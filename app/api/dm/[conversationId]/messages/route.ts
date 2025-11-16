@@ -1,181 +1,180 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { publishMessage } from "@/lib/ably"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
 
-// GET /api/dm/[conversationId]/messages - Get messages with pagination
-export async function GET(request: NextRequest, { params }: { params: { conversationId: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { dmId: string } }
+) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
-
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { conversationId } = await params
+    const { dmId } = await params
     const { searchParams } = new URL(request.url)
     const cursor = searchParams.get("cursor")
-    const limit = Number.parseInt(searchParams.get("limit") || "50")
+    const limit = parseInt(searchParams.get("limit") || "50")
 
-    // Verify user is a member
-    const dmConversation = await prisma.thread.findUnique({
-      where: { id: conversationId },
-      include: { members: true },
+    // Verify user is part of this DM
+    const dm = await prisma.directMessage.findFirst({
+      where: {
+        id: dmId,
+        OR: [
+          { participant1Id: session.user.id },
+          { participant2Id: session.user.id },
+        ],
+      },
     })
 
-    if (!dmConversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
-    }
-
-    const isMember = dmConversation.members.some((member) => member.id === session.user.id)
-
-    if (!isMember) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!dm) {
+      return NextResponse.json({ error: "DM not found" }, { status: 404 })
     }
 
     // Fetch messages with pagination
-    const messages = await prisma.message.findMany({
+    const messages = await prisma.dMMessage.findMany({
       where: {
-        threadId: conversationId,
+        dmId,
+        ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
-        },
-        reactions: true,
         attachments: true,
-        mentions: true,
+        reactions: true,
+        readBy: true,
         replies: {
           include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-              },
-            },
+            reactions: true,
+            readBy: true,
           },
         },
       },
       orderBy: {
-        timestamp: "desc",
+        createdAt: "desc",
       },
-      take: limit,
-      ...(cursor && {
-        skip: 1,
-        cursor: {
-          id: cursor,
-        },
-      }),
+      take: limit + 1,
     })
 
-    const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null
+    const hasMore = messages.length > limit
+    const data = hasMore ? messages.slice(0, limit) : messages
+    const nextCursor = hasMore ? data[data.length - 1].createdAt.toISOString() : null
+
+    // Add sender info
+    const messagesWithSender = await Promise.all(
+      data.map(async (msg) => {
+        const sender = await prisma.user.findUnique({
+          where: { id: msg.senderId },
+          select: { id: true, name: true, avatar: true },
+        })
+        return { ...msg, sender }
+      })
+    )
 
     return NextResponse.json({
-      messages: messages.reverse(),
+      messages: messagesWithSender.reverse(),
       nextCursor,
+      hasMore,
     })
   } catch (error) {
     console.error("[v0] Error fetching DM messages:", error)
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch messages" },
+      { status: 500 }
+    )
   }
 }
 
-// POST /api/dm/[conversationId]/messages - Send a new message
-export async function POST(request: NextRequest, { params }: { params: { conversationId: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { dmId: string } }
+) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
-
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { conversationId } = await params
-    const body = await request.json()
-    const { content, messageType = "standard", metadata, replyToId } = body
+    const { dmId } = await params
+    const { content, replyToId, attachments } = await request.json()
 
-    if (!content || content.trim().length === 0) {
-      return NextResponse.json({ error: "Message content is required" }, { status: 400 })
-    }
-
-    // Verify user is a member
-    const dmConversation = await prisma.thread.findUnique({
-      where: { id: conversationId },
-      include: { members: true },
+    // Verify user is part of this DM
+    const dm = await prisma.directMessage.findFirst({
+      where: {
+        id: dmId,
+        OR: [
+          { participant1Id: session.user.id },
+          { participant2Id: session.user.id },
+        ],
+      },
     })
 
-    if (!dmConversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
-    }
-
-    const isMember = dmConversation.members.some((member) => member.id === session.user.id)
-
-    if (!isMember) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!dm) {
+      return NextResponse.json({ error: "DM not found" }, { status: 404 })
     }
 
     // Create message
-    const message = await prisma.message.create({
+    const message = await prisma.dMMessage.create({
       data: {
+        dmId,
+        senderId: session.user.id,
         content,
-        messageType,
-        metadata,
-        threadId: conversationId,
-        userId: session.user.id,
-        ...(replyToId && { replyToId, depth: 1 }),
+        replyToId,
+        attachments: attachments
+          ? {
+              create: attachments.map((att: any) => ({
+                name: att.name,
+                type: att.type,
+                url: att.url,
+                size: att.size,
+              })),
+            }
+          : undefined,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
-        },
-        reactions: true,
         attachments: true,
+        reactions: true,
+        readBy: true,
       },
     })
 
-    // Update thread's updatedAt
-    await prisma.thread.update({
-      where: { id: conversationId },
-      data: { updatedAt: new Date() },
+    // Update DM lastMessageAt
+    await prisma.directMessage.update({
+      where: { id: dmId },
+      data: { lastMessageAt: new Date() },
     })
 
-    // Publish message to Ably for real-time delivery
-    await publishMessage(conversationId, {
-      type: "message.new",
-      data: message,
+    // Get sender info
+    const sender = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, avatar: true },
     })
 
-    // Send notification to other member
-    const otherMember = dmConversation.members.find((m) => m.id !== session.user.id)
-    if (otherMember) {
-      await prisma.notification.create({
-        data: {
-          userId: otherMember.id,
-          type: "dm_message",
-          title: `New message from ${session.user.name}`,
-          message: content.substring(0, 100),
-          entityType: "message",
-          entityId: message.id,
-          linkUrl: `/dm/${session.user.id}`,
-          metadata: {
-            senderId: session.user.id,
-            senderName: session.user.name,
-          },
-        },
-      })
-    }
+    // Send real-time notification
+    const ably = getAblyRest()
+    const channel = ably.channels.get(AblyChannels.dm(dmId))
+    await channel.publish(AblyEvents.MESSAGE_SENT, {
+      ...message,
+      sender,
+    })
 
-    return NextResponse.json(message, { status: 201 })
+    // Notify the other user
+    const otherUserId =
+      dm.participant1Id === session.user.id
+        ? dm.participant2Id
+        : dm.participant1Id
+    const userChannel = ably.channels.get(AblyChannels.user(otherUserId))
+    await userChannel.publish(AblyEvents.DM_RECEIVED, {
+      dmId,
+      message: { ...message, sender },
+    })
+
+    return NextResponse.json({ ...message, sender }, { status: 201 })
   } catch (error) {
     console.error("[v0] Error sending DM message:", error)
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to send message" },
+      { status: 500 }
+    )
   }
 }

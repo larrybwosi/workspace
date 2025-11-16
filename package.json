@@ -66,6 +66,7 @@
     "firebase-admin": "latest",
     "framer-motion": "latest",
     "input-otp": "1.4.1",
+    "keyv": "^5.5.4",
     "lucide-react": "^0.454.0",
     "nanoid": "latest",
     "next": "16.0.0",

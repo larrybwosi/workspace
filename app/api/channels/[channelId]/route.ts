@@ -9,8 +9,9 @@ export async function GET(request: NextRequest, { params }: { params: { channelI
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { channelId } = await params
     const channel = await prisma.channel.findUnique({
-      where: { id: params.channelId },
+      where: { id: channelId },
       include: {
         children: true,
         members: {
@@ -53,9 +54,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { channe
     }
 
     const body = await request.json()
+    const { channelId } = await params;
 
     const channel = await prisma.channel.update({
-      where: { id: params.channelId },
+      where: { id: channelId },
       data: body,
       include: {
         members: {
@@ -78,9 +80,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { chann
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    const { channelId } = await params;
 
     await prisma.channel.delete({
-      where: { id: params.channelId },
+      where: { id: channelId },
     })
 
     return NextResponse.json({ success: true })

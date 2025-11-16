@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   // output   = "../../prisma/client"
@@ -66,13 +65,22 @@ model User {
   calls                Call[]
   // ADDED: Relation for calls user participated in
   callParticipants     CallParticipant[]
-  // ADDED: Relation for message reads
+  // ADDCORS: Relation for message reads (DM and Channel)
   messageReads         MessageRead[]
-  // ADDED: Relation for message reactions
+  dmMessageReads       DMMessageRead[]
+  // ADDED: Relation for message reactions (DM and Channel)
   reactions            Reaction[]
+  dmReactions          DMReaction[]
   // ADDED: Relation for invitations sent by the user
   sentInvitations      Invitation[]          @relation("InvitedBy")
+  // ADDED: Relation for DM participants
+  dmParticipant1       DirectMessage[]       @relation("DMParticipant1")
+  dmParticipant2       DirectMessage[]       @relation("DMParticipant2")
+  // ADDED: Relation for DM messages
+  dmMessages           DMMessage[]
+
   pushNotificationLogs PushNotificationLog[]
+  noteVersions NoteVersion[]
 
   sessions Session[]
   accounts Account[]
@@ -86,7 +94,7 @@ model Verification {
   value      String
   expiresAt  DateTime
 
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String?
 
   createdAt DateTime @default(now())
@@ -111,7 +119,7 @@ model Channel {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  parent   Channel?  @relation("ChannelHierarchy", fields: [parentId], references: [id])
+  parent   Channel? @relation("ChannelHierarchy", fields: [parentId], references: [id])
   children Channel[] @relation("ChannelHierarchy")
 
   threads  Thread[]
@@ -255,6 +263,95 @@ model Attachment {
   @@map("attachments")
 }
 
+model DirectMessage {
+  id             String    @id @default(cuid())
+  participant1Id String
+  participant2Id String
+  lastMessageAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  participant1 User @relation("DMParticipant1", fields: [participant1Id], references: [id], onDelete: Cascade)
+  participant2 User @relation("DMParticipant2", fields: [participant2Id], references: [id], onDelete: Cascade)
+
+  messages DMMessage[]
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+  @@map("direct_messages")
+}
+
+model DMMessage {
+  id        String   @id @default(cuid())
+  dmId      String
+  senderId  String
+  content   String   @db.Text
+  isEdited  Boolean  @default(false)
+  replyToId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dm      DirectMessage @relation(fields: [dmId], references: [id], onDelete: Cascade)
+  // CORRECTED: Added relation to the sender
+  sender  User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo DMMessage?    @relation("DMMessageReplies", fields: [replyToId], references: [id])
+  replies DMMessage[]   @relation("DMMessageReplies")
+
+  attachments DMAttachment[]
+  reactions   DMReaction[]
+  readBy      DMMessageRead[]
+
+  @@index([dmId])
+  @@index([senderId])
+  @@map("dm_messages")
+}
+
+model DMMessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message DMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  // CORRECTED: Added relation to the user
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId])
+  @@index([messageId])
+  @@map("dm_message_reads")
+}
+
+model DMReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message DMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  // CORRECTED: Added relation to the user
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("dm_reactions")
+}
+
+model DMAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  name      String
+  type      String
+  url       String
+  size      String?
+  createdAt DateTime @default(now())
+
+  message DMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("dm_attachments")
+}
+
 // ============================================
 // PROJECT & TASK MODELS
 // ============================================
@@ -312,8 +409,10 @@ model Task {
   updatedAt      DateTime  @updatedAt
 
   project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  sprint     Sprint?    @relation(fields: [sprintId], references: [id])
-  milestone  Milestone? @relation(fields: [milestoneId], references: [id])
+  // CORRECTED: Added onDelete rule for optional relation
+  sprint     Sprint?    @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  // CORRECTED: Added onDelete rule for optional relation
+  milestone  Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
   parentTask Task?      @relation("TaskSubtasks", fields: [parentTaskId], references: [id])
   creator    User       @relation("TaskCreator", fields: [creatorId], references: [id])
 
@@ -331,6 +430,8 @@ model Task {
   customFieldValues CustomFieldValue[]
   notes             Note[]             @relation("NoteLinkedTasks")
   attachments       Attachment[]       @relation("TaskAttachments")
+  // ADDED: Relation for calendar events
+  calendarEvents    CalendarEvent[]
 
   @@map("tasks")
 }
@@ -363,9 +464,8 @@ model TaskBlocker {
   taskId    String
   blockerId String
   reason    String?
-
-  task    Task @relation("TaskBlockers", fields: [taskId], references: [id], onDelete: Cascade)
-  blocker Task @relation("TaskBlocking", fields: [blockerId], references: [id], onDelete: Cascade)
+  task      Task @relation("TaskBlockers", fields: [taskId], references: [id], onDelete: Cascade)
+  blocker   Task @relation("TaskBlocking", fields: [blockerId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, blockerId])
   @@map("task_blockers")
@@ -512,7 +612,8 @@ model ProjectTemplate {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project Project? @relation(fields: [projectId], references: [id])
+  // CORRECTED: Added onDelete rule for optional relation
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@map("project_templates")
 }
@@ -630,6 +731,7 @@ model CalendarShare {
 model CalendarEvent {
   id          String   @id @default(cuid())
   projectId   String?
+  // CORRECTED: Added taskId
   taskId      String?
   creatorId   String
   title       String
@@ -645,7 +747,10 @@ model CalendarEvent {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project   Project? @relation(fields: [projectId], references: [id])
+  // CORRECTED: Added onDelete rule for optional relation
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  // CORRECTED: Added task relation
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
   creator   User     @relation("EventCreator", fields: [creatorId], references: [id])
   attendees User[]   @relation("EventAttendees")
 
@@ -735,11 +840,14 @@ model NoteVersion {
   id                String   @id @default(cuid())
   noteId            String
   content           String   @db.Text
-  createdBy         String
+  // CORRECTED: Changed `createdBy` to `createdById` and added relation
+  createdById       String
   changeDescription String?
   createdAt         DateTime @default(now())
 
-  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  note      Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  // CORRECTED: Added relation to the User who created the version
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("note_versions")
 }
@@ -764,9 +872,11 @@ model Invitation {
   updatedAt   DateTime  @updatedAt
 
   // ADDED: Relations to the inviter, project, and channel
-  inviter User     @relation("InvitedBy", fields: [invitedBy], references: [id])
-  project Project? @relation("ProjectInvitations", fields: [projectId], references: [id])
-  channel Channel? @relation(fields: [channelId], references: [id])
+  inviter User @relation("InvitedBy", fields: [invitedBy], references: [id])
+  // CORRECTED: Added onDelete rule for optional relation
+  project Project? @relation("ProjectInvitations", fields: [projectId], references: [id], onDelete: Cascade)
+  // CORRECTED: Added onDelete rule for optional relation
+  channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   // ADDED: Relation to invitation logs
   logs InvitationLog[]
@@ -827,7 +937,8 @@ model Webhook {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs WebhookLog[]
 
   @@index([userId])
   @@map("webhooks")
@@ -843,6 +954,9 @@ model WebhookLog {
   success    Boolean
   error      String?  @db.Text
   createdAt  DateTime @default(now())
+
+  // CORRECTED: Added relation to the Webhook
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@index([webhookId])
   @@index([createdAt])
@@ -1009,7 +1123,6 @@ model ScheduledNotificationHistory {
   success                 Boolean
   errorMessage            String?  @db.Text
   metadata                Json?
-
   scheduledNotification ScheduledNotification @relation(fields: [scheduledNotificationId], references: [id], onDelete: Cascade)
 
   @@index([scheduledNotificationId])
@@ -1081,7 +1194,8 @@ model Call {
   participants CallParticipant[]
 
   // ADDED: Relation to the user who started the call
-  initiator User @relation(fields: [initiatorId], references: [id])
+  // CORRECTED: Added onDelete rule for relation
+  initiator User @relation(fields: [initiatorId], references: [id], onDelete: SetNull)
 
   @@index([channelName])
   @@index([initiatorId])

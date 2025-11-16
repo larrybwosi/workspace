@@ -1,112 +1,126 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-// GET /api/dm/[conversationId] - Get specific DM conversation
-export async function GET(request: NextRequest, { params }: { params: { conversationId: string } }) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
-
+    const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = await params
-
-    const dmConversation = await prisma.thread.findUnique({
+    // Get all DM conversations for the current user
+    const dms = await prisma.directMessage.findMany({
       where: {
-        id: conversationId,
+        OR: [
+          { participant1Id: session.user.id },
+          { participant2Id: session.user.id },
+        ],
       },
       include: {
-        members: {
+        participant1: {
           select: {
             id: true,
             name: true,
-            email: true,
             avatar: true,
             status: true,
-            role: true,
+          },
+        },
+        participant2: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            status: true,
           },
         },
         messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
           include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-              },
-            },
-            reactions: true,
-            attachments: true,
-            mentions: true,
-          },
-          orderBy: {
-            timestamp: "asc",
+            readBy: true,
           },
         },
       },
-    })
+      orderBy: {
+        lastMessageAt: "desc",
+      },
+    });
 
-    if (!dmConversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
-    }
+    // Format DMs with unread count
+    const formattedDms = dms.map((dm) => {
+      const otherUser =
+        dm.participant1Id === session.user.id
+          ? dm.participant2
+          : dm.participant1;
+      const lastMessage = dm.messages[0];
+      const unreadCount = dm.messages.filter(
+        (msg) => !msg.readBy.some((read) => read.userId === session.user.id)
+      ).length;
 
-    // Verify user is a member of this DM
-    const isMember = dmConversation.members.some((member) => member.id === session.user.id)
+      return {
+        id: dm.id,
+        user: otherUser,
+        lastMessage: lastMessage
+          ? {
+              content: lastMessage.content,
+              createdAt: lastMessage.createdAt,
+            }
+          : null,
+        unreadCount,
+        lastMessageAt: dm.lastMessageAt,
+      };
+    });
 
-    if (!isMember) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    return NextResponse.json(dmConversation)
+    return NextResponse.json(formattedDms);
   } catch (error) {
-    console.error("[v0] Error fetching DM conversation:", error)
-    return NextResponse.json({ error: "Failed to fetch conversation" }, { status: 500 })
+    console.error("[v0] Error fetching DMs:", error);
+    return NextResponse.json({ error: "Failed to fetch DMs" }, { status: 500 });
   }
 }
 
-// DELETE /api/dm/[conversationId] - Delete DM conversation
-export async function DELETE(request: NextRequest, { params }: { params: { conversationId: string } }) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
-
+    const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = await params
+    const { userId } = await request.json();
 
-    // Verify user is a member
-    const dmConversation = await prisma.thread.findUnique({
+    if (!userId) {
+      return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    }
+
+    // Check if DM already exists
+    const existingDm = await prisma.directMessage.findFirst({
       where: {
-        id: conversationId,
+        OR: [
+          { participant1Id: session.user.id, participant2Id: userId },
+          { participant1Id: userId, participant2Id: session.user.id },
+        ],
+      },
+    });
+
+    if (existingDm) {
+      return NextResponse.json(existingDm);
+    }
+
+    // Create new DM
+    const dm = await prisma.directMessage.create({
+      data: {
+        participant1Id: session.user.id,
+        participant2Id: userId,
       },
       include: {
-        members: true,
+        participant1: true,
+        participant2: true,
       },
-    })
+    });
 
-    if (!dmConversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
-    }
-
-    const isMember = dmConversation.members.some((member) => member.id === session.user.id)
-
-    if (!isMember) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    // Delete the conversation
-    await prisma.thread.delete({
-      where: {
-        id: conversationId,
-      },
-    })
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json(dm, { status: 201 });
   } catch (error) {
-    console.error("[v0] Error deleting DM conversation:", error)
-    return NextResponse.json({ error: "Failed to delete conversation" }, { status: 500 })
+    console.error("[v0] Error creating DM:", error);
+    return NextResponse.json({ error: "Failed to create DM" }, { status: 500 });
   }
 }

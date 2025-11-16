@@ -5,25 +5,59 @@ import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
 import { extractMentions, extractUserIds } from "@/lib/mention-utils"
 import { notifyMention } from "@/lib/notifications"
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { channelId: string } }
+) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { channelId } = await params
     const { searchParams } = new URL(request.url)
-    const threadId = searchParams.get("threadId")
     const cursor = searchParams.get("cursor")
     const limit = parseInt(searchParams.get("limit") || "50")
 
-    if (!threadId) {
-      return NextResponse.json({ error: "Thread ID required" }, { status: 400 })
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      include: {
+        members: {
+          where: { userId: session.user.id },
+        },
+      },
+    })
+
+    if (!channel) {
+      return NextResponse.json({ error: "Channel not found" }, { status: 404 })
+    }
+
+    if (channel.isPrivate && channel.members.length === 0) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 })
+    }
+
+    let thread = await prisma.thread.findFirst({
+      where: {
+        channelId,
+        title: `${channel.name} General`,
+      },
+    })
+
+    if (!thread) {
+      thread = await prisma.thread.create({
+        data: {
+          channelId,
+          title: `${channel.name} General`,
+          creatorId: session.user.id,
+          status: "Active",
+        },
+      })
     }
 
     const messages = await prisma.message.findMany({
       where: {
-        threadId,
+        threadId: thread.id,
         ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
       include: {
@@ -54,31 +88,70 @@ export async function GET(request: NextRequest) {
       messages: data.reverse(),
       nextCursor,
       hasMore,
+      threadId: thread.id,
     })
   } catch (error) {
-    console.error("[v0] Error fetching messages:", error)
+    console.error("[v0] Error fetching channel messages:", error)
     return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { channelId: string } }
+) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { channelId } = await params
     const body = await request.json()
-    const { threadId, content, messageType, metadata, replyToId, mentions, attachments } = body
+    const { content, messageType, metadata, replyToId, mentions, attachments } = body
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      include: {
+        members: {
+          where: { userId: session.user.id },
+        },
+      },
+    })
+
+    if (!channel) {
+      return NextResponse.json({ error: "Channel not found" }, { status: 404 })
+    }
+
+    if (channel.isPrivate && channel.members.length === 0) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 })
+    }
+
+    let thread = await prisma.thread.findFirst({
+      where: {
+        channelId,
+        title: `${channel.name} General`,
+      },
+    })
+
+    if (!thread) {
+      thread = await prisma.thread.create({
+        data: {
+          channelId,
+          title: `${channel.name} General`,
+          creatorId: session.user.id,
+          status: "Active",
+        },
+      })
+    }
 
     const detectedMentions = mentions || extractMentions(content)
-    
     const users = await prisma.user.findMany()
     const mentionedUserIds = extractUserIds(detectedMentions, users)
 
     const message = await prisma.message.create({
       data: {
-        threadId,
+        threadId: thread.id,
         userId: session.user.id,
         content,
         messageType: messageType || "standard",
@@ -119,19 +192,19 @@ export async function POST(request: NextRequest) {
           message.id,
           mentionedUserId,
           mentionedByUser?.name || "Someone",
-          threadId,
+          thread.id,
           content
         )
       }
     }
 
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(threadId))
-    await channel.publish(AblyEvents.MESSAGE_SENT, message)
+    const ablyChannel = ably.channels.get(AblyChannels.channel(channelId))
+    await ablyChannel.publish(AblyEvents.MESSAGE_SENT, message)
 
     return NextResponse.json(message, { status: 201 })
   } catch (error) {
-    console.error("[v0] Message creation error:", error)
+    console.error("[v0] Channel message creation error:", error)
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 })
   }
 }

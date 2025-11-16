@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query"
+import { useMutation, useQueryClient, useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api-client"
 import type { Message } from "@/lib/types"
 
@@ -102,6 +102,80 @@ export function useMarkMessageAsRead() {
     },
     onSuccess: ({ channelId }) => {
       queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId) })
+    },
+  })
+}
+
+export const dmKeys = {
+  all: ["dms"] as const,
+  lists: () => [...dmKeys.all, "list"] as const,
+  list: (dmId: string) => [...dmKeys.lists(), dmId] as const,
+  conversations: () => [...dmKeys.all, "conversations"] as const,
+}
+
+// Fetch all DM conversations
+export function useDMConversations() {
+  return useQuery({
+    queryKey: dmKeys.conversations(),
+    queryFn: async () => {
+      const { data } = await apiClient.get("/dms")
+      return data
+    },
+  })
+}
+
+// Create or get DM
+export function useCreateDM() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { data } = await apiClient.post("/dms", { userId })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dmKeys.conversations() })
+    },
+  })
+}
+
+// Fetch DM messages with pagination
+export function useDMMessages(dmId: string) {
+  return useInfiniteQuery({
+    queryKey: dmKeys.list(dmId),
+    queryFn: async ({ pageParam }) => {
+      const { data } = await apiClient.get(`/dms/${dmId}/messages`, {
+        params: { cursor: pageParam, limit: 50 },
+      })
+      return data
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !!dmId,
+    initialPageParam: undefined,
+  })
+}
+
+// Send DM message
+export function useSendDMMessage() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ dmId, content, replyToId, attachments }: {
+      dmId: string
+      content: string
+      replyToId?: string
+      attachments?: any[]
+    }) => {
+      const { data } = await apiClient.post(`/dms/${dmId}/messages`, {
+        content,
+        replyToId,
+        attachments,
+      })
+      return data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: dmKeys.list(variables.dmId) })
+      queryClient.invalidateQueries({ queryKey: dmKeys.conversations() })
     },
   })
 }
