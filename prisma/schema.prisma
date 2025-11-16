@@ -1,0 +1,1148 @@
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../../prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTH MODELS (Better Auth)
+// ============================================
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  avatar        String?
+  role          String   @default("Development")
+  status        String   @default("online")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  verification Verification[]
+
+  // Application relations accountId
+  messages          Message[]
+  threads           Thread[]        @relation("ThreadCreator")
+  threadMembers     Thread[]        @relation("ThreadMembers")
+  tasks             Task[]          @relation("TaskAssignees")
+  createdTasks      Task[]          @relation("TaskCreator")
+  watchedTasks      Task[]          @relation("TaskWatchers")
+  projects          Project[]       @relation("ProjectMembers")
+  createdProjects   Project[]       @relation("ProjectCreator")
+  notes             Note[]          @relation("NoteCreator")
+  noteCollaborators Note[]          @relation("NoteCollaborators")
+  timeEntries       TimeEntry[]
+  comments          Comment[]
+  channelMembers    ChannelMember[]
+  createdFolders    NoteFolder[]
+  sprintMembers     Sprint[]        @relation("SprintMembers")
+  eventAttendees    CalendarEvent[] @relation("EventAttendees")
+  createdEvents     CalendarEvent[] @relation("EventCreator")
+
+  notifications          Notification[]
+  activityLogs           ActivityLog[]
+  scheduledNotifications ScheduledNotification[]
+  deviceTokens           DeviceToken[]
+
+  apiKeys  ApiKey[]
+  webhooks Webhook[]
+
+  assistantConversations AssistantConversation[]
+  assistantAuditLogs     AssistantAuditLog[]
+
+  calendarIntegrations  CalendarIntegration[]
+  calendarSubscriptions CalendarSubscription[]
+  calendarShares        CalendarShare[]
+  eventReminders        EventReminder[]
+
+  // ADDED: Relation for calls initiated by the user
+  calls                Call[]
+  // ADDED: Relation for calls user participated in
+  callParticipants     CallParticipant[]
+  // ADDED: Relation for message reads
+  messageReads         MessageRead[]
+  // ADDED: Relation for message reactions
+  reactions            Reaction[]
+  // ADDED: Relation for invitations sent by the user
+  sentInvitations      Invitation[]          @relation("InvitedBy")
+  pushNotificationLogs PushNotificationLog[]
+
+  sessions Session[]
+  accounts Account[]
+
+  @@map("users")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([identifier, value])
+  @@map("verifications")
+}
+
+// ============================================
+// CHANNEL & MESSAGING MODELS
+// ============================================
+
+model Channel {
+  id          String   @id @default(cuid())
+  name        String
+  icon        String
+  type        String   @default("channel")
+  description String?
+  isPrivate   Boolean  @default(false)
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Channel?  @relation("ChannelHierarchy", fields: [parentId], references: [id])
+  children Channel[] @relation("ChannelHierarchy")
+
+  threads  Thread[]
+  members  ChannelMember[]
+  projects Project[]       @relation("ProjectChannels")
+
+  // ADDED: Relations for invitations and calendar feeds
+  invitations           Invitation[]
+  calendarSubscriptions CalendarSubscription[]
+
+  @@map("channels")
+}
+
+model ChannelMember {
+  id        String   @id @default(cuid())
+  channelId String
+  userId    String
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@map("channel_members")
+}
+
+model Thread {
+  id          String   @id @default(cuid())
+  title       String
+  channelId   String
+  creatorId   String
+  status      String   @default("Active")
+  dateCreated DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  creator User    @relation("ThreadCreator", fields: [creatorId], references: [id])
+
+  messages Message[]
+  tags     ThreadTag[]
+  members  User[]      @relation("ThreadMembers")
+  tasks    Task[]      @relation("TaskLinkedThreads")
+
+  @@map("threads")
+}
+
+model ThreadTag {
+  id       String @id @default(cuid())
+  threadId String
+  tag      String
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, tag])
+  @@map("thread_tags")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  threadId    String
+  userId      String
+  content     String   @db.Text
+  messageType String   @default("standard")
+  metadata    Json?
+  isEdited    Boolean  @default(false)
+  replyToId   String?
+  depth       Int      @default(0)
+  timestamp   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  thread  Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replyTo Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies Message[] @relation("MessageReplies")
+
+  reactions   Reaction[]
+  attachments Attachment[]
+  mentions    MessageMention[]
+  readBy      MessageRead[]
+
+  @@map("messages")
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  // ADDED: Relation to the User who read the message
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId])
+  @@index([messageId])
+  @@map("message_reads")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  // ADDED: Relation to the User who reacted
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("reactions")
+}
+
+model MessageMention {
+  id        String @id @default(cuid())
+  messageId String
+  mention   String
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("message_mentions")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  messageId String?
+  noteId    String?
+  taskId    String?
+  name      String
+  type      String
+  url       String
+  size      String?
+  createdAt DateTime @default(now())
+
+  message Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  note    Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  task    Task?    @relation("TaskAttachments", fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+// ============================================
+// PROJECT & TASK MODELS
+// ============================================
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  icon        String
+  description String   @db.Text
+  status      String   @default("active")
+  startDate   DateTime
+  endDate     DateTime
+  creatorId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator User @relation("ProjectCreator", fields: [creatorId], references: [id])
+
+  tasks        Task[]
+  members      User[]            @relation("ProjectMembers")
+  channels     Channel[]         @relation("ProjectChannels")
+  milestones   Milestone[]
+  sprints      Sprint[]
+  customFields CustomField[]
+  risks        Risk[]
+  budgets      Budget[]
+  templates    ProjectTemplate[]
+  notes        Note[]            @relation("NoteLinkedProjects")
+  events       CalendarEvent[]
+  invitations  Invitation[]      @relation("ProjectInvitations")
+
+  // ADDED: Relation for calendar feeds
+  calendarSubscriptions CalendarSubscription[]
+
+  @@map("projects")
+}
+
+model Task {
+  id             String    @id @default(cuid())
+  title          String
+  description    String    @db.Text
+  status         String    @default("todo")
+  priority       String    @default("medium")
+  dueDate        DateTime?
+  startDate      DateTime?
+  estimatedHours Float?
+  loggedHours    Float?
+  progress       Float     @default(0)
+  projectId      String
+  sprintId       String?
+  milestoneId    String?
+  parentTaskId   String?
+  creatorId      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sprint     Sprint?    @relation(fields: [sprintId], references: [id])
+  milestone  Milestone? @relation(fields: [milestoneId], references: [id])
+  parentTask Task?      @relation("TaskSubtasks", fields: [parentTaskId], references: [id])
+  creator    User       @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  subtasks          Task[]             @relation("TaskSubtasks")
+  assignees         User[]             @relation("TaskAssignees")
+  watchers          User[]             @relation("TaskWatchers")
+  tags              TaskTag[]
+  comments          Comment[]
+  timeEntries       TimeEntry[]
+  linkedThreads     Thread[]           @relation("TaskLinkedThreads")
+  dependencies      TaskDependency[]   @relation("TaskDependencies")
+  dependents        TaskDependency[]   @relation("TaskDependents")
+  blockers          TaskBlocker[]      @relation("TaskBlockers")
+  blocking          TaskBlocker[]      @relation("TaskBlocking")
+  customFieldValues CustomFieldValue[]
+  notes             Note[]             @relation("NoteLinkedTasks")
+  attachments       Attachment[]       @relation("TaskAttachments")
+
+  @@map("tasks")
+}
+
+model TaskTag {
+  id     String @id @default(cuid())
+  taskId String
+  tag    String
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, tag])
+  @@map("task_tags")
+}
+
+model TaskDependency {
+  id          String @id @default(cuid())
+  taskId      String
+  dependsOnId String
+
+  task      Task @relation("TaskDependencies", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn Task @relation("TaskDependents", fields: [dependsOnId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnId])
+  @@map("task_dependencies")
+}
+
+model TaskBlocker {
+  id        String  @id @default(cuid())
+  taskId    String
+  blockerId String
+  reason    String?
+
+  task    Task @relation("TaskBlockers", fields: [taskId], references: [id], onDelete: Cascade)
+  blocker Task @relation("TaskBlocking", fields: [blockerId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, blockerId])
+  @@map("task_blockers")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  taskId      String
+  userId      String
+  duration    Int
+  startTime   DateTime
+  endTime     DateTime
+  description String?
+  billable    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("time_entries")
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String   @db.Text
+  dueDate     DateTime
+  status      String   @default("upcoming")
+  progress    Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@map("milestones")
+}
+
+model Sprint {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  goal      String   @db.Text
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("planning")
+  velocity  Float    @default(0)
+  capacity  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+  members User[]  @relation("SprintMembers")
+
+  @@map("sprints")
+}
+
+model CustomField {
+  id           String   @id @default(cuid())
+  projectId    String
+  name         String
+  type         String
+  options      Json?
+  required     Boolean  @default(false)
+  defaultValue String?
+  entityType   String
+  createdAt    DateTime @default(now())
+
+  project Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  values  CustomFieldValue[]
+
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id            String @id @default(cuid())
+  customFieldId String
+  taskId        String
+  value         String @db.Text
+
+  customField CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  task        Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([customFieldId, taskId])
+  @@map("custom_field_values")
+}
+
+model Risk {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String   @db.Text
+  impact      String
+  probability String
+  mitigation  String?  @db.Text
+  status      String   @default("open")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("risks")
+}
+
+model Budget {
+  id        String   @id @default(cuid())
+  projectId String
+  category  String
+  allocated Float
+  spent     Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}
+
+model ProjectTemplate {
+  id          String   @id @default(cuid())
+  projectId   String?
+  name        String
+  description String   @db.Text
+  category    String
+  icon        String
+  isDefault   Boolean  @default(false)
+  content     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project? @relation(fields: [projectId], references: [id])
+
+  @@map("project_templates")
+}
+
+// ============================================
+// CALENDAR INTEGRATION MODELS
+// ============================================
+
+model CalendarIntegration {
+  id           String    @id @default(cuid())
+  userId       String
+  provider     String // google, outlook, apple
+  accountEmail String
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
+  expiresAt    DateTime?
+  calendarId   String?
+  calendarName String?
+  syncEnabled  Boolean   @default(true)
+  lastSyncAt   DateTime?
+  settings     Json? // sync preferences, filters
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // ADDED: Relation to sync logs
+  syncs CalendarSync[]
+
+  @@index([userId])
+  @@index([provider])
+  @@map("calendar_integrations")
+}
+
+model CalendarSync {
+  id              String   @id @default(cuid())
+  integrationId   String
+  eventId         String // our internal event ID
+  externalEventId String // external calendar event ID
+  provider        String
+  lastSynced      DateTime @default(now())
+  syncStatus      String   @default("synced") // synced, pending, error
+  errorMessage    String?  @db.Text
+
+  // ADDED: Relations to the integration and event being synced
+  integration CalendarIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  event       CalendarEvent       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([integrationId, externalEventId])
+  @@index([eventId])
+  @@map("calendar_syncs")
+}
+
+model CalendarSubscription {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String?
+  channelId   String?
+  name        String
+  description String?
+  token       String   @unique // For secure calendar feed access
+  format      String   @default("ics") // ics, json
+  filterTypes Json? // Which event types to include
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // ADDED: Relations to user, project, and channel
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("calendar_subscriptions")
+}
+
+model EventReminder {
+  id            String    @id @default(cuid())
+  eventId       String
+  // ADDED: userId to link reminder to a user
+  userId        String
+  type          String // notification, email, sms
+  minutesBefore Int // minutes before event
+  sent          Boolean   @default(false)
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  // ADDED: Relations to the event and user
+  event CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([sent])
+  @@index([userId])
+  @@map("event_reminders")
+}
+
+model CalendarShare {
+  id         String   @id @default(cuid())
+  calendarId String // project or user calendar
+  entityType String // project, user
+  sharedWith String // user ID
+  permission String   @default("read") // read, write, admin
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // ADDED: Relation to the user being shared with
+  user User @relation(fields: [sharedWith], references: [id], onDelete: Cascade)
+
+  @@unique([calendarId, entityType, sharedWith])
+  @@index([sharedWith])
+  @@map("calendar_shares")
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  projectId   String?
+  taskId      String?
+  creatorId   String
+  title       String
+  description String?  @db.Text
+  type        String
+  startDate   DateTime
+  endDate     DateTime
+  allDay      Boolean  @default(false)
+  location    String?
+  color       String?
+  recurring   String?
+  reminders   Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project? @relation(fields: [projectId], references: [id])
+  creator   User     @relation("EventCreator", fields: [creatorId], references: [id])
+  attendees User[]   @relation("EventAttendees")
+
+  // ADDED: Relations to sync logs and reminders
+  syncs          CalendarSync[]
+  eventReminders EventReminder[]
+
+  @@map("calendar_events")
+}
+
+// ============================================
+// NOTES MODELS
+// ============================================
+
+model NoteFolder {
+  id        String   @id @default(cuid())
+  name      String
+  icon      String
+  parentId  String?
+  order     Int      @default(0)
+  creatorId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   NoteFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children NoteFolder[] @relation("FolderHierarchy")
+  creator  User         @relation(fields: [creatorId], references: [id])
+  notes    Note[]
+
+  @@map("note_folders")
+}
+
+model Note {
+  id           String   @id @default(cuid())
+  title        String
+  content      String   @db.Text
+  folderId     String
+  creatorId    String
+  isFavorite   Boolean  @default(false)
+  template     Boolean  @default(false)
+  encrypted    Boolean  @default(false)
+  isPublic     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  lastModified DateTime @updatedAt
+
+  folder  NoteFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  creator User       @relation("NoteCreator", fields: [creatorId], references: [id])
+
+  tags          NoteTag[]
+  collaborators User[]        @relation("NoteCollaborators")
+  projects      Project[]     @relation("NoteLinkedProjects")
+  tasks         Task[]        @relation("NoteLinkedTasks")
+  attachments   Attachment[]
+  versions      NoteVersion[]
+  sourceLinks   NoteLink[]    @relation("SourceNote")
+  targetLinks   NoteLink[]    @relation("TargetNote")
+
+  @@map("notes")
+}
+
+model NoteTag {
+  id     String @id @default(cuid())
+  noteId String
+  tag    String
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, tag])
+  @@map("note_tags")
+}
+
+model NoteLink {
+  id           String   @id @default(cuid())
+  sourceNoteId String
+  targetNoteId String
+  type         String   @default("bidirectional")
+  createdAt    DateTime @default(now())
+
+  sourceNote Note @relation("SourceNote", fields: [sourceNoteId], references: [id], onDelete: Cascade)
+  targetNote Note @relation("TargetNote", fields: [targetNoteId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceNoteId, targetNoteId])
+  @@map("note_links")
+}
+
+model NoteVersion {
+  id                String   @id @default(cuid())
+  noteId            String
+  content           String   @db.Text
+  createdBy         String
+  changeDescription String?
+  createdAt         DateTime @default(now())
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@map("note_versions")
+}
+
+// ============================================
+// INVITATION MODELS
+// ============================================
+
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  token       String    @unique
+  role        String    @default("member")
+  invitedBy   String
+  projectId   String?
+  channelId   String?
+  permissions Json?
+  status      String    @default("pending") // pending, accepted, expired, cancelled
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // ADDED: Relations to the inviter, project, and channel
+  inviter User     @relation("InvitedBy", fields: [invitedBy], references: [id])
+  project Project? @relation("ProjectInvitations", fields: [projectId], references: [id])
+  channel Channel? @relation(fields: [channelId], references: [id])
+
+  // ADDED: Relation to invitation logs
+  logs InvitationLog[]
+
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@map("invitations")
+}
+
+model InvitationLog {
+  id           String   @id @default(cuid())
+  invitationId String
+  action       String // sent, resent, accepted, expired, cancelled
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  // ADDED: Relation to the invitation
+  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("invitation_logs")
+}
+
+// ============================================
+// API KEY & WEBHOOK MODELS
+// ============================================
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  key         String    @unique
+  userId      String
+  permissions Json // Array of allowed actions: ["messages:write", "tasks:read", etc]
+  rateLimit   Int       @default(1000)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([key])
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model Webhook {
+  id          String    @id @default(cuid())
+  name        String
+  url         String
+  secret      String
+  events      Json // Array of events to trigger: ["task.created", "project.updated"]
+  userId      String
+  isActive    Boolean   @default(true)
+  lastFiredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("webhooks")
+}
+
+model WebhookLog {
+  id         String   @id @default(cuid())
+  webhookId  String
+  event      String
+  payload    Json
+  response   String?
+  statusCode Int?
+  success    Boolean
+  error      String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([createdAt])
+  @@map("webhook_logs")
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  title      String
+  message    String   @db.Text
+  entityType String?
+  entityId   String?
+  linkUrl    String?
+  isRead     Boolean  @default(false)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  // ADDED: Relation to the user
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // ADDED: Relation to push notification logs
+  pushNotificationLogs PushNotificationLog[]
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // ADDED: Relation to the user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ============================================
+// AI ASSISTANT MODELS
+// ============================================
+
+model AssistantConversation {
+  id         String   @id @default(cuid())
+  userId     String
+  title      String
+  context    Json? // Stores conversation context and metadata
+  settings   Json? // User preferences for this conversation
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AssistantMessage[]
+  tools    AssistantToolUsage[]
+
+  @@index([userId])
+  @@map("assistant_conversations")
+}
+
+model AssistantMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String // user, assistant, system, tool
+  content        String   @db.Text
+  toolCalls      Json? // Store tool call information
+  toolResults    Json? // Store tool execution results
+  tokens         Int? // Token usage for this message
+  model          String? // Which model was used
+  createdAt      DateTime @default(now())
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("assistant_messages")
+}
+
+model AssistantToolUsage {
+  id             String   @id @default(cuid())
+  conversationId String
+  toolName       String
+  parameters     Json
+  result         Json?
+  success        Boolean
+  errorMessage   String?  @db.Text
+  executionTime  Int? // milliseconds
+  createdAt      DateTime @default(now())
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([toolName])
+  @@map("assistant_tool_usage")
+}
+
+model AssistantAuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  action       String // query, tool_call, data_access, etc.
+  resourceType String? // task, project, note, etc.
+  resourceId   String?
+  query        String?  @db.Text
+  response     String?  @db.Text
+  metadata     Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  // ADDED: Relation to the user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+  @@map("assistant_audit_logs")
+}
+
+// ============================================
+// SCHEDULED NOTIFICATION MODELS
+// ============================================
+
+model ScheduledNotification {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  message      String    @db.Text
+  scheduleType String // once, daily, weekly, monthly, custom
+  scheduledFor DateTime
+  timezone     String    @default("UTC")
+  recurrence   Json? // For recurring notifications
+  isActive     Boolean   @default(true)
+  isSent       Boolean   @default(false)
+  sentAt       DateTime?
+  entityType   String?
+  entityId     String?
+  linkUrl      String?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user    User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history ScheduledNotificationHistory[]
+
+  @@index([userId])
+  @@index([scheduledFor])
+  @@index([isActive, isSent])
+  @@map("scheduled_notifications")
+}
+
+model ScheduledNotificationHistory {
+  id                      String   @id @default(cuid())
+  scheduledNotificationId String
+  sentAt                  DateTime
+  success                 Boolean
+  errorMessage            String?  @db.Text
+  metadata                Json?
+
+  scheduledNotification ScheduledNotification @relation(fields: [scheduledNotificationId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledNotificationId])
+  @@map("scheduled_notification_history")
+}
+
+// ============================================
+// DEVICE TOKEN MODELS
+// ============================================
+
+model DeviceToken {
+  id         String   @id @default(cuid())
+  userId     String
+  platform   String // web, ios, android, desktop
+  token      String   @unique
+  deviceInfo Json? // Device name, OS version, browser, etc.
+  isActive   Boolean  @default(true)
+  lastUsedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([platform])
+  @@index([token])
+  @@map("device_tokens")
+}
+
+model PushNotificationLog {
+  id             String   @id @default(cuid())
+  userId         String
+  notificationId String?
+  platform       String
+  deviceToken    String
+  title          String
+  body           String
+  data           Json?
+  status         String // sent, failed, delivered
+  error          String?  @db.Text
+  sentAt         DateTime @default(now())
+
+  // ADDED: Relations to user and the original notification
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([notificationId])
+  @@index([status])
+  @@map("push_notification_logs")
+}
+
+// ============================================
+// CALL MODELS
+// ============================================
+
+model Call {
+  id          String    @id @default(cuid())
+  channelName String
+  type        String // voice, video
+  initiatorId String
+  status      String    @default("pending") // pending, active, ended, missed
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  duration    Int? // in seconds
+  agoraToken  String?   @db.Text
+  metadata    Json? // recording info, screen share logs, etc.
+
+  participants CallParticipant[]
+
+  // ADDED: Relation to the user who started the call
+  initiator User @relation(fields: [initiatorId], references: [id])
+
+  @@index([channelName])
+  @@index([initiatorId])
+  @@index([status])
+  @@map("calls")
+}
+
+model CallParticipant {
+  id       String    @id @default(cuid())
+  callId   String
+  userId   String
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+  role     String    @default("participant") // host, participant
+  muted    Boolean   @default(false)
+  videoOff Boolean   @default(false)
+
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  // ADDED: Relation to the user participating in the call
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([callId, userId])
+  @@index([callId])
+  @@index([userId])
+  @@map("call_participants")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+
+  // ADDED: The session token field that was missing
+  token     String   @unique
+
+  // ADDED: Timestamp fields the library is also trying to set
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
