@@ -51,7 +51,7 @@ export function NotificationPermissionPrompt() {
         setShow(false)
       }
     } catch (error) {
-      console.error("[v0] Failed to enable notifications:", error)
+      console.error(" Failed to enable notifications:", error)
     } finally {
       setLoading(false)
     }

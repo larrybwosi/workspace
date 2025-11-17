@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(dmConversations)
   } catch (error) {
-    console.error("[v0] Error fetching DM conversations:", error)
+    console.error(" Error fetching DM conversations:", error)
     return NextResponse.json({ error: "Failed to fetch conversations" }, { status: 500 })
   }
 }
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(dmThread, { status: 201 })
   } catch (error) {
-    console.error("[v0] Error creating DM conversation:", error)
+    console.error(" Error creating DM conversation:", error)
     return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 })
   }
 }

@@ -77,7 +77,7 @@ export async function GET(
       hasMore,
     })
   } catch (error) {
-    console.error("[v0] Error fetching DM messages:", error)
+    console.error(" Error fetching DM messages:", error)
     return NextResponse.json(
       { error: "Failed to fetch messages" },
       { status: 500 }
@@ -171,7 +171,7 @@ export async function POST(
 
     return NextResponse.json({ ...message, sender }, { status: 201 })
   } catch (error) {
-    console.error("[v0] Error sending DM message:", error)
+    console.error(" Error sending DM message:", error)
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 500 }

@@ -19,7 +19,7 @@ function getFirebaseAdmin() {
 
     return firebaseAdmin
   } catch (error) {
-    console.error("[v0] Firebase Admin initialization error:", error)
+    console.error(" Firebase Admin initialization error:", error)
     return undefined
   }
 }
@@ -46,7 +46,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
   })
 
   if (deviceTokens.length === 0) {
-    console.log("[v0] No active device tokens found for user:", userId)
+    console.log(" No active device tokens found for user:", userId)
     return []
   }
 
@@ -131,7 +131,7 @@ async function sendWebPushNotification(
 
     return { success: true, messageId: response }
   } catch (error: any) {
-    console.error("[v0] Web push notification error:", error)
+    console.error(" Web push notification error:", error)
 
     // Log failed notification
     await prisma.pushNotificationLog.create({
@@ -214,7 +214,7 @@ async function sendExpoPushNotification(
 
     return { success: true, result }
   } catch (error: any) {
-    console.error("[v0] Expo push notification error:", error)
+    console.error(" Expo push notification error:", error)
 
     // Log failed notification
     await prisma.pushNotificationLog.create({
@@ -292,7 +292,7 @@ async function sendDesktopPushNotification(
 
     return { success: true }
   } catch (error: any) {
-    console.error("[v0] Desktop push notification error:", error)
+    console.error(" Desktop push notification error:", error)
 
     // Log failed notification
     await prisma.pushNotificationLog.create({

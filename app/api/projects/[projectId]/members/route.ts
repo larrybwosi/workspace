@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: { project
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Add project member error:", error)
+    console.error(" Add project member error:", error)
     return NextResponse.json({ error: "Failed to add project members" }, { status: 500 })
   }
 }

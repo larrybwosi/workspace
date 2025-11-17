@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(tokenRequest)
   } catch (error) {
-    console.error("[v0] Ably token generation error:", error)
+    console.error(" Ably token generation error:", error)
     return NextResponse.json({ error: "Failed to generate token" }, { status: 500 })
   }
 }

@@ -95,7 +95,7 @@ export async function GET(request: NextRequest, { params }: { params: { projectI
       ...settings,
     })
   } catch (error) {
-    console.error("[v0] Error fetching project settings:", error)
+    console.error(" Error fetching project settings:", error)
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })
   }
 }
@@ -146,7 +146,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { projec
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid settings data", details: error.errors }, { status: 400 })
     }
-    console.error("[v0] Error updating project settings:", error)
+    console.error(" Error updating project settings:", error)
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 })
   }
 }

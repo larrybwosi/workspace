@@ -36,7 +36,7 @@ export async function generateMetadata({
 
     return getInvitationSEOMetadata(inviter?.name || "A team member", projectName)
   } catch (error) {
-    console.error("[v0] Error generating metadata:", error)
+    console.error(" Error generating metadata:", error)
     return {
       title: "Invitation",
       description: "Accept your invitation to join the team.",

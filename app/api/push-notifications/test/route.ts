@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, results })
   } catch (error) {
-    console.error("[v0] Test push notification error:", error)
+    console.error(" Test push notification error:", error)
     return NextResponse.json({ error: "Failed to send test notification" }, { status: 500 })
   }
 }

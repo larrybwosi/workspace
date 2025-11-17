@@ -42,22 +42,22 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
           {/* Profile Header */}
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarFallback className="text-lg bg-primary text-primary-foreground">{user.avatar}</AvatarFallback>
+              <AvatarFallback className="text-lg bg-primary text-primary-foreground">{user?.name}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold">{user.name}</h3>
+              <h3 className="text-lg font-semibold">{user?.name}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <div
                   className={cn(
                     "h-2 w-2 rounded-full",
-                    user.status === "online" && "bg-green-500",
-                    user.status === "away" && "bg-yellow-500",
-                    user.status === "offline" && "bg-gray-400",
+                    user?.status === "online" && "bg-green-500",
+                    user?.status === "away" && "bg-yellow-500",
+                    user?.status === "offline" && "bg-gray-400",
                   )}
                 />
-                <span className="text-sm text-muted-foreground capitalize">{user.status}</span>
+                <span className="text-sm text-muted-foreground capitalize">{user?.status}</span>
               </div>
-              <Badge className={cn("mt-2", getRoleBadgeColor(user.role))}>{user.role}</Badge>
+              <Badge className={cn("mt-2", getRoleBadgeColor(user?.role))}>{user?.role}</Badge>
             </div>
           </div>
 
@@ -69,7 +69,7 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
             <div className="space-y-2">
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{user.name.toLowerCase().replace(" ", ".")}@conceptzilla.com</span>
+                <span>{user?.name.toLowerCase().replace(" ", ".")}@conceptzilla.com</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />

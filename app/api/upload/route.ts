@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("[v0] Upload error:", error)
+    console.error(" Upload error:", error)
     return NextResponse.json(
       { error: "Failed to upload file", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
@@ -86,7 +86,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Asset deleted successfully" })
   } catch (error) {
-    console.error("[v0] Delete error:", error)
+    console.error(" Delete error:", error)
     return NextResponse.json(
       { error: "Failed to delete asset", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }

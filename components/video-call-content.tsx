@@ -72,7 +72,7 @@ export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCall
           body: JSON.stringify({ action: 'join' })
         })
       } catch (error) {
-        console.error('[v0] Error fetching Agora token:', error)
+        console.error(' Error fetching Agora token:', error)
         toast.error('Failed to join call')
       }
     }
@@ -134,7 +134,7 @@ export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCall
         toast.success('Screen sharing stopped')
       }
     } catch (error) {
-      console.error('[v0] Error toggling screen share:', error)
+      console.error(' Error toggling screen share:', error)
       toast.error('Failed to share screen')
     }
   }

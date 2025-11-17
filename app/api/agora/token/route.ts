@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       expiresAt: new Date(privilegeExpiredTs * 1000)
     })
   } catch (error) {
-    console.error('[v0] Error generating Agora token:', error)
+    console.error(' Error generating Agora token:', error)
     return NextResponse.json(
       { error: 'Failed to generate token' },
       { status: 500 }

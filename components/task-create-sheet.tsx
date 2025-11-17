@@ -150,7 +150,7 @@ export function TaskCreateSheet({
       onOpenChange(false)
     } catch (error) {
       toast.error(mode === "create" ? "Failed to create task" : "Failed to update task")
-      console.error("[v0] Error saving task:", error)
+      console.error(" Error saving task:", error)
     }
   }
 

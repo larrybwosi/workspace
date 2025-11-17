@@ -91,7 +91,7 @@ export function TaskDetailModal({ task, open, onOpenChange }: TaskDetailModalPro
   if (!task) return null
 
   const handleSaveTask = (taskData: Partial<Task>) => {
-    console.log("[v0] Saving edited task:", taskData)
+    console.log(" Saving edited task:", taskData)
     setEditDialogOpen(false)
     // In real implementation, this would update the task
   }

@@ -77,7 +77,7 @@ export function FileUpload({
         description: `${uploaded.length} file(s) uploaded successfully`,
       })
     } catch (error) {
-      console.error("[v0] Upload failed:", error)
+      console.error(" Upload failed:", error)
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "Failed to upload files",

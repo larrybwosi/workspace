@@ -127,7 +127,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[v0] Error updating call:', error)
+    console.error(' Error updating call:', error)
     return NextResponse.json({ error: 'Failed to update call' }, { status: 500 })
   }
 }

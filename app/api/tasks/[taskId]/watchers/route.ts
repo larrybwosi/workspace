@@ -15,7 +15,7 @@ export async function POST(request: NextRequest, { params }: { params: { taskId:
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Add watcher error:", error)
+    console.error(" Add watcher error:", error)
     return NextResponse.json({ error: "Failed to add watcher" }, { status: 500 })
   }
 }
@@ -33,7 +33,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { taskI
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Remove watcher error:", error)
+    console.error(" Remove watcher error:", error)
     return NextResponse.json({ error: "Failed to remove watcher" }, { status: 500 })
   }
 }

@@ -44,13 +44,13 @@ export function initializeFirebase() {
 
 export async function requestNotificationPermission() {
   if (!("Notification" in window)) {
-    console.log("[v0] Browser doesn't support notifications")
+    console.log(" Browser doesn't support notifications")
     return null
   }
 
   const permission = await Notification.requestPermission()
   if (permission !== "granted") {
-    console.log("[v0] Notification permission denied")
+    console.log(" Notification permission denied")
     return null
   }
 
@@ -76,7 +76,7 @@ export async function getFirebaseToken(): Promise<string | null> {
 
     return token
   } catch (error) {
-    console.error("[v0] Error getting Firebase token:", error)
+    console.error(" Error getting Firebase token:", error)
     return null
   }
 }

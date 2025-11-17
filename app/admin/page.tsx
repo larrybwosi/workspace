@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Sidebar } from "@/components/sidebar"
 import { TopBar } from "@/components/top-bar"
 import { AdminOverview } from "@/components/admin-overview"
 import { AdminMembers } from "@/components/admin-members"
@@ -21,12 +20,6 @@ export default function AdminPage() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        activeChannel="admin"
-        onChannelSelect={() => {}}
-      />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar

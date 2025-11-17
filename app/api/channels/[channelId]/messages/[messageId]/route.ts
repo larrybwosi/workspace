@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { messag
 
     return NextResponse.json(message)
   } catch (error) {
-    console.error("[v0] Message update error:", error)
+    console.error(" Message update error:", error)
     return NextResponse.json({ error: "Failed to update message" }, { status: 500 })
   }
 }
@@ -78,7 +78,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { messa
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Message deletion error:", error)
+    console.error(" Message deletion error:", error)
     return NextResponse.json({ error: "Failed to delete message" }, { status: 500 })
   }
 }

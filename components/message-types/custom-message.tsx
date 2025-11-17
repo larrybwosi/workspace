@@ -73,7 +73,7 @@ export function CustomMessage({ message }: CustomMessageProps) {
         })
         setFieldValues(initialValues)
       } catch (error) {
-        console.error("[v0] Failed to parse UI definition:", error)
+        console.error(" Failed to parse UI definition:", error)
       }
     }
   }, [message.metadata])
@@ -83,7 +83,7 @@ export function CustomMessage({ message }: CustomMessageProps) {
   }
 
   const handleAction = (actionId: string) => {
-    console.log("[v0] Custom message action:", actionId, fieldValues)
+    console.log(" Custom message action:", actionId, fieldValues)
     // Emit action event with field values
     if (message.actions) {
       const action = message.actions.find((a) => a.id === actionId)

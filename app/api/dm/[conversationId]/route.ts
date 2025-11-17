@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(formattedDms);
   } catch (error) {
-    console.error("[v0] Error fetching DMs:", error);
+    console.error(" Error fetching DMs:", error);
     return NextResponse.json({ error: "Failed to fetch DMs" }, { status: 500 });
   }
 }
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(dm, { status: 201 });
   } catch (error) {
-    console.error("[v0] Error creating DM:", error);
+    console.error(" Error creating DM:", error);
     return NextResponse.json({ error: "Failed to create DM" }, { status: 500 });
   }
 }

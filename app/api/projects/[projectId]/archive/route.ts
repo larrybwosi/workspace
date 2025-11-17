@@ -30,7 +30,7 @@ export async function POST(request: NextRequest, { params }: { params: { project
 
     return NextResponse.json(project)
   } catch (error) {
-    console.error("[v0] Error archiving project:", error)
+    console.error(" Error archiving project:", error)
     return NextResponse.json({ error: "Failed to archive project" }, { status: 500 })
   }
 }

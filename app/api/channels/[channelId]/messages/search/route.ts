@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ results })
   } catch (error) {
-    console.error("[v0] Message search error:", error)
+    console.error(" Message search error:", error)
     return NextResponse.json({ error: "Failed to search messages" }, { status: 500 })
   }
 }

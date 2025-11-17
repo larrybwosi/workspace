@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
     return NextResponse.json(sprint)
   } catch (error) {
-    console.error("[v0] Error ending sprint:", error)
+    console.error(" Error ending sprint:", error)
     return NextResponse.json({ error: "Failed to end sprint" }, { status: 500 })
   }
 }

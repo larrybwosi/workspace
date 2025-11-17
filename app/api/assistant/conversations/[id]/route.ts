@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     return NextResponse.json(conversation)
   } catch (error: any) {
-    console.error("[v0] Get conversation error:", error)
+    console.error(" Get conversation error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -54,7 +54,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error("[v0] Delete conversation error:", error)
+    console.error(" Delete conversation error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

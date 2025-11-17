@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Mark all read error:", error)
+    console.error(" Mark all read error:", error)
     return NextResponse.json({ error: "Failed to mark all as read" }, { status: 500 })
   }
 }

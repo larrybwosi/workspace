@@ -105,7 +105,7 @@ export function NotesView() {
   const renameFolder = () => {
     if (renamingFolder && newFolderName.trim()) {
       // In a real app, you'd update the folder name in the backend
-      console.log("[v0] Renaming folder", renamingFolder, "to", newFolderName)
+      console.log(" Renaming folder", renamingFolder, "to", newFolderName)
       setRenameDialogOpen(false)
       setRenamingFolder(null)
       setNewFolderName("")

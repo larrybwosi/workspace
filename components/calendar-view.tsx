@@ -139,7 +139,7 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (error) {
-      console.error('[v0] Export error:', error)
+      console.error(' Export error:', error)
     }
   }
 
@@ -227,7 +227,7 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
   }
 
   const handleQuickNoteSave = (note: string) => {
-    console.log("[v0] Saving quick note:", note, "for date:", contextMenuDate)
+    console.log(" Saving quick note:", note, "for date:", contextMenuDate)
     toast({
       title: "Note saved",
       description: "Your note has been saved successfully",
@@ -443,7 +443,7 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
         onOpenChange={setEventDialogOpen}
         event={selectedEvent}
         onSave={(eventData) => {
-          console.log("[v0] Saving event:", eventData)
+          console.log(" Saving event:", eventData)
           setEventDialogOpen(false)
         }}
         mode={selectedEvent ? "edit" : "create"}

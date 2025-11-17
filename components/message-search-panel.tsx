@@ -51,7 +51,7 @@ export function MessageSearchPanel({ channelId, onMessageClick }: MessageSearchP
       const data = await response.json()
       setResults(data.results || [])
     } catch (error) {
-      console.error("[v0] Search error:", error)
+      console.error(" Search error:", error)
     } finally {
       setIsSearching(false)
     }

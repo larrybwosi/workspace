@@ -49,20 +49,21 @@ export interface CustomMessageComponent {
 }
 
 export interface Message {
-  id: string
-  userId: string
-  content: string
-  timestamp: Date
-  reactions: Reaction[]
-  mentions: string[]
-  attachments?: Attachment[]
-  isEdited?: boolean
-  messageType?: MessageType
-  metadata?: MessageMetadata
-  actions?: MessageAction[]
-  replyTo?: string
-  replies?: Message[]
-  depth?: number
+  id: string;
+  userId: string;
+  content: string;
+  timestamp: Date;
+  reactions: Reaction[];
+  mentions: string[];
+  attachments?: Attachment[];
+  isEdited?: boolean;
+  messageType?: MessageType;
+  metadata?: MessageMetadata;
+  actions?: MessageAction[];
+  replyTo?: string;
+  replies?: Message[];
+  depth?: number;
+  readByCurrentUser?: boolean;
 }
 
 export interface Thread {

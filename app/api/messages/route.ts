@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       hasMore,
     })
   } catch (error) {
-    console.error("[v0] Error fetching messages:", error)
+    console.error(" Error fetching messages:", error)
     return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 })
   }
 }
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(message, { status: 201 })
   } catch (error) {
-    console.error("[v0] Message creation error:", error)
+    console.error(" Message creation error:", error)
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 })
   }
 }

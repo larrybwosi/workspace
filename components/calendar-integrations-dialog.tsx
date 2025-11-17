@@ -31,14 +31,14 @@ export function CalendarIntegrationsDialog({ open, onOpenChange }: CalendarInteg
       
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[v0] API Error:', errorText)
+        console.error(' API Error:', errorText)
         throw new Error(`Failed to fetch integrations: ${response.statusText}`)
       }
       
       const data = await response.json()
       setIntegrations(data)
     } catch (error) {
-      console.error('[v0] Failed to fetch integrations:', error)
+      console.error(' Failed to fetch integrations:', error)
       setError(error instanceof Error ? error.message : 'Failed to load calendar integrations')
     }
   }
@@ -70,7 +70,7 @@ export function CalendarIntegrationsDialog({ open, onOpenChange }: CalendarInteg
         window.location.href = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`
       }
     } catch (error) {
-      console.error('[v0] Connection error:', error)
+      console.error(' Connection error:', error)
       setLoading(false)
     }
   }
@@ -84,7 +84,7 @@ export function CalendarIntegrationsDialog({ open, onOpenChange }: CalendarInteg
       })
       fetchIntegrations()
     } catch (error) {
-      console.error('[v0] Toggle sync error:', error)
+      console.error(' Toggle sync error:', error)
     }
   }
 
@@ -95,7 +95,7 @@ export function CalendarIntegrationsDialog({ open, onOpenChange }: CalendarInteg
       })
       fetchIntegrations()
     } catch (error) {
-      console.error('[v0] Delete error:', error)
+      console.error(' Delete error:', error)
     }
   }
 

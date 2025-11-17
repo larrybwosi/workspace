@@ -29,7 +29,7 @@ export function CommentRequestMessage({ message, metadata }: CommentRequestMessa
 
     setComments([...comments, comment])
     setNewComment("")
-    console.log("[v0] Added comment:", comment)
+    console.log(" Added comment:", comment)
   }
 
   const formatTime = (date: Date) => {

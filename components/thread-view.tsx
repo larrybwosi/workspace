@@ -30,16 +30,19 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
   const markAsReadMutation = useMarkMessageAsRead()
 
   const [replyingTo, setReplyingTo] = React.useState<{ id: string; userName: string } | null>(null)
-  const [lastReadMessageId, setLastReadMessageId] = React.useState<string | null>(null)
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const highlightedMessageRef = React.useRef<HTMLDivElement>(null)
+  
+  // Track which messages have already been marked as read
+  const markedAsReadRef = React.useRef<Set<string>>(new Set())
 
   const messages = React.useMemo(() => {
     if (!messagesData?.pages) return thread.messages
     return messagesData.pages.flatMap((page) => page.messages)
   }, [messagesData, thread.messages])
 
+  // Scroll to highlighted message or bottom
   React.useEffect(() => {
     if (highlightedMessageId && highlightedMessageRef.current) {
       setTimeout(() => {
@@ -51,21 +54,31 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
-  }, [messages, highlightedMessageId])
+  }, [messages.length, highlightedMessageId]) // Only depend on length, not the entire array
 
+  // Mark unread messages as read - OPTIMIZED
   React.useEffect(() => {
-    if (messages.length > 0) {
-      const unreadMessages = messages.filter(m => !m.readByCurrentUser)
-      if (unreadMessages.length > 0) {
-        unreadMessages.forEach(msg => {
-          markAsReadMutation.mutate({
-            messageId: msg.id,
-            channelId: activeChannelId,
-          })
+    if (messages.length === 0) return
+
+    const unreadMessages = messages.filter(
+      m => !m.readByCurrentUser && !markedAsReadRef.current.has(m.id)
+    )
+    
+    if (unreadMessages.length > 0) {
+      // Mark them in our ref immediately to prevent duplicate calls
+      unreadMessages.forEach(msg => {
+        markedAsReadRef.current.add(msg.id)
+      })
+      
+      // Batch the API calls
+      unreadMessages.forEach(msg => {
+        markAsReadMutation.mutate({
+          messageId: msg.id,
+          channelId: activeChannelId,
         })
-      }
+      })
     }
-  }, [messages, activeChannelId])
+  }, [messages.length, activeChannelId]) // Only run when message count or channel changes
 
   const firstUnreadMessageId = React.useMemo(() => {
     const firstUnread = messages.find(m => !m.readByCurrentUser)
@@ -97,7 +110,8 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
     return rootMessages
   }, [messages])
 
-  const handleSendMessage = (content: string) => {
+  // Memoize callbacks to prevent unnecessary rerenders
+  const handleSendMessage = React.useCallback((content: string) => {
     const messageData = {
       channelId: activeChannelId,
       userId: mockUsers[0].id,
@@ -118,17 +132,17 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
     }
 
     setReplyingTo(null)
-  }
+  }, [activeChannelId, replyingTo, replyToMessageMutation, sendMessageMutation])
 
-  const handleReply = (messageId: string) => {
+  const handleReply = React.useCallback((messageId: string) => {
     const replyMessage = messages.find((m) => m.id === messageId)
     if (replyMessage) {
       const user = mockUsers.find((u) => u.id === replyMessage.userId)
       setReplyingTo({ id: messageId, userName: user?.name || "Unknown" })
     }
-  }
+  }, [messages])
 
-  const handleReaction = (messageId: string, emoji: string) => {
+  const handleReaction = React.useCallback((messageId: string, emoji: string) => {
     const message = messages.find((m) => m.id === messageId)
     if (!message) return
 
@@ -148,7 +162,15 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
         channelId: activeChannelId,
       })
     }
-  }
+  }, [messages, activeChannelId, addReactionMutation, removeReactionMutation])
+
+  const handleCancelReply = React.useCallback(() => {
+    setReplyingTo(null)
+  }, [])
+
+  const handleLoadMore = React.useCallback(() => {
+    fetchNextPage()
+  }, [fetchNextPage])
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
@@ -166,7 +188,7 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => fetchNextPage()}
+              onClick={handleLoadMore}
               disabled={isFetchingNextPage}
             >
               {isFetchingNextPage ? (
@@ -239,7 +261,7 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
           onSend={handleSendMessage}
           placeholder={replyingTo ? `Reply to ${replyingTo.userName}...` : "Type a message..."}
           replyingTo={replyingTo}
-          onCancelReply={() => setReplyingTo(null)}
+          onCancelReply={handleCancelReply}
         />
       </div>
     </div>

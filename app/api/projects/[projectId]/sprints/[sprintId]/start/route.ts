@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
     return NextResponse.json(sprint)
   } catch (error) {
-    console.error("[v0] Error starting sprint:", error)
+    console.error(" Error starting sprint:", error)
     return NextResponse.json({ error: "Failed to start sprint" }, { status: 500 })
   }
 }

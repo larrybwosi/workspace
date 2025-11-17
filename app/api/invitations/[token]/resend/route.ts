@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, { params }: { params: { token: 
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Error resending invitation:", error)
+    console.error(" Error resending invitation:", error)
     return NextResponse.json({ error: "Failed to resend invitation" }, { status: 500 })
   }
 }

@@ -54,7 +54,7 @@ export async function publishMessage(channelId: string, data: any) {
     const channel = ably.channels.get(AblyChannels.channel(channelId))
     await channel.publish(data.type, data.data)
   } catch (error) {
-    console.error("[v0] Error publishing message to Ably:", error)
+    console.error(" Error publishing message to Ably:", error)
     throw error
   }
 }
@@ -65,7 +65,7 @@ export async function publishNotification(userId: string, notification: any) {
     const channel = ably.channels.get(AblyChannels.notifications(userId))
     await channel.publish(AblyEvents.NOTIFICATION, notification)
   } catch (error) {
-    console.error("[v0] Error publishing notification to Ably:", error)
+    console.error(" Error publishing notification to Ably:", error)
     throw error
   }
 }
@@ -76,7 +76,7 @@ export async function publishToAbly(channelName: string, eventName: string, data
     const channel = ably.channels.get(channelName)
     await channel.publish(eventName, data)
   } catch (error) {
-    console.error("[v0] Error publishing to Ably:", error)
+    console.error(" Error publishing to Ably:", error)
     throw error
   }
 }

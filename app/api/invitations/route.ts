@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Error creating invitation:", error)
+    console.error(" Error creating invitation:", error)
     return NextResponse.json({ error: "Failed to create invitation" }, { status: 500 })
   }
 }
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ invitations })
   } catch (error) {
-    console.error("[v0] Error fetching invitations:", error)
+    console.error(" Error fetching invitations:", error)
     return NextResponse.json({ error: "Failed to fetch invitations" }, { status: 500 })
   }
 }

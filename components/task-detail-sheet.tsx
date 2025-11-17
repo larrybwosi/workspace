@@ -342,7 +342,7 @@ export function TaskDetailSheet({ taskId, projectId, open, onOpenChange }: TaskD
   }
 
   const handleSaveTask = (taskData: Partial<Task>) => {
-    console.log("[v0] Saving edited task:", taskData)
+    console.log(" Saving edited task:", taskData)
     setEditDialogOpen(false)
   }
 

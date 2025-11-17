@@ -117,7 +117,7 @@ export function ProjectSettingsSheet({ project, open, onOpenChange, embedded = f
       toast.success("Settings saved successfully")
       onOpenChange(false)
     } catch (error) {
-      console.error("[v0] Error saving settings:", error)
+      console.error(" Error saving settings:", error)
       toast.error("Failed to save settings")
     }
   }
@@ -132,7 +132,7 @@ export function ProjectSettingsSheet({ project, open, onOpenChange, embedded = f
       onOpenChange(false)
       window.location.href = "/projects"
     } catch (error) {
-      console.error("[v0] Error deleting project:", error)
+      console.error(" Error deleting project:", error)
       toast.error("Failed to delete project")
     }
   }
@@ -146,7 +146,7 @@ export function ProjectSettingsSheet({ project, open, onOpenChange, embedded = f
       toast.success("Project archived successfully")
       onOpenChange(false)
     } catch (error) {
-      console.error("[v0] Error archiving project:", error)
+      console.error(" Error archiving project:", error)
       toast.error("Failed to archive project")
     }
   }

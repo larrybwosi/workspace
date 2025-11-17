@@ -37,7 +37,7 @@ export async function sendInvitationEmail(
 ) {
   // TODO: Implement email sending logic with your email provider
   // This is a placeholder that logs the invitation details
-  console.log("[v0] Sending invitation email:", {
+  console.log(" Sending invitation email:", {
     to: email,
     invitationLink,
     inviterName,

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, { params }: { params: { message
 
     return NextResponse.json(message)
   } catch (error) {
-    console.error("[v0] Reaction error:", error)
+    console.error(" Reaction error:", error)
     return NextResponse.json({ error: "Failed to update reaction" }, { status: 500 })
   }
 }

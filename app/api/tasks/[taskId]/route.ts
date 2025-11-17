@@ -164,7 +164,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { taskId
 
     return NextResponse.json(task)
   } catch (error) {
-    console.error("[v0] Task update error:", error)
+    console.error(" Task update error:", error)
     return NextResponse.json({ error: "Failed to update task" }, { status: 500 })
   }
 }

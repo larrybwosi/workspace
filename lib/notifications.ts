@@ -52,7 +52,7 @@ export async function createNotification(payload: NotificationPayload) {
       notificationId: notification.id,
     })
   } catch (error) {
-    console.error("[v0] Push notification error:", error)
+    console.error(" Push notification error:", error)
     // Don't fail the whole operation if push notifications fail
   }
 

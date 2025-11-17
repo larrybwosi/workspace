@@ -7,7 +7,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "init": "docker desktop start ; docker-compose up -d ; docker start redis; next dev --turbopack"
+    "init": "docker desktop start ; docker-compose up -d ; docker start redis; next dev"
   },
   "dependencies": {
     "@ai-sdk/openai": "latest",
@@ -58,7 +58,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
-    "crypto": "latest",
     "date-fns": "latest",
     "embla-carousel-react": "8.5.1",
     "emoji-mart": "latest",
@@ -82,7 +81,7 @@
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "vaul": "^0.9.9",
+    "vaul": "^1.1.2",
     "zod": "3.25.76"
   },
   "devDependencies": {
@@ -94,5 +93,10 @@
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "keyv": "5.5.4"
+    }
   }
 }

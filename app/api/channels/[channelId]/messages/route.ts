@@ -10,15 +10,18 @@ export async function GET(
   { params }: { params: { channelId: string } }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { channelId } = await params
-    const { searchParams } = new URL(request.url)
-    const cursor = searchParams.get("cursor")
-    const limit = parseInt(searchParams.get("limit") || "50")
+    // Get the current user's ID
+    const currentUserId = session.user.id;
+
+    const { channelId } = await params;
+    const { searchParams } = new URL(request.url);
+    const cursor = searchParams.get("cursor");
+    const limit = parseInt(searchParams.get("limit") || "50");
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -27,14 +30,14 @@ export async function GET(
           where: { userId: session.user.id },
         },
       },
-    })
+    });
 
     if (!channel) {
-      return NextResponse.json({ error: "Channel not found" }, { status: 404 })
+      return NextResponse.json({ error: "Channel not found" }, { status: 404 });
     }
 
     if (channel.isPrivate && channel.members.length === 0) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 })
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     let thread = await prisma.thread.findFirst({
@@ -42,7 +45,7 @@ export async function GET(
         channelId,
         title: `${channel.name} General`,
       },
-    })
+    });
 
     if (!thread) {
       thread = await prisma.thread.create({
@@ -52,25 +55,25 @@ export async function GET(
           creatorId: session.user.id,
           status: "Active",
         },
-      })
+      });
     }
 
     const messages = await prisma.message.findMany({
       where: {
         threadId: thread.id,
-        ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
+        // ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
       include: {
         user: true,
         reactions: true,
         attachments: true,
         mentions: true,
-        readBy: true,
+        readBy: true, // Fetches the array of read receipts
         replies: {
           include: {
             user: true,
             reactions: true,
-            readBy: true,
+            readBy: true, // Fetches read receipts for replies
           },
         },
       },
@@ -78,21 +81,50 @@ export async function GET(
         timestamp: "desc",
       },
       take: limit + 1,
-    })
+    });
 
-    const hasMore = messages.length > limit
-    const data = hasMore ? messages.slice(0, limit) : messages
-    const nextCursor = hasMore ? data[data.length - 1].timestamp.toISOString() : null
+    const hasMore = messages.length > limit;
+    const data = hasMore ? messages.slice(0, limit) : messages;
+    const nextCursor = hasMore
+      ? data[data.length - 1].timestamp.toISOString()
+      : null;
+
+    const processedMessages = data.map((message) => {
+      // Check if the current user is in the 'readBy' array for the main message
+      const readByCurrentUser = message.readBy.some(
+        (read) => read.userId === currentUserId
+      );
+
+      // Process replies to add the same field
+      const processedReplies = message.replies.map((reply) => {
+        const replyReadByCurrentUser = reply.readBy.some(
+          (read) => read.userId === currentUserId
+        );
+        return {
+          ...reply,
+          readByCurrentUser: replyReadByCurrentUser,
+        };
+      });
+
+      return {
+        ...message,
+        readByCurrentUser: readByCurrentUser,
+        replies: processedReplies, // Overwrite with processed replies
+      };
+    });
 
     return NextResponse.json({
-      messages: data.reverse(),
+      messages: processedMessages.reverse(),
       nextCursor,
       hasMore,
       threadId: thread.id,
-    })
+    });
   } catch (error) {
-    console.error("[v0] Error fetching channel messages:", error)
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 })
+    console.error(" Error fetching channel messages:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch messages" },
+      { status: 500 }
+    );
   }
 }
 
@@ -204,7 +236,7 @@ export async function POST(
 
     return NextResponse.json(message, { status: 201 })
   } catch (error) {
-    console.error("[v0] Channel message creation error:", error)
+    console.error(" Channel message creation error:", error)
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 })
   }
 }

@@ -26,13 +26,13 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
 
   const handleApprove = () => {
     setLocalStatus("approved")
-    console.log("[v0] Approved request:", message.id, "with comment:", comment)
+    console.log(" Approved request:", message.id, "with comment:", comment)
     setShowCommentField(false)
   }
 
   const handleReject = () => {
     setLocalStatus("rejected")
-    console.log("[v0] Rejected request:", message.id, "with comment:", comment)
+    console.log(" Rejected request:", message.id, "with comment:", comment)
     setShowCommentField(false)
   }
 

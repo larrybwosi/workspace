@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(conversations)
   } catch (error: any) {
-    console.error("[v0] Get conversations error:", error)
+    console.error(" Get conversations error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(conversation)
   } catch (error: any) {
-    console.error("[v0] Create conversation error:", error)
+    console.error(" Create conversation error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

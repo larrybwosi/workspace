@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import type { Message } from "@/lib/types"
 import { mockUsers } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import { cn, formatTime } from "@/lib/utils"
 import { renderCustomMessage } from "@/lib/message-renderer"
 import { EmojiPicker } from "./emoji-picker"
 import { MarkdownRenderer } from "./markdown-renderer"
@@ -50,14 +50,6 @@ export function MessageItem({
   const user = mockUsers.find((u) => u.id === message.userId)
   const [isHovered, setIsHovered] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })
-  }
 
   const handleAddReaction = (emoji: string) => {
     onReaction?.(message.id, emoji)

@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(deviceToken)
   } catch (error) {
-    console.error("[v0] Device token registration error:", error)
+    console.error(" Device token registration error:", error)
     return NextResponse.json({ error: "Failed to register device token" }, { status: 500 })
   }
 }
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(deviceTokens)
   } catch (error) {
-    console.error("[v0] Device tokens fetch error:", error)
+    console.error(" Device tokens fetch error:", error)
     return NextResponse.json({ error: "Failed to fetch device tokens" }, { status: 500 })
   }
 }
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Device token deletion error:", error)
+    console.error(" Device token deletion error:", error)
     return NextResponse.json({ error: "Failed to delete device token" }, { status: 500 })
   }
 }

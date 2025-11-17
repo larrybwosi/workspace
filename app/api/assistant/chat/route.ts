@@ -183,7 +183,7 @@ Guidelines:
 
     return result.toUIMessageStreamResponse()
   } catch (error: any) {
-    console.error("[v0] Assistant error:", error)
+    console.error(" Assistant error:", error)
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
   }
 }

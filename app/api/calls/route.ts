@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ call })
   } catch (error) {
-    console.error('[v0] Error creating call:', error)
+    console.error(' Error creating call:', error)
     return NextResponse.json({ error: 'Failed to create call' }, { status: 500 })
   }
 }
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ calls })
   } catch (error) {
-    console.error('[v0] Error fetching calls:', error)
+    console.error(' Error fetching calls:', error)
     return NextResponse.json({ error: 'Failed to fetch calls' }, { status: 500 })
   }
 }

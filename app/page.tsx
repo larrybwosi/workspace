@@ -36,9 +36,9 @@ export default function HomePage() {
   const [projectSettingsOpen, setProjectSettingsOpen] = React.useState(false) // Added project settings open state
   const [tasks, setTasks] = React.useState<Task[]>([])
 
-  useEffect(() => {
-    router.push("/channels/uikit")
-  }, [router])
+  // useEffect(() => {
+  //   router.push("/channels/uikit")
+  // }, [router])
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task)

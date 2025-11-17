@@ -58,7 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
       },
     })
   } catch (error) {
-    console.error("[v0] Error fetching invitation:", error)
+    console.error(" Error fetching invitation:", error)
     return NextResponse.json({ error: "Failed to fetch invitation" }, { status: 500 })
   }
 }
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest, { params }: { params: { token: 
       },
     })
   } catch (error) {
-    console.error("[v0] Error accepting invitation:", error)
+    console.error(" Error accepting invitation:", error)
     return NextResponse.json({ error: "Failed to accept invitation" }, { status: 500 })
   }
 }
