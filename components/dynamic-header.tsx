@@ -71,7 +71,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
       )
     }
 
-    return <span className="font-semibold">Conceptzilla</span>
+    return <span className="font-semibold">Dealio</span>
   }
 
   return (

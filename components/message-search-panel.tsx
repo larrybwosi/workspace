@@ -140,7 +140,7 @@ export function MessageSearchPanel({ channelId, onMessageClick }: MessageSearchP
                 className="w-full text-left p-3 rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-start gap-2 mb-1">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="text-xs font-semibold text-primary">
                       {result.userName.slice(0, 2).toUpperCase()}
                     </span>

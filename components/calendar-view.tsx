@@ -298,9 +298,9 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
                   onClick={(e) => handleEventClick(event, e)}
                 >
                   <div className="flex items-center gap-1">
-                    {event.type === "task" && <Clock className="h-3 w-3 flex-shrink-0" />}
-                    {event.type === "meeting" && <Users className="h-3 w-3 flex-shrink-0" />}
-                    {event.type === "milestone" && <CalendarIcon className="h-3 w-3 flex-shrink-0" />}
+                    {event.type === "task" && <Clock className="h-3 w-3 shrink-0" />}
+                    {event.type === "meeting" && <Users className="h-3 w-3 shrink-0" />}
+                    {event.type === "milestone" && <CalendarIcon className="h-3 w-3 shrink-0" />}
                     <span className="truncate">{event.title}</span>
                   </div>
                 </div>

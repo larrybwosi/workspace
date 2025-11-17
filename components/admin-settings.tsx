@@ -20,7 +20,7 @@ export function AdminSettings() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Workspace Name</Label>
-            <Input defaultValue="Conceptzilla" />
+            <Input defaultValue="Dealio" />
           </div>
           <div className="space-y-2">
             <Label>Workspace Description</Label>

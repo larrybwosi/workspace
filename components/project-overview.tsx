@@ -126,7 +126,7 @@ export function ProjectOverview() {
                       <p className="text-sm font-medium truncate">{file.name}</p>
                       <p className="text-xs text-muted-foreground">{file.type}</p>
                     </div>
-                    {file.type === "Download" && <Download className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+                    {file.type === "Download" && <Download className="h-4 w-4 text-muted-foreground shrink-0" />}
                   </div>
                 </Card>
               ))}
@@ -187,7 +187,7 @@ export function ProjectOverview() {
                       const user = mockUsers.find((u) => u.id === activity.userId)
                       return (
                         <div key={activity.id} className="flex items-start gap-3">
-                          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                          <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
                           <Avatar className="h-6 w-6">
                             <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
                             <AvatarFallback className="text-xs">{user?.name.slice(0, 2)}</AvatarFallback>

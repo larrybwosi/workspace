@@ -46,11 +46,11 @@ export function TaskListCard({ task, onClick }: TaskListCardProps) {
 
   return (
     <div className="border border-border rounded-lg overflow-hidden hover:border-border/80 transition-colors">
-      <div className="bg-gradient-to-r from-gray-50 to-transparent dark:from-gray-900/50">
+      <div className="bg-linear-to-r from-gray-50 to-transparent dark:from-gray-900/50">
         {/* Header with icon and basic info */}
         <div className="flex items-start gap-4 p-4 border-b border-border/50">
           <div
-            className={`flex-shrink-0 w-12 h-12 rounded-lg ${getPriorityColor(task.priority)} flex items-center justify-center text-white font-semibold`}
+            className={`shrink-0 w-12 h-12 rounded-lg ${getPriorityColor(task.priority)} flex items-center justify-center text-white font-semibold`}
           >
             {progressPercent}%
           </div>
@@ -58,7 +58,7 @@ export function TaskListCard({ task, onClick }: TaskListCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold text-base truncate">{task.title}</h3>
-              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </div>

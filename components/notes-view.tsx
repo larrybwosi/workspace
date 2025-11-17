@@ -285,7 +285,7 @@ export function NotesView() {
                             <div className="flex items-start justify-between gap-2">
                               <h3 className="font-medium text-sm line-clamp-1">{note.title}</h3>
                               {note.isFavorite && (
-                                <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 flex-shrink-0" />
+                                <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 shrink-0" />
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground line-clamp-2">
@@ -449,7 +449,7 @@ export function NotesView() {
                                     <div className="flex items-center justify-between">
                                       <span className="line-clamp-1">{note.title}</span>
                                       {note.isFavorite && (
-                                        <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 flex-shrink-0 ml-2" />
+                                        <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 shrink-0 ml-2" />
                                       )}
                                     </div>
                                   </button>

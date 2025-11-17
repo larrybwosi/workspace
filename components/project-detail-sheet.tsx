@@ -496,7 +496,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange }: ProjectDetai
 
                 {/* Budget Tab */}
                 <TabsContent value="budget" className="space-y-4 mt-0">
-                  <Card className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
+                  <Card className="p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Total Budget</p>

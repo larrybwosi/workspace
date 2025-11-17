@@ -437,7 +437,7 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                   <div className="space-y-2">
                     {mockThread.linkedThreads.map((thread, idx) => (
                       <Button key={idx} variant="ghost" className="w-full justify-start text-sm h-auto py-2">
-                        <Hash className="h-3 w-3 mr-2 flex-shrink-0" />
+                        <Hash className="h-3 w-3 mr-2 shrink-0" />
                         <span className="truncate">{thread}</span>
                         <Badge variant="secondary" className="ml-auto">
                           4

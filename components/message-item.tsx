@@ -115,14 +115,14 @@ export function MessageItem({
 
           <div className="flex gap-3">
             {showAvatar ? (
-              <Avatar className="h-9 w-9 flex-shrink-0">
+              <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                   {user?.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="w-9 flex-shrink-0 flex items-start justify-center">
+              <div className="w-9 shrink-0 flex items-start justify-center">
                 {isHovered && <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>}
               </div>
             )}
@@ -162,7 +162,7 @@ export function MessageItem({
                       key={attachment.id}
                       className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card hover:bg-muted/50 transition-colors cursor-pointer max-w-sm"
                     >
-                      <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
                         <span className="text-xs font-semibold text-primary">🔗</span>
                       </div>
                       <div className="flex-1 min-w-0">

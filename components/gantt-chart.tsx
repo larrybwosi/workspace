@@ -201,7 +201,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
 
                 {/* Status indicator */}
                 <div
-                  className="h-2 w-2 rounded-full flex-shrink-0"
+                  className="h-2 w-2 rounded-full shrink-0"
                   style={{
                     backgroundColor:
                       task.status === "done" ? "#22c55e" : task.status === "in-progress" ? "#3b82f6" : "#9ca3af",

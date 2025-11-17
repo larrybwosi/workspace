@@ -217,7 +217,7 @@ export function Sidebar({
               <span className="text-white font-bold text-sm">C</span>
             </div>
             <h1 className="font-semibold text-sidebar-foreground">
-              Conceptzilla
+              Dealio
             </h1>
           </div>
           <Button

@@ -58,7 +58,7 @@ export function CommentRequestMessage({ message, metadata }: CommentRequestMessa
               const user = mockUsers.find((u) => u.id === comment.userId)
               return (
                 <div key={comment.id} className="flex gap-3">
-                  <Avatar className="h-7 w-7 flex-shrink-0">
+                  <Avatar className="h-7 w-7 shrink-0">
                     <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                       {user?.avatar}
                     </AvatarFallback>

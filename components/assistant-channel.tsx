@@ -70,7 +70,7 @@ export function AssistantChannel() {
   return (
     <div className="flex flex-col h-full">
       <div className="h-14 border-b border-border flex items-center gap-3 px-6">
-        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+        <div className="h-8 w-8 rounded-lg bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
           <Sparkles className="h-4 w-4 text-white" />
         </div>
         <div className="flex-1">
@@ -107,8 +107,8 @@ export function AssistantChannel() {
           {messages.map((message) => (
             <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
               {message.role === "assistant" && (
-                <Avatar className="h-8 w-8 flex-shrink-0">
-                  <div className="h-full w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <div className="h-full w-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <Sparkles className="h-4 w-4 text-white" />
                   </div>
                 </Avatar>
@@ -121,7 +121,7 @@ export function AssistantChannel() {
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               </Card>
               {message.role === "user" && (
-                <Avatar className="h-8 w-8 flex-shrink-0">
+                <Avatar className="h-8 w-8 shrink-0">
                   <AvatarFallback className="text-xs">You</AvatarFallback>
                 </Avatar>
               )}
@@ -130,8 +130,8 @@ export function AssistantChannel() {
           
           {isLoading && (
             <div className="flex gap-3">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <div className="h-full w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Avatar className="h-8 w-8 shrink-0">
+                <div className="h-full w-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
               </Avatar>

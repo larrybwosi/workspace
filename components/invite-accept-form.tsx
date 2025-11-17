@@ -62,7 +62,7 @@ export default function InviteAcceptForm({ token }: { token: string }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-blue-50 to-pink-50">
         <Card className="w-full max-w-md p-8 text-center">
           <Loader2 className="w-12 h-12 animate-spin mx-auto text-purple-600" />
           <p className="mt-4 text-muted-foreground">Loading invitation...</p>
@@ -73,7 +73,7 @@ export default function InviteAcceptForm({ token }: { token: string }) {
 
   if (error || !invitation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-blue-50 to-pink-50">
         <Card className="w-full max-w-md p-8 text-center">
           <XCircle className="w-16 h-16 mx-auto text-red-500" />
           <h1 className="text-2xl font-bold mt-4">Invitation Not Found</h1>
@@ -87,7 +87,7 @@ export default function InviteAcceptForm({ token }: { token: string }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-blue-50 to-pink-50 p-4">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-6">
           <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />

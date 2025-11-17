@@ -336,7 +336,7 @@ export function NoteEditor({ note, onClose, onUpdate }: NoteEditorProps) {
 
           <div ref={editorRef} className="space-y-1 relative">
             {lines.map((line, index) => (
-              <div key={index} className="group relative min-h-[1.75rem]">
+              <div key={index} className="group relative min-h-7">
                 {focusedLineIndex === index ? (
                   <div
                     ref={(el) => {
@@ -351,7 +351,7 @@ export function NoteEditor({ note, onClose, onUpdate }: NoteEditorProps) {
                     onBlur={() => handleLineBlur(index)}
                     onFocus={() => handleLineFocus(index)}
                     onKeyDown={(e) => handleLineKeyDown(e, index)}
-                    className="outline-none px-2 py-1 rounded cursor-text font-mono text-sm bg-muted/30 min-h-[1.75rem]"
+                    className="outline-none px-2 py-1 rounded cursor-text font-mono text-sm bg-muted/30 min-h-7"
                     data-placeholder={!editingContent ? "Type / for commands" : ""}
                   />
                 ) : (
@@ -360,7 +360,7 @@ export function NoteEditor({ note, onClose, onUpdate }: NoteEditorProps) {
                       handleLineFocus(index)
                       setTimeout(() => contentEditableRefs.current[index]?.focus(), 0)
                     }}
-                    className="cursor-text px-2 py-1 rounded hover:bg-muted/50 transition-colors min-h-[1.75rem]"
+                    className="cursor-text px-2 py-1 rounded hover:bg-muted/50 transition-colors min-h-7"
                   >
                     {line.trim() ? (
                       <MarkdownRenderer content={line} />

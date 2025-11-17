@@ -209,7 +209,7 @@ export function KanbanBoard({ onTaskClick, onCreateTask }: KanbanBoardProps) {
       {columns.map((column) => (
         <div
           key={column.id}
-          className="flex-shrink-0 w-80 flex flex-col"
+          className="shrink-0 w-80 flex flex-col"
           onDragOver={handleDragOver}
           onDrop={() => handleDrop(column.id)}
         >
@@ -349,7 +349,7 @@ export function KanbanBoard({ onTaskClick, onCreateTask }: KanbanBoardProps) {
 
       <Button
         variant="ghost"
-        className="flex-shrink-0 w-64 h-12 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50"
+        className="shrink-0 w-64 h-12 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50"
       >
         <Plus className="h-4 w-4 mr-2" />
         Add column

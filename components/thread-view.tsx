@@ -176,7 +176,7 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
     <div className="flex-1 flex flex-col min-h-0 relative">
       <div className="px-3 sm:px-4 py-3 border-b border-border bg-background shrink-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="h-2 w-2 rounded-full bg-green-500 flex-shrink-0" />
+          <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
           <h2 className="font-semibold text-sm sm:text-base truncate">{thread.title}</h2>
           <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{messages.length} messages</span>
         </div>
