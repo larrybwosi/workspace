@@ -2,15 +2,16 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(request: NextRequest, { params }: { params: { projectId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    const { projectId } = await params
 
     const project = await prisma.project.findUnique({
-      where: { id: params.projectId },
+      where: { id: projectId },
       include: {
         creator: true,
         members: true,
@@ -27,13 +28,13 @@ export async function GET(request: NextRequest, { params }: { params: { projectI
           },
         },
         events: true,
-        resources: {
-          include: {
-            member: true,
-          },
-        },
+        // resources: {
+        //   include: {
+        //     member: true,
+        //   },
+        // },
         risks: true,
-        budgetCategories: true,
+        // budgetCategories: true,
         channels: true,
       },
     })
@@ -48,18 +49,19 @@ export async function GET(request: NextRequest, { params }: { params: { projectI
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { projectId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    const { projectId } = await params;
 
     const body = await request.json()
     const { name, icon, description, startDate, endDate, status, members, settings } = body
 
     const project = await prisma.project.update({
-      where: { id: params.projectId },
+      where: { id: projectId },
       data: {
         name,
         icon,
@@ -67,7 +69,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { projec
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
         status,
-        settings: settings ? JSON.stringify(settings) : undefined,
+        // settings: settings ? JSON.stringify(settings) : undefined,
         members: members
           ? {
               set: [],
@@ -90,15 +92,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { projec
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { projectId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    const { projectId } = await params;
 
     await prisma.project.delete({
-      where: { id: params.projectId },
+      where: { id: projectId },
     })
 
     return NextResponse.json({ success: true })

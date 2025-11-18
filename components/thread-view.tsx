@@ -10,7 +10,6 @@ import type { Thread, Message } from "@/lib/types"
 import { mockThread, mockUsers } from "@/lib/mock-data"
 import { useMessages, useSendMessage, useReplyToMessage, useMarkMessageAsRead } from "@/hooks/api/use-messages"
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/use-reactions"
-import { cn } from "@/lib/utils"
 
 interface ThreadViewProps {
   thread?: Thread
@@ -220,7 +219,7 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
                     <div className="relative flex items-center py-2 px-4">
                       <div className="flex-1 border-t-2 border-red-500" />
                       <span className="px-3 text-xs font-semibold text-red-500 bg-background">
-                        NEW
+                        New Messages
                       </span>
                       <div className="flex-1 border-t-2 border-red-500" />
                     </div>

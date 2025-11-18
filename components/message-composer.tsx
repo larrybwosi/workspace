@@ -198,7 +198,7 @@ export function MessageComposer({
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2"
+              className="min-h-10 max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2"
               rows={1}
             />
           </div>

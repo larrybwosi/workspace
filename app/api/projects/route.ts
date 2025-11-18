@@ -41,13 +41,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json()
-    const { name, icon, description, startDate, endDate, members, channels } = body
+    const body = await request.json();
+    const { name, icon, description, startDate, endDate, members, channels } =
+      body;
+
+    // Ensure the current user is always included in members
+    const allMemberIds = [...new Set([session.user.id, ...(members || [])])];
 
     const project = await prisma.project.create({
       data: {
@@ -59,7 +63,7 @@ export async function POST(request: NextRequest) {
         status: "planning",
         creatorId: session.user.id,
         members: {
-          connect: members?.map((id: string) => ({ id })) || [{ id: session.user.id }],
+          connect: allMemberIds.map((id: string) => ({ id })),
         },
         channels: channels
           ? {
@@ -72,10 +76,14 @@ export async function POST(request: NextRequest) {
         members: true,
         tasks: true,
       },
-    })
+    });
 
-    return NextResponse.json(project, { status: 201 })
+    return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to create project" }, { status: 500 })
+    console.error("Failed to create project:", error);
+    return NextResponse.json(
+      { error: "Failed to create project" },
+      { status: 500 }
+    );
   }
 }

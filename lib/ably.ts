@@ -36,6 +36,7 @@ export const AblyEvents = {
   MESSAGE_UPDATED: "message:updated",
   MESSAGE_DELETED: "message:deleted",
   MESSAGE_REACTION: "message:reaction",
+  MESSAGE_REPLY: "message:reply",
   TASK_CREATED: "task:created",
   TASK_UPDATED: "task:updated",
   PROJECT_MEMBER_ADDED: "project:member:added",
@@ -45,7 +46,7 @@ export const AblyEvents = {
   TYPING_STOP: "typing:stop",
   USER_JOINED: "user:joined",
   USER_LEFT: "user:left",
-  DM_RECEIVED: "dm:received", // Added DM received event
+  DM_RECEIVED: "dm:received", 
 }
 
 export async function publishMessage(channelId: string, data: any) {

@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { taskId
         dueDate: dueDate ? new Date(dueDate) : undefined,
         startDate: startDate ? new Date(startDate) : undefined,
         estimatedHours,
-        actualHours,
+        // actualHours,
         progress,
         sprintId,
         assignees: assignees

@@ -1,28 +1,53 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { mockUsers } from "@/lib/mock-data"
-import data from "@emoji-mart/data"
-import Picker from "@emoji-mart/react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import * as React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar } from "@/components/ui/calendar";
+import { mockUsers } from "@/lib/mock-data";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
 interface ProjectCreateDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onCreateProject: (project: { name: string; description: string; icon: string; members: string[] }) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreateProject: (project: {
+    name: string;
+    description: string;
+    icon: string;
+    members: string[];
+    startDate?: Date;
+    endDate?: Date;
+  }) => void;
 }
 
-export function ProjectCreateDialog({ open, onOpenChange, onCreateProject }: ProjectCreateDialogProps) {
-  const [name, setName] = React.useState("")
-  const [description, setDescription] = React.useState("")
-  const [icon, setIcon] = React.useState("📁")
-  const [selectedMembers, setSelectedMembers] = React.useState<string[]>([])
+export function ProjectCreateDialog({
+  open,
+  onOpenChange,
+  onCreateProject,
+}: ProjectCreateDialogProps) {
+  const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [icon, setIcon] = React.useState("📁");
+  const [selectedMembers, setSelectedMembers] = React.useState<string[]>([]);
+  const [startDate, setStartDate] = React.useState<Date>();
+  const [endDate, setEndDate] = React.useState<Date>();
 
   const handleCreate = () => {
     if (name) {
@@ -31,22 +56,30 @@ export function ProjectCreateDialog({ open, onOpenChange, onCreateProject }: Pro
         description,
         icon,
         members: selectedMembers,
-      })
-      setName("")
-      setDescription("")
-      setIcon("📁")
-      setSelectedMembers([])
-      onOpenChange(false)
+        startDate,
+        endDate,
+      });
+      setName("");
+      setDescription("");
+      setIcon("📁");
+      setSelectedMembers([]);
+      setStartDate(undefined);
+      setEndDate(undefined);
+      onOpenChange(false);
     }
-  }
+  };
 
   const toggleMember = (userId: string) => {
-    setSelectedMembers((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]))
-  }
+    setSelectedMembers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
         </DialogHeader>
@@ -57,7 +90,10 @@ export function ProjectCreateDialog({ open, onOpenChange, onCreateProject }: Pro
             <Label>Project Icon</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-2xl h-12 bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-2xl h-12 bg-transparent"
+                >
                   {icon} Choose icon
                 </Button>
               </PopoverTrigger>
@@ -92,8 +128,60 @@ export function ProjectCreateDialog({ open, onOpenChange, onCreateProject }: Pro
               placeholder="Enter project description..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[80px]"
+              className="min-h-20"
             />
+          </div>
+
+          {/* Date Range */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Start Date */}
+            <div className="space-y-2">
+              <Label>Start Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    disabled={(date) => (startDate ? date < startDate : false)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           {/* Members */}
@@ -111,8 +199,13 @@ export function ProjectCreateDialog({ open, onOpenChange, onCreateProject }: Pro
                   }`}
                 >
                   <Avatar className="h-5 w-5">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                    <AvatarFallback className="text-xs">{user.name.slice(0, 2)}</AvatarFallback>
+                    <AvatarImage
+                      src={user.avatar || "/placeholder.svg"}
+                      alt={user.name}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {user.name.slice(0, 2)}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="text-sm">{user.name}</span>
                 </button>
@@ -131,5 +224,5 @@ export function ProjectCreateDialog({ open, onOpenChange, onCreateProject }: Pro
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

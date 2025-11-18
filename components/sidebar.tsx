@@ -62,8 +62,8 @@ export function Sidebar({
 
   const channels = channelsData || [];
   const projects = projectsData || [];
-  const session = useSession()
-  const currentUser = session.data?.user
+  const session = useSession();
+  const currentUser = session.data?.user;
 
   const router = useRouter();
 
@@ -120,6 +120,8 @@ export function Sidebar({
     description: string;
     icon: string;
     members: string[];
+    startDate?: Date;
+    endDate?: Date;
   }) => {
     createProjectMutation.mutate({
       name: projectData.name,
@@ -128,23 +130,26 @@ export function Sidebar({
       members: projectData.members,
       status: "active",
       progress: 0,
-      startDate: new Date(),
+      startDate: projectData.startDate || new Date(),
+      endDate: projectData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   };
 
   const renderChannel = (channel: any, level = 0) => {
     const hasChildren = channel.children && channel.children.length > 0;
     const isExpanded = expandedChannels.includes(channel.id);
+    const paddingLeft = level === 0 ? "pl-2" : `pl-${2 + level * 4}`;
 
     return (
       <div key={channel.id}>
         <Button
           variant={activeChannel === channel.id ? "secondary" : "ghost"}
           className={cn(
-            "w-full justify-start h-8 px-2 hover:bg-sidebar-accent text-sidebar-foreground",
+            "w-full justify-start h-8 hover:bg-sidebar-accent text-sidebar-foreground",
             activeChannel === channel.id &&
               "bg-sidebar-accent text-sidebar-accent-foreground",
-            level > 0 && "pl-6"
+            paddingLeft,
+            "pr-2"
           )}
           onClick={() => {
             if (hasChildren) {
@@ -155,26 +160,28 @@ export function Sidebar({
             }
           }}
         >
-          {hasChildren && (
+          {hasChildren ? (
             <ChevronRight
               className={cn(
                 "h-3 w-3 mr-1 transition-transform shrink-0",
                 isExpanded && "rotate-90"
               )}
             />
+          ) : (
+            <span className="w-4 mr-1 shrink-0" />
           )}
           <span className="mr-2 shrink-0 text-base">{channel.icon}</span>
           <span className="flex-1 text-left truncate text-sm">
             {channel.name}
           </span>
           {channel.unreadCount && (
-            <Badge variant="secondary" className="text-xs px-1.5 py-0 ml-auto">
+            <Badge variant="secondary" className="text-xs px-1.5 py-0 ml-auto shrink-0">
               {channel.unreadCount}
             </Badge>
           )}
         </Button>
         {hasChildren && isExpanded && (
-          <div className="ml-2">
+          <div>
             {channel.children.map((child: any) =>
               renderChannel(child, level + 1)
             )}
@@ -210,10 +217,10 @@ export function Sidebar({
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Header */}
+        {/* Header - Fixed */}
         <div className="h-14 border-b border-sidebar-border flex items-center justify-between px-4 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
             <h1 className="font-semibold text-sidebar-foreground">
@@ -230,8 +237,9 @@ export function Sidebar({
           </Button>
         </div>
 
+        {/* Scrollable Content */}
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-0.5">
+          <div className="p-2 space-y-1">
             {/* Quick Actions */}
             <Button
               variant={activeChannel === "assistant" ? "secondary" : "ghost"}
@@ -246,13 +254,12 @@ export function Sidebar({
               <span className="flex-1 text-left text-sm">Assistant</span>
               <Badge
                 variant="secondary"
-                className="text-xs px-1.5 py-0 bg-blue-500/20 text-blue-400 border-0"
+                className="text-xs px-1.5 py-0 bg-blue-500/20 text-blue-400 border-0 shrink-0"
               >
                 NEW
               </Badge>
             </Button>
 
-            {/* Notes navigation link */}
             <Link href="/notes" onClick={onClose}>
               <Button
                 variant="ghost"
@@ -270,6 +277,7 @@ export function Sidebar({
               <Bookmark className="h-4 w-4 mr-2 shrink-0" />
               <span className="flex-1 text-left text-sm">Drafts</span>
             </Button>
+
             <Button
               variant="ghost"
               className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
@@ -277,21 +285,22 @@ export function Sidebar({
               <Bookmark className="h-4 w-4 mr-2 shrink-0" />
               <span className="flex-1 text-left text-sm">Saved items</span>
             </Button>
+
             <Button
               variant="ghost"
               className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <Inbox className="h-4 w-4 mr-2 shrink-0" />
               <span className="flex-1 text-left text-sm">Inbox</span>
-              <Badge variant="secondary" className="text-xs px-1.5 py-0">
+              <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">
                 8
               </Badge>
             </Button>
           </div>
 
-          {/* Projects */}
-          <div className="px-2 py-2 mt-2">
-            <div className="flex items-center justify-between mb-1">
+          {/* Projects Section */}
+          <div className="mt-4">
+            <div className="px-2 mb-1 flex items-center justify-between">
               <Button
                 variant="ghost"
                 className="flex-1 justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
@@ -299,7 +308,7 @@ export function Sidebar({
               >
                 <ChevronDown
                   className={cn(
-                    "h-3 w-3 mr-1 transition-transform",
+                    "h-3 w-3 mr-1 transition-transform shrink-0",
                     !projectsOpen && "-rotate-90"
                   )}
                 />
@@ -308,7 +317,7 @@ export function Sidebar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6"
+                className="h-6 w-6 shrink-0"
                 onClick={() => setProjectCreateOpen(true)}
                 title="Create project"
               >
@@ -316,7 +325,7 @@ export function Sidebar({
               </Button>
             </div>
             {projectsOpen && (
-              <div className="space-y-0.5">
+              <div className="px-2 space-y-0.5">
                 {projectsLoading ? (
                   renderLoadingSkeleton(3)
                 ) : projects.length > 0 ? (
@@ -337,27 +346,24 @@ export function Sidebar({
                             router.push(`/projects/${project.id}`);
                             onClose();
                           }}
-                          onDoubleClick={() => {
-                            if (project.tasks.length > 0) {
-                              toggleProjectExpansion(project.id);
-                            }
-                          }}
                         >
-                          {project.tasks.length > 0 && (
+                          {project.tasks.length > 0 ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleProjectExpansion(project.id);
                               }}
-                              className="flex items-center"
+                              className="flex items-center mr-1 shrink-0"
                             >
                               <ChevronRight
                                 className={cn(
-                                  "h-3 w-3 mr-1 transition-transform shrink-0",
+                                  "h-3 w-3 transition-transform",
                                   isExpanded && "rotate-90"
                                 )}
                               />
                             </button>
+                          ) : (
+                            <span className="w-4 mr-1 shrink-0" />
                           )}
                           <span className="mr-2 shrink-0 text-base">
                             {project.icon}
@@ -368,14 +374,14 @@ export function Sidebar({
                           {project.tasks.length > 0 && (
                             <Badge
                               variant="secondary"
-                              className="text-xs px-1.5 py-0"
+                              className="text-xs px-1.5 py-0 shrink-0"
                             >
                               {project.tasks.length}
                             </Badge>
                           )}
                         </Button>
                         {isExpanded && project.tasks.length > 0 && (
-                          <div className="ml-6 space-y-0.5">
+                          <div className="ml-4 space-y-0.5 mt-0.5">
                             {project.tasks.map((task) => (
                               <Button
                                 key={task.id}
@@ -421,29 +427,31 @@ export function Sidebar({
             )}
           </div>
 
-          {/* Direct messages */}
-          <div className="px-2 py-2 mt-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent mb-1"
-              onClick={() => setDirectMessagesOpen(!directMessagesOpen)}
-            >
-              <ChevronDown
-                className={cn(
-                  "h-3 w-3 mr-1 transition-transform",
-                  !directMessagesOpen && "-rotate-90"
-                )}
-              />
-              Direct messages
-              <Badge
-                variant="secondary"
-                className="text-xs px-1.5 py-0 ml-auto"
+          {/* Direct Messages Section */}
+          <div className="mt-4">
+            <div className="px-2 mb-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
+                onClick={() => setDirectMessagesOpen(!directMessagesOpen)}
               >
-                {mockUsers.length - 1}
-              </Badge>
-            </Button>
+                <ChevronDown
+                  className={cn(
+                    "h-3 w-3 mr-1 transition-transform shrink-0",
+                    !directMessagesOpen && "-rotate-90"
+                  )}
+                />
+                Direct messages
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-1.5 py-0 ml-auto shrink-0"
+                >
+                  {mockUsers.length - 1}
+                </Badge>
+              </Button>
+            </div>
             {directMessagesOpen && (
-              <div className="space-y-0.5">
+              <div className="px-2 space-y-0.5">
                 {mockUsers.slice(1).map((user) => (
                   <Button
                     key={user.id}
@@ -460,9 +468,9 @@ export function Sidebar({
                       onClose();
                     }}
                   >
-                    <div className="relative mr-2">
+                    <div className="relative mr-2 shrink-0">
                       <Avatar className="h-6 w-6">
-                        <div className="text-xs bg-primary text-primary-foreground">
+                        <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
                           {user.avatar}
                         </div>
                         <AvatarFallback className="text-xs bg-primary text-primary-foreground">
@@ -486,7 +494,7 @@ export function Sidebar({
                     {user.id === "user-2" && (
                       <Badge
                         variant="secondary"
-                        className="text-xs px-1.5 py-0"
+                        className="text-xs px-1.5 py-0 shrink-0"
                       >
                         1
                       </Badge>
@@ -497,23 +505,25 @@ export function Sidebar({
             )}
           </div>
 
-          {/* Favorites */}
-          <div className="px-2 py-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent mb-1"
-              onClick={() => setFavoritesOpen(!favoritesOpen)}
-            >
-              <ChevronDown
-                className={cn(
-                  "h-3 w-3 mr-1 transition-transform",
-                  !favoritesOpen && "-rotate-90"
-                )}
-              />
-              Favorites
-            </Button>
+          {/* Favorites Section */}
+          <div className="mt-4">
+            <div className="px-2 mb-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
+                onClick={() => setFavoritesOpen(!favoritesOpen)}
+              >
+                <ChevronDown
+                  className={cn(
+                    "h-3 w-3 mr-1 transition-transform shrink-0",
+                    !favoritesOpen && "-rotate-90"
+                  )}
+                />
+                Favorites
+              </Button>
+            </div>
             {favoritesOpen && (
-              <div className="space-y-0.5">
+              <div className="px-2 space-y-0.5">
                 {mockFavorites.map((fav) => (
                   <Button
                     key={fav.id}
@@ -529,8 +539,8 @@ export function Sidebar({
                     }}
                   >
                     {fav.icon === "👤" ? (
-                      <Avatar className="h-5 w-5 mr-2">
-                        <div className="text-xs bg-primary text-primary-foreground">
+                      <Avatar className="h-5 w-5 mr-2 shrink-0">
+                        <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
                           {mockUsers.find((u) => u.name === fav.name)?.avatar}
                         </div>
                         <AvatarFallback className="text-xs">
@@ -548,7 +558,7 @@ export function Sidebar({
                     {fav.unreadCount && (
                       <Badge
                         variant="secondary"
-                        className="text-xs px-1.5 py-0"
+                        className="text-xs px-1.5 py-0 shrink-0"
                       >
                         {fav.unreadCount}
                       </Badge>
@@ -559,9 +569,9 @@ export function Sidebar({
             )}
           </div>
 
-          {/* Channels */}
-          <div className="px-2 py-2">
-            <div className="flex items-center justify-between mb-1">
+          {/* Channels Section */}
+          <div className="mt-4 pb-4">
+            <div className="px-2 mb-1 flex items-center justify-between">
               <Button
                 variant="ghost"
                 className="flex-1 justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
@@ -569,7 +579,7 @@ export function Sidebar({
               >
                 <ChevronDown
                   className={cn(
-                    "h-3 w-3 mr-1 transition-transform",
+                    "h-3 w-3 mr-1 transition-transform shrink-0",
                     !channelsOpen && "-rotate-90"
                   )}
                 />
@@ -578,7 +588,7 @@ export function Sidebar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6"
+                className="h-6 w-6 shrink-0"
                 onClick={() => setCreateChannelOpen(true)}
                 title="Create channel"
               >
@@ -586,7 +596,7 @@ export function Sidebar({
               </Button>
             </div>
             {channelsOpen && (
-              <div className="space-y-0.5">
+              <div className="px-2 space-y-0.5">
                 {channelsLoading ? (
                   renderLoadingSkeleton(4)
                 ) : channels.length > 0 ? (
@@ -601,28 +611,28 @@ export function Sidebar({
           </div>
         </ScrollArea>
 
-        {/* User profile footer - stays fixed at bottom */}
+        {/* User Profile Footer - Fixed */}
         <button
           className="h-14 border-t border-sidebar-border flex items-center gap-2 px-3 hover:bg-sidebar-accent transition-colors w-full text-left shrink-0"
           onClick={() => setProfileOpen(true)}
         >
-          <div className="relative">
+          <div className="relative shrink-0">
             <Avatar className="h-8 w-8">
-              <div className="text-xs bg-primary text-primary-foreground">
+              <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
                 {currentUser?.image}
               </div>
               <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                {currentUser?.name.slice(0, 2).toUpperCase()}
+                {currentUser?.name?.slice(0, 2).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
             <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-sidebar rounded-full" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {currentUser?.name}
+              {currentUser?.name || "User"}
             </p>
             <p className="text-xs text-muted-foreground capitalize">
-              {currentUser?.status}
+              {currentUser?.status || "online"}
             </p>
           </div>
         </button>

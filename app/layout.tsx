@@ -1,44 +1,28 @@
-'use client'
-import type React from "react"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
-import { ThemeProvider } from "@/components/theme-provider"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import "./globals.css"
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { Providers } from "@/lib/providers";
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const geist = Geist({ subsets: ["latin"] });
+const geistMono = Geist_Mono({ subsets: ["latin"] });
 
-// export const metadata: Metadata = {
-//   title: "v0 App",
-//   description: "Created with v0",
-//   generator: "v0.app",
-// }
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-      gcTime: 1000 * 60 * 60 * 12, // 12 hours
-    },
-  },
-})
+export const metadata: Metadata = {
+  title: "Dealio - Messaging and Team Chat Application",
+  description: "Your personal dashboard to manage your account and settings.",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>{children}</ThemeProvider>
-        </QueryClientProvider>
-        <Analytics />
+      <body
+        className={`${geist.className} ${geistMono.className} font-sans antialiased`}
+      >
+        <Providers>{children}</Providers>
       </body>
     </html>
-  )
+  );
 }
