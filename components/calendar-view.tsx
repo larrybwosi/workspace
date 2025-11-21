@@ -1,18 +1,32 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Plus, CalendarIcon, Clock, Users, Filter, Download, Upload, Share2, Settings } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  CalendarIcon,
+  Clock,
+  Users,
+  Download,
+  Share2,
+  Settings,
+  Grid3x3,
+  List,
+  Columns,
+  BarChart3,
+  Zap,
+  Target,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TaskCreateEditDialog } from "./task-create-edit-dialog"
 import { EventCreateEditDialog } from "./event-create-edit-dialog"
 import { CalendarIntegrationsDialog } from "./calendar-integrations-dialog"
 import { CalendarShareDialog } from "./calendar-share-dialog"
 import { CalendarContextMenu } from "./calendar-context-menu"
 import { DayTasksDialog } from "./day-tasks-dialog"
 import { QuickNoteDialog } from "./quick-note-dialog"
-import { ScheduledNotificationsPanel } from "./scheduled-notifications-panel"
 import { cn } from "@/lib/utils"
 import type { Task, CalendarEvent } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
@@ -59,7 +73,7 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
   const [shareOpen, setShareOpen] = React.useState(false)
   const [eventDialogOpen, setEventDialogOpen] = React.useState(false)
   const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null)
-  const [filterType, setFilterType] = React.useState<string>('all')
+  const [filterType, setFilterType] = React.useState<string>("all")
   const [dayTasksDialogOpen, setDayTasksDialogOpen] = React.useState(false)
   const [quickNoteDialogOpen, setQuickNoteDialogOpen] = React.useState(false)
   const [contextMenuDate, setContextMenuDate] = React.useState<Date | null>(null)
@@ -67,6 +81,12 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
   const [selectedTeamMembers, setSelectedTeamMembers] = React.useState<string[]>([])
   const [showPersonalOnly, setShowPersonalOnly] = React.useState(false)
   const [colorByType, setColorByType] = React.useState(true)
+  const [showWorkHours, setShowWorkHours] = React.useState(false)
+  const [showWeekends, setShowWeekends] = React.useState(true)
+  const [highlightToday, setHighlightToday] = React.useState(true)
+  const [showTimeZones, setShowTimeZones] = React.useState(false)
+  const [calendarLayout, setCalendarLayout] = React.useState<"grid" | "list" | "timeline">("grid")
+  const [showMetrics, setShowMetrics] = React.useState(false)
   const { toast } = useToast()
 
   const monthNames = [
@@ -128,18 +148,18 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
 
   const handleExportCalendar = async () => {
     try {
-      const response = await fetch('/api/calendar/export?format=ics')
+      const response = await fetch("/api/calendar/export?format=ics")
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const a = document.createElement("a")
       a.href = url
-      a.download = 'calendar-export.ics'
+      a.download = "calendar-export.ics"
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (error) {
-      console.error(' Export error:', error)
+      console.error("[v0] Export error:", error)
     }
   }
 
@@ -187,11 +207,11 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
   }
 
   const handleContextMenuCopyDate = (date: Date) => {
-    const formattedDate = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const formattedDate = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })
     navigator.clipboard.writeText(formattedDate)
     toast({
@@ -227,7 +247,7 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
   }
 
   const handleQuickNoteSave = (note: string) => {
-    console.log(" Saving quick note:", note, "for date:", contextMenuDate)
+    console.log("[v0] Saving quick note:", note, "for date:", contextMenuDate)
     toast({
       title: "Note saved",
       description: "Your note has been saved successfully",
@@ -298,9 +318,10 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
                   onClick={(e) => handleEventClick(event, e)}
                 >
                   <div className="flex items-center gap-1">
-                    {event.type === "task" && <Clock className="h-3 w-3 shrink-0" />}
-                    {event.type === "meeting" && <Users className="h-3 w-3 shrink-0" />}
-                    {event.type === "milestone" && <CalendarIcon className="h-3 w-3 shrink-0" />}
+                    {event.type === "task" && <Clock className="h-3 w-3 flex-shrink-0" />}
+                    {event.type === "meeting" && <Users className="h-3 w-3 flex-shrink-0" />}
+                    {event.type === "milestone" && <CalendarIcon className="h-3 w-3 flex-shrink-0" />}
+                    {event.type === "reminder" && <Target className="h-3 w-3 flex-shrink-0" />}
                     <span className="truncate">{event.title}</span>
                   </div>
                 </div>
@@ -339,6 +360,48 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Calendar layout switcher */}
+          <div className="flex items-center gap-1 border rounded-lg p-1">
+            <Button
+              variant={calendarLayout === "grid" ? "default" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCalendarLayout("grid")}
+              title="Grid View"
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={calendarLayout === "list" ? "default" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCalendarLayout("list")}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={calendarLayout === "timeline" ? "default" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCalendarLayout("timeline")}
+              title="Timeline View"
+            >
+              <Columns className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Metrics toggle */}
+          <Button
+            variant={showMetrics ? "default" : "outline"}
+            size="sm"
+            className="gap-2"
+            onClick={() => setShowMetrics(!showMetrics)}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Metrics
+          </Button>
+
           <div className="flex items-center gap-2 border rounded-lg p-1">
             <Button
               variant={showPersonalOnly ? "default" : "ghost"}
@@ -380,7 +443,18 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" size="sm" className="gap-2 bg-transparent" onClick={() => setIntegrationsOpen(true)}>
+          {/* Quick actions button */}
+          <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+            <Zap className="h-4 w-4" />
+            Quick Actions
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 bg-transparent"
+            onClick={() => setIntegrationsOpen(true)}
+          >
             <Settings className="h-4 w-4" />
             Integrations
           </Button>
@@ -395,15 +469,47 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
             Export
           </Button>
 
-          <Button size="sm" className="gap-2" onClick={() => {
-            setSelectedEvent(null)
-            setEventDialogOpen(true)
-          }}>
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              setSelectedEvent(null)
+              setEventDialogOpen(true)
+            }}
+          >
             <Plus className="h-4 w-4" />
             Add Event
           </Button>
         </div>
       </div>
+
+      {/* Metrics dashboard when enabled */}
+      {showMetrics && (
+        <div className="border-b bg-muted/30 p-4">
+          <div className="grid grid-cols-5 gap-4">
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold">12</span>
+              <span className="text-sm text-muted-foreground">Total Events</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold">8</span>
+              <span className="text-sm text-muted-foreground">Meetings</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold">24h</span>
+              <span className="text-sm text-muted-foreground">Time Booked</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold">85%</span>
+              <span className="text-sm text-muted-foreground">Utilization</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold">3</span>
+              <span className="text-sm text-muted-foreground">Conflicts</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Calendar Grid */}
       <div className="flex-1 overflow-auto p-4">
@@ -435,6 +541,15 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
           <div className="h-3 w-3 rounded" style={{ backgroundColor: "#22c55e" }} />
           <span className="text-sm">Milestones</span>
         </div>
+        {/* More legend items */}
+        <div className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded" style={{ backgroundColor: "#f59e0b" }} />
+          <span className="text-sm">Reminders</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded" style={{ backgroundColor: "#ef4444" }} />
+          <span className="text-sm">Deadlines</span>
+        </div>
       </div>
 
       {/* Dialogs */}
@@ -443,22 +558,16 @@ export function CalendarView({ onTaskClick }: CalendarViewProps) {
         onOpenChange={setEventDialogOpen}
         event={selectedEvent}
         onSave={(eventData) => {
-          console.log(" Saving event:", eventData)
+          console.log("[v0] Saving event:", eventData)
           setEventDialogOpen(false)
         }}
         mode={selectedEvent ? "edit" : "create"}
         defaultDate={selectedDate || undefined}
       />
 
-      <CalendarIntegrationsDialog
-        open={integrationsOpen}
-        onOpenChange={setIntegrationsOpen}
-      />
+      <CalendarIntegrationsDialog open={integrationsOpen} onOpenChange={setIntegrationsOpen} />
 
-      <CalendarShareDialog
-        open={shareOpen}
-        onOpenChange={setShareOpen}
-      />
+      <CalendarShareDialog open={shareOpen} onOpenChange={setShareOpen} />
 
       <DayTasksDialog
         open={dayTasksDialogOpen}

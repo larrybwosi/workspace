@@ -8,9 +8,9 @@ export async function GET(request: NextRequest, { params }: { params: { projectI
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
+    const {projectId} = await params
     const sprints = await prisma.sprint.findMany({
-      where: { projectId: params.projectId },
+      where: { projectId },
       include: {
         tasks: {
           include: {
