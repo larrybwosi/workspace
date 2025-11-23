@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -61,23 +60,19 @@ model User {
   calendarShares        CalendarShare[]
   eventReminders        EventReminder[]
 
-  // ADDED: Relation for calls initiated by the user
   calls                Call[]
-  // ADDED: Relation for calls user participated in
   callParticipants     CallParticipant[]
-  // ADDCORS: Relation for message reads (DM and Channel)
   messageReads         MessageRead[]
   dmMessageReads       DMMessageRead[]
-  // ADDED: Relation for message reactions (DM and Channel)
   reactions            Reaction[]
   dmReactions          DMReaction[]
-  // ADDED: Relation for invitations sent by the user
   sentInvitations      Invitation[]          @relation("InvitedBy")
-  // ADDED: Relation for DM participants
   dmParticipant1       DirectMessage[]       @relation("DMParticipant1")
   dmParticipant2       DirectMessage[]       @relation("DMParticipant2")
-  // ADDED: Relation for DM messages
   dmMessages           DMMessage[]
+
+  ownedWorkspaces    Workspace[]       @relation("WorkspaceOwner")
+  workspaceMemberships WorkspaceMember[]
 
   pushNotificationLogs PushNotificationLog[]
   noteVersions NoteVersion[]
@@ -116,17 +111,18 @@ model Channel {
   description String?
   isPrivate   Boolean  @default(false)
   parentId    String?
+  workspaceId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   parent   Channel? @relation("ChannelHierarchy", fields: [parentId], references: [id])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   children Channel[] @relation("ChannelHierarchy")
 
   threads  Thread[]
   members  ChannelMember[]
   projects Project[]       @relation("ProjectChannels")
 
-  // ADDED: Relations for invitations and calendar feeds
   invitations           Invitation[]
   calendarSubscriptions CalendarSubscription[]
 
@@ -211,7 +207,6 @@ model MessageRead {
   readAt    DateTime @default(now())
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  // ADDED: Relation to the User who read the message
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
@@ -228,7 +223,6 @@ model Reaction {
   createdAt DateTime @default(now())
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  // ADDED: Relation to the User who reacted
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
@@ -314,7 +308,6 @@ model DMMessageRead {
   readAt    DateTime @default(now())
 
   message DMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  // CORRECTED: Added relation to the user
   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
@@ -331,7 +324,6 @@ model DMReaction {
   createdAt DateTime @default(now())
 
   message DMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  // CORRECTED: Added relation to the user
   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
@@ -367,8 +359,10 @@ model Project {
   creatorId   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  workspaceId String? 
 
   creator User @relation("ProjectCreator", fields: [creatorId], references: [id])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   tasks        Task[]
   members      User[]            @relation("ProjectMembers")
@@ -793,10 +787,12 @@ model Note {
   template     Boolean  @default(false)
   encrypted    Boolean  @default(false)
   isPublic     Boolean  @default(false)
+  workspaceId String?
   createdAt    DateTime @default(now())
   lastModified DateTime @updatedAt
 
   folder  NoteFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade) 
   creator User       @relation("NoteCreator", fields: [creatorId], references: [id])
 
   tags          NoteTag[]
@@ -840,14 +836,12 @@ model NoteVersion {
   id                String   @id @default(cuid())
   noteId            String
   content           String   @db.Text
-  // CORRECTED: Changed `createdBy` to `createdById` and added relation
-  createdById       String
+  createdById       String?
   changeDescription String?
   createdAt         DateTime @default(now())
 
   note      Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  // CORRECTED: Added relation to the User who created the version
-  createdBy User @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@map("note_versions")
 }
@@ -871,14 +865,10 @@ model Invitation {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // ADDED: Relations to the inviter, project, and channel
   inviter User @relation("InvitedBy", fields: [invitedBy], references: [id])
-  // CORRECTED: Added onDelete rule for optional relation
   project Project? @relation("ProjectInvitations", fields: [projectId], references: [id], onDelete: Cascade)
-  // CORRECTED: Added onDelete rule for optional relation
   channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
-  // ADDED: Relation to invitation logs
   logs InvitationLog[]
 
   @@index([email])
@@ -894,7 +884,6 @@ model InvitationLog {
   metadata     Json?
   createdAt    DateTime @default(now())
 
-  // ADDED: Relation to the invitation
   invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
 
   @@index([invitationId])
@@ -1259,4 +1248,121 @@ model Account {
   updatedAt             DateTime  @updatedAt
 
   @@map("account")
+}
+
+
+// ============================================
+// WORKSPACE MODELS
+// ============================================
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  icon        String?
+  description String?
+  ownerId     String
+  plan        String   @default("free") // free, pro, enterprise
+  settings    Json?    // Workspace-level settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+
+  members      WorkspaceMember[]
+  projects     Project[]
+  channels     Channel[]
+  notes        Note[]
+  invitations  WorkspaceInvitation[]
+  webhooks     WorkspaceWebhook[]
+  integrations WorkspaceIntegration[]
+  auditLogs    WorkspaceAuditLog[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String   @default("member") // owner, admin, member, guest
+  joinedAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+model WorkspaceInvitation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  role        String   @default("member")
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_invitations")
+}
+
+model WorkspaceWebhook {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  url         String
+  secret      String
+  events      String[] // Array of event types to listen to
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  logs      WorkspaceWebhookLog[]
+
+  @@map("workspace_webhooks")
+}
+
+model WorkspaceWebhookLog {
+  id        String   @id @default(cuid())
+  webhookId String
+  event     String
+  payload   Json
+  response  Json?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  webhook WorkspaceWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_webhook_logs")
+}
+
+model WorkspaceIntegration {
+  id          String   @id @default(cuid())
+  workspaceId String
+  service     String   // slack, github, jira, etc.
+  config      Json     // Service-specific configuration
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_integrations")
+}
+
+model WorkspaceAuditLog {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  action      String
+  resource    String
+  resourceId  String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_audit_logs")
 }

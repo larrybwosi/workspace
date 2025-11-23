@@ -19,6 +19,7 @@ import { mockFavorites, mockUsers } from "@/lib/mock-data";
 import { UserProfileDialog } from "./user-profile-dialog";
 import { CreateChannelDialog } from "./create-channel-dialog";
 import { ProjectCreateDialog } from "./project-create-dialog";
+import { WorkspaceSwitcher } from "./workspace-switcher";
 import { cn } from "@/lib/utils";
 import { useChannels, useCreateChannel } from "@/hooks/api/use-channels";
 import { useProjects, useCreateProject } from "@/hooks/api/use-projects";
@@ -32,6 +33,8 @@ interface SidebarProps {
   activeChannel: string;
   onChannelSelect: (channelId: string) => void;
   onMembersClick?: () => void;
+  currentWorkspaceId?: string;
+  onWorkspaceChange?: (workspaceId: string) => void;
 }
 
 export function Sidebar({
@@ -40,6 +43,8 @@ export function Sidebar({
   activeChannel,
   onChannelSelect,
   onMembersClick,
+  currentWorkspaceId,
+  onWorkspaceChange,
 }: SidebarProps) {
   const { data: channelsData, isLoading: channelsLoading } = useChannels();
   const { data: projectsData, isLoading: projectsLoading } = useProjects();
@@ -131,7 +136,8 @@ export function Sidebar({
       status: "active",
       progress: 0,
       startDate: projectData.startDate || new Date(),
-      endDate: projectData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      endDate:
+        projectData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   };
 
@@ -175,7 +181,10 @@ export function Sidebar({
             {channel.name}
           </span>
           {channel.unreadCount && (
-            <Badge variant="secondary" className="text-xs px-1.5 py-0 ml-auto shrink-0">
+            <Badge
+              variant="secondary"
+              className="text-xs px-1.5 py-0 ml-auto shrink-0"
+            >
               {channel.unreadCount}
             </Badge>
           )}
@@ -223,9 +232,7 @@ export function Sidebar({
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
-            <h1 className="font-semibold text-sidebar-foreground">
-              Dealio
-            </h1>
+            <h1 className="font-semibold text-sidebar-foreground">Dealio</h1>
           </div>
           <Button
             variant="ghost"
@@ -235,6 +242,14 @@ export function Sidebar({
           >
             <X className="h-4 w-4" />
           </Button>
+        </div>
+
+        {/* Workspace Switcher */}
+        <div className="border-b border-sidebar-border p-2 shrink-0">
+          <WorkspaceSwitcher
+            currentWorkspaceId={currentWorkspaceId}
+            onWorkspaceChange={onWorkspaceChange}
+          />
         </div>
 
         {/* Scrollable Content */}
@@ -292,7 +307,10 @@ export function Sidebar({
             >
               <Inbox className="h-4 w-4 mr-2 shrink-0" />
               <span className="flex-1 text-left text-sm">Inbox</span>
-              <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">
+              <Badge
+                variant="secondary"
+                className="text-xs px-1.5 py-0 shrink-0"
+              >
                 8
               </Badge>
             </Button>
