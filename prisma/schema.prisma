@@ -854,12 +854,12 @@ model Invitation {
   id          String    @id @default(cuid())
   email       String
   token       String    @unique
-  role        String    @default("member")
+  role        String    @default("member") // owner, admin, member, guest
   invitedBy   String
   projectId   String?
   channelId   String?
   permissions Json?
-  status      String    @default("pending") // pending, accepted, expired, cancelled
+  status      String    @default("pending") // pending, accepted, declined, expired
   expiresAt   DateTime
   acceptedAt  DateTime?
   createdAt   DateTime  @default(now())
@@ -869,11 +869,14 @@ model Invitation {
   project Project? @relation("ProjectInvitations", fields: [projectId], references: [id], onDelete: Cascade)
   channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
+  workspace Workspace @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  inviter   User      @relation("WorkspaceInviter", fields: [invitedBy], references: [id])
+  user      User?     @relation("WorkspaceInvitedUser", fields: [userId], references: [id])
+
   logs InvitationLog[]
 
   @@index([email])
-  @@index([token])
-  @@index([status])
+  @@index([workspaceId])
   @@map("invitations")
 }
 
@@ -1281,18 +1284,28 @@ model Workspace {
   @@map("workspaces")
 }
 
-model WorkspaceMember {
+model WorkspaceInvitation {
   id          String   @id @default(cuid())
   workspaceId String
-  userId      String
+  email       String
+  userId      String? // For existing users
+  token       String   @unique
   role        String   @default("member") // owner, admin, member, guest
-  joinedAt    DateTime @default(now())
+  invitedBy   String
+  status      String   @default("pending") // pending, accepted, declined, expired
+  permissions Json?
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inviter   User      @relation("WorkspaceInviter", fields: [invitedBy], references: [id])
+  user      User?     @relation("WorkspaceInvitedUser", fields: [userId], references: [id])
 
-  @@unique([workspaceId, userId])
-  @@map("workspace_members")
+  @@index([email])
+  @@index([workspaceId])
+  @@map("workspace_invitations")
 }
 
 model WorkspaceInvitation {
