@@ -11,11 +11,10 @@ import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { signUp, authClient } from "@/lib/auth-client"
 import { Loader2, Mail, Lock, User, Github } from 'lucide-react'
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function SignupPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -23,80 +22,56 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const handleEmailSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
+const handleEmailSignup = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!agreedToTerms) {
-      toast({
-        title: "Terms required",
-        description: "Please agree to the Terms of Service and Privacy Policy.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      await signUp.email({
-        email,
-        password,
-        name,
-        callbackURL: "/",
-      })
-
-      toast({
-        title: "Account created!",
-        description: "Welcome! Your account has been created successfully.",
-      })
-
-      // router.push("/")
-    } catch (error) {
-      toast({
-        title: "Signup failed",
-        description: "Unable to create your account. Email may already be in use.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+  if (password !== confirmPassword) {
+    toast.error("Passwords don't match. Please make sure your passwords match.")
+    return
   }
 
-  const handleSocialSignup = async (provider: "google" | "github") => {
-    if (!agreedToTerms) {
-      toast({
-        title: "Terms required",
-        description: "Please agree to the Terms of Service and Privacy Policy.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      await authClient.signIn.social({
-        provider,
-        callbackURL: "/",
-      })
-    } catch (error) {
-      toast({
-        title: "Signup failed",
-        description: `Unable to sign up with ${provider}. Please try again.`,
-        variant: "destructive",
-      })
-      setIsLoading(false)
-    }
+  if (!agreedToTerms) {
+    toast.error("Please agree to the Terms of Service and Privacy Policy.")
+    return
   }
 
+  setIsLoading(true)
+
+  try {
+    await signUp.email({
+      email,
+      password,
+      name,
+      callbackURL: "/",
+    })
+
+    toast.success("Account created! Welcome! Your account has been created successfully.")
+
+    // router.push("/")
+  } catch (error) {
+    toast.error("Unable to create your account. Email may already be in use.")
+  } finally {
+    setIsLoading(false)
+  }
+}
+
+const handleSocialSignup = async (provider: "google" | "github") => {
+  if (!agreedToTerms) {
+    toast.error("Please agree to the Terms of Service and Privacy Policy.")
+    return
+  }
+
+  setIsLoading(true)
+  try {
+    await authClient.signIn.social({
+      provider,
+      callbackURL: "/",
+    })
+  } catch (error) {
+    toast.error(`Unable to sign up with ${provider}. Please try again.`)
+    setIsLoading(false)
+  }
+}
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">

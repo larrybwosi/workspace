@@ -10,60 +10,48 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator"
 import { signIn, authClient } from "@/lib/auth-client"
 import { Loader2, Mail, Lock, Github } from 'lucide-react'
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
 
-    try {
-      await signIn.email({
-        email,
-        password,
-        callbackURL: "/",
-      })
-      
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
-      })
-      
-      router.push("/")
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+const handleEmailLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setIsLoading(true)
+
+  try {
+    await signIn.email({
+      email,
+      password,
+      callbackURL: "/",
+    })
+    
+    toast.success("Welcome back! You've successfully logged in.")
+    
+    router.push("/")
+  } catch (error) {
+    toast.error("Invalid email or password. Please try again.")
+  } finally {
+    setIsLoading(false)
   }
+}
 
-  const handleSocialLogin = async (provider: "google" | "github") => {
-    setIsLoading(true)
-    try {
-      await authClient.signIn.social({
-        provider,
-        callbackURL: "/",
-      })
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: `Unable to login with ${provider}. Please try again.`,
-        variant: "destructive",
-      })
-      setIsLoading(false)
-    }
+const handleSocialLogin = async (provider: "google" | "github") => {
+  setIsLoading(true)
+  try {
+    await authClient.signIn.social({
+      provider,
+      callbackURL: "/",
+    })
+  } catch (error) {
+    toast.error(`Unable to login with ${provider}. Please try again.`)
+    setIsLoading(false)
   }
-
+}
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
