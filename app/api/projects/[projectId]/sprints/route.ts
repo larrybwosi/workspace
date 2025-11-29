@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(request: NextRequest, { params }: { params: { projectId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -29,13 +29,14 @@ export async function GET(request: NextRequest, { params }: { params: { projectI
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { projectId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const {projectId} = await params
     const body = await request.json()
     const { name, goal, startDate, endDate, status } = body
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest, { params }: { params: { project
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         status: status || "planning",
-        projectId: params.projectId,
+        projectId: projectId,
       },
       include: {
         tasks: true,

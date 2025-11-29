@@ -71,7 +71,6 @@
     "next": "16.0.0",
     "next-mdx-remote": "latest",
     "next-themes": "^0.4.6",
-    "prisma": "latest",
     "react": "19.2.0",
     "react-day-picker": "9.8.0",
     "react-dom": "latest",
@@ -90,6 +89,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "prisma": "latest",
     "tailwindcss": "^4.1.17",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"

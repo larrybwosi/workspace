@@ -49,6 +49,7 @@ const handleEmailSignup = async (e: React.FormEvent) => {
 
     // router.push("/")
   } catch (error) {
+    console.log(error)
     toast.error("Unable to create your account. Email may already be in use.")
   } finally {
     setIsLoading(false)
