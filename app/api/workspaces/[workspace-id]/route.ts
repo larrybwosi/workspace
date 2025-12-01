@@ -8,6 +8,7 @@ const updateWorkspaceSchema = z.object({
   icon: z.string().optional(),
   description: z.string().optional(),
   settings: z.record(z.any()).optional(),
+  plan: z.enum(["free", "pro", "enterprise"]).optional(),
 })
 
 export async function GET(request: NextRequest, { params }: { params: { workspaceId: string } }) {
@@ -118,6 +119,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { worksp
             user: true,
           },
         },
+      },
+    })
+
+    await prisma.workspaceAuditLog.create({
+      data: {
+        workspaceId: params.workspaceId,
+        userId: session.user.id,
+        action: "workspace.updated",
+        resource: "workspace",
+        resourceId: params.workspaceId,
+        metadata: validatedData,
       },
     })
 
