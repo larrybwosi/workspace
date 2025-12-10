@@ -13,6 +13,10 @@ export function getAblyClient() {
   return ablyClientInstance
 }
 
+export function getAblyServer() {
+  return getAblyClient()
+}
+
 export function getAblyRest() {
   return new Ably.Rest({
     key: process.env.ABLY_API_KEY,
@@ -46,7 +50,7 @@ export const AblyEvents = {
   TYPING_STOP: "typing:stop",
   USER_JOINED: "user:joined",
   USER_LEFT: "user:left",
-  DM_RECEIVED: "dm:received", 
+  DM_RECEIVED: "dm:received", // Added DM received event
 }
 
 export async function publishMessage(channelId: string, data: any) {

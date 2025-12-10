@@ -97,6 +97,9 @@ model User {
   dmParticipant2 DirectMessage[] @relation("DMParticipant2")
   dmMessages     DMMessage[]
 
+  teamMemberships     WorkspaceTeamMember[]
+  announcements       DepartmentAnnouncement[]
+  workspaceApiTokens  WorkspaceApiToken[]
   @@map("users")
 }
 
@@ -178,20 +181,129 @@ model Workspace {
   auditLogs    WorkspaceAuditLog[]
   customEmojis CustomEmoji[]
   userBadges   UserBadge[]
+  departments   WorkspaceDepartment[]
+  teams         WorkspaceTeam[]
+  apiTokens     WorkspaceApiToken[]
 
   @@map("workspaces")
 }
 
-// ADDED: Missing WorkspaceMember model referenced by User and Workspace
+model WorkspaceDepartment {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  color       String?
+  parentId    String?  // For nested departments
+  managerId   String?  // Department head
+  settings    Json?    // Department-specific settings
+  channelId   String?  // Default department channel
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent    WorkspaceDepartment?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children  WorkspaceDepartment[] @relation("DepartmentHierarchy")
+  members   WorkspaceMember[]
+  teams     WorkspaceTeam[]
+  announcements DepartmentAnnouncement[]
+
+  @@unique([workspaceId, slug])
+  @@map("workspace_departments")
+}
+
+model WorkspaceTeam {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  departmentId String?
+  name         String
+  slug         String
+  description  String?
+  icon         String?
+  color        String?
+  leadId       String?  // Team lead
+  settings     Json?
+  channelId    String?  // Team channel
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  department WorkspaceDepartment? @relation(fields: [departmentId], references: [id])
+  members    WorkspaceTeamMember[]
+
+  @@unique([workspaceId, slug])
+  @@map("workspace_teams")
+}
+
+model WorkspaceTeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("member") // lead, member
+  joinedAt DateTime @default(now())
+
+  team WorkspaceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("workspace_team_members")
+}
+
+model DepartmentAnnouncement {
+  id           String   @id @default(cuid())
+  departmentId String
+  authorId     String
+  title        String
+  content      String
+  priority     String   @default("normal") // low, normal, high, urgent
+  pinned       Boolean  @default(false)
+  publishAt    DateTime?
+  expiresAt    DateTime?
+  targetAudience Json?  // { departments: [], teams: [], roles: [] }
+  attachments  Json?
+  reactions    Json?
+  readBy       String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department WorkspaceDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  author     User                @relation(fields: [authorId], references: [id])
+
+  @@map("department_announcements")
+}
+
+model WorkspaceApiToken {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  token       String   @unique
+  permissions Json     // { departments: [...], teams: [...], actions: [...] }
+  rateLimit   Int      @default(1000)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  usageCount  Int      @default(0)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdById], references: [id])
+
+  @@map("workspace_api_tokens")
+}
 model WorkspaceMember {
   id          String   @id @default(cuid())
   workspaceId String
   userId      String
+  departmentId String?
   role        String   @default("member")
   joinedAt    DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department WorkspaceDepartment? @relation(fields: [departmentId], references: [id])
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
