@@ -1,14 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Smile, MessageSquare, Bookmark, Copy, Pin, Trash2, Edit, LinkIcon } from 'lucide-react'
+import { Smile, MessageSquare, Bookmark, Copy, Pin, Trash2, Edit, LinkIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import type { Message } from "@/lib/types"
 import { mockUsers } from "@/lib/mock-data"
-import { cn, formatTime } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { renderCustomMessage } from "@/lib/message-renderer"
-import { EmojiPicker } from "./emoji-picker"
+import { CustomEmojiPicker } from "./custom-emoji-picker"
+import { UserBadgeDisplay } from "./user-badge-display"
 import { MarkdownRenderer } from "./markdown-renderer"
 import {
   ContextMenu,
@@ -24,12 +25,48 @@ interface MessageItemProps {
   message: Message
   showAvatar?: boolean
   onReply?: (messageId: string) => void
-  onReaction?: (messageId: string, emoji: string) => void
+  onReaction?: (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void
   depth?: number
   isReply?: boolean
   channelId?: string
   isHighlighted?: boolean
   highlightRef?: React.RefObject<HTMLDivElement>
+}
+
+const mockUserBadges: Record<string, any[]> = {
+  "1": [
+    {
+      id: "1",
+      name: "Admin",
+      icon: "shield",
+      color: "#ef4444",
+      bgColor: "#fef2f2",
+      tier: "legendary" as const,
+      category: "role",
+      isPrimary: true,
+    },
+    {
+      id: "2",
+      name: "Early Adopter",
+      icon: "star",
+      color: "#eab308",
+      bgColor: "#fefce8",
+      tier: "premium" as const,
+      category: "special",
+    },
+  ],
+  "2": [
+    {
+      id: "3",
+      name: "Top Contributor",
+      icon: "trophy",
+      color: "#8b5cf6",
+      bgColor: "#f5f3ff",
+      tier: "elite" as const,
+      category: "achievement",
+      isPrimary: true,
+    },
+  ],
 }
 
 export function MessageItem({
@@ -51,8 +88,18 @@ export function MessageItem({
   const [isHovered, setIsHovered] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
 
-  const handleAddReaction = (emoji: string) => {
-    onReaction?.(message.id, emoji)
+  const userBadges = mockUserBadges[message.userId] || []
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+  }
+
+  const handleAddReaction = (emoji: string, isCustom?: boolean, customEmojiId?: string) => {
+    onReaction?.(message.id, emoji, isCustom, customEmojiId)
   }
 
   const handleToggleReaction = (emoji: string) => {
@@ -106,7 +153,7 @@ export function MessageItem({
             !showAvatar && "pl-16",
             isReply && "border-l-2 border-primary/30 pl-4",
             depth > 0 && "ml-12",
-            isHighlighted && "bg-primary/20 animate-pulse"
+            isHighlighted && "bg-primary/20 animate-pulse",
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -115,22 +162,23 @@ export function MessageItem({
 
           <div className="flex gap-3">
             {showAvatar ? (
-              <Avatar className="h-9 w-9 shrink-0">
+              <Avatar className="h-9 w-9 flex-shrink-0">
                 <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                   {user?.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="w-9 shrink-0 flex items-start justify-center">
+              <div className="w-9 flex-shrink-0 flex items-start justify-center">
                 {isHovered && <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>}
               </div>
             )}
 
             <div className="flex-1 min-w-0">
               {showAvatar && (
-                <div className="flex items-baseline gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold text-sm">{user?.name}</span>
+                  {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
                   <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>
                   {isReply && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -162,7 +210,7 @@ export function MessageItem({
                       key={attachment.id}
                       className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card hover:bg-muted/50 transition-colors cursor-pointer max-w-sm"
                     >
-                      <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                      <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-semibold text-primary">🔗</span>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -185,15 +233,23 @@ export function MessageItem({
                       className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted hover:border-primary/50 transition-colors text-xs"
                       onClick={() => handleToggleReaction(reaction.emoji)}
                     >
-                      <span className="text-base">{reaction.emoji}</span>
+                      {reaction.emoji.startsWith(":") ? (
+                        <img
+                          src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
+                          alt={reaction.emoji}
+                          className="h-4 w-4"
+                        />
+                      ) : (
+                        <span className="text-base">{reaction.emoji}</span>
+                      )}
                       <span className="font-medium text-muted-foreground">{reaction.count}</span>
                     </button>
                   ))}
-                  <EmojiPicker onEmojiSelect={handleAddReaction}>
+                  <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
                     <button className="flex items-center justify-center h-7 w-7 rounded-md border border-dashed border-border hover:bg-muted hover:border-primary/50 transition-colors">
                       <Smile className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
-                  </EmojiPicker>
+                  </CustomEmojiPicker>
                 </div>
               )}
             </div>
@@ -201,11 +257,11 @@ export function MessageItem({
 
           {isHovered && (
             <div className="absolute top-0 right-4 -translate-y-1/2 flex items-center gap-0.5 bg-background border border-border rounded-lg shadow-lg p-0.5">
-              <EmojiPicker onEmojiSelect={handleAddReaction}>
+              <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
                 <Button variant="ghost" size="icon" className="h-7 w-7">
                   <Smile className="h-4 w-4" />
                 </Button>
-              </EmojiPicker>
+              </CustomEmojiPicker>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleReply}>
                 <MessageSquare className="h-4 w-4" />
               </Button>

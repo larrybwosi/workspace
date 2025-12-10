@@ -176,6 +176,8 @@ model Workspace {
   webhooks     WorkspaceWebhook[]
   integrations WorkspaceIntegration[]
   auditLogs    WorkspaceAuditLog[]
+  customEmojis CustomEmoji[]
+  userBadges   UserBadge[]
 
   @@map("workspaces")
 }
@@ -398,10 +400,12 @@ model Reaction {
   messageId String
   userId    String
   emoji     String
+  customEmojiId String?
   createdAt DateTime @default(now())
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customEmoji CustomEmoji? @relation(fields: [customEmojiId], references: [id])
 
   @@unique([messageId, userId, emoji])
   @@map("reactions")
@@ -1361,4 +1365,68 @@ model CallParticipant {
   @@index([callId])
   @@index([userId])
   @@map("call_participants")
+}
+
+model CustomEmoji {
+  id          String   @id @default(cuid())
+  name        String
+  shortcode   String   // e.g., :custom_emoji:
+  imageUrl    String
+  animated    Boolean  @default(false)
+  workspaceId String?
+  createdById String
+  category    String   @default("custom")
+  isGlobal    Boolean  @default(false) // Available across all workspaces
+  usageCount  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@unique([shortcode, workspaceId])
+  @@map("custom_emojis")
+}
+
+// ============================================
+// USER BADGE MODELS
+// ============================================
+
+model UserBadge {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  icon        String   // Emoji or icon name
+  color       String   // Badge color
+  bgColor     String   // Background color
+  tier        String   @default("standard") // standard, premium, elite, legendary
+  category    String   @default("achievement") // achievement, role, special, event
+  isGlobal    Boolean  @default(false)
+  workspaceId String?
+  createdById String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userBadges  UserBadgeAssignment[]
+
+  @@map("user_badges")
+}
+
+model UserBadgeAssignment {
+  id         String   @id @default(cuid())
+  userId     String
+  badgeId    String
+  assignedBy String
+  reason     String?
+  isPrimary  Boolean  @default(false) // Show as primary badge
+  isVisible  Boolean  @default(true)
+  earnedAt   DateTime @default(now())
+
+  badge UserBadge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badge_assignments")
 }
