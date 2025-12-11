@@ -53,6 +53,8 @@ export const AblyEvents = {
   DM_RECEIVED: "dm:received", // Added DM received event
 }
 
+export const EVENTS = AblyEvents
+
 export async function publishMessage(channelId: string, data: any) {
   try {
     const ably = getAblyRest()
