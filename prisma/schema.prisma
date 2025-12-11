@@ -4,7 +4,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../prisma"
+  // output   = "../prisma"
 }
 
 datasource db {
@@ -97,9 +97,15 @@ model User {
   dmParticipant2 DirectMessage[] @relation("DMParticipant2")
   dmMessages     DMMessage[]
 
-  teamMemberships     WorkspaceTeamMember[]
-  announcements       DepartmentAnnouncement[]
-  workspaceApiTokens  WorkspaceApiToken[]
+  teamMemberships    WorkspaceTeamMember[]
+  announcements      DepartmentAnnouncement[]
+  workspaceApiTokens WorkspaceApiToken[]
+
+  // New relationships for enterprise project management
+  resourceAllocations ResourceAllocation[]
+  projectReports      ProjectReport[]
+  statusUpdates       ProjectStatusUpdate[]
+  createdTemplates    ProjectTemplate[]
   @@map("users")
 }
 
@@ -181,10 +187,13 @@ model Workspace {
   auditLogs    WorkspaceAuditLog[]
   customEmojis CustomEmoji[]
   userBadges   UserBadge[]
-  departments   WorkspaceDepartment[]
-  teams         WorkspaceTeam[]
-  apiTokens     WorkspaceApiToken[]
+  departments  WorkspaceDepartment[]
+  teams        WorkspaceTeam[]
+  apiTokens    WorkspaceApiToken[]
 
+  projectTemplates ProjectTemplate[]
+  projectReports   ProjectReport[]
+  statusUpdates    ProjectStatusUpdate[]
   @@map("workspaces")
 }
 
@@ -196,18 +205,18 @@ model WorkspaceDepartment {
   description String?
   icon        String?
   color       String?
-  parentId    String?  // For nested departments
-  managerId   String?  // Department head
-  settings    Json?    // Department-specific settings
-  channelId   String?  // Default department channel
+  parentId    String? // For nested departments
+  managerId   String? // Department head
+  settings    Json? // Department-specific settings
+  channelId   String? // Default department channel
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  parent    WorkspaceDepartment?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
-  children  WorkspaceDepartment[] @relation("DepartmentHierarchy")
-  members   WorkspaceMember[]
-  teams     WorkspaceTeam[]
+  workspace     Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent        WorkspaceDepartment?     @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children      WorkspaceDepartment[]    @relation("DepartmentHierarchy")
+  members       WorkspaceMember[]
+  teams         WorkspaceTeam[]
   announcements DepartmentAnnouncement[]
 
   @@unique([workspaceId, slug])
@@ -223,14 +232,14 @@ model WorkspaceTeam {
   description  String?
   icon         String?
   color        String?
-  leadId       String?  // Team lead
+  leadId       String? // Team lead
   settings     Json?
-  channelId    String?  // Team channel
+  channelId    String? // Team channel
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  department WorkspaceDepartment? @relation(fields: [departmentId], references: [id])
+  workspace  Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  department WorkspaceDepartment?  @relation(fields: [departmentId], references: [id])
   members    WorkspaceTeamMember[]
 
   @@unique([workspaceId, slug])
@@ -252,21 +261,21 @@ model WorkspaceTeamMember {
 }
 
 model DepartmentAnnouncement {
-  id           String   @id @default(cuid())
-  departmentId String
-  authorId     String
-  title        String
-  content      String
-  priority     String   @default("normal") // low, normal, high, urgent
-  pinned       Boolean  @default(false)
-  publishAt    DateTime?
-  expiresAt    DateTime?
-  targetAudience Json?  // { departments: [], teams: [], roles: [] }
-  attachments  Json?
-  reactions    Json?
-  readBy       String[] @default([])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String    @id @default(cuid())
+  departmentId   String
+  authorId       String
+  title          String
+  content        String
+  priority       String    @default("normal") // low, normal, high, urgent
+  pinned         Boolean   @default(false)
+  publishAt      DateTime?
+  expiresAt      DateTime?
+  targetAudience Json? // { departments: [], teams: [], roles: [] }
+  attachments    Json?
+  reactions      Json?
+  readBy         String[]  @default([])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   department WorkspaceDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   author     User                @relation(fields: [authorId], references: [id])
@@ -275,34 +284,35 @@ model DepartmentAnnouncement {
 }
 
 model WorkspaceApiToken {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
   name        String
-  token       String   @unique
-  permissions Json     // { departments: [...], teams: [...], actions: [...] }
-  rateLimit   Int      @default(1000)
+  token       String    @unique
+  permissions Json // { departments: [...], teams: [...], actions: [...] }
+  rateLimit   Int       @default(1000)
   expiresAt   DateTime?
   lastUsedAt  DateTime?
-  usageCount  Int      @default(0)
+  usageCount  Int       @default(0)
   createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdBy User      @relation(fields: [createdById], references: [id])
 
   @@map("workspace_api_tokens")
 }
-model WorkspaceMember {
-  id          String   @id @default(cuid())
-  workspaceId String
-  userId      String
-  departmentId String?
-  role        String   @default("member")
-  joinedAt    DateTime @default(now())
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+model WorkspaceMember {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  userId       String
+  departmentId String?
+  role         String   @default("member")
+  joinedAt     DateTime @default(now())
+
+  workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   department WorkspaceDepartment? @relation(fields: [departmentId], references: [id])
 
   @@unique([workspaceId, userId])
@@ -508,15 +518,15 @@ model MessageRead {
 }
 
 model Reaction {
-  id        String   @id @default(cuid())
-  messageId String
-  userId    String
-  emoji     String
+  id            String   @id @default(cuid())
+  messageId     String
+  userId        String
+  emoji         String
   customEmojiId String?
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
 
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   customEmoji CustomEmoji? @relation(fields: [customEmojiId], references: [id])
 
   @@unique([messageId, userId, emoji])
@@ -665,13 +675,103 @@ model Project {
   customFields          CustomField[]
   risks                 Risk[]
   budgets               Budget[]
-  templates             ProjectTemplate[]
   notes                 Note[]                 @relation("NoteLinkedProjects")
   events                CalendarEvent[]
   invitations           Invitation[]           @relation("ProjectInvitations")
   calendarSubscriptions CalendarSubscription[]
 
+  // New relationships for enterprise project management
+  templateId String?
+  template   ProjectTemplate? @relation(fields: [templateId], references: [id])
+  
+  resourceAllocations ResourceAllocation[]
+  timelines           ProjectTimeline[]
+  reports             ProjectReport[]
+  statusUpdates       ProjectStatusUpdate[]
   @@map("projects")
+}
+
+
+// New model for enterprise project management
+model ResourceAllocation {
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String
+  role           String   // developer, designer, manager, etc.
+  allocation     Float    // percentage of time (0-100)
+  startDate      DateTime
+  endDate        DateTime?
+  billableRate   Float?
+  cost           Float?
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("resource_allocations")
+}
+
+// New model for enterprise project management
+model ProjectTimeline {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?  @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  progress    Float    @default(0)
+  color       String?
+  dependencies String[] // Array of timeline IDs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_timelines")
+}
+
+// New model for enterprise project management
+model ProjectReport {
+  id          String   @id @default(cuid())
+  projectId   String
+  workspaceId String?
+  title       String
+  type        String   // status, velocity, burndown, cost, resource, etc.
+  data        Json     // Report data
+  generatedBy String
+  createdAt   DateTime @default(now())
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  generator User       @relation(fields: [generatedBy], references: [id])
+
+  @@map("project_reports")
+}
+
+// New model for enterprise project management
+model ProjectStatusUpdate {
+  id          String   @id @default(cuid())
+  projectId   String
+  workspaceId String?
+  authorId    String
+  title       String
+  content     String   @db.Text
+  status      String   // on_track, at_risk, off_track, completed
+  visibility  String   @default("team") // team, workspace, public
+  notifyTeam  Boolean  @default(true)
+  achievements String[] // Array of accomplishments
+  challenges  String[] // Array of blockers/issues
+  nextSteps   String[] // Array of upcoming actions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id])
+
+  @@map("project_status_updates")
 }
 
 model Task {
@@ -885,17 +985,20 @@ model Budget {
 
 model ProjectTemplate {
   id          String   @id @default(cuid())
-  projectId   String?
   name        String
   description String   @db.Text
-  category    String
-  icon        String
-  isDefault   Boolean  @default(false)
-  content     Json
+  category    String   // development, marketing, sales, operations, etc.
+  icon        String?
+  workspaceId String?
+  isPublic    Boolean  @default(false)
+  metadata    Json?    // Template configuration
+  createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User       @relation(fields: [createdById], references: [id])
+  projects  Project[]
 
   @@map("project_templates")
 }
@@ -1482,7 +1585,7 @@ model CallParticipant {
 model CustomEmoji {
   id          String   @id @default(cuid())
   name        String
-  shortcode   String   // e.g., :custom_emoji:
+  shortcode   String // e.g., :custom_emoji:
   imageUrl    String
   animated    Boolean  @default(false)
   workspaceId String?
@@ -1509,9 +1612,9 @@ model UserBadge {
   id          String   @id @default(cuid())
   name        String
   description String?
-  icon        String   // Emoji or icon name
-  color       String   // Badge color
-  bgColor     String   // Background color
+  icon        String // Emoji or icon name
+  color       String // Badge color
+  bgColor     String // Background color
   tier        String   @default("standard") // standard, premium, elite, legendary
   category    String   @default("achievement") // achievement, role, special, event
   isGlobal    Boolean  @default(false)
@@ -1521,8 +1624,8 @@ model UserBadge {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace   Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  userBadges  UserBadgeAssignment[]
+  workspace  Workspace?            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userBadges UserBadgeAssignment[]
 
   @@map("user_badges")
 }
