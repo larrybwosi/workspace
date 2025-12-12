@@ -1,14 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, LinkIcon, X, File } from 'lucide-react'
+import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, LinkIcon, X, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { EmojiPicker } from "./emoji-picker"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { FileUpload } from "./file-upload"
-import { type UploadedFile } from "@/lib/upload-utils"
+import type { UploadedFile } from "@/lib/upload-utils"
+import { UserMentionSelector } from "./user-mention-selector"
+import { mockUsers } from "@/lib/mock-data"
 
 interface MessageComposerProps {
   placeholder?: string
@@ -26,6 +28,10 @@ export function MessageComposer({
   const [message, setMessage] = React.useState("")
   const [attachments, setAttachments] = React.useState<UploadedFile[]>([])
   const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false)
+  const [showMentionSelector, setShowMentionSelector] = React.useState(false)
+  const [mentionSearch, setMentionSearch] = React.useState("")
+  const [mentionPosition, setMentionPosition] = React.useState({ top: 0, left: 0 })
+  const [cursorPosition, setCursorPosition] = React.useState(0)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   React.useEffect(() => {
@@ -35,19 +41,72 @@ export function MessageComposer({
     }
   }, [message])
 
+  React.useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const beforeCursor = message.slice(0, cursorPosition)
+    const lastAtIndex = beforeCursor.lastIndexOf("@")
+
+    if (lastAtIndex !== -1) {
+      const afterAt = beforeCursor.slice(lastAtIndex + 1)
+      if (!afterAt.includes(" ") && afterAt.length <= 20) {
+        setMentionSearch(afterAt)
+        setShowMentionSelector(true)
+
+        const rect = textarea.getBoundingClientRect()
+        setMentionPosition({
+          top: rect.top - 280,
+          left: rect.left,
+        })
+      } else {
+        setShowMentionSelector(false)
+      }
+    } else {
+      setShowMentionSelector(false)
+    }
+  }, [message, cursorPosition])
+
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
       onSend?.(message, attachments)
       setMessage("")
       setAttachments([])
+      setShowMentionSelector(false)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !showMentionSelector) {
       e.preventDefault()
       handleSend()
     }
+  }
+
+  const handleMentionSelect = (user: any) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const beforeCursor = message.slice(0, cursorPosition)
+    const lastAtIndex = beforeCursor.lastIndexOf("@")
+    const beforeMention = message.slice(0, lastAtIndex)
+    const afterCursor = message.slice(cursorPosition)
+
+    const newMessage = `${beforeMention}@${user.name} ${afterCursor}`
+    setMessage(newMessage)
+    setShowMentionSelector(false)
+
+    setTimeout(() => {
+      const newPosition = lastAtIndex + user.name.length + 2
+      textarea.focus()
+      textarea.setSelectionRange(newPosition, newPosition)
+      setCursorPosition(newPosition)
+    }, 0)
+  }
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value)
+    setCursorPosition(e.target.selectionStart)
   }
 
   const insertMarkdown = (before: string, after: string = before) => {
@@ -86,6 +145,17 @@ export function MessageComposer({
 
   return (
     <div className="bg-background">
+      {showMentionSelector && <div className="fixed inset-0 z-40" onClick={() => setShowMentionSelector(false)} />}
+
+      {showMentionSelector && (
+        <UserMentionSelector
+          users={mockUsers}
+          onSelect={handleMentionSelect}
+          searchTerm={mentionSearch}
+          position={mentionPosition}
+        />
+      )}
+
       {replyingTo && (
         <div className="px-3 py-2 border-t border-border bg-muted/30 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
@@ -171,18 +241,10 @@ export function MessageComposer({
         {attachments.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {attachments.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs"
-              >
+              <div key={file.id} className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs">
                 <File className="h-3 w-3" />
                 <span className="max-w-[100px] truncate">{file.name}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4"
-                  onClick={() => removeAttachment(file)}
-                >
+                <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => removeAttachment(file)}>
                   <X className="h-3 w-3" />
                 </Button>
               </div>
@@ -195,10 +257,10 @@ export function MessageComposer({
             <Textarea
               ref={textareaRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              className="min-h-10 max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2"
+              className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2"
               rows={1}
             />
           </div>
@@ -244,7 +306,12 @@ export function MessageComposer({
                 </DialogContent>
               </Dialog>
 
-              <Button size="icon" onClick={handleSend} disabled={!message.trim() && attachments.length === 0} className="h-9 w-9">
+              <Button
+                size="icon"
+                onClick={handleSend}
+                disabled={!message.trim() && attachments.length === 0}
+                className="h-9 w-9"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>

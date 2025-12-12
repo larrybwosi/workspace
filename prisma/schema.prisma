@@ -4,6 +4,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  // output   = "../prisma"
 }
 
 datasource db {
@@ -28,42 +29,42 @@ model User {
   updatedAt     DateTime @updatedAt
 
   // Auth Relations
-  verification  Verification[]
-  sessions      Session[]
-  accounts      Account[]
-  apiKeys       ApiKey[]
-  
+  verification Verification[]
+  sessions     Session[]
+  accounts     Account[]
+  apiKeys      ApiKey[]
+
   // Workspace Relations
-  ownedWorkspaces            Workspace[]           @relation("WorkspaceOwner")
-  workspaceMemberships       WorkspaceMember[]
-  sentWorkspaceInvitations   WorkspaceInvitation[] @relation("WorkspaceInviter")
+  ownedWorkspaces              Workspace[]           @relation("WorkspaceOwner")
+  workspaceMemberships         WorkspaceMember[]
+  sentWorkspaceInvitations     WorkspaceInvitation[] @relation("WorkspaceInviter")
   receivedWorkspaceInvitations WorkspaceInvitation[] @relation("WorkspaceInvitedUser")
 
   // Communication Relations
-  messages          Message[]
-  threads           Thread[]        @relation("ThreadCreator")
-  threadMembers     Thread[]        @relation("ThreadMembers")
-  comments          Comment[]
-  channelMembers    ChannelMember[]
-  
+  messages       Message[]
+  threads        Thread[]        @relation("ThreadCreator")
+  threadMembers  Thread[]        @relation("ThreadMembers")
+  comments       Comment[]
+  channelMembers ChannelMember[]
+
   // Task & Project Relations
-  tasks             Task[]          @relation("TaskAssignees")
-  createdTasks      Task[]          @relation("TaskCreator")
-  watchedTasks      Task[]          @relation("TaskWatchers")
-  projects          Project[]       @relation("ProjectMembers")
-  createdProjects   Project[]       @relation("ProjectCreator")
- 
+  tasks           Task[]    @relation("TaskAssignees")
+  createdTasks    Task[]    @relation("TaskCreator")
+  watchedTasks    Task[]    @relation("TaskWatchers")
+  projects        Project[] @relation("ProjectMembers")
+  createdProjects Project[] @relation("ProjectCreator")
+
   // Note Relations
-  notes             Note[]          @relation("NoteCreator")
-  noteCollaborators Note[]          @relation("NoteCollaborators")
+  notes             Note[]        @relation("NoteCreator")
+  noteCollaborators Note[]        @relation("NoteCollaborators")
   createdFolders    NoteFolder[]
   noteVersions      NoteVersion[]
 
   // Calendar & Event Relations
-  sprintMembers     Sprint[]        @relation("SprintMembers")
-  eventAttendees    CalendarEvent[] @relation("EventAttendees")
-  createdEvents     CalendarEvent[] @relation("EventCreator")
-  timeEntries       TimeEntry[]
+  sprintMembers         Sprint[]               @relation("SprintMembers")
+  eventAttendees        CalendarEvent[]        @relation("EventAttendees")
+  createdEvents         CalendarEvent[]        @relation("EventCreator")
+  timeEntries           TimeEntry[]
   calendarIntegrations  CalendarIntegration[]
   calendarSubscriptions CalendarSubscription[]
   calendarShares        CalendarShare[]
@@ -82,21 +83,30 @@ model User {
   assistantAuditLogs     AssistantAuditLog[]
 
   // Calls & DM Relations
-  calls                Call[]
-  callParticipants     CallParticipant[]
-  messageReads         MessageRead[]
-  dmMessageReads       DMMessageRead[]
-  reactions            Reaction[]
-  dmReactions          DMReaction[]
-  
-  // Invitation Relations (General)
-  sentInvitations      Invitation[]          @relation("InvitedBy")
-  
-  // DM Relations
-  dmParticipant1       DirectMessage[]       @relation("DMParticipant1")
-  dmParticipant2       DirectMessage[]       @relation("DMParticipant2")
-  dmMessages           DMMessage[]
+  calls            Call[]
+  callParticipants CallParticipant[]
+  messageReads     MessageRead[]
+  dmMessageReads   DMMessageRead[]
+  reactions        Reaction[]
+  dmReactions      DMReaction[]
 
+  // Invitation Relations (General)
+  sentInvitations Invitation[] @relation("InvitedBy")
+
+  // DM Relations
+  dmParticipant1 DirectMessage[] @relation("DMParticipant1")
+  dmParticipant2 DirectMessage[] @relation("DMParticipant2")
+  dmMessages     DMMessage[]
+
+  teamMemberships    WorkspaceTeamMember[]
+  announcements      DepartmentAnnouncement[]
+  workspaceApiTokens WorkspaceApiToken[]
+
+  // New relationships for enterprise project management
+  resourceAllocations ResourceAllocation[]
+  projectReports      ProjectReport[]
+  statusUpdates       ProjectStatusUpdate[]
+  createdTemplates    ProjectTemplate[]
   @@map("users")
 }
 
@@ -109,7 +119,7 @@ model Verification {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt // Fixed: @updatedAt requires DateTime
 
-  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, value])
   @@map("verifications")
@@ -145,7 +155,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -176,39 +186,154 @@ model Workspace {
   webhooks     WorkspaceWebhook[]
   integrations WorkspaceIntegration[]
   auditLogs    WorkspaceAuditLog[]
+  customEmojis CustomEmoji[]
+  userBadges   UserBadge[]
+  departments  WorkspaceDepartment[]
+  teams        WorkspaceTeam[]
+  apiTokens    WorkspaceApiToken[]
 
+  projectTemplates ProjectTemplate[]
+  projectReports   ProjectReport[]
+  statusUpdates    ProjectStatusUpdate[]
   @@map("workspaces")
 }
 
-// ADDED: Missing WorkspaceMember model referenced by User and Workspace
-model WorkspaceMember {
+model WorkspaceDepartment {
   id          String   @id @default(cuid())
   workspaceId String
-  userId      String
-  role        String   @default("member")
-  joinedAt    DateTime @default(now())
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  color       String?
+  parentId    String? // For nested departments
+  managerId   String? // Department head
+  settings    Json? // Department-specific settings
+  channelId   String? // Default department channel
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace     Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent        WorkspaceDepartment?     @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children      WorkspaceDepartment[]    @relation("DepartmentHierarchy")
+  members       WorkspaceMember[]
+  teams         WorkspaceTeam[]
+  announcements DepartmentAnnouncement[]
+
+  @@unique([workspaceId, slug])
+  @@map("workspace_departments")
+}
+
+model WorkspaceTeam {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  departmentId String?
+  name         String
+  slug         String
+  description  String?
+  icon         String?
+  color        String?
+  leadId       String? // Team lead
+  settings     Json?
+  channelId    String? // Team channel
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace  Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  department WorkspaceDepartment?  @relation(fields: [departmentId], references: [id])
+  members    WorkspaceTeamMember[]
+
+  @@unique([workspaceId, slug])
+  @@map("workspace_teams")
+}
+
+model WorkspaceTeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("member") // lead, member
+  joinedAt DateTime @default(now())
+
+  team WorkspaceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("workspace_team_members")
+}
+
+model DepartmentAnnouncement {
+  id             String    @id @default(cuid())
+  departmentId   String
+  authorId       String
+  title          String
+  content        String
+  priority       String    @default("normal") // low, normal, high, urgent
+  pinned         Boolean   @default(false)
+  publishAt      DateTime?
+  expiresAt      DateTime?
+  targetAudience Json? // { departments: [], teams: [], roles: [] }
+  attachments    Json?
+  reactions      Json?
+  readBy         String[]  @default([])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  department WorkspaceDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  author     User                @relation(fields: [authorId], references: [id])
+
+  @@map("department_announcements")
+}
+
+model WorkspaceApiToken {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  token       String    @unique
+  permissions Json // { departments: [...], teams: [...], actions: [...] }
+  rateLimit   Int       @default(1000)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  usageCount  Int       @default(0)
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdById], references: [id])
+
+  @@map("workspace_api_tokens")
+}
+
+model WorkspaceMember {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  userId       String
+  departmentId String?
+  role         String   @default("member")
+  joinedAt     DateTime @default(now())
+
+  workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department WorkspaceDepartment? @relation(fields: [departmentId], references: [id])
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
 }
 
 model WorkspaceInvitation {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
   email       String
-  userId      String?  // For linking to existing users if known
-  token       String   @unique
-  role        String   @default("member") 
+  userId      String? // For linking to existing users if known
+  token       String    @unique
+  role        String    @default("member")
   invitedBy   String
-  status      String   @default("pending") // pending, accepted, declined, expired
+  status      String    @default("pending") // pending, accepted, declined, expired
   permissions Json?
   expiresAt   DateTime
   acceptedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   inviter   User      @relation("WorkspaceInviter", fields: [invitedBy], references: [id])
@@ -229,7 +354,7 @@ model WorkspaceWebhook {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   logs      WorkspaceWebhookLog[]
 
   @@map("workspace_webhooks")
@@ -252,8 +377,8 @@ model WorkspaceWebhookLog {
 model WorkspaceIntegration {
   id          String   @id @default(cuid())
   workspaceId String
-  service     String   // slack, github, jira, etc.
-  config      Json     
+  service     String // slack, github, jira, etc.
+  config      Json
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
 
@@ -293,13 +418,13 @@ model Channel {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  parent    Channel?  @relation("ChannelHierarchy", fields: [parentId], references: [id])
-  children  Channel[] @relation("ChannelHierarchy")
+  parent    Channel?   @relation("ChannelHierarchy", fields: [parentId], references: [id])
+  children  Channel[]  @relation("ChannelHierarchy")
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  threads   Thread[]
-  members   ChannelMember[]
-  projects  Project[]       @relation("ProjectChannels")
+  threads  Thread[]
+  members  ChannelMember[]
+  projects Project[]       @relation("ProjectChannels")
 
   invitations           Invitation[]
   calendarSubscriptions CalendarSubscription[]
@@ -394,14 +519,16 @@ model MessageRead {
 }
 
 model Reaction {
-  id        String   @id @default(cuid())
-  messageId String
-  userId    String
-  emoji     String
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  messageId     String
+  userId        String
+  emoji         String
+  customEmojiId String?
+  createdAt     DateTime @default(now())
 
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customEmoji CustomEmoji? @relation(fields: [customEmojiId], references: [id])
 
   @@unique([messageId, userId, emoji])
   @@map("reactions")
@@ -536,26 +663,116 @@ model Project {
   creatorId   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  workspaceId String? 
+  workspaceId String?
 
   creator   User       @relation("ProjectCreator", fields: [creatorId], references: [id])
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  tasks        Task[]
-  members      User[]            @relation("ProjectMembers")
-  channels     Channel[]         @relation("ProjectChannels")
-  milestones   Milestone[]
-  sprints      Sprint[]
-  customFields CustomField[]
-  risks        Risk[]
-  budgets      Budget[]
-  templates    ProjectTemplate[]
-  notes        Note[]            @relation("NoteLinkedProjects")
-  events       CalendarEvent[]
-  invitations  Invitation[]      @relation("ProjectInvitations")
+  tasks                 Task[]
+  members               User[]                 @relation("ProjectMembers")
+  channels              Channel[]              @relation("ProjectChannels")
+  milestones            Milestone[]
+  sprints               Sprint[]
+  customFields          CustomField[]
+  risks                 Risk[]
+  budgets               Budget[]
+  notes                 Note[]                 @relation("NoteLinkedProjects")
+  events                CalendarEvent[]
+  invitations           Invitation[]           @relation("ProjectInvitations")
   calendarSubscriptions CalendarSubscription[]
 
+  // New relationships for enterprise project management
+  templateId String?
+  template   ProjectTemplate? @relation(fields: [templateId], references: [id])
+  
+  resourceAllocations ResourceAllocation[]
+  timelines           ProjectTimeline[]
+  reports             ProjectReport[]
+  statusUpdates       ProjectStatusUpdate[]
   @@map("projects")
+}
+
+
+// New model for enterprise project management
+model ResourceAllocation {
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String
+  role           String   // developer, designer, manager, etc.
+  allocation     Float    // percentage of time (0-100)
+  startDate      DateTime
+  endDate        DateTime?
+  billableRate   Float?
+  cost           Float?
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("resource_allocations")
+}
+
+// New model for enterprise project management
+model ProjectTimeline {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?  @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  progress    Float    @default(0)
+  color       String?
+  dependencies String[] // Array of timeline IDs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_timelines")
+}
+
+// New model for enterprise project management
+model ProjectReport {
+  id          String   @id @default(cuid())
+  projectId   String
+  workspaceId String?
+  title       String
+  type        String   // status, velocity, burndown, cost, resource, etc.
+  data        Json     // Report data
+  generatedBy String
+  createdAt   DateTime @default(now())
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  generator User       @relation(fields: [generatedBy], references: [id])
+
+  @@map("project_reports")
+}
+
+// New model for enterprise project management
+model ProjectStatusUpdate {
+  id          String   @id @default(cuid())
+  projectId   String
+  workspaceId String?
+  authorId    String
+  title       String
+  content     String   @db.Text
+  status      String   // on_track, at_risk, off_track, completed
+  visibility  String   @default("team") // team, workspace, public
+  notifyTeam  Boolean  @default(true)
+  achievements String[] // Array of accomplishments
+  challenges  String[] // Array of blockers/issues
+  nextSteps   String[] // Array of upcoming actions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id])
+
+  @@map("project_status_updates")
 }
 
 model Task {
@@ -630,9 +847,9 @@ model TaskBlocker {
   taskId    String
   blockerId String
   reason    String?
-  
-  task      Task @relation("TaskBlockers", fields: [taskId], references: [id], onDelete: Cascade)
-  blocker   Task @relation("TaskBlocking", fields: [blockerId], references: [id], onDelete: Cascade)
+
+  task    Task @relation("TaskBlockers", fields: [taskId], references: [id], onDelete: Cascade)
+  blocker Task @relation("TaskBlocking", fields: [blockerId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, blockerId])
   @@map("task_blockers")
@@ -769,17 +986,20 @@ model Budget {
 
 model ProjectTemplate {
   id          String   @id @default(cuid())
-  projectId   String?
   name        String
   description String   @db.Text
-  category    String
-  icon        String
-  isDefault   Boolean  @default(false)
-  content     Json
+  category    String   // development, marketing, sales, operations, etc.
+  icon        String?
+  workspaceId String?
+  isPublic    Boolean  @default(false)
+  metadata    Json?    // Template configuration
+  createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User       @relation(fields: [createdById], references: [id])
+  projects  Project[]
 
   @@map("project_templates")
 }
@@ -837,8 +1057,8 @@ model CalendarSubscription {
   channelId   String?
   name        String
   description String?
-  token       String   @unique 
-  format      String   @default("ics") 
+  token       String   @unique
+  format      String   @default("ics")
   filterTypes Json?
   isPublic    Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -858,7 +1078,7 @@ model EventReminder {
   eventId       String
   userId        String
   type          String // notification, email, sms
-  minutesBefore Int 
+  minutesBefore Int
   sent          Boolean   @default(false)
   sentAt        DateTime?
   createdAt     DateTime  @default(now())
@@ -874,10 +1094,10 @@ model EventReminder {
 
 model CalendarShare {
   id         String   @id @default(cuid())
-  calendarId String 
+  calendarId String
   entityType String // project, user
   sharedWith String // user ID
-  permission String   @default("read") 
+  permission String   @default("read")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -954,7 +1174,7 @@ model Note {
   lastModified DateTime @updatedAt
 
   folder    NoteFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade) 
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   creator   User       @relation("NoteCreator", fields: [creatorId], references: [id])
 
   tags          NoteTag[]
@@ -1016,7 +1236,7 @@ model Invitation {
   id          String    @id @default(cuid())
   email       String
   token       String    @unique
-  role        String    @default("member") 
+  role        String    @default("member")
   invitedBy   String
   projectId   String?
   channelId   String?
@@ -1027,9 +1247,9 @@ model Invitation {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  inviter   User     @relation("InvitedBy", fields: [invitedBy], references: [id])
-  project   Project? @relation("ProjectInvitations", fields: [projectId], references: [id], onDelete: Cascade)
-  channel   Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  inviter User     @relation("InvitedBy", fields: [invitedBy], references: [id])
+  project Project? @relation("ProjectInvitations", fields: [projectId], references: [id], onDelete: Cascade)
+  channel Channel? @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   logs InvitationLog[]
 
@@ -1059,7 +1279,7 @@ model ApiKey {
   name        String
   key         String    @unique
   userId      String
-  permissions Json 
+  permissions Json
   rateLimit   Int       @default(1000)
   expiresAt   DateTime?
   lastUsedAt  DateTime?
@@ -1079,14 +1299,14 @@ model Webhook {
   name        String
   url         String
   secret      String
-  events      Json 
+  events      Json
   userId      String
   isActive    Boolean   @default(true)
   lastFiredAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs WebhookLog[]
 
   @@index([userId])
@@ -1175,7 +1395,7 @@ model AssistantConversation {
 model AssistantMessage {
   id             String   @id @default(cuid())
   conversationId String
-  role           String 
+  role           String
   content        String   @db.Text
   toolCalls      Json?
   toolResults    Json?
@@ -1210,7 +1430,7 @@ model AssistantToolUsage {
 model AssistantAuditLog {
   id           String   @id @default(cuid())
   userId       String
-  action       String 
+  action       String
   resourceType String?
   resourceId   String?
   query        String?  @db.Text
@@ -1237,7 +1457,7 @@ model ScheduledNotification {
   userId       String
   title        String
   message      String    @db.Text
-  scheduleType String 
+  scheduleType String
   scheduledFor DateTime
   timezone     String    @default("UTC")
   recurrence   Json?
@@ -1267,7 +1487,7 @@ model ScheduledNotificationHistory {
   success                 Boolean
   errorMessage            String?  @db.Text
   metadata                Json?
-  
+
   scheduledNotification ScheduledNotification @relation(fields: [scheduledNotificationId], references: [id], onDelete: Cascade)
 
   @@index([scheduledNotificationId])
@@ -1281,7 +1501,7 @@ model ScheduledNotificationHistory {
 model DeviceToken {
   id         String   @id @default(cuid())
   userId     String
-  platform   String 
+  platform   String
   token      String   @unique
   deviceInfo Json?
   isActive   Boolean  @default(true)
@@ -1331,7 +1551,7 @@ model Call {
   status      String    @default("pending") // pending, active, ended, missed
   startedAt   DateTime  @default(now())
   endedAt     DateTime?
-  duration    Int? 
+  duration    Int?
   agoraToken  String?   @db.Text
   metadata    Json?
 
@@ -1361,4 +1581,68 @@ model CallParticipant {
   @@index([callId])
   @@index([userId])
   @@map("call_participants")
+}
+
+model CustomEmoji {
+  id          String   @id @default(cuid())
+  name        String
+  shortcode   String // e.g., :custom_emoji:
+  imageUrl    String
+  animated    Boolean  @default(false)
+  workspaceId String?
+  createdById String
+  category    String   @default("custom")
+  isGlobal    Boolean  @default(false) // Available across all workspaces
+  usageCount  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@unique([shortcode, workspaceId])
+  @@map("custom_emojis")
+}
+
+// ============================================
+// USER BADGE MODELS
+// ============================================
+
+model UserBadge {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  icon        String // Emoji or icon name
+  color       String // Badge color
+  bgColor     String // Background color
+  tier        String   @default("standard") // standard, premium, elite, legendary
+  category    String   @default("achievement") // achievement, role, special, event
+  isGlobal    Boolean  @default(false)
+  workspaceId String?
+  createdById String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace  Workspace?            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userBadges UserBadgeAssignment[]
+
+  @@map("user_badges")
+}
+
+model UserBadgeAssignment {
+  id         String   @id @default(cuid())
+  userId     String
+  badgeId    String
+  assignedBy String
+  reason     String?
+  isPrimary  Boolean  @default(false) // Show as primary badge
+  isVisible  Boolean  @default(true)
+  earnedAt   DateTime @default(now())
+
+  badge UserBadge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badge_assignments")
 }
