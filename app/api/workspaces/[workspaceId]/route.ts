@@ -11,15 +11,16 @@ const updateWorkspaceSchema = z.object({
   plan: z.enum(["free", "pro", "enterprise"]).optional(),
 })
 
-export async function GET(request: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
+    const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const workspace = await prisma.workspace.findUnique({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
       include: {
         owner: {
           select: {
@@ -85,8 +86,9 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
+    const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -96,7 +98,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { worksp
     const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
-          workspaceId: params.workspaceId,
+          workspaceId: workspaceId,
           userId: session.user.id,
         },
       },
@@ -110,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { worksp
     const validatedData = updateWorkspaceSchema.parse(body)
 
     const workspace = await prisma.workspace.update({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
       data: validatedData,
       include: {
         owner: true,
@@ -124,11 +126,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { worksp
 
     await prisma.workspaceAuditLog.create({
       data: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         userId: session.user.id,
         action: "workspace.updated",
         resource: "workspace",
-        resourceId: params.workspaceId,
+        resourceId: workspaceId,
         metadata: validatedData,
       },
     })
@@ -143,15 +145,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { worksp
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
+    const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const workspace = await prisma.workspace.findUnique({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
     })
 
     if (!workspace) {
@@ -164,7 +167,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { works
     }
 
     await prisma.workspace.delete({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
     })
 
     return NextResponse.json({ success: true })

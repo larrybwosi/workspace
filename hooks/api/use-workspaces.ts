@@ -387,6 +387,46 @@ export function useCreateDepartment(workspaceId: string) {
   })
 }
 
+export function useUpdateDepartment(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      departmentId,
+      data,
+    }: {
+      departmentId: string
+      data: { name?: string; description?: string; icon?: string; color?: string; managerId?: string }
+    }) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/departments/${departmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error("Failed to update department")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
+    },
+  })
+}
+
+export function useDeleteDepartment(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (departmentId: string) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/departments/${departmentId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete department")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
+    },
+  })
+}
+
 export function useWorkspaceTeams(workspaceId: string, departmentId?: string) {
   return useQuery({
     queryKey: ["workspace-teams", workspaceId, departmentId],
@@ -465,6 +505,162 @@ export function useCreateWorkspaceApiToken(workspaceId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceId] })
+    },
+  })
+}
+
+export function useWorkspaceChannels(workspaceId: string) {
+  return useQuery({
+    queryKey: ["workspace-channels", workspaceId],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/channels`)
+      if (!res.ok) throw new Error("Failed to fetch channels")
+      return res.json()
+    },
+    enabled: !!workspaceId,
+  })
+}
+
+export function useCreateWorkspaceChannel(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      name: string
+      description?: string
+      type?: "public" | "private"
+      departmentId?: string
+      icon?: string
+    }) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/channels`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error("Failed to create channel")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceId] })
+    },
+  })
+}
+
+export function useUpdateWorkspaceChannel(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      channelId,
+      data,
+    }: {
+      channelId: string
+      data: { name?: string; description?: string; type?: "public" | "private"; icon?: string }
+    }) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/channels/${channelId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error("Failed to update channel")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceId] })
+    },
+  })
+}
+
+export function useDeleteWorkspaceChannel(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (channelId: string) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/channels/${channelId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete channel")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceId] })
+    },
+  })
+}
+
+export function useWorkspaceProjects(workspaceId: string) {
+  return useQuery({
+    queryKey: ["workspace-projects", workspaceId],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/projects`)
+      if (!res.ok) throw new Error("Failed to fetch projects")
+      return res.json()
+    },
+    enabled: !!workspaceId,
+  })
+}
+
+export function useCreateWorkspaceProject(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      name: string
+      description?: string
+      icon?: string
+      status?: string
+      priority?: string
+      startDate: string
+      endDate: string
+      departmentId?: string
+      memberIds?: string[]
+    }) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/projects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error("Failed to create project")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceId] })
+    },
+  })
+}
+
+export function useUpdateWorkspaceProject(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      data,
+    }: {
+      projectId: string
+      data: { name?: string; description?: string; icon?: string; status?: string; priority?: string; endDate?: string }
+    }) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error("Failed to update project")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceId] })
+    },
+  })
+}
+
+export function useDeleteWorkspaceProject(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (projectId: string) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/projects/${projectId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete project")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceId] })
     },
   })
 }
