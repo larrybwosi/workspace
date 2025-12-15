@@ -60,9 +60,11 @@ export default function ChannelDetailPage({
                   <Edit className="mr-2 size-4" />
                   Edit Channel
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 size-4" />
-                  Channel Settings
+                <DropdownMenuItem asChild>
+                  <a href={`/workspace/${params.slug}/channels/${params.channelId}/settings`}>
+                    <Settings className="mr-2 size-4" />
+                    Channel Settings
+                  </a>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive">
