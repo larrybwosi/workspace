@@ -42,7 +42,7 @@ export function useCreateProject() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (newProject: Omit<Project, "id">) => {
+    mutationFn: async (newProject: any) => {
       const { data } = await apiClient.post<Project>("/projects", newProject)
       return data
     },

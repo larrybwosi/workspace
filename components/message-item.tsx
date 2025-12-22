@@ -1,12 +1,11 @@
 "use client"
 
-import * as React from "react"
 import { Smile, MessageSquare, Bookmark, Copy, Pin, Trash2, Edit, LinkIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import type { Message } from "@/lib/types"
 import { mockUsers } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import { cn, formatTime } from "@/lib/utils"
 import { renderCustomMessage } from "@/lib/message-renderer"
 import { CustomEmojiPicker } from "./custom-emoji-picker"
 import { UserBadgeDisplay } from "./user-badge-display"
@@ -20,6 +19,7 @@ import {
 } from "./context-menu"
 import { useUpdateMessage, useDeleteMessage } from "@/hooks/api/use-messages"
 import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 
 interface MessageItemProps {
   message: Message
@@ -76,7 +76,7 @@ export function MessageItem({
   onReaction,
   depth = 0,
   isReply = false,
-  channelId = "uikit",
+  channelId = undefined,
   isHighlighted = false,
   highlightRef,
 }: MessageItemProps) {
@@ -85,18 +85,10 @@ export function MessageItem({
   const { toast } = useToast()
 
   const user = mockUsers.find((u) => u.id === message.userId)
-  const [isHovered, setIsHovered] = React.useState(false)
-  const [isEditing, setIsEditing] = React.useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   const userBadges = mockUserBadges[message.userId] || []
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })
-  }
 
   const handleAddReaction = (emoji: string, isCustom?: boolean, customEmojiId?: string) => {
     onReaction?.(message.id, emoji, isCustom, customEmojiId)
@@ -115,6 +107,7 @@ export function MessageItem({
   }
 
   const handleDeleteMessage = () => {
+    if(!channelId) return;
     if (confirm("Are you sure you want to delete this message?")) {
       deleteMessageMutation.mutate({
         id: message.id,
@@ -124,6 +117,7 @@ export function MessageItem({
   }
 
   const handleSaveEdit = (newContent: string) => {
+    if(!channelId) return;
     updateMessageMutation.mutate({
       id: message.id,
       channelId,

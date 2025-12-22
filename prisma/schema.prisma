@@ -39,6 +39,7 @@ model User {
   workspaceMemberships         WorkspaceMember[]
   sentWorkspaceInvitations     WorkspaceInvitation[] @relation("WorkspaceInviter")
   receivedWorkspaceInvitations WorkspaceInvitation[] @relation("WorkspaceInvitedUser")
+  workspaceApiTokens           WorkspaceApiToken[]
 
   // Communication Relations
   messages       Message[]
@@ -98,15 +99,26 @@ model User {
   dmParticipant2 DirectMessage[] @relation("DMParticipant2")
   dmMessages     DMMessage[]
 
-  teamMemberships    WorkspaceTeamMember[]
-  announcements      DepartmentAnnouncement[]
-  workspaceApiTokens WorkspaceApiToken[]
+  teamMemberships WorkspaceTeamMember[]
+  announcements   DepartmentAnnouncement[]
 
-  // New relationships for enterprise project management
+  // Enterprise Project Management
   resourceAllocations ResourceAllocation[]
   projectReports      ProjectReport[]
   statusUpdates       ProjectStatusUpdate[]
   createdTemplates    ProjectTemplate[]
+
+  // Social & Webhooks (Added for consistency with lower models)
+  friends                Friend[]         @relation("UserFriends")
+  friendOf               Friend[]         @relation("FriendOf")
+  sentFriendRequests     FriendRequest[]  @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[]  @relation("ReceivedFriendRequests")
+  createdChannelWebhooks ChannelWebhook[]
+
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
   @@map("users")
 }
 
@@ -117,12 +129,13 @@ model Verification {
   expiresAt  DateTime
   userId     String?
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt // Fixed: @updatedAt requires DateTime
+  updatedAt  DateTime @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, value])
   @@map("verifications")
+  @@index([identifier])
 }
 
 model Session {
@@ -137,7 +150,10 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  impersonatedBy String?
+
   @@map("sessions")
+  @@index([userId])
 }
 
 model Account {
@@ -158,6 +174,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
+  @@index([userId])
 }
 
 // ============================================
@@ -192,9 +209,11 @@ model Workspace {
   teams        WorkspaceTeam[]
   apiTokens    WorkspaceApiToken[]
 
+  // Enterprise relations
   projectTemplates ProjectTemplate[]
   projectReports   ProjectReport[]
   statusUpdates    ProjectStatusUpdate[]
+
   @@map("workspaces")
 }
 
@@ -428,6 +447,7 @@ model Channel {
 
   invitations           Invitation[]
   calendarSubscriptions CalendarSubscription[]
+  webhooks              ChannelWebhook[]
 
   @@map("channels")
 }
@@ -684,29 +704,30 @@ model Project {
   // New relationships for enterprise project management
   templateId String?
   template   ProjectTemplate? @relation(fields: [templateId], references: [id])
-  
+
   resourceAllocations ResourceAllocation[]
   timelines           ProjectTimeline[]
   reports             ProjectReport[]
   statusUpdates       ProjectStatusUpdate[]
+
   @@map("projects")
 }
 
-
 // New model for enterprise project management
+
 model ResourceAllocation {
-  id             String   @id @default(cuid())
-  projectId      String
-  userId         String
-  role           String   // developer, designer, manager, etc.
-  allocation     Float    // percentage of time (0-100)
-  startDate      DateTime
-  endDate        DateTime?
-  billableRate   Float?
-  cost           Float?
-  notes          String?  @db.Text
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String    @id @default(cuid())
+  projectId    String
+  userId       String
+  role         String // developer, designer, manager, etc.
+  allocation   Float // percentage of time (0-100)
+  startDate    DateTime
+  endDate      DateTime?
+  billableRate Float?
+  cost         Float?
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
@@ -715,18 +736,19 @@ model ResourceAllocation {
 }
 
 // New model for enterprise project management
+
 model ProjectTimeline {
-  id          String   @id @default(cuid())
-  projectId   String
-  title       String
-  description String?  @db.Text
-  startDate   DateTime
-  endDate     DateTime
-  progress    Float    @default(0)
-  color       String?
+  id           String   @id @default(cuid())
+  projectId    String
+  title        String
+  description  String?  @db.Text
+  startDate    DateTime
+  endDate      DateTime
+  progress     Float    @default(0)
+  color        String?
   dependencies String[] // Array of timeline IDs
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -734,13 +756,14 @@ model ProjectTimeline {
 }
 
 // New model for enterprise project management
+
 model ProjectReport {
   id          String   @id @default(cuid())
   projectId   String
   workspaceId String?
   title       String
-  type        String   // status, velocity, burndown, cost, resource, etc.
-  data        Json     // Report data
+  type        String // status, velocity, burndown, cost, resource, etc.
+  data        Json // Report data
   generatedBy String
   createdAt   DateTime @default(now())
 
@@ -752,21 +775,22 @@ model ProjectReport {
 }
 
 // New model for enterprise project management
+
 model ProjectStatusUpdate {
-  id          String   @id @default(cuid())
-  projectId   String
-  workspaceId String?
-  authorId    String
-  title       String
-  content     String   @db.Text
-  status      String   // on_track, at_risk, off_track, completed
-  visibility  String   @default("team") // team, workspace, public
-  notifyTeam  Boolean  @default(true)
+  id           String   @id @default(cuid())
+  projectId    String
+  workspaceId  String?
+  authorId     String
+  title        String
+  content      String   @db.Text
+  status       String // on_track, at_risk, off_track, completed
+  visibility   String   @default("team") // team, workspace, public
+  notifyTeam   Boolean  @default(true)
   achievements String[] // Array of accomplishments
-  challenges  String[] // Array of blockers/issues
-  nextSteps   String[] // Array of upcoming actions
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  challenges   String[] // Array of blockers/issues
+  nextSteps    String[] // Array of upcoming actions
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -988,11 +1012,11 @@ model ProjectTemplate {
   id          String   @id @default(cuid())
   name        String
   description String   @db.Text
-  category    String   // development, marketing, sales, operations, etc.
+  category    String // development, marketing, sales, operations, etc.
   icon        String?
   workspaceId String?
   isPublic    Boolean  @default(false)
-  metadata    Json?    // Template configuration
+  metadata    Json? // Template configuration
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1481,14 +1505,13 @@ model ScheduledNotification {
 }
 
 model ScheduledNotificationHistory {
-  id                      String   @id @default(cuid())
+  id                      String                @id @default(cuid())
   scheduledNotificationId String
   sentAt                  DateTime
   success                 Boolean
-  errorMessage            String?  @db.Text
+  errorMessage            String?               @db.Text
   metadata                Json?
-
-  scheduledNotification ScheduledNotification @relation(fields: [scheduledNotificationId], references: [id], onDelete: Cascade)
+  scheduledNotification   ScheduledNotification @relation(fields: [scheduledNotificationId], references: [id], onDelete: Cascade)
 
   @@index([scheduledNotificationId])
   @@map("scheduled_notification_history")
@@ -1544,17 +1567,16 @@ model PushNotificationLog {
 // ============================================
 
 model Call {
-  id          String    @id @default(cuid())
-  channelName String
-  type        String // voice, video
-  initiatorId String?
-  status      String    @default("pending") // pending, active, ended, missed
-  startedAt   DateTime  @default(now())
-  endedAt     DateTime?
-  duration    Int?
-  agoraToken  String?   @db.Text
-  metadata    Json?
-
+  id           String            @id @default(cuid())
+  channelName  String
+  type         String // voice, video
+  initiatorId  String?
+  status       String            @default("pending") // pending, active, ended, missed
+  startedAt    DateTime          @default(now())
+  endedAt      DateTime?
+  duration     Int?
+  agoraToken   String?           @db.Text
+  metadata     Json?
   participants CallParticipant[]
   initiator    User?             @relation(fields: [initiatorId], references: [id], onDelete: SetNull)
 
@@ -1645,4 +1667,79 @@ model UserBadgeAssignment {
 
   @@unique([userId, badgeId])
   @@map("user_badge_assignments")
+}
+
+// ============================================
+// CHANNEL WEBHOOK MODELS
+// ============================================
+
+model ChannelWebhook {
+  id          String    @id @default(cuid())
+  channelId   String
+  name        String
+  url         String
+  secret      String
+  events      Json // Array of events: ["message.created", "message.updated", "message.deleted", "member.added", "member.removed"]
+  isActive    Boolean   @default(true)
+  createdBy   String
+  lastFiredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  channel Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  creator User                @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  logs    ChannelWebhookLog[]
+
+  @@index([channelId])
+  @@map("channel_webhooks")
+}
+
+model ChannelWebhookLog {
+  id        String   @id @default(cuid())
+  webhookId String
+  event     String
+  payload   Json
+  status    Int
+  response  String?
+  createdAt DateTime @default(now())
+
+  webhook ChannelWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@map("channel_webhook_logs")
+}
+
+model Friend {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  nickname  String? // Optional custom nickname for the friend
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@map("friends")
+}
+
+model FriendRequest {
+  id          String    @id @default(cuid())
+  senderId    String
+  receiverId  String
+  status      String    @default("pending") // pending, accepted, declined, cancelled
+  message     String?   @db.Text // Optional message with the request
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  sender   User @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("friend_requests")
 }

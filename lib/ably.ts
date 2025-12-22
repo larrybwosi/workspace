@@ -22,6 +22,7 @@ export function getAblyRest() {
     key: process.env.ABLY_API_KEY,
   })
 }
+export const ably = getAblyServer() 
 
 // Channel naming conventions
 export const AblyChannels = {

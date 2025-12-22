@@ -6,11 +6,12 @@ import InviteAcceptForm from "@/components/invite-accept-form"
 export async function generateMetadata({
   params,
 }: {
-  params: { token: string }
+  params: Promise<{ token: string }>
 }): Promise<Metadata> {
   try {
+    const { token } = await params
     const invitation = await prisma.invitation.findUnique({
-      where: { token: params.token },
+      where: { token },
     })
 
     if (!invitation) {
@@ -44,6 +45,7 @@ export async function generateMetadata({
   }
 }
 
-export default function InvitePage({ params }: { params: { token: string } }) {
-  return <InviteAcceptForm token={params.token} />
+export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
+  return <InviteAcceptForm token={token} />
 }

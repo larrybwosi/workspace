@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { mockFavorites, mockUsers } from "@/lib/mock-data";
 import { UserProfileDialog } from "./user-profile-dialog";
 import { CreateChannelDialog } from "./create-channel-dialog";
 import { ProjectCreateDialog } from "./project-create-dialog";
@@ -464,61 +463,11 @@ export function Sidebar({
                   variant="secondary"
                   className="text-xs px-1.5 py-0 ml-auto shrink-0"
                 >
-                  {mockUsers.length - 1}
                 </Badge>
               </Button>
             </div>
             {directMessagesOpen && (
               <div className="px-2 space-y-0.5">
-                {mockUsers.slice(1).map((user) => (
-                  <Button
-                    key={user.id}
-                    variant={
-                      activeChannel === `dm-${user.id}` ? "secondary" : "ghost"
-                    }
-                    className={cn(
-                      "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                      activeChannel === `dm-${user.id}` &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )}
-                    onClick={() => {
-                      router.push(`/dm/${user.id}`);
-                      onClose();
-                    }}
-                  >
-                    <div className="relative mr-2 shrink-0">
-                      <Avatar className="h-6 w-6">
-                        <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
-                          {user.avatar}
-                        </div>
-                        <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                          {user.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div
-                        className={cn(
-                          "absolute bottom-0 right-0 h-2 w-2 border border-sidebar rounded-full",
-                          user.status === "online"
-                            ? "bg-green-500"
-                            : user.status === "away"
-                            ? "bg-yellow-500"
-                            : "bg-gray-400"
-                        )}
-                      />
-                    </div>
-                    <span className="flex-1 text-left truncate text-sm">
-                      {user.name}
-                    </span>
-                    {user.id === "user-2" && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs px-1.5 py-0 shrink-0"
-                      >
-                        1
-                      </Badge>
-                    )}
-                  </Button>
-                ))}
               </div>
             )}
           </div>
@@ -542,47 +491,7 @@ export function Sidebar({
             </div>
             {favoritesOpen && (
               <div className="px-2 space-y-0.5">
-                {mockFavorites.map((fav) => (
-                  <Button
-                    key={fav.id}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                      activeChannel === fav.id &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )}
-                    onClick={() => {
-                      onChannelSelect(fav.id);
-                      onClose();
-                    }}
-                  >
-                    {fav.icon === "👤" ? (
-                      <Avatar className="h-5 w-5 mr-2 shrink-0">
-                        <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
-                          {mockUsers.find((u) => u.name === fav.name)?.avatar}
-                        </div>
-                        <AvatarFallback className="text-xs">
-                          {fav.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <span className="mr-2 shrink-0 text-base">
-                        {fav.icon}
-                      </span>
-                    )}
-                    <span className="flex-1 text-left truncate text-sm">
-                      {fav.name}
-                    </span>
-                    {fav.unreadCount && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs px-1.5 py-0 shrink-0"
-                      >
-                        {fav.unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                ))}
+                
               </div>
             )}
           </div>
@@ -650,17 +559,18 @@ export function Sidebar({
               {currentUser?.name || "User"}
             </p>
             <p className="text-xs text-muted-foreground capitalize">
-              {currentUser?.status || "online"}
+              { "online"}
             </p>
           </div>
         </button>
       </aside>
-
-      <UserProfileDialog
-        user={currentUser}
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-      />
+        { currentUser &&
+          <UserProfileDialog
+            user={currentUser}
+            open={profileOpen}
+            onOpenChange={setProfileOpen}
+          />
+        }
 
       <CreateChannelDialog
         open={createChannelOpen}

@@ -11,10 +11,10 @@ import { MembersPanel } from "@/components/members-panel"
 import { TaskManagementView } from "@/components/task-management-view"
 import { TaskDetailSheet } from "@/components/task-detail-sheet"
 import { TaskCreateEditDialog } from "@/components/task-create-edit-dialog"
-import { ProjectDetailSheet } from "@/components/project-detail-sheet" // Added project detail sheet
+import { ProjectDetailSheet } from "@/components/project-detail-sheet" 
 import { AssistantChannel } from "@/components/assistant-channel"
 import { DynamicHeader } from "@/components/dynamic-header"
-import { ProjectSettingsSheet } from "@/components/project-settings-sheet" // Import project settings sheet
+import { ProjectSettingsSheet } from "@/components/project-settings-sheet" 
 import { mockUsers, mockProjects } from "@/lib/mock-data"
 import type { Task, Project } from "@/lib/types"
 import { useRouter } from "next/navigation"
@@ -24,7 +24,7 @@ export default function HomePage() {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
-  const [activeChannel, setActiveChannel] = React.useState("uikit")
+  const [activeChannel, setActiveChannel] = React.useState('')
   const [searchMode, setSearchMode] = React.useState(false)
   const [membersMode, setMembersMode] = React.useState(false)
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
@@ -76,8 +76,8 @@ export default function HomePage() {
   }
 
   const getDMUser = () => {
-    if (activeChannel.startsWith("dm-")) {
-      const userId = activeChannel.replace("dm-", "")
+    if (activeChannel?.startsWith("dm-")) {
+      const userId = activeChannel?.replace("dm-", "")
       return mockUsers.find((u) => u.id === userId)
     }
     return null
@@ -96,7 +96,7 @@ export default function HomePage() {
       return <MembersPanel />
     }
 
-    if (activeChannel.startsWith("project-")) {
+    if (activeChannel?.startsWith("project-")) {
       return (
         <TaskManagementView
           onTaskClick={handleTaskClick}
@@ -106,7 +106,7 @@ export default function HomePage() {
       )
     }
 
-    if (activeChannel.startsWith("dm-")) {
+    if (activeChannel?.startsWith("dm-")) {
       const dmUser = getDMUser()
       return (
         <ThreadView
@@ -130,7 +130,7 @@ export default function HomePage() {
     return <ThreadView />
   }
 
-  const shouldShowInfoPanel = !activeChannel.startsWith("project-") && activeChannel !== "assistant"
+  const shouldShowInfoPanel = !activeChannel?.startsWith("project-") && activeChannel !== "assistant"
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -153,7 +153,7 @@ export default function HomePage() {
             setSearchMode(true)
             setMembersMode(false)
           }}
-          onBackClick={activeChannel.startsWith("project-") ? () => setActiveChannel("uikit") : undefined}
+          onBackClick={activeChannel?.startsWith("project-") ? () => setActiveChannel("uikit") : undefined}
         />
 
         {renderMainContent()}
