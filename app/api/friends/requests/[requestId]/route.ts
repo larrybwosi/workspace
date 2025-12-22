@@ -10,8 +10,9 @@ const actionSchema = z.object({
 })
 
 // PATCH /api/friends/requests/[requestId] - Accept/Decline/Cancel friend request
-export async function PATCH(request: NextRequest, { params }: { params: { requestId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ requestId: string }> }) {
   try {
+    const { requestId } = await params;
     const session = await auth.api.getSession({
       headers: await headers(),
     })
@@ -24,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { reques
     const { action } = actionSchema.parse(body)
 
     const friendRequest = await prisma.friendRequest.findUnique({
-      where: { id: params.requestId },
+      where: { id: requestId },
       include: {
         sender: true,
         receiver: true,
@@ -50,7 +51,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { reques
 
     // Update request status
     const updatedRequest = await prisma.friendRequest.update({
-      where: { id: params.requestId },
+      where: { id: requestId },
       data: {
         status: action === "accept" ? "accepted" : action === "decline" ? "declined" : "cancelled",
         respondedAt: action !== "cancel" ? new Date() : undefined,
@@ -104,7 +105,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { reques
           title: "Friend Request Declined",
           message: `${friendRequest.receiver.name} declined your friend request`,
           entityType: "friend_request",
-          entityId: params.requestId,
+          entityId: requestId,
         },
       })
 
@@ -127,8 +128,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { reques
 }
 
 // DELETE /api/friends/requests/[requestId] - Delete friend request
-export async function DELETE(request: NextRequest, { params }: { params: { requestId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ requestId: string }> }) {
   try {
+    const { requestId } = await params;
     const session = await auth.api.getSession({
       headers: await headers(),
     })
@@ -138,7 +140,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { reque
     }
 
     const friendRequest = await prisma.friendRequest.findUnique({
-      where: { id: params.requestId },
+      where: { id: requestId },
     })
 
     if (!friendRequest) {
@@ -151,7 +153,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { reque
     }
 
     await prisma.friendRequest.delete({
-      where: { id: params.requestId },
+      where: { id: requestId },
     })
 
     return NextResponse.json({ message: "Friend request deleted" })

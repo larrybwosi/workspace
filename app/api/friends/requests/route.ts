@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ requests })
   } catch (error) {
-    console.error("[v0] Error fetching friend requests:", error)
+    console.error("Error fetching friend requests:", error)
     return NextResponse.json({ error: "Failed to fetch friend requests" }, { status: 500 })
   }
 }
@@ -90,26 +90,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = friendRequestSchema.parse(body)
 
+
+    // Check if receiver exists
+    const receiver = await prisma.user.findUnique({
+      where: { email: validatedData.receiverId },
+    })
+
+    if (!receiver) {
+      console.error("Receiver user not found:", validatedData.receiverId)
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    const receiverId = receiver.id;
+
     // Cannot send friend request to yourself
     if (validatedData.receiverId === session.user.id) {
       return NextResponse.json({ error: "Cannot send friend request to yourself" }, { status: 400 })
     }
-
-    // Check if receiver exists
-    const receiver = await prisma.user.findUnique({
-      where: { id: validatedData.receiverId },
-    })
-
-    if (!receiver) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
     // Check if already friends
     const existingFriend = await prisma.friend.findFirst({
       where: {
         OR: [
-          { userId: session.user.id, friendId: validatedData.receiverId },
-          { userId: validatedData.receiverId, friendId: session.user.id },
+          { userId: session.user.id, friendId: receiverId },
+          { userId: receiverId, friendId: session.user.id },
         ],
       },
     })
@@ -122,8 +125,8 @@ export async function POST(request: NextRequest) {
     const existingRequest = await prisma.friendRequest.findFirst({
       where: {
         OR: [
-          { senderId: session.user.id, receiverId: validatedData.receiverId, status: "pending" },
-          { senderId: validatedData.receiverId, receiverId: session.user.id, status: "pending" },
+          { senderId: session.user.id, receiverId: receiverId, status: "pending" },
+          { senderId: receiverId, receiverId: session.user.id, status: "pending" },
         ],
       },
     })
@@ -136,7 +139,7 @@ export async function POST(request: NextRequest) {
     const friendRequest = await prisma.friendRequest.create({
       data: {
         senderId: session.user.id,
-        receiverId: validatedData.receiverId,
+        receiverId: receiverId,
         message: validatedData.message,
       },
       include: {
@@ -168,7 +171,7 @@ export async function POST(request: NextRequest) {
     // Create notification for receiver
     await prisma.notification.create({
       data: {
-        userId: validatedData.receiverId,
+        userId: receiverId,
         type: "friend_request",
         title: "New Friend Request",
         message: `${session.user.name} sent you a friend request`,
@@ -184,7 +187,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Send real-time notification via Ably
-    await publishToAbly(`user:${validatedData.receiverId}`, "NOTIFICATION", {
+    await publishToAbly(`user:${receiverId}`, "NOTIFICATION", {
       type: "friend_request",
       title: "New Friend Request",
       message: `${session.user.name} sent you a friend request`,
@@ -199,7 +202,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Error creating friend request:", error)
+    console.error("Error creating friend request:", error)
     return NextResponse.json({ error: "Failed to send friend request" }, { status: 500 })
   }
 }
