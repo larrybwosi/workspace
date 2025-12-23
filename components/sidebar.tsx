@@ -25,6 +25,8 @@ import { useProjects, useCreateProject } from "@/hooks/api/use-projects";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { useDMConversations } from "@/hooks/api/use-dm";
+import { StartDMDialog } from "./start-dm-dialog";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -49,6 +51,7 @@ export function Sidebar({
   const { data: projectsData, isLoading: projectsLoading } = useProjects();
   const createChannelMutation = useCreateChannel();
   const createProjectMutation = useCreateProject();
+  const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations()
 
   const [favoritesOpen, setFavoritesOpen] = React.useState(true);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
@@ -63,6 +66,7 @@ export function Sidebar({
     "project-1",
   ]);
   const [projectCreateOpen, setProjectCreateOpen] = React.useState(false);
+  const [startDMOpen, setStartDMOpen] = React.useState(false)
 
   const channels = channelsData || [];
   const projects = projectsData || [];
@@ -444,30 +448,75 @@ export function Sidebar({
             )}
           </div>
 
-          {/* Direct Messages Section */}
-          <div className="mt-4">
-            <div className="px-2 mb-1">
+          {/* Direct messages */}
+          <div className="px-2 py-2 mt-2">
+            <div className="flex items-center justify-between mb-1">
               <Button
                 variant="ghost"
-                className="w-full justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
+                className="flex-1 justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
                 onClick={() => setDirectMessagesOpen(!directMessagesOpen)}
               >
-                <ChevronDown
-                  className={cn(
-                    "h-3 w-3 mr-1 transition-transform shrink-0",
-                    !directMessagesOpen && "-rotate-90"
-                  )}
-                />
+                <ChevronDown className={cn("h-3 w-3 mr-1 transition-transform", !directMessagesOpen && "-rotate-90")} />
                 Direct messages
-                <Badge
-                  variant="secondary"
-                  className="text-xs px-1.5 py-0 ml-auto shrink-0"
-                >
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 ml-auto">
+                  {dmConversations.length}
                 </Badge>
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStartDMOpen(true)}>
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
             {directMessagesOpen && (
-              <div className="px-2 space-y-0.5">
+              <div className="space-y-0.5">
+                {dmsLoading ? (
+                  <div className="text-center text-xs text-muted-foreground py-2">Loading...</div>
+                ) : dmConversations.length === 0 ? (
+                  <div className="text-center text-xs text-muted-foreground py-2">No conversations yet</div>
+                ) : (
+                  dmConversations.map((dm: any) => {
+                    const otherUser = dm.members.find((m: any) => m.id !== dm.creatorId) || dm.members[0]
+                    const dmId = `dm-${otherUser.id}`
+
+                    return (
+                      <Button
+                        key={dm.id}
+                        variant={activeChannel === dmId ? "secondary" : "ghost"}
+                        className={cn(
+                          "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
+                          activeChannel === dmId && "bg-sidebar-accent text-sidebar-accent-foreground",
+                        )}
+                        onClick={() => {
+                          router.push(`/dm/${otherUser.id}`)
+                          onClose()
+                        }}
+                      >
+                        <div className="relative mr-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                              {otherUser.name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div
+                            className={cn(
+                              "absolute bottom-0 right-0 h-2 w-2 border border-sidebar rounded-full",
+                              otherUser.status === "online"
+                                ? "bg-green-500"
+                                : otherUser.status === "away"
+                                  ? "bg-yellow-500"
+                                  : "bg-gray-400",
+                            )}
+                          />
+                        </div>
+                        <span className="flex-1 text-left truncate text-sm">{otherUser.name}</span>
+                        {dm._count?.messages > 0 && (
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                            {dm._count.messages}
+                          </Badge>
+                        )}
+                      </Button>
+                    )
+                  })
+                )}
               </div>
             )}
           </div>
@@ -583,6 +632,8 @@ export function Sidebar({
         onOpenChange={setProjectCreateOpen}
         onCreateProject={handleCreateProject}
       />
+      
+      <StartDMDialog open={startDMOpen} onOpenChange={setStartDMOpen} />
     </>
   );
 }
