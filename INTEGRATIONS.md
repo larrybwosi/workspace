@@ -4,7 +4,6 @@ The main changes involve adding language identifiers (like `json`, `bash`, `java
 
 Here is the corrected Markdown:
 
-````markdown
 # External Integrations Guide
 
 Complete guide for integrating external systems (ERP, CRM, CI/CD, etc.) with the collaboration platform.

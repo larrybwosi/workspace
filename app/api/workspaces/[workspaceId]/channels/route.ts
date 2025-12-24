@@ -38,7 +38,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       orderBy: { name: "asc" },
     })
 
-    return NextResponse.json({ channels })
+
+    return NextResponse.json(channels)
   } catch (error) {
     console.error("[WORKSPACE_CHANNELS_GET]", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

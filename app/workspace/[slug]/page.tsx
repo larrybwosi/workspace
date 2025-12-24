@@ -27,7 +27,6 @@ import {
   List,
   CalendarDays,
 } from "lucide-react"
-import { WorkspaceSidebar } from "@/components/workspace-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -122,6 +121,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     endDate: "",
     departmentId: "",
   })
+
+  // Mock workspace ID - in real app, fetch from API based on slug
+  const workspaceId = "workspace-1"
 
   // Mock data - replace with actual API calls
   const stats = [
@@ -394,7 +396,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       tasks: 0,
       completed: 0,
     }
-    setProjects([...projects, newProject])
+    // setProjects([...projects, newProject])
     setCreateProjectOpen(false)
     setProjectForm({
       name: "",
@@ -445,466 +447,698 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const colorOptions = ["#3b82f6", "#8b5cf6", "#22c55e", "#f59e0b", "#ef4444", "#ec4899", "#06b6d4", "#84cc16"]
 
   return (
-    <div className="h-screen flex overflow-hidden bg-background">
-      <WorkspaceSidebar workspaceSlug={slug} />
-
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Workspace Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage your workspace resources</p>
-            </div>
+    <>
+      {/* Header */}
+      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Workspace Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Manage your workspace resources</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-64"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule
-            </Button>
-            <Button size="sm">
-              <Activity className="h-4 w-4 mr-2" />
-              View Activity
-            </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-64"
+            />
           </div>
-        </header>
+          <Button variant="outline" size="sm">
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule
+          </Button>
+          <Button size="sm">
+            <Activity className="h-4 w-4 mr-2" />
+            View Activity
+          </Button>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <div className="border-b px-6">
-              <TabsList className="h-12">
-                <TabsTrigger value="overview" className="gap-2">
-                  <LayoutGrid className="h-4 w-4" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="departments" className="gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Departments
-                </TabsTrigger>
-                <TabsTrigger value="channels" className="gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Channels
-                </TabsTrigger>
-                <TabsTrigger value="projects" className="gap-2">
-                  <FolderKanban className="h-4 w-4" />
-                  Projects
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="gap-2">
-                  <CalendarDays className="h-4 w-4" />
-                  Calendar
-                </TabsTrigger>
-              </TabsList>
-            </div>
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+          <div className="border-b px-6">
+            <TabsList className="h-12">
+              <TabsTrigger value="overview" className="gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="departments" className="gap-2">
+                <Building2 className="h-4 w-4" />
+                Departments
+              </TabsTrigger>
+              <TabsTrigger value="channels" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Channels
+              </TabsTrigger>
+              <TabsTrigger value="projects" className="gap-2">
+                <FolderKanban className="h-4 w-4" />
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Calendar
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-            <ScrollArea className="flex-1">
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="p-6 m-0">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  {stats.map((stat) => (
-                    <Card key={stat.title}>
-                      <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                        <stat.icon className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{stat.value}</div>
-                        <div className="flex items-center text-xs text-muted-foreground mt-1">
-                          <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                          <span className="text-green-500 font-medium">{stat.change}</span>
-                          <span className="ml-1">{stat.description}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Recent Projects */}
-                  <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>Active Projects</CardTitle>
-                          <CardDescription>Track progress across your workspace</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => setActiveTab("projects")}>
-                          View All <ArrowUpRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </div>
+          <ScrollArea className="flex-1">
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="p-6 m-0">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {stats.map((stat) => (
+                  <Card key={stat.title}>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                      <stat.icon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {projects.slice(0, 3).map((project) => (
-                        <div
-                          key={project.id}
-                          className="p-4 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-lg">{project.icon}</span>
-                                <h4 className="font-semibold text-sm">{project.name}</h4>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  Due {project.dueDate}
-                                </span>
-                                <Badge
-                                  variant={project.status === "in-progress" ? "default" : "secondary"}
-                                  className="text-xs"
-                                >
-                                  {project.status}
-                                </Badge>
-                                <Badge
-                                  variant={project.priority === "high" ? "destructive" : "outline"}
-                                  className="text-xs"
-                                >
-                                  {project.priority}
-                                </Badge>
-                              </div>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <div className="flex items-center text-xs text-muted-foreground mt-1">
+                        <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                        <span className="text-green-500 font-medium">{stat.change}</span>
+                        <span className="ml-1">{stat.description}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recent Projects */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Active Projects</CardTitle>
+                        <CardDescription>Track progress across your workspace</CardDescription>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setActiveTab("projects")}>
+                        View All <ArrowUpRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {projects.slice(0, 3).map((project) => (
+                      <div
+                        key={project.id}
+                        className="p-4 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-lg">{project.icon}</span>
+                              <h4 className="font-semibold text-sm">{project.name}</h4>
                             </div>
-                            <div className="flex -space-x-2">
-                              {project.team.map((member, idx) => (
-                                <Avatar key={idx} className="h-7 w-7 border-2 border-background">
-                                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                                    {member}
-                                  </AvatarFallback>
-                                </Avatar>
-                              ))}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Due {project.dueDate}
+                              </span>
+                              <Badge
+                                variant={project.status === "in-progress" ? "default" : "secondary"}
+                                className="text-xs"
+                              >
+                                {project.status}
+                              </Badge>
+                              <Badge
+                                variant={project.priority === "high" ? "destructive" : "outline"}
+                                className="text-xs"
+                              >
+                                {project.priority}
+                              </Badge>
                             </div>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">
-                                {project.completed}/{project.tasks} tasks
-                              </span>
-                              <span className="font-medium">{project.progress}%</span>
-                            </div>
-                            <Progress value={project.progress} className="h-2" />
+                          <div className="flex -space-x-2">
+                            {project.team.map((member, idx) => (
+                              <Avatar key={idx} className="h-7 w-7 border-2 border-background">
+                                <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                                  {member}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">
+                              {project.completed}/{project.tasks} tasks
+                            </span>
+                            <span className="font-medium">{project.progress}%</span>
+                          </div>
+                          <Progress value={project.progress} className="h-2" />
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Activity */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Latest updates from your team</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {recentActivity.map((activity) => (
+                        <div key={activity.id} className="flex gap-3">
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                              {activity.user
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm">
+                              <span className="font-medium">{activity.user}</span>{" "}
+                              <span className="text-muted-foreground">{activity.action}</span>{" "}
+                              <span className="font-medium">{activity.target}</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{activity.time}</p>
                           </div>
                         </div>
                       ))}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-                  {/* Recent Activity */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                      <CardDescription>Latest updates from your team</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {recentActivity.map((activity) => (
-                          <div key={activity.id} className="flex gap-3">
-                            <Avatar className="h-8 w-8 shrink-0">
-                              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                                {activity.user
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm">
-                                <span className="font-medium">{activity.user}</span>{" "}
-                                <span className="text-muted-foreground">{activity.action}</span>{" "}
-                                <span className="font-medium">{activity.target}</span>
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">{activity.time}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+            {/* Departments Tab */}
+            <TabsContent value="departments" className="p-6 m-0">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Departments</h2>
+                  <p className="text-sm text-muted-foreground">Organize your workspace by departments</p>
                 </div>
-              </TabsContent>
-
-              {/* Departments Tab */}
-              <TabsContent value="departments" className="p-6 m-0">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold">Departments</h2>
-                    <p className="text-sm text-muted-foreground">Organize your workspace by departments</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                    >
-                      {viewMode === "grid" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-                    </Button>
-                    <Dialog open={createDeptOpen} onOpenChange={setCreateDeptOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Department
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Create Department</DialogTitle>
-                          <DialogDescription>Add a new department to your workspace</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div className="grid grid-cols-4 gap-4">
-                            <div className="col-span-3 space-y-2">
-                              <Label>Name</Label>
-                              <Input
-                                value={deptForm.name}
-                                onChange={(e) =>
-                                  setDeptForm({
-                                    ...deptForm,
-                                    name: e.target.value,
-                                    slug: e.target.value.toLowerCase().replace(/\s+/g, "-"),
-                                  })
-                                }
-                                placeholder="Engineering"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Icon</Label>
-                              <Select
-                                value={deptForm.icon}
-                                onValueChange={(v) => setDeptForm({ ...deptForm, icon: v })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {iconOptions.map((icon) => (
-                                    <SelectItem key={icon} value={icon}>
-                                      {icon}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Slug</Label>
-                            <Input
-                              value={deptForm.slug}
-                              onChange={(e) => setDeptForm({ ...deptForm, slug: e.target.value })}
-                              placeholder="engineering"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Textarea
-                              value={deptForm.description}
-                              onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
-                              placeholder="Department description..."
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Color</Label>
-                            <div className="flex gap-2">
-                              {colorOptions.map((color) => (
-                                <button
-                                  key={color}
-                                  className={`h-8 w-8 rounded-full border-2 ${deptForm.color === color ? "border-foreground" : "border-transparent"}`}
-                                  style={{ backgroundColor: color }}
-                                  onClick={() => setDeptForm({ ...deptForm, color })}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={deptForm.createChannel}
-                              onCheckedChange={(c) => setDeptForm({ ...deptForm, createChannel: c })}
-                            />
-                            <Label>Create department channel</Label>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setCreateDeptOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleCreateDepartment}>Create Department</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-
-                <div
-                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}
-                >
-                  {filteredDepartments.map((dept) => (
-                    <Card key={dept.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
-                              style={{ backgroundColor: dept.color + "20" }}
-                            >
-                              {dept.icon}
-                            </div>
-                            <div>
-                              <CardTitle className="text-base">{dept.name}</CardTitle>
-                              <CardDescription className="text-xs">/{dept.slug}</CardDescription>
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedDept(dept)
-                                  setDeptForm({
-                                    name: dept.name,
-                                    slug: dept.slug,
-                                    description: dept.description,
-                                    icon: dept.icon,
-                                    color: dept.color,
-                                    createChannel: false,
-                                  })
-                                  setEditDeptOpen(true)
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <UserPlus className="h-4 w-4 mr-2" />
-                                Add Members
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Settings className="h-4 w-4 mr-2" />
-                                Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => {
-                                  setSelectedDept(dept)
-                                  setDeleteDeptOpen(true)
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{dept.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {dept.members}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="h-4 w-4" />
-                            {dept.channels}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-
-              {/* Channels Tab */}
-              <TabsContent value="channels" className="p-6 m-0">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold">Channels</h2>
-                    <p className="text-sm text-muted-foreground">Communication channels in your workspace</p>
-                  </div>
-                  <Dialog open={createChannelOpen} onOpenChange={setCreateChannelOpen}>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+                  >
+                    {viewMode === "grid" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+                  </Button>
+                  <Dialog open={createDeptOpen} onOpenChange={setCreateDeptOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Create Channel
+                        Create Department
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Create Channel</DialogTitle>
-                        <DialogDescription>Add a new channel to your workspace</DialogDescription>
+                        <DialogTitle>Create Department</DialogTitle>
+                        <DialogDescription>Add a new department to your workspace</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="col-span-3 space-y-2">
+                            <Label>Name</Label>
+                            <Input
+                              value={deptForm.name}
+                              onChange={(e) =>
+                                setDeptForm({
+                                  ...deptForm,
+                                  name: e.target.value,
+                                  slug: e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                                })
+                              }
+                              placeholder="Engineering"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Icon</Label>
+                            <Select value={deptForm.icon} onValueChange={(v) => setDeptForm({ ...deptForm, icon: v })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {iconOptions.map((icon) => (
+                                  <SelectItem key={icon} value={icon}>
+                                    {icon}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                         <div className="space-y-2">
-                          <Label>Channel Name</Label>
+                          <Label>Slug</Label>
                           <Input
-                            value={channelForm.name}
-                            onChange={(e) =>
-                              setChannelForm({
-                                ...channelForm,
-                                name: e.target.value.toLowerCase().replace(/\s+/g, "-"),
-                              })
-                            }
-                            placeholder="general"
+                            value={deptForm.slug}
+                            onChange={(e) => setDeptForm({ ...deptForm, slug: e.target.value })}
+                            placeholder="engineering"
                           />
                         </div>
                         <div className="space-y-2">
                           <Label>Description</Label>
                           <Textarea
-                            value={channelForm.description}
-                            onChange={(e) => setChannelForm({ ...channelForm, description: e.target.value })}
-                            placeholder="What is this channel about?"
+                            value={deptForm.description}
+                            onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
+                            placeholder="Department description..."
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Type</Label>
-                          <Select
-                            value={channelForm.type}
-                            onValueChange={(v) => setChannelForm({ ...channelForm, type: v })}
+                          <Label>Color</Label>
+                          <div className="flex gap-2">
+                            {colorOptions.map((color) => (
+                              <button
+                                key={color}
+                                className={`h-8 w-8 rounded-full border-2 ${deptForm.color === color ? "border-foreground" : "border-transparent"}`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => setDeptForm({ ...deptForm, color })}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={deptForm.createChannel}
+                            onCheckedChange={(c) => setDeptForm({ ...deptForm, createChannel: c })}
+                          />
+                          <Label>Create department channel</Label>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setCreateDeptOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateDepartment}>Create Department</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+
+              <div
+                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}
+              >
+                {filteredDepartments.map((dept) => (
+                  <Card key={dept.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
+                            style={{ backgroundColor: dept.color + "20" }}
                           >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="public">Public</SelectItem>
-                              <SelectItem value="private">Private</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            {dept.icon}
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">{dept.name}</CardTitle>
+                            <CardDescription className="text-xs">/{dept.slug}</CardDescription>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedDept(dept)
+                                setDeptForm({
+                                  name: dept.name,
+                                  slug: dept.slug,
+                                  description: dept.description,
+                                  icon: dept.icon,
+                                  color: dept.color,
+                                  createChannel: false,
+                                })
+                                setEditDeptOpen(true)
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Add Members
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Settings className="h-4 w-4 mr-2" />
+                              Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => {
+                                setSelectedDept(dept)
+                                setDeleteDeptOpen(true)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{dept.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          {dept.members}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" />
+                          {dept.channels}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Channels Tab */}
+            <TabsContent value="channels" className="p-6 m-0">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Channels</h2>
+                  <p className="text-sm text-muted-foreground">Communication channels in your workspace</p>
+                </div>
+                <Dialog open={createChannelOpen} onOpenChange={setCreateChannelOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Channel
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create Channel</DialogTitle>
+                      <DialogDescription>Add a new channel to your workspace</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Channel Name</Label>
+                        <Input
+                          value={channelForm.name}
+                          onChange={(e) =>
+                            setChannelForm({
+                              ...channelForm,
+                              name: e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                            })
+                          }
+                          placeholder="general"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          value={channelForm.description}
+                          onChange={(e) => setChannelForm({ ...channelForm, description: e.target.value })}
+                          placeholder="What is this channel about?"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Type</Label>
+                        <Select
+                          value={channelForm.type}
+                          onValueChange={(v) => setChannelForm({ ...channelForm, type: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="public">Public</SelectItem>
+                            <SelectItem value="private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Department (optional)</Label>
+                        <Select
+                          value={channelForm.departmentId || "none"}
+                          onValueChange={(v) => setChannelForm({ ...channelForm, departmentId: v === "none" ? "" : v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {departments.map((dept) => (
+                              <SelectItem key={dept.id} value={dept.id}>
+                                {dept.icon} {dept.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setCreateChannelOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateChannel}>Create Channel</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="space-y-2">
+                {filteredChannels.map((channel) => (
+                  <div
+                    key={channel.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                        {channel.type === "private" ? (
+                          <Lock className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <Hash className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{channel.name}</h4>
+                          {channel.unread > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {channel.unread} new
+                            </Badge>
+                          )}
+                          {channel.departmentId && (
+                            <Badge variant="outline" className="text-xs">
+                              {departments.find((d) => d.id === channel.departmentId)?.icon}{" "}
+                              {departments.find((d) => d.id === channel.departmentId)?.name}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{channel.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {channel.members}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedChannel(channel)
+                              setChannelForm({
+                                name: channel.name,
+                                description: channel.description,
+                                type: channel.type,
+                                departmentId: channel.departmentId || "",
+                              })
+                              setEditChannelOpen(true)
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Invite Members
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Settings className="h-4 w-4 mr-2" />
+                            Settings
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              setSelectedChannel(channel)
+                              setDeleteChannelOpen(true)
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Projects Tab */}
+            <TabsContent value="projects" className="p-6 m-0">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Projects</h2>
+                  <p className="text-sm text-muted-foreground">Manage workspace projects</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+                  >
+                    {viewMode === "grid" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+                  </Button>
+                  <Dialog open={createProjectOpen} onOpenChange={setCreateProjectOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Project
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Create Project</DialogTitle>
+                        <DialogDescription>Start a new project in your workspace</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="col-span-3 space-y-2">
+                            <Label>Project Name</Label>
+                            <Input
+                              value={projectForm.name}
+                              onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                              placeholder="Q1 Product Launch"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Icon</Label>
+                            <Select
+                              value={projectForm.icon}
+                              onValueChange={(v) => setProjectForm({ ...projectForm, icon: v })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {iconOptions.map((icon) => (
+                                  <SelectItem key={icon} value={icon}>
+                                    {icon}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                         <div className="space-y-2">
-                          <Label>Department (optional)</Label>
+                          <Label>Description</Label>
+                          <Textarea
+                            value={projectForm.description}
+                            onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                            placeholder="Project description..."
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Status</Label>
+                            <Select
+                              value={projectForm.status}
+                              onValueChange={(v) => setProjectForm({ ...projectForm, status: v })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="planning">Planning</SelectItem>
+                                <SelectItem value="in-progress">In Progress</SelectItem>
+                                <SelectItem value="on-hold">On Hold</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Priority</Label>
+                            <Select
+                              value={projectForm.priority}
+                              onValueChange={(v) => setProjectForm({ ...projectForm, priority: v })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="critical">Critical</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Start Date</Label>
+                            <Input
+                              type="date"
+                              value={projectForm.startDate}
+                              onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>End Date</Label>
+                            <Input
+                              type="date"
+                              value={projectForm.endDate}
+                              onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Department</Label>
                           <Select
-                            value={channelForm.departmentId || "none"}
+                            value={projectForm.departmentId || "none"}
                             onValueChange={(v) =>
-                              setChannelForm({ ...channelForm, departmentId: v === "none" ? "" : v })
+                              setProjectForm({ ...projectForm, departmentId: v === "none" ? "" : v })
                             }
                           >
                             <SelectTrigger>
@@ -922,52 +1156,45 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setCreateChannelOpen(false)}>
+                        <Button variant="outline" onClick={() => setCreateProjectOpen(false)}>
                           Cancel
                         </Button>
-                        <Button onClick={handleCreateChannel}>Create Channel</Button>
+                        <Button onClick={handleCreateProject}>Create Project</Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  {filteredChannels.map((channel) => (
-                    <div
-                      key={channel.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                          {channel.type === "private" ? (
-                            <Lock className="h-5 w-5 text-muted-foreground" />
-                          ) : (
-                            <Hash className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{channel.name}</h4>
-                            {channel.unread > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                {channel.unread} new
-                              </Badge>
-                            )}
-                            {channel.departmentId && (
-                              <Badge variant="outline" className="text-xs">
-                                {departments.find((d) => d.id === channel.departmentId)?.icon}{" "}
-                                {departments.find((d) => d.id === channel.departmentId)?.name}
-                              </Badge>
-                            )}
+              <div
+                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}
+              >
+                {filteredProjects.map((project) => (
+                  <Card key={project.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center text-xl">
+                            {project.icon}
                           </div>
-                          <p className="text-sm text-muted-foreground">{channel.description}</p>
+                          <div>
+                            <CardTitle className="text-base">{project.name}</CardTitle>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge
+                                variant={project.status === "in-progress" ? "default" : "secondary"}
+                                className="text-xs"
+                              >
+                                {project.status}
+                              </Badge>
+                              <Badge
+                                variant={project.priority === "high" ? "destructive" : "outline"}
+                                className="text-xs"
+                              >
+                                {project.priority}
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {channel.members}
-                        </span>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -977,14 +1204,18 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() => {
-                                setSelectedChannel(channel)
-                                setChannelForm({
-                                  name: channel.name,
-                                  description: channel.description,
-                                  type: channel.type,
-                                  departmentId: channel.departmentId || "",
+                                setSelectedProject(project)
+                                setProjectForm({
+                                  name: project.name,
+                                  description: "",
+                                  icon: project.icon,
+                                  status: project.status,
+                                  priority: project.priority,
+                                  startDate: "",
+                                  endDate: project.dueDate,
+                                  departmentId: project.departmentId || "",
                                 })
-                                setEditChannelOpen(true)
+                                setEditProjectOpen(true)
                               }}
                             >
                               <Edit className="h-4 w-4 mr-2" />
@@ -992,7 +1223,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <UserPlus className="h-4 w-4 mr-2" />
-                              Invite Members
+                              Add Members
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Settings className="h-4 w-4 mr-2" />
@@ -1002,8 +1233,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => {
-                                setSelectedChannel(channel)
-                                setDeleteChannelOpen(true)
+                                setSelectedProject(project)
+                                setDeleteProjectOpen(true)
                               }}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -1012,295 +1243,58 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-
-              {/* Projects Tab */}
-              <TabsContent value="projects" className="p-6 m-0">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold">Projects</h2>
-                    <p className="text-sm text-muted-foreground">Manage workspace projects</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filter
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                    >
-                      {viewMode === "grid" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-                    </Button>
-                    <Dialog open={createProjectOpen} onOpenChange={setCreateProjectOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Project
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-lg">
-                        <DialogHeader>
-                          <DialogTitle>Create Project</DialogTitle>
-                          <DialogDescription>Start a new project in your workspace</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div className="grid grid-cols-4 gap-4">
-                            <div className="col-span-3 space-y-2">
-                              <Label>Project Name</Label>
-                              <Input
-                                value={projectForm.name}
-                                onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                                placeholder="Q1 Product Launch"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Icon</Label>
-                              <Select
-                                value={projectForm.icon}
-                                onValueChange={(v) => setProjectForm({ ...projectForm, icon: v })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {iconOptions.map((icon) => (
-                                    <SelectItem key={icon} value={icon}>
-                                      {icon}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Textarea
-                              value={projectForm.description}
-                              onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                              placeholder="Project description..."
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Status</Label>
-                              <Select
-                                value={projectForm.status}
-                                onValueChange={(v) => setProjectForm({ ...projectForm, status: v })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="planning">Planning</SelectItem>
-                                  <SelectItem value="in-progress">In Progress</SelectItem>
-                                  <SelectItem value="on-hold">On Hold</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Priority</Label>
-                              <Select
-                                value={projectForm.priority}
-                                onValueChange={(v) => setProjectForm({ ...projectForm, priority: v })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="low">Low</SelectItem>
-                                  <SelectItem value="medium">Medium</SelectItem>
-                                  <SelectItem value="high">High</SelectItem>
-                                  <SelectItem value="critical">Critical</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Start Date</Label>
-                              <Input
-                                type="date"
-                                value={projectForm.startDate}
-                                onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>End Date</Label>
-                              <Input
-                                type="date"
-                                value={projectForm.endDate}
-                                onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })}
-                              />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Department</Label>
-                            <Select
-                              value={projectForm.departmentId || "none"}
-                              onValueChange={(v) =>
-                                setProjectForm({ ...projectForm, departmentId: v === "none" ? "" : v })
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select department" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                {departments.map((dept) => (
-                                  <SelectItem key={dept.id} value={dept.id}>
-                                    {dept.icon} {dept.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setCreateProjectOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleCreateProject}>Create Project</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-
-                <div
-                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}
-                >
-                  {filteredProjects.map((project) => (
-                    <Card key={project.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center text-xl">
-                              {project.icon}
-                            </div>
-                            <div>
-                              <CardTitle className="text-base">{project.name}</CardTitle>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge
-                                  variant={project.status === "in-progress" ? "default" : "secondary"}
-                                  className="text-xs"
-                                >
-                                  {project.status}
-                                </Badge>
-                                <Badge
-                                  variant={project.priority === "high" ? "destructive" : "outline"}
-                                  className="text-xs"
-                                >
-                                  {project.priority}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedProject(project)
-                                  setProjectForm({
-                                    name: project.name,
-                                    description: "",
-                                    icon: project.icon,
-                                    status: project.status,
-                                    priority: project.priority,
-                                    startDate: "",
-                                    endDate: project.dueDate,
-                                    departmentId: project.departmentId || "",
-                                  })
-                                  setEditProjectOpen(true)
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <UserPlus className="h-4 w-4 mr-2" />
-                                Add Members
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Settings className="h-4 w-4 mr-2" />
-                                Settings
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => {
-                                  setSelectedProject(project)
-                                  setDeleteProjectOpen(true)
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Due {project.dueDate}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Due {project.dueDate}
+                        </span>
+                        {project.departmentId && (
+                          <Badge variant="outline" className="text-xs">
+                            {departments.find((d) => d.id === project.departmentId)?.icon}{" "}
+                            {departments.find((d) => d.id === project.departmentId)?.name}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {project.completed}/{project.tasks} tasks
                           </span>
-                          {project.departmentId && (
-                            <Badge variant="outline" className="text-xs">
-                              {departments.find((d) => d.id === project.departmentId)?.icon}{" "}
-                              {departments.find((d) => d.id === project.departmentId)?.name}
-                            </Badge>
-                          )}
+                          <span className="font-medium">{project.progress}%</span>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">
-                              {project.completed}/{project.tasks} tasks
-                            </span>
-                            <span className="font-medium">{project.progress}%</span>
-                          </div>
-                          <Progress value={project.progress} className="h-2" />
+                        <Progress value={project.progress} className="h-2" />
+                      </div>
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex -space-x-2">
+                          {project.team.map((member, idx) => (
+                            <Avatar key={idx} className="h-7 w-7 border-2 border-background">
+                              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                                {member}
+                              </AvatarFallback>
+                            </Avatar>
+                          ))}
                         </div>
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex -space-x-2">
-                            {project.team.map((member, idx) => (
-                              <Avatar key={idx} className="h-7 w-7 border-2 border-background">
-                                <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                                  {member}
-                                </AvatarFallback>
-                              </Avatar>
-                            ))}
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            View
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
+                        <Button variant="ghost" size="sm">
+                          View
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
 
-              {/* Calendar Tab */}
-              <TabsContent value="calendar" className="p-0 m-0 h-full">
-                <CalendarView />
-              </TabsContent>
-            </ScrollArea>
-          </Tabs>
-        </div>
-      </main>
+            {/* Calendar Tab */}
+            <TabsContent value="calendar" className="p-0 m-0 h-full">
+              <CalendarView />
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
+      </div>
 
+      {/* All Dialogs */}
       {/* Edit Department Dialog */}
       <Dialog open={editDeptOpen} onOpenChange={setEditDeptOpen}>
         <DialogContent>
@@ -1544,6 +1538,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }

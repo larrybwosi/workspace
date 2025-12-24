@@ -17,12 +17,13 @@ const createProjectSchema = z.object({
   memberIds: z.array(z.string()).optional(),
 })
 
-export async function GET(request: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    const {workspaceId}= await params
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
     // Verify workspace membership
     const member = await prisma.workspaceMember.findFirst({
       where: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         userId: session.user.id,
       },
     })
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
 
     const projects = await prisma.project.findMany({
       where: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         ...(status && { status }),
         ...(departmentId && { departmentId }),
         ...(priority && { priority }),
@@ -139,17 +140,18 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const {workspaceId}= await params
     // Verify workspace membership with proper permissions
     const member = await prisma.workspaceMember.findFirst({
       where: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         userId: session.user.id,
         role: {
           in: ["owner", "admin", "member"],
@@ -181,7 +183,7 @@ export async function POST(request: NextRequest, { params }: { params: { workspa
         status: validatedData.status || "planning",
         startDate: new Date(validatedData.startDate),
         endDate: new Date(validatedData.endDate),
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         creatorId: session.user.id,
         templateId: validatedData.templateId,
         members: {
@@ -198,13 +200,14 @@ export async function POST(request: NextRequest, { params }: { params: { workspa
     // Create audit log
     await prisma.workspaceAuditLog.create({
       data: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         userId: session.user.id,
         action: "project.created",
-        details: {
-          projectId: project.id,
-          projectName: project.name,
-        },
+        resource: "project",
+        // details: {
+        //   projectId: project.id,
+        //   projectName: project.name,
+        // },
       },
     })
 

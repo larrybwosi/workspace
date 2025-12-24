@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       orderBy: { name: "asc" },
     })
 
-    return NextResponse.json({ departments })
+    return NextResponse.json(departments)
   } catch (error) {
     console.error("[v0] Failed to fetch departments:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

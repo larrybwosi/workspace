@@ -1,5 +1,7 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+
 import * as React from "react"
 import {
   LayoutDashboard,
@@ -29,7 +31,6 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   DropdownMenu,
@@ -38,17 +39,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import {
   useWorkspace,
@@ -65,6 +55,15 @@ import {
   useUpdateWorkspaceChannel,
   useDeleteWorkspaceChannel,
 } from "@/hooks/api/use-workspaces"
+import { CreateDepartmentDialog } from "@/components/workspace/create-department-dialog"
+import { EditDepartmentDialog } from "@/components/workspace/edit-department-dialog"
+import { DeleteDepartmentDialog } from "@/components/workspace/delete-department-dialog"
+import { CreateProjectDialog } from "@/components/workspace/create-project-dialog"
+import { EditProjectDialog } from "@/components/workspace/edit-project-dialog"
+import { DeleteProjectDialog } from "@/components/workspace/delete-project-dialog"
+import { CreateChannelDialog } from "@/components/workspace/create-channel-dialog"
+import { EditChannelDialog } from "@/components/workspace/edit-channel-dialog"
+import { DeleteChannelDialog } from "@/components/workspace/delete-channel-dialog"
 
 interface Department {
   id: string
@@ -87,76 +86,6 @@ interface Channel {
   name: string
   type: "public" | "private"
   unread: number
-}
-
-// Dialog Props Interfaces
-interface CreateDeptDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  deptForm: { name: string; icon: string; description: string }
-  setDeptForm: React.Dispatch<React.SetStateAction<{ name: string; icon: string; description: string }>>
-  handleCreateDept: () => Promise<void>
-}
-
-interface EditDeptDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  deptForm: { name: string; icon: string; description: string }
-  setDeptForm: React.Dispatch<React.SetStateAction<{ name: string; icon: string; description: string }>>
-  handleEditDept: () => Promise<void>
-}
-
-interface DeleteDeptDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  selectedDept: Department | null
-  handleDeleteDept: () => Promise<void>
-}
-
-interface CreateProjectDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  projectForm: { name: string; description: string; status: string }
-  setProjectForm: React.Dispatch<React.SetStateAction<{ name: string; description: string; status: string }>>
-  handleCreateProject: () => Promise<void>
-}
-
-interface EditProjectDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  projectForm: { name: string; description: string; status: string }
-  setProjectForm: React.Dispatch<React.SetStateAction<{ name: string; description: string; status: string }>>
-  handleEditProject: () => Promise<void>
-}
-
-interface DeleteProjectDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  selectedProject: Project | null
-  handleDeleteProject: () => Promise<void>
-}
-
-interface CreateChannelDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  channelForm: { name: string; description: string; type: "public" | "private" }
-  setChannelForm: React.Dispatch<React.SetStateAction<{ name: string; description: string; type: "public" | "private" }>>
-  handleCreateChannel: () => Promise<void>
-}
-
-interface EditChannelDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  channelForm: { name: string; description: string; type: "public" | "private" }
-  setChannelForm: React.Dispatch<React.SetStateAction<{ name: string; description: string; type: "public" | "private" }>>
-  handleEditChannel: () => Promise<void>
-}
-
-interface DeleteChannelDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  selectedChannel: Channel | null
-  handleDeleteChannel: () => Promise<void>
 }
 
 export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
@@ -201,7 +130,6 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
   const updateDepartment = useUpdateDepartment(workspaceData?.id || "")
   const deleteDepartment = useDeleteDepartment(workspaceData?.id || "")
 
-  const createProject = useCreateWorkspaceProject(workspaceData?.id || "")
   const updateProject = useUpdateWorkspaceProject(workspaceData?.id || "")
   const deleteProject = useDeleteWorkspaceProject(workspaceData?.id || "")
 
@@ -264,21 +192,6 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
       toast({ title: "Department deleted", description: "Department has been deleted successfully." })
     } catch (error) {
       toast({ title: "Error", description: "Failed to delete department", variant: "destructive" })
-    }
-  }
-
-  const handleCreateProject = async () => {
-    try {
-      await createProject.mutateAsync({
-        name: projectForm.name,
-        description: projectForm.description,
-        status: projectForm.status as any,
-      })
-      setCreateProjectOpen(false)
-      setProjectForm({ name: "", description: "", status: "planning" })
-      toast({ title: "Project created", description: `${projectForm.name} has been created successfully.` })
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to create project", variant: "destructive" })
     }
   }
 
@@ -392,7 +305,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
   }
 
   return (
-    <div className="w-72 bg-sidebar-accent border-r border-sidebar-border flex flex-col">
+    <>
       {/* Workspace Header */}
       <div className="border-b border-sidebar-border p-4 shrink-0">
         <div className="flex items-center gap-3 mb-3">
@@ -723,481 +636,69 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
       </div>
 
       {/* Dialogs */}
-      <CreateDeptDialog
+      <CreateDepartmentDialog
         open={createDeptOpen}
         onOpenChange={setCreateDeptOpen}
-        deptForm={deptForm}
-        setDeptForm={setDeptForm}
-        handleCreateDept={handleCreateDept}
+        workspaceId={workspaceData?.id || ""}
+        onSuccess={() => {
+          /* refetch data */
+        }}
       />
-      
-      <EditDeptDialog
-        open={editDeptOpen}
-        onOpenChange={setEditDeptOpen}
+      <EditDepartmentDialog
+        editDeptOpen={editDeptOpen}
+        setEditDeptOpen={setEditDeptOpen}
         deptForm={deptForm}
         setDeptForm={setDeptForm}
         handleEditDept={handleEditDept}
       />
-      
-      <DeleteDeptDialog
-        open={deleteDeptOpen}
-        onOpenChange={setDeleteDeptOpen}
+      <DeleteDepartmentDialog
+        deleteDeptOpen={deleteDeptOpen}
+        setDeleteDeptOpen={setDeleteDeptOpen}
         selectedDept={selectedDept}
         handleDeleteDept={handleDeleteDept}
       />
-      
       <CreateProjectDialog
         open={createProjectOpen}
         onOpenChange={setCreateProjectOpen}
-        projectForm={projectForm}
-        setProjectForm={setProjectForm}
-        handleCreateProject={handleCreateProject}
+        workspaceId={workspaceData?.id || ""}
+        onSuccess={() => {
+          /* refetch data */
+        }}
       />
-      
       <EditProjectDialog
-        open={editProjectOpen}
-        onOpenChange={setEditProjectOpen}
+        editProjectOpen={editProjectOpen}
+        setEditProjectOpen={setEditProjectOpen}
         projectForm={projectForm}
         setProjectForm={setProjectForm}
         handleEditProject={handleEditProject}
       />
-      
       <DeleteProjectDialog
-        open={deleteProjectOpen}
-        onOpenChange={setDeleteProjectOpen}
+        deleteProjectOpen={deleteProjectOpen}
+        setDeleteProjectOpen={setDeleteProjectOpen}
         selectedProject={selectedProject}
         handleDeleteProject={handleDeleteProject}
       />
-      
       <CreateChannelDialog
         open={createChannelOpen}
         onOpenChange={setCreateChannelOpen}
-        channelForm={channelForm}
-        setChannelForm={setChannelForm}
-        handleCreateChannel={handleCreateChannel}
+        workspaceId={workspaceData?.id || ""}
+        onSuccess={() => {
+          /* refetch data */
+        }}
       />
-      
       <EditChannelDialog
-        open={editChannelOpen}
-        onOpenChange={setEditChannelOpen}
+        editChannelOpen={editChannelOpen}
+        setEditChannelOpen={setEditChannelOpen}
         channelForm={channelForm}
         setChannelForm={setChannelForm}
         handleEditChannel={handleEditChannel}
       />
-      
       <DeleteChannelDialog
-        open={deleteChannelOpen}
-        onOpenChange={setDeleteChannelOpen}
+        deleteChannelOpen={deleteChannelOpen}
+        setDeleteChannelOpen={setDeleteChannelOpen}
         selectedChannel={selectedChannel}
         handleDeleteChannel={handleDeleteChannel}
       />
-    </div>
+    </>
   )
 }
-
-// Create Department Dialog
-const CreateDeptDialog: React.FC<CreateDeptDialogProps> = ({
-  open,
-  onOpenChange,
-  deptForm,
-  setDeptForm,
-  handleCreateDept,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Create Department</DialogTitle>
-        <DialogDescription>Add a new department to your workspace.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Department Name</Label>
-          <Input
-            placeholder="e.g., Engineering, Marketing"
-            value={deptForm.name}
-            onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Icon</Label>
-          <Select value={deptForm.icon} onValueChange={(v) => setDeptForm({ ...deptForm, icon: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="💼">💼 Business</SelectItem>
-              <SelectItem value="💻">💻 Engineering</SelectItem>
-              <SelectItem value="🎨">🎨 Design</SelectItem>
-              <SelectItem value="📢">📢 Marketing</SelectItem>
-              <SelectItem value="💰">💰 Finance</SelectItem>
-              <SelectItem value="🤝">🤝 HR</SelectItem>
-              <SelectItem value="📊">📊 Analytics</SelectItem>
-              <SelectItem value="🔧">🔧 Operations</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Description (Optional)</Label>
-          <Textarea
-            placeholder="Describe the department's purpose..."
-            value={deptForm.description}
-            onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
-          />
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button onClick={handleCreateDept} disabled={!deptForm.name}>
-          Create Department
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Edit Department Dialog
-const EditDeptDialog: React.FC<EditDeptDialogProps> = ({
-  open,
-  onOpenChange,
-  deptForm,
-  setDeptForm,
-  handleEditDept,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Edit Department</DialogTitle>
-        <DialogDescription>Update department information.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Department Name</Label>
-          <Input value={deptForm.name} onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Icon</Label>
-          <Select value={deptForm.icon} onValueChange={(v) => setDeptForm({ ...deptForm, icon: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="💼">💼 Business</SelectItem>
-              <SelectItem value="💻">💻 Engineering</SelectItem>
-              <SelectItem value="🎨">🎨 Design</SelectItem>
-              <SelectItem value="📢">📢 Marketing</SelectItem>
-              <SelectItem value="💰">💰 Finance</SelectItem>
-              <SelectItem value="🤝">🤝 HR</SelectItem>
-              <SelectItem value="📊">📊 Analytics</SelectItem>
-              <SelectItem value="🔧">🔧 Operations</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button onClick={handleEditDept}>Save Changes</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Delete Department Dialog
-const DeleteDeptDialog: React.FC<DeleteDeptDialogProps> = ({
-  open,
-  onOpenChange,
-  selectedDept,
-  handleDeleteDept,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Delete Department</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete "{selectedDept?.name}"? This action cannot be undone.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={handleDeleteDept}>
-          Delete Department
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Create Project Dialog
-const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({
-  open,
-  onOpenChange,
-  projectForm,
-  setProjectForm,
-  handleCreateProject,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Create Project</DialogTitle>
-        <DialogDescription>Start a new project in your workspace.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Project Name</Label>
-          <Input
-            placeholder="e.g., Q1 Product Launch"
-            value={projectForm.name}
-            onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select value={projectForm.status} onValueChange={(v) => setProjectForm({ ...projectForm, status: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="planning">Planning</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="on-hold">On Hold</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Description (Optional)</Label>
-          <Textarea
-            placeholder="Describe the project..."
-            value={projectForm.description}
-            onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-          />
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button onClick={handleCreateProject} disabled={!projectForm.name}>
-          Create Project
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Edit Project Dialog
-const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
-  open,
-  onOpenChange,
-  projectForm,
-  setProjectForm,
-  handleEditProject,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Edit Project</DialogTitle>
-        <DialogDescription>Update project information.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Project Name</Label>
-          <Input value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select value={projectForm.status} onValueChange={(v) => setProjectForm({ ...projectForm, status: v })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="planning">Planning</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="on-hold">On Hold</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button onClick={handleEditProject}>Save Changes</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Delete Project Dialog
-const DeleteProjectDialog: React.FC<DeleteProjectDialogProps> = ({
-  open,
-  onOpenChange,
-  selectedProject,
-  handleDeleteProject,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Delete Project</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete "{selectedProject?.name}"? All tasks and data will be lost.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={handleDeleteProject}>
-          Delete Project
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Create Channel Dialog
-const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
-  open,
-  onOpenChange,
-  channelForm,
-  setChannelForm,
-  handleCreateChannel,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Create Channel</DialogTitle>
-        <DialogDescription>Add a new communication channel.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Channel Name</Label>
-          <Input
-            placeholder="e.g., general, announcements"
-            value={channelForm.name}
-            onChange={(e) => setChannelForm({ ...channelForm, name: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Channel Type</Label>
-          <Select
-            value={channelForm.type}
-            onValueChange={(v: "public" | "private") => setChannelForm({ ...channelForm, type: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="public">
-                <div className="flex items-center gap-2">
-                  <Hash className="h-4 w-4" />
-                  Public - Anyone can join
-                </div>
-              </SelectItem>
-              <SelectItem value="private">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Private - Invite only
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Description (Optional)</Label>
-          <Textarea
-            placeholder="What is this channel about?"
-            value={channelForm.description}
-            onChange={(e) => setChannelForm({ ...channelForm, description: e.target.value })}
-          />
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button onClick={handleCreateChannel} disabled={!channelForm.name}>
-          Create Channel
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Edit Channel Dialog
-const EditChannelDialog: React.FC<EditChannelDialogProps> = ({
-  open,
-  onOpenChange,
-  channelForm,
-  setChannelForm,
-  handleEditChannel,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Edit Channel</DialogTitle>
-        <DialogDescription>Update channel settings.</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Channel Name</Label>
-          <Input value={channelForm.name} onChange={(e) => setChannelForm({ ...channelForm, name: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Channel Type</Label>
-          <Select
-            value={channelForm.type}
-            onValueChange={(v: "public" | "private") => setChannelForm({ ...channelForm, type: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="public">Public</SelectItem>
-              <SelectItem value="private">Private</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button onClick={handleEditChannel}>Save Changes</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)
-
-// Delete Channel Dialog
-const DeleteChannelDialog: React.FC<DeleteChannelDialogProps> = ({
-  open,
-  onOpenChange,
-  selectedChannel,
-  handleDeleteChannel,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Delete Channel</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete "#{selectedChannel?.name}"? All messages will be lost.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={handleDeleteChannel}>
-          Delete Channel
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)

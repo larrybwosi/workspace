@@ -9,7 +9,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -47,6 +47,7 @@ model User {
   threadMembers  Thread[]        @relation("ThreadMembers")
   comments       Comment[]
   channelMembers ChannelMember[]
+  createdChannels Channel[]     @relation("ChannelCreator")
 
   // Task & Project Relations
   tasks           Task[]    @relation("TaskAssignees")
@@ -448,6 +449,9 @@ model Channel {
   invitations           Invitation[]
   calendarSubscriptions CalendarSubscription[]
   webhooks              ChannelWebhook[]
+
+  createdById String?
+  createdBy   User? @relation("ChannelCreator", fields: [createdById], references: [id])
 
   @@map("channels")
 }

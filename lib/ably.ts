@@ -32,7 +32,8 @@ export const AblyChannels = {
   user: (userId: string) => `user:${userId}`,
   notifications: (userId: string) => `notifications:${userId}`,
   presence: (channelId: string) => `presence:${channelId}`,
-  dm: (dmId: string) => `dm:${dmId}`, // Added DM channel naming
+  dm: (dmId: string) => `dm:${dmId}`,
+  workspace: (workspaceId: string) => `workspace:${workspaceId}`,
 }
 
 // Event types
@@ -51,7 +52,9 @@ export const AblyEvents = {
   TYPING_STOP: "typing:stop",
   USER_JOINED: "user:joined",
   USER_LEFT: "user:left",
-  DM_RECEIVED: "dm:received", // Added DM received event
+  DM_RECEIVED: "dm:received",
+  WORKSPACE_UPDATED: "workspace:updated",
+  CHANNEL_CREATED: "channel:created",
 }
 
 export const EVENTS = AblyEvents

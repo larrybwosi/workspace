@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const workspace = await prisma.workspace.findUnique({
-      where: { id: workspaceId },
+      where: { slug: workspaceId },
       include: {
         owner: {
           select: {

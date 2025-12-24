@@ -1,10 +1,11 @@
-import type { Metadata } from "next"
-import { Hash, Settings, UserPlus, Trash2, Edit, MoreVertical } from "lucide-react"
+"use client"
+
+import { useParams } from "next/navigation"
+import { Hash, Users, FolderKanban, Settings, UserPlus, Trash2, Edit, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,17 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Link from "next/link"
 
-export const metadata: Metadata = {
-  title: "Department Details",
-  description: "View and manage department details",
-}
+export default function DepartmentPage() {
+  const params = useParams()
+  const slug = params.slug as string
+  const departmentId = params.departmentId as string
 
-export default function DepartmentDetailPage({
-  params,
-}: {
-  params: { slug: string; departmentId: string }
-}) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -31,7 +28,7 @@ export default function DepartmentDetailPage({
           <div className="flex items-center gap-4">
             <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-2xl">💻</div>
             <div>
-              <h1 className="text-2xl font-semibold">Engineering</h1>
+              <h1 className="text-2xl font-semibold">Engineering Department</h1>
               <p className="text-sm text-muted-foreground">Technology and product development</p>
             </div>
           </div>
@@ -51,9 +48,11 @@ export default function DepartmentDetailPage({
                   <Edit className="mr-2 size-4" />
                   Edit Department
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 size-4" />
-                  Settings
+                <DropdownMenuItem asChild>
+                  <Link href={`/workspace/${slug}/departments/${departmentId}/settings`}>
+                    <Settings className="mr-2 size-4" />
+                    Department Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive">
@@ -66,170 +65,144 @@ export default function DepartmentDetailPage({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Main Department View */}
       <div className="flex-1 overflow-auto p-6">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="channels">Channels</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats */}
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardDescription>Total Members</CardDescription>
-                  <CardTitle className="text-3xl">45</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardDescription>Active Channels</CardDescription>
-                  <CardTitle className="text-3xl">8</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardDescription>Active Projects</CardDescription>
-                  <CardTitle className="text-3xl">12</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardDescription>Tasks Completed</CardDescription>
-                  <CardTitle className="text-3xl">234</CardTitle>
-                </CardHeader>
-              </Card>
-            </div>
-
-            {/* Department Manager */}
+        <div className="space-y-6">
+          {/* Quick Stats */}
+          <div className="grid gap-4 md:grid-cols-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Department Manager</CardTitle>
+              <CardHeader className="pb-3">
+                <CardDescription>Total Members</CardDescription>
+                <CardTitle className="text-3xl">45</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-12">
-                    <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">John Doe</p>
-                    <p className="text-sm text-muted-foreground">john.doe@company.com</p>
-                  </div>
-                  <Badge>Manager</Badge>
-                </div>
-              </CardContent>
             </Card>
-
-            {/* Recent Activity */}
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+              <CardHeader className="pb-3">
+                <CardDescription>Active Channels</CardDescription>
+                <CardTitle className="text-3xl">8</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex gap-4">
-                      <Avatar className="size-8">
-                        <AvatarFallback>U{i}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm">
-                          <span className="font-medium">User {i}</span> completed task in project
-                        </p>
-                        <p className="text-xs text-muted-foreground">{i} hours ago</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="members" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Department Members (45)</CardTitle>
-                <CardDescription>All members in this department</CardDescription>
+              <CardHeader className="pb-3">
+                <CardDescription>Active Projects</CardDescription>
+                <CardTitle className="text-3xl">12</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[...Array(10)].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback>U{i}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">Team Member {i + 1}</p>
-                          <p className="text-sm text-muted-foreground">member{i + 1}@company.com</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Developer</Badge>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
             </Card>
-          </TabsContent>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>Tasks This Week</CardDescription>
+                <CardTitle className="text-3xl">234</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
 
-          <TabsContent value="channels" className="space-y-4">
+          {/* Main Sections Grid */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Channels Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Department Channels (8)</CardTitle>
-                <CardDescription>Communication channels for this department</CardDescription>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Hash className="size-5" />
+                    Channels
+                  </CardTitle>
+                  <Button variant="ghost" size="sm">
+                    View All
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {["general", "dev-team", "announcements", "code-review", "standup"].map((channel) => (
-                    <div key={channel} className="flex items-center justify-between rounded-lg border p-3">
+                  {["general", "dev-team", "announcements", "code-review"].map((channel) => (
+                    <Link
+                      key={channel}
+                      href={`/workspace/${slug}/channels/${channel}`}
+                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted transition-colors"
+                    >
                       <div className="flex items-center gap-3">
                         <Hash className="size-4 text-muted-foreground" />
                         <span className="font-medium">{channel}</span>
                       </div>
-                      <Badge variant="secondary">Public</Badge>
-                    </div>
+                      <Badge variant="secondary">24 online</Badge>
+                    </Link>
                   ))}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="activity" className="space-y-4">
+            {/* Projects Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Department Activity</CardTitle>
-                <CardDescription>Recent activity and updates</CardDescription>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FolderKanban className="size-5" />
+                    Projects
+                  </CardTitle>
+                  <Button variant="ghost" size="sm">
+                    View All
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[...Array(15)].map((_, i) => (
-                    <div key={i} className="flex gap-4">
-                      <Avatar className="size-8">
-                        <AvatarFallback>U{i}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm">
-                          <span className="font-medium">User {i}</span> performed action in the department
-                        </p>
-                        <p className="text-xs text-muted-foreground">{i} hours ago</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {["Mobile App Redesign", "API v2 Migration", "Dashboard Analytics", "Security Audit"].map(
+                    (project, i) => (
+                      <Link
+                        key={project}
+                        href={`/workspace/${slug}/projects/proj-${i}`}
+                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{project}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary" style={{ width: `${60 + i * 10}%` }} />
+                            </div>
+                            <span className="text-xs text-muted-foreground">{60 + i * 10}%</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ),
+                  )}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+
+          {/* Team Members */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="size-5" />
+                  Team Members
+                </CardTitle>
+                <Button variant="outline" size="sm">
+                  <UserPlus className="mr-2 size-4" />
+                  Add Member
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
+                    <Avatar>
+                      <AvatarFallback>U{i}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">Team Member {i + 1}</p>
+                      <p className="text-xs text-muted-foreground truncate">member{i + 1}@company.com</p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      Dev
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
