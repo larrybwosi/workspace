@@ -14,7 +14,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { useWorkspaces } from "@/hooks/api/use-workspaces"
-// import { CreateWorkspaceDialog } from "@/components/features/workspace/create-workspace-dialog"
+import { CreateWorkspaceDialog } from "@/components/features/workspace/create-workspace-dialog"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
@@ -162,7 +162,7 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} /> */}
+      <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </>
   )
 }

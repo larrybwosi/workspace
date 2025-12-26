@@ -58,15 +58,15 @@ import {
 } from "@/hooks/api/use-workspaces"
 
 // Dialog Imports
-import { CreateDepartmentDialog } from "@/components/workspace/create-department-dialog"
-import { EditDepartmentDialog } from "@/components/workspace/edit-department-dialog"
-import { DeleteDepartmentDialog } from "@/components/workspace/delete-department-dialog"
-import { CreateProjectDialog } from "@/components/workspace/create-project-dialog"
-import { EditProjectDialog } from "@/components/workspace/edit-project-dialog"
-import { DeleteProjectDialog } from "@/components/workspace/delete-project-dialog"
-import { CreateChannelDialog } from "@/components/workspace/create-channel-dialog"
-import { EditChannelDialog } from "@/components/workspace/edit-channel-dialog"
-import { DeleteChannelDialog } from "@/components/workspace/delete-channel-dialog"
+import { CreateDepartmentDialog } from "@/components/features/workspace/create-department-dialog"
+import { EditDepartmentDialog } from "@/components/features/workspace/edit-department-dialog"
+import { DeleteDepartmentDialog } from "@/components/features/workspace/delete-department-dialog"
+import { CreateProjectDialog } from "@/components/features/workspace/create-project-dialog"
+import { EditProjectDialog } from "@/components/features/workspace/edit-project-dialog"
+import { DeleteProjectDialog } from "@/components/features/workspace/delete-project-dialog"
+import { CreateChannelDialog } from "@/components/features/workspace/create-channel-dialog"
+import { EditChannelDialog } from "@/components/features/workspace/edit-channel-dialog"
+import { DeleteChannelDialog } from "@/components/features/workspace/delete-channel-dialog"
 
 // --- Interfaces ---
 interface Department {

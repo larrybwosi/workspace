@@ -10,6 +10,9 @@ export async function GET(request: NextRequest) {
     }
 
     const channels = await prisma.channel.findMany({
+      where: {
+        workspaceId: null,
+      },
       include: {
         children: true,
         members: {

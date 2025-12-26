@@ -120,7 +120,6 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
       replyToMessageMutation.mutate({
         messageId: replyingTo.id,
         channelId: activeChannelId,
-        userId: mockUsers[0].id,
         content,
         mentions: [],
         messageType: "standard" as const,
@@ -128,7 +127,6 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
     } else {
       sendMessageMutation.mutate({
         channelId: activeChannelId,
-        userId: mockUsers[0].id,
         content,
         mentions: [],
         messageType: "standard" as const,

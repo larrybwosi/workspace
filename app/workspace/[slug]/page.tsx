@@ -65,7 +65,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CalendarView } from "@/components/calendar-view"
+import { CalendarView } from "@/components/features/calendar/calendar-view"
 import { useToast } from "@/hooks/use-toast"
 
 interface WorkspacePageProps {
@@ -121,9 +121,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     endDate: "",
     departmentId: "",
   })
-
-  // Mock workspace ID - in real app, fetch from API based on slug
-  const workspaceId = "workspace-1"
 
   // Mock data - replace with actual API calls
   const stats = [

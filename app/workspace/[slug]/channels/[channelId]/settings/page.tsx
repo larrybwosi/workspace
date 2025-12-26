@@ -1,55 +1,166 @@
 import type { Metadata } from "next"
-import { Webhook, Plus, Trash2, Power, Copy, Eye } from "lucide-react"
+import { Hash, UserPlus, Trash2, Edit, MoreVertical, Pin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChannelWebhooksTab } from "@/components/features/workspace/channel-webhooks-tab"
+// import { ChannelWebhooksTab } from "@/components/channel-webhooks-tab"
 
 export const metadata: Metadata = {
   title: "Channel Settings",
   description: "Manage channel settings and webhooks",
 }
 
-export default function ChannelSettingsPage({
+export default async function ChannelSettingsPage({
   params,
 }: {
-  params: { slug: string; channelId: string }
+  params: Promise<{ slug: string; channelId: string }>
 }) {
+  const { slug, channelId } = await params
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Channel Settings</h1>
-            <p className="text-sm text-muted-foreground">Configure channel settings, permissions, and integrations</p>
+          <div className="flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10">
+              <Hash className="size-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold">Channel Settings</h1>
+              <p className="text-sm text-muted-foreground">Configure channel settings, permissions, and integrations</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <UserPlus className="mr-2 size-4" />
+              Add Members
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <Edit className="mr-2 size-4" />
+                  Edit Channel
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive">
+                  <Trash2 className="mr-2 size-4" />
+                  Delete Channel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        <Tabs defaultValue="general" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+            <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="permissions">Permissions</TabsTrigger>
+            <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats */}
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Total Members</CardDescription>
+                  <CardTitle className="text-3xl">127</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Messages Today</CardDescription>
+                  <CardTitle className="text-3xl">48</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Files Shared</CardDescription>
+                  <CardTitle className="text-3xl">23</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Pinned Messages</CardDescription>
+                  <CardTitle className="text-3xl">5</CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+
+            {/* Channel Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Channel Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Channel Type</span>
+                  <Badge>Public</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Created</span>
+                  <span className="text-sm">January 15, 2024</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Department</span>
+                  <span className="text-sm">Engineering</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pinned Messages */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pinned Messages</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-4 rounded-lg border p-3">
+                      <Avatar className="size-8">
+                        <AvatarFallback>U{i}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">User {i}</span>
+                          <span className="text-xs text-muted-foreground">2 days ago</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Important announcement message that was pinned to the channel
+                        </p>
+                      </div>
+                      <Pin className="size-4 text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="general" className="space-y-6">
             <Card>
@@ -78,184 +189,30 @@ export default function ChannelSettingsPage({
             </Card>
           </TabsContent>
 
-          <TabsContent value="webhooks" className="space-y-6">
-            {/* Webhooks Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Channel Webhooks</h3>
-                <p className="text-sm text-muted-foreground">Connect external services to receive channel events</p>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 size-4" />
-                    Add Webhook
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Create Channel Webhook</DialogTitle>
-                    <DialogDescription>
-                      Configure a webhook to receive real-time events from this channel
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="webhook-name">Webhook Name</Label>
-                      <Input id="webhook-name" placeholder="e.g., Slack Integration" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="webhook-url">Webhook URL</Label>
-                      <Input id="webhook-url" type="url" placeholder="https://example.com/webhook" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Events to Trigger</Label>
-                      <div className="grid gap-3 pt-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="event-message-created" />
-                          <label htmlFor="event-message-created" className="text-sm">
-                            Message Created
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="event-message-updated" />
-                          <label htmlFor="event-message-updated" className="text-sm">
-                            Message Updated
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="event-message-deleted" />
-                          <label htmlFor="event-message-deleted" className="text-sm">
-                            Message Deleted
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="event-member-added" />
-                          <label htmlFor="event-member-added" className="text-sm">
-                            Member Added
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="event-member-removed" />
-                          <label htmlFor="event-member-removed" className="text-sm">
-                            Member Removed
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline">Cancel</Button>
-                    <Button>Create Webhook</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Webhooks List */}
-            <div className="space-y-4">
-              {[1, 2].map((i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                          <Webhook className="size-5" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <CardTitle>Slack Integration {i}</CardTitle>
-                            <Badge variant={i === 1 ? "default" : "secondary"}>{i === 1 ? "Active" : "Inactive"}</Badge>
-                          </div>
-                          <CardDescription className="mt-1">
-                            https://hooks.slack.com/services/T00000000/B00000000/...
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Power className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Events</span>
-                        <div className="flex gap-2">
-                          <Badge variant="outline">Message Created</Badge>
-                          <Badge variant="outline">Member Added</Badge>
-                          <Badge variant="outline">+2 more</Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Last Fired</span>
-                        <span className="text-sm">2 hours ago</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Total Deliveries</span>
-                        <span className="text-sm">1,234</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Success Rate</span>
-                        <span className="text-sm font-medium text-green-600">99.2%</span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Webhook Secret</span>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="mr-2 size-4" />
-                            Reveal
-                          </Button>
-                        </div>
-                        <div className="rounded-lg border bg-muted p-3">
-                          <code className="text-xs">••••••••••••••••••••••••••••••••</code>
-                          <Button variant="ghost" size="icon" className="ml-2 size-6">
-                            <Copy className="size-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Webhook Documentation */}
+          <TabsContent value="members" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Webhook Documentation</CardTitle>
-                <CardDescription>Learn how to integrate with channel webhooks</CardDescription>
+                <CardTitle>Channel Members (127)</CardTitle>
+                <CardDescription>All members with access to this channel</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="mb-2 font-medium text-sm">Webhook Payload Example</h4>
-                  <pre className="rounded-lg border bg-muted p-4 text-xs">
-                    {`{
-  "event": "message.created",
-  "channel_id": "ch_123456",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "data": {
-    "message_id": "msg_789",
-    "content": "Hello world",
-    "author": {
-      "id": "usr_456",
-      "name": "John Doe"
-    }
-  }
-}`}
-                  </pre>
-                </div>
-                <div>
-                  <h4 className="mb-2 font-medium text-sm">Signature Verification</h4>
-                  <p className="text-sm text-muted-foreground">
-                    All webhook requests include an <code className="rounded bg-muted px-1">X-Webhook-Signature</code>{" "}
-                    header for security verification. Use the webhook secret to validate requests.
-                  </p>
+              <CardContent>
+                <div className="space-y-4">
+                  {[...Array(10)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarFallback>U{i}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">Team Member {i + 1}</p>
+                          <p className="text-sm text-muted-foreground">Last active: {i + 1}h ago</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -321,6 +278,10 @@ export default function ChannelSettingsPage({
                 <Button>Save Permissions</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="webhooks" className="space-y-6">
+            <ChannelWebhooksTab channelId={channelId} />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">

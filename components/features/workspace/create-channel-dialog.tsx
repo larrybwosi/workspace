@@ -112,7 +112,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceId, onSuccess
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!form.name || isLoading} loading={isLoading}>
+          <Button onClick={handleCreate} disabled={!form.name || isLoading}>
             Create Channel
           </Button>
         </DialogFooter>

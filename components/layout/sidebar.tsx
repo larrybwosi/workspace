@@ -24,9 +24,9 @@ import { useSession } from "@/lib/auth-client";
 import { useDMConversations } from "@/hooks/api/use-dm";
 import { WorkspaceSwitcher } from "../features/workspace/workspace-switcher";
 import { UserProfileDialog } from "../features/social/user-profile-dialog";
-import { CreateChannelDialog } from "../features/workspace/create-channel-dialog";
 import { ProjectCreateDialog } from "../features/projects/project-create-dialog";
 import { StartDMDialog } from "../start-dm-dialog";
+import { CreateChannelDialog } from "../features/chat/create-channel-dialog";
 
 interface SidebarProps {
   isOpen: boolean;

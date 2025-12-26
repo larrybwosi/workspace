@@ -8,33 +8,34 @@ const updateMemberSchema = z.object({
   role: z.enum(["owner", "admin", "member", "guest"]),
 })
 
-export async function PATCH(request: NextRequest, { params }: { params: { workspaceId: string; memberId: string } }) {
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if requester is admin or owner
-    const requesterMember = await prisma.workspaceMember.findUnique({
+    const { workspaceId } = await params
+
+    // Check if user is a member of the workspace
+    const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
-          workspaceId: params.workspaceId,
+          workspaceId:workspaceId,
           userId: session.user.id,
         },
       },
     })
 
-    if (!requesterMember || !["owner", "admin"].includes(requesterMember.role)) {
+    if (!member) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 })
     }
 
-    const body = await request.json()
-    const { role } = updateMemberSchema.parse(body)
-
-    const updatedMember = await prisma.workspaceMember.update({
-      where: { id: params.memberId },
-      data: { role },
+    const members = await prisma.workspaceMember.findMany({
+      where: {
+        workspaceId:workspaceId,
+      },
       include: {
         user: {
           select: {
@@ -42,98 +43,19 @@ export async function PATCH(request: NextRequest, { params }: { params: { worksp
             name: true,
             email: true,
             avatar: true,
+            status: true,
+            // lastActiveAt: true,
           },
         },
       },
-    })
-
-    // Create audit log
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: params.workspaceId,
-        userId: session.user.id,
-        action: "member.role_changed",
-        resource: "member",
-        resourceId: params.memberId,
-        metadata: { newRole: role },
+      orderBy: {
+        // createdAt: "asc",
       },
     })
 
-    // Notify the member
-    await publishToAbly(AblyChannels.user(updatedMember.userId), "NOTIFICATION", {
-      type: "workspace.role_changed",
-      workspaceId: params.workspaceId,
-      newRole: role,
-    })
-
-    return NextResponse.json(updatedMember)
+    return NextResponse.json({ members })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
-    }
-    console.error("[v0] Failed to update member:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: { params: { workspaceId: string; memberId: string } }) {
-  try {
-    const session = await auth.api.getSession({ headers: request.headers })
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Check if requester is admin or owner
-    const requesterMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: params.workspaceId,
-          userId: session.user.id,
-        },
-      },
-    })
-
-    if (!requesterMember || !["owner", "admin"].includes(requesterMember.role)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 })
-    }
-
-    const memberToRemove = await prisma.workspaceMember.findUnique({
-      where: { id: params.memberId },
-    })
-
-    if (!memberToRemove) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 })
-    }
-
-    // Cannot remove workspace owner
-    if (memberToRemove.role === "owner") {
-      return NextResponse.json({ error: "Cannot remove workspace owner" }, { status: 400 })
-    }
-
-    await prisma.workspaceMember.delete({
-      where: { id: params.memberId },
-    })
-
-    // Create audit log
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: params.workspaceId,
-        userId: session.user.id,
-        action: "member.removed",
-        resource: "member",
-        resourceId: params.memberId,
-      },
-    })
-
-    // Notify the removed member
-    await publishToAbly(AblyChannels.user(memberToRemove.userId), "NOTIFICATION", {
-      type: "workspace.removed",
-      workspaceId: params.workspaceId,
-    })
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("[v0] Failed to remove member:", error)
+    console.error("[v0] Failed to fetch workspace members:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -12,6 +12,38 @@ const createChannelSchema = z.object({
   icon: z.string().optional(),
 })
 
+async function getWorkspaceChannels(workspaceId: string, userId: string) {
+  const channels = await prisma.channel.findMany({
+    where: {
+      workspaceId: workspaceId, // 1. Strict Workspace Isolation
+      
+      OR: [
+        // Condition A: Public Channels (Everyone in workspace sees these)
+        { isPrivate: false },
+        
+        // Condition B: Private Channels (Only members see these)
+        { 
+          isPrivate: true,
+          members: {
+            some: {
+              userId: userId
+            }
+          }
+        }
+      ]
+    },
+    include: {
+        // Optional: Get unread counts or last message
+        _count: { select: { messages: true } }
+    },
+    orderBy: {
+      name: 'asc'
+    }
+  })
+
+  return channels
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const { workspaceId } = await params
@@ -29,14 +61,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const channels = await prisma.channel.findMany({
-      where: { workspaceId },
-      include: {
-        members: { include: { user: { select: { id: true, name: true, avatar: true } } } },
-        _count: { select: { members: true, threads: true } },
-      },
-      orderBy: { name: "asc" },
-    })
+    const channels = await getWorkspaceChannels(workspaceId, session.user.id)
 
 
     return NextResponse.json(channels)

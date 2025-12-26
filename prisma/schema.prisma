@@ -115,6 +115,7 @@ model User {
   sentFriendRequests     FriendRequest[]  @relation("SentFriendRequests")
   receivedFriendRequests FriendRequest[]  @relation("ReceivedFriendRequests")
   createdChannelWebhooks ChannelWebhook[]
+  createdIncomingWebhooks ChannelIncomingWebhook[] @relation(fields: [], references: [])
 
   banned     Boolean?  @default(false)
   banReason  String?
@@ -443,8 +444,10 @@ model Channel {
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   threads  Thread[]
+  messages Message[] 
   members  ChannelMember[]
   projects Project[]       @relation("ProjectChannels")
+  incomingWebhooks ChannelIncomingWebhook[] @relation(fields: [], references: [])
 
   invitations           Invitation[]
   calendarSubscriptions CalendarSubscription[]
@@ -472,7 +475,6 @@ model ChannelMember {
 
 model Thread {
   id          String   @id @default(cuid())
-  title       String
   channelId   String
   creatorId   String
   status      String   @default("Active")
@@ -482,9 +484,22 @@ model Thread {
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   creator User    @relation("ThreadCreator", fields: [creatorId], references: [id])
 
+
+
+  // ✅ 1. Metadata is optional now
+  // Slack threads don't usually have titles. Discord threads do.
+  // Make title optional to support both styles.
+  title       String?  
+
+
+  // ✅ 3. The "Root" Message (Discord Style)
+  // This helps you render: "Thread started from: [Message Preview]"
+  rootMessageId String? @unique 
+  rootMessage   Message? @relation("ThreadRoot", fields: [rootMessageId], references: [id])
+
+  participants User[]    @relation("ThreadMembers")
   messages Message[]
   tags     ThreadTag[]
-  members  User[]      @relation("ThreadMembers")
   tasks    Task[]      @relation("TaskLinkedThreads")
 
   @@map("threads")
@@ -503,21 +518,35 @@ model ThreadTag {
 
 model Message {
   id          String   @id @default(cuid())
-  threadId    String
   userId      String
   content     String   @db.Text
   messageType String   @default("standard")
   metadata    Json?
   isEdited    Boolean  @default(false)
-  replyToId   String?
   depth       Int      @default(0)
   timestamp   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  thread  Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  // Opposite relation field for Thread's rootMessage
+  rootThread  Thread?  @relation("ThreadRoot")
+
+  // ✅ 1. Direct Link to Channel (The "Main Feed")
+  // This allows you to fetch "all messages in #general" instantly.
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  // ✅ 2. Optional Thread Link
+  // If null, it's a main channel message. If set, it's a reply inside a thread.
+  threadId  String?
+  thread    Thread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  // ✅ 3. Hierarchy (Optional but Recommended)
+  // Useful for "Slack-style" threading where you don't always create a full "Thread" entity
+  // immediately, or just to know which message started the conversation.
+  replyToId String?
+  replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies   Message[] @relation("MessageReplies")
   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  replyTo Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies Message[] @relation("MessageReplies")
 
   reactions   Reaction[]
   attachments Attachment[]
@@ -1712,6 +1741,45 @@ model ChannelWebhookLog {
   @@index([webhookId])
   @@map("channel_webhook_logs")
 }
+
+
+model ChannelIncomingWebhook {
+  id              String   @id @default(cuid())
+  channelId       String
+  name            String
+  description     String?
+  token           String   @unique
+  secret          String
+  isActive        Boolean  @default(true)
+  createdBy       String
+  lastReceivedAt  DateTime?
+  totalReceived   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  creator User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  logs    ChannelIncomingWebhookLog[]
+
+  @@index([channelId])
+  @@index([token])
+  @@map("channel_incoming_webhooks")
+}
+
+model ChannelIncomingWebhookLog {
+  id        String   @id @default(cuid())
+  webhookId String
+  payload   Json
+  status    Int
+  response  String?
+  createdAt DateTime @default(now())
+
+  webhook ChannelIncomingWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@map("channel_incoming_webhook_logs")
+}
+
 
 model Friend {
   id        String   @id @default(cuid())
