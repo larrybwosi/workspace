@@ -2,10 +2,10 @@
 
 import type * as React from "react"
 import type { Message, MessageMetadata, MessageType } from "./types"
-import { ApprovalMessage } from "@/components/message-types/approval-message"
-import { CommentRequestMessage } from "@/components/message-types/comment-request-message"
-import { CodeMessage } from "@/components/message-types/code-message"
-import { CustomMessage } from "@/components/message-types/custom-message"
+import { ApprovalMessage } from "@/components/features/chat/message-types/approval-message"
+import { CommentRequestMessage } from "@/components/features/chat/message-types/comment-request-message"
+import { CodeMessage } from "@/components/features/chat/message-types/code-message"
+import { CustomMessage } from "@/components/features/chat/message-types/custom-message"
 
 export class MessageRendererFactory {
   private static renderers = new Map<MessageType, React.ComponentType<any>>()

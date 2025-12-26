@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { User } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { InviteToWorkspaceDialog } from "@/components/invite-to-workspace-dialog";
+import { InviteToWorkspaceDialog } from "../workspace/invite-to-workspace-dialog";
 
 interface UserProfileDialogProps {
   user: User;

@@ -23,9 +23,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { mockUsers } from "@/lib/mock-data";
 import type { User } from "@/lib/types";
-import { UserProfileDialog } from "./user-profile-dialog";
 import { InviteToWorkspaceDialog } from "./invite-to-workspace-dialog";
 import { cn } from "@/lib/utils";
+import { UserProfileDialog } from "../social/user-profile-dialog";
 
 export function MembersPanel() {
   const [searchQuery, setSearchQuery] = React.useState("");

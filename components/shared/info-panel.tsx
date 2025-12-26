@@ -2,13 +2,13 @@
 import { X, User, Calendar, Tag, CheckSquare, TrendingUp, Plus, Hash, MessageCircle, FileText, LinkIcon, Target, Clock, Phone, Video, UserPlus, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { mockThread, mockUsers } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import React from "react"
-import { MessageSearchPanel } from "./message-search-panel"
+import { MessageSearchPanel } from '../features/chat/message-search-panel'
 
 interface InfoPanelProps {
   isOpen: boolean
@@ -360,6 +360,7 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                     {members.slice(0, 4).map((member) => (
                       <div key={member.id} className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
+                          <AvatarImage src={member.avatar} />
                           <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                             {member.avatar}
                           </AvatarFallback>
@@ -481,6 +482,7 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                     {members.map((member) => (
                       <div key={member.id} className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
+                          <AvatarImage src={member.avatar} />
                           <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                             {member.avatar}
                           </AvatarFallback>

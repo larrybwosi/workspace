@@ -5,12 +5,12 @@ import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { EmojiPicker } from "./emoji-picker"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { FileUpload } from "./file-upload"
 import type { UploadedFile } from "@/lib/upload-utils"
-import { UserMentionSelector } from "./user-mention-selector"
 import { mockUsers } from "@/lib/mock-data"
+import { UserMentionSelector } from "@/components/shared/user-mention-selector"
+import { EmojiPicker } from "@/components/shared/emoji-picker"
+import { FileUpload } from "@/components/shared/file-upload"
 
 interface MessageComposerProps {
   placeholder?: string

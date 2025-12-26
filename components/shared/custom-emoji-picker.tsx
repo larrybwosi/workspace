@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
-import { useTheme } from "./theme-provider"
+import { useTheme } from "../layout/theme-provider"
 
 interface CustomEmoji {
   id: string

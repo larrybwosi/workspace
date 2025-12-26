@@ -2,8 +2,8 @@
 import { Menu, Search, MoreVertical, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { mockChannels, mockProjects } from "@/lib/mock-data"
+import { ThemeToggle } from "./theme-toggle"
 
 interface DynamicHeaderProps {
   activeView: string

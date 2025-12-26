@@ -14,13 +14,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { KanbanBoard } from "./kanban-board"
-import { ProjectOverview } from "./project-overview"
-import { TaskCreateSheet } from "./task-create-sheet"
-import { GanttChart } from "./gantt-chart"
-import { SprintManagement } from "./sprint-management"
-import { CalendarView } from "./calendar-view"
-import { NotesView } from "./notes-view"
 import type { Task } from "@/lib/types"
 import * as React from "react"
 import { useTasks, useCreateTask } from "@/hooks/api/use-tasks"
@@ -32,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ProjectOverview } from "../projects/project-overview"
+import { KanbanBoard } from "../projects/kanban-board"
+import { SprintManagement } from "../projects/sprint-management"
+import { GanttChart } from "../projects/gantt-chart"
+import { CalendarView } from "../calendar/calendar-view"
+import { NotesView } from "@/components/notes-view"
+import { TaskCreateSheet } from "./task-create-sheet"
 
 interface TaskManagementViewProps {
   onTaskClick?: (task: Task) => void

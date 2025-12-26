@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Sidebar } from "@/components/sidebar"
-import { DynamicHeader } from "@/components/dynamic-header"
-import { AssistantChannel } from "@/components/assistant-channel"
 import { useRouter } from "next/navigation"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
+import { AssistantChannel } from "@/components/features/assistant/assistant-channel"
 
 export default function AssistantPage() {
   const router = useRouter()

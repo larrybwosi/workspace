@@ -7,19 +7,19 @@ import type { Message } from "@/lib/types"
 import { mockUsers } from "@/lib/mock-data"
 import { cn, formatTime } from "@/lib/utils"
 import { renderCustomMessage } from "@/lib/message-renderer"
-import { CustomEmojiPicker } from "./custom-emoji-picker"
-import { UserBadgeDisplay } from "./user-badge-display"
-import { MarkdownRenderer } from "./markdown-renderer"
+import { CustomEmojiPicker } from "@/components/shared/custom-emoji-picker"
+import { MarkdownRenderer } from "@/components/shared/markdown-renderer"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from "./context-menu"
+} from "@/components/shared/context-menu"
 import { useUpdateMessage, useDeleteMessage } from "@/hooks/api/use-messages"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
+import { UserBadgeDisplay } from "../social/user-badge-display"
 
 interface MessageItemProps {
   message: Message

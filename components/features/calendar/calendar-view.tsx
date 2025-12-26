@@ -27,8 +27,6 @@ import { EventCreateEditDialog } from "./event-create-edit-dialog"
 import { CalendarIntegrationsDialog } from "./calendar-integrations-dialog"
 import { CalendarShareDialog } from "./calendar-share-dialog"
 import { CalendarContextMenu } from "./calendar-context-menu"
-import { DayTasksDialog } from "./day-tasks-dialog"
-import { QuickNoteDialog } from "./quick-note-dialog"
 import { cn } from "@/lib/utils"
 import type { Task, CalendarEvent } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
@@ -53,6 +51,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { DayTasksDialog } from "../tasks/day-tasks-dialog"
+import { QuickNoteDialog } from "@/components/quick-note-dialog"
 
 interface CalendarViewProps {
   onTaskClick?: (task: Task) => void

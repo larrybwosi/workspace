@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "@/hooks/api/use-integrations"
 import { CreateWebhookDialog } from "@/components/create-webhook-dialog"
-import { WebhookLogsDialog } from "@/components/webhook-logs-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import {
@@ -26,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { WebhookLogsDialog } from "./webhook-logs-dialog"
 
 export function WebhooksPanel() {
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)

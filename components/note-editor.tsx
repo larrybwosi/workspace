@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MarkdownRenderer } from "@/components/markdown-renderer";
 import type { Note } from "@/lib/types";
 import { mockUsers, mockProjects } from "@/lib/mock-data";
 import {
@@ -43,6 +42,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { MarkdownRenderer } from "./shared/markdown-renderer";
 
 interface NoteEditorProps {
   note: Note;

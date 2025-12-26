@@ -3,12 +3,12 @@
 import * as React from "react"
 import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sidebar } from "@/components/sidebar"
-import { InfoPanel } from "@/components/info-panel"
-import { ThreadView } from "@/components/thread-view"
-import { DynamicHeader } from "@/components/dynamic-header"
 import { mockUsers } from "@/lib/mock-data"
 import { useParams, useRouter } from "next/navigation"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
+import { ThreadView } from "@/components/features/chat/thread-view"
+import { InfoPanel } from "@/components/shared/info-panel"
 
 export default function DMPage() {
   const params = useParams()

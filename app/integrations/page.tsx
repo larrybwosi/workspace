@@ -5,11 +5,10 @@ import { Key, Webhook, Plus, Copy, Trash2, Eye, EyeOff, RefreshCw, Activity, Shi
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
-import { TopBar } from "@/components/top-bar"
-import { ApiKeysPanel } from "@/components/api-keys-panel"
-import { WebhooksPanel } from "@/components/webhooks-panel"
-import { IntegrationStats } from "@/components/integration-stats"
+import { TopBar } from "@/components/layout/top-bar"
+import { IntegrationStats } from "@/components/features/admin/integration-stats"
+import { ApiKeysPanel } from "@/components/features/admin/api-keys-panel"
+import { WebhooksPanel } from "@/components/features/admin/webhooks-panel"
 
 export default function IntegrationsPage() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)

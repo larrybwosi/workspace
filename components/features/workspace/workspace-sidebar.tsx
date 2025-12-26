@@ -1,8 +1,8 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-
 import * as React from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   LayoutDashboard,
   FolderKanban,
@@ -25,13 +25,15 @@ import {
   Hash,
   Lock,
 } from "lucide-react"
+
+// UI Imports
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import Link from "next/link"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,21 +42,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
+
+// API Hooks
 import {
   useWorkspace,
   useWorkspaceDepartments,
   useWorkspaceProjects,
   useWorkspaceChannels,
-  useCreateDepartment,
   useUpdateDepartment,
   useDeleteDepartment,
-  useCreateWorkspaceProject,
   useUpdateWorkspaceProject,
   useDeleteWorkspaceProject,
-  useCreateWorkspaceChannel,
   useUpdateWorkspaceChannel,
   useDeleteWorkspaceChannel,
 } from "@/hooks/api/use-workspaces"
+
+// Dialog Imports
 import { CreateDepartmentDialog } from "@/components/workspace/create-department-dialog"
 import { EditDepartmentDialog } from "@/components/workspace/edit-department-dialog"
 import { DeleteDepartmentDialog } from "@/components/workspace/delete-department-dialog"
@@ -65,6 +68,7 @@ import { CreateChannelDialog } from "@/components/workspace/create-channel-dialo
 import { EditChannelDialog } from "@/components/workspace/edit-channel-dialog"
 import { DeleteChannelDialog } from "@/components/workspace/delete-channel-dialog"
 
+// --- Interfaces ---
 interface Department {
   id: string
   name: string
@@ -91,6 +95,8 @@ interface Channel {
 export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
   const router = useRouter()
   const { toast } = useToast()
+
+  // UI Toggles
   const [projectsOpen, setProjectsOpen] = React.useState(true)
   const [channelsOpen, setChannelsOpen] = React.useState(true)
   const [departmentsOpen, setDepartmentsOpen] = React.useState(true)
@@ -121,49 +127,30 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
     type: "public" as "public" | "private",
   })
 
-  const { data: workspaceData } = useWorkspace(workspaceSlug)
-  const { data: departmentsData } = useWorkspaceDepartments(workspaceData?.id || "")
-  const { data: projectsData } = useWorkspaceProjects(workspaceData?.id || "")
-  const { data: channelsData } = useWorkspaceChannels(workspaceData?.id || "")
+  // --- Data Fetching & Loading States ---
+  const { data: workspaceData, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug)
+  
+  // Only fetch children if workspace ID is available
+  const workspaceId = workspaceData?.id || ""
 
-  const createDepartment = useCreateDepartment(workspaceData?.id || "")
-  const updateDepartment = useUpdateDepartment(workspaceData?.id || "")
-  const deleteDepartment = useDeleteDepartment(workspaceData?.id || "")
+  const { data: departmentsData, isLoading: isDepartmentsLoading } = useWorkspaceDepartments(workspaceId)
+  const { data: projectsData, isLoading: isProjectsLoading } = useWorkspaceProjects(workspaceId)
+  const { data: channelsData, isLoading: isChannelsLoading } = useWorkspaceChannels(workspaceId)
 
-  const updateProject = useUpdateWorkspaceProject(workspaceData?.id || "")
-  const deleteProject = useDeleteWorkspaceProject(workspaceData?.id || "")
+  // Mutations
+  const updateDepartment = useUpdateDepartment(workspaceId)
+  const deleteDepartment = useDeleteDepartment(workspaceId)
+  const updateProject = useUpdateWorkspaceProject(workspaceId)
+  const deleteProject = useDeleteWorkspaceProject(workspaceId)
+  const updateChannel = useUpdateWorkspaceChannel(workspaceId)
+  const deleteChannel = useDeleteWorkspaceChannel(workspaceId)
 
-  const createChannel = useCreateWorkspaceChannel(workspaceData?.id || "")
-  const updateChannel = useUpdateWorkspaceChannel(workspaceData?.id || "")
-  const deleteChannel = useDeleteWorkspaceChannel(workspaceData?.id || "")
-
-  const workspace = workspaceData || {
-    name: "Loading...",
-    icon: "🏢",
-    plan: "enterprise",
-  }
-
+  // Derived Data
   const departments = Array.isArray(departmentsData) ? departmentsData : []
   const projects = Array.isArray(projectsData) ? projectsData : []
   const channels = Array.isArray(channelsData) ? channelsData : []
 
-  const handleCreateDept = async () => {
-    try {
-      await createDepartment.mutateAsync({
-        name: deptForm.name,
-        slug: deptForm.name.toLowerCase().replace(/\s+/g, "-"),
-        description: deptForm.description,
-        icon: deptForm.icon,
-        createChannel: true,
-      })
-      setCreateDeptOpen(false)
-      setDeptForm({ name: "", icon: "💼", description: "" })
-      toast({ title: "Department created", description: `${deptForm.name} has been created successfully.` })
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to create department", variant: "destructive" })
-    }
-  }
-
+  // --- Handlers ---
   const handleEditDept = async () => {
     if (!selectedDept) return
     try {
@@ -225,21 +212,6 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
     }
   }
 
-  const handleCreateChannel = async () => {
-    try {
-      await createChannel.mutateAsync({
-        name: channelForm.name.toLowerCase().replace(/\s+/g, "-"),
-        description: channelForm.description,
-        type: channelForm.type as "public" | "private",
-      })
-      setCreateChannelOpen(false)
-      setChannelForm({ name: "", description: "", type: "public" })
-      toast({ title: "Channel created", description: `#${channelForm.name} has been created successfully.` })
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to create channel", variant: "destructive" })
-    }
-  }
-
   const handleEditChannel = async () => {
     if (!selectedChannel) return
     try {
@@ -270,7 +242,6 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
     }
   }
 
-  // Open edit dialog with selected item data
   const openEditDept = (dept: Department) => {
     setSelectedDept(dept)
     setDeptForm({ name: dept.name, icon: dept.icon, description: "" })
@@ -304,17 +275,64 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
     setDeleteChannelOpen(true)
   }
 
+  // --- Loading State Render ---
+  if (isWorkspaceLoading) {
+    return (
+      <div className="flex flex-col h-full border-r border-sidebar-border bg-sidebar p-4 w-full">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-3 mb-6">
+          <Skeleton className="h-10 w-10 rounded-xl" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+        <Skeleton className="h-9 w-full mb-6" />
+        
+        {/* Navigation Skeleton */}
+        <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+            ))}
+        </div>
+        <div className="mt-8 space-y-3">
+             <Skeleton className="h-4 w-32 mb-2" />
+             {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+            ))}
+        </div>
+        <div className="mt-auto pt-4 border-t">
+             <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="space-y-1">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-2 w-12" />
+                </div>
+             </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Fallback if data is missing but not loading (error state or empty)
+  if (!workspaceData) return null
+
+  const workspace = workspaceData
+
   return (
-    <>
+    <div className="flex flex-col h-full w-full border-r border-sidebar-border bg-sidebar">
+      
       {/* Workspace Header */}
       <div className="border-b border-sidebar-border p-4 shrink-0">
         <div className="flex items-center gap-3 mb-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl shadow-lg">
-            {workspace.icon}
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl shadow-lg text-white">
+            {workspace.icon || "🏢"}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-bold text-base truncate">{workspace.name}</h2>
-            <Badge className="text-[9px] px-1.5 py-0 bg-gradient-to-r from-amber-500 to-orange-500">ENTERPRISE</Badge>
+            <Badge className="text-[9px] px-1.5 py-0 bg-gradient-to-r from-amber-500 to-orange-500 border-none text-white">
+              {workspace.plan ? workspace.plan.toUpperCase() : "FREE"}
+            </Badge>
           </div>
         </div>
 
@@ -376,7 +394,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
           <div className="flex items-center justify-between mb-2">
             <Button
               variant="ghost"
-              className="flex-1 justify-start h-8 px-2 text-xs font-semibold text-muted-foreground"
+              className="flex-1 justify-start h-8 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
               onClick={() => setDepartmentsOpen(!departmentsOpen)}
             >
               <ChevronDown className={cn("h-3 w-3 mr-2 transition-transform", !departmentsOpen && "-rotate-90")} />
@@ -393,48 +411,56 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
               <Plus className="h-3 w-3" />
             </Button>
           </div>
+          
           {departmentsOpen && (
             <div className="space-y-0.5">
-              {departments.map((dept) => (
-                <div key={dept.id} className="group flex items-center">
-                  <Button
-                    variant="ghost"
-                    className="flex-1 justify-start h-9 px-3 hover:bg-sidebar-accent"
-                    onClick={() => router.push(`/workspace/${workspaceSlug}/departments/${dept.id}`)}
-                  >
-                    <span className="mr-2 text-base">{dept.icon}</span>
-                    <span className="flex-1 text-left text-sm truncate">{dept.name}</span>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Users className="h-3 w-3" />
-                      {dept.members}
-                    </div>
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => openEditDept(dept)}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit Department
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push(`/workspace/${workspaceSlug}/departments/${dept.id}/members`)}
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Manage Members
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDept(dept)}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Department
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
+              {isDepartmentsLoading ? (
+                 <div className="px-2 space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                 </div>
+              ) : (
+                departments.map((dept) => (
+                  <div key={dept.id} className="group flex items-center">
+                    <Button
+                      variant="ghost"
+                      className="flex-1 justify-start h-9 px-3 hover:bg-sidebar-accent"
+                      onClick={() => router.push(`/workspace/${workspaceSlug}/departments/${dept.id}`)}
+                    >
+                      <span className="mr-2 text-base">{dept.icon}</span>
+                      <span className="flex-1 text-left text-sm truncate">{dept.name}</span>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Users className="h-3 w-3" />
+                        {dept.members}
+                      </div>
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => openEditDept(dept)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit Department
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/workspace/${workspaceSlug}/departments/${dept.id}/members`)}
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Manage Members
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive" onClick={() => openDeleteDept(dept)}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Department
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -444,7 +470,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
           <div className="flex items-center justify-between mb-2">
             <Button
               variant="ghost"
-              className="flex-1 justify-start h-8 px-2 text-xs font-semibold text-muted-foreground"
+              className="flex-1 justify-start h-8 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
               onClick={() => setProjectsOpen(!projectsOpen)}
             >
               <ChevronDown className={cn("h-3 w-3 mr-2 transition-transform", !projectsOpen && "-rotate-90")} />
@@ -463,62 +489,69 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
           {projectsOpen && (
             <div className="space-y-0.5">
-              {projects.map((project) => (
-                <div key={project.id} className="group">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-auto px-3 hover:bg-sidebar-accent flex-col items-start py-2"
-                    onClick={() => router.push(`/workspace/${workspaceSlug}/projects/${project.id}`)}
-                  >
-                    <div className="flex items-center w-full">
-                      <span className="flex-1 text-left text-sm truncate">{project.name}</span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
-                            <MoreHorizontal className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openEditProject(project)
-                            }}
-                          >
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit Project
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/workspace/${workspaceSlug}/projects/${project.id}/settings`)
-                            }}
-                          >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Settings
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openDeleteProject(project)
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Project
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <div className="w-full mt-1">
-                      <div className="h-1 bg-sidebar-accent rounded-full overflow-hidden">
-                        <div className="h-full bg-primary transition-all" style={{ width: `${project.progress}%` }} />
+               {isProjectsLoading ? (
+                 <div className="px-2 space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                 </div>
+              ) : (
+                projects.map((project) => (
+                  <div key={project.id} className="group">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start h-auto px-3 hover:bg-sidebar-accent flex-col items-start py-2"
+                      onClick={() => router.push(`/workspace/${workspaceSlug}/projects/${project.id}`)}
+                    >
+                      <div className="flex items-center w-full">
+                        <span className="flex-1 text-left text-sm truncate">{project.name}</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openEditProject(project)
+                              }}
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/workspace/${workspaceSlug}/projects/${project.id}/settings`)
+                              }}
+                            >
+                              <Settings className="h-4 w-4 mr-2" />
+                              Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openDeleteProject(project)
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Project
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                    </div>
-                  </Button>
-                </div>
-              ))}
+                      <div className="w-full mt-1">
+                        <div className="h-1 bg-sidebar-accent rounded-full overflow-hidden">
+                          <div className="h-full bg-primary transition-all" style={{ width: `${project.progress}%` }} />
+                        </div>
+                      </div>
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -528,7 +561,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
           <div className="flex items-center justify-between mb-2">
             <Button
               variant="ghost"
-              className="flex-1 justify-start h-8 px-2 text-xs font-semibold text-muted-foreground"
+              className="flex-1 justify-start h-8 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
               onClick={() => setChannelsOpen(!channelsOpen)}
             >
               <ChevronDown className={cn("h-3 w-3 mr-2 transition-transform", !channelsOpen && "-rotate-90")} />
@@ -547,51 +580,58 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
           {channelsOpen && (
             <div className="space-y-0.5">
-              {channels.map((channel) => (
-                <div key={channel.id} className="group flex items-center">
-                  <Button
-                    variant="ghost"
-                    className="flex-1 justify-start h-9 px-3 hover:bg-sidebar-accent"
-                    onClick={() => router.push(`/workspace/${workspaceSlug}/channels/${channel.id}`)}
-                  >
-                    {channel.type === "private" ? (
-                      <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
-                    ) : (
-                      <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
-                    )}
-                    <span className="flex-1 text-left text-sm truncate">{channel.name}</span>
-                    {channel.unread > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {channel.unread}
-                      </Badge>
-                    )}
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => openEditChannel(channel)}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit Channel
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push(`/workspace/${workspaceSlug}/channels/${channel.id}/settings`)}
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onClick={() => openDeleteChannel(channel)}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Channel
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
+               {isChannelsLoading ? (
+                 <div className="px-2 space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                 </div>
+              ) : (
+                channels.map((channel) => (
+                  <div key={channel.id} className="group flex items-center">
+                    <Button
+                      variant="ghost"
+                      className="flex-1 justify-start h-9 px-3 hover:bg-sidebar-accent"
+                      onClick={() => router.push(`/workspace/${workspaceSlug}/channels/${channel.id}`)}
+                    >
+                      {channel.type === "private" ? (
+                        <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
+                      ) : (
+                        <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
+                      )}
+                      <span className="flex-1 text-left text-sm truncate">{channel.name}</span>
+                      {channel.unread > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {channel.unread}
+                        </Badge>
+                      )}
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => openEditChannel(channel)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit Channel
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/workspace/${workspaceSlug}/channels/${channel.id}/settings`)}
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive" onClick={() => openDeleteChannel(channel)}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Channel
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -624,7 +664,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-3 shrink-0">
-        <Button variant="outline" className="w-full justify-start h-10 bg-transparent" size="sm">
+        <Button variant="outline" className="w-full justify-start h-10 bg-transparent border-transparent hover:bg-sidebar-accent" size="sm">
           <Avatar className="h-7 w-7 mr-2">
             <AvatarFallback className="text-xs bg-primary text-primary-foreground">JD</AvatarFallback>
           </Avatar>
@@ -640,9 +680,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
         open={createDeptOpen}
         onOpenChange={setCreateDeptOpen}
         workspaceId={workspaceData?.id || ""}
-        onSuccess={() => {
-          /* refetch data */
-        }}
+        onSuccess={() => {}}
       />
       <EditDepartmentDialog
         editDeptOpen={editDeptOpen}
@@ -661,9 +699,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
         open={createProjectOpen}
         onOpenChange={setCreateProjectOpen}
         workspaceId={workspaceData?.id || ""}
-        onSuccess={() => {
-          /* refetch data */
-        }}
+        onSuccess={() => {}}
       />
       <EditProjectDialog
         editProjectOpen={editProjectOpen}
@@ -682,9 +718,7 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
         open={createChannelOpen}
         onOpenChange={setCreateChannelOpen}
         workspaceId={workspaceData?.id || ""}
-        onSuccess={() => {
-          /* refetch data */
-        }}
+        onSuccess={() => {}}
       />
       <EditChannelDialog
         editChannelOpen={editChannelOpen}
@@ -699,6 +733,6 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
         selectedChannel={selectedChannel}
         handleDeleteChannel={handleDeleteChannel}
       />
-    </>
+    </div>
   )
 }

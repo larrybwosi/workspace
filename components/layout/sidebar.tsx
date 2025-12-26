@@ -15,10 +15,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { UserProfileDialog } from "./user-profile-dialog";
-import { CreateChannelDialog } from "./create-channel-dialog";
-import { ProjectCreateDialog } from "./project-create-dialog";
-import { WorkspaceSwitcher } from "./workspace-switcher";
 import { cn } from "@/lib/utils";
 import { useChannels, useCreateChannel } from "@/hooks/api/use-channels";
 import { useProjects, useCreateProject } from "@/hooks/api/use-projects";
@@ -26,7 +22,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { useDMConversations } from "@/hooks/api/use-dm";
-import { StartDMDialog } from "./start-dm-dialog";
+import { WorkspaceSwitcher } from "../features/workspace/workspace-switcher";
+import { UserProfileDialog } from "../features/social/user-profile-dialog";
+import { CreateChannelDialog } from "../features/workspace/create-channel-dialog";
+import { ProjectCreateDialog } from "../features/projects/project-create-dialog";
+import { StartDMDialog } from "../start-dm-dialog";
 
 interface SidebarProps {
   isOpen: boolean;

@@ -1,5 +1,5 @@
 "use client"
-import { SyntaxHighlighter } from "@/components/syntax-highlighter"
+import { SyntaxHighlighter } from "@/components/shared/syntax-highlighter"
 import type { Message, MessageMetadata } from "@/lib/types"
 
 interface CodeMessageProps {

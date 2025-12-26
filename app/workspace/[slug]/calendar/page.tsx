@@ -3,8 +3,8 @@
 import * as React from "react"
 import { use } from "react"
 import { Button } from "@/components/ui/button"
-import { WorkspaceSidebar } from "@/components/workspace-sidebar"
-import { CalendarView } from "@/components/calendar-view"
+import { WorkspaceSidebar } from "@/components/features/workspace/workspace-sidebar"
+import { CalendarView } from "@/components/features/calendar/calendar-view"
 
 interface CalendarPageProps {
   params: Promise<{ slug: string }>

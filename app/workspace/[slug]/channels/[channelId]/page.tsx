@@ -7,7 +7,9 @@ export const metadata: Metadata = {
 }
 
 export default function WorkspaceChannelPage() {
-  return( <div className="flex-1 h-screen flex-col">
-    <WorkspaceChannelPageClient />
-  </div>)
+  return (
+    <div className="flex-1 h-full flex-col"> 
+      <WorkspaceChannelPageClient />
+    </div>
+  )
 }

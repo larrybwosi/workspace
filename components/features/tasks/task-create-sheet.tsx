@@ -14,13 +14,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
-import { FileUpload } from "@/components/file-upload"
 import { mockUsers, mockChannels } from "@/lib/mock-data"
 import type { Task } from "@/lib/types"
 import type { UploadedFile } from "@/lib/upload-utils"
 import { useCreateTask, useUpdateTask } from "@/hooks/api/use-tasks"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { FileUpload } from "@/components/shared/file-upload"
 
 interface TaskCreateSheetProps {
   open: boolean

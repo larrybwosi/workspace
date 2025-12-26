@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Sidebar } from "@/components/sidebar"
-import { TaskDetailSheet } from "@/components/task-detail-sheet"
 import { useProject } from "@/hooks/api/use-projects"
 import { useTasks } from "@/hooks/api/use-tasks"
 import type { Task } from "@/lib/types"
@@ -94,6 +92,8 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { mockUsers } from "@/lib/mock-data"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Sidebar } from "@/components/layout/sidebar"
+import { TaskDetailSheet } from "@/components/features/tasks/task-detail-sheet"
 
 export default function ProjectPage() {
   const params = useParams()

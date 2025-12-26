@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { getInvitationSEOMetadata } from "@/lib/invitation-utils"
-import InviteAcceptForm from "@/components/invite-accept-form"
+import InviteAcceptForm from "@/components/features/workspace/invite-accept-form"
 
 export async function generateMetadata({
   params,
