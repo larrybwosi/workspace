@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { WorkspaceSidebar } from "@/components/workspace-sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +36,6 @@ export default function ChannelsPage({ params }: ChannelsPageProps) {
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
-      <WorkspaceSidebar workspaceSlug={slug} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="border-b border-border px-6 py-4 flex items-center justify-between">

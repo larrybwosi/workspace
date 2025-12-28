@@ -185,3 +185,184 @@ export async function DELETE(request: NextRequest, { params }: { params: { taskI
     return NextResponse.json({ error: "Failed to delete task" }, { status: 500 })
   }
 }
+
+
+
+// import { type NextRequest, NextResponse } from "next/server"
+// import { auth } from "@/lib/auth"
+// import { prisma } from "@/lib/prisma"
+// import { z } from "zod"
+
+// const createTaskSchema = z.object({
+//   title: z.string().min(1),
+//   description: z.string().optional(),
+//   status: z.enum(["backlog", "todo", "in-progress", "in-review", "done", "cancelled"]).default("backlog"),
+//   priority: z.enum(["urgent", "high", "medium", "low", "none"]).default("medium"),
+//   type: z.enum(["task", "story", "bug", "epic", "subtask"]).default("task"),
+//   assignees: z.array(z.string()).optional(),
+//   labels: z.array(z.string()).optional(),
+//   dueDate: z.string().optional(),
+//   estimate: z.number().optional(),
+//   parentId: z.string().optional(),
+// })
+
+// export async function GET(request: NextRequest, { params }: { params: { projectId: string } }) {
+//   try {
+//     const session = await auth()
+//     if (!session?.user) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+//     }
+
+//     const { projectId } = params
+
+//     // Verify user has access to project
+//     const project = await prisma.project.findFirst({
+//       where: {
+//         id: projectId,
+//         members: {
+//           some: {
+//             userId: session.user.id,
+//           },
+//         },
+//       },
+//     })
+
+//     if (!project) {
+//       return NextResponse.json({ error: "Project not found" }, { status: 404 })
+//     }
+
+//     const tasks = await prisma.task.findMany({
+//       where: { projectId },
+//       include: {
+//         assignees: {
+//           include: {
+//             user: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//                 email: true,
+//                 image: true,
+//               },
+//             },
+//           },
+//         },
+//         labels: true,
+//         subtasks: {
+//           select: {
+//             id: true,
+//             title: true,
+//             status: true,
+//           },
+//         },
+//         parent: {
+//           select: {
+//             id: true,
+//             title: true,
+//           },
+//         },
+//         _count: {
+//           select: {
+//             comments: true,
+//             attachments: true,
+//           },
+//         },
+//       },
+//       orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+//     })
+
+//     return NextResponse.json(tasks)
+//   } catch (error) {
+//     console.error("[TASKS_GET]", error)
+//     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+//   }
+// }
+
+// export async function POST(request: NextRequest, { params }: { params: { projectId: string } }) {
+//   try {
+//     const session = await auth()
+//     if (!session?.user) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+//     }
+
+//     const { projectId } = params
+//     const body = await request.json()
+//     const validatedData = createTaskSchema.parse(body)
+
+//     // Verify user has access to project
+//     const project = await prisma.project.findFirst({
+//       where: {
+//         id: projectId,
+//         members: {
+//           some: {
+//             userId: session.user.id,
+//           },
+//         },
+//       },
+//     })
+
+//     if (!project) {
+//       return NextResponse.json({ error: "Project not found" }, { status: 404 })
+//     }
+
+//     // Create task
+//     const task = await prisma.task.create({
+//       data: {
+//         ...validatedData,
+//         projectId,
+//         createdById: session.user.id,
+//         assignees: validatedData.assignees
+//           ? {
+//               create: validatedData.assignees.map((userId) => ({
+//                 userId,
+//               })),
+//             }
+//           : undefined,
+//         labels: validatedData.labels
+//           ? {
+//               create: validatedData.labels.map((name) => ({
+//                 name,
+//                 color: "#3B82F6",
+//               })),
+//             }
+//           : undefined,
+//       },
+//       include: {
+//         assignees: {
+//           include: {
+//             user: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//                 email: true,
+//                 image: true,
+//               },
+//             },
+//           },
+//         },
+//         labels: true,
+//       },
+//     })
+
+//     // Log activity
+//     await prisma.activityLog.create({
+//       data: {
+//         action: "task.created",
+//         entityType: "task",
+//         entityId: task.id,
+//         userId: session.user.id,
+//         metadata: {
+//           taskTitle: task.title,
+//           projectId,
+//         },
+//       },
+//     })
+
+//     return NextResponse.json(task, { status: 201 })
+//   } catch (error) {
+//     console.error("[TASKS_POST]", error)
+//     if (error instanceof z.ZodError) {
+//       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 })
+//     }
+//     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+//   }
+// }

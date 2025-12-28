@@ -34,7 +34,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -92,6 +91,9 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { mockUsers } from "@/lib/mock-data"
 import { Checkbox } from "@/components/ui/checkbox"
+
+// Import mutation hooks
+import { useCreateTask, useUpdateTask, useDeleteTask, useMoveTask } from "@/hooks/api/use-tasks"
 import { Sidebar } from "@/components/layout/sidebar"
 import { TaskDetailSheet } from "@/components/features/tasks/task-detail-sheet"
 
@@ -101,7 +103,12 @@ export default function ProjectPage() {
   const projectId = params.projectId as string
 
   const { data: project, isLoading, refetch } = useProject(projectId)
-  const { data: tasks } = useTasks(projectId)
+  const { data: tasks, isLoading: tasksLoading } = useTasks(projectId)
+
+  const createTask = useCreateTask()
+  const updateTask = useUpdateTask()
+  const deleteTask = useDeleteTask()
+  const moveTask = useMoveTask()
 
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
@@ -278,14 +285,50 @@ export default function ProjectPage() {
     }
   }
 
-  const handleQuickCreate = () => {
+  const handleQuickCreate = async () => {
     if (!quickCreateTitle.trim()) return
-    toast.success(`Task "${quickCreateTitle}" created`)
-    setQuickCreateTitle("")
-    setQuickCreateOpen(false)
+
+    try {
+      await createTask.mutateAsync({
+        projectId,
+        title: quickCreateTitle,
+        status: quickCreateStatus as any,
+        priority: "medium", // Default priority
+        type: "task", // Default type
+      })
+      toast.success(`Task "${quickCreateTitle}" created`)
+      setQuickCreateTitle("")
+      setQuickCreateOpen(false)
+    } catch (error) {
+      toast.error("Failed to create task")
+    }
   }
 
-  if (isLoading) {
+  const handleTaskStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      await moveTask.mutateAsync({
+        id: taskId,
+        projectId,
+        status: newStatus as any,
+      })
+      toast.success("Task status updated")
+      refetch() // Refetch tasks to reflect the change
+    } catch (error) {
+      toast.error("Failed to update task status")
+    }
+  }
+
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      await deleteTask.mutateAsync({ id: taskId, projectId })
+      toast.success("Task deleted")
+      refetch() // Refetch tasks to reflect the deletion
+    } catch (error) {
+      toast.error("Failed to delete task")
+    }
+  }
+
+  if (isLoading || tasksLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-background">
         <div className="relative">
@@ -722,15 +765,162 @@ export default function ProjectPage() {
         <ScrollArea className="flex-1">
           <div className="p-6">
             {activeView === "board" && (
-              <EnterpriseKanbanBoard
-                tasks={filteredTasks}
-                statuses={statuses}
-                priorities={priorities}
-                labels={labels}
-                onTaskClick={handleTaskClick}
-                groupBy={groupBy}
-                compactMode={compactMode}
-              />
+              <div className="flex gap-4 overflow-x-auto pb-4">
+                {statuses.map((status) => {
+                  const statusTasks = filteredTasks.filter((t) => t.status === status.id)
+                  const StatusIcon = status.icon
+
+                  return (
+                    <div key={status.id} className="flex-shrink-0 w-80 flex flex-col">
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <div className="flex items-center gap-2">
+                          <StatusIcon className="h-4 w-4" style={{ color: status.color }} />
+                          <h3 className="font-semibold text-sm">{status.name}</h3>
+                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            {statusTasks.length}
+                          </Badge>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setQuickCreateStatus(status.id)
+                            setQuickCreateOpen(true)
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <ScrollArea className="h-[calc(100vh-280px)]">
+                        {" "}
+                        {/* Adjust height as needed */}
+                        <div className="space-y-2 flex-1 overflow-y-auto">
+                          {statusTasks.map((task) => {
+                            const priorityConfig = priorities.find((p) => p.id === task.priority)
+                            const PriorityIcon = priorityConfig?.icon || Circle
+
+                            return (
+                              <Card
+                                key={task.id}
+                                className="cursor-pointer hover:border-primary/50 transition-colors group"
+                                onClick={() => handleTaskClick(task)}
+                              >
+                                <CardContent className="p-3">
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <PriorityIcon
+                                          className="h-3 w-3 flex-shrink-0"
+                                          style={{ color: priorityConfig?.color }}
+                                        />
+                                        <p className="text-sm font-medium line-clamp-2">{task.title}</p>
+                                      </div>
+                                      {task.description && (
+                                        <p className="text-xs text-muted-foreground line-clamp-1">{task.description}</p>
+                                      )}
+                                    </div>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                        >
+                                          <MoreHorizontal className="h-3 w-3" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleTaskClick(task)}>Edit</DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuSub>
+                                          <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
+                                          <DropdownMenuSubContent>
+                                            {statuses.map((s) => (
+                                              <DropdownMenuItem
+                                                key={s.id}
+                                                onClick={(e) => {
+                                                  e.stopPropagation()
+                                                  handleTaskStatusChange(task.id, s.id)
+                                                }}
+                                              >
+                                                {s.name}
+                                              </DropdownMenuItem>
+                                            ))}
+                                          </DropdownMenuSubContent>
+                                        </DropdownMenuSub>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="text-destructive"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleTaskDelete(task.id)
+                                          }}
+                                        >
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1">
+                                      {task.labels?.slice(0, 2).map((label: any) => {
+                                        const labelConfig = labels.find((l) => l.id === label.id)
+                                        return labelConfig ? (
+                                          <Badge
+                                            key={labelConfig.id}
+                                            variant="outline"
+                                            className="text-xs px-1.5 py-0"
+                                            style={{ borderColor: labelConfig.color, color: labelConfig.color }}
+                                          >
+                                            {labelConfig.name}
+                                          </Badge>
+                                        ) : null
+                                      })}
+                                    </div>
+                                    {task.assignees && task.assignees.length > 0 && (
+                                      <div className="flex -space-x-2">
+                                        {task.assignees.slice(0, 3).map((assigneeId: string) => {
+                                          const user = mockUsers.find((u) => u.id === assigneeId)
+                                          return (
+                                            <Avatar key={assigneeId} className="h-6 w-6 border-2 border-background">
+                                              <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                                              <AvatarFallback className="text-xs">
+                                                {user?.name?.charAt(0) || "?"}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )
+                          })}
+                          {statusTasks.length === 0 && (
+                            <div className="text-center text-muted-foreground py-4">No tasks in this status.</div>
+                          )}
+                        </div>
+                      </ScrollArea>
+
+                      <Button
+                        variant="ghost"
+                        className="w-full mt-2 justify-start text-muted-foreground hover:text-foreground text-sm"
+                        onClick={() => {
+                          setQuickCreateStatus(status.id)
+                          setQuickCreateOpen(true)
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add issue
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
             )}
             {activeView === "list" && (
               <EnterpriseListView
@@ -828,68 +1018,54 @@ export default function ProjectPage() {
 
       {/* Quick Create Dialog */}
       <Dialog open={quickCreateOpen} onOpenChange={setQuickCreateOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Issue</DialogTitle>
+            <DialogTitle>Create Task</DialogTitle>
+            <DialogDescription>Quickly add a new task to your project</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Title</Label>
+              <Label htmlFor="title">Task Title</Label>
               <Input
-                placeholder="Issue title..."
+                id="title"
                 value={quickCreateTitle}
                 onChange={(e) => setQuickCreateTitle(e.target.value)}
-                autoFocus
+                placeholder="What needs to be done?"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleQuickCreate()
+                  }
+                }}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={quickCreateStatus} onValueChange={setQuickCreateStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statuses.map((status) => (
-                      <SelectItem key={status.id} value={status.id}>
-                        <div className="flex items-center gap-2">
-                          <status.icon className="h-4 w-4" style={{ color: status.color }} />
-                          {status.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Priority</Label>
-                <Select defaultValue="medium">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {priorities.map((priority) => (
-                      <SelectItem key={priority.id} value={priority.id}>
-                        <div className="flex items-center gap-2">
-                          <priority.icon className="h-4 w-4" style={{ color: priority.color }} />
-                          {priority.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea placeholder="Add a description..." className="min-h-24" />
+              <Label>Status</Label>
+              <Select value={quickCreateStatus} onValueChange={setQuickCreateStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statuses.map((status) => (
+                    <SelectItem key={status.id} value={status.id}>
+                      <div className="flex items-center gap-1">
+                        <status.icon className="h-3 w-3" style={{ color: status.color }} />
+                        {status.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            {/* Add priority and other fields if needed */}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setQuickCreateOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleQuickCreate}>Create Issue</Button>
+            <Button onClick={handleQuickCreate} disabled={createTask.isPending}>
+              {createTask.isPending ? "Creating..." : "Create Task"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -897,7 +1073,7 @@ export default function ProjectPage() {
   )
 }
 
-// Enterprise Kanban Board Component
+// Enterprise Kanban Board Component (Example - can be moved to separate file)
 function EnterpriseKanbanBoard({
   tasks,
   statuses,
@@ -915,30 +1091,16 @@ function EnterpriseKanbanBoard({
   groupBy: string
   compactMode: boolean
 }) {
-  const getGroupedTasks = () => {
-    if (groupBy === "status") {
-      return statuses.map((status) => ({
-        ...status,
-        tasks: tasks.filter((t) => t.status === status.id),
-      }))
-    }
-    if (groupBy === "priority") {
-      return priorities.map((priority) => ({
-        ...priority,
-        tasks: tasks.filter((t) => t.priority === priority.id),
-      }))
-    }
-    return statuses.map((status) => ({
-      ...status,
-      tasks: tasks.filter((t) => t.status === status.id),
-    }))
-  }
-
-  const groups = getGroupedTasks()
+  // For simplicity, this component will only render tasks grouped by status for now.
+  // Extending it to handle `groupBy` for other fields would require more logic.
+  const groupedByStatus = statuses.map((status) => ({
+    ...status,
+    tasks: tasks.filter((t) => t.status === status.id),
+  }))
 
   return (
     <div className="flex gap-4 h-full overflow-x-auto pb-4">
-      {groups.map((group) => (
+      {groupedByStatus.map((group) => (
         <div key={group.id} className="flex-shrink-0 w-80 flex flex-col">
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
@@ -958,10 +1120,7 @@ function EnterpriseKanbanBoard({
               <Card
                 key={task.id}
                 onClick={() => onTaskClick(task)}
-                className={cn(
-                  "cursor-pointer hover:shadow-md transition-all border-l-4 group",
-                  compactMode ? "p-2" : "p-3",
-                )}
+                className={cn("cursor-pointer hover:shadow-md transition-all group", compactMode ? "p-2" : "p-3")}
                 style={{ borderLeftColor: priorities.find((p) => p.id === task.priority)?.color || "#6B7280" }}
               >
                 <div className="space-y-2">
@@ -1037,7 +1196,7 @@ function EnterpriseKanbanBoard({
   )
 }
 
-// Enterprise List View Component
+// Enterprise List View Component (Example - can be moved to separate file)
 function EnterpriseListView({
   tasks,
   statuses,
@@ -1120,7 +1279,7 @@ function EnterpriseListView({
   )
 }
 
-// Enterprise Table View Component
+// Enterprise Table View Component (Example - can be moved to separate file)
 function EnterpriseTableView({
   tasks,
   statuses,
@@ -1232,8 +1391,18 @@ function EnterpriseTableView({
   )
 }
 
-// Project Analytics View
+// Project Analytics View (Example - can be moved to separate file)
 function ProjectAnalyticsView({ metrics, tasks }: { metrics: any; tasks: Task[] }) {
+  // Ensure we have a way to map statuses to colors if needed within this component
+  const statusColorMap = {
+    backlog: "#6B7280",
+    todo: "#8B5CF6",
+    "in-progress": "#F59E0B",
+    "in-review": "#3B82F6",
+    done: "#10B981",
+    cancelled: "#EF4444",
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
@@ -1246,11 +1415,12 @@ function ProjectAnalyticsView({ metrics, tasks }: { metrics: any; tasks: Task[] 
         <CardContent>
           <div className="space-y-4">
             {[
-              { label: "Backlog", value: metrics.backlog, color: "#6B7280" },
-              { label: "To Do", value: metrics.todo, color: "#8B5CF6" },
-              { label: "In Progress", value: metrics.inProgress, color: "#F59E0B" },
-              { label: "In Review", value: metrics.inReview, color: "#3B82F6" },
-              { label: "Done", value: metrics.completed, color: "#10B981" },
+              { label: "Backlog", value: metrics.backlog, color: statusColorMap.backlog },
+              { label: "To Do", value: metrics.todo, color: statusColorMap.todo },
+              { label: "In Progress", value: metrics.inProgress, color: statusColorMap["in-progress"] },
+              { label: "In Review", value: metrics.inReview, color: statusColorMap["in-review"] },
+              { label: "Done", value: metrics.completed, color: statusColorMap.done },
+              { label: "Cancelled", value: metrics.cancelled || 0, color: statusColorMap.cancelled }, // Added cancelled status
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
@@ -1312,6 +1482,7 @@ function ProjectAnalyticsView({ metrics, tasks }: { metrics: any; tasks: Task[] 
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {/* Placeholder for actual activity feed */}
             {[
               { user: "John Doe", action: "completed", task: "Fix login bug", time: "2 hours ago" },
               { user: "Jane Smith", action: "created", task: "Add dark mode", time: "4 hours ago" },

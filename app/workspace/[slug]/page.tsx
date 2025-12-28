@@ -148,7 +148,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     },
   ]
   const recentActivity = analytics?.recentActivity || []
-  console.log("Recent Activity:", recentActivity)
+  // console.log("Recent Activity:", recentActivity)
 
 
   const handleEditChannel = () => {

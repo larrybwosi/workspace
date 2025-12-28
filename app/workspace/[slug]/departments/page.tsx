@@ -6,7 +6,7 @@ import { Plus, Search, MoreHorizontal, Edit, Trash2, Users, MessageSquare } from
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { WorkspaceSidebar } from "@/components/workspace-sidebar"
+import { WorkspaceSidebar } from "@/components/features/workspace/workspace-sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,7 +73,6 @@ export default function DepartmentsPage({ params }: DepartmentsPageProps) {
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
-      <WorkspaceSidebar workspaceSlug={slug} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}

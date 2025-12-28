@@ -9,6 +9,7 @@ import { NotificationsTab } from "@/components/features/workspace/settings/notif
 import { AuditLogsTab } from "@/components/features/workspace/settings/audit-log-tab"
 import { cache } from "react"
 import { prisma } from "@/lib/prisma"
+import { IntegrationsTab } from "@/components/features/workspace/integrations-tab"
 
 const getWorkspaceBySlug = cache(async (slug: string, userId: string) => {
   const workspace = await prisma.workspace.findUnique({
@@ -47,6 +48,10 @@ export default async function WorkspaceSettingsPage({
   }
   const workspace = await getWorkspaceBySlug(slug, session.user.id)
 
+  if (!workspace) {
+    return <div className="p-6">Workspace not found or access denied.</div>
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b bg-background px-6 py-4">
@@ -67,6 +72,7 @@ export default async function WorkspaceSettingsPage({
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="audit">Audit Logs</TabsTrigger>
@@ -82,6 +88,10 @@ export default async function WorkspaceSettingsPage({
 
           <TabsContent value="security" className="space-y-6">
             <SecurityTab workspaceId={workspace?.id} />
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-6">
+            <IntegrationsTab workspaceId={workspace?.id} />
           </TabsContent>
 
           <TabsContent value="webhooks" className="space-y-6">

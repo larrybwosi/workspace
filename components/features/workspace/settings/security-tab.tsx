@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Check } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -11,8 +11,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiClient } from "@/lib/api-client"
 
 export function SecurityTab({ workspaceId }: { workspaceId: string }) {
+  const queryClient = useQueryClient()
+
+  const { data: securitySettings, isLoading } = useQuery({
+    queryKey: ["workspace-security", workspaceId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/workspaces/${workspaceId}/security`)
+      return data
+    },
+  })
+
   const [settings, setSettings] = useState({
     requireMfa: false,
     allowGuestAccess: true,
@@ -25,8 +37,32 @@ export function SecurityTab({ workspaceId }: { workspaceId: string }) {
     passwordExpiry: "90",
   })
 
+  useEffect(() => {
+    if (securitySettings) {
+      setSettings(securitySettings)
+    }
+  }, [securitySettings])
+
+  const updateSettings = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.patch(`/workspaces/${workspaceId}/security`, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-security", workspaceId] })
+      toast.success("Security settings saved")
+    },
+    onError: () => {
+      toast.error("Failed to save settings")
+    },
+  })
+
   const handleSave = () => {
-    toast.success("Security settings saved")
+    updateSettings.mutate(settings)
+  }
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading security settings...</div>
   }
 
   return (
@@ -191,9 +227,9 @@ export function SecurityTab({ workspaceId }: { workspaceId: string }) {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} disabled={updateSettings.isPending}>
           <Check className="h-4 w-4 mr-2" />
-          Save Security Settings
+          {updateSettings.isPending ? "Saving..." : "Save Security Settings"}
         </Button>
       </div>
     </div>

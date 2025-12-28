@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 
-export async function PUT(request: NextRequest, { params }: { params: { workspaceId: string; webhookId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ workspaceId: string; webhookId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: { params: { workspac
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { workspaceId: string; webhookId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ workspaceId: string; webhookId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {

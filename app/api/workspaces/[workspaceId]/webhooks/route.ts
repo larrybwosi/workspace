@@ -10,15 +10,17 @@ const createWebhookSchema = z.object({
   events: z.array(z.string()),
 })
 
-export async function GET(request: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { workspaceId } = await params;
+
     const webhooks = await prisma.workspaceWebhook.findMany({
-      where: { workspaceId: params.workspaceId },
+      where: { workspaceId: workspaceId },
       include: {
         _count: {
           select: {
@@ -43,6 +45,7 @@ export async function POST(request: NextRequest, { params }: { params: { workspa
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { workspaceId } = await params;
     const body = await request.json()
     const validatedData = createWebhookSchema.parse(body)
 
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: { workspa
 
     const webhook = await prisma.workspaceWebhook.create({
       data: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         name: validatedData.name,
         url: validatedData.url,
         secret,
