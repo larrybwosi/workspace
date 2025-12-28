@@ -63,10 +63,10 @@ export async function POST(request: NextRequest, { params }: { params: { workspa
 
     return NextResponse.json(webhook, { status: 201 })
   } catch (error) {
+    console.error("[v0] Failed to create webhook:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to create webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

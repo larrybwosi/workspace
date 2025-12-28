@@ -246,10 +246,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       { status: 201 },
     )
   } catch (error) {
+    console.error("[v0] Failed to create integration:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to create integration:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

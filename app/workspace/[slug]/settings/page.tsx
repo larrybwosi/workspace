@@ -95,7 +95,7 @@ export default async function WorkspaceSettingsPage({
           </TabsContent>
 
           <TabsContent value="webhooks" className="space-y-6">
-            <WorkspaceWebhooksManagement workspaceSlug={slug} />
+            <WorkspaceWebhooksManagement workspaceSlug={workspace?.id} />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
