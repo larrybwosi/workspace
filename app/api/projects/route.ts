@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
             id: session.user.id,
           },
         },
+        workspaceId: null // Personal projects only
       },
       include: {
         creator: true,

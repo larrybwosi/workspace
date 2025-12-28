@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -67,6 +66,7 @@ import { DeleteProjectDialog } from "@/components/features/workspace/delete-proj
 import { CreateChannelDialog } from "@/components/features/workspace/create-channel-dialog"
 import { EditChannelDialog } from "@/components/features/workspace/edit-channel-dialog"
 import { DeleteChannelDialog } from "@/components/features/workspace/delete-channel-dialog"
+import { useState } from "react"
 
 // --- Interfaces ---
 interface Department {
@@ -97,31 +97,31 @@ export function WorkspaceSidebar({ workspaceSlug }: { workspaceSlug: string }) {
   const { toast } = useToast()
 
   // UI Toggles
-  const [projectsOpen, setProjectsOpen] = React.useState(true)
-  const [channelsOpen, setChannelsOpen] = React.useState(true)
-  const [departmentsOpen, setDepartmentsOpen] = React.useState(true)
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [projectsOpen, setProjectsOpen] = useState(true)
+  const [channelsOpen, setChannelsOpen] = useState(true)
+  const [departmentsOpen, setDepartmentsOpen] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Dialog states
-  const [createDeptOpen, setCreateDeptOpen] = React.useState(false)
-  const [editDeptOpen, setEditDeptOpen] = React.useState(false)
-  const [deleteDeptOpen, setDeleteDeptOpen] = React.useState(false)
-  const [createProjectOpen, setCreateProjectOpen] = React.useState(false)
-  const [editProjectOpen, setEditProjectOpen] = React.useState(false)
-  const [deleteProjectOpen, setDeleteProjectOpen] = React.useState(false)
-  const [createChannelOpen, setCreateChannelOpen] = React.useState(false)
-  const [editChannelOpen, setEditChannelOpen] = React.useState(false)
-  const [deleteChannelOpen, setDeleteChannelOpen] = React.useState(false)
+  const [createDeptOpen, setCreateDeptOpen] = useState(false)
+  const [editDeptOpen, setEditDeptOpen] = useState(false)
+  const [deleteDeptOpen, setDeleteDeptOpen] = useState(false)
+  const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const [editProjectOpen, setEditProjectOpen] = useState(false)
+  const [deleteProjectOpen, setDeleteProjectOpen] = useState(false)
+  const [createChannelOpen, setCreateChannelOpen] = useState(false)
+  const [editChannelOpen, setEditChannelOpen] = useState(false)
+  const [deleteChannelOpen, setDeleteChannelOpen] = useState(false)
 
   // Selected item for edit/delete
-  const [selectedDept, setSelectedDept] = React.useState<Department | null>(null)
-  const [selectedProject, setSelectedProject] = React.useState<Project | null>(null)
-  const [selectedChannel, setSelectedChannel] = React.useState<Channel | null>(null)
+  const [selectedDept, setSelectedDept] = useState<Department | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null)
 
   // Form states
-  const [deptForm, setDeptForm] = React.useState({ name: "", icon: "💼", description: "" })
-  const [projectForm, setProjectForm] = React.useState({ name: "", description: "", status: "planning" })
-  const [channelForm, setChannelForm] = React.useState({
+  const [deptForm, setDeptForm] = useState({ name: "", icon: "💼", description: "" })
+  const [projectForm, setProjectForm] = useState({ name: "", description: "", status: "planning" })
+  const [channelForm, setChannelForm] = useState({
     name: "",
     description: "",
     type: "public" as "public" | "private",

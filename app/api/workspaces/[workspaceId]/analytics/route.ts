@@ -9,11 +9,13 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { workspaceId } = await params;
+
     // Check if user is a member
     const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
-          workspaceId: params.workspaceId,
+          workspaceId: workspaceId,
           userId: session.user.id,
         },
       },
@@ -32,32 +34,32 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
     // Fetch comprehensive analytics
     const [totalProjects, totalTasks, totalMembers, activeProjects, recentActivity, taskStats] = await Promise.all([
       prisma.project.count({
-        where: { workspaceId: params.workspaceId },
+        where: { workspaceId: workspaceId },
       }),
       prisma.task.count({
         where: {
-          project: { workspaceId: params.workspaceId },
+          project: { workspaceId: workspaceId },
         },
       }),
       prisma.workspaceMember.count({
-        where: { workspaceId: params.workspaceId },
+        where: { workspaceId: workspaceId },
       }),
       prisma.project.count({
         where: {
-          workspaceId: params.workspaceId,
+          workspaceId: workspaceId,
           status: "active",
         },
       }),
       prisma.workspaceAuditLog.count({
         where: {
-          workspaceId: params.workspaceId,
+          workspaceId: workspaceId,
           createdAt: { gte: startDate },
         },
       }),
       prisma.task.groupBy({
         by: ["status"],
         where: {
-          project: { workspaceId: params.workspaceId },
+          project: { workspaceId: workspaceId },
         },
         _count: true,
       }),
@@ -71,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
     const previousPeriodStart = new Date(startDate.getTime() - (now.getTime() - startDate.getTime()))
     const previousActivity = await prisma.workspaceAuditLog.count({
       where: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         createdAt: {
           gte: previousPeriodStart,
           lt: startDate,

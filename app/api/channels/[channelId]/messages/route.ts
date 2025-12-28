@@ -41,7 +41,7 @@ export async function GET(
       where: {
         channelId: channelId, // Direct link to channel
         threadId: undefined,       // Only fetch "Root" messages (exclude sidebar replies)
-        ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
+        // ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
       include: {
         user: true,
@@ -54,7 +54,7 @@ export async function GET(
         // structure for compatibility:
         replies: {
           include: {
-            user: true,
+            user: { select:{ name: true, email: true } },
             reactions: true,
             readBy: true,
           },
@@ -93,8 +93,7 @@ export async function GET(
         replies: processedReplies,
       };
     });
-
-    console.log("Fetched messages for channel:", processedMessages);
+    
     return NextResponse.json({
       messages: processedMessages.reverse(),
       nextCursor,

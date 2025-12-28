@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    const {workspaceId}= await params
+    const { workspaceId }= await params
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
@@ -132,8 +132,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         },
       }
     })
-
-    return NextResponse.json({ projects: projectsWithMetrics })
+    
+    return NextResponse.json(projectsWithMetrics)
   } catch (error) {
     console.error("[WORKSPACE_PROJECTS_GET]", error)
     return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 })
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const {workspaceId}= await params
+    const { workspaceId } = await params
     // Verify workspace membership with proper permissions
     const member = await prisma.workspaceMember.findFirst({
       where: {

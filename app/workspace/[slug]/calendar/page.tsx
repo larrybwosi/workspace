@@ -1,9 +1,7 @@
 "use client"
 
-import * as React from "react"
-import { use } from "react"
+import { use, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { WorkspaceSidebar } from "@/components/features/workspace/workspace-sidebar"
 import { CalendarView } from "@/components/features/calendar/calendar-view"
 
 interface CalendarPageProps {
@@ -12,11 +10,10 @@ interface CalendarPageProps {
 
 export default function CalendarPage({ params }: CalendarPageProps) {
   const { slug } = use(params)
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
-      <WorkspaceSidebar workspaceSlug={slug} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="border-b border-border px-6 py-4 flex items-center justify-between">

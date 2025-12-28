@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown, Plus, Settings, Users, Building2 } from "lucide-react"
+import { Check, ChevronsUpDown, Plus, Settings, Users, Building2, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,6 +30,11 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
 
   const currentWorkspace = workspaces?.find((w: any) => w.id === currentWorkspaceId)
 
+  // Define fallback values for the "Personal" view
+  const displayName = currentWorkspace?.name || "Personal"
+  const displayIcon = currentWorkspace?.icon
+  const displayInitials = displayName.charAt(0).toUpperCase()
+
   const handleWorkspaceChange = (workspaceId: string) => {
     const workspace = workspaces?.find((w: any) => w.id === workspaceId)
     if (workspace) {
@@ -44,18 +49,25 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="w-full justify-between h-14 px-3 hover:bg-muted/80">
             <div className="flex items-center gap-3 min-w-0">
-              {currentWorkspace?.icon ? (
+              {displayIcon ? (
                 <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg shrink-0 shadow-sm">
-                  {currentWorkspace.icon}
+                  {displayIcon}
                 </div>
               ) : (
-                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shrink-0 shadow-sm">
-                  <span className="text-white font-bold text-sm">{currentWorkspace?.name?.charAt(0) || "W"}</span>
+                <div className={cn(
+                  "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
+                  currentWorkspace 
+                    ? "bg-gradient-to-br from-blue-500 to-purple-600" 
+                    : "bg-muted border border-border" // Neutral look for Personal if preferred
+                )}>
+                  <span className={cn("font-bold text-sm", currentWorkspace ? "text-white" : "text-muted-foreground")}>
+                    {displayInitials}
+                  </span>
                 </div>
               )}
               <div className="text-left min-w-0">
                 <div className="font-semibold text-sm truncate flex items-center gap-2">
-                  {currentWorkspace?.name || "Select Workspace"}
+                  {displayName}
                   {currentWorkspace?.plan === "pro" && (
                     <Badge variant="secondary" className="text-[10px] px-1 py-0">
                       PRO
@@ -66,13 +78,17 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {currentWorkspace?._count?.members || 0} members · {currentWorkspace?._count?.projects || 0} projects
+                  {currentWorkspace 
+                    ? `${currentWorkspace?._count?.members || 0} members · ${currentWorkspace?._count?.projects || 0} projects`
+                    : "Individual Workspace"}
                 </div>
               </div>
             </div>
             <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
           </Button>
         </DropdownMenuTrigger>
+        
+        {/* ... Rest of the DropdownMenuContent remains the same ... */}
         <DropdownMenuContent align="start" className="w-72">
           <DropdownMenuLabel className="flex items-center justify-between">
             <span>Workspaces</span>

@@ -229,23 +229,6 @@ export function Sidebar({
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Header - Fixed */}
-        <div className="h-14 border-b border-sidebar-border flex items-center justify-between px-4 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
-            <h1 className="font-semibold text-sidebar-foreground">Dealio</h1>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden h-8 w-8"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
 
         {/* Workspace Switcher */}
         <div className="border-b border-sidebar-border p-2 shrink-0">

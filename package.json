@@ -72,7 +72,7 @@
     "next": "16.0.10",
     "next-mdx-remote": "latest",
     "next-themes": "^0.4.6",
-    "react": "19.2.1",
+    "react": "19.2.3",
     "react-day-picker": "9.8.0",
     "react-dom": "latest",
     "react-hook-form": "^7.69.0",

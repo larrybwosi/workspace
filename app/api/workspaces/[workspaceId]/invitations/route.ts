@@ -21,12 +21,13 @@ export async function GET(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspaceId } = await params;
 
     // Check if user is admin or owner
     const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
-          workspaceId: params.workspaceId,
+          workspaceId: workspaceId,
           userId: session.user.id,
         },
       },
@@ -37,7 +38,7 @@ export async function GET(
     }
 
     const invitations = await prisma.workspaceInvitation.findMany({
-      where: { workspaceId: params.workspaceId },
+      where: { workspaceId: workspaceId },
       include: {
         inviter: {
           select: {
@@ -80,11 +81,13 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { workspaceId } = await params;
+
     // Check if user is admin or owner
     const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
-          workspaceId: params.workspaceId,
+          workspaceId: workspaceId,
           userId: session.user.id,
         },
       },
@@ -122,7 +125,7 @@ export async function POST(
       const existingMember = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: {
-            workspaceId: params.workspaceId,
+            workspaceId: workspaceId,
             userId: validatedData.userId,
           },
         },
@@ -152,7 +155,7 @@ export async function POST(
         const existingMember = await prisma.workspaceMember.findUnique({
           where: {
             workspaceId_userId: {
-              workspaceId: params.workspaceId,
+              workspaceId: workspaceId,
               userId: user.id,
             },
           },
@@ -170,7 +173,7 @@ export async function POST(
     // Check for existing pending invitation
     const existingInvitation = await prisma.workspaceInvitation.findFirst({
       where: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         email: invitedUserEmail,
         status: "pending",
         expiresAt: { gt: new Date() },
@@ -193,7 +196,7 @@ export async function POST(
     // Create invitation
     const invitation = await prisma.workspaceInvitation.create({
       data: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         email: invitedUserEmail,
         userId: invitedUserId,
         token,
@@ -220,7 +223,7 @@ export async function POST(
         type: "workspace_invitation",
         title: "Workspace Invitation",
         message: `${session.user.name} invited you to join ${invitation.workspace.name}`,
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         invitationId: invitation.id,
       });
     }
@@ -228,14 +231,17 @@ export async function POST(
     // Create audit log
     await prisma.workspaceAuditLog.create({
       data: {
-        workspaceId: params.workspaceId,
+        workspaceId: workspaceId,
         userId: session.user.id,
         action: "INVITE_USER",
-        resourceType: "workspace_invitation",
-        resourceId: invitation.id,
+        // resourceType: "workspace_invitation",
+        resource: "workspace_invitation",
+        // resourceId: invitation.id,
         metadata: {
           email: invitedUserEmail,
           role: validatedData.role,
+          invitedUserId: invitedUserId,
+          invitationId: invitation.id,
         },
       },
     });

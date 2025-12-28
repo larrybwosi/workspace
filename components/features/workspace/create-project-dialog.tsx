@@ -1,5 +1,10 @@
 "use client"
+
 import React from "react"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
+
 import {
   Dialog,
   DialogContent,
@@ -13,6 +18,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useToast } from "@/hooks/use-toast"
 
 interface CreateProjectDialogProps {
@@ -23,7 +30,13 @@ interface CreateProjectDialogProps {
 }
 
 export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess }: CreateProjectDialogProps) {
-  const [form, setForm] = React.useState({ name: "", description: "", status: "planning" })
+  const [form, setForm] = React.useState({ 
+    name: "", 
+    description: "", 
+    status: "planning",
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined,
+  })
   const [isLoading, setIsLoading] = React.useState(false)
   const { toast } = useToast()
 
@@ -44,7 +57,7 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
       if (!response.ok) throw new Error("Failed to create project")
 
       toast({ title: "Success", description: "Project created successfully" })
-      setForm({ name: "", description: "", status: "planning" })
+      setForm({ name: "", description: "", status: "planning", startDate: undefined, endDate: undefined })
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
@@ -56,7 +69,7 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>Start a new project in your workspace.</DialogDescription>
@@ -71,6 +84,60 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
               disabled={isLoading}
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Start Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !form.startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {form.startDate ? format(form.startDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={form.startDate}
+                    onSelect={(date) => setForm({ ...form, startDate: date })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !form.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {form.endDate ? format(form.endDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={form.endDate}
+                    onSelect={(date) => setForm({ ...form, endDate: date })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label>Status</Label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })} disabled={isLoading}>
@@ -99,7 +166,7 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!form.name || isLoading} loading={isLoading}>
+          <Button onClick={handleCreate} disabled={!form.name || isLoading}>
             Create Project
           </Button>
         </DialogFooter>
