@@ -9,7 +9,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { emojiI
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { emojiId } = params
+    const { emojiId } = await params
     const body = await request.json()
 
     const emoji = await prisma.customEmoji.update({
@@ -31,7 +31,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { emoji
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { emojiId } = params
+    const { emojiId } = await params
 
     await prisma.customEmoji.update({
       where: { id: emojiId },

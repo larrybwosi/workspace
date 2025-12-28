@@ -9,7 +9,8 @@ import { NotificationsTab } from "@/components/features/workspace/settings/notif
 import { AuditLogsTab } from "@/components/features/workspace/settings/audit-log-tab"
 import { cache } from "react"
 import { prisma } from "@/lib/prisma"
-import { IntegrationsTab } from "@/components/features/workspace/integrations-tab"
+import { IntegrationsTab } from "@/components/features/workspace/settings/integrations-tab"
+// import { IntegrationsTab } from "@/components/features/workspace/integrations-tab"
 
 const getWorkspaceBySlug = cache(async (slug: string, userId: string) => {
   const workspace = await prisma.workspace.findUnique({

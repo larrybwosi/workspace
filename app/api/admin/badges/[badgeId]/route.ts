@@ -2,14 +2,14 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function PATCH(request: NextRequest, { params }: { params: { badgeId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ badgeId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { badgeId } = params
+    const { badgeId } = await params
     const body = await request.json()
 
     const badge = await prisma.userBadge.update({
@@ -24,14 +24,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { badgeI
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { badgeId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ badgeId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { badgeId } = params
+    const { badgeId } = await params
 
     await prisma.userBadge.update({
       where: { id: badgeId },
