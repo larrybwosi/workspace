@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(emojis)
   } catch (error) {
-    console.error("[v0] Get custom emojis error:", error)
+    console.error("Get custom emojis error:", error)
     return NextResponse.json({ error: "Failed to fetch custom emojis" }, { status: 500 })
   }
 }
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Create custom emoji error:", error)
+    console.error("Create custom emoji error:", error)
     return NextResponse.json({ error: "Failed to create custom emoji" }, { status: 500 })
   }
 }

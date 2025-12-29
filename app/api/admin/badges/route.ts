@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(badges)
   } catch (error) {
-    console.error("[v0] Get badges error:", error)
+    console.error("Get badges error:", error)
     return NextResponse.json({ error: "Failed to fetch badges" }, { status: 500 })
   }
 }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Create badge error:", error)
+    console.error("Create badge error:", error)
     return NextResponse.json({ error: "Failed to create badge" }, { status: 500 })
   }
 }

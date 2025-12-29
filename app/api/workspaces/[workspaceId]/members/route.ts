@@ -55,7 +55,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ members })
   } catch (error) {
-    console.error("[v0] Failed to fetch workspace members:", error)
+    console.error("Failed to fetch workspace members:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

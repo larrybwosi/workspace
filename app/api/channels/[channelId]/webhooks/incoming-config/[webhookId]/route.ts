@@ -27,7 +27,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { chann
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Failed to delete incoming webhook:", error)
+    console.error("Failed to delete incoming webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { channe
 
     return NextResponse.json(webhook)
   } catch (error) {
-    console.error("[v0] Failed to update incoming webhook:", error)
+    console.error("Failed to update incoming webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -131,7 +131,7 @@ export async function POST(
 
     return NextResponse.json(testResult)
   } catch (error) {
-    console.error("[v0] Failed to test integration:", error)
+    console.error("Failed to test integration:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

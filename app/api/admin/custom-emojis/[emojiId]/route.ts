@@ -19,7 +19,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { emojiI
 
     return NextResponse.json(emoji)
   } catch (error) {
-    console.error("[v0] Update custom emoji error:", error)
+    console.error("Update custom emoji error:", error)
     return NextResponse.json({ error: "Failed to update custom emoji" }, { status: 500 })
   }
 }
@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { emoji
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Delete custom emoji error:", error)
+    console.error("Delete custom emoji error:", error)
     return NextResponse.json({ error: "Failed to delete custom emoji" }, { status: 500 })
   }
 }

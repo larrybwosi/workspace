@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error("[v0] Failed to fetch audit logs:", error)
+    console.error("Failed to fetch audit logs:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

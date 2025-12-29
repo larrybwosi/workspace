@@ -199,7 +199,7 @@ export const IntegrationService = {
       })
       return response.ok
     } catch (error) {
-      console.error("[v0] Slack send failed:", error)
+      console.error("Slack send failed:", error)
       return false
     }
   },
@@ -214,7 +214,7 @@ export const IntegrationService = {
       })
       return response.ok
     } catch (error) {
-      console.error("[v0] Discord send failed:", error)
+      console.error("Discord send failed:", error)
       return false
     }
   },
@@ -229,7 +229,7 @@ export const IntegrationService = {
       })
       return response.ok
     } catch (error) {
-      console.error("[v0] Teams send failed:", error)
+      console.error("Teams send failed:", error)
       return false
     }
   },
@@ -257,7 +257,7 @@ export const IntegrationService = {
       })
       return response.ok
     } catch (error) {
-      console.error("[v0] Custom webhook send failed:", error)
+      console.error("Custom webhook send failed:", error)
       return false
     }
   },

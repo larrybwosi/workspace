@@ -19,7 +19,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(badge)
   } catch (error) {
-    console.error("[v0] Update badge error:", error)
+    console.error("Update badge error:", error)
     return NextResponse.json({ error: "Failed to update badge" }, { status: 500 })
   }
 }
@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Delete badge error:", error)
+    console.error("Delete badge error:", error)
     return NextResponse.json({ error: "Failed to delete badge" }, { status: 500 })
   }
 }

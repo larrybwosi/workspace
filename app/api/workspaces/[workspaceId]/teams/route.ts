@@ -60,7 +60,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ teams })
   } catch (error) {
-    console.error("[v0] Failed to fetch teams:", error)
+    console.error("Failed to fetch teams:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to create team:", error)
+    console.error("Failed to create team:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

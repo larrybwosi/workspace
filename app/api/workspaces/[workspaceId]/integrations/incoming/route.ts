@@ -69,7 +69,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   } catch (error) {
-    console.error("[v0] Failed to process incoming webhook:", error)
+    console.error("Failed to process incoming webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -143,7 +143,7 @@ async function processIncomingWebhook(workspace: any, integration: any, payload:
           channelId: channel.id,
         })
       } catch (e) {
-        console.error("[v0] Ably publish failed:", e)
+        console.error("Ably publish failed:", e)
       }
 
       return NextResponse.json({

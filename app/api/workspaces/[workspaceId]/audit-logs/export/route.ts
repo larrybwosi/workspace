@@ -73,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
   } catch (error) {
-    console.error("[v0] Failed to export audit logs:", error)
+    console.error("Failed to export audit logs:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

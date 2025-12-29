@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to update member:", error)
+    console.error("Failed to update member:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -135,7 +135,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { works
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Failed to remove member:", error)
+    console.error("Failed to remove member:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -122,7 +122,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Error processing friend request:", error)
+    console.error("Error processing friend request:", error)
     return NextResponse.json({ error: "Failed to process friend request" }, { status: 500 })
   }
 }
@@ -158,7 +158,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json({ message: "Friend request deleted" })
   } catch (error) {
-    console.error("[v0] Error deleting friend request:", error)
+    console.error("Error deleting friend request:", error)
     return NextResponse.json({ error: "Failed to delete friend request" }, { status: 500 })
   }
 }

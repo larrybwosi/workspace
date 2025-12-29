@@ -117,7 +117,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    console.error("[v0] External API - Failed to fetch members:", error)
+    console.error("External API - Failed to fetch members:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] External API - Failed to add members:", error)
+    console.error("External API - Failed to add members:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

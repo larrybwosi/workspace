@@ -78,7 +78,7 @@ export async function GET(
       },
     })
   } catch (error) {
-    console.error("[v0] Failed to fetch announcements:", error)
+    console.error("Failed to fetch announcements:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -156,7 +156,7 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to create announcement:", error)
+    console.error("Failed to create announcement:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

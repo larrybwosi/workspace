@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       },
     )
   } catch (error) {
-    console.error("[v0] Failed to list channels via API:", error)
+    console.error("Failed to list channels via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
-    console.error("[v0] Failed to create channel via API:", error)
+    console.error("Failed to create channel via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }

@@ -47,7 +47,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
       router.push(`/dm/${userId}`)
     } catch (error) {
       toast.error("Failed to start conversation")
-      console.error("[v0] Error starting DM:", error)
+      console.error("Error starting DM:", error)
     }
   }
 
@@ -57,7 +57,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
       toast.success(`Friend request sent to ${userName}`)
     } catch (error) {
       toast.error("Failed to send friend request")
-      console.error("[v0] Error sending friend request:", error)
+      console.error("Error sending friend request:", error)
     }
   }
 

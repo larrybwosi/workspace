@@ -106,7 +106,7 @@ export async function POST(request: NextRequest, { params }: { params: { channel
 
     return NextResponse.json({ success: true, messageId: message.id }, { status: 201 })
   } catch (error) {
-    console.error("[v0] Incoming webhook error:", error)
+    console.error("Incoming webhook error:", error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid payload", details: error.errors }, { status: 400 })

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ departments })
   } catch (error) {
-    console.error("[v0] External API - Failed to fetch departments:", error)
+    console.error("External API - Failed to fetch departments:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] External API - Failed to create department:", error)
+    console.error("External API - Failed to create department:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { channe
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to update webhook:", error)
+    console.error("Failed to update webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -87,7 +87,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { chann
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Failed to delete webhook:", error)
+    console.error("Failed to delete webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

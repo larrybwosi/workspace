@@ -36,7 +36,7 @@ export async function PATCH(
 
     return NextResponse.json(webhook)
   } catch (error) {
-    console.error("[v0] Failed to update webhook:", error)
+    console.error("Failed to update webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -66,7 +66,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Webhook deleted successfully" })
   } catch (error) {
-    console.error("[v0] Failed to delete webhook:", error)
+    console.error("Failed to delete webhook:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

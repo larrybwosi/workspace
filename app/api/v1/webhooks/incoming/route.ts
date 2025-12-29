@@ -4,6 +4,16 @@ import { validateWebhookSignature } from "@/lib/api-auth"
 import { z } from "zod"
 import { sendRealtimeMessage } from "@/lib/ably"
 
+// Simple slugify helper
+const slugify = (text: string) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-")
+
 const webhookPayloadSchema = z.object({
   action: z.enum(["send_message", "create_channel", "create_department", "add_member"]),
   data: z.record(z.any()),
@@ -19,34 +29,50 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("x-webhook-signature")
 
     if (!webhookId || !signature) {
-      return NextResponse.json({ error: "Missing webhook headers", code: "MISSING_HEADERS" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing webhook headers", code: "MISSING_HEADERS" },
+        { status: 400 }
+      )
     }
 
     // Find webhook configuration
+    // We include workspace to access ownerId, as WorkspaceWebhook doesn't have createdById
     const webhook = await prisma.workspaceWebhook.findUnique({
       where: { id: webhookId },
       include: { workspace: true },
     })
 
-    if (!webhook || !webhook.isActive) {
-      return NextResponse.json({ error: "Webhook not found or inactive", code: "INVALID_WEBHOOK" }, { status: 404 })
+    if (!webhook || !webhook.active) {
+      return NextResponse.json(
+        { error: "Webhook not found or inactive", code: "INVALID_WEBHOOK" },
+        { status: 404 }
+      )
     }
 
     // Validate signature
     const rawBody = await request.text()
-    const isValid = validateWebhookSignature(rawBody, signature.replace("sha256=", ""), webhook.secret)
+    const isValid = validateWebhookSignature(
+      rawBody,
+      signature.replace("sha256=", ""),
+      webhook.secret
+    )
 
     if (!isValid) {
-      await prisma.webhookDelivery.create({
+      // Updated to match schema: WorkspaceWebhookLog
+      await prisma.workspaceWebhookLog.create({
         data: {
           webhookId: webhook.id,
-          status: "failed",
-          request: { headers: Object.fromEntries(request.headers), body: rawBody },
+          event: "unknown", // Event is unknown if signature fails
+          success: false,
+          payload: { headers: Object.fromEntries(request.headers), body: rawBody },
           response: { error: "Invalid signature" },
         },
       })
 
-      return NextResponse.json({ error: "Invalid signature", code: "INVALID_SIGNATURE" }, { status: 401 })
+      return NextResponse.json(
+        { error: "Invalid signature", code: "INVALID_SIGNATURE" },
+        { status: 401 }
+      )
     }
 
     // Parse and validate payload
@@ -67,13 +93,18 @@ export async function POST(request: NextRequest) {
         const message = await prisma.message.create({
           data: {
             channelId: messageData.channelId,
-            userId: webhook.createdById,
+            // Fallback to workspace owner since Webhook doesn't track a specific creator
+            userId: webhook.workspace.ownerId, 
             content: messageData.content,
             messageType: "integration",
           },
         })
 
-        await sendRealtimeMessage(`channel:${messageData.channelId}`, "message.created", { message })
+        await sendRealtimeMessage(
+          `channel:${messageData.channelId}`,
+          "message.created",
+          { message }
+        )
         result = { messageId: message.id }
         break
 
@@ -82,7 +113,8 @@ export async function POST(request: NextRequest) {
           .object({
             name: z.string(),
             description: z.string().optional(),
-            type: z.enum(["public", "private"]).optional(),
+            type: z.string().optional(), // Schema uses string for type
+            icon: z.string().optional(),
           })
           .parse(payload.data)
 
@@ -91,12 +123,19 @@ export async function POST(request: NextRequest) {
             workspaceId: webhook.workspaceId,
             name: channelData.name,
             description: channelData.description,
-            type: channelData.type || "public",
-            createdById: webhook.createdById,
+            type: channelData.type || "channel",
+            // Icon is required in schema
+            icon: channelData.icon || "hash", 
+            // createdById is optional in Channel, we can omit or use owner
+            createdById: webhook.workspace.ownerId, 
           },
         })
 
-        await sendRealtimeMessage(`workspace:${webhook.workspaceId}`, "channel.created", { channel })
+        await sendRealtimeMessage(
+          `workspace:${webhook.workspaceId}`,
+          "channel.created",
+          { channel }
+        )
         result = { channelId: channel.id }
         break
 
@@ -108,10 +147,13 @@ export async function POST(request: NextRequest) {
           })
           .parse(payload.data)
 
-        const department = await prisma.department.create({
+        // Updated to use WorkspaceDepartment
+        const department = await prisma.workspaceDepartment.create({
           data: {
             workspaceId: webhook.workspaceId,
             name: deptData.name,
+            // Slug is required in schema
+            slug: slugify(deptData.name),
             description: deptData.description,
           },
         })
@@ -153,25 +195,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Log successful delivery
-    await prisma.webhookDelivery.create({
+    // Updated to match schema: WorkspaceWebhookLog
+    await prisma.workspaceWebhookLog.create({
       data: {
         webhookId: webhook.id,
-        status: "success",
-        request: { headers: Object.fromEntries(request.headers), body: JSON.parse(rawBody) },
+        event: payload.action,
+        success: true,
+        payload: JSON.parse(rawBody),
         response: { success: true, result },
-        responseTime: 0, // Could track actual time
       },
     })
 
-    // Update webhook stats
-    await prisma.workspaceWebhook.update({
-      where: { id: webhook.id },
-      data: {
-        lastTriggeredAt: new Date(),
-        deliveryCount: { increment: 1 },
-        successCount: { increment: 1 },
-      },
-    })
+    // Note: The schema for WorkspaceWebhook does not include 
+    // lastTriggeredAt, deliveryCount, or successCount, so those updates were removed.
 
     return NextResponse.json({
       success: true,
@@ -179,15 +215,18 @@ export async function POST(request: NextRequest) {
       result,
     })
   } catch (error) {
-    console.error("[v0] Webhook processing failed:", error)
+    console.error("Webhook processing failed:", error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid payload", code: "INVALID_PAYLOAD", details: error.errors },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
-    return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
+      { status: 500 }
+    )
   }
 }

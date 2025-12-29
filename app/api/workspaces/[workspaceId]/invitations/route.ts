@@ -62,7 +62,7 @@ export async function GET(
 
     return NextResponse.json({ invitations });
   } catch (error) {
-    console.error("[v0] Failed to fetch workspace invitations:", error);
+    console.error("Failed to fetch workspace invitations:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -251,7 +251,7 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
-    console.error("[v0] Failed to create workspace invitation:", error);
+    console.error("Failed to create workspace invitation:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -70,7 +70,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ tokens: maskedTokens })
   } catch (error) {
-    console.error("[v0] Failed to fetch API tokens:", error)
+    console.error("Failed to fetch API tokens:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -129,10 +129,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       { status: 201 },
     )
   } catch (error) {
+    console.log("Failed to create API token:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to create API token:", error)
+    console.error("Failed to create API token:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

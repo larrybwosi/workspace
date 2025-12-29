@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     )
   } catch (error) {
-    console.error("[v0] Failed to fetch security settings:", error)
+    console.error("Failed to fetch security settings:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -84,7 +84,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(workspace.securitySettings)
   } catch (error) {
-    console.error("[v0] Failed to update security settings:", error)
+    console.error("Failed to update security settings:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

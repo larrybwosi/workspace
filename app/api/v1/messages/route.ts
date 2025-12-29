@@ -28,6 +28,7 @@ const sendMessageSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const context = await authenticateWorkspaceApiKey(request)
+    console.log("Authenticated context:", context)
 
     if (!context) {
       return NextResponse.json(
@@ -69,6 +70,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = sendMessageSchema.parse(body)
 
+    console.log("Parsed message data:", data)
+
     // Verify channel exists and belongs to workspace
     const channel = await prisma.channel.findFirst({
       where: {
@@ -92,7 +95,14 @@ export async function POST(request: NextRequest) {
         content: data.content,
         messageType: data.messageType,
         metadata: data.metadata || {},
-        // attachments: data.attachments || [],
+        attachments: {
+          create: data.attachments?.map((attachment) => ({
+            name: attachment.name,
+            type: attachment.type,
+            url: attachment.url,
+            size: attachment.size.toString(),
+          })) || [],
+        },
       },
       include: {
         user: {
@@ -144,7 +154,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
-    console.error("[v0] Failed to send message via API:", error)
+    console.error("Failed to send message via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }

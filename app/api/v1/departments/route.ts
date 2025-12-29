@@ -4,6 +4,16 @@ import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from 
 import { z } from "zod"
 import { sendRealtimeMessage } from "@/lib/ably"
 
+// Helper to generate slugs
+const slugify = (text: string) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-")
+
 const createDepartmentSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
@@ -31,7 +41,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden", code: "INSUFFICIENT_PERMISSIONS" }, { status: 403 })
     }
 
-    const departments = await prisma.department.findMany({
+    const departments = await prisma.workspaceDepartment.findMany({
       where: { workspaceId: context.workspaceId },
       include: {
         manager: {
@@ -69,7 +79,7 @@ export async function GET(request: NextRequest) {
       },
     )
   } catch (error) {
-    console.error("[v0] Failed to list departments via API:", error)
+    console.error("Failed to list departments via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }
@@ -116,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     // Verify parent department exists if provided
     if (data.parentId) {
-      const parent = await prisma.department.findFirst({
+      const parent = await prisma.workspaceDepartment.findFirst({
         where: {
           id: data.parentId,
           workspaceId: context.workspaceId,
@@ -124,15 +134,19 @@ export async function POST(request: NextRequest) {
       })
 
       if (!parent) {
-        return NextResponse.json({ error: "Parent department not found", code: "PARENT_NOT_FOUND" }, { status: 404 })
+        return NextResponse.json(
+          { error: "Parent department not found", code: "PARENT_NOT_FOUND" },
+          { status: 404 }
+        )
       }
     }
 
     // Create department
-    const department = await prisma.department.create({
+    const department = await prisma.workspaceDepartment.create({
       data: {
         workspaceId: context.workspaceId,
         name: data.name,
+        slug: slugify(data.name),
         description: data.description,
         managerId: data.managerId,
         parentId: data.parentId,
@@ -155,6 +169,8 @@ export async function POST(request: NextRequest) {
     })
 
     // Log to audit trail
+    // Ensuring we use a consistent model name if provided in schema, 
+    // assuming 'WorkspaceAuditLog' exists based on the provided snippet context.
     await prisma.workspaceAuditLog.create({
       data: {
         workspaceId: context.workspaceId,
@@ -162,7 +178,7 @@ export async function POST(request: NextRequest) {
         action: "department.created_via_api",
         resource: "department",
         resourceId: department.id,
-        metadata: { name: data.name },
+        metadata: { name: data.name, slug: department.slug },
       },
     })
 
@@ -186,7 +202,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
-    console.error("[v0] Failed to create department via API:", error)
+    console.error("Failed to create department via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }

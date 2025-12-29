@@ -7,7 +7,6 @@ const addMemberSchema = z.object({
   email: z.string().email(),
   role: z.enum(["owner", "admin", "member", "guest"]).default("member"),
   departmentId: z.string().optional(),
-  title: z.string().optional(),
   teamIds: z.array(z.string()).optional(),
 })
 
@@ -87,7 +86,7 @@ export async function GET(request: NextRequest) {
       },
     )
   } catch (error) {
-    console.error("[v0] Failed to list members via API:", error)
+    console.error("Failed to list members via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }
@@ -150,7 +149,6 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         role: data.role,
         departmentId: data.departmentId,
-        title: data.title,
       },
       include: {
         user: {
@@ -196,7 +194,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
-    console.error("[v0] Failed to add member via API:", error)
+    console.error("Failed to add member via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }

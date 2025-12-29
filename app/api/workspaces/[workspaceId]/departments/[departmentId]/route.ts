@@ -65,7 +65,7 @@ export async function GET(
 
     return NextResponse.json(department)
   } catch (error) {
-    console.error("[v0] Failed to fetch department:", error)
+    console.error("Failed to fetch department:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -114,7 +114,7 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to update department:", error)
+    console.error("Failed to update department:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -152,7 +152,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Failed to delete department:", error)
+    console.error("Failed to delete department:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -98,7 +98,7 @@ export async function GET(request: NextRequest, { params }: { params: { workspac
       timeRange: range,
     })
   } catch (error) {
-    console.error("[v0] Failed to fetch analytics:", error)
+    console.error("Failed to fetch analytics:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

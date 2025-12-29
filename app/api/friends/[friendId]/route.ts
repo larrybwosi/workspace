@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { friend
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Error updating friend:", error)
+    console.error("Error updating friend:", error)
     return NextResponse.json({ error: "Failed to update friend" }, { status: 500 })
   }
 }
@@ -91,7 +91,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { frien
 
     return NextResponse.json({ message: "Friend removed" })
   } catch (error) {
-    console.error("[v0] Error removing friend:", error)
+    console.error("Error removing friend:", error)
     return NextResponse.json({ error: "Failed to remove friend" }, { status: 500 })
   }
 }

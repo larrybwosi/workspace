@@ -81,7 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(workspace)
   } catch (error) {
-    console.error("[v0] Failed to fetch workspace:", error)
+    console.error("Failed to fetch workspace:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to update workspace:", error)
+    console.error("Failed to update workspace:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -172,7 +172,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Failed to delete workspace:", error)
+    console.error("Failed to delete workspace:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

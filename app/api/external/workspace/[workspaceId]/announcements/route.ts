@@ -128,7 +128,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] External API - Failed to create announcement:", error)
+    console.error("External API - Failed to create announcement:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

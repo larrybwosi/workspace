@@ -61,7 +61,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ channels })
   } catch (error) {
-    console.error("[v0] External API - Failed to fetch channels:", error)
+    console.error("External API - Failed to fetch channels:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] External API - Failed to create channel:", error)
+    console.error("External API - Failed to create channel:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

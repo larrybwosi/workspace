@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ friends })
   } catch (error) {
-    console.error("[v0] Error fetching friends:", error)
+    console.error("Error fetching friends:", error)
     return NextResponse.json({ error: "Failed to fetch friends" }, { status: 500 })
   }
 }

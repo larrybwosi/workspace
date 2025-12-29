@@ -38,7 +38,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "API token deleted successfully" })
   } catch (error) {
-    console.error("[v0] Failed to delete API token:", error)
+    console.error("Failed to delete API token:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

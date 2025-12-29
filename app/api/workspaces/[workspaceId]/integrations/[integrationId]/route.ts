@@ -32,7 +32,7 @@ export async function GET(
 
     return NextResponse.json(integration)
   } catch (error) {
-    console.error("[v0] Failed to fetch integration:", error)
+    console.error("Failed to fetch integration:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -88,7 +88,7 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Failed to update integration:", error)
+    console.error("Failed to update integration:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -133,7 +133,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Failed to delete integration:", error)
+    console.error("Failed to delete integration:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
