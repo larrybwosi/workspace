@@ -91,3 +91,7 @@ export async function publishToAbly(channelName: string, eventName: string, data
     throw error
   }
 }
+
+export async function sendRealtimeMessage(channelName: string, eventName: string, data: any) {
+  return publishToAbly(channelName, eventName, data)
+}
