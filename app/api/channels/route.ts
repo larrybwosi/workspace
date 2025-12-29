@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { name, icon, type, description, isPrivate, parentId, members } = body
-    console.log(body)
+    // console.log(body)
 
     const channel = await prisma.channel.create({
       data: {

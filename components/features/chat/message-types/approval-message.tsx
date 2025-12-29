@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import type { Message, MessageMetadata } from "@/lib/types"
 import { mockUsers } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface ApprovalMessageProps {
   message: Message
@@ -20,20 +21,46 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
   const [showCommentField, setShowCommentField] = React.useState(false)
   const [comment, setComment] = React.useState("")
   const [localStatus, setLocalStatus] = React.useState(metadata.approvalStatus || "pending")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const requester = mockUsers.find((u) => u.id === message.userId)
   const approver = metadata.approvedBy ? mockUsers.find((u) => u.id === metadata.approvedBy) : null
 
+  const handleAction = async (actionId: string) => {
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/v1/messages/${message.id}/actions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actionId,
+          comment: comment || undefined,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Failed to submit action")
+      }
+
+      const data = await response.json()
+      setLocalStatus(actionId === "approve" ? "approved" : "rejected")
+      toast.success(`Request ${actionId === "approve" ? "approved" : "rejected"} successfully`)
+      setShowCommentField(false)
+    } catch (error) {
+      console.error("[v0] Failed to submit action:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to submit action")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleApprove = () => {
-    setLocalStatus("approved")
-    console.log(" Approved request:", message.id, "with comment:", comment)
-    setShowCommentField(false)
+    handleAction("approve")
   }
 
   const handleReject = () => {
-    setLocalStatus("rejected")
-    console.log(" Rejected request:", message.id, "with comment:", comment)
-    setShowCommentField(false)
+    handleAction("reject")
   }
 
   return (
@@ -135,9 +162,10 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
                     setShowCommentField(true)
                     setTimeout(() => handleApprove(), 100)
                   }}
+                  disabled={isSubmitting}
                 >
                   <Check className="h-4 w-4" />
-                  Approve Request
+                  {isSubmitting ? "Processing..." : "Approve Request"}
                 </Button>
                 <Button
                   size="sm"
@@ -147,9 +175,10 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
                     setShowCommentField(true)
                     setTimeout(() => handleReject(), 100)
                   }}
+                  disabled={isSubmitting}
                 >
                   <X className="h-4 w-4" />
-                  Reject Request
+                  {isSubmitting ? "Processing..." : "Reject Request"}
                 </Button>
               </div>
 

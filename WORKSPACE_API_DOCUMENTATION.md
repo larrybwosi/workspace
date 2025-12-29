@@ -171,6 +171,339 @@ Send a message to a channel in your workspace.
 }
 ```
 
+#### Send Interactive Message
+
+Send a message with interactive action buttons that users can respond to. When a user clicks an action button, a webhook callback is sent to your specified URL.
+
+**Endpoint:** `POST /api/v1/messages`
+
+**Required Permission:** `send:messages`
+
+**Request Body:**
+
+```json
+{
+  "channelId": "channel_123",
+  "content": "🚀 **Deployment Request**\n\nThe staging environment is ready to deploy to production.\n\n**Changes:**\n- Feature: User authentication\n- Bugfix: Payment processing\n- Performance: Database optimization",
+  "messageType": "interactive",
+  "actions": [
+    {
+      "actionId": "approve",
+      "label": "Approve Deployment",
+      "style": "primary",
+      "value": "approved"
+    },
+    {
+      "actionId": "reject",
+      "label": "Reject",
+      "style": "danger",
+      "value": "rejected"
+    }
+  ],
+  "callbackUrl": "https://your-app.com/api/deployment/callback",
+  "metadata": {
+    "deploymentId": "deploy_789",
+    "environment": "production",
+    "requestedBy": "deploy-bot"
+  }
+}
+```
+
+**Field Descriptions:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `channelId` | string | Yes | Channel ID to send message to |
+| `content` | string | Yes | Message content (supports Markdown) |
+| `messageType` | string | Yes | Must be `"interactive"` for action buttons |
+| `actions` | array | Yes | Array of action buttons (max 5) |
+| `actions[].actionId` | string | Yes | Unique identifier for the action |
+| `actions[].label` | string | Yes | Button label text |
+| `actions[].style` | string | No | Button style: `default`, `primary`, `danger` |
+| `actions[].value` | string | No | Optional value to include in callback |
+| `callbackUrl` | string | Yes | Your endpoint to receive action responses |
+| `metadata` | object | No | Custom data included in callback |
+
+**Response (201 Created):**
+
+```json
+{
+  "success": true,
+  "message": {
+    "id": "msg_xyz789",
+    "channelId": "channel_123",
+    "content": "🚀 **Deployment Request**...",
+    "messageType": "interactive",
+    "metadata": {
+      "deploymentId": "deploy_789",
+      "callbackUrl": "https://your-app.com/api/deployment/callback"
+    },
+    "actions": [
+      {
+        "id": "action_abc123",
+        "actionId": "approve",
+        "label": "Approve Deployment",
+        "style": "primary",
+        "value": "approved",
+        "disabled": false,
+        "order": 0
+      },
+      {
+        "id": "action_def456",
+        "actionId": "reject",
+        "label": "Reject",
+        "style": "danger",
+        "value": "rejected",
+        "disabled": false,
+        "order": 1
+      }
+    ],
+    "createdAt": "2025-01-01T12:00:00Z",
+    "user": {
+      "id": "user_123",
+      "name": "API Bot"
+    }
+  }
+}
+```
+
+#### Interactive Message Callback
+
+When a user responds to an interactive message, your `callbackUrl` receives a POST request with the action details.
+
+**Callback Request:**
+
+```
+POST https://your-app.com/api/deployment/callback
+Content-Type: application/json
+X-Webhook-Event: message.action_response
+```
+
+**Callback Payload:**
+
+```json
+{
+  "event": "message.action_response",
+  "timestamp": "2025-01-01T12:05:00Z",
+  "workspace": {
+    "id": "workspace_123",
+    "name": "Acme Corp"
+  },
+  "message": {
+    "id": "msg_xyz789",
+    "content": "🚀 **Deployment Request**...",
+    "channelId": "channel_123"
+  },
+  "action": {
+    "id": "approve",
+    "label": "Approve Deployment"
+  },
+  "response": {
+    "userId": "user_456",
+    "userName": "Jane Smith",
+    "userEmail": "jane@acme.com",
+    "actionValue": "approve",
+    "comment": "LGTM! Deploying now.",
+    "metadata": {
+      "deploymentId": "deploy_789"
+    },
+    "respondedAt": "2025-01-01T12:05:00Z"
+  }
+}
+```
+
+**Your Callback Response:**
+
+```json
+{
+  "success": true,
+  "message": "Deployment initiated"
+}
+```
+
+### Use Cases for Interactive Messages
+
+#### 1. Approval Workflows
+
+```javascript
+// Send approval request
+await api.sendMessage({
+  channelId: 'approvals',
+  content: '📋 **Budget Approval Request**\n\nDepartment: Engineering\nAmount: $15,000\nPurpose: New development servers',
+  messageType: 'interactive',
+  actions: [
+    { actionId: 'approve', label: 'Approve', style: 'primary' },
+    { actionId: 'reject', label: 'Reject', style: 'danger' },
+    { actionId: 'request_info', label: 'Request More Info', style: 'default' }
+  ],
+  callbackUrl: 'https://your-app.com/api/approvals/callback',
+  metadata: { requestId: 'req_123', amount: 15000 }
+});
+```
+
+#### 2. Incident Response
+
+```javascript
+// Send incident alert
+await api.sendMessage({
+  channelId: 'incidents',
+  content: '🚨 **High Priority Incident**\n\nService: Payment Gateway\nSeverity: P1\nStatus: Investigating',
+  messageType: 'interactive',
+  actions: [
+    { actionId: 'acknowledge', label: 'Acknowledge', style: 'primary' },
+    { actionId: 'escalate', label: 'Escalate', style: 'danger' }
+  ],
+  callbackUrl: 'https://your-app.com/api/incidents/callback',
+  metadata: { incidentId: 'inc_456', severity: 'P1' }
+});
+```
+
+#### 3. Survey/Poll
+
+```javascript
+// Send quick poll
+await api.sendMessage({
+  channelId: 'team',
+  content: '📊 **Quick Poll**\n\nShall we have the team meeting at 2pm or 3pm today?',
+  messageType: 'interactive',
+  actions: [
+    { actionId: '2pm', label: '2:00 PM', style: 'default' },
+    { actionId: '3pm', label: '3:00 PM', style: 'default' }
+  ],
+  callbackUrl: 'https://your-app.com/api/polls/callback',
+  metadata: { pollId: 'poll_789' }
+});
+```
+
+### Handling Action Callbacks
+
+#### Node.js Example
+
+```javascript
+app.post('/api/deployment/callback', async (req, res) => {
+  const { event, message, action, response, workspace } = req.body;
+  
+  console.log(`User ${response.userName} ${action.id}d deployment`);
+  
+  if (action.id === 'approve') {
+    // Trigger deployment
+    await triggerDeployment(response.metadata.deploymentId);
+    
+    // Send confirmation back to channel
+    await api.sendMessage({
+      channelId: message.channelId,
+      content: `✅ Deployment approved by ${response.userName} and initiated!`
+    });
+  } else if (action.id === 'reject') {
+    // Cancel deployment
+    await cancelDeployment(response.metadata.deploymentId);
+    
+    // Send notification
+    await api.sendMessage({
+      channelId: message.channelId,
+      content: `❌ Deployment rejected by ${response.userName}\nReason: ${response.comment || 'No reason provided'}`
+    });
+  }
+  
+  res.json({ success: true });
+});
+```
+
+#### Python Example
+
+```python
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/api/deployment/callback', methods=['POST'])
+def deployment_callback():
+    data = request.json
+    event = data['event']
+    message = data['message']
+    action = data['action']
+    response = data['response']
+    workspace = data['workspace']
+    
+    print(f"User {response['userName']} {action['id']}d deployment")
+    
+    if action['id'] == 'approve':
+        # Trigger deployment
+        trigger_deployment(response['metadata']['deploymentId'])
+        
+        # Send confirmation
+        api.send_message(
+            message['channelId'],
+            f"✅ Deployment approved by {response['userName']} and initiated!"
+        )
+    elif action['id'] == 'reject':
+        # Cancel deployment
+        cancel_deployment(response['metadata']['deploymentId'])
+        
+        # Send notification
+        reason = response.get('comment', 'No reason provided')
+        api.send_message(
+            message['channelId'],
+            f"❌ Deployment rejected by {response['userName']}\nReason: {reason}"
+        )
+    
+    return jsonify({'success': True})
+```
+
+### Interactive Message Best Practices
+
+1. **Keep Actions Clear and Concise**
+   - Use descriptive labels (max 20 characters recommended)
+   - Limit to 3-5 actions per message
+   - Use appropriate button styles (primary for positive actions, danger for destructive)
+
+2. **Include Context in Message Content**
+   - Explain what the user is approving/rejecting
+   - Include relevant details and links
+   - Use Markdown for better formatting
+
+3. **Handle Callbacks Securely**
+   - Validate callback payloads
+   - Verify webhook signatures (recommended)
+   - Implement idempotency to handle duplicate callbacks
+
+4. **Provide Feedback**
+   - Send a follow-up message after processing the action
+   - Update the original message status if possible
+   - Notify relevant users of the action taken
+
+5. **Store Action Responses**
+   - Log all action responses for audit trails
+   - Track who approved/rejected what and when
+   - Include in your compliance reporting
+
+6. **Set Timeouts**
+   - Consider adding expiration times for time-sensitive actions
+   - Disable actions after a certain period
+   - Send reminders for pending actions
+
+### Security Considerations
+
+1. **Verify Callback Authenticity**
+   - Implement HMAC signature verification for callbacks
+   - Use HTTPS for callback URLs
+   - Validate the workspace ID matches your records
+
+2. **Prevent Replay Attacks**
+   - Check the `respondedAt` timestamp
+   - Implement nonce/unique request IDs
+   - Store processed action IDs to prevent duplicates
+
+3. **Authorize Actions**
+   - Verify the user has permission to perform the action
+   - Check workspace membership
+   - Validate action matches original message
+
+4. **Secure Callback Endpoints**
+   - Use authentication for your callback endpoints
+   - Rate limit callback endpoints
+   - Implement timeout handling
+
 ---
 
 ### Channels

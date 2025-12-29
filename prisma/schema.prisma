@@ -49,6 +49,7 @@ model User {
   comments       Comment[]
   channelMembers ChannelMember[]
   createdChannels Channel[]     @relation("ChannelCreator")
+  actionResponses MessageActionResponse[]
 
   // Task & Project Relations
   tasks           Task[]    @relation("TaskAssignees")
@@ -547,22 +548,11 @@ model Message {
   timestamp   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Opposite relation field for Thread's rootMessage
   rootThread  Thread?  @relation("ThreadRoot")
-
-  // ✅ 1. Direct Link to Channel (The "Main Feed")
-  // This allows you to fetch "all messages in #general" instantly.
   channelId String
   channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-
-  // ✅ 2. Optional Thread Link
-  // If null, it's a main channel message. If set, it's a reply inside a thread.
   threadId  String?
   thread    Thread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
-
-  // ✅ 3. Hierarchy (Optional but Recommended)
-  // Useful for "Slack-style" threading where you don't always create a full "Thread" entity
-  // immediately, or just to know which message started the conversation.
   replyToId String?
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
   replies   Message[] @relation("MessageReplies")
@@ -572,6 +562,7 @@ model Message {
   attachments Attachment[]
   mentions    MessageMention[]
   readBy      MessageRead[]
+  actions     MessageAction[]
 
   @@map("messages")
 }
@@ -720,6 +711,49 @@ model DMAttachment {
 
   @@map("dm_attachments")
 }
+
+
+// Added models for Message Actions
+model MessageAction {
+  id          String   @id @default(cuid())
+  messageId   String
+  actionId    String   // Unique identifier for the action (e.g., "approve", "reject")
+  label       String   // Button label
+  style       String   @default("default") // Button style: default, primary, danger
+  value       String?  // Optional value to send with the action
+  disabled    Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  message   Message                @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  responses MessageActionResponse[]
+
+  @@unique([messageId, actionId])
+  @@index([messageId])
+  @@map("message_actions")
+}
+
+model MessageActionResponse {
+  id           String   @id @default(cuid())
+  actionId     String
+  messageId    String
+  userId       String
+  actionValue  String   // The action that was taken (e.g., "approved", "rejected")
+  comment      String?  @db.Text
+  metadata     Json?
+  webhookSent  Boolean  @default(false)
+  webhookUrl   String?
+  respondedAt  DateTime @default(now())
+
+  action  MessageAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([actionId, userId])
+  @@index([messageId])
+  @@index([userId])
+  @@map("message_action_responses")
+}
+
 
 // ============================================
 // PROJECT & TASK MODELS

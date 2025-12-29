@@ -9,6 +9,7 @@ const createChannelSchema = z.object({
   description: z.string().max(500).optional(),
   type: z.enum(["public", "private"]).default("public"),
   departmentId: z.string().optional(),
+  icon: z.string().optional(),
 })
 
 /**
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Verify department exists if provided
     if (data.departmentId) {
-      const department = await prisma.department.findFirst({
+      const department = await prisma.workspaceDepartment.findFirst({
         where: {
           id: data.departmentId,
           workspaceId: context.workspaceId,
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
         type: data.type,
         departmentId: data.departmentId,
         createdById: context.userId,
+        icon: data.icon || "#",
       },
       include: {
         department: {
