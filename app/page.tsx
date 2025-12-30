@@ -3,28 +3,27 @@
 import * as React from "react"
 import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sidebar } from "@/components/sidebar"
-import { InfoPanel } from "@/components/info-panel"
-import { ThreadView } from "@/components/thread-view"
-import { SearchView } from "@/components/search-view"
-import { MembersPanel } from "@/components/members-panel"
-import { TaskManagementView } from "@/components/task-management-view"
-import { TaskDetailSheet } from "@/components/task-detail-sheet"
-import { TaskCreateEditDialog } from "@/components/task-create-edit-dialog"
-import { ProjectDetailSheet } from "@/components/project-detail-sheet" // Added project detail sheet
-import { AssistantChannel } from "@/components/assistant-channel"
-import { DynamicHeader } from "@/components/dynamic-header"
-import { ProjectSettingsSheet } from "@/components/project-settings-sheet" // Import project settings sheet
 import { mockUsers, mockProjects } from "@/lib/mock-data"
 import type { Task, Project } from "@/lib/types"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { AssistantChannel } from "@/components/features/assistant/assistant-channel"
+import { SearchView } from "@/components/layout/search-view"
+import { MembersPanel } from "@/components/features/workspace/members-panel"
+import { TaskManagementView } from "@/components/features/tasks/task-management-view"
+import { ThreadView } from "@/components/features/chat/thread-view"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
+import { InfoPanel } from "@/components/shared/info-panel"
+import { TaskDetailSheet } from "@/components/features/tasks/task-detail-sheet"
+import { ProjectDetailSheet } from "@/components/features/projects/project-detail-sheet"
+import { ProjectSettingsSheet } from "@/components/features/projects/project-settings-sheet"
+import { TaskCreateEditDialog } from "@/components/features/tasks/task-create-edit-dialog"
 
 export default function HomePage() {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
-  const [activeChannel, setActiveChannel] = React.useState("uikit")
+  const [activeChannel, setActiveChannel] = React.useState('')
   const [searchMode, setSearchMode] = React.useState(false)
   const [membersMode, setMembersMode] = React.useState(false)
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
@@ -76,8 +75,8 @@ export default function HomePage() {
   }
 
   const getDMUser = () => {
-    if (activeChannel.startsWith("dm-")) {
-      const userId = activeChannel.replace("dm-", "")
+    if (activeChannel?.startsWith("dm-")) {
+      const userId = activeChannel?.replace("dm-", "")
       return mockUsers.find((u) => u.id === userId)
     }
     return null
@@ -96,7 +95,7 @@ export default function HomePage() {
       return <MembersPanel />
     }
 
-    if (activeChannel.startsWith("project-")) {
+    if (activeChannel?.startsWith("project-")) {
       return (
         <TaskManagementView
           onTaskClick={handleTaskClick}
@@ -106,7 +105,7 @@ export default function HomePage() {
       )
     }
 
-    if (activeChannel.startsWith("dm-")) {
+    if (activeChannel?.startsWith("dm-")) {
       const dmUser = getDMUser()
       return (
         <ThreadView
@@ -130,7 +129,7 @@ export default function HomePage() {
     return <ThreadView />
   }
 
-  const shouldShowInfoPanel = !activeChannel.startsWith("project-") && activeChannel !== "assistant"
+  const shouldShowInfoPanel = !activeChannel?.startsWith("project-") && activeChannel !== "assistant"
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -153,7 +152,7 @@ export default function HomePage() {
             setSearchMode(true)
             setMembersMode(false)
           }}
-          onBackClick={activeChannel.startsWith("project-") ? () => setActiveChannel("uikit") : undefined}
+          onBackClick={activeChannel?.startsWith("project-") ? () => setActiveChannel("uikit") : undefined}
         />
 
         {renderMainContent()}

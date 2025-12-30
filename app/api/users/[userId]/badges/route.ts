@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
 
     return NextResponse.json(badges)
   } catch (error) {
-    console.error("[v0] Get user badges error:", error)
+    console.error("Get user badges error:", error)
     return NextResponse.json({ error: "Failed to fetch user badges" }, { status: 500 })
   }
 }

@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Custom message error:", error)
+    console.error("Custom message error:", error)
     return NextResponse.json({ error: "Failed to send custom message" }, { status: 500 })
   }
 }

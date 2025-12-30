@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 })
     }
-    console.error("[v0] Assign badge error:", error)
+    console.error("Assign badge error:", error)
     return NextResponse.json({ error: "Failed to assign badge" }, { status: 500 })
   }
 }
@@ -95,7 +95,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Revoke badge error:", error)
+    console.error("Revoke badge error:", error)
     return NextResponse.json({ error: "Failed to revoke badge" }, { status: 500 })
   }
 }

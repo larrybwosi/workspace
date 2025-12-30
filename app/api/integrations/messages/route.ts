@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Integration message error:", error)
+    console.error("Integration message error:", error)
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 })
   }
 }
