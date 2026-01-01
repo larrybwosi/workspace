@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
         )
       }
     }
+    console.log("Message created with ID:", threadId)
 
     const ably = getAblyRest()
     const channel = ably.channels.get(AblyChannels.thread(threadId))

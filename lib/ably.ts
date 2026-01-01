@@ -55,6 +55,8 @@ export const AblyEvents = {
   DM_RECEIVED: "dm:received",
   WORKSPACE_UPDATED: "workspace:updated",
   CHANNEL_CREATED: "channel:created",
+  CHANNEL_UPDATED: "channel:updated",
+  CHANNEL_DELETED: "channel:deleted",
 }
 
 export const EVENTS = AblyEvents

@@ -1,30 +1,40 @@
-"use client"
-import { ThreadView } from "@/components/features/chat/thread-view"
-import { DynamicHeader } from "@/components/layout/dynamic-header"
-import { InfoPanel } from "@/components/shared/info-panel"
-import { useParams } from "next/navigation"
-import { useState } from "react"
+"use client";
+
+import { ThreadView } from "@/components/features/chat/thread-view";
+import { DynamicHeader } from "@/components/layout/dynamic-header";
+import { InfoPanel } from "@/components/shared/info-panel";
+import { useParams } from "next/navigation";
+import { useState } from "react";
 
 export default function WorkspaceChannelPageClient() {
-  const params = useParams()
-  const channelId = params.channelId as string
-  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
+  const params = useParams();
+  const channelId = params.channelId as string;
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false);
 
   return (
-    <div className="flex-1 h-full flex-col">
+    <div className="flex flex-col h-full w-full bg-background overflow-hidden">
       <DynamicHeader
         activeView={channelId}
         onMenuClick={() => {}}
         onSearchClick={() => {}}
-        // onInfoClick={() => setInfoPanelOpen(!infoPanelOpen)}
+        onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* <div className="flex-1"> */}
+      <div className="flex flex-1 overflow-hidden relative">
+        <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
           <ThreadView channelId={channelId} />
-        {/* </div> */}
-        {infoPanelOpen && <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} />}
+        </main>
+
+        {/* 4. Info Panel: Rendered side-by-side */}
+        {infoPanelOpen && (
+          <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out">
+            <InfoPanel
+              isOpen={infoPanelOpen}
+              onClose={() => setInfoPanelOpen(false)}
+            />
+          </aside>
+        )}
       </div>
     </div>
-  )
+  );
 }

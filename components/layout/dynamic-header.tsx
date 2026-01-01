@@ -6,13 +6,14 @@ import { mockChannels, mockProjects } from "@/lib/mock-data"
 import { ThemeToggle } from "./theme-toggle"
 
 interface DynamicHeaderProps {
-  activeView: string
-  onMenuClick: () => void
-  onSearchClick: () => void
-  onBackClick?: () => void
+  activeView: string;
+  onMenuClick: () => void;
+  onSearchClick: () => void;
+  onBackClick?: () => void;
+  onInfoClick?: () => void;
 }
 
-export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick }: DynamicHeaderProps) {
+export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
   const getBreadcrumb = () => {
     if (activeView.startsWith("task-")) {
       const project = mockProjects.find((p) => p.tasks.some((t) => `task-${t.id}` === activeView))
@@ -96,7 +97,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
           <Search className="h-4 w-4" />
         </Button>
         <ThemeToggle />
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onInfoClick}>
           <MoreVertical className="h-4 w-4" />
         </Button>
       </div>

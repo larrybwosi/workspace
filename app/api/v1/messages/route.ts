@@ -2,13 +2,29 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from "@/lib/api-auth"
 import { z } from "zod"
-import { sendRealtimeMessage } from "@/lib/ably"
+import { AblyChannels, AblyEvents, getAblyRest, sendRealtimeMessage } from "@/lib/ably"
 
 const sendMessageSchema = z.object({
   channelId: z.string().min(1),
   content: z.string().min(1).max(10000),
-  messageType: z.enum(["text", "integration", "system"]).optional().default("integration"),
+  messageType: z
+    .enum(["text", "system", "custom", "standard", "code", "comment-request", "approval_request"])
+    .optional()
+    .default("custom"),
   metadata: z.record(z.any()).optional(),
+  // Add this section to validate incoming actions
+  actions: z
+    .array(
+      z.object({
+        actionId: z.string().min(1), // Required: Unique ID for the button logic (e.g. "approve_request")
+        label: z.string().min(1), // Required: Text to display on the button
+        style: z.enum(["default", "primary", "danger"]).optional(),
+        value: z.string().optional(),
+        disabled: z.boolean().optional(),
+        order: z.number().optional(),
+      })
+    )
+    .optional(),
   attachments: z
     .array(
       z.object({
@@ -16,10 +32,10 @@ const sendMessageSchema = z.object({
         type: z.string(),
         url: z.string().url(),
         size: z.number(),
-      }),
+      })
     )
     .optional(),
-})
+});
 
 /**
  * POST /api/v1/messages
@@ -28,7 +44,7 @@ const sendMessageSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const context = await authenticateWorkspaceApiKey(request)
-    console.log("Authenticated context:", context)
+    // console.log("Authenticated context:", context)
 
     if (!context) {
       return NextResponse.json(
@@ -87,7 +103,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create message
+// Create message
     const message = await prisma.message.create({
       data: {
         channelId: data.channelId,
@@ -95,6 +111,17 @@ export async function POST(request: NextRequest) {
         content: data.content,
         messageType: data.messageType,
         metadata: data.metadata || {},
+        // Add this block to create actions in the DB [cite: 247]
+        actions: {
+          create: data.actions?.map((action, index) => ({
+            actionId: action.actionId,
+            label: action.label,
+            style: action.style || "default",
+            value: action.value,
+            disabled: action.disabled || false,
+            order: action.order ?? index, // Default to array index if no order provided
+          })) || [],
+        },
         attachments: {
           create: data.attachments?.map((attachment) => ({
             name: attachment.name,
@@ -113,14 +140,18 @@ export async function POST(request: NextRequest) {
             avatar: true,
           },
         },
+        actions: true, // Make sure to include actions in the response
       },
     })
 
     // Send real-time notification
-    await sendRealtimeMessage(`channel:${data.channelId}`, "message.created", {
-      message,
-      channelId: data.channelId,
-    })
+    // await sendRealtimeMessage(`${data.channelId}`, AblyEvents.MESSAGE_SENT, {
+    //   message,
+    //   channelId: data.channelId,
+    // });
+    const ably = getAblyRest();
+    const ablyChannel = ably.channels.get(AblyChannels.channel(data.channelId));
+    await ablyChannel.publish(AblyEvents.MESSAGE_SENT, message);
 
     // Log to audit trail
     await prisma.workspaceAuditLog.create({
@@ -133,7 +164,6 @@ export async function POST(request: NextRequest) {
         metadata: { channelId: data.channelId, messageType: data.messageType },
       },
     })
-
     return NextResponse.json(
       {
         success: true,
@@ -148,6 +178,7 @@ export async function POST(request: NextRequest) {
       },
     )
   } catch (error) {
+    console.log("Error in POST /api/v1/messages:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.errors },
