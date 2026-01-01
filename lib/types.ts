@@ -14,7 +14,7 @@ export interface Reaction {
   users: string[]
 }
 
-export type MessageType = "standard" | "approval" | "poll" | "code" | "system" | "comment-request" | "custom"
+export type MessageType = "standard" | "approval" | "poll" | "code" | "system" | "comment-request" | "custom" | "report"
 
 export interface MessageAction {
   id: string

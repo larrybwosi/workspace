@@ -3,12 +3,9 @@
 import { ThreadView } from "@/components/features/chat/thread-view";
 import { DynamicHeader } from "@/components/layout/dynamic-header";
 import { InfoPanel } from "@/components/shared/info-panel";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 
-export default function WorkspaceChannelPageClient() {
-  const params = useParams();
-  const channelId = params.channelId as string;
+export default function WorkspaceChannelPageClient({channelId}: {channelId: string}) {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
 
   return (

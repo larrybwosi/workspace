@@ -8,7 +8,7 @@ const sendMessageSchema = z.object({
   channelId: z.string().min(1),
   content: z.string().min(1).max(10000),
   messageType: z
-    .enum(["text", "system", "custom", "standard", "code", "comment-request", "approval_request"])
+    .enum(["text", "system", "custom", "standard", "code", "comment-request", "approval-request","report"])
     .optional()
     .default("custom"),
   metadata: z.record(z.any()).optional(),

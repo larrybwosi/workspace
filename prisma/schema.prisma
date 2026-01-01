@@ -505,16 +505,8 @@ model Thread {
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   creator User    @relation("ThreadCreator", fields: [creatorId], references: [id])
 
-
-
-  // ✅ 1. Metadata is optional now
-  // Slack threads don't usually have titles. Discord threads do.
-  // Make title optional to support both styles.
   title       String?  
 
-
-  // ✅ 3. The "Root" Message (Discord Style)
-  // This helps you render: "Thread started from: [Message Preview]"
   rootMessageId String? @unique 
   rootMessage   Message? @relation("ThreadRoot", fields: [rootMessageId], references: [id])
 
@@ -554,7 +546,7 @@ model Message {
   threadId  String?
   thread    Thread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
   replyToId String?
-  replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id])
   replies   Message[] @relation("MessageReplies")
   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 

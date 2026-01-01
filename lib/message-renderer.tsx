@@ -5,6 +5,7 @@ import { ApprovalMessage } from "@/components/features/chat/message-types/approv
 import { CommentRequestMessage } from "@/components/features/chat/message-types/comment-request-message";
 import { CodeMessage } from "@/components/features/chat/message-types/code-message";
 import { CustomMessage } from "@/components/features/chat/message-types/custom-message";
+import { ReportMessage } from "@/components/features/chat/message-types/report-message";
 
 // Revised Regex:
 // 1. ^\s*``` : Starts with optional whitespace and backticks
@@ -56,6 +57,7 @@ MessageRendererFactory.register("approval", ApprovalMessage);
 MessageRendererFactory.register("comment-request", CommentRequestMessage);
 MessageRendererFactory.register("code", CodeMessage);
 MessageRendererFactory.register("custom" as MessageType, CustomMessage);
+MessageRendererFactory.register("report", ReportMessage);
 
 export function renderCustomMessage(message: Message) {
   if (!message.messageType || message.messageType === "standard") {
