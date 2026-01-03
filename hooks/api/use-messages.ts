@@ -100,9 +100,6 @@ export function useMarkMessageAsRead() {
       const { data } = await apiClient.post(`/messages/${messageId}/read`, {})
       return { data, channelId }
     },
-    onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId) })
-    },
   })
 }
 

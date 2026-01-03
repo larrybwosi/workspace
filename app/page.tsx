@@ -1,7 +1,5 @@
 "use client"
 
-import * as React from "react"
-import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { mockUsers, mockProjects } from "@/lib/mock-data"
 import type { Task, Project } from "@/lib/types"
@@ -18,22 +16,23 @@ import { TaskDetailSheet } from "@/components/features/tasks/task-detail-sheet"
 import { ProjectDetailSheet } from "@/components/features/projects/project-detail-sheet"
 import { ProjectSettingsSheet } from "@/components/features/projects/project-settings-sheet"
 import { TaskCreateEditDialog } from "@/components/features/tasks/task-create-edit-dialog"
+import { useState } from "react"
 
 export default function HomePage() {
   const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
-  const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
-  const [activeChannel, setActiveChannel] = React.useState('')
-  const [searchMode, setSearchMode] = React.useState(false)
-  const [membersMode, setMembersMode] = React.useState(false)
-  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
-  const [taskSheetOpen, setTaskSheetOpen] = React.useState(false)
-  const [taskCreateEditOpen, setTaskCreateEditOpen] = React.useState(false)
-  const [taskEditMode, setTaskEditMode] = React.useState<"create" | "edit">("create")
-  const [selectedProject, setSelectedProject] = React.useState<Project | null>(null)
-  const [projectSheetOpen, setProjectSheetOpen] = React.useState(false)
-  const [projectSettingsOpen, setProjectSettingsOpen] = React.useState(false) // Added project settings open state
-  const [tasks, setTasks] = React.useState<Task[]>([])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
+  const [activeChannel, setActiveChannel] = useState('')
+  const [searchMode, setSearchMode] = useState(false)
+  const [membersMode, setMembersMode] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [taskSheetOpen, setTaskSheetOpen] = useState(false)
+  const [taskCreateEditOpen, setTaskCreateEditOpen] = useState(false)
+  const [taskEditMode, setTaskEditMode] = useState<"create" | "edit">("create")
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [projectSheetOpen, setProjectSheetOpen] = useState(false)
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false) // Added project settings open state
+  const [tasks, setTasks] = useState<Task[]>([])
 
   // useEffect(() => {
   //   router.push("/channels/uikit")
@@ -157,16 +156,6 @@ export default function HomePage() {
 
         {renderMainContent()}
 
-        {shouldShowInfoPanel && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="fixed bottom-4 right-4 lg:hidden h-12 w-12 rounded-full shadow-lg"
-            onClick={() => setInfoPanelOpen(true)}
-          >
-            <Info className="h-5 w-5" />
-          </Button>
-        )}
       </main>
       {shouldShowInfoPanel && <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} />}
       <TaskDetailSheet task={selectedTask} open={taskSheetOpen} onOpenChange={setTaskSheetOpen} />

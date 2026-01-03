@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { messag
 
     // Broadcast update via Ably
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(message.threadId))
+    const channel = ably.channels.get(AblyChannels.thread(message.channelId))
     await channel.publish(AblyEvents.MESSAGE_UPDATED, message)
 
     return NextResponse.json(message)
@@ -73,7 +73,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { messa
 
     // Broadcast deletion via Ably
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(existingMessage.threadId))
+    const channel = ably.channels.get(AblyChannels.thread(existingMessage.channelId))
     await channel.publish(AblyEvents.MESSAGE_DELETED, { messageId })
 
     return NextResponse.json({ success: true })

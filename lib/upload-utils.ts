@@ -3,7 +3,7 @@ export interface UploadedFile {
   url: string
   name: string
   type: string
-  size: number
+  size: string
   assetId: string
   metadata?: {
     dimensions?: { width: number; height: number }
@@ -51,10 +51,10 @@ export function getFileIcon(type: string): string {
   if (type.startsWith("image/")) return "🖼️"
   if (type.startsWith("video/")) return "🎥"
   if (type.startsWith("audio/")) return "🎵"
-  if (type.includes("pdf")) return "📄"
-  if (type.includes("word") || type.includes("document")) return "📝"
-  if (type.includes("excel") || type.includes("spreadsheet")) return "📊"
-  if (type.includes("powerpoint") || type.includes("presentation")) return "📽️"
+  if (type.includes("pdf")) return "/pdf.svg"
+  if (type.includes("word") || type.includes("document")) return "/word.svg"
+  if (type.includes("excel") || type.includes("spreadsheet")) return "/xls.svg"
+  if (type.includes("powerpoint") || type.includes("presentation")) return "/ppt.svg"
   if (type.includes("zip") || type.includes("rar")) return "🗜️"
   return "📎"
 }

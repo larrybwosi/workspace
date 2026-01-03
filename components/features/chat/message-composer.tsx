@@ -1,16 +1,14 @@
 "use client"
 
-import * as React from "react"
-import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, LinkIcon, X, File } from "lucide-react"
+import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, LinkIcon, X, File, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import type { UploadedFile } from "@/lib/upload-utils"
+import { uploadFile, UploadedFile } from "@/lib/upload-utils";
 import { mockUsers } from "@/lib/mock-data"
 import { UserMentionSelector } from "@/components/shared/user-mention-selector"
 import { EmojiPicker } from "@/components/shared/emoji-picker"
-import { FileUpload } from "@/components/shared/file-upload"
+import { ChangeEvent, useEffect, useRef, useState, ClipboardEvent } from "react"
 
 interface MessageComposerProps {
   placeholder?: string
@@ -25,23 +23,28 @@ export function MessageComposer({
   replyingTo,
   onCancelReply,
 }: MessageComposerProps) {
-  const [message, setMessage] = React.useState("")
-  const [attachments, setAttachments] = React.useState<UploadedFile[]>([])
-  const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false)
-  const [showMentionSelector, setShowMentionSelector] = React.useState(false)
-  const [mentionSearch, setMentionSearch] = React.useState("")
-  const [mentionPosition, setMentionPosition] = React.useState({ top: 0, left: 0 })
-  const [cursorPosition, setCursorPosition] = React.useState(0)
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const [message, setMessage] = useState("")
+  const [attachments, setAttachments] = useState<UploadedFile[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  
+  const [showMentionSelector, setShowMentionSelector] = useState(false)
+  const [mentionSearch, setMentionSearch] = useState("")
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
+  const [cursorPosition, setCursorPosition] = useState(0)
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  React.useEffect(() => {
+  // Auto-resize textarea
+  useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto"
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
     }
   }, [message])
 
-  React.useEffect(() => {
+  // Mention logic
+  useEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
 
@@ -68,11 +71,13 @@ export function MessageComposer({
   }, [message, cursorPosition])
 
   const handleSend = () => {
-    if (message.trim() || attachments.length > 0) {
+    if ((message.trim() || attachments.length > 0) && !isUploading) {
       onSend?.(message, attachments)
       setMessage("")
       setAttachments([])
       setShowMentionSelector(false)
+      // Reset height
+      if (textareaRef.current) textareaRef.current.style.height = "auto"
     }
   }
 
@@ -81,6 +86,102 @@ export function MessageComposer({
       e.preventDefault()
       handleSend()
     }
+  }
+
+  // --- File Upload Logic ---
+
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await processFiles(Array.from(e.target.files))
+    }
+    // Reset input so the same file can be selected again if needed
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const processFiles = async (files: File[]) => {
+    setIsUploading(true)
+    try {
+      const uploadPromises = files.map(file => uploadFile(file))
+      const uploadedFiles = await Promise.all(uploadPromises)
+      setAttachments(prev => [...prev, ...uploadedFiles])
+    } catch (error) {
+      console.error("Upload failed", error)
+      // toast.error("Failed to upload files") 
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const removeAttachment = (fileId: string) => {
+    setAttachments(prev => prev.filter(f => f.id !== fileId))
+  }
+
+  // --- Paste Handling (Files & Code) ---
+
+  const detectCodeBlock = (text: string) => {
+    const lines = text.split('\n');
+    const hasIndentation = lines.some(line => line.startsWith('  ') || line.startsWith('\t'));
+    const hasCodeSymbols = /[{};=()[\]<>]/.test(text);
+    const hasKeywords = /\b(const|let|var|function|class|import|export|if|for|return|interface|type)\b/.test(text);
+    
+    // Heuristic: If it has multiple lines AND (code symbols OR keywords), treat as code
+    return lines.length > 1 && (hasCodeSymbols || hasKeywords || hasIndentation);
+  }
+
+  const handlePaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    // 1. Handle File Paste (e.g. Screenshots)
+    if (e.clipboardData.files.length > 0) {
+      e.preventDefault()
+      await processFiles(Array.from(e.clipboardData.files))
+      return
+    }
+
+    // 2. Handle Code/Markdown Detection
+    const text = e.clipboardData.getData("text")
+    if (text) {
+      // If already markdown formatted (simple check), let it pass naturally
+      if (text.trim().startsWith("```")) return;
+
+      if (detectCodeBlock(text)) {
+        e.preventDefault()
+        insertMarkdown("\n```\n", "\n```\n", text)
+      }
+    }
+  }
+
+  // --- Markdown Insertion Helper ---
+
+  const insertMarkdown = (before: string, after: string = before, customContent?: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    
+    // If we have custom content (from paste), use that, otherwise use selection
+    const contentToWrap = customContent !== undefined 
+      ? customContent 
+      : message.substring(start, end)
+
+    const newText = message.substring(0, start) + before + contentToWrap + after + message.substring(end)
+
+    setMessage(newText)
+
+    // Reset cursor position
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + before.length + contentToWrap.length + (customContent ? after.length : 0)
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+      setCursorPosition(newCursorPos)
+    }, 0)
+  }
+
+  const insertCodeBlock = () => {
+    insertMarkdown("\n```javascript\n", "\n```\n")
+  }
+
+  const insertLink = () => {
+    insertMarkdown("[", "](url)")
   }
 
   const handleMentionSelect = (user: any) => {
@@ -104,47 +205,21 @@ export function MessageComposer({
     }, 0)
   }
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value)
     setCursorPosition(e.target.selectionStart)
   }
 
-  const insertMarkdown = (before: string, after: string = before) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = message.substring(start, end)
-    const newText = message.substring(0, start) + before + selectedText + after + message.substring(end)
-
-    setMessage(newText)
-
-    setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + before.length, end + before.length)
-    }, 0)
-  }
-
-  const insertCodeBlock = () => {
-    insertMarkdown("\n```javascript\n", "\n```\n")
-  }
-
-  const insertLink = () => {
-    insertMarkdown("[", "](url)")
-  }
-
-  const handleUploadComplete = (files: UploadedFile[]) => {
-    setAttachments((prev) => [...prev, ...files])
-    setUploadDialogOpen(false)
-  }
-
-  const removeAttachment = (file: UploadedFile) => {
-    setAttachments((prev) => prev.filter((f) => f.id !== file.id))
-  }
-
   return (
-    <div className="bg-background">
+    <div className="bg-background rounded-lg">
+      <input 
+        type="file" 
+        multiple 
+        className="hidden" 
+        ref={fileInputRef} 
+        onChange={handleFileSelect}
+      />
+
       {showMentionSelector && <div className="fixed inset-0 z-40" onClick={() => setShowMentionSelector(false)} />}
 
       {showMentionSelector && (
@@ -168,6 +243,7 @@ export function MessageComposer({
       )}
 
       <div className="p-3">
+        {/* Formatting Toolbar */}
         <div className="flex items-center gap-1 mb-2 pb-2 border-b border-border">
           <TooltipProvider delayDuration={300}>
             <Tooltip>
@@ -238,13 +314,15 @@ export function MessageComposer({
           </TooltipProvider>
         </div>
 
+        {/* Attachment Preview Area */}
         {attachments.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {attachments.map((file) => (
-              <div key={file.id} className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs">
-                <File className="h-3 w-3" />
-                <span className="max-w-[100px] truncate">{file.name}</span>
-                <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => removeAttachment(file)}>
+              <div key={file.id} className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs animate-in fade-in zoom-in-95 duration-200">
+                <File className="h-3 w-3 text-primary" />
+                <span className="max-w-[150px] truncate">{file.name}</span>
+                <span className="text-muted-foreground">({Math.round(parseInt(file.size || '0') / 1024)}KB)</span>
+                <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 hover:bg-background/50" onClick={() => removeAttachment(file.id)}>
                   <X className="h-3 w-3" />
                 </Button>
               </div>
@@ -253,14 +331,15 @@ export function MessageComposer({
         )}
 
         <div className="flex items-end gap-2">
-          <div className="flex-1 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring">
+          <div className="flex-1 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring transition-all">
             <Textarea
               ref={textareaRef}
               value={message}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
               placeholder={placeholder}
-              className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2"
+              className="min-h-[40px] max-h-[200px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2 bg-transparent"
               rows={1}
             />
           </div>
@@ -287,32 +366,28 @@ export function MessageComposer({
                 </Tooltip>
               </EmojiPicker>
 
-              <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Attach</TooltipContent>
-                  </Tooltip>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Files</DialogTitle>
-                  </DialogHeader>
-                  <FileUpload onUploadComplete={handleUploadComplete} />
-                </DialogContent>
-              </Dialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Attach files</TooltipContent>
+              </Tooltip>
 
               <Button
                 size="icon"
                 onClick={handleSend}
-                disabled={!message.trim() && attachments.length === 0}
+                disabled={(!message.trim() && attachments.length === 0) || isUploading}
                 className="h-9 w-9"
               >
-                <Send className="h-4 w-4" />
+                {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </div>
           </TooltipProvider>
