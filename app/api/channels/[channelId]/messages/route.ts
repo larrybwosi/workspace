@@ -122,6 +122,7 @@ export async function POST(
     const body = await request.json()
     // UPDATED: Added threadId to body destructuring
     const { content, messageType, metadata, replyToId, mentions, attachments, threadId } = body
+    console.log("Creating message with attachments:", attachments)
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -168,7 +169,7 @@ export async function POST(
                 name: att.name,
                 type: att.type,
                 url: att.url,
-                size: att.size,
+                size: att.size.toString(),
               })),
             }
           : undefined,

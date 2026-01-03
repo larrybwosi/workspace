@@ -3,13 +3,12 @@
 import {
   Smile,
   MessageSquare,
-  Bookmark,
   Copy,
-  Pin,
   Trash2,
   Edit,
   LinkIcon,
   MoreHorizontal,
+  Reply,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,9 @@ import { CODE_BLOCK_REGEX, renderCustomMessage } from "@/lib/message-renderer";
 import { CustomEmojiPicker } from "@/components/shared/custom-emoji-picker";
 import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 import { CustomMessage } from "@/components/features/chat/message-types/custom-message";
+import { MessageAttachments } from "./message-types/message-attachments"; // Import the new component
+
+// Context Menu (Right Click)
 import {
   ContextMenu,
   ContextMenuContent,
@@ -27,6 +29,16 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/shared/context-menu";
+
+// Dropdown Menu (Left Click on 3 dots)
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import { useUpdateMessage, useDeleteMessage } from "@/hooks/api/use-messages";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState } from "react";
@@ -103,6 +115,7 @@ export function MessageItem({
   const user = mockUsers.find((u) => u.id === message.userId);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Track dropdown state
 
   const userBadges = mockUserBadges[message.userId] || [];
 
@@ -162,7 +175,7 @@ export function MessageItem({
     );
   }, [message.content, message.messageType, message.metadata]);
 
-  // 2. RENDER COMPONENT STRATEGY
+  // RENDER COMPONENT STRATEGY
   const customComponent = useMemo(() => {
     if (isImplicitCode) {
       return <CustomMessage message={message} readOnly />;
@@ -170,16 +183,52 @@ export function MessageItem({
     return renderCustomMessage(message);
   }, [isImplicitCode, message]);
 
+  // Shared menu items logic to ensure ContextMenu and DropdownMenu match
+  const MenuItems = () => (
+    <>
+      <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
+        <Reply className="mr-2 h-4 w-4" />
+        Reply
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={handleCopyMessageLink}
+        className="cursor-pointer"
+      >
+        <LinkIcon className="mr-2 h-4 w-4" />
+        Copy Link
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => navigator.clipboard.writeText(message.content)}
+        className="cursor-pointer"
+      >
+        <Copy className="mr-2 h-4 w-4" />
+        Copy Text
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={handleEditMessage} className="cursor-pointer">
+        <Edit className="mr-2 h-4 w-4" />
+        Edit
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="text-destructive focus:text-destructive cursor-pointer"
+        onClick={handleDeleteMessage}
+      >
+        <Trash2 className="mr-2 h-4 w-4" />
+        Delete
+      </DropdownMenuItem>
+    </>
+  );
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
           ref={highlightRef}
           className={cn(
-            "group relative px-2 md:px-4 py-1 md:py-2 hover:bg-muted/30 transition-colors w-full touch-manipulation",
-            // Responsive left padding when avatar is hidden
+            "group relative px-2 md:px-4 py-1 md:py-2 transition-colors w-full touch-manipulation",
+            "hover:bg-muted/30",
+            isMenuOpen && "bg-muted/30",
             !showAvatar && "pl-12 md:pl-16",
-            // Responsive nesting indentation
             isReply && "border-l-2 border-primary/30 pl-2 md:pl-4",
             depth > 0 && "ml-2 md:ml-12",
             isHighlighted && "bg-primary/20 animate-pulse"
@@ -187,6 +236,7 @@ export function MessageItem({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
+
           {isReply && (
             <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20" />
           )}
@@ -204,8 +254,7 @@ export function MessageItem({
               </Avatar>
             ) : (
               <div className="w-8 md:w-9 flex-shrink-0 flex items-start justify-center">
-                {/* Only show timestamp on hover for desktop, maybe always for mobile if needed, but keeping logic consistent */}
-                {isHovered && (
+                {(isHovered || isMenuOpen) && (
                   <span className="text-[10px] text-muted-foreground hidden md:inline-block">
                     {formatTime(message.timestamp)}
                   </span>
@@ -219,7 +268,6 @@ export function MessageItem({
                   <span className="font-semibold text-sm truncate max-w-[150px] md:max-w-none">
                     {user?.name}
                   </span>
-
                   {userBadges.length > 0 && (
                     <div className="flex-shrink-0">
                       <UserBadgeDisplay
@@ -229,11 +277,9 @@ export function MessageItem({
                       />
                     </div>
                   )}
-
                   <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">
                     {formatTime(message.timestamp)}
                   </span>
-
                   {isReply && (
                     <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
@@ -278,51 +324,17 @@ export function MessageItem({
                       />
                     </div>
                   )}
-                  {/* Container for custom components ensuring they don't overflow on mobile */}
                   <div className="w-full overflow-x-auto">
                     {customComponent}
                   </div>
                 </>
               )}
 
-              {message.attachments && message.attachments.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {message.attachments.map((attachment) => (
-                    <div
-                      key={attachment.id}
-                      className="flex items-center gap-3 p-2 md:p-3 border border-border rounded-lg bg-card hover:bg-muted/50 transition-colors cursor-pointer max-w-full md:max-w-sm"
-                    >
-                      <div className="h-8 w-8 md:h-10 md:w-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-semibold text-primary">
-                          🔗
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {attachment.name}
-                        </p>
-                        {attachment.size && (
-                          <p className="text-xs text-muted-foreground">
-                            {attachment.size}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <MessageAttachments attachments={message.attachments} />
 
-              {/* Reactions: Mobile friendly spacing and touch targets */}
-              {(message.reactions && message.reactions.length > 0) ||
-              isHovered ? (
-                <div
-                  className={cn(
-                    "flex flex-wrap gap-1.5 mt-2",
-                    // If no reactions yet, hide this row on mobile unless there's a way to trigger it
-                    !message.reactions?.length && !isHovered && "hidden"
-                  )}
-                >
-                  {message.reactions?.map((reaction, idx) => (
+              {message.reactions && message.reactions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {message.reactions.map((reaction, idx) => (
                     <button
                       key={idx}
                       className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted hover:border-primary/50 transition-colors text-xs active:scale-95"
@@ -343,24 +355,17 @@ export function MessageItem({
                     </button>
                   ))}
 
-                  {/* Always show Add Reaction button on desktop hover, or if reactions exist */}
                   <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-                    <button
-                      className={cn(
-                        "flex items-center justify-center h-6 w-6 md:h-7 md:w-7 rounded-md border border-dashed border-border hover:bg-muted hover:border-primary/50 transition-colors",
-                        // On mobile, only show if there are already reactions, otherwise rely on ContextMenu/LongPress to start
-                        !message.reactions?.length && "hidden md:flex"
-                      )}
-                    >
+                    <button className="flex items-center justify-center h-6 w-6 md:h-7 md:w-7 rounded-md border border-dashed border-border hover:bg-muted hover:border-primary/50 transition-colors">
                       <Smile className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                   </CustomEmojiPicker>
                 </div>
-              ) : null}
+              )}
             </div>
           </div>
 
-          {isHovered && (
+          {(isHovered || isMenuOpen) && (
             <div className="hidden md:flex absolute -top-3 right-4 items-center gap-0.5 bg-background border border-border rounded-lg shadow-sm p-0.5 z-10 animate-in fade-in zoom-in-95 duration-100">
               <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
                 <Button
@@ -379,25 +384,29 @@ export function MessageItem({
               >
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </Button>
-              <ContextMenuTrigger>
-                {/* Visual indicator that right click provides more */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 hover:bg-muted"
-                >
-                  <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </ContextMenuTrigger>
+
+              <DropdownMenu onOpenChange={setIsMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 hover:bg-muted"
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <MenuItems />
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
       </ContextMenuTrigger>
 
-      {/* Context Menu (Long Press on Mobile) */}
       <ContextMenuContent className="w-56">
         <ContextMenuItem onClick={handleReply}>
-          <MessageSquare className="mr-2 h-4 w-4" />
+          <Reply className="mr-2 h-4 w-4" />
           Reply
         </ContextMenuItem>
         <ContextMenuItem onClick={handleCopyMessageLink}>

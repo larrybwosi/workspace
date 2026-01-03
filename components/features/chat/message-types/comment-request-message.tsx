@@ -32,6 +32,7 @@ import type { Message } from "@/lib/types";
 import { mockUsers } from "@/lib/mock-data";
 // Ensure this path matches your project structure
 import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
+import { useSession } from "@/lib/auth-client";
 
 // --- Styles for Markdown Content ---
 // These classes ensure headers, lists, and code blocks render correctly inside the cards.
@@ -98,6 +99,8 @@ export function CommentRequestMessage({
   const [inputValue, setInputValue] = useState("");
   const [isExpanded, setIsExpanded] = useState(true);
 
+  const { data: session } = useSession();
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const requester = mockUsers.find((u) => u.id === message.userId);
@@ -118,7 +121,7 @@ export function CommentRequestMessage({
 
     const newComment: Comment = {
       id: Math.random().toString(36).substr(2, 9),
-      userId: currentUser.id,
+      userId: session?.user?.id || "guest",
       content: inputValue,
       timestamp: new Date(),
     };
@@ -287,7 +290,7 @@ export function CommentRequestMessage({
                   <CommentItem
                     key={comment.id}
                     comment={comment}
-                    currentUser={currentUser}
+                    currentUser={session?.user}
                   />
                 ))}
               </div>

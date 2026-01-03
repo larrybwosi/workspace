@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageItem } from "./message-item";
@@ -8,7 +7,7 @@ import { MessageComposer } from "./message-composer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
-import type { Thread, Message } from "@/lib/types";
+import type { Thread, Message, Attachment } from "@/lib/types";
 import { mockThread, mockUsers } from "@/lib/mock-data";
 import {
   useMessages,
@@ -18,6 +17,8 @@ import {
 } from "@/hooks/api/use-messages";
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/use-reactions";
 import { cn } from "@/lib/utils";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { UploadedFile } from "@/lib/upload-utils";
 
 interface ThreadViewProps {
   thread?: Thread;
@@ -97,11 +98,6 @@ export function ThreadView({
     hasNextPage,
     isFetchingNextPage,
   } = useMessages(activeChannelId);
-  console.log("ThreadView messagesData:", messagesData);
-  console.log(
-    "ThreadView isLoading:",
-    `${process.env.NEXT_PUBLIC_API_URL || ""}/api`
-  );
 
   // API Mutations
   const sendMessageMutation = useSendMessage();
@@ -111,22 +107,22 @@ export function ThreadView({
   const markAsReadMutation = useMarkMessageAsRead();
 
   // State & Refs
-  const [replyingTo, setReplyingTo] = React.useState<{
+  const [replyingTo, setReplyingTo] = useState<{
     id: string;
     userName: string;
   } | null>(null);
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const highlightedMessageRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const highlightedMessageRef = useRef<HTMLDivElement>(null);
 
   // 1. Flatten Data
-  const messages = React.useMemo(() => {
+  const messages = useMemo(() => {
     if (!messagesData?.pages) return thread.messages;
     return messagesData.pages.flatMap((page) => page.messages);
   }, [messagesData, thread.messages]);
 
   // 2. Scroll Handling
-  React.useEffect(() => {
+  useEffect(() => {
     if (highlightedMessageId && highlightedMessageRef.current) {
       setTimeout(() => {
         highlightedMessageRef.current?.scrollIntoView({
@@ -140,7 +136,7 @@ export function ThreadView({
   }, [messages.length, highlightedMessageId, isLoading]);
 
   // 3. Read Receipts
-  React.useEffect(() => {
+  useEffect(() => {
     if (messages.length > 0) {
       const unreadMessages = messages.filter((m) => !m.readByCurrentUser);
       if (unreadMessages.length > 0) {
@@ -154,13 +150,13 @@ export function ThreadView({
     }
   }, [messages, activeChannelId]);
 
-  const firstUnreadMessageId = React.useMemo(() => {
+  const firstUnreadMessageId = useMemo(() => {
     const firstUnread = messages.find((m) => !m.readByCurrentUser);
     return firstUnread?.id || null;
   }, [messages]);
 
   // 4. Organize Messages
-  const renderList = React.useMemo(() => {
+  const renderList = useMemo(() => {
     const list: Array<
       | { type: "message"; data: Message; depth: number }
       | { type: "date"; date: Date }
@@ -213,16 +209,17 @@ export function ThreadView({
   }, [messages, firstUnreadMessageId]);
 
   // Handlers
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = (content: string, attachments?: UploadedFile[]) => {
     const payload = {
       channelId: activeChannelId,
       content,
       mentions: [],
       messageType: "standard" as const,
+      attachments,
     };
 
     if (replyingTo) {
-      replyToMessageMutation.mutate({ ...payload, messageId: replyingTo.id });
+      replyToMessageMutation.mutate({ ...payload, messageId: replyingTo.id, attachments });
     } else {
       sendMessageMutation.mutate(payload);
     }
