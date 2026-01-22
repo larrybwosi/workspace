@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { notifyTaskWatchers } from "@/lib/notifications"
+import { prisma } from "@/lib/db/prisma"
+import { notifyTaskWatchers } from "@/lib/notifications/notifications"
 
 export async function GET(request: NextRequest, { params }: { params: { taskId: string } }) {
   try {

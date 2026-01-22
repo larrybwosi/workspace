@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@/hooks/api/use-integrations"
-import { CreateApiKeyDialog } from "@/components/create-api-key-dialog"
+import { CreateApiKeyDialog } from "@/components/features/settings/create-api-key-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import {

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { runAllCronTasks } from "@/lib/cron-tasks"
+import { runAllCronTasks } from "@/lib/utils/cron-tasks"
 
 /**
  * GET /api/cron/tasks

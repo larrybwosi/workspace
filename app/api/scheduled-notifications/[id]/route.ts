@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import {
   updateScheduledNotification,
   deleteScheduledNotification,
   pauseScheduledNotification,
   resumeScheduledNotification,
-} from "@/lib/scheduled-notifications"
+} from "@/lib/notifications/scheduled-notifications"
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {

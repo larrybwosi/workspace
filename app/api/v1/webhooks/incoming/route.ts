@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { validateWebhookSignature } from "@/lib/api-auth"
+import { prisma } from "@/lib/db/prisma"
+import { validateWebhookSignature } from "@/lib/auth/api-auth"
 import { z } from "zod"
-import { sendRealtimeMessage } from "@/lib/ably"
+import { sendRealtimeMessage } from "@/lib/integrations/ably"
 
 // Simple slugify helper
 const slugify = (text: string) =>

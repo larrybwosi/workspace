@@ -18,7 +18,7 @@ import {
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/use-reactions";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { UploadedFile } from "@/lib/upload-utils";
+import { UploadedFile } from "@/lib/utils/upload-utils";
 
 interface ThreadViewProps {
   thread?: Thread;

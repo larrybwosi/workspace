@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
-import { sendRealtimeMessage } from "@/lib/ably"
+import { sendRealtimeMessage } from "@/lib/integrations/ably"
 
 const actionResponseSchema = z.object({
   actionId: z.string().min(1),

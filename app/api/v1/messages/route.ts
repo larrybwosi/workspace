@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from "@/lib/api-auth"
+import { prisma } from "@/lib/db/prisma"
+import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from "@/lib/auth/api-auth"
 import { z } from "zod"
-import { AblyChannels, AblyEvents, getAblyRest, sendRealtimeMessage } from "@/lib/ably"
+import { AblyChannels, AblyEvents, getAblyRest, sendRealtimeMessage } from "@/lib/integrations/ably"
 
 const sendMessageSchema = z.object({
   channelId: z.string().min(1),

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { taskAlertMessages } from "@/lib/system-messages"
 
 /**
@@ -303,7 +303,7 @@ export async function checkMilestoneCompletion() {
  * Cron job for processing scheduled notifications
  */
 export async function processScheduledNotifications() {
-  const { processScheduledNotifications: process } = await import("@/lib/scheduled-notifications")
+  const { processScheduledNotifications: process } = await import("@/lib/notifications/scheduled-notifications")
   await process()
 }
 

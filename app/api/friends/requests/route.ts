@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { publishToAbly } from "@/lib/ably"
+import { publishToAbly } from "@/lib/integrations/ably"
 import { z } from "zod"
 
 const friendRequestSchema = z.object({

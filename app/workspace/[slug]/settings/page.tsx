@@ -8,7 +8,7 @@ import { WorkspaceWebhooksManagement } from "@/components/features/workspace/wor
 import { NotificationsTab } from "@/components/features/workspace/settings/notifications-tab"
 import { AuditLogsTab } from "@/components/features/workspace/settings/audit-log-tab"
 import { cache } from "react"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { IntegrationsTab } from "@/components/features/workspace/settings/integrations-tab"
 // import { IntegrationsTab } from "@/components/features/workspace/integrations-tab"
 

@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
-import { getAblyServer } from "@/lib/ably"
+import { getAblyServer } from "@/lib/integrations/ably"
 
 const createStatusUpdateSchema = z.object({
   title: z.string().min(1),

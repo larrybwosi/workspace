@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
-import { publishToAbly, AblyChannels } from "@/lib/ably"
+import { publishToAbly, AblyChannels } from "@/lib/integrations/ably"
 
 const updateMemberSchema = z.object({
   role: z.enum(["owner", "admin", "member", "guest"]),

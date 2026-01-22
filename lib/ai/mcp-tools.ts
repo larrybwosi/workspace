@@ -1,7 +1,7 @@
 import { z } from "zod"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { createSystemMessage } from "@/lib/system-messages"
-import { publishMessage } from "@/lib/ably"
+import { publishMessage } from "@/lib/integrations/ably"
 
 export const mcpTools = {
   // Task Management Tools
@@ -406,7 +406,7 @@ export const mcpTools = {
         .optional(),
     }),
     execute: async ({ userId, ...params }: any) => {
-      const { createScheduledNotification } = await import("@/lib/scheduled-notifications")
+      const { createScheduledNotification } = await import("@/lib/notifications/scheduled-notifications")
       
       const notification = await createScheduledNotification({
         userId,
@@ -432,7 +432,7 @@ export const mcpTools = {
       includeHistory: z.boolean().default(false),
     }),
     execute: async ({ userId, includeHistory }: any) => {
-      const { getUserScheduledNotifications } = await import("@/lib/scheduled-notifications")
+      const { getUserScheduledNotifications } = await import("@/lib/notifications/scheduled-notifications")
       return await getUserScheduledNotifications(userId)
     },
   },
@@ -447,7 +447,7 @@ export const mcpTools = {
       isActive: z.boolean().optional(),
     }),
     execute: async ({ notificationId, ...updates }: any) => {
-      const { updateScheduledNotification } = await import("@/lib/scheduled-notifications")
+      const { updateScheduledNotification } = await import("@/lib/notifications/scheduled-notifications")
       
       return await updateScheduledNotification(notificationId, {
         ...updates,
@@ -462,7 +462,7 @@ export const mcpTools = {
       notificationId: z.string(),
     }),
     execute: async ({ notificationId }: any) => {
-      const { deleteScheduledNotification } = await import("@/lib/scheduled-notifications")
+      const { deleteScheduledNotification } = await import("@/lib/notifications/scheduled-notifications")
       await deleteScheduledNotification(notificationId)
       return { message: "Scheduled notification deleted successfully" }
     },

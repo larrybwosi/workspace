@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import crypto from "crypto"
 import { z } from "zod"
-import { getAblyServer } from "@/lib/ably"
+import { getAblyServer } from "@/lib/integrations/ably"
 
 const incomingMessageSchema = z.object({
   content: z.string().min(1),

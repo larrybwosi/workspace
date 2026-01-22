@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Bell, X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { getFirebaseToken } from "@/lib/firebase-config"
+import { getFirebaseToken } from "@/lib/integrations/firebase-config"
 
 export function NotificationPermissionPrompt() {
   const [show, setShow] = useState(false)

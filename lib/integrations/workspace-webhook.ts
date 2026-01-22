@@ -1,7 +1,7 @@
 import crypto from "crypto"
 
 export async function sendWebhookNotification(workspaceId: string, event: string, payload: any) {
-  const { prisma } = await import("@/lib/prisma")
+  const { prisma } = await import("@/lib/db/prisma")
 
   // Find all active webhooks for this workspace that listen to this event
   const webhooks = await prisma.workspaceWebhook.findMany({

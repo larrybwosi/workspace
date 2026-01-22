@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
-import { sendPushNotification } from "@/lib/push-notifications"
+import { prisma } from "@/lib/db/prisma"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
+import { sendPushNotification } from "@/lib/notifications/push-notifications"
 
 export interface NotificationPayload {
   userId: string

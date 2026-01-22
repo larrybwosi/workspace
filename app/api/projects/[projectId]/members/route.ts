@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { notifyProjectMemberAdded, createSystemMessage } from "@/lib/notifications"
+import { prisma } from "@/lib/db/prisma"
+import { notifyProjectMemberAdded, createSystemMessage } from "@/lib/notifications/notifications"
 
 export async function POST(request: NextRequest, { params }: { params: { projectId: string } }) {
   try {

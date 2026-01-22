@@ -52,7 +52,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { DayTasksDialog } from "../tasks/day-tasks-dialog"
-import { QuickNoteDialog } from "@/components/quick-note-dialog"
+import { QuickNoteDialog } from "@/components/features/notes/quick-note-dialog"
 
 interface CalendarViewProps {
   onTaskClick?: (task: Task) => void

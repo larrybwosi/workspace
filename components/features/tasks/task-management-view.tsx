@@ -30,7 +30,7 @@ import { KanbanBoard } from "../projects/kanban-board"
 import { SprintManagement } from "../projects/sprint-management"
 import { GanttChart } from "../projects/gantt-chart"
 import { CalendarView } from "../calendar/calendar-view"
-import { NotesView } from "@/components/notes-view"
+import { NotesView } from "@/components/features/notes/notes-view"
 import { TaskCreateSheet } from "./task-create-sheet"
 
 interface TaskManagementViewProps {

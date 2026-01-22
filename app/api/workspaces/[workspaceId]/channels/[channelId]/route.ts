@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
-import { getAblyServer, AblyChannels, EVENTS } from "@/lib/ably"
+import { getAblyServer, AblyChannels, EVENTS } from "@/lib/integrations/ably"
 
 const updateChannelSchema = z.object({
   name: z.string().min(1).max(100).optional(),

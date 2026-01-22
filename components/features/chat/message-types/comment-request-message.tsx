@@ -32,7 +32,7 @@ import type { Message } from "@/lib/types";
 import { mockUsers } from "@/lib/mock-data";
 // Ensure this path matches your project structure
 import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth/auth-client";
 
 // --- Styles for Markdown Content ---
 // These classes ensure headers, lists, and code blocks render correctly inside the cards.

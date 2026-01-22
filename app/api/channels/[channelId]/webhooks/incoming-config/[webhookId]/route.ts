@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 
 export async function DELETE(request: NextRequest, { params }: { params: { channelId: string; webhookId: string } }) {

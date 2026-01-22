@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
-import { signUp, authClient } from "@/lib/auth-client"
+import { signUp, authClient } from "@/lib/auth/auth-client"
 import { Loader2, Mail, Lock, User, Github } from 'lucide-react'
 import { toast } from "sonner"
 

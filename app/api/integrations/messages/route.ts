@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { authenticateApiKey, hasPermission } from "@/lib/api-auth"
+import { prisma } from "@/lib/db/prisma"
+import { authenticateApiKey, hasPermission } from "@/lib/auth/api-auth"
 import { createIntegrationMessage } from "@/lib/system-messages"
 import { z } from "zod"
 

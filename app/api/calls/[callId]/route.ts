@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { publishToAbly } from '@/lib/ably'
+import { prisma } from '@/lib/db/prisma'
+import { publishToAbly } from '@/lib/integrations/ably'
 
 export async function PATCH(
   request: NextRequest,

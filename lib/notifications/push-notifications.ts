@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import * as admin from "firebase-admin"
 
 let firebaseAdmin: admin.app.App | undefined

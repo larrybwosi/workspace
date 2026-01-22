@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { isInvitationExpired } from "@/lib/invitation-utils"
+import { prisma } from "@/lib/db/prisma"
+import { isInvitationExpired } from "@/lib/utils/invitation-utils"
 import { auth } from "@/lib/auth"
 
 // POST /api/invitations/[token]/accept - Accept invitation

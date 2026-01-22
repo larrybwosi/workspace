@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 
 // GET /api/dm - Get all DM conversations for current user
 export async function GET(request: NextRequest) {

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import crypto from "crypto"
-import { getAblyServer, AblyChannels, EVENTS } from "@/lib/ably"
+import { getAblyServer, AblyChannels, EVENTS } from "@/lib/integrations/ably"
 
 function validateWebhookSignature(payload: string, signature: string, secret: string): boolean {
   const expectedSignature = crypto.createHmac("sha256", secret).update(payload).digest("hex")

@@ -20,13 +20,13 @@ import { useChannels, useCreateChannel } from "@/hooks/api/use-channels";
 import { useProjects, useCreateProject } from "@/hooks/api/use-projects";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth/auth-client";
 import { useDMConversations } from "@/hooks/api/use-dm";
-import { WorkspaceSwitcher } from "../features/workspace/workspace-switcher";
-import { UserProfileDialog } from "../features/social/user-profile-dialog";
-import { ProjectCreateDialog } from "../features/projects/project-create-dialog";
-import { StartDMDialog } from "../start-dm-dialog";
-import { CreateChannelDialog } from "../features/chat/create-channel-dialog";
+import { WorkspaceSwitcher } from "@/components/features/workspace/workspace-switcher";
+import { UserProfileDialog } from "@/components/features/social/user-profile-dialog";
+import { ProjectCreateDialog } from "@/components/features/projects/project-create-dialog";
+import { StartDMDialog } from "@/components/features/chat/start-dm-dialog";
+import { CreateChannelDialog } from "@/components/features/chat/create-channel-dialog";
 
 interface SidebarProps {
   isOpen: boolean;

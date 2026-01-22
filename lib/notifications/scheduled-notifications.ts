@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma"
-import { createNotification } from "@/lib/notifications"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
+import { prisma } from "@/lib/db/prisma"
+import { createNotification } from "@/lib/notifications/notifications"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
 export interface ScheduledNotificationConfig {
   userId: string

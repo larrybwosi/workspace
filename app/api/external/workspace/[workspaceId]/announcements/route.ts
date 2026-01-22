@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
-import { getAblyServer, AblyChannels, EVENTS } from "@/lib/ably"
+import { getAblyServer, AblyChannels, EVENTS } from "@/lib/integrations/ably"
 
 const createAnnouncementSchema = z.object({
   departmentId: z.string(),

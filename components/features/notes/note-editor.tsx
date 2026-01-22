@@ -42,7 +42,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MarkdownRenderer } from "./shared/markdown-renderer";
+import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 
 interface NoteEditorProps {
   note: Note;

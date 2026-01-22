@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from "@/lib/api-auth"
+import { prisma } from "@/lib/db/prisma"
+import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from "@/lib/auth/api-auth"
 import { z } from "zod"
 
 const addMemberSchema = z.object({

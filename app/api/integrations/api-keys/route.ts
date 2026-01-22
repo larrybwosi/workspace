@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { generateApiKey } from "@/lib/api-auth"
+import { prisma } from "@/lib/db/prisma"
+import { generateApiKey } from "@/lib/auth/api-auth"
 import { z } from "zod"
 
 const createApiKeySchema = z.object({

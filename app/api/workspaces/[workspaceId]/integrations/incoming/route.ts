@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import crypto from "crypto"
-import { getAblyServer, AblyChannels, AblyEvents } from "@/lib/ably"
+import { getAblyServer, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {

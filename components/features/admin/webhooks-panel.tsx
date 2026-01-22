@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "@/hooks/api/use-integrations"
-import { CreateWebhookDialog } from "@/components/create-webhook-dialog"
+import { CreateWebhookDialog } from "@/components/features/settings/create-webhook-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import {

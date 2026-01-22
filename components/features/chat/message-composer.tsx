@@ -4,7 +4,7 @@ import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { uploadFile, UploadedFile } from "@/lib/upload-utils";
+import { uploadFile, UploadedFile } from "@/lib/utils/upload-utils";
 import { mockUsers } from "@/lib/mock-data"
 import { UserMentionSelector } from "@/components/shared/user-mention-selector"
 import { EmojiPicker } from "@/components/shared/emoji-picker"

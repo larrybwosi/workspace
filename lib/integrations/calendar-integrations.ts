@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from "@/lib/db/prisma"
 
 export interface GoogleCalendarConfig {
   clientId: string

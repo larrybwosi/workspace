@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
-import { publishToAbly } from "@/lib/ably";
+import { publishToAbly } from "@/lib/integrations/ably";
 
 const invitationSchema = z.object({
   email: z.string().email().optional(),

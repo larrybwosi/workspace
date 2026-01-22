@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { authenticateApiKey, hasPermission } from "@/lib/api-auth"
-import { CustomMessageUIDefinitionSchema } from "@/lib/custom-message-schema"
+import { prisma } from "@/lib/db/prisma"
+import { authenticateApiKey, hasPermission } from "@/lib/auth/api-auth"
+import { CustomMessageUIDefinitionSchema } from "@/lib/types/custom-message-schema"
 import { z } from "zod"
 
 const customMessagePayloadSchema = z.object({
