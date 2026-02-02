@@ -426,8 +426,8 @@ const isValid = calComUtils.verifyWebhook(
 
 Enable debug logging:
 ```typescript
-console.log('[v0] Integration event:', event)
-console.log('[v0] Payload:', payload)
+console.log('Integration event:', event)
+console.log('Payload:', payload)
 ```
 
 ### Testing Webhooks

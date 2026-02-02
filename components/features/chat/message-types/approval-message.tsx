@@ -48,7 +48,7 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
       toast.success(`Request ${actionId === "approve" ? "approved" : "rejected"} successfully`)
       setShowCommentField(false)
     } catch (error) {
-      console.error("[v0] Failed to submit action:", error)
+      console.error("Failed to submit action:", error)
       toast.error(error instanceof Error ? error.message : "Failed to submit action")
     } finally {
       setIsSubmitting(false)

@@ -141,7 +141,7 @@ export async function POST(request: NextRequest, { params }: { params: { message
           data: { webhookSent: true },
         })
       } catch (webhookError) {
-        console.error("[v0] Failed to send webhook callback:", webhookError)
+        console.error("Failed to send webhook callback:", webhookError)
         // Don't fail the request if webhook fails
       }
     }
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest, { params }: { params: { message
         { status: 400 },
       )
     }
-    console.error("[v0] Failed to process action response:", error)
+    console.error("Failed to process action response:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }
@@ -213,7 +213,7 @@ export async function GET(request: NextRequest, { params }: { params: { messageI
       responses,
     })
   } catch (error) {
-    console.error("[v0] Failed to fetch action responses:", error)
+    console.error("Failed to fetch action responses:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }
