@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { generateInvitationLink, sendInvitationEmail } from "@/lib/invitation-utils"
+import { generateInvitationLink, sendInvitationEmail } from "@/lib/utils/invitation-utils"
 
 // POST /api/invitations/[token]/resend - Resend invitation
 export async function POST(request: NextRequest, { params }: { params: { token: string } }) {

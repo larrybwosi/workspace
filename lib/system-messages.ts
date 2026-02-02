@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
+import { prisma } from "@/lib/db/prisma"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
 /**
  * System message utilities for easy composition of standard messages

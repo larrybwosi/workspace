@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 
 // GET /api/dm - Get all DM conversations for current user
 export async function GET(request: NextRequest) {
@@ -17,14 +17,14 @@ export async function GET(request: NextRequest) {
         channelId: {
           startsWith: "dm-",
         },
-        members: {
+        participants: {
           some: {
             id: session.user.id,
           },
         },
       },
       include: {
-        members: {
+        participants: {
           select: {
             id: true,
             name: true,
@@ -83,14 +83,14 @@ export async function POST(request: NextRequest) {
     const existingThread = await prisma.thread.findFirst({
       where: {
         channelId: `dm-${userId}`,
-        members: {
+        participants: {
           some: {
             id: session.user.id,
           },
         },
       },
       include: {
-        members: true,
+        participants: true,
       },
     })
 
@@ -105,12 +105,12 @@ export async function POST(request: NextRequest) {
         channelId: `dm-${userId}`,
         creatorId: session.user.id,
         status: "Active",
-        members: {
+        participants: {
           connect: [{ id: session.user.id }, { id: userId }],
         },
       },
       include: {
-        members: {
+        participants: {
           select: {
             id: true,
             name: true,

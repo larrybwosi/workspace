@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
+import { prisma } from "@/lib/db/prisma"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
 export async function GET(
   request: NextRequest,

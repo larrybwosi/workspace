@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres:latest
-    command: '-d 1'  # Runs Postgres in debug mode (optional)
+    image: postgres:16-alpine
+    # command: '-d 1'  # Runs Postgres in debug mode (optional)
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:

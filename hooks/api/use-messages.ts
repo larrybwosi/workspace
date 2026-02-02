@@ -32,7 +32,7 @@ export function useSendMessage() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ channelId, ...message }: Omit<Message, "id" | "timestamp"> & { channelId: string }) => {
+    mutationFn: async ({ channelId, ...message }: Omit<Message, "id" | "timestamp" | "reactions" | "userId"> & { channelId: string }) => {
       const { data } = await apiClient.post<Message>(`/channels/${channelId}/messages`, message)
       return data
     },
@@ -81,7 +81,7 @@ export function useReplyToMessage() {
       messageId,
       channelId,
       ...reply
-    }: Omit<Message, "id" | "timestamp"> & { messageId: string; channelId: string }) => {
+    }: Omit<Message, "id" | "timestamp" | "reactions" | "userId"> & { messageId: string; channelId: string }) => {
       const { data } = await apiClient.post<Message>(`/messages/${messageId}/replies`, reply)
       return { data, channelId }
     },
@@ -99,9 +99,6 @@ export function useMarkMessageAsRead() {
     mutationFn: async ({ messageId, channelId }: { messageId: string; channelId: string }) => {
       const { data } = await apiClient.post(`/messages/${messageId}/read`, {})
       return { data, channelId }
-    },
-    onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId) })
     },
   })
 }

@@ -3,13 +3,13 @@
 import * as React from "react"
 import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sidebar } from "@/components/sidebar"
-import { InfoPanel } from "@/components/info-panel"
-import { ThreadView } from "@/components/thread-view"
-import { DynamicHeader } from "@/components/dynamic-header"
-import { AssistantChannel } from "@/components/assistant-channel"
 import { mockChannels, mockUsers } from "@/lib/mock-data"
 import { useParams, useRouter } from "next/navigation"
+import { AssistantChannel } from "@/components/features/assistant/assistant-channel"
+import { ThreadView } from "@/components/features/chat/thread-view"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
+import { InfoPanel } from "@/components/shared/info-panel"
 
 export default function ChannelPage() {
   const params = useParams()
@@ -28,19 +28,6 @@ export default function ChannelPage() {
     }
     return null
   }
-
-  const findChannel = (channels: typeof mockChannels, id: string): any => {
-    for (const channel of channels) {
-      if (channel.id === id) return channel
-      if (channel.children) {
-        const found = findChannel(channel.children, id)
-        if (found) return found
-      }
-    }
-    return null
-  }
-
-  const channel = findChannel(mockChannels, channelId)
   const dmUser = getDMUser()
 
   const handleChannelSelect = (newChannelId: string) => {

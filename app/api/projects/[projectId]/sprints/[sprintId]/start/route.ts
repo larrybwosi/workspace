@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
-import { publishToAbly } from "@/lib/ably"
+import { publishToAbly } from "@/lib/integrations/ably"
 
 export async function POST(req: NextRequest, { params }: { params: { projectId: string; sprintId: string } }) {
   try {

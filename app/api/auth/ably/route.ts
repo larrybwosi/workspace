@@ -1,6 +1,6 @@
 // app/api/ably-auth/route.ts
 import { NextResponse } from 'next/server';
-import { ably } from '@/lib/ably';
+import { ably } from '@/lib/integrations/ably';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 

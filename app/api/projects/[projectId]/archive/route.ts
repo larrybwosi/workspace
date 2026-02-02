@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 import { createSystemMessage } from "@/lib/system-messages"
 
 export async function POST(request: NextRequest, { params }: { params: { projectId: string } }) {

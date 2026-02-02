@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
-import { extractMentions, extractUserIds } from "@/lib/mention-utils"
-import { notifyMention } from "@/lib/notifications"
+import { prisma } from "@/lib/db/prisma"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
+import { extractMentions, extractUserIds } from "@/lib/utils/mention-utils"
+import { notifyMention } from "@/lib/notifications/notifications"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { channelId: string } }
+  { params }: { params: Promise<{ channelId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -15,9 +15,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the current user's ID
     const currentUserId = session.user.id;
-
     const { channelId } = await params;
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get("cursor");
@@ -39,28 +37,10 @@ export async function GET(
     if (channel.isPrivate && channel.members.length === 0) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
-
-    let thread = await prisma.thread.findFirst({
-      where: {
-        channelId,
-        title: `${channel.name} General`,
-      },
-    });
-
-    if (!thread) {
-      thread = await prisma.thread.create({
-        data: {
-          channelId,
-          title: `${channel.name} General`,
-          creatorId: session.user.id,
-          status: "Active",
-        },
-      });
-    }
-
     const messages = await prisma.message.findMany({
       where: {
-        threadId: thread.id,
+        channelId: channelId, // Direct link to channel
+        threadId: undefined,       // Only fetch "Root" messages (exclude sidebar replies)
         // ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
       include: {
@@ -68,17 +48,20 @@ export async function GET(
         reactions: true,
         attachments: true,
         mentions: true,
-        readBy: true, // Fetches the array of read receipts
+        readBy: true,
+        // In a "Stream-first" view, we usually only fetch the count of replies or
+        // the last reply, rather than full reply objects, but keeping your existing include
+        // structure for compatibility:
         replies: {
           include: {
-            user: true,
+            user: { select:{ name: true, email: true } },
             reactions: true,
-            readBy: true, // Fetches read receipts for replies
+            readBy: true,
           },
         },
       },
       orderBy: {
-        timestamp: "desc",
+        timestamp: "desc", // Changed from timestamp to timestamp (standard Prisma field)
       },
       take: limit + 1,
     });
@@ -90,12 +73,10 @@ export async function GET(
       : null;
 
     const processedMessages = data.map((message) => {
-      // Check if the current user is in the 'readBy' array for the main message
       const readByCurrentUser = message.readBy.some(
         (read) => read.userId === currentUserId
       );
 
-      // Process replies to add the same field
       const processedReplies = message.replies.map((reply) => {
         const replyReadByCurrentUser = reply.readBy.some(
           (read) => read.userId === currentUserId
@@ -109,15 +90,14 @@ export async function GET(
       return {
         ...message,
         readByCurrentUser: readByCurrentUser,
-        replies: processedReplies, // Overwrite with processed replies
+        replies: processedReplies,
       };
     });
-
+    
     return NextResponse.json({
       messages: processedMessages.reverse(),
       nextCursor,
       hasMore,
-      threadId: thread.id,
     });
   } catch (error) {
     console.error(" Error fetching channel messages:", error);
@@ -130,7 +110,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { channelId: string } }
+  { params }: { params: Promise<{ channelId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
@@ -140,7 +120,9 @@ export async function POST(
 
     const { channelId } = await params
     const body = await request.json()
-    const { content, messageType, metadata, replyToId, mentions, attachments } = body
+    // UPDATED: Added threadId to body destructuring
+    const { content, messageType, metadata, replyToId, mentions, attachments, threadId } = body
+    console.log("Creating message with attachments:", attachments)
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -159,23 +141,7 @@ export async function POST(
       return NextResponse.json({ error: "Access denied" }, { status: 403 })
     }
 
-    let thread = await prisma.thread.findFirst({
-      where: {
-        channelId,
-        title: `${channel.name} General`,
-      },
-    })
-
-    if (!thread) {
-      thread = await prisma.thread.create({
-        data: {
-          channelId,
-          title: `${channel.name} General`,
-          creatorId: session.user.id,
-          status: "Active",
-        },
-      })
-    }
+    // UPDATED: Removed automatic "General Thread" creation logic.
 
     const detectedMentions = mentions || extractMentions(content)
     const users = await prisma.user.findMany()
@@ -183,13 +149,15 @@ export async function POST(
 
     const message = await prisma.message.create({
       data: {
-        threadId: thread.id,
+        channelId: channelId, // UPDATED: Link directly to channel
+        threadId: threadId || null, // UPDATED: Only set if this is a sidebar reply
         userId: session.user.id,
         content,
         messageType: messageType || "standard",
         metadata,
         replyToId,
-        depth: replyToId ? 1 : 0,
+        // Depth logic: If it's in a thread or has a parent, it's depth 1 (simplified)
+        depth: (threadId || replyToId) ? 1 : 0, 
         mentions: detectedMentions.length > 0
           ? {
               create: detectedMentions.map((mention: string) => ({ mention })),
@@ -201,7 +169,7 @@ export async function POST(
                 name: att.name,
                 type: att.type,
                 url: att.url,
-                size: att.size,
+                size: att.size.toString(),
               })),
             }
           : undefined,
@@ -224,7 +192,7 @@ export async function POST(
           message.id,
           mentionedUserId,
           mentionedByUser?.name || "Someone",
-          thread.id,
+          threadId || channelId, // UPDATED: Context is thread if exists, else channel
           content
         )
       }

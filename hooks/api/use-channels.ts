@@ -39,7 +39,7 @@ export function useCreateChannel() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (newChannel: Omit<Channel, "id">) => {
+    mutationFn: async (newChannel: any) => {
       const { data } = await apiClient.post<Channel>("/channels", newChannel)
       return data
     },

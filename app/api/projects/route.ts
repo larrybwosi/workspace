@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
             id: session.user.id,
           },
         },
+        workspaceId: null // Personal projects only
       },
       include: {
         creator: true,
