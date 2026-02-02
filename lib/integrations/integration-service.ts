@@ -1,59 +1,62 @@
-import crypto from "crypto"
+import crypto from "crypto";
 
 export interface IntegrationPayload {
-  event: string
+  event: string;
   workspace: {
-    id: string
-    name: string
-  }
-  data: Record<string, any>
-  timestamp: string
+    id: string;
+    name: string;
+  };
+  data: Record<string, any>;
+  timestamp: string;
 }
 
 export interface SlackMessage {
-  text?: string
-  blocks?: any[]
-  attachments?: any[]
-  channel?: string
-  username?: string
-  icon_emoji?: string
-  icon_url?: string
+  text?: string;
+  blocks?: any[];
+  attachments?: any[];
+  channel?: string;
+  username?: string;
+  icon_emoji?: string;
+  icon_url?: string;
 }
 
 export interface DiscordMessage {
-  content?: string
-  embeds?: DiscordEmbed[]
-  username?: string
-  avatar_url?: string
+  content?: string;
+  embeds?: DiscordEmbed[];
+  username?: string;
+  avatar_url?: string;
 }
 
 export interface DiscordEmbed {
-  title?: string
-  description?: string
-  url?: string
-  color?: number
-  fields?: { name: string; value: string; inline?: boolean }[]
-  footer?: { text: string; icon_url?: string }
-  thumbnail?: { url: string }
-  image?: { url: string }
-  timestamp?: string
+  title?: string;
+  description?: string;
+  url?: string;
+  color?: number;
+  fields?: { name: string; value: string; inline?: boolean }[];
+  footer?: { text: string; icon_url?: string };
+  thumbnail?: { url: string };
+  image?: { url: string };
+  timestamp?: string;
 }
 
 export const IntegrationService = {
   // Generate signature for webhook verification
   generateSignature(payload: string, secret: string): string {
-    return crypto.createHmac("sha256", secret).update(payload).digest("hex")
+    return crypto.createHmac("sha256", secret).update(payload).digest("hex");
   },
 
   // Verify incoming webhook signature
   verifySignature(payload: string, signature: string, secret: string): boolean {
-    const expected = this.generateSignature(payload, secret)
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+    const expected = this.generateSignature(payload, secret);
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expected),
+    );
   },
 
   // Format message for Slack
   formatSlackMessage(payload: IntegrationPayload): SlackMessage {
-    const { event, workspace, data } = payload
+    const { event, workspace, data } = payload;
 
     const eventColors: Record<string, string> = {
       "task.created": "#36a64f",
@@ -62,7 +65,7 @@ export const IntegrationService = {
       "project.created": "#0066cc",
       "member.joined": "#6f42c1",
       "message.created": "#17a2b8",
-    }
+    };
 
     return {
       text: `${event} in ${workspace.name}`,
@@ -76,19 +79,22 @@ export const IntegrationService = {
             .slice(0, 5)
             .map(([key, value]) => ({
               title: this.formatFieldName(key),
-              value: typeof value === "object" ? JSON.stringify(value) : String(value),
+              value:
+                typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value),
               short: String(value).length < 30,
             })),
           footer: `Workspace: ${workspace.name}`,
           ts: Math.floor(Date.now() / 1000),
         },
       ],
-    }
+    };
   },
 
   // Format message for Discord
   formatDiscordMessage(payload: IntegrationPayload): DiscordMessage {
-    const { event, workspace, data } = payload
+    const { event, workspace, data } = payload;
 
     const eventColors: Record<string, number> = {
       "task.created": 0x36a64f,
@@ -97,7 +103,7 @@ export const IntegrationService = {
       "project.created": 0x0066cc,
       "member.joined": 0x6f42c1,
       "message.created": 0x17a2b8,
-    }
+    };
 
     return {
       embeds: [
@@ -110,19 +116,22 @@ export const IntegrationService = {
             .slice(0, 5)
             .map(([key, value]) => ({
               name: this.formatFieldName(key),
-              value: typeof value === "object" ? JSON.stringify(value) : String(value),
+              value:
+                typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value),
               inline: String(value).length < 30,
             })),
           footer: { text: `Workspace: ${workspace.name}` },
           timestamp: new Date().toISOString(),
         },
       ],
-    }
+    };
   },
 
   // Format Microsoft Teams message
   formatTeamsMessage(payload: IntegrationPayload): Record<string, any> {
-    const { event, workspace, data } = payload
+    const { event, workspace, data } = payload;
 
     return {
       "@type": "MessageCard",
@@ -138,12 +147,15 @@ export const IntegrationService = {
             .slice(0, 5)
             .map(([key, value]) => ({
               name: this.formatFieldName(key),
-              value: typeof value === "object" ? JSON.stringify(value) : String(value),
+              value:
+                typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value),
             })),
           markdown: true,
         },
       ],
-    }
+    };
   },
 
   formatEventTitle(event: string): string {
@@ -160,24 +172,60 @@ export const IntegrationService = {
       "comment.created": "New Comment",
       "sprint.started": "Sprint Started",
       "sprint.completed": "Sprint Completed",
-    }
-    return titles[event] || event.replace(".", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+      // Cal.com events
+      "booking.created": "New Booking Created",
+      "booking.rescheduled": "Booking Rescheduled",
+      "booking.cancelled": "Booking Cancelled",
+      // Affine events
+      "page.created": "New Page Created",
+      "page.updated": "Page Updated",
+      "page.deleted": "Page Deleted",
+      // Plane events
+      "issue.created": "New Issue Created",
+      "issue.updated": "Issue Updated",
+      "issue.deleted": "Issue Deleted",
+    };
+    return (
+      titles[event] ||
+      event.replace(".", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
   },
 
   formatEventDescription(event: string, data: Record<string, any>): string {
     switch (event) {
       case "task.created":
-        return `Task "${data.title}" was created${data.assignee ? ` and assigned to ${data.assignee}` : ""}`
+        return `Task "${data.title}" was created${data.assignee ? ` and assigned to ${data.assignee}` : ""}`;
       case "task.completed":
-        return `Task "${data.title}" was marked as completed${data.completedBy ? ` by ${data.completedBy}` : ""}`
+        return `Task "${data.title}" was marked as completed${data.completedBy ? ` by ${data.completedBy}` : ""}`;
       case "project.created":
-        return `Project "${data.name}" was created`
+        return `Project "${data.name}" was created`;
       case "member.joined":
-        return `${data.name || data.email} joined the workspace`
+        return `${data.name || data.email} joined the workspace`;
       case "message.created":
-        return data.content?.slice(0, 200) || "New message"
+        return data.content?.slice(0, 200) || "New message";
+      // Cal.com events
+      case "booking.created":
+        return `New booking "${data.title}" scheduled for ${data.startTime}`;
+      case "booking.rescheduled":
+        return `Booking "${data.title}" rescheduled to ${data.startTime}`;
+      case "booking.cancelled":
+        return `Booking "${data.title}" was cancelled`;
+      // Affine events
+      case "page.created":
+        return `New page "${data.title}" created in Affine`;
+      case "page.updated":
+        return `Page "${data.title}" was updated`;
+      case "page.deleted":
+        return `Page "${data.title}" was deleted`;
+      // Plane events
+      case "issue.created":
+        return `New issue "${data.name}" created in ${data.project}`;
+      case "issue.updated":
+        return `Issue "${data.name}" was updated`;
+      case "issue.deleted":
+        return `Issue "${data.name}" was deleted`;
       default:
-        return data.description || data.message || `Event: ${event}`
+        return data.description || data.message || `Event: ${event}`;
     }
   },
 
@@ -186,51 +234,60 @@ export const IntegrationService = {
       .replace(/([A-Z])/g, " $1")
       .replace(/_/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase())
-      .trim()
+      .trim();
   },
 
   // Send to Slack
-  async sendToSlack(webhookUrl: string, message: SlackMessage): Promise<boolean> {
+  async sendToSlack(
+    webhookUrl: string,
+    message: SlackMessage,
+  ): Promise<boolean> {
     try {
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(message),
-      })
-      return response.ok
+      });
+      return response.ok;
     } catch (error) {
-      console.error("Slack send failed:", error)
-      return false
+      console.error("Slack send failed:", error);
+      return false;
     }
   },
 
   // Send to Discord
-  async sendToDiscord(webhookUrl: string, message: DiscordMessage): Promise<boolean> {
+  async sendToDiscord(
+    webhookUrl: string,
+    message: DiscordMessage,
+  ): Promise<boolean> {
     try {
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(message),
-      })
-      return response.ok
+      });
+      return response.ok;
     } catch (error) {
-      console.error("Discord send failed:", error)
-      return false
+      console.error("Discord send failed:", error);
+      return false;
     }
   },
 
   // Send to Microsoft Teams
-  async sendToTeams(webhookUrl: string, message: Record<string, any>): Promise<boolean> {
+  async sendToTeams(
+    webhookUrl: string,
+    message: Record<string, any>,
+  ): Promise<boolean> {
     try {
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(message),
-      })
-      return response.ok
+      });
+      return response.ok;
     } catch (error) {
-      console.error("Teams send failed:", error)
-      return false
+      console.error("Teams send failed:", error);
+      return false;
     }
   },
 
@@ -242,8 +299,8 @@ export const IntegrationService = {
     headers?: Record<string, string>,
   ): Promise<boolean> {
     try {
-      const body = JSON.stringify(payload)
-      const signature = this.generateSignature(body, secret)
+      const body = JSON.stringify(payload);
+      const signature = this.generateSignature(body, secret);
 
       const response = await fetch(webhookUrl, {
         method: "POST",
@@ -254,11 +311,11 @@ export const IntegrationService = {
           ...headers,
         },
         body,
-      })
-      return response.ok
+      });
+      return response.ok;
     } catch (error) {
-      console.error("Custom webhook send failed:", error)
-      return false
+      console.error("Custom webhook send failed:", error);
+      return false;
     }
   },
-}
+};
