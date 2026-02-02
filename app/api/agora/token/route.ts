@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RtcTokenBuilder, RtcRole } from 'agora-token'
-import { agoraConfig } from '@/lib/agora-config'
+import { agoraConfig } from '@/lib/integrations/agora-config'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 
 export async function POST(request: NextRequest) {
   try {

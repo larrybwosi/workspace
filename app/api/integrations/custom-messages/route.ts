@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { authenticateApiKey, hasPermission } from "@/lib/api-auth"
-import { CustomMessageUIDefinitionSchema } from "@/lib/custom-message-schema"
+import { prisma } from "@/lib/db/prisma"
+import { authenticateApiKey, hasPermission } from "@/lib/auth/api-auth"
+import { CustomMessageUIDefinitionSchema } from "@/lib/types/custom-message-schema"
 import { z } from "zod"
 
 const customMessagePayloadSchema = z.object({
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Custom message error:", error)
+    console.error("Custom message error:", error)
     return NextResponse.json({ error: "Failed to send custom message" }, { status: 500 })
   }
 }

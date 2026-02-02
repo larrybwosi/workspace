@@ -1,14 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { authenticateApiKey, hasPermission } from "@/lib/api-auth"
-import { checkRateLimit, getRateLimitHeaders } from "@/lib/rate-limiter"
+import { authenticateApiKey, hasPermission } from "@/lib/auth/api-auth"
+import { checkRateLimit, getRateLimitHeaders } from "@/lib/utils/rate-limiter"
 import {
   createExternalMessage,
   validateChannelAccess,
   fireMessageWebhooks,
   type ExternalMessage,
-} from "@/lib/external-message-utils"
-import { prisma } from "@/lib/prisma"
+} from "@/lib/utils/external-message-utils"
+import { prisma } from "@/lib/db/prisma"
 
 const messageSchema = z.object({
   channelId: z.string().min(1, "Channel ID is required"),

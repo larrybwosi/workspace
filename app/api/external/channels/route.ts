@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { authenticateApiKey, hasPermission } from "@/lib/api-auth"
-import { prisma } from "@/lib/prisma"
+import { authenticateApiKey, hasPermission } from "@/lib/auth/api-auth"
+import { prisma } from "@/lib/db/prisma"
 
 /**
  * GET /api/external/channels

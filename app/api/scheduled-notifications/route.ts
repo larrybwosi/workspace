@@ -4,7 +4,7 @@ import {
   createScheduledNotification,
   getUserScheduledNotifications,
   getNotificationStats,
-} from "@/lib/scheduled-notifications"
+} from "@/lib/notifications/scheduled-notifications"
 import { z } from "zod"
 
 const createSchema = z.object({

@@ -1,40 +1,38 @@
 "use client"
 
-import * as React from "react"
-import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sidebar } from "@/components/sidebar"
-import { InfoPanel } from "@/components/info-panel"
-import { ThreadView } from "@/components/thread-view"
-import { SearchView } from "@/components/search-view"
-import { MembersPanel } from "@/components/members-panel"
-import { TaskManagementView } from "@/components/task-management-view"
-import { TaskDetailSheet } from "@/components/task-detail-sheet"
-import { TaskCreateEditDialog } from "@/components/task-create-edit-dialog"
-import { ProjectDetailSheet } from "@/components/project-detail-sheet" // Added project detail sheet
-import { AssistantChannel } from "@/components/assistant-channel"
-import { DynamicHeader } from "@/components/dynamic-header"
-import { ProjectSettingsSheet } from "@/components/project-settings-sheet" // Import project settings sheet
 import { mockUsers, mockProjects } from "@/lib/mock-data"
 import type { Task, Project } from "@/lib/types"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { AssistantChannel } from "@/components/features/assistant/assistant-channel"
+import { SearchView } from "@/components/layout/search-view"
+import { MembersPanel } from "@/components/features/workspace/members-panel"
+import { TaskManagementView } from "@/components/features/tasks/task-management-view"
+import { ThreadView } from "@/components/features/chat/thread-view"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
+import { InfoPanel } from "@/components/shared/info-panel"
+import { TaskDetailSheet } from "@/components/features/tasks/task-detail-sheet"
+import { ProjectDetailSheet } from "@/components/features/projects/project-detail-sheet"
+import { ProjectSettingsSheet } from "@/components/features/projects/project-settings-sheet"
+import { TaskCreateEditDialog } from "@/components/features/tasks/task-create-edit-dialog"
+import { useState } from "react"
 
 export default function HomePage() {
   const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
-  const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
-  const [activeChannel, setActiveChannel] = React.useState("uikit")
-  const [searchMode, setSearchMode] = React.useState(false)
-  const [membersMode, setMembersMode] = React.useState(false)
-  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
-  const [taskSheetOpen, setTaskSheetOpen] = React.useState(false)
-  const [taskCreateEditOpen, setTaskCreateEditOpen] = React.useState(false)
-  const [taskEditMode, setTaskEditMode] = React.useState<"create" | "edit">("create")
-  const [selectedProject, setSelectedProject] = React.useState<Project | null>(null)
-  const [projectSheetOpen, setProjectSheetOpen] = React.useState(false)
-  const [projectSettingsOpen, setProjectSettingsOpen] = React.useState(false) // Added project settings open state
-  const [tasks, setTasks] = React.useState<Task[]>([])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
+  const [activeChannel, setActiveChannel] = useState('')
+  const [searchMode, setSearchMode] = useState(false)
+  const [membersMode, setMembersMode] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [taskSheetOpen, setTaskSheetOpen] = useState(false)
+  const [taskCreateEditOpen, setTaskCreateEditOpen] = useState(false)
+  const [taskEditMode, setTaskEditMode] = useState<"create" | "edit">("create")
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [projectSheetOpen, setProjectSheetOpen] = useState(false)
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false) // Added project settings open state
+  const [tasks, setTasks] = useState<Task[]>([])
 
   // useEffect(() => {
   //   router.push("/channels/uikit")
@@ -76,8 +74,8 @@ export default function HomePage() {
   }
 
   const getDMUser = () => {
-    if (activeChannel.startsWith("dm-")) {
-      const userId = activeChannel.replace("dm-", "")
+    if (activeChannel?.startsWith("dm-")) {
+      const userId = activeChannel?.replace("dm-", "")
       return mockUsers.find((u) => u.id === userId)
     }
     return null
@@ -96,7 +94,7 @@ export default function HomePage() {
       return <MembersPanel />
     }
 
-    if (activeChannel.startsWith("project-")) {
+    if (activeChannel?.startsWith("project-")) {
       return (
         <TaskManagementView
           onTaskClick={handleTaskClick}
@@ -106,7 +104,7 @@ export default function HomePage() {
       )
     }
 
-    if (activeChannel.startsWith("dm-")) {
+    if (activeChannel?.startsWith("dm-")) {
       const dmUser = getDMUser()
       return (
         <ThreadView
@@ -130,7 +128,7 @@ export default function HomePage() {
     return <ThreadView />
   }
 
-  const shouldShowInfoPanel = !activeChannel.startsWith("project-") && activeChannel !== "assistant"
+  const shouldShowInfoPanel = !activeChannel?.startsWith("project-") && activeChannel !== "assistant"
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -153,21 +151,11 @@ export default function HomePage() {
             setSearchMode(true)
             setMembersMode(false)
           }}
-          onBackClick={activeChannel.startsWith("project-") ? () => setActiveChannel("uikit") : undefined}
+          onBackClick={activeChannel?.startsWith("project-") ? () => setActiveChannel("uikit") : undefined}
         />
 
         {renderMainContent()}
 
-        {shouldShowInfoPanel && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="fixed bottom-4 right-4 lg:hidden h-12 w-12 rounded-full shadow-lg"
-            onClick={() => setInfoPanelOpen(true)}
-          >
-            <Info className="h-5 w-5" />
-          </Button>
-        )}
       </main>
       {shouldShowInfoPanel && <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} />}
       <TaskDetailSheet task={selectedTask} open={taskSheetOpen} onOpenChange={setTaskSheetOpen} />

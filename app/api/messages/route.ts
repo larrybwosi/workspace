@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/ably"
-import { extractMentions, extractUserIds } from "@/lib/mention-utils"
-import { notifyMention } from "@/lib/notifications"
+import { prisma } from "@/lib/db/prisma"
+import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
+import { extractMentions, extractUserIds } from "@/lib/utils/mention-utils"
+import { notifyMention } from "@/lib/notifications/notifications"
 
 export async function GET(request: NextRequest) {
   try {
@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
         )
       }
     }
+    console.log("Message created with ID:", threadId)
 
     const ably = getAblyRest()
     const channel = ably.channels.get(AblyChannels.thread(threadId))

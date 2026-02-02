@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
-import { prisma } from '@/lib/prisma'
-import { syncCalendarEvent } from '@/lib/calendar-integrations'
+import { prisma } from '@/lib/db/prisma'
+import { syncCalendarEvent } from '@/lib/integrations/calendar-integrations'
 
 export async function GET(
   request: NextRequest,

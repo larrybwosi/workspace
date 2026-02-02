@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { sendPushNotification } from "@/lib/push-notifications"
+import { sendPushNotification } from "@/lib/notifications/push-notifications"
 
 export async function POST(request: NextRequest) {
   try {

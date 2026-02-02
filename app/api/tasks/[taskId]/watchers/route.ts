@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { addTaskWatcher, removeTaskWatcher } from "@/lib/notifications"
+import { addTaskWatcher, removeTaskWatcher } from "@/lib/notifications/notifications"
 
 export async function POST(request: NextRequest, { params }: { params: { taskId: string } }) {
   try {

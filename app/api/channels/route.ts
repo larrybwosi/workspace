@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/db/prisma"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,6 +10,9 @@ export async function GET(request: NextRequest) {
     }
 
     const channels = await prisma.channel.findMany({
+      where: {
+        workspaceId: null,
+      },
       include: {
         children: true,
         members: {
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { name, icon, type, description, isPrivate, parentId, members } = body
-    console.log(body)
+    // console.log(body)
 
     const channel = await prisma.channel.create({
       data: {

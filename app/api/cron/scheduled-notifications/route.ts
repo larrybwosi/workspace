@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { processScheduledNotifications } from "@/lib/scheduled-notifications"
+import { processScheduledNotifications } from "@/lib/notifications/scheduled-notifications"
 
 export async function POST(req: NextRequest) {
   try {

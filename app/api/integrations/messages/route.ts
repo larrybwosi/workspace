@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { authenticateApiKey, hasPermission } from "@/lib/api-auth"
+import { prisma } from "@/lib/db/prisma"
+import { authenticateApiKey, hasPermission } from "@/lib/auth/api-auth"
 import { createIntegrationMessage } from "@/lib/system-messages"
 import { z } from "zod"
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 })
     }
 
-    console.error("[v0] Integration message error:", error)
+    console.error("Integration message error:", error)
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 })
   }
 }

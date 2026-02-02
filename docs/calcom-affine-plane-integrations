@@ -1,0 +1,462 @@
+# Cal.com, Affine, and Plane Integrations
+
+Complete guide for integrating Cal.com (scheduling), Affine (knowledge base), and Plane (project management) with your workspace.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Cal.com Integration](#calcom-integration)
+- [Affine Integration](#affine-integration)
+- [Plane Integration](#plane-integration)
+- [Webhook Configuration](#webhook-configuration)
+- [Sync Behavior](#sync-behavior)
+- [Best Practices](#best-practices)
+
+---
+
+## Overview
+
+These integrations enable bi-directional sync between your workspace and popular productivity tools:
+
+- **Cal.com**: Sync bookings to your calendar
+- **Affine**: Sync pages to notes
+- **Plane**: Sync issues to tasks
+
+All integrations support real-time webhooks and automatic data synchronization.
+
+---
+
+## Cal.com Integration
+
+### Setup
+
+1. **Get API Key**
+   - Go to Cal.com Settings → Developer → API Keys
+   - Create a new API key with appropriate permissions
+   - Copy the API key (starts with `cal_live_`)
+
+2. **Configure in Workspace**
+   - Navigate to Workspace Settings → Integrations
+   - Click "Add Integration"
+   - Select "Cal.com"
+   - Enter:
+     - **Integration Name**: e.g., "Cal.com Bookings"
+     - **API Key**: Your Cal.com API key
+     - **Webhook Secret** (optional): For signature verification
+
+3. **Setup Webhook in Cal.com**
+   - In Cal.com, go to Settings → Developer → Webhooks
+   - Add webhook URL: `https://your-app.com/api/integrations/calcom/webhook?integrationId=YOUR_INTEGRATION_ID`
+   - Subscribe to events: `BOOKING_CREATED`, `BOOKING_RESCHEDULED`, `BOOKING_CANCELLED`
+   - Copy the webhook secret and add it to your integration config
+
+### Features
+
+#### Booking Sync
+- Automatically creates calendar events when bookings are made
+- Updates events when bookings are rescheduled
+- Removes events when bookings are cancelled
+
+#### Available Operations
+```typescript
+import { calComUtils } from '@/lib/calcom-integration'
+
+// List event types
+const eventTypes = await calComUtils.listEventTypes(config)
+
+// List bookings
+const bookings = await calComUtils.listBookings(config, {
+  status: 'ACCEPTED',
+  fromDate: '2025-01-01',
+  toDate: '2025-12-31'
+})
+
+// Create booking
+const booking = await calComUtils.createBooking(config, {
+  eventTypeId: 123,
+  start: '2025-06-01T10:00:00Z',
+  responses: {
+    name: 'John Doe',
+    email: 'john@example.com',
+    notes: 'Important meeting'
+  }
+})
+
+// Cancel booking
+await calComUtils.cancelBooking(config, bookingId, 'Reason for cancellation')
+
+// Reschedule booking
+await calComUtils.rescheduleBooking(config, bookingUid, '2025-06-02T14:00:00Z')
+
+// Get availability
+const availability = await calComUtils.getAvailability(config, {
+  eventTypeId: 123,
+  startTime: '2025-06-01T00:00:00Z',
+  endTime: '2025-06-07T23:59:59Z',
+  timeZone: 'America/New_York'
+})
+```
+
+### Webhook Events
+
+| Event | Description | Action |
+|-------|-------------|--------|
+| `BOOKING_CREATED` | New booking created | Creates calendar event |
+| `BOOKING_RESCHEDULED` | Booking time changed | Updates calendar event |
+| `BOOKING_CANCELLED` | Booking cancelled | Deletes calendar event |
+
+---
+
+## Affine Integration
+
+### Setup
+
+1. **Get API Token**
+   - Log in to Affine (app.affine.pro or self-hosted instance)
+   - Go to Settings → Developer
+   - Generate a new API token
+   - Copy the token
+
+2. **Get Workspace ID**
+   - In Affine, open your workspace
+   - The workspace ID is in the URL: `app.affine.pro/workspace/{workspaceId}`
+
+3. **Configure in Workspace**
+   - Navigate to Workspace Settings → Integrations
+   - Click "Add Integration"
+   - Select "Affine"
+   - Enter:
+     - **Integration Name**: e.g., "Knowledge Base Sync"
+     - **API Token**: Your Affine API token
+     - **Workspace ID**: Your Affine workspace ID
+
+### Features
+
+#### Page Sync
+- Automatically syncs Affine pages to workspace notes
+- Maintains page metadata (tags, public status)
+- Supports markdown export
+
+#### Available Operations
+```typescript
+import { affineUtils } from '@/lib/affine-integration'
+
+// Get workspace info
+const workspace = await affineUtils.getWorkspace(config)
+
+// List pages
+const pages = await affineUtils.listPages(config, 50, 0)
+
+// Get page content
+const page = await affineUtils.getPage(config, pageId)
+
+// Create page
+const newPage = await affineUtils.createPage(config, {
+  title: 'New Page',
+  content: 'Page content in markdown',
+  isPublic: false,
+  tags: ['documentation', 'tutorial']
+})
+
+// Update page
+await affineUtils.updatePage(config, pageId, {
+  title: 'Updated Title',
+  content: 'Updated content'
+})
+
+// Delete page
+await affineUtils.deletePage(config, pageId)
+
+// Search pages
+const results = await affineUtils.searchPages(config, 'search query')
+
+// Export as markdown
+const markdown = await affineUtils.exportPageAsMarkdown(config, pageId)
+```
+
+### Webhook Events
+
+| Event | Description | Action |
+|-------|-------------|--------|
+| `page.created` | New page created | Creates workspace note |
+| `page.updated` | Page content updated | Updates workspace note |
+| `page.deleted` | Page deleted | Deletes workspace note |
+
+### Content Conversion
+
+Affine blocks are automatically converted to markdown:
+- Headings → `# Heading`
+- Paragraphs → Plain text
+- Lists → `- Item` or `1. Item`
+- Code blocks → ` ```language\ncode\n``` `
+- Quotes → `> Quote`
+- Dividers → `---`
+
+---
+
+## Plane Integration
+
+### Setup
+
+1. **Get API Token**
+   - Log in to Plane (app.plane.so or self-hosted instance)
+   - Go to Settings → API Tokens
+   - Create a new token with appropriate permissions
+   - Copy the token
+
+2. **Get Workspace Slug**
+   - In Plane, open your workspace
+   - The slug is in the URL: `app.plane.so/{workspaceSlug}`
+
+3. **Configure in Workspace**
+   - Navigate to Workspace Settings → Integrations
+   - Click "Add Integration"
+   - Select "Plane"
+   - Enter:
+     - **Integration Name**: e.g., "Project Management"
+     - **API Token**: Your Plane API token
+     - **Workspace Slug**: Your Plane workspace slug
+
+### Features
+
+#### Issue Sync
+- Automatically syncs Plane issues to workspace tasks
+- Maps priority levels and states
+- Syncs assignees and labels
+- Maintains bi-directional links
+
+#### Available Operations
+```typescript
+import { planeUtils } from '@/lib/plane-integration'
+
+// Get workspace
+const workspace = await planeUtils.getWorkspace(config)
+
+// List projects
+const projects = await planeUtils.listProjects(config)
+
+// Get project
+const project = await planeUtils.getProject(config, projectId)
+
+// List issues
+const issues = await planeUtils.listIssues(config, projectId, {
+  state: 'in_progress',
+  priority: 'high',
+  assignee: 'user_id'
+})
+
+// Get issue
+const issue = await planeUtils.getIssue(config, projectId, issueId)
+
+// Create issue
+const newIssue = await planeUtils.createIssue(config, projectId, {
+  name: 'New Feature',
+  description: 'Detailed description',
+  priority: 'high',
+  assignees: ['user_id'],
+  labels: ['feature', 'frontend'],
+  start_date: '2025-06-01',
+  target_date: '2025-06-15'
+})
+
+// Update issue
+await planeUtils.updateIssue(config, projectId, issueId, {
+  state: 'in_progress',
+  priority: 'urgent'
+})
+
+// Delete issue
+await planeUtils.deleteIssue(config, projectId, issueId)
+
+// Get states
+const states = await planeUtils.getStates(config, projectId)
+
+// Add comment
+await planeUtils.addComment(config, projectId, issueId, 'Comment text')
+```
+
+### Priority Mapping
+
+| Plane Priority | Workspace Priority |
+|----------------|-------------------|
+| `urgent` | `critical` |
+| `high` | `high` |
+| `medium` | `medium` |
+| `low` | `low` |
+| `none` | `none` |
+
+### State Mapping
+
+| Plane State Group | Workspace Status |
+|-------------------|------------------|
+| `backlog` | `backlog` |
+| `unstarted` | `todo` |
+| `started` | `in_progress` |
+| `completed` | `completed` |
+| `cancelled` | `cancelled` |
+
+### Webhook Events
+
+| Event | Description | Action |
+|-------|-------------|--------|
+| `issue.created` | New issue created | Creates workspace task |
+| `issue.updated` | Issue updated | Updates workspace task |
+| `issue.deleted` | Issue deleted | Deletes workspace task |
+
+---
+
+## Webhook Configuration
+
+### Webhook URLs
+
+Each integration has its own webhook endpoint:
+
+```
+Cal.com:  POST /api/integrations/calcom/webhook?integrationId={ID}
+Affine:   POST /api/integrations/affine/webhook?integrationId={ID}
+Plane:    POST /api/integrations/plane/webhook?integrationId={ID}
+```
+
+### Security
+
+- **Cal.com**: Supports HMAC SHA-256 signature verification
+- **Affine**: Configure webhook secret in Affine settings
+- **Plane**: Uses API token authentication
+
+### Signature Verification (Cal.com)
+
+```typescript
+import { calComUtils } from '@/lib/calcom-integration'
+
+const isValid = calComUtils.verifyWebhook(
+  payload,      // Request body as string
+  signature,    // x-cal-signature-256 header
+  secret        // Your webhook secret
+)
+```
+
+---
+
+## Sync Behavior
+
+### Data Flow
+
+1. **External Event** → Webhook received at integration endpoint
+2. **Verification** → Signature/token validated
+3. **Processing** → Data mapped to internal format
+4. **Database** → Record created/updated in workspace
+5. **Notifications** → Outgoing webhooks triggered (Slack, Discord, etc.)
+
+### Sync Frequency
+
+- **Real-time**: All integrations support webhook-based real-time sync
+- **Manual**: Use the "Test" button to manually trigger a sync
+- **Error Handling**: Failed syncs are logged and can be retried
+
+### Conflict Resolution
+
+- **Last Write Wins**: Most recent update takes precedence
+- **External URLs**: Original links preserved in metadata
+- **Bidirectional**: Changes in workspace can be pushed back (coming soon)
+
+---
+
+## Best Practices
+
+### 1. Security
+
+- Store API tokens securely
+- Use webhook secrets for signature verification
+- Rotate tokens regularly
+- Limit token permissions to minimum required
+
+### 2. Performance
+
+- Configure event filters to only sync relevant data
+- Use batch operations when available
+- Monitor webhook response times
+- Set up retry logic with exponential backoff
+
+### 3. Data Management
+
+- Regularly review synced data for accuracy
+- Use metadata fields to track external sources
+- Implement data retention policies
+- Back up integration configurations
+
+### 4. Error Handling
+
+- Monitor integration logs for failures
+- Set up alerts for sync errors
+- Test webhook endpoints before deploying
+- Have rollback procedures ready
+
+### 5. User Experience
+
+- Inform users about sync delays (typically < 1 second)
+- Provide clear links to external systems
+- Show sync status in UI
+- Allow users to manually trigger syncs
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Cal.com bookings not syncing**
+- Verify webhook URL is correct
+- Check webhook secret matches
+- Ensure integration is active
+- Review Cal.com webhook logs
+
+**Affine pages not appearing**
+- Confirm workspace ID is correct
+- Check API token permissions
+- Verify page visibility settings
+- Review Affine workspace access
+
+**Plane issues not syncing**
+- Validate workspace slug
+- Check API token permissions
+- Ensure project is accessible
+- Review Plane webhook configuration
+
+### Debug Mode
+
+Enable debug logging:
+```typescript
+console.log('[v0] Integration event:', event)
+console.log('[v0] Payload:', payload)
+```
+
+### Testing Webhooks
+
+Use tools like:
+- **ngrok** for local testing
+- **Webhook.site** for debugging
+- **Postman** for manual testing
+
+---
+
+## Support
+
+For integration issues:
+1. Check the [main integrations guide](/docs/integrations)
+2. Review API documentation:
+   - [Cal.com API Docs](https://cal.com/docs/api-reference)
+   - [Affine API Docs](https://docs.affine.pro/api)
+   - [Plane API Docs](https://docs.plane.so/api-reference)
+3. Open a support ticket at vercel.com/help
+
+---
+
+## Changelog
+
+### v1.0.0 (Current)
+- Initial release
+- Cal.com booking sync
+- Affine page sync
+- Plane issue sync
+- Webhook support
+- Real-time notifications

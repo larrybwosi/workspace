@@ -3,8 +3,8 @@ import { streamText, tool } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { mcpTools } from "@/lib/mcp-tools"
+import { prisma } from "@/lib/db/prisma"
+import { mcpTools } from "@/lib/ai/mcp-tools"
 import {
   getSecurityContext,
   checkPermission,
@@ -12,7 +12,7 @@ import {
   checkRateLimit,
   sanitizeOutput,
   conversationSchema,
-} from "@/lib/assistant-security"
+} from "@/lib/ai/assistant-security"
 
 export const maxDuration = 60
 
