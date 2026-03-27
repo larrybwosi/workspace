@@ -26,19 +26,11 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
   const creator = mockUsers.find((u) => u.id === mockThread.creator)
   const members = mockUsers.filter((u) => mockThread.members.includes(u.id))
   const [activeTab, setActiveTab] = React.useState("info")
-  const [activeView, setActiveView] = React.useState<"channel" | "project">("channel")
-  const [selectedProject, setSelectedProject] = React.useState<any>(null)
 
   const handleStartCall = (type: string) => {
     // Placeholder for new call system logic
     console.log(`Starting ${type} call...`)
   }
-
-  React.useEffect(() => {
-    // This would be passed as a prop in real implementation
-    const currentView = "channel" // or "project"
-    setActiveView(currentView)
-  }, [])
 
   if (dmUser) {
     return (
@@ -207,176 +199,7 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
           />
         ) : (
           <ScrollArea className="flex-1">
-            {activeTab === "info" && activeView === "project" && selectedProject && (
-              <div className="p-4 space-y-6">
-                {/* Project Info */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3">Project Details</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <User className="h-4 w-4" />
-                        <span>Project Manager</span>
-                      </div>
-                      <span className="font-medium">Rustam Musalev</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>Start Date</span>
-                      </div>
-                      <span className="font-medium">13 May 2021</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>End Date</span>
-                      </div>
-                      <span className="font-medium">10 Sep 2022</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>Status</span>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                      >
-                        According to plan
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Tag className="h-4 w-4" />
-                        <span>Category</span>
-                      </div>
-                      <span className="font-medium">Corporate Website</span>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Project Progress */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3">Project Progress</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">Overall Progress</span>
-                        <span className="text-lg font-bold text-primary">19%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[19%]" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Plus className="h-4 w-4 text-blue-500" />
-                          <span className="text-xs text-muted-foreground">Created</span>
-                        </div>
-                        <p className="text-2xl font-bold">32</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CheckSquare className="h-4 w-4 text-green-500" />
-                          <span className="text-xs text-muted-foreground">Completed</span>
-                        </div>
-                        <p className="text-2xl font-bold">6</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 mb-1">
-                          <TrendingUp className="h-4 w-4 text-orange-500" />
-                          <span className="text-xs text-muted-foreground">In Progress</span>
-                        </div>
-                        <p className="text-2xl font-bold">2</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="h-4 w-4 text-purple-500" />
-                          <span className="text-xs text-muted-foreground">Upcoming</span>
-                        </div>
-                        <p className="text-2xl font-bold">24</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Milestones */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">Milestones</h3>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs">
-                      View all
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {[
-                      { name: "Project Preparation", status: "completed", progress: 100 },
-                      { name: "UX/UI Design", status: "in-progress", progress: 65 },
-                      { name: "Development", status: "upcoming", progress: 0 },
-                    ].map((milestone, idx) => (
-                      <div key={idx} className="p-3 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">{milestone.name}</span>
-                          </div>
-                          <Badge
-                            variant="secondary"
-                            className={
-                              milestone.status === "completed"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                : milestone.status === "in-progress"
-                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400"
-                            }
-                          >
-                            {milestone.status}
-                          </Badge>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary transition-all" style={{ width: `${milestone.progress}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Team Members */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">Team Members</h3>
-                    <span className="text-xs text-muted-foreground">6 members</span>
-                  </div>
-                  <div className="space-y-2">
-                    {members.slice(0, 4).map((member) => (
-                      <div key={member.id} className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                            {member.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{member.name}</p>
-                          <p className="text-xs text-muted-foreground">{member.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "info" && activeView === "channel" && (
+            {activeTab === "info" && (
               <div className="p-4 space-y-6">
                 {/* Main Info */}
                 <div>

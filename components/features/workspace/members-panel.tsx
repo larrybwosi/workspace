@@ -7,7 +7,6 @@ import {
   MoreVertical,
   Crown,
   Shield,
-  Building2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { mockUsers } from "@/lib/mock-data";
 import type { User } from "@/lib/types";
-import { InviteToWorkspaceDialog } from "./invite-to-workspace-dialog";
 import { cn } from "@/lib/utils";
 import { UserProfileDialog } from "../social/user-profile-dialog";
 
@@ -31,8 +29,6 @@ export function MembersPanel() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const [profileOpen, setProfileOpen] = React.useState(false);
-  const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false);
-  const [userToInvite, setUserToInvite] = React.useState<User | null>(null);
 
   const filteredUsers = mockUsers.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -69,12 +65,6 @@ export function MembersPanel() {
   const handleUserClick = (user: User) => {
     setSelectedUser(user);
     setProfileOpen(true);
-  };
-
-  const handleInviteToWorkspace = (user: User, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setUserToInvite(user);
-    setInviteDialogOpen(true);
   };
 
   return (
@@ -158,12 +148,6 @@ export function MembersPanel() {
                             View Profile
                           </DropdownMenuItem>
                           <DropdownMenuItem>Send Message</DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => handleInviteToWorkspace(user, e)}
-                          >
-                            <Building2 className="h-4 w-4 mr-2" />
-                            Invite to Workspace
-                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>Change Role</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">
@@ -255,16 +239,6 @@ export function MembersPanel() {
           user={selectedUser}
           open={profileOpen}
           onOpenChange={setProfileOpen}
-        />
-      )}
-
-      {/* Workspace Invitation Dialog */}
-      {userToInvite && (
-        <InviteToWorkspaceDialog
-          userId={userToInvite.id}
-          userName={userToInvite.name}
-          open={inviteDialogOpen}
-          onOpenChange={setInviteDialogOpen}
         />
       )}
     </>

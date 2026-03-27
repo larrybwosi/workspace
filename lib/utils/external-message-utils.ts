@@ -92,6 +92,7 @@ export async function createExternalMessage(
   // Create the message
   const newMessage = await prisma.message.create({
     data: {
+      channelId: channelId,
       threadId: thread.id,
       userId,
       content: message.content,
@@ -103,7 +104,7 @@ export async function createExternalMessage(
               name: att.name,
               type: att.type,
               url: att.url,
-              size: att.size,
+              size: att.size?.toString(),
             })),
           }
         : undefined,
@@ -185,14 +186,14 @@ export async function fireMessageWebhooks(userId: string, event: string, payload
     where: {
       userId,
       isActive: true,
-      events: {
-        array_contains: [event],
-      },
     },
   })
 
   for (const webhook of webhooks) {
     try {
+      const events = webhook.events as any[]
+      if (!events.includes(event)) continue
+
       const signature = crypto.createHmac("sha256", webhook.secret).update(JSON.stringify(payload)).digest("hex")
 
       const response = await fetch(webhook.url, {

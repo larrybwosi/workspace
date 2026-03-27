@@ -3,15 +3,25 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 
-const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2024-01-01",
-  token: process.env.SANITY_WRITE_TOKEN!,
-  useCdn: false,
-})
+function getSanityClient() {
+  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+  if (!projectId) {
+    return null
+  }
+  return createClient({
+    projectId,
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
+    apiVersion: "2024-01-01",
+    token: process.env.SANITY_WRITE_TOKEN!,
+    useCdn: false,
+  })
+}
 
 export async function POST(request: NextRequest) {
+  const client = getSanityClient()
+  if (!client) {
+    return NextResponse.json({ error: "Sanity not configured" }, { status: 503 })
+  }
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -66,6 +76,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const client = getSanityClient()
+  if (!client) {
+    return NextResponse.json({ error: "Sanity not configured" }, { status: 503 })
+  }
   try {
     const session = await auth.api.getSession({
       headers: await headers(),

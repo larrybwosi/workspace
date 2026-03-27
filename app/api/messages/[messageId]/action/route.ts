@@ -14,14 +14,14 @@ const actionResponseSchema = z.object({
  * POST /api/v1/messages/:messageId/actions
  * Submit a response to an interactive message action
  */
-export async function POST(request: NextRequest, { params }: { params: { messageId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { messageId } = params
+    const { messageId } = await params
     const body = await request.json()
     const data = actionResponseSchema.parse(body)
 
@@ -182,14 +182,14 @@ export async function POST(request: NextRequest, { params }: { params: { message
  * GET /api/v1/messages/:messageId/actions
  * Get all responses for a message's actions
  */
-export async function GET(request: NextRequest, { params }: { params: { messageId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { messageId } = params
+    const { messageId } = await params
 
     // Fetch all action responses for this message
     const responses = await prisma.messageActionResponse.findMany({

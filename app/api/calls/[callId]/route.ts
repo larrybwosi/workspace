@@ -5,7 +5,7 @@ import { publishToAbly } from '@/lib/integrations/ably'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { callId: string } }
+  { params }: { params: Promise<{ callId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })

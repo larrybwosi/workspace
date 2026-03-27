@@ -26,16 +26,7 @@ export async function generateMetadata({
       select: { name: true },
     })
 
-    let projectName: string | undefined
-    if (invitation.projectId) {
-      const project = await prisma.project.findUnique({
-        where: { id: invitation.projectId },
-        select: { name: true },
-      })
-      projectName = project?.name
-    }
-
-    return getInvitationSEOMetadata(inviter?.name || "A team member", projectName)
+    return getInvitationSEOMetadata(inviter?.name || "A team member", undefined)
   } catch (error) {
     console.error(" Error generating metadata:", error)
     return {

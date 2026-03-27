@@ -1,0 +1,124 @@
+
+> dealio@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 1770ms
+○ Compiling / ...
+ GET / 200 in 18.2s (compile: 15.8s, render: 2.4s)
+○ Compiling /api/workspaces ...
+ GET /api/workspaces 401 in 8.5s (compile: 8.5s, render: 30ms)
+ GET /api/friends 401 in 8.5s (compile: 8.3s, render: 129ms)
+05:31:56.591 Ably: Auth(): No authentication options provided; need one of: key, authUrl, or authCallback (or for testing only, token or tokenDetails)
+⨯ Error: No authentication options provided; need one of: key, authUrl, or authCallback (or for testing only, token or tokenDetails)
+    at getAblyClient (lib/integrations/ably.ts:8:26)
+    at getAblyServer (lib/integrations/ably.ts:17:10)
+    at module evaluation (lib/integrations/ably.ts:25:21)
+    at module evaluation (app/api/channels/[channelId]/messages/route.ts:4:1)
+    at Object.<anonymous> (.next/dev/server/app/api/channels/[channelId]/messages/route.js:28:3)
+   6 | export function getAblyClient() {
+   7 |   if (!ablyClientInstance) {
+>  8 |     ablyClientInstance = new Ably.Realtime({
+     |                          ^
+   9 |       key: process.env.ABLY_API_KEY,
+  10 |       clientId: "server",
+  11 |     }) {
+  code: 40160,
+  statusCode: 401,
+  cause: undefined,
+  page: '/api/channels/uikit/messages'
+}
+ GET /api/channels 401 in 8.9s (compile: 8.9s, render: 12ms)
+ GET /api/dm 401 in 9.4s (compile: 9.4s, render: 14ms)
+ GET /api/workspaces 401 in 32ms (compile: 20ms, render: 11ms)
+ GET /api/friends 401 in 29ms (compile: 9ms, render: 20ms)
+ GET /api/channels/uikit/messages?cursor=0&limit=50 500 in 9.9s
+ GET /api/channels 401 in 36ms (compile: 15ms, render: 21ms)
+ GET /api/dm 401 in 30ms (compile: 7ms, render: 24ms)
+⨯ Error: No authentication options provided; need one of: key, authUrl, or authCallback (or for testing only, token or tokenDetails)
+    at getAblyClient (lib/integrations/ably.ts:8:26)
+    at getAblyServer (lib/integrations/ably.ts:17:10)
+    at module evaluation (lib/integrations/ably.ts:25:21)
+    at module evaluation (app/api/channels/[channelId]/messages/route.ts:4:1)
+    at Object.<anonymous> (.next/dev/server/app/api/channels/[channelId]/messages/route.js:28:3)
+   6 | export function getAblyClient() {
+   7 |   if (!ablyClientInstance) {
+>  8 |     ablyClientInstance = new Ably.Realtime({
+     |                          ^
+   9 |       key: process.env.ABLY_API_KEY,
+  10 |       clientId: "server",
+  11 |     }) {
+  code: 40160,
+  statusCode: 401,
+  cause: undefined,
+  page: '/api/channels/uikit/messages'
+}
+ GET /api/auth/get-session 200 in 11.1s (compile: 11.1s, render: 18ms)
+ GET /api/workspaces 401 in 19ms (compile: 10ms, render: 9ms)
+ GET /api/friends 401 in 26ms (compile: 5ms, render: 21ms)
+ GET /api/channels 401 in 26ms (compile: 9ms, render: 17ms)
+ GET /api/dm 401 in 14ms (compile: 3ms, render: 11ms)
+ GET /api/channels/uikit/messages?cursor=0&limit=50 500 in 1912ms (compile: 1893ms, render: 20ms)
+ GET /docs/api 200 in 2.4s (compile: 1699ms, render: 743ms)
+✓ Compiled in 481ms
+ GET / 200 in 1774ms (compile: 294ms, render: 1479ms)
+ GET /api/workspaces 401 in 607ms (compile: 588ms, render: 19ms)
+ GET /api/friends 401 in 66ms (compile: 52ms, render: 14ms)
+ GET /api/dm 401 in 128ms (compile: 122ms, render: 6ms)
+ GET /api/channels 401 in 167ms (compile: 162ms, render: 5ms)
+ GET /api/auth/get-session 200 in 1240ms (compile: 1218ms, render: 22ms)
+ GET /api/workspaces 401 in 74ms (compile: 59ms, render: 15ms)
+ GET /api/dm 401 in 68ms (compile: 62ms, render: 6ms)
+ GET /api/friends 200 in 82ms (compile: 61ms, render: 21ms)
+ GET /login 200 in 1880ms (compile: 1261ms, render: 619ms)
+○ Compiling /_not-found/page ...
+✓ Finished filesystem cache database compaction in 11.3s
+ GET /docs/api 200 in 1579ms (compile: 512ms, render: 1067ms)
+ GET / 200 in 1228ms (compile: 157ms, render: 1071ms)
+ GET /api/workspaces 401 in 12ms (compile: 3ms, render: 9ms)
+ GET /api/dm 401 in 22ms (compile: 18ms, render: 4ms)
+ GET /api/friends 401 in 26ms (compile: 4ms, render: 22ms)
+ GET /api/channels 401 in 14ms (compile: 8ms, render: 6ms)
+ GET /api/auth/get-session 200 in 91ms (compile: 81ms, render: 10ms)
+ GET /api/channels/uikit/messages?cursor=0&limit=50 404 in 240ms (compile: 16ms, render: 223ms)
+ GET /login 200 in 258ms (compile: 7ms, render: 251ms)
+ GET /docs/api 200 in 239ms (compile: 11ms, render: 229ms)
+○ Compiling /assistant ...
+⨯ TypeError: Cannot read properties of undefined (reading 'trim')
+    at AssistantChannel (components/features/assistant/assistant-channel.tsx:99:43)
+   97 |             type="submit"
+   98 |             size="icon"
+>  99 |             disabled={isLoading || !input.trim()}
+      |                                           ^
+  100 |             className="absolute right-1.5 top-1.5 h-9 w-9"
+  101 |           >
+  102 |             <Send className="h-4 w-4" /> {
+  digest: '2709450262'
+}
+ GET /assistant 200 in 13.4s (compile: 13.0s, render: 395ms)
+ GET /api/auth/get-session 200 in 90ms (compile: 77ms, render: 13ms)
+You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.
+ GET /assistant 200 in 533ms (compile: 93ms, render: 440ms)
+ GET /api/workspaces 401 in 10ms (compile: 3ms, render: 7ms)
+ GET /api/friends 401 in 9ms (compile: 3ms, render: 6ms)
+ GET /api/dm 401 in 16ms (compile: 10ms, render: 6ms)
+ GET /api/channels 401 in 8ms (compile: 3ms, render: 5ms)
+ GET /api/auth/get-session 200 in 90ms (compile: 80ms, render: 10ms)
+ GET /login 200 in 142ms (compile: 6ms, render: 136ms)
+You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.
+ GET /assistant 200 in 152ms (compile: 30ms, render: 122ms)
+ GET /api/workspaces 401 in 13ms (compile: 4ms, render: 8ms)
+ GET /api/dm 401 in 12ms (compile: 7ms, render: 5ms)
+ GET /api/friends 401 in 19ms (compile: 4ms, render: 15ms)
+ GET /api/channels 401 in 11ms (compile: 7ms, render: 4ms)
+ GET /api/auth/get-session 200 in 128ms (compile: 119ms, render: 9ms)
+ GET /login 200 in 101ms (compile: 8ms, render: 94ms)

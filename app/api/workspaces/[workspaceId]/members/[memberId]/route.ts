@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { workspaceId: string; memberId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ workspaceId: string; memberId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {

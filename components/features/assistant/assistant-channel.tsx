@@ -1,171 +1,105 @@
 "use client"
 
-import * as React from "react"
-import { Sparkles, Send, Loader2 } from 'lucide-react'
+import { useChat } from "@ai-sdk/react"
+import { Sparkles, Send, User, Bot, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card } from "@/components/ui/card"
-import { useChat } from "@ai-sdk/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import axios from "axios"
-
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp: Date
-}
-
-interface Conversation {
-  id: string
-  title: string
-  updatedAt: Date
-}
+import { useEffect, useRef } from "react"
+import { cn } from "@/lib/utils"
 
 export function AssistantChannel() {
-  const [selectedConversation, setSelectedConversation] = React.useState<string | null>(null)
-  const queryClient = useQueryClient()
-
-  const { data: conversations } = useQuery({
-    queryKey: ["assistant-conversations"],
-    queryFn: async () => {
-      const { data } = await axios.get("/api/assistant/conversations")
-      return data as Conversation[]
-    },
-  })
-
-  const createConversation = useMutation({
-    mutationFn: async () => {
-      const { data } = await axios.post("/api/assistant/conversations", {
-        title: "New Conversation",
-      })
-      return data
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["assistant-conversations"] })
-      setSelectedConversation(data.id)
-    },
-  })
-
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const chat = useChat({
+    // @ts-ignore
     api: "/api/assistant/chat",
-    body: {
-      conversationId: selectedConversation,
-    },
-    onFinish: () => {
-      queryClient.invalidateQueries({ queryKey: ["assistant-conversations"] })
-    },
   })
+  const { messages = [], input = "", handleInputChange, handleSubmit, isLoading = false } = chat as any
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const scrollRef = React.useRef<HTMLDivElement>(null)
-
-  React.useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  useEffect(() => {
+    if (scrollRef.current && messages.length > 0) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      })
     }
   }, [messages])
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="h-14 border-b border-border flex items-center gap-3 px-6">
-        <div className="h-8 w-8 rounded-lg bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-white" />
-        </div>
-        <div className="flex-1">
-          <h2 className="font-semibold">AI Assistant</h2>
-          <p className="text-xs text-muted-foreground">Enterprise MCP-powered assistant</p>
-        </div>
-        <Button onClick={() => createConversation.mutate()} size="sm" variant="outline">
-          New Chat
-        </Button>
-      </div>
-
-      <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-        <div className="space-y-4 max-w-3xl mx-auto">
-          {messages.length === 0 && (
-            <Card className="p-6 bg-muted">
-              <p className="text-sm">
-                Hello! I'm your AI assistant with access to:
-                <br />
-                <br />
-                • Tasks and project management
-                <br />
-                • Search across all workspace content
-                <br />
-                • Notes and documentation
-                <br />
-                • Analytics and reporting
-                <br />
-                <br />
-                How can I help you today?
-              </p>
-            </Card>
+    <div className="flex flex-col h-full bg-background">
+      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+        <div className="max-w-3xl mx-auto space-y-6 pb-4">
+          {messages && messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+              <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <Sparkles className="h-8 w-8 text-blue-500" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">How can I help you today?</h2>
+                <p className="text-muted-foreground">
+                  I'm your AI assistant, ready to help with your workspace and messages.
+                </p>
+              </div>
+            </div>
           )}
-          
-          {messages.map((message) => (
-            <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
-              {message.role === "assistant" && (
-                <Avatar className="h-8 w-8 shrink-0">
-                  <div className="h-full w-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-white" />
-                  </div>
-                </Avatar>
+
+          {messages.map((m: any) => (
+            <div
+              key={m.id}
+              className={cn(
+                "flex gap-4 p-4 rounded-lg",
+                m.role === "user" ? "bg-muted/50" : "bg-blue-500/5 border border-blue-500/10"
               )}
-              <Card
-                className={`p-4 max-w-[80%] ${
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              </Card>
-              {message.role === "user" && (
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback className="text-xs">You</AvatarFallback>
-                </Avatar>
-              )}
+            >
+              <Avatar className="h-8 w-8 shrink-0">
+                {m.role === "user" ? (
+                  <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                ) : (
+                  <AvatarFallback className="bg-blue-500 text-white"><Bot className="h-4 w-4" /></AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex-1 space-y-1">
+                <p className="text-sm font-semibold">
+                  {m.role === "user" ? "You" : "Assistant"}
+                </p>
+                <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {m.content}
+                </div>
+              </div>
             </div>
           ))}
-          
           {isLoading && (
-            <div className="flex gap-3">
+            <div className="flex gap-4 p-4 rounded-lg bg-blue-500/5 animate-pulse">
               <Avatar className="h-8 w-8 shrink-0">
-                <div className="h-full w-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-white" />
-                </div>
+                <AvatarFallback className="bg-blue-500 text-white"><Bot className="h-4 w-4" /></AvatarFallback>
               </Avatar>
-              <Card className="p-4 bg-muted">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </Card>
+              <div className="flex items-center">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              </div>
             </div>
-          )}
-          
-          {error && (
-            <Card className="p-4 bg-destructive/10 text-destructive">
-              <p className="text-sm">Error: {error.message}</p>
-            </Card>
           )}
         </div>
       </ScrollArea>
 
-      <div className="border-t border-border p-4">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-2">
-          <Textarea
-            placeholder="Ask me anything..."
+      <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="max-w-3xl mx-auto relative flex items-center gap-2"
+        >
+          <Input
             value={input}
             onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSubmit(e as any)
-              }
-            }}
-            className="min-h-[60px] max-h-[200px]"
-            disabled={isLoading}
+            placeholder="Ask anything..."
+            className="pr-12 h-12"
           />
-          <Button type="submit" disabled={!input?.trim() || isLoading} size="icon" className="h-[60px] w-[60px]">
-            <Send className="h-5 w-5" />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isLoading || !input?.trim()}
+            className="absolute right-1.5 top-1.5 h-9 w-9"
+          >
+            <Send className="h-4 w-4" />
           </Button>
         </form>
       </div>

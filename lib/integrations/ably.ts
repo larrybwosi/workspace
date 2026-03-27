@@ -4,9 +4,14 @@ import Ably from "ably"
 let ablyClientInstance: Ably.Realtime | null = null
 
 export function getAblyClient() {
+  const key = process.env.ABLY_API_KEY
+  if (!key) {
+    console.warn("ABLY_API_KEY is not defined")
+    return null
+  }
   if (!ablyClientInstance) {
     ablyClientInstance = new Ably.Realtime({
-      key: process.env.ABLY_API_KEY,
+      key,
       clientId: "server",
     })
   }
@@ -18,17 +23,33 @@ export function getAblyServer() {
 }
 
 export function getAblyRest() {
+  const key = process.env.ABLY_API_KEY
+  if (!key) {
+    throw new Error("ABLY_API_KEY is not defined")
+  }
   return new Ably.Rest({
-    key: process.env.ABLY_API_KEY,
+    key,
   })
 }
-export const ably = getAblyServer() 
+
+// Lazy load ably instance to avoid build-time errors when ABLY_API_KEY is missing
+export const ably = {
+  get auth() {
+    const client = getAblyServer()
+    if (!client) throw new Error("Ably client not initialized")
+    return client.auth
+  },
+  get channels() {
+    const client = getAblyServer()
+    if (!client) throw new Error("Ably client not initialized")
+    return client.channels
+  }
+} as any
 
 // Channel naming conventions
 export const AblyChannels = {
   channel: (channelId: string) => `channel:${channelId}`,
   thread: (threadId: string) => `thread:${threadId}`,
-  project: (projectId: string) => `project:${projectId}`,
   user: (userId: string) => `user:${userId}`,
   notifications: (userId: string) => `notifications:${userId}`,
   presence: (channelId: string) => `presence:${channelId}`,
@@ -43,10 +64,6 @@ export const AblyEvents = {
   MESSAGE_DELETED: "message:deleted",
   MESSAGE_REACTION: "message:reaction",
   MESSAGE_REPLY: "message:reply",
-  TASK_CREATED: "task:created",
-  TASK_UPDATED: "task:updated",
-  PROJECT_MEMBER_ADDED: "project:member:added",
-  NOTE_SHARED: "note:shared",
   NOTIFICATION: "notification",
   TYPING_START: "typing:start",
   TYPING_STOP: "typing:stop",

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
-export async function PATCH(request: NextRequest, { params }: { params: { messageId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -78,7 +78,6 @@ export async function DELETE(
     }
 
     // 2. Ownership & Admin Verification
-    // (Optional: Add `session.user.role === 'Admin'` if admins should be able to delete)
     if (existingMessage.userId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -87,8 +86,6 @@ export async function DELETE(
 
     // 3. Handle Storage Cleanup (Crucial to save money)
     if (existingMessage.attachments.length > 0) {
-      // Run in background so request doesn't hang
-      // await deleteFilesFromS3(existingMessage.attachments.map(a => a.url));
       console.log(`[TODO] Delete ${existingMessage.attachments.length} files from storage`)
     }
 
@@ -96,23 +93,18 @@ export async function DELETE(
     
     // Scenario A: Message starts a thread
     if (existingMessage.rootThread) {
-      // OPTION 1: Delete the whole thread (Cleanest)
       await prisma.thread.delete({
         where: { id: existingMessage.rootThread.id }
       })
-      // Ably: You might need to broadcast THREAD_DELETED instead
     } 
     // Scenario B: Message has replies (but isn't a thread root)
     else if (existingMessage._count.replies > 0) {
-      // OPTION: Soft Delete (Preserve tree structure)
-      // Hard deleting a parent message often breaks UI conversation flow
       await prisma.message.update({
         where: { id: messageId },
         data: {
           content: "[Message Deleted]",
-          attachments: { deleteMany: {} }, // Remove attachments from DB
+          attachments: { deleteMany: {} },
           isEdited: true,
-          // You might want a 'deletedAt' field in your schema for this
         }
       })
     } 
@@ -128,7 +120,6 @@ export async function DELETE(
     const channel = ably.channels.get(AblyChannels.thread(channelId))
     await channel.publish(AblyEvents.MESSAGE_DELETED, { 
       messageId,
-      // Useful for frontend to remove thread UI if needed
       threadId: existingMessage.rootThread?.id 
     })
 

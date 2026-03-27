@@ -2,7 +2,13 @@
 
 import { z } from "zod"
 
-export const CustomMessageComponentSchema = z.object({
+export type CustomMessageComponent = {
+  type: "text" | "button" | "badge" | "progress" | "card" | "list" | "table" | "chart" | "timeline" | "approval" | "alert"
+  props?: Record<string, any>
+  children?: CustomMessageComponent[]
+}
+
+export const CustomMessageComponentSchema: z.ZodType<CustomMessageComponent> = z.lazy(() => z.object({
   type: z.enum([
     "text",
     "button",
@@ -17,8 +23,8 @@ export const CustomMessageComponentSchema = z.object({
     "alert",
   ]),
   props: z.record(z.any()).optional(),
-  children: z.lazy(() => z.array(CustomMessageComponentSchema)).optional(),
-})
+  children: z.array(CustomMessageComponentSchema).optional(),
+}))
 
 export const CustomMessageUIDefinitionSchema = z.object({
   id: z.string().optional(),
@@ -67,4 +73,3 @@ export const CustomMessageUIDefinitionSchema = z.object({
 })
 
 export type CustomMessageUIDefinition = z.infer<typeof CustomMessageUIDefinitionSchema>
-export type CustomMessageComponent = z.infer<typeof CustomMessageComponentSchema>

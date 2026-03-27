@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db/prisma"
 import { createNotification } from "@/lib/notifications/notifications"
-import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
 export interface ScheduledNotificationConfig {
   userId: string
@@ -15,7 +14,7 @@ export interface ScheduledNotificationConfig {
     daysOfMonth?: number[] // 1-31
     endDate?: Date
   }
-  entityType?: string
+  entityType?: "channel"
   entityId?: string
   linkUrl?: string
   metadata?: Record<string, any>
@@ -30,11 +29,11 @@ export async function createScheduledNotification(config: ScheduledNotificationC
       scheduleType: config.scheduleType,
       scheduledFor: config.scheduledFor,
       timezone: config.timezone || "UTC",
-      recurrence: config.recurrence || null,
+      recurrence: config.recurrence as any || null,
       entityType: config.entityType,
       entityId: config.entityId,
       linkUrl: config.linkUrl,
-      metadata: config.metadata,
+      metadata: config.metadata || {},
     },
   })
 
@@ -45,7 +44,7 @@ export async function updateScheduledNotification(id: string, updates: Partial<S
   return await prisma.scheduledNotification.update({
     where: { id },
     data: {
-      ...updates,
+      ...updates as any,
       updatedAt: new Date(),
     },
   })
@@ -113,9 +112,9 @@ export async function processScheduledNotifications() {
         type: "system",
         title: notification.title,
         message: notification.message,
-        entityType: notification.entityType,
-        entityId: notification.entityId,
-        linkUrl: notification.linkUrl,
+        entityType: notification.entityType as any,
+        entityId: notification.entityId || undefined,
+        linkUrl: notification.linkUrl || undefined,
         metadata: notification.metadata as Record<string, any>,
       })
 
@@ -177,7 +176,7 @@ export async function processScheduledNotifications() {
  */
 function calculateNextSchedule(notification: any): Date | null {
   const current = new Date(notification.scheduledFor)
-  const recurrence = notification.recurrence
+  const recurrence = notification.recurrence as any
 
   if (!recurrence) return null
 

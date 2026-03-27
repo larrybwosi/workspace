@@ -11,7 +11,7 @@ export interface SecurityContext {
 }
 
 export async function getSecurityContext(userId: string): Promise<SecurityContext> {
-  const headersList = headers()
+  const headersList = await headers()
   const ipAddress = (headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown").split(",")[0].trim()
   const userAgent = headersList.get("user-agent") || "unknown"
 
@@ -33,10 +33,10 @@ export async function getSecurityContext(userId: string): Promise<SecurityContex
 
 function getRolePermissions(role: string): string[] {
   const permissionMap: Record<string, string[]> = {
-    Admin: ["read:all", "write:all", "delete:all", "manage:users", "manage:projects"],
-    Management: ["read:all", "write:projects", "write:tasks", "read:analytics", "manage:teams"],
-    Development: ["read:projects", "read:tasks", "write:tasks", "read:notes", "write:notes"],
-    Design: ["read:projects", "read:tasks", "write:tasks", "read:notes", "write:notes"],
+    Admin: ["read:all", "write:all", "delete:all", "manage:users"],
+    Management: ["read:all", "read:analytics", "manage:teams"],
+    Development: [],
+    Design: [],
   }
 
   return permissionMap[role] || permissionMap.Development
