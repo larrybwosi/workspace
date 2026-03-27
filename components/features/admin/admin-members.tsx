@@ -27,7 +27,7 @@ import { useAdminMembers } from "@/hooks/api/use-admin"
 import { formatDistanceToNow } from "date-fns"
 
 export function AdminMembers() {
-  const { data: members, isLoading } = useAdminMembers()
+  const { data: members } = useAdminMembers()
   const [searchQuery, setSearchQuery] = React.useState("")
   const [roleFilter, setRoleFilter] = React.useState<string>("all")
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
@@ -42,8 +42,6 @@ export function AdminMembers() {
       avatar: "AJ",
       joinedAt: new Date(2023, 0, 15),
       lastActive: new Date(2024, 2, 10, 14, 30),
-      projectsCount: 12,
-      tasksCompleted: 145,
       invitedBy: "System",
     },
     {
@@ -55,8 +53,6 @@ export function AdminMembers() {
       avatar: "BS",
       joinedAt: new Date(2023, 1, 20),
       lastActive: new Date(2024, 2, 10, 16, 45),
-      projectsCount: 8,
-      tasksCompleted: 92,
       invitedBy: "Alice Johnson",
     },
     {
@@ -68,13 +64,11 @@ export function AdminMembers() {
       avatar: "CD",
       joinedAt: new Date(2023, 3, 10),
       lastActive: new Date(2024, 1, 15, 9, 20),
-      projectsCount: 5,
-      tasksCompleted: 34,
       invitedBy: "Alice Johnson",
     },
   ]
 
-  const data = members || mockMembers
+  const data: any[] = members || mockMembers
 
   const filteredMembers = data.filter((member) => {
     const matchesSearch =
@@ -141,8 +135,6 @@ export function AdminMembers() {
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
               <TableHead>Last Active</TableHead>
-              <TableHead>Projects</TableHead>
-              <TableHead>Tasks</TableHead>
               <TableHead>Invited By</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
@@ -190,8 +182,6 @@ export function AdminMembers() {
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDistanceToNow(member.lastActive, { addSuffix: true })}
                 </TableCell>
-                <TableCell className="text-sm font-medium">{member.projectsCount}</TableCell>
-                <TableCell className="text-sm font-medium">{member.tasksCompleted}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{member.invitedBy}</TableCell>
                 <TableCell>
                   <DropdownMenu>

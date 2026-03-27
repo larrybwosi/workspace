@@ -14,7 +14,7 @@ const invitationSchema = z.object({
 // GET - Fetch workspace invitations
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -73,7 +73,7 @@ export async function GET(
 // POST - Create workspace invitation
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -234,9 +234,7 @@ export async function POST(
         workspaceId: workspaceId,
         userId: session.user.id,
         action: "INVITE_USER",
-        // resourceType: "workspace_invitation",
         resource: "workspace_invitation",
-        // resourceId: invitation.id,
         metadata: {
           email: invitedUserEmail,
           role: validatedData.role,

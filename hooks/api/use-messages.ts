@@ -16,8 +16,8 @@ export function useMessages(channelId: string) {
     queryKey: messageKeys.list(channelId),
     queryFn: async ({ pageParam = 0 }) => {
       const { data } = await apiClient.get<{ messages: Message[]; nextCursor: number | null }>(
-        `/channels/${channelId}/messages`,
-        { params: { cursor: pageParam, limit: 50 } },
+        `/messages`,
+        { params: { channelId, cursor: pageParam, limit: 50 } },
       )
       return data
     },
@@ -33,7 +33,7 @@ export function useSendMessage() {
 
   return useMutation({
     mutationFn: async ({ channelId, ...message }: Omit<Message, "id" | "timestamp" | "reactions" | "userId"> & { channelId: string }) => {
-      const { data } = await apiClient.post<Message>(`/channels/${channelId}/messages`, message)
+      const { data } = await apiClient.post<Message>(`/messages`, { ...message, channelId })
       return data
     },
     onSuccess: (_, variables) => {

@@ -1,39 +1,41 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { authenticateWorkspaceApiKey, hasPermission, isRateLimitExceeded } from "@/lib/auth/api-auth"
+import { authenticateV1, hasPermission, isRateLimitExceeded } from "@/lib/auth/api-auth"
 import { z } from "zod"
-import { sendRealtimeMessage } from "@/lib/integrations/ably"
+import { getAblyRest, AblyChannels } from "@/lib/integrations/ably"
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   type: z.enum(["public", "private"]).default("public"),
+  workspaceId: z.string().optional(),
   departmentId: z.string().optional(),
   icon: z.string().optional(),
 })
 
-/**
- * GET /api/v1/channels
- * List all channels in workspace (workspace ID derived from API token)
- */
 export async function GET(request: NextRequest) {
   try {
-    const context = await authenticateWorkspaceApiKey(request)
+    const context = await authenticateV1(request)
 
     if (!context) {
-      return NextResponse.json({ error: "Unauthorized", code: "INVALID_API_KEY" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized", code: "INVALID_TOKEN" }, { status: 401 })
     }
 
     if (isRateLimitExceeded(context)) {
       return NextResponse.json({ error: "Rate limit exceeded", code: "RATE_LIMIT_EXCEEDED" }, { status: 429 })
     }
 
-    if (!hasPermission(context, "read:channels")) {
+    if (!hasPermission(context, "channels:read")) {
       return NextResponse.json({ error: "Forbidden", code: "INSUFFICIENT_PERMISSIONS" }, { status: 403 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const workspaceId = searchParams.get("workspaceId") || context.workspaceId
+
     const channels = await prisma.channel.findMany({
-      where: { workspaceId: context.workspaceId },
+      where: {
+        ...(workspaceId ? { workspaceId } : {}),
+      },
       include: {
         department: {
           select: {
@@ -61,40 +63,39 @@ export async function GET(request: NextRequest) {
       },
     )
   } catch (error) {
-    console.error("Failed to list channels via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }
 
-/**
- * POST /api/v1/channels
- * Create a new channel (workspace ID derived from API token)
- */
 export async function POST(request: NextRequest) {
   try {
-    const context = await authenticateWorkspaceApiKey(request)
+    const context = await authenticateV1(request)
 
     if (!context) {
-      return NextResponse.json({ error: "Unauthorized", code: "INVALID_API_KEY" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized", code: "INVALID_TOKEN" }, { status: 401 })
     }
 
     if (isRateLimitExceeded(context)) {
       return NextResponse.json({ error: "Rate limit exceeded", code: "RATE_LIMIT_EXCEEDED" }, { status: 429 })
     }
 
-    if (!hasPermission(context, "write:channels")) {
+    if (!hasPermission(context, "channels:write")) {
       return NextResponse.json({ error: "Forbidden", code: "INSUFFICIENT_PERMISSIONS" }, { status: 403 })
     }
 
     const body = await request.json()
     const data = createChannelSchema.parse(body)
+    const workspaceId = data.workspaceId || context.workspaceId
 
-    // Verify department exists if provided
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Workspace ID required", code: "WORKSPACE_ID_REQUIRED" }, { status: 400 })
+    }
+
     if (data.departmentId) {
       const department = await prisma.workspaceDepartment.findFirst({
         where: {
           id: data.departmentId,
-          workspaceId: context.workspaceId,
+          workspaceId: workspaceId,
         },
       })
 
@@ -103,10 +104,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create channel
     const channel = await prisma.channel.create({
       data: {
-        workspaceId: context.workspaceId,
+        workspaceId: workspaceId,
         name: data.name,
         description: data.description,
         type: data.type,
@@ -124,22 +124,22 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Send real-time notification
-    await sendRealtimeMessage(`workspace:${context.workspaceId}`, "channel.created", {
-      channel,
-    })
+    const ably = getAblyRest()
+    const ablyChannel = ably.channels.get(`workspace:${workspaceId}`)
+    await ablyChannel.publish("channel.created", { channel })
 
-    // Log to audit trail
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: context.workspaceId,
-        userId: context.userId,
-        action: "channel.created_via_api",
-        resource: "channel",
-        resourceId: channel.id,
-        metadata: { name: data.name, type: data.type },
-      },
-    })
+    if (context.workspaceId) {
+      await prisma.workspaceAuditLog.create({
+        data: {
+          workspaceId: workspaceId,
+          userId: context.userId,
+          action: "channel.created_via_api",
+          resource: "channel",
+          resourceId: channel.id,
+          metadata: { name: data.name, type: data.type, authType: context.authType },
+        },
+      })
+    }
 
     return NextResponse.json(
       {
@@ -161,7 +161,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
-    console.error("Failed to create channel via API:", error)
     return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 })
   }
 }

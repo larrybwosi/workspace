@@ -149,7 +149,7 @@ export function FileUpload({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatFileSize(file.size)}
+                    {formatFileSize(Number(file.size))}
                   </p>
                 </div>
                 <Button
@@ -180,7 +180,7 @@ export function FileUpload({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatFileSize(file.size)}
+                    {formatFileSize(Number(file.size))}
                   </p>
                 </div>
                 <Button

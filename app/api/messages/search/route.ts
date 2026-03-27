@@ -27,9 +27,7 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (channelId) {
-      whereClause.thread = {
-        channelId,
-      }
+      whereClause.channelId = channelId
     }
 
     if (filter === "mentions") {
@@ -63,11 +61,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         user: true,
-        thread: {
-          include: {
-            channel: true,
-          },
-        },
+        channel: true
       },
       orderBy: {
         timestamp: "desc",
@@ -81,8 +75,8 @@ export async function GET(request: NextRequest) {
       userName: msg.user.name,
       userAvatar: msg.user.avatar,
       timestamp: msg.timestamp,
-      channelName: msg.thread.channel.name,
-      channelId: msg.thread.channelId,
+      channelName: msg.channel.name,
+      channelId: msg.channelId,
     }))
 
     return NextResponse.json({ results })
