@@ -2,7 +2,7 @@
 import { Menu, Search, MoreVertical, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { mockChannels, mockProjects } from "@/lib/mock-data"
+import { mockChannels } from "@/lib/mock-data"
 import { ThemeToggle } from "./theme-toggle"
 
 interface DynamicHeaderProps {
@@ -15,31 +15,6 @@ interface DynamicHeaderProps {
 
 export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
   const getBreadcrumb = () => {
-    if (activeView.startsWith("task-")) {
-      const project = mockProjects.find((p) => p.tasks.some((t) => `task-${t.id}` === activeView))
-      const task = project?.tasks.find((t) => `task-${t.id}` === activeView)
-      return (
-        <>
-          <span className="text-muted-foreground">Projects</span>
-          <span className="text-muted-foreground">›</span>
-          <span className="text-muted-foreground">{project?.name}</span>
-          <span className="text-muted-foreground">›</span>
-          <span className="font-semibold">{task?.title}</span>
-        </>
-      )
-    }
-
-    if (activeView.startsWith("project-")) {
-      const project = mockProjects.find((p) => p.id === activeView)
-      return (
-        <>
-          <span className="text-muted-foreground">Team spaces</span>
-          <span className="text-muted-foreground">›</span>
-          <span className="font-semibold">{project?.name}</span>
-        </>
-      )
-    }
-
     if (activeView.startsWith("dm-")) {
       return (
         <>

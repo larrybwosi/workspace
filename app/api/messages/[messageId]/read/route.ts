@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma"
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })

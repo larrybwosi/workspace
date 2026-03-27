@@ -7,9 +7,7 @@ import {
   ChevronRight,
   Inbox,
   Bookmark,
-  X,
   Sparkles,
-  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,16 +15,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useChannels, useCreateChannel } from "@/hooks/api/use-channels";
-import { useProjects, useCreateProject } from "@/hooks/api/use-projects";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth/auth-client";
 import { useDMConversations } from "@/hooks/api/use-dm";
 import { WorkspaceSwitcher } from "@/components/features/workspace/workspace-switcher";
 import { UserProfileDialog } from "@/components/features/social/user-profile-dialog";
-import { ProjectCreateDialog } from "@/components/features/projects/project-create-dialog";
 import { StartDMDialog } from "@/components/features/chat/start-dm-dialog";
 import { CreateChannelDialog } from "@/components/features/chat/create-channel-dialog";
+import { User } from "@/lib/types";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -43,14 +39,11 @@ export function Sidebar({
   onClose,
   activeChannel,
   onChannelSelect,
-  onMembersClick,
   currentWorkspaceId,
   onWorkspaceChange,
 }: SidebarProps) {
   const { data: channelsData, isLoading: channelsLoading } = useChannels();
-  const { data: projectsData, isLoading: projectsLoading } = useProjects();
   const createChannelMutation = useCreateChannel();
-  const createProjectMutation = useCreateProject();
   const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations()
 
   const [favoritesOpen, setFavoritesOpen] = React.useState(true);
@@ -61,35 +54,25 @@ export function Sidebar({
   ]);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
-  const [projectsOpen, setProjectsOpen] = React.useState(true);
-  const [expandedProjects, setExpandedProjects] = React.useState<string[]>([
-    "project-1",
-  ]);
-  const [projectCreateOpen, setProjectCreateOpen] = React.useState(false);
   const [startDMOpen, setStartDMOpen] = React.useState(false)
 
   const channels = channelsData || [];
-  const projects = projectsData || [];
   const session = useSession();
-  const currentUser = session.data?.user;
+  const sessionUser = session.data?.user;
+
+  const currentUser: User | undefined = sessionUser ? {
+    id: sessionUser.id,
+    name: sessionUser.name,
+    avatar: sessionUser.image || "",
+    role: "Admin", // Default role
+    status: "online"
+  } : undefined;
 
   const router = useRouter();
 
-  const handleChannelSelect = (channelId: string) => {
-    onChannelSelect(channelId);
-  };
-
-  const handleAssistantClick = () => {
+  const handleAssistantClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     router.push("/assistant");
-    onClose();
-  };
-
-  const handleItemSelect = (id: string) => {
-    if (id.startsWith("project-")) {
-      router.push(`/projects/${id}`);
-    } else {
-      router.push(`/channels/${id}`);
-    }
     onClose();
   };
 
@@ -98,14 +81,6 @@ export function Sidebar({
       prev.includes(channelId)
         ? prev.filter((id) => id !== channelId)
         : [...prev, channelId]
-    );
-  };
-
-  const toggleProjectExpansion = (projectId: string) => {
-    setExpandedProjects((prev) =>
-      prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
-        : [...prev, projectId]
     );
   };
 
@@ -120,27 +95,6 @@ export function Sidebar({
       name: channelData.name,
       description: channelData.description,
       isPrivate: channelData.isPrivate,
-    });
-  };
-
-  const handleCreateProject = (projectData: {
-    name: string;
-    description: string;
-    icon: string;
-    members: string[];
-    startDate?: Date;
-    endDate?: Date;
-  }) => {
-    createProjectMutation.mutate({
-      name: projectData.name,
-      description: projectData.description,
-      icon: projectData.icon,
-      members: projectData.members,
-      status: "active",
-      progress: 0,
-      startDate: projectData.startDate || new Date(),
-      endDate:
-        projectData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   };
 
@@ -261,15 +215,6 @@ export function Sidebar({
               </Badge>
             </Button>
 
-            <Link href="/notes" onClick={onClose}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <FileText className="h-4 w-4 mr-2 shrink-0" />
-                <span className="flex-1 text-left text-sm">Notes</span>
-              </Button>
-            </Link>
 
             <Button
               variant="ghost"
@@ -302,134 +247,6 @@ export function Sidebar({
             </Button>
           </div>
 
-          {/* Projects Section */}
-          <div className="mt-4">
-            <div className="px-2 mb-1 flex items-center justify-between">
-              <Button
-                variant="ghost"
-                className="flex-1 justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
-                onClick={() => setProjectsOpen(!projectsOpen)}
-              >
-                <ChevronDown
-                  className={cn(
-                    "h-3 w-3 mr-1 transition-transform shrink-0",
-                    !projectsOpen && "-rotate-90"
-                  )}
-                />
-                Projects
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0"
-                onClick={() => setProjectCreateOpen(true)}
-                title="Create project"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-            {projectsOpen && (
-              <div className="px-2 space-y-0.5">
-                {projectsLoading ? (
-                  renderLoadingSkeleton(3)
-                ) : projects.length > 0 ? (
-                  projects.map((project) => {
-                    const isExpanded = expandedProjects.includes(project.id);
-                    return (
-                      <div key={project.id}>
-                        <Button
-                          variant={
-                            activeChannel === project.id ? "secondary" : "ghost"
-                          }
-                          className={cn(
-                            "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                            activeChannel === project.id &&
-                              "bg-sidebar-accent text-sidebar-accent-foreground"
-                          )}
-                          onClick={() => {
-                            router.push(`/projects/${project.id}`);
-                            onClose();
-                          }}
-                        >
-                          {project.tasks.length > 0 ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleProjectExpansion(project.id);
-                              }}
-                              className="flex items-center mr-1 shrink-0"
-                            >
-                              <ChevronRight
-                                className={cn(
-                                  "h-3 w-3 transition-transform",
-                                  isExpanded && "rotate-90"
-                                )}
-                              />
-                            </button>
-                          ) : (
-                            <span className="w-4 mr-1 shrink-0" />
-                          )}
-                          <span className="mr-2 shrink-0 text-base">
-                            {project.icon}
-                          </span>
-                          <span className="flex-1 text-left truncate text-sm">
-                            {project.name}
-                          </span>
-                          {project.tasks.length > 0 && (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs px-1.5 py-0 shrink-0"
-                            >
-                              {project.tasks.length}
-                            </Badge>
-                          )}
-                        </Button>
-                        {isExpanded && project.tasks.length > 0 && (
-                          <div className="ml-4 space-y-0.5 mt-0.5">
-                            {project.tasks.map((task) => (
-                              <Button
-                                key={task.id}
-                                variant={
-                                  activeChannel === `task-${task.id}`
-                                    ? "secondary"
-                                    : "ghost"
-                                }
-                                className={cn(
-                                  "w-full justify-start h-7 px-2 text-xs text-sidebar-foreground hover:bg-sidebar-accent",
-                                  activeChannel === `task-${task.id}` &&
-                                    "bg-sidebar-accent text-sidebar-accent-foreground"
-                                )}
-                                onClick={() =>
-                                  handleItemSelect(`task-${task.id}`)
-                                }
-                              >
-                                <div
-                                  className={cn(
-                                    "h-2 w-2 rounded-full mr-2 shrink-0",
-                                    task.status === "done" && "bg-green-500",
-                                    task.status === "in-progress" &&
-                                      "bg-blue-500",
-                                    task.status === "todo" && "bg-gray-400"
-                                  )}
-                                />
-                                <span className="flex-1 text-left truncate">
-                                  {task.title}
-                                </span>
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-xs text-muted-foreground text-center py-2">
-                    No projects found
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
 
           {/* Direct messages */}
           <div className="px-2 py-2 mt-2">
@@ -578,7 +395,7 @@ export function Sidebar({
           <div className="relative shrink-0">
             <Avatar className="h-8 w-8">
               <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
-                {currentUser?.image}
+                {currentUser?.avatar}
               </div>
               <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                 {currentUser?.name?.slice(0, 2).toUpperCase() || "U"}
@@ -610,12 +427,6 @@ export function Sidebar({
         onCreateChannel={handleCreateChannel}
       />
 
-      <ProjectCreateDialog
-        open={projectCreateOpen}
-        onOpenChange={setProjectCreateOpen}
-        onCreateProject={handleCreateProject}
-      />
-      
       <StartDMDialog open={startDMOpen} onOpenChange={setStartDMOpen} />
     </>
   );

@@ -43,14 +43,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             },
           },
         },
-        projects: {
-          select: {
-            id: true,
-            name: true,
-            icon: true,
-            status: true,
-          },
-        },
         channels: {
           select: {
             id: true,
@@ -61,9 +53,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         },
         _count: {
           select: {
-            projects: true,
             channels: true,
-            notes: true,
           },
         },
       },

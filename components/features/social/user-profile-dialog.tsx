@@ -6,10 +6,8 @@ import {
   Calendar,
   Edit2,
   LogOut,
-  Building2,
   MessageSquare,
 } from "lucide-react";
-import { useState } from "react";
 
 import {
   Dialog,
@@ -24,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { User } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { InviteToWorkspaceDialog } from "../workspace/invite-to-workspace-dialog";
 
 interface UserProfileDialogProps {
   user: User;
@@ -37,7 +34,6 @@ export function UserProfileDialog({
   open,
   onOpenChange,
 }: UserProfileDialogProps) {
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -150,14 +146,6 @@ export function UserProfileDialog({
                 <Button
                   variant="outline"
                   className="flex-1 gap-2 bg-transparent"
-                  onClick={() => setInviteDialogOpen(true)}
-                >
-                  <Building2 className="h-4 w-4" />
-                  Invite to Workspace
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 gap-2 bg-transparent"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Send Message
@@ -183,14 +171,6 @@ export function UserProfileDialog({
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Workspace Invitation Dialog */}
-      <InviteToWorkspaceDialog
-        userId={user?.id}
-        userName={user?.name}
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-      />
     </>
   );
 }

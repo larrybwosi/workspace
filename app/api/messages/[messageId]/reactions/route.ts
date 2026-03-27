@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
-export async function POST(request: NextRequest, { params }: { params: { messageId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -49,12 +49,17 @@ export async function POST(request: NextRequest, { params }: { params: { message
       },
     })
 
+    if (!message) {
+      return NextResponse.json({ error: "Message not found" }, { status: 404 })
+    }
+
     // Broadcast reaction update via Ably
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(message!.threadId))
+    const channelId = message.channelId || "default"
+    const channel = ably.channels.get(AblyChannels.thread(channelId))
     await channel.publish(AblyEvents.MESSAGE_REACTION, {
       messageId,
-      reactions: message!.reactions,
+      reactions: message.reactions,
     })
 
     return NextResponse.json(message)

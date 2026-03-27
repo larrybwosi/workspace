@@ -8,7 +8,7 @@ import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
  *
  * Creates a new reply for a specific message.
  */
-export async function POST(request: NextRequest, { params }: { params: { messageId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: { message
     }
 
     // This is the ID of the message being replied to
-    const { messageId: parentMessageId } = params
+    const { messageId: parentMessageId } = await params
     const body = await request.json()
     const { content } = body
 
@@ -25,7 +25,6 @@ export async function POST(request: NextRequest, { params }: { params: { message
     }
 
     // 1. Find the parent message to get its threadId and depth
-    // The parent message (the one being replied to) is in the 'Message' model [cite: 145]
     const parentMessage = await prisma.message.findUnique({
       where: { id: parentMessageId },
     })
@@ -35,27 +34,27 @@ export async function POST(request: NextRequest, { params }: { params: { message
     }
 
     // 2. Create the new reply message
-    // A reply is a 'Message' with 'replyToId' [cite: 147] and 'depth' [cite: 148] set
     const newReply = await prisma.message.create({
       data: {
         content,
-        threadId: parentMessage.threadId, // All replies belong to the same thread [cite: 145]
-        userId: session.user.id, // The user creating the reply [cite: 145]
-        replyToId: parentMessageId, // Link to the parent message [cite: 147]
-        depth: parentMessage.depth + 1, // Increment depth for nesting [cite: 148]
+        channelId: parentMessage.channelId,
+        threadId: parentMessage.threadId,
+        userId: session.user.id,
+        replyToId: parentMessageId,
+        depth: parentMessage.depth + 1,
       },
       include: {
-        user: true, // Include the sender's info
-        reactions: true, // Include empty reactions array for the client
+        user: true,
+        reactions: true,
       },
     })
 
     // 3. Broadcast the new reply via Ably
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(parentMessage.threadId))
+    const channelId = parentMessage.channelId || "default"
+    const channel = ably.channels.get(AblyChannels.thread(channelId))
 
     // Publish a "message created" event.
-    // The client will use the `replyToId` to place it in the UI.
     await channel.publish(AblyEvents.MESSAGE_SENT, newReply)
 
     return NextResponse.json(newReply, { status: 201 }) // 201 Created

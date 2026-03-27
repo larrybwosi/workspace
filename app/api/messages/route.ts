@@ -13,17 +13,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const threadId = searchParams.get("threadId")
+    const channelId = searchParams.get("channelId")
     const cursor = searchParams.get("cursor")
     const limit = parseInt(searchParams.get("limit") || "50")
 
-    if (!threadId) {
-      return NextResponse.json({ error: "Thread ID required" }, { status: 400 })
+    if (!channelId) {
+      return NextResponse.json({ error: "Channel ID required" }, { status: 400 })
     }
 
     const messages = await prisma.message.findMany({
       where: {
-        threadId,
+        channelId,
         ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
       include: {
@@ -69,7 +69,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { threadId, content, messageType, metadata, replyToId, mentions, attachments } = body
+    const { channelId, content, messageType, metadata, replyToId, mentions, attachments } = body
+
+    if (!channelId) {
+      return NextResponse.json({ error: "Channel ID required" }, { status: 400 })
+    }
 
     const detectedMentions = mentions || extractMentions(content)
     
@@ -78,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     const message = await prisma.message.create({
       data: {
-        threadId,
+        channelId,
         userId: session.user.id,
         content,
         messageType: messageType || "standard",
@@ -119,15 +123,15 @@ export async function POST(request: NextRequest) {
           message.id,
           mentionedUserId,
           mentionedByUser?.name || "Someone",
-          threadId,
+          channelId,
           content
         )
       }
     }
-    console.log("Message created with ID:", threadId)
+    console.log("Message created with ID:", channelId)
 
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(threadId))
+    const channel = ably.channels.get(AblyChannels.thread(channelId))
     await channel.publish(AblyEvents.MESSAGE_SENT, message)
 
     return NextResponse.json(message, { status: 201 })
