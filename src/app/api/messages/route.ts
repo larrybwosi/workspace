@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
-import { extractMentions, extractUserIds } from "@/lib/utils/mention-utils"
-import { notifyMention } from "@/lib/notifications/notifications"
+import { extractUserMentions, extractUserIds, hasSpecialMention, extractChannelMentions } from "@/lib/utils/mention-utils"
+import { notifyMention, notifyChannel } from "@/lib/notifications/notifications"
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,16 +69,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { channelId, content, messageType, metadata, replyToId, mentions, attachments } = body
+    const { channelId, content, messageType, metadata, replyToId, attachments } = body
 
     if (!channelId) {
       return NextResponse.json({ error: "Channel ID required" }, { status: 400 })
     }
 
-    const detectedMentions = mentions || extractMentions(content)
-    
+    const userMentions = extractUserMentions(content)
+    const channelMentions = extractChannelMentions(content)
+    const mentionsAll = hasSpecialMention(content, "all")
+    const mentionsHere = hasSpecialMention(content, "here")
+
     const users = await prisma.user.findMany()
-    const mentionedUserIds = extractUserIds(detectedMentions, users)
+    const mentionedUserIds = extractUserIds(userMentions, users)
 
     const message = await prisma.message.create({
       data: {
@@ -89,11 +92,14 @@ export async function POST(request: NextRequest) {
         metadata,
         replyToId,
         depth: replyToId ? 1 : 0,
-        mentions: detectedMentions.length > 0
-          ? {
-              create: detectedMentions.map((mention: string) => ({ mention })),
-            }
-          : undefined,
+        mentions: {
+          create: [
+            ...userMentions.map((mention: string) => ({ mention })),
+            ...channelMentions.map((mention: string) => ({ mention: `#${mention}` })),
+            ...(mentionsAll ? [{ mention: "@all" }] : []),
+            ...(mentionsHere ? [{ mention: "@here" }] : []),
+          ],
+        },
         attachments: attachments
           ? {
               create: attachments.map((att: any) => ({
@@ -113,22 +119,33 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const mentionedByUser = await prisma.user.findUnique({
+    const sender = await prisma.user.findUnique({
       where: { id: session.user.id },
     })
 
+    // Notify specific users
     for (const mentionedUserId of mentionedUserIds) {
       if (mentionedUserId !== session.user.id) {
         await notifyMention(
           message.id,
           mentionedUserId,
-          mentionedByUser?.name || "Someone",
+          sender?.name || "Someone",
           channelId,
           content
         )
       }
     }
-    console.log("Message created with ID:", channelId)
+
+    // Notify @all / @here
+    if (mentionsAll || mentionsHere) {
+      await notifyChannel(
+        channelId,
+        sender?.name || "Someone",
+        message.id,
+        content,
+        mentionsHere
+      )
+    }
 
     const ably = getAblyRest()
     const channel = ably.channels.get(AblyChannels.thread(channelId))

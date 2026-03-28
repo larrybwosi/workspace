@@ -41,6 +41,7 @@ model User {
   receivedWorkspaceInvitations WorkspaceInvitation[] @relation("WorkspaceInvitedUser")
   workspaceApiTokens           WorkspaceApiToken[]
   managedDepartments           WorkspaceDepartment[] @relation("DepartmentManager")
+  workspaceInviteLinks         WorkspaceInviteLink[]
 
   // Communication Relations
   messages       Message[]
@@ -191,6 +192,7 @@ model Workspace {
   webhooks     WorkspaceWebhook[]
   integrations WorkspaceIntegration[]
   auditLogs    WorkspaceAuditLog[]
+  inviteLinks  WorkspaceInviteLink[]
   customEmojis CustomEmoji[]
   userBadges   UserBadge[]
   departments  WorkspaceDepartment[]
@@ -413,6 +415,22 @@ model WorkspaceAuditLog {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@map("workspace_audit_logs")
+}
+
+model WorkspaceInviteLink {
+  id          String   @id @default(cuid())
+  workspaceId String
+  code        String   @unique
+  maxUses     Int?     @default(0) // 0 for unlimited
+  uses        Int      @default(0)
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdById], references: [id])
+
+  @@map("workspace_invite_links")
 }
 
 // ============================================

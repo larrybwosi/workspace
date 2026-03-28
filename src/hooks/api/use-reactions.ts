@@ -7,8 +7,14 @@ export function useAddReaction() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ messageId, emoji, channelId }: { messageId: string; emoji: string; channelId: string }) => {
-      const { data } = await apiClient.post(`/messages/${messageId}/reactions`, { emoji })
+    mutationFn: async ({ messageId, emoji, channelId, isCustom, customEmojiId }: {
+      messageId: string;
+      emoji: string;
+      channelId: string;
+      isCustom?: boolean;
+      customEmojiId?: string;
+    }) => {
+      const { data } = await apiClient.post(`/messages/${messageId}/reactions`, { emoji, isCustom, customEmojiId })
       return { data, channelId }
     },
     onMutate: async ({ messageId, emoji, channelId }) => {

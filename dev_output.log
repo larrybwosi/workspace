@@ -1,0 +1,21 @@
+
+> dealio@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 1407ms
+○ Compiling /api/auth/[...all] ...
+[2m2026-03-28T12:33:21.753Z[0m [33mWARN[0m [1m[Better Auth]:[0m Please ensure '/.well-known/oauth-authorization-server/api/auth' exists. Upon completion, clear with silenceWarnings.oauthAuthServerConfig.
+[2m2026-03-28T12:33:23.096Z[0m [33mWARN[0m [1m[Better Auth]:[0m Please ensure '/.well-known/oauth-authorization-server/api/auth' exists. Upon completion, clear with silenceWarnings.oauthAuthServerConfig.
+ GET /api/auth/get-session 200 in 5.5s (compile: 5.5s, proxy.ts: 6ms, render: 62ms)
+○ Compiling /login ...
+ GET /login 200 in 5.3s (compile: 4.9s, proxy.ts: 6ms, render: 429ms)
+ GET /api/auth/get-session 200 in 66ms (compile: 46ms, proxy.ts: 5ms, render: 15ms)
+ GET /login 200 in 224ms (compile: 6ms, proxy.ts: 8ms, render: 210ms)
+[2m2026-03-28T12:33:33.718Z[0m [33mWARN[0m [1m[Better Auth]:[0m Please ensure '/.well-known/oauth-authorization-server/api/auth' exists. Upon completion, clear with silenceWarnings.oauthAuthServerConfig.
+[?25h

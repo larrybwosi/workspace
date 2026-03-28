@@ -10,6 +10,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const { notificationId } = await params
+    const body = await request.json()
+    const { isRead } = body
 
     const notification = await prisma.notification.update({
       where: {
@@ -17,7 +19,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         userId: session.user.id,
       },
       data: {
-        isRead: true,
+        isRead: isRead !== undefined ? isRead : true,
       },
     })
 
@@ -25,5 +27,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   } catch (error) {
     console.error(" Notification update error:", error)
     return NextResponse.json({ error: "Failed to update notification" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ notificationId: string }> }) {
+  try {
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { notificationId } = await params
+
+    await prisma.notification.delete({
+      where: {
+        id: notificationId,
+        userId: session.user.id,
+      },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error(" Notification delete error:", error)
+    return NextResponse.json({ error: "Failed to delete notification" }, { status: 500 })
   }
 }
