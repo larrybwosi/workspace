@@ -7,6 +7,7 @@ import {
   Inbox,
   Bookmark,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -144,8 +145,11 @@ export function Sidebar({
             </Button>
 
             <Button
-              variant="ghost"
-              className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
+              variant={activeChannel === "notifications" ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
+                activeChannel === "notifications" && "bg-sidebar-accent text-sidebar-accent-foreground"
+              )}
               onClick={() => router.push('/notifications')}
             >
               <Inbox className="h-4 w-4 mr-2 shrink-0" />
@@ -158,6 +162,18 @@ export function Sidebar({
                   {notificationsData?.total || notificationsData?.notifications?.length}
                 </Badge>
               )}
+            </Button>
+
+            <Button
+              variant={activeChannel === "friends" ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
+                activeChannel === "friends" && "bg-sidebar-accent text-sidebar-accent-foreground"
+              )}
+              onClick={() => router.push('/friends')}
+            >
+              <Users className="h-4 w-4 mr-2 shrink-0" />
+              <span className="flex-1 text-left text-sm">Friends</span>
             </Button>
           </div>
 

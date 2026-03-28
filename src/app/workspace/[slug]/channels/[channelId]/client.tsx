@@ -4,7 +4,7 @@ import { ThreadView } from "@/components/features/chat/thread-view";
 import { DynamicHeader } from "@/components/layout/dynamic-header";
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar";
 import { InfoPanel } from "@/components/shared/info-panel";
-import { useWorkspace } from "@/hooks/api/use-workspaces";
+import { useWorkspaces } from "@/hooks/api/use-workspaces";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
@@ -12,7 +12,7 @@ export default function WorkspaceChannelPageClient({channelId}: {channelId: stri
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { slug } = useParams();
-  const { data: workspaces } = useWorkspace("");
+  const { data: workspaces } = useWorkspaces();
   const workspace = workspaces?.find((w: any) => w.slug === slug);
 
   return (

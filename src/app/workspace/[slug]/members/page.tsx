@@ -29,7 +29,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import {
-  useWorkspace,
+  useWorkspaces,
   useWorkspaceMembers,
   useInviteToWorkspace,
   useUpdateWorkspaceMember,
@@ -55,7 +55,7 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   // Fetch workspace
-  const { data: workspaces } = useWorkspace("")
+  const { data: workspaces } = useWorkspaces()
   const workspace = workspaces?.find((w: any) => w.slug === slug)
   const workspaceId = workspace?.id
 

@@ -27,8 +27,9 @@ import { useSession } from "@/lib/auth/auth-client";
 import { WorkspaceSwitcher } from "@/components/features/workspace/workspace-switcher";
 import { UserProfileDialog } from "@/components/features/social/user-profile-dialog";
 import { CreateChannelDialog } from "@/components/features/chat/create-channel-dialog";
-import { useCreateWorkspaceChannel } from "@/hooks/api/use-workspaces";
+import { useCreateWorkspaceChannel, useWorkspaceChannels } from "@/hooks/api/use-workspaces";
 import { User } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WorkspaceSidebarProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export function WorkspaceSidebar({
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
   const createChannelMutation = useCreateWorkspaceChannel(currentWorkspaceId || "");
+  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(currentWorkspaceId || "");
 
   const session = useSession();
   const sessionUser = session.data?.user;
@@ -94,7 +96,6 @@ export function WorkspaceSidebar({
     {
       label: "Workspace",
       items: [
-        { icon: MessageSquare, label: "Channels", href: `/workspace/${slug}` }, // Redirecting to dashboard for now as list page is gone
         { icon: Users, label: "Members", href: `/workspace/${slug}/members` },
         { icon: FolderKanban, label: "Projects", href: `/workspace/${slug}/projects` },
       ]
@@ -173,6 +174,49 @@ export function WorkspaceSidebar({
                 </div>
               </div>
             ))}
+
+            {/* Channels Section */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-2">
+                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Channels
+                </h4>
+                <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => setCreateChannelOpen(true)}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="space-y-0.5">
+                {channelsLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center h-9 px-2">
+                      <Skeleton className="h-4 w-4 mr-2.5" />
+                      <Skeleton className="h-3 flex-1" />
+                    </div>
+                  ))
+                ) : channels?.length > 0 ? (
+                  channels.map((channel: any) => (
+                    <Button
+                      key={channel.id}
+                      variant="ghost"
+                      className="w-full justify-start h-9 px-2 text-sidebar-foreground hover:bg-sidebar-accent group"
+                      onClick={() => {
+                        router.push(`/workspace/${slug}/channels/${channel.id}`);
+                        onClose();
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2.5 shrink-0 text-muted-foreground group-hover:text-sidebar-accent-foreground" />
+                      <span className="flex-1 text-left text-sm font-medium truncate">
+                        {channel.name}
+                      </span>
+                    </Button>
+                  ))
+                ) : (
+                  <div className="px-2 py-2 text-xs text-muted-foreground italic text-center">
+                    No channels yet
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </ScrollArea>
 
