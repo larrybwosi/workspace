@@ -22,6 +22,12 @@ export async function POST() {
           'cashier-notifications': ['subscribe'],
           'channel:*': ['subscribe', 'publish', 'history'],
           'session:*': ['subscribe', 'publish', 'history'],
+          'workspace:*': ['subscribe', 'publish', 'history'],
+          'user:*': ['subscribe', 'publish', 'history'],
+          'notifications:*': ['subscribe', 'publish', 'history'],
+          'thread:*': ['subscribe', 'publish', 'history'],
+          'dm:*': ['subscribe', 'publish', 'history'],
+          'presence:*': ['subscribe', 'publish', 'history'],
         }),
         ttl: 3600 * 1000, // 1 hour in milliseconds
         timestamp: Date.now(),

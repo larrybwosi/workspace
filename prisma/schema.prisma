@@ -447,6 +447,7 @@ model WorkspaceInviteLink {
 model Channel {
   id          String  @id @default(cuid())
   name        String
+  slug        String?
   icon        String
   type        String  @default("channel")
   description String?
@@ -479,6 +480,7 @@ model Channel {
   // Inverse relation for Department Default Channel
   defaultForDepartments WorkspaceDepartment[] @relation("DepartmentDefaultChannel")
 
+  @@unique([workspaceId, slug])
   @@map("channels")
 }
 

@@ -2,17 +2,21 @@
 
 import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, LinkIcon, X, File, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { uploadFile, UploadedFile } from "@/lib/utils/upload-utils";
 import { mockUsers } from "@/lib/mock-data"
 import { MentionSelector, MentionItem } from "@/components/shared/mention-selector"
 import { EmojiPicker } from "@/components/shared/emoji-picker"
-import { ChangeEvent, useEffect, useRef, useState, ClipboardEvent, useMemo } from "react"
-import { useChannels } from "@/hooks/api/use-channels"
+import { ChangeEvent, useEffect, useRef, useState, useMemo } from "react"
+import { useChannel } from "@/hooks/api/use-channels"
 import { useParams } from "next/navigation"
 import { useTypingNotifier, TypingIndicator } from "./typing-indicator"
 import { useCurrentUser } from "@/hooks/api/use-users"
+import { LexicalEditor } from "./editor/lexical-editor"
+import { $getRoot, EditorState, $getSelection, $isRangeSelection, $insertNodes, FORMAT_TEXT_COMMAND, $createTextNode, $createParagraphNode } from "lexical"
+import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown"
+import { useWorkspace, useWorkspaceChannels } from "@/hooks/api/use-workspaces"
+import { $createMentionNode } from "./editor/mention-node"
 
 interface MessageComposerProps {
   placeholder?: string
@@ -36,24 +40,24 @@ export function MessageComposer({
   const [mentionType, setMentionType] = useState<"user" | "channel" | null>(null)
   const [mentionSearch, setMentionSearch] = useState("")
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
-  const [cursorPosition, setCursorPosition] = useState(0)
   
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const editorRef = useRef<any>(null)
   const params = useParams()
-  const workspaceId = params.workspaceId as string
-  const { data: channels } = useChannels(workspaceId)
+  const workspaceSlug = params.slug as string
+  const { data: workspace } = useWorkspace(workspaceSlug)
+  const { data: channels } = useWorkspaceChannels(workspace?.id)
+  const { data: channel } = useChannel(channelId || "")
+
   const { data: currentUser } = useCurrentUser()
 
   const { handleKeyPress, stopTyping } = useTypingNotifier(channelId || "", currentUser)
 
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
-    }
-  }, [message])
+  const dynamicPlaceholder = useMemo(() => {
+    if (replyingTo) return `Replying to @${replyingTo.userName}`
+    if (channel) return `Message #${channel.name}`
+    return placeholder
+  }, [channel, replyingTo, placeholder])
 
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
@@ -75,7 +79,7 @@ export function MessageComposer({
     }
 
     if (mentionType === "channel") {
-      return (channels || []).map(c => ({
+      return (channels || []).map((c: any) => ({
         id: c.id,
         name: c.name,
         type: "channel",
@@ -84,72 +88,65 @@ export function MessageComposer({
     }
 
     return []
-  }, [mentionType, channels])
-
-  // Mention logic
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const beforeCursor = message.slice(0, cursorPosition)
-
-    const lastAtIndex = beforeCursor.lastIndexOf("@")
-    const lastHashIndex = beforeCursor.lastIndexOf("#")
-
-    const isAfterAt = lastAtIndex !== -1 && (lastHashIndex === -1 || lastAtIndex > lastHashIndex)
-    const isAfterHash = lastHashIndex !== -1 && (lastAtIndex === -1 || lastHashIndex > lastAtIndex)
-
-    if (isAfterAt) {
-      const afterAt = beforeCursor.slice(lastAtIndex + 1)
-      if (!afterAt.includes(" ") && afterAt.length <= 20) {
-        setMentionSearch(afterAt)
-        setMentionType("user")
-
-        const rect = textarea.getBoundingClientRect()
-        setMentionPosition({
-          top: rect.top - 280,
-          left: rect.left,
-        })
-        return
-      }
-    }
-
-    if (isAfterHash) {
-      const afterHash = beforeCursor.slice(lastHashIndex + 1)
-      if (!afterHash.includes(" ") && afterHash.length <= 20) {
-        setMentionSearch(afterHash)
-        setMentionType("channel")
-
-        const rect = textarea.getBoundingClientRect()
-        setMentionPosition({
-          top: rect.top - 280,
-          left: rect.left,
-        })
-        return
-      }
-    }
-
-    setMentionType(null)
-  }, [message, cursorPosition])
+  }, [mentionType])
 
   const handleSend = () => {
     if ((message.trim() || attachments.length > 0) && !isUploading) {
       onSend?.(message, attachments)
+
+      if (editorRef.current) {
+        editorRef.current.update(() => {
+          const root = $getRoot();
+          root.clear();
+          const paragraph = $createParagraphNode();
+          root.append(paragraph);
+        });
+      }
+
       setMessage("")
       setAttachments([])
       setMentionType(null)
       stopTyping()
-      // Reset height
-      if (textareaRef.current) textareaRef.current.style.height = "auto"
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey && !mentionType) {
-      e.preventDefault()
-      handleSend()
-    } else {
-      handleKeyPress()
+  const handleEditorChange = (editorState: EditorState) => {
+    editorState.read(() => {
+        const markdown = $convertToMarkdownString(TRANSFORMERS);
+        setMessage(markdown);
+    })
+    handleKeyPress()
+  }
+
+  const formatText = (command: any) => {
+    if (editorRef.current) {
+        editorRef.current.dispatchCommand(command, undefined);
+    }
+  }
+
+  const insertEmoji = (emoji: string) => {
+    if (editorRef.current) {
+        editorRef.current.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+                selection.insertText(emoji);
+            } else {
+                const root = $getRoot();
+                root.append($createTextNode(emoji));
+            }
+        });
+    }
+  }
+
+  const triggerMention = () => {
+    if (editorRef.current) {
+        editorRef.current.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+                selection.insertText("@");
+            }
+        });
+        editorRef.current.focus();
     }
   }
 
@@ -159,7 +156,6 @@ export function MessageComposer({
     if (e.target.files && e.target.files.length > 0) {
       await processFiles(Array.from(e.target.files))
     }
-    // Reset input so the same file can be selected again if needed
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
@@ -180,80 +176,48 @@ export function MessageComposer({
     setAttachments(prev => prev.filter(f => f.id !== fileId))
   }
 
-  const handlePaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
-    if (e.clipboardData.files.length > 0) {
-      e.preventDefault()
-      await processFiles(Array.from(e.clipboardData.files))
-      return
-    }
-
-    const text = e.clipboardData.getData("text")
-    if (text) {
-      if (text.trim().startsWith("```")) return;
-
-      const lines = text.split('\n');
-      const isCode = lines.length > 1 && /[{};=()[\]<>]/.test(text);
-
-      if (isCode) {
-        e.preventDefault()
-        insertMarkdown("\n```\n", "\n```\n", text)
-      }
-    }
-  }
-
-  const insertMarkdown = (before: string, after: string = before, customContent?: string) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    
-    const contentToWrap = customContent !== undefined 
-      ? customContent 
-      : message.substring(start, end)
-
-    const newText = message.substring(0, start) + before + contentToWrap + after + message.substring(end)
-
-    setMessage(newText)
-
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = start + before.length + contentToWrap.length + (customContent ? after.length : 0)
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-      setCursorPosition(newCursorPos)
-    }, 0)
-  }
-
   const handleMentionSelect = (item: MentionItem) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
+    if (editorRef.current) {
+      editorRef.current.update(() => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection)) {
+          const anchorNode = selection.anchor.getNode();
+          const anchorOffset = selection.anchor.offset;
 
-    const beforeCursor = message.slice(0, cursorPosition)
-    const char = item.type === "channel" ? "#" : "@"
-    const lastIndex = beforeCursor.lastIndexOf(char)
-    const beforeMention = message.slice(0, lastIndex)
-    const afterCursor = message.slice(cursorPosition)
+          // Delete the partial mention query
+          const text = anchorNode.getTextContent();
+          const char = item.type === "channel" ? "#" : "@";
+          const lastIndex = text.lastIndexOf(char, anchorOffset - 1);
 
-    const newMessage = `${beforeMention}${char}${item.name} ${afterCursor}`
-    setMessage(newMessage)
+          if (lastIndex !== -1) {
+            selection.anchor.set(anchorNode.getKey(), lastIndex, "text");
+            selection.focus.set(anchorNode.getKey(), anchorOffset, "text");
+            selection.removeText();
+          }
+
+          const node = $createMentionNode(item.name);
+          $insertNodes([node]);
+        }
+      });
+    }
     setMentionType(null)
-
-    setTimeout(() => {
-      const newPosition = lastIndex + item.name.length + 2
-      textarea.focus()
-      textarea.setSelectionRange(newPosition, newPosition)
-      setCursorPosition(newPosition)
-    }, 0)
   }
 
-  const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value)
-    setCursorPosition(e.target.selectionStart)
-    handleKeyPress()
+  const handleMentionSearch = (search: string, type: "user" | "channel") => {
+    setMentionSearch(search);
+    setMentionType(search ? type : null);
+  }
+
+  const handleMentionPosition = (position: { top: number; left: number }) => {
+    // Offset for the selector dropdown
+    setMentionPosition({
+      top: position.top - 280,
+      left: position.left,
+    });
   }
 
   return (
-    <div className="bg-background rounded-lg">
+    <div className="bg-background rounded-lg border border-border">
       {channelId && currentUser && (
         <TypingIndicator channelId={channelId} currentUserId={currentUser.id} />
       )}
@@ -266,20 +230,8 @@ export function MessageComposer({
         onChange={handleFileSelect}
       />
 
-      {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}
-
-      {mentionType && (
-        <MentionSelector
-          items={mentionItems}
-          onSelect={handleMentionSelect}
-          searchTerm={mentionSearch}
-          position={mentionPosition}
-          type={mentionType}
-        />
-      )}
-
       {replyingTo && (
-        <div className="px-3 py-2 border-t border-border bg-muted/30 flex items-center justify-between">
+        <div className="px-3 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             Replying to <span className="font-medium text-foreground">{replyingTo.userName}</span>
           </span>
@@ -289,13 +241,13 @@ export function MessageComposer({
         </div>
       )}
 
-      <div className="p-3">
+      <div className="p-2">
         {/* Formatting Toolbar */}
         <div className="flex items-center gap-1 mb-2 pb-2 border-b border-border">
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("**", "**")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => formatText(FORMAT_TEXT_COMMAND.bold)}>
                   <Bold className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -304,7 +256,7 @@ export function MessageComposer({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("*", "*")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => formatText(FORMAT_TEXT_COMMAND.italic)}>
                   <Italic className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -313,56 +265,41 @@ export function MessageComposer({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("`", "`")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => formatText(FORMAT_TEXT_COMMAND.code)}>
                   <Code className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Inline code</TooltipContent>
             </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("\n```javascript\n", "\n```\n")}>
-                  <Code className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Code block</TooltipContent>
-            </Tooltip>
-
-            <div className="w-px h-4 bg-border mx-1" />
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("\n- ", "")}>
-                  <List className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Bullet list</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("\n1. ", "")}>
-                  <ListOrdered className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Numbered list</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("[", "](url)")}>
-                  <LinkIcon className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Insert link</TooltipContent>
-            </Tooltip>
           </TooltipProvider>
         </div>
 
+        <div className="flex-1 rounded-lg bg-background focus-within:ring-1 focus-within:ring-ring transition-all">
+          <LexicalEditor
+            onChange={handleEditorChange}
+            placeholder={dynamicPlaceholder}
+            onEnter={handleSend}
+            onMentionSearch={handleMentionSearch}
+            onMentionPosition={handleMentionPosition}
+            onEditorRef={(editor) => { editorRef.current = editor }}
+          />
+        </div>
+
+        {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}
+
+        {mentionType && (
+            <MentionSelector
+            items={mentionItems}
+            onSelect={handleMentionSelect}
+            searchTerm={mentionSearch}
+            position={mentionPosition}
+            type={mentionType}
+            />
+        )}
+
         {/* Attachment Preview Area */}
         {attachments.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
+          <div className="mt-2 mb-2 flex flex-wrap gap-2 px-2">
             {attachments.map((file) => (
               <div key={file.id} className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs animate-in fade-in zoom-in-95 duration-200">
                 <File className="h-3 w-3 text-primary" />
@@ -376,35 +313,22 @@ export function MessageComposer({
           </div>
         )}
 
-        <div className="flex items-end gap-2">
-          <div className="flex-1 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring transition-all">
-            <Textarea
-              ref={textareaRef}
-              value={message}
-              onChange={handleTextareaChange}
-              onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              placeholder={placeholder}
-              className="min-h-[40px] max-h-[200px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2 bg-transparent"
-              rows={1}
-            />
-          </div>
-
-          <TooltipProvider delayDuration={300}>
-            <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between mt-2 px-1">
+          <div className="flex items-center gap-0.5">
+            <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMessage(message + "@")}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={triggerMention}>
                     <AtSign className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Mention</TooltipContent>
               </Tooltip>
 
-              <EmojiPicker onEmojiSelect={(emoji) => setMessage(message + emoji)}>
+              <EmojiPicker onEmojiSelect={insertEmoji}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                       <Smile className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
@@ -417,7 +341,7 @@ export function MessageComposer({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-9 w-9" 
+                    className="h-8 w-8 text-muted-foreground"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
                   >
@@ -426,17 +350,18 @@ export function MessageComposer({
                 </TooltipTrigger>
                 <TooltipContent>Attach files</TooltipContent>
               </Tooltip>
+            </TooltipProvider>
+          </div>
 
-              <Button
-                size="icon"
-                onClick={handleSend}
-                disabled={(!message.trim() && attachments.length === 0) || isUploading}
-                className="h-9 w-9"
-              >
-                {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </Button>
-            </div>
-          </TooltipProvider>
+          <Button
+            size="sm"
+            onClick={handleSend}
+            disabled={(!message.trim() && attachments.length === 0) || isUploading}
+            className="h-8 px-3"
+          >
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+            Send
+          </Button>
         </div>
       </div>
     </div>

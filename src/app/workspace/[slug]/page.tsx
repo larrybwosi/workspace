@@ -10,6 +10,7 @@ import { Building2, Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus }
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { CreateChannelDialog } from "@/components/features/chat/create-channel-dialog"
+import { InfoPanel } from "@/components/shared/info-panel"
 
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -18,6 +19,7 @@ export default function WorkspacePage() {
   const { data: workspaces, isLoading } = useWorkspaces()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [createChannelOpen, setCreateChannelOpen] = useState(false)
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
 
   const workspace = workspaces?.find((w: any) => w.slug === slug)
   const createChannelMutation = useCreateWorkspaceChannel(workspace?.id || "")
@@ -104,9 +106,11 @@ export default function WorkspacePage() {
         <DynamicHeader
           activeView="Workspace Dashboard"
           onMenuClick={() => setSidebarOpen(true)}
+          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
 
-        <div className="p-8 max-w-5xl mx-auto w-full space-y-8">
+        <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 p-8 max-w-5xl mx-auto w-full space-y-8 overflow-y-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl shadow-sm shrink-0 text-white font-bold">
@@ -211,6 +215,16 @@ export default function WorkspacePage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+        {infoPanelOpen && (
+            <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out hidden lg:block">
+                <InfoPanel
+                    isOpen={infoPanelOpen}
+                    onClose={() => setInfoPanelOpen(false)}
+                    type="workspace"
+                />
+            </aside>
+        )}
         </div>
       </main>
 
