@@ -4,18 +4,28 @@ import Ably from "ably"
 let ablyClientInstance: Ably.Realtime | null = null
 
 export function getAblyClient() {
-  const key = process.env.ABLY_API_KEY
-  if (!key) {
-    console.warn("ABLY_API_KEY is not defined")
-    return null
+  if (typeof window === "undefined") {
+    const key = process.env.ABLY_API_KEY
+    if (!key) {
+      console.warn("ABLY_API_KEY is not defined")
+      return null
+    }
+    if (!ablyClientInstance) {
+      ablyClientInstance = new Ably.Realtime({
+        key,
+        clientId: "server",
+      })
+    }
+    return ablyClientInstance
+  } else {
+    if (!ablyClientInstance) {
+      ablyClientInstance = new Ably.Realtime({
+        authUrl: "/api/auth/ably",
+        authMethod: "POST",
+      })
+    }
+    return ablyClientInstance
   }
-  if (!ablyClientInstance) {
-    ablyClientInstance = new Ably.Realtime({
-      key,
-      clientId: "server",
-    })
-  }
-  return ablyClientInstance
 }
 
 export function getAblyServer() {
