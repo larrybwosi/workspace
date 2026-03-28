@@ -97,6 +97,13 @@ model User {
   banReason  String?
   banExpires DateTime?
 
+  oauthConsents     OAuthConsent[]
+  oauthRefreshTokens OAuthRefreshToken[]
+  oauthAccessTokens  OAuthAccessToken[]
+
+  members      Member[]
+  invitations  OrganizationInvitation[]
+
   @@map("users")
 }
 
@@ -129,6 +136,11 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   impersonatedBy String?
+
+  oauthRefreshTokens OAuthRefreshToken[]
+  oauthAccessTokens  OAuthAccessToken[]
+
+  activeOrganizationId String?
 
   @@map("sessions")
   @@index([userId])
@@ -1221,15 +1233,42 @@ model OAuthClient {
   id           String   @id @default(cuid())
   name         String
   clientId     String   @unique
-  clientSecret String
+  clientSecret String?
   redirectUris String[]
-  userId       String
+  userId       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   tokens OAuthToken[]
+
+  disabled Boolean?
+  skipConsent Boolean?
+  enableEndSession Boolean?
+  subjectType String?
+  scopes String[]
+  referenceId String?
+  uri String?
+  icon String?
+  contacts String[]
+  tos String?
+  policy String?
+  softwareId String?
+  softwareVersion String?
+  softwareStatement String?
+  postLogoutRedirectUris String[]
+  tokenEndpointAuthMethod String?
+  grantTypes String[]
+  responseTypes String[]
+  public Boolean?
+  type String?
+  requirePKCE Boolean?
+  metadata Json?
+
+  oauthRefreshTokens OAuthRefreshToken[]
+  oauthAccessTokens  OAuthAccessToken[]
+  oauthConsents      OAuthConsent[]
 
   @@map("oauth_clients")
 }
@@ -1248,6 +1287,63 @@ model OAuthToken {
   user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("oauth_tokens")
+}
+
+model OAuthRefreshToken {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  clientId    String
+  sessionId   String?
+  userId      String
+  referenceId String?
+  scopes      String[]
+  revoked     DateTime?
+  authTime    DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+
+  client  OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session Session?    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  oauthAccessTokens OAuthAccessToken[]
+
+  @@map("oauth_refresh_tokens")
+}
+
+model OAuthAccessToken {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  clientId    String
+  sessionId   String?
+  refreshId   String?
+  userId      String?
+  referenceId String?
+  scopes      String[]
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+
+  client       OAuthClient       @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user         User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session      Session?          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  refreshToken OAuthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+
+  @@map("oauth_access_tokens")
+}
+
+model OAuthConsent {
+  id          String   @id @default(cuid())
+  userId      String
+  clientId    String
+  referenceId String?
+  scopes      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  @@map("oauth_consents")
 }
 
 model PersonalAccessToken {
@@ -1282,4 +1378,47 @@ model FriendRequest {
   @@index([receiverId])
   @@index([status])
   @@map("friend_requests")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  members     Member[]
+  invitations OrganizationInvitation[]
+
+  @@map("organizations")
+}
+
+model Member {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("members")
+}
+
+model OrganizationInvitation {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  role           String?
+  status         String
+  expiresAt      DateTime
+  inviterId      String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter      User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@map("organization_invitations")
 }
