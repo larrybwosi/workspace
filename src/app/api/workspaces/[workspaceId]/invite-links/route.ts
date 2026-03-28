@@ -5,7 +5,7 @@ import { nanoid } from "nanoid"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { workspaceId } = params
+    const { workspaceId } = await params
 
     const inviteLinks = await prisma.workspaceInviteLink.findMany({
       where: {
@@ -36,7 +36,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
@@ -44,7 +44,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { workspaceId } = params
+    const { workspaceId } = await params
     const body = await request.json()
     const { maxUses, expiresAt } = body
 

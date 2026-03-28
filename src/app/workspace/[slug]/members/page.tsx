@@ -34,6 +34,8 @@ import {
   useInviteToWorkspace,
   useUpdateWorkspaceMember,
   useRemoveWorkspaceMember,
+  useWorkspaceInviteLinks,
+  useCreateWorkspaceInviteLink,
 } from "@/hooks/api/use-workspaces"
 import { useToast } from "@/hooks/use-toast"
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"
@@ -50,9 +52,9 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [roleFilter, setRoleFilter] = React.useState<string>("all")
   const [inviteOpen, setInviteOpen] = React.useState(false)
-  const [inviteEmail, setInviteEmail] = React.useState("")
   const [inviteRole, setInviteRole] = React.useState("member")
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const [generatedLink, setGeneratedLink] = React.useState("")
 
   // Fetch workspace
   const { data: workspaces } = useWorkspaces()
@@ -61,7 +63,8 @@ export default function MembersPage({ params }: MembersPageProps) {
 
   // Fetch members
   const { data: membersData, isLoading } = useWorkspaceMembers(workspaceId || "")
-  const inviteMutation = useInviteToWorkspace()
+  const { data: inviteLinks } = useWorkspaceInviteLinks(workspaceId || "")
+  const createInviteLinkMutation = useCreateWorkspaceInviteLink(workspaceId || "")
   const updateMutation = useUpdateWorkspaceMember(workspaceId || "")
   const removeMutation = useRemoveWorkspaceMember(workspaceId || "")
 
@@ -76,29 +79,35 @@ export default function MembersPage({ params }: MembersPageProps) {
     return matchesSearch && matchesRole
   })
 
-  const handleInvite = async () => {
-    if (!inviteEmail || !workspaceId) return
+  const handleGenerateLink = async () => {
+    if (!workspaceId) return
 
     try {
-      await inviteMutation.mutateAsync({
+      const link = await createInviteLinkMutation.mutateAsync({
         workspaceId,
-        email: inviteEmail,
-        role: inviteRole,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       })
+      const fullUrl = `${window.location.origin}/invite/${link.code}`
+      setGeneratedLink(fullUrl)
       toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${inviteEmail}`,
+        title: "Invite link generated",
+        description: "You can now share this link with others",
       })
-      setInviteOpen(false)
-      setInviteEmail("")
-      setInviteRole("member")
     } catch (error) {
       toast({
-        title: "Failed to send invitation",
+        title: "Failed to generate link",
         description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       })
     }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({
+      title: "Copied to clipboard",
+      description: "Link has been copied to your clipboard",
+    })
   }
 
   const handleUpdateRole = async (memberId: string, newRole: string) => {
@@ -176,39 +185,51 @@ export default function MembersPage({ params }: MembersPageProps) {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Invite Members</DialogTitle>
-                <DialogDescription>Send an invitation to join this workspace</DialogDescription>
+                <DialogDescription>Generate a unique link to join this workspace</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="colleague@example.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={inviteRole} onValueChange={setInviteRole}>
-                    <SelectTrigger id="role">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {generatedLink ? (
+                  <div className="space-y-2">
+                    <Label>Invite Link</Label>
+                    <div className="flex gap-2">
+                      <Input readOnly value={generatedLink} className="flex-1" />
+                      <Button variant="secondary" onClick={() => copyToClipboard(generatedLink)}>Copy</Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">This link will expire in 7 days.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Invite links allow anyone with the link to join your workspace.
+                      The link will be associated with you so we know who invited the new member.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Default Role</Label>
+                      <Select value={inviteRole} onValueChange={setInviteRole}>
+                        <SelectTrigger id="role">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="member">Member</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setInviteOpen(false)}>
-                  Cancel
+                <Button variant="outline" onClick={() => {
+                  setInviteOpen(false);
+                  setGeneratedLink("");
+                }}>
+                  Close
                 </Button>
-                <Button onClick={handleInvite} disabled={!inviteEmail || inviteMutation.isPending}>
-                  {inviteMutation.isPending ? "Sending..." : "Send Invitation"}
-                </Button>
+                {!generatedLink && (
+                  <Button onClick={handleGenerateLink} disabled={createInviteLinkMutation.isPending}>
+                    {createInviteLinkMutation.isPending ? "Generating..." : "Generate Link"}
+                  </Button>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>
