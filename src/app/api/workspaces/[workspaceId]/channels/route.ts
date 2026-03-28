@@ -91,9 +91,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const body = await request.json()
     const data = createChannelSchema.parse(body)
 
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
     const channel = await prisma.channel.create({
       data: {
         name: data.name,
+        slug,
         description: data.description,
         type: data.type === "private" ? "private" : "public",
         icon: data.icon || "#",

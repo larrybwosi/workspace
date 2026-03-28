@@ -200,7 +200,7 @@ export function WorkspaceSidebar({
                       variant="ghost"
                       className="w-full justify-start h-9 px-2 text-sidebar-foreground hover:bg-sidebar-accent group"
                       onClick={() => {
-                        router.push(`/workspace/${slug}/channels/${channel.id}`);
+                        router.push(`/workspace/${slug}/channels/${channel.slug || channel.id}`);
                         onClose();
                       }}
                     >

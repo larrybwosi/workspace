@@ -6,6 +6,8 @@ import { mockChannels } from "@/lib/mock-data"
 import { ThemeToggle } from "./theme-toggle"
 import { Huddle } from "@/components/features/chat/huddle"
 import { useCurrentUser } from "@/hooks/api/use-users"
+import { useWorkspace, useWorkspaceChannels } from "@/hooks/api/use-workspaces";
+import { useParams } from "next/navigation";
 
 interface DynamicHeaderProps {
   activeView: string;
@@ -17,6 +19,9 @@ interface DynamicHeaderProps {
 
 export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
   const { data: currentUser } = useCurrentUser()
+  const { slug } = useParams();
+  const { data: workspace } = useWorkspace(slug as string);
+  const { data: channels } = useWorkspaceChannels(workspace?.id);
 
   const getBreadcrumb = () => {
     if (activeView.startsWith("dm-")) {
@@ -31,8 +36,9 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
 
     // Channel view
     const findChannel = (channels: any[], id: string): any => {
+      if (!channels) return null;
       for (const channel of channels) {
-        if (channel.id === id) return channel
+        if (channel.id === id || channel.slug === id) return channel
         if (channel.children) {
           const found = findChannel(channel.children, id)
           if (found) return found
@@ -41,7 +47,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
       return null
     }
 
-    const channel = findChannel(mockChannels, activeView)
+    const channel = findChannel(channels, activeView)
     if (channel) {
       return (
         <>
@@ -55,7 +61,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
   }
 
   const channel = activeView && !activeView.startsWith("dm-")
-    ? mockChannels.find(c => c.id === activeView)
+    ? channels?.find((c: any) => c.id === activeView || c.slug === activeView)
     : null
 
   return (

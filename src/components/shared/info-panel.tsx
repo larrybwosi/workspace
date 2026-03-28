@@ -10,6 +10,10 @@ import { cn } from "@/lib/utils"
 import React from "react"
 import { MessageSearchPanel } from '../features/chat/message-search-panel'
 
+import { useWorkspace, useWorkspaceMembers } from "@/hooks/api/use-workspaces"
+import { useChannel } from "@/hooks/api/use-channels"
+import { useParams } from "next/navigation"
+
 interface InfoPanelProps {
   isOpen: boolean
   onClose: () => void
@@ -20,11 +24,22 @@ interface InfoPanelProps {
     role: string
     status: string
   }
+  type?: "channel" | "workspace"
+  id?: string
 }
 
-export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
+export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: InfoPanelProps) {
+  const params = useParams()
+  const workspaceSlug = params.slug as string
+  const channelSlug = params.channelSlug as string
+  const channelId = id || channelSlug;
+
+  const { data: workspace } = useWorkspace(workspaceSlug)
+  const { data: channel } = useChannel(channelId)
+  const { data: workspaceMembers } = useWorkspaceMembers(workspace?.id)
+
   const creator = mockUsers.find((u) => u.id === mockThread.creator)
-  const members = mockUsers.filter((u) => mockThread.members.includes(u.id))
+  const members = workspaceMembers || []
   const [activeTab, setActiveTab] = React.useState("info")
 
   const handleStartCall = (type: string) => {
@@ -208,9 +223,11 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <User className="h-4 w-4" />
-                        <span>Creator</span>
+                        <span>{type === "workspace" ? "Owner" : "Creator"}</span>
                       </div>
-                      <span className="font-medium">{creator?.name}</span>
+                      <span className="font-medium">
+                        {type === "workspace" ? workspace?.owner?.name : (channel?.createdBy?.name || "Unknown")}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -218,12 +235,24 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                         <span>Date of creation</span>
                       </div>
                       <span className="font-medium">
-                        {mockThread.dateCreated.toLocaleDateString("en-US", {
+                        {new Date(type === "workspace" ? workspace?.createdAt : channel?.createdAt).toLocaleDateString("en-US", {
                           day: "numeric",
                           month: "short",
+                          year: "numeric"
                         })}
                       </span>
                     </div>
+                    {type === "workspace" && (
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Target className="h-4 w-4" />
+                          <span>Plan</span>
+                        </div>
+                        <Badge variant="secondary" className="capitalize">
+                          {workspace?.plan}
+                        </Badge>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <TrendingUp className="h-4 w-4" />
@@ -233,25 +262,21 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                         variant="secondary"
                         className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                       >
-                        {mockThread.status}
+                        Active
                       </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Tag className="h-4 w-4" />
-                        <span>Tags</span>
-                      </div>
-                      <span className="font-medium">{mockThread.tags.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <CheckSquare className="h-4 w-4" />
-                        <span>Tasks</span>
-                      </div>
-                      <span className="font-medium">{mockThread.tasks}</span>
                     </div>
                   </div>
                 </div>
+
+                {type === "channel" && channel?.description && (
+                   <>
+                    <Separator />
+                    <div>
+                        <h3 className="text-sm font-semibold mb-2">Description</h3>
+                        <p className="text-sm text-muted-foreground">{channel.description}</p>
+                    </div>
+                   </>
+                )}
 
                 <Separator />
 
@@ -302,36 +327,35 @@ export function InfoPanel({ isOpen, onClose, dmUser }: InfoPanelProps) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {members.map((member) => (
-                      <div key={member.id} className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                            {member.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{member.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {member.status === "online" ? "Just now" : "Offline"}
-                          </p>
+                    {members.map((m: any) => {
+                      const member = m.user || m;
+                      return (
+                        <div key={member.id} className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={member.avatar || member.image} />
+                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                              {member.name?.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{member.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {member.status === "online" ? "Online" : "Offline"}
+                            </p>
+                          </div>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "text-xs",
+                              m.role === "admin" && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+                              m.role === "member" && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                            )}
+                          >
+                            {m.role || member.role}
+                          </Badge>
                         </div>
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "text-xs",
-                            member.role === "Design" &&
-                              "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-                            member.role === "Management" &&
-                              "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-                            member.role === "Development" &&
-                              "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-                          )}
-                        >
-                          {member.role}
-                        </Badge>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>

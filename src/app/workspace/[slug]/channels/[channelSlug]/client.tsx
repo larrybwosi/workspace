@@ -8,12 +8,17 @@ import { useWorkspaces } from "@/hooks/api/use-workspaces";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
-export default function WorkspaceChannelPageClient({channelId}: {channelId: string}) {
+import { useWorkspaceChannels } from "@/hooks/api/use-workspaces";
+
+export default function WorkspaceChannelPageClient({channelSlug}: {channelSlug: string}) {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { slug } = useParams();
   const { data: workspaces } = useWorkspaces();
   const workspace = workspaces?.find((w: any) => w.slug === slug);
+  const { data: channels } = useWorkspaceChannels(workspace?.id);
+  const channel = channels?.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
+  const channelId = channel?.id || channelSlug;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
