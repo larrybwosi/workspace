@@ -1,7 +1,8 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { admin } from "better-auth/plugins";
+import { admin, jwt, organization } from "better-auth/plugins";
+import { oauthProvider } from "@better-auth/oauth-provider";
 import { prisma } from "@/lib/db/prisma";
 
 export const auth = betterAuth({
@@ -12,22 +13,31 @@ export const auth = betterAuth({
         enabled: true,
         requireEmailVerification: false,
     },
-    baseURL: "http://localhost:3001",
-    // socialProviders: {
-    //   google: {
-    //     clientId: process.env.GOOGLE_CLIENT_ID!,
-    //     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    //   },
-    //   github: {
-    //     clientId: process.env.GITHUB_CLIENT_ID!,
-    //     clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    //   },
-    // },
+    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
     plugins: [
         admin({
             defaultRole: "Member",
         }),
         nextCookies(),
+        jwt(),
+        organization(),
+        oauthProvider({
+            loginPage: "/login",
+            consentPage: "/consent",
+            allowDynamicClientRegistration: true,
+            scopes: [
+                "openid",
+                "profile",
+                "email",
+                "offline_access",
+                "channels:read",
+                "channels:write",
+                "members:read",
+                "members:write",
+                "messages:send",
+                "workspaces:read",
+            ],
+        }),
     ],
 });
 
