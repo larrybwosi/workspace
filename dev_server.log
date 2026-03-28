@@ -1,0 +1,17 @@
+
+> dealio@0.1.0 dev /app
+> next dev --port 3001 --port 3001
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 554ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+[2m2026-03-28T18:26:40.248Z[0m [33mWARN[0m [1m[Better Auth]:[0m Please ensure '/.well-known/oauth-authorization-server/api/auth' exists. Upon completion, clear with silenceWarnings.oauthAuthServerConfig.
+○ Compiling /login ...
+ GET /login 200 in 5.2s (next.js: 4.6s, proxy.ts: 8ms, application-code: 590ms)

@@ -23,11 +23,14 @@ export function useChannels() {
 }
 
 // Fetch single channel
-export function useChannel(id: string) {
+export function useChannel(id: string, workspaceId?: string) {
   return useQuery({
-    queryKey: channelKeys.detail(id),
+    queryKey: workspaceId ? ["workspaces", workspaceId, "channels", id] : channelKeys.detail(id),
     queryFn: async () => {
-      const { data } = await apiClient.get<Channel>(`/channels/${id}`)
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${id}`
+        : `/channels/${id}`;
+      const { data } = await apiClient.get<Channel>(url)
       return data
     },
     enabled: !!id,
