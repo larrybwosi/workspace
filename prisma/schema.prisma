@@ -44,11 +44,11 @@ model User {
   workspaceInviteLinks         WorkspaceInviteLink[]
 
   // Communication Relations
-  messages       Message[]
-  threads        Thread[]        @relation("ThreadCreator")
-  threadMembers  Thread[]        @relation("ThreadMembers")
-  channelMembers ChannelMember[]
-  createdChannels Channel[]     @relation("ChannelCreator")
+  messages        Message[]
+  threads         Thread[]                @relation("ThreadCreator")
+  threadMembers   Thread[]                @relation("ThreadMembers")
+  channelMembers  ChannelMember[]
+  createdChannels Channel[]               @relation("ChannelCreator")
   actionResponses MessageActionResponse[]
 
   oauthClients OAuthClient[]
@@ -79,12 +79,12 @@ model User {
   announcements   DepartmentAnnouncement[]
 
   // Social & Webhooks (Added for consistency with lower models)
-  friends                Friend[]         @relation("UserFriends")
-  friendOf               Friend[]         @relation("FriendOf")
-  sentFriendRequests     FriendRequest[]  @relation("SentFriendRequests")
-  receivedFriendRequests FriendRequest[]  @relation("ReceivedFriendRequests")
-  createdChannelWebhooks ChannelWebhook[]
-  createdIncomingWebhooks ChannelIncomingWebhook[] @relation(fields: [], references: [])
+  friends                 Friend[]                 @relation("UserFriends")
+  friendOf                Friend[]                 @relation("FriendOf")
+  sentFriendRequests      FriendRequest[]          @relation("SentFriendRequests")
+  receivedFriendRequests  FriendRequest[]          @relation("ReceivedFriendRequests")
+  createdChannelWebhooks  ChannelWebhook[]
+  createdIncomingWebhooks ChannelIncomingWebhook[]
 
   // Notification & System Relations
   notifications          Notification[]
@@ -98,12 +98,17 @@ model User {
   banReason  String?
   banExpires DateTime?
 
-  oauthConsents     OAuthConsent[]
+  oauthConsents      OAuthConsent[]
   oauthRefreshTokens OAuthRefreshToken[]
   oauthAccessTokens  OAuthAccessToken[]
 
-  members      Member[]
-  invitations  OrganizationInvitation[]
+  members     Member[]
+  invitations OrganizationInvitation[]
+
+  oauthclients       OauthClient[]
+  oauthrefreshtokens OauthRefreshToken[]
+  oauthaccesstokens  OauthAccessToken[]
+  oauthconsents      OauthConsent[]
 
   @@map("users")
 }
@@ -137,11 +142,13 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   impersonatedBy String?
-
   oauthRefreshTokens OAuthRefreshToken[]
   oauthAccessTokens  OAuthAccessToken[]
 
   activeOrganizationId String?
+
+  oauthrefreshtokens OauthRefreshToken[]
+  oauthaccesstokens  OauthAccessToken[]
 
   @@map("sessions")
   @@index([userId])
@@ -203,7 +210,7 @@ model Workspace {
 }
 
 model WorkspaceDepartment {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   name        String
   slug        String
@@ -211,24 +218,24 @@ model WorkspaceDepartment {
   icon        String?
   color       String?
   parentId    String? // For nested departments
-  
-  // Manager Relation
-  managerId   String?
-  manager     User?    @relation("DepartmentManager", fields: [managerId], references: [id])
 
-  settings    Json? // Department-specific settings
+  // Manager Relation
+  managerId String?
+  manager   User?   @relation("DepartmentManager", fields: [managerId], references: [id])
+
+  settings Json? // Department-specific settings
 
   // Default Channel Relation
   channelId      String?
   defaultChannel Channel? @relation("DepartmentDefaultChannel", fields: [channelId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  workspace     Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  parent        WorkspaceDepartment?     @relation("DepartmentHierarchy", fields: [parentId], references: [id])
-  children      WorkspaceDepartment[]    @relation("DepartmentHierarchy")
-  
+  workspace Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent    WorkspaceDepartment?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children  WorkspaceDepartment[] @relation("DepartmentHierarchy")
+
   // Relations
   members       WorkspaceMember[]
   teams         WorkspaceTeam[]
@@ -339,7 +346,7 @@ model WorkspaceInvitation {
   id          String    @id @default(cuid())
   workspaceId String
   email       String
-  userId      String? // For linking to existing users if known
+  userId      String?   // For linking to existing users if known
   token       String    @unique
   role        String    @default("member")
   invitedBy   String
@@ -418,14 +425,14 @@ model WorkspaceAuditLog {
 }
 
 model WorkspaceInviteLink {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
-  code        String   @unique
-  maxUses     Int?     @default(0) // 0 for unlimited
-  uses        Int      @default(0)
+  code        String    @unique
+  maxUses     Int?      @default(0) // 0 for unlimited
+  uses        Int       @default(0)
   expiresAt   DateTime?
   createdById String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdBy User      @relation(fields: [createdById], references: [id])
@@ -438,37 +445,37 @@ model WorkspaceInviteLink {
 // ============================================
 
 model Channel {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   icon        String
-  type        String   @default("channel")
+  type        String  @default("channel")
   description String?
-  isPrivate   Boolean  @default(false)
+  isPrivate   Boolean @default(false)
   parentId    String?
   workspaceId String?
-  
+
   // Department Relation
   departmentId String?
   department   WorkspaceDepartment? @relation("DepartmentChannels", fields: [departmentId], references: [id])
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   parent    Channel?   @relation("ChannelHierarchy", fields: [parentId], references: [id])
   children  Channel[]  @relation("ChannelHierarchy")
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  threads  Thread[]
-  messages Message[] 
-  members  ChannelMember[]
-  incomingWebhooks ChannelIncomingWebhook[] @relation(fields: [], references: [])
+  threads          Thread[]
+  messages         Message[]
+  members          ChannelMember[]
+  incomingWebhooks ChannelIncomingWebhook[]
 
-  invitations           Invitation[]
-  webhooks              ChannelWebhook[]
+  invitations Invitation[]
+  webhooks    ChannelWebhook[]
 
   createdById String?
-  createdBy   User? @relation("ChannelCreator", fields: [createdById], references: [id])
-  
+  createdBy   User?   @relation("ChannelCreator", fields: [createdById], references: [id])
+
   // Inverse relation for Department Default Channel
   defaultForDepartments WorkspaceDepartment[] @relation("DepartmentDefaultChannel")
 
@@ -500,14 +507,13 @@ model Thread {
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   creator User    @relation("ThreadCreator", fields: [creatorId], references: [id])
 
-  title       String?  
-
-  rootMessageId String? @unique 
+  title String?
+  rootMessageId String?  @unique
   rootMessage   Message? @relation("ThreadRoot", fields: [rootMessageId], references: [id])
 
-  participants User[]    @relation("ThreadMembers")
-  messages Message[]
-  tags     ThreadTag[]
+  participants User[]      @relation("ThreadMembers")
+  messages     Message[]
+  tags         ThreadTag[]
 
   @@map("threads")
 }
@@ -534,15 +540,15 @@ model Message {
   timestamp   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  rootThread  Thread?  @relation("ThreadRoot")
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  threadId  String?
-  thread    Thread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  replyToId String?
-  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies   Message[] @relation("MessageReplies")
-  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rootThread Thread?   @relation("ThreadRoot")
+  channelId  String
+  channel    Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  threadId   String?
+  thread     Thread?   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  replyToId  String?
+  replyTo    Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies    Message[] @relation("MessageReplies")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reactions   Reaction[]
   attachments Attachment[]
@@ -694,20 +700,20 @@ model DMAttachment {
   @@map("dm_attachments")
 }
 
-
 // Added models for Message Actions
-model MessageAction {
-  id          String   @id @default(cuid())
-  messageId   String
-  actionId    String   // Unique identifier for the action (e.g., "approve", "reject")
-  label       String   // Button label
-  style       String   @default("default") // Button style: default, primary, danger
-  value       String?  // Optional value to send with the action
-  disabled    Boolean  @default(false)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
 
-  message   Message                @relation(fields: [messageId], references: [id], onDelete: Cascade)
+model MessageAction {
+  id        String   @id @default(cuid())
+  messageId String
+  actionId  String // Unique identifier for the action (e.g., "approve", "reject")
+  label     String // Button label
+  style     String   @default("default") // Button style: default, primary, danger
+  value     String?  // Optional value to send with the action
+  disabled  Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  message   Message                 @relation(fields: [messageId], references: [id], onDelete: Cascade)
   responses MessageActionResponse[]
 
   @@unique([messageId, actionId])
@@ -716,26 +722,25 @@ model MessageAction {
 }
 
 model MessageActionResponse {
-  id           String   @id @default(cuid())
-  actionId     String
-  messageId    String
-  userId       String
-  actionValue  String   // The action that was taken (e.g., "approved", "rejected")
-  comment      String?  @db.Text
-  metadata     Json?
-  webhookSent  Boolean  @default(false)
-  webhookUrl   String?
-  respondedAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  actionId    String
+  messageId   String
+  userId      String
+  actionValue String // The action that was taken (e.g., "approved", "rejected")
+  comment     String?  @db.Text
+  metadata    Json?
+  webhookSent Boolean  @default(false)
+  webhookUrl  String?
+  respondedAt DateTime @default(now())
 
-  action  MessageAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action MessageAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([actionId, userId])
   @@index([messageId])
   @@index([userId])
   @@map("message_action_responses")
 }
-
 
 // ============================================
 // INVITATION MODELS
@@ -1130,7 +1135,7 @@ model UserBadge {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace  Workspace?            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace  Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   userBadges UserBadgeAssignment[]
 
   @@map("user_badges")
@@ -1192,23 +1197,22 @@ model ChannelWebhookLog {
   @@map("channel_webhook_logs")
 }
 
-
 model ChannelIncomingWebhook {
-  id              String   @id @default(cuid())
-  channelId       String
-  name            String
-  description     String?
-  token           String   @unique
-  secret          String
-  isActive        Boolean  @default(true)
-  createdBy       String
-  lastReceivedAt  DateTime?
-  totalReceived   Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid())
+  channelId      String
+  name           String
+  description    String?
+  token          String    @unique
+  secret         String
+  isActive       Boolean   @default(true)
+  createdBy      String
+  lastReceivedAt DateTime?
+  totalReceived  Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  creator User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  channel Channel                     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  creator User                        @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   logs    ChannelIncomingWebhookLog[]
 
   @@index([channelId])
@@ -1230,12 +1234,11 @@ model ChannelIncomingWebhookLog {
   @@map("channel_incoming_webhook_logs")
 }
 
-
 model Friend {
   id        String   @id @default(cuid())
   userId    String
   friendId  String
-  nickname  String? // Optional custom nickname for the friend
+  nickname  String?  // Optional custom nickname for the friend
   createdAt DateTime @default(now())
 
   user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
@@ -1261,29 +1264,28 @@ model OAuthClient {
 
   tokens OAuthToken[]
 
-  disabled Boolean?
-  skipConsent Boolean?
-  enableEndSession Boolean?
-  subjectType String?
-  scopes String[]
-  referenceId String?
-  uri String?
-  icon String?
-  contacts String[]
-  tos String?
-  policy String?
-  softwareId String?
-  softwareVersion String?
-  softwareStatement String?
-  postLogoutRedirectUris String[]
+  disabled                Boolean?
+  skipConsent             Boolean?
+  enableEndSession        Boolean?
+  subjectType             String?
+  scopes                  String[]
+  referenceId             String?
+  uri                     String?
+  icon                    String?
+  contacts                String[]
+  tos                     String?
+  policy                  String?
+  softwareId              String?
+  softwareVersion         String?
+  softwareStatement       String?
+  postLogoutRedirectUris  String[]
   tokenEndpointAuthMethod String?
-  grantTypes String[]
-  responseTypes String[]
-  public Boolean?
-  type String?
-  requirePKCE Boolean?
-  metadata Json?
-
+  grantTypes              String[]
+  responseTypes           String[]
+  public                  Boolean?
+  type                    String?
+  requirePKCE             Boolean?
+  metadata                Json?
   oauthRefreshTokens OAuthRefreshToken[]
   oauthAccessTokens  OAuthAccessToken[]
   oauthConsents      OAuthConsent[]
@@ -1292,14 +1294,14 @@ model OAuthClient {
 }
 
 model OAuthToken {
-  id           String    @id @default(cuid())
-  accessToken  String    @unique
-  refreshToken String?   @unique
+  id           String   @id @default(cuid())
+  accessToken  String   @unique
+  refreshToken String?  @unique
   expiresAt    DateTime
   clientId     String
   userId       String
   scopes       String[]
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime @default(now())
 
   client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
   user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1330,20 +1332,20 @@ model OAuthRefreshToken {
 }
 
 model OAuthAccessToken {
-  id          String    @id @default(cuid())
-  token       String    @unique
+  id          String   @id @default(cuid())
+  token       String   @unique
   clientId    String
   sessionId   String?
   refreshId   String?
   userId      String?
   referenceId String?
   scopes      String[]
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
   expiresAt   DateTime
 
-  client       OAuthClient       @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  user         User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  session      Session?          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  client       OAuthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user         User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session      Session?           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   refreshToken OAuthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
 
   @@map("oauth_access_tokens")
@@ -1365,14 +1367,14 @@ model OAuthConsent {
 }
 
 model PersonalAccessToken {
-  id          String    @id @default(cuid())
-  name        String
-  token       String    @unique
-  userId      String
-  scopes      String[]
-  lastUsedAt  DateTime?
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  name       String
+  token      String    @unique
+  userId     String
+  scopes     String[]
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1387,7 +1389,6 @@ model FriendRequest {
   message     String?   @db.Text // Optional message with the request
   createdAt   DateTime  @default(now())
   respondedAt DateTime?
-
   sender   User @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
@@ -1423,6 +1424,8 @@ model Member {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("members")
+  @@index([organizationId])
+  @@index([userId])
 }
 
 model OrganizationInvitation {
@@ -1439,4 +1442,107 @@ model OrganizationInvitation {
   inviter      User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@map("organization_invitations")
+}
+
+model Jwks {
+  id         String    @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime
+  expiresAt  DateTime?
+  @@map("jwks")
+}
+
+model OauthClient {
+  id                      String              @id
+  clientId                String
+  clientSecret            String?
+  disabled                Boolean?            @default(false)
+  skipConsent             Boolean?
+  enableEndSession        Boolean?
+  subjectType             String?
+  scopes                  String[]
+  userId                  String?
+  user                    User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt               DateTime?
+  updatedAt               DateTime?
+  name                    String?
+  uri                     String?
+  icon                    String?
+  contacts                String[]
+  tos                     String?
+  policy                  String?
+  softwareId              String?
+  softwareVersion         String?
+  softwareStatement       String?
+  redirectUris            String[]
+  postLogoutRedirectUris  String[]
+  tokenEndpointAuthMethod String?
+  grantTypes              String[]
+  responseTypes           String[]
+  public                  Boolean?
+  type                    String?
+  requirePKCE             Boolean?
+  referenceId             String?
+  metadata                Json?
+  oauthrefreshtokens      OauthRefreshToken[]
+  oauthaccesstokens       OauthAccessToken[]
+  oauthconsents           OauthConsent[]
+
+  @@unique([clientId])
+  @@map("oauthClient")
+}
+
+model OauthRefreshToken {
+  id                String             @id
+  token             String
+  clientId          String
+  oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId         String?
+  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId       String?
+  expiresAt         DateTime?
+  createdAt         DateTime?
+  revoked           DateTime?
+  authTime          DateTime?
+  scopes            String[]
+  oauthaccesstokens OauthAccessToken[]
+
+  @@map("oauthRefreshToken")
+}
+
+model OauthAccessToken {
+  id                String             @id
+  token             String?
+  clientId          String
+  oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId         String?
+  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId            String?
+  user              User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId       String?
+  refreshId         String?
+  oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+  expiresAt         DateTime?
+  createdAt         DateTime?
+  scopes            String[]
+
+  @@unique([token])
+  @@map("oauthAccessToken")
+}
+
+model OauthConsent {
+  id          String      @id
+  clientId    String
+  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId String?
+  scopes      String[]
+  createdAt   DateTime?
+  updatedAt   DateTime?
+
+  @@map("oauthConsent")
 }
