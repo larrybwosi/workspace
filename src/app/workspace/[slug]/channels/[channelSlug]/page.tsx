@@ -6,11 +6,11 @@ export const metadata: Metadata = {
   description: "View and manage channel details",
 }
 
-export default async function WorkspaceChannelPage( {params}: {params: Promise<{channelId: string}>} ) {
-  const { channelId } = await params; 
+export default async function WorkspaceChannelPage( {params}: {params: Promise<{channelSlug: string}>} ) {
+  const { channelSlug } = await params;
   return (
     <div className="flex-1 h-full flex-col"> 
-      <WorkspaceChannelPageClient channelId={channelId} />
+      <WorkspaceChannelPageClient channelSlug={channelSlug} />
     </div>
   )
 }
