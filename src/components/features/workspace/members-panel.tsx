@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { UserProfileDialog } from "../social/user-profile-dialog";
 import { useWorkspaceMembers } from "@/hooks/api/use-workspaces";
 import { useParams } from "next/navigation";
@@ -71,7 +72,31 @@ export function MembersPanel() {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center text-muted-foreground">Loading members...</div>;
+    return (
+      <div className="flex flex-col h-full">
+        <div className="p-4 border-b border-border space-y-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-7 w-7 rounded-md" />
+          </div>
+          <Skeleton className="h-8 w-full" />
+        </div>
+        <div className="p-3 space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-16 ml-2" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2 p-1.5">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-2 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
