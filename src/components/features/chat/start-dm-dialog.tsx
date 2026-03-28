@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, UserPlus, MessageSquare, Loader2, Users } from "lucide-react"
+import { Search, UserPlus, MessageSquare, Loader2, Users, Link as LinkIcon, Copy } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,7 +25,7 @@ interface StartDMDialogProps {
 export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [searchTab, setSearchTab] = React.useState<"friends" | "all">("friends")
+  const [searchTab, setSearchTab] = React.useState<"friends" | "all" | "invite">("friends")
 
   // Fetch friends
   const { data: friends = [], isLoading: friendsLoading } = useFriends()
@@ -96,16 +96,20 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
           </div>
         </div>
 
-        <Tabs value={searchTab} onValueChange={(v) => setSearchTab(v as "friends" | "all")} className="flex-1">
+        <Tabs value={searchTab} onValueChange={(v) => setSearchTab(v as any)} className="flex-1">
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="friends" className="gap-2">
                 <Users className="h-4 w-4" />
-                Friends ({friends.length})
+                Friends
               </TabsTrigger>
               <TabsTrigger value="all" className="gap-2">
                 <Search className="h-4 w-4" />
-                All Users
+                Users
+              </TabsTrigger>
+              <TabsTrigger value="invite" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Invite
               </TabsTrigger>
             </TabsList>
           </div>
@@ -165,6 +169,46 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                 </div>
               )}
             </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="invite" className="mt-0 flex-1">
+            <div className="p-6 flex flex-col items-center text-center space-y-4">
+              <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                <LinkIcon className="h-8 w-8" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Invite to Platform</h3>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                  Share this link with others to invite them to join the platform.
+                </p>
+              </div>
+
+              <div className="w-full space-y-2 pt-4">
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/invite/link/generic-invite-token`}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/invite/link/generic-invite-token`)
+                      toast.success("Invitation link copied to clipboard")
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  This link will expire in 7 days and can be used by anyone.
+                </p>
+              </div>
+
+              <Button className="w-full" variant="outline" onClick={() => toast.info("Email invitations coming soon")}>
+                Send Email Invitation
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="all" className="mt-0 flex-1">

@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useCreateWorkspace } from "@/hooks/api/use-workspaces"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 interface CreateWorkspaceDialogProps {
   open: boolean
@@ -33,6 +34,7 @@ const workspaceTemplates = [
 const workspaceIcons = ["🏢", "🚀", "💼", "🎯", "⚡", "🔥", "💡", "🌟", "🎨", "📊", "🔧", "🌐"]
 
 export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDialogProps) {
+  const router = useRouter()
   const [step, setStep] = React.useState(1)
   const [name, setName] = React.useState("")
   const [slug, setSlug] = React.useState("")
@@ -57,10 +59,11 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await createWorkspace.mutateAsync({ name, slug, icon, description })
+      const workspace = await createWorkspace.mutateAsync({ name, slug, icon, description })
       toast.success("Workspace created successfully")
       onOpenChange(false)
       resetForm()
+      router.push(`/workspace/${workspace.slug}`)
     } catch (error) {
       toast.error("Failed to create workspace")
     }

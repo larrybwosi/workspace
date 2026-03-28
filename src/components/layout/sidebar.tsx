@@ -14,9 +14,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useChannels, useCreateChannel } from "@/hooks/api/use-channels";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth/auth-client";
+import { useNotifications } from "@/hooks/api/use-notifications";
 import { useDMConversations } from "@/hooks/api/use-dm";
 import { WorkspaceSwitcher } from "@/components/features/workspace/workspace-switcher";
 import { UserProfileDialog } from "@/components/features/social/user-profile-dialog";
@@ -45,6 +47,7 @@ export function Sidebar({
   const { data: channelsData, isLoading: channelsLoading } = useChannels();
   const createChannelMutation = useCreateChannel();
   const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations()
+  const { data: notificationsData } = useNotifications(true);
 
   const [favoritesOpen, setFavoritesOpen] = React.useState(true);
   const [channelsOpen, setChannelsOpen] = React.useState(true);
@@ -159,9 +162,9 @@ export function Sidebar({
 
   const renderLoadingSkeleton = (count: number = 3) => {
     return Array.from({ length: count }).map((_, index) => (
-      <div key={index} className="flex items-center h-8 px-2 animate-pulse">
-        <div className="h-4 w-4 bg-gray-300 rounded mr-2"></div>
-        <div className="h-3 flex-1 bg-gray-300 rounded"></div>
+      <div key={index} className="flex items-center h-8 px-2">
+        <Skeleton className="h-4 w-4 mr-2" />
+        <Skeleton className="h-3 flex-1" />
       </div>
     ));
   };
@@ -235,15 +238,18 @@ export function Sidebar({
             <Button
               variant="ghost"
               className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => router.push('/notifications')}
             >
               <Inbox className="h-4 w-4 mr-2 shrink-0" />
               <span className="flex-1 text-left text-sm">Inbox</span>
-              <Badge
-                variant="secondary"
-                className="text-xs px-1.5 py-0 shrink-0"
-              >
-                8
-              </Badge>
+              {(notificationsData?.notifications?.length > 0 || notificationsData?.total > 0) && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-1.5 py-0 shrink-0"
+                >
+                  {notificationsData?.total || notificationsData?.notifications?.length}
+                </Badge>
+              )}
             </Button>
           </div>
 
@@ -269,7 +275,7 @@ export function Sidebar({
             {directMessagesOpen && (
               <div className="space-y-0.5">
                 {dmsLoading ? (
-                  <div className="text-center text-xs text-muted-foreground py-2">Loading...</div>
+                  renderLoadingSkeleton(3)
                 ) : dmConversations.length === 0 ? (
                   <div className="text-center text-xs text-muted-foreground py-2">No conversations yet</div>
                 ) : (
