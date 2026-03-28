@@ -3,7 +3,7 @@
 import * as React from "react"
 import { use } from "react"
 import { useRouter } from "next/navigation"
-import { Users, Search, Filter, UserPlus, Mail, MoreHorizontal, Trash2, Shield, Crown, User } from "lucide-react"
+import { Users, Search, Filter, UserPlus, Mail, MoreHorizontal, Trash2, Shield, Crown, User, Menu } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -29,13 +29,15 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import {
-  useWorkspace,
+  useWorkspaces,
   useWorkspaceMembers,
   useInviteToWorkspace,
   useUpdateWorkspaceMember,
   useRemoveWorkspaceMember,
 } from "@/hooks/api/use-workspaces"
 import { useToast } from "@/hooks/use-toast"
+import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
 
 interface MembersPageProps {
   params: Promise<{ slug: string }>
@@ -50,9 +52,10 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [inviteOpen, setInviteOpen] = React.useState(false)
   const [inviteEmail, setInviteEmail] = React.useState("")
   const [inviteRole, setInviteRole] = React.useState("member")
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   // Fetch workspace
-  const { data: workspaces } = useWorkspace("")
+  const { data: workspaces } = useWorkspaces()
   const workspace = workspaces?.find((w: any) => w.slug === slug)
   const workspaceId = workspace?.id
 
@@ -144,7 +147,18 @@ export default function MembersPage({ params }: MembersPageProps) {
   }
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="h-screen flex overflow-hidden bg-background">
+      <WorkspaceSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        currentWorkspaceId={workspaceId}
+      />
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <DynamicHeader
+          activeView="Members"
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <div className="flex-1 overflow-auto">
       {/* Header */}
       <div className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
@@ -300,6 +314,8 @@ export default function MembersPage({ params }: MembersPageProps) {
           )}
         </div>
       </div>
+        </div>
+      </main>
     </div>
   )
 }
