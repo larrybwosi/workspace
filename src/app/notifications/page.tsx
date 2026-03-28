@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Check, Trash2, Bell, MessageSquare, AtSign, UserPlus, Info, CheckCircle2, X } from "lucide-react"
+import { Check, Trash2, Bell, MessageSquare, AtSign, UserPlus, Info, CheckCircle2, X, Menu } from "lucide-react"
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from "@/hooks/api/use-notifications"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { useToast } from "@/hooks/use-toast"
 import { format, isToday, isYesterday } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -15,6 +17,7 @@ import Link from "next/link"
 
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const { data: notifications, isLoading } = useNotifications(filter === "unread")
   const markReadMutation = useMarkNotificationRead()
   const markAllReadMutation = useMarkAllNotificationsRead()
@@ -75,7 +78,20 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="h-screen flex overflow-hidden bg-background">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeChannel="notifications"
+        onChannelSelect={() => {}}
+      />
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <DynamicHeader
+          activeView="Notifications"
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <div className="flex-1 overflow-auto bg-background">
+          <div className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Notifications</h1>
@@ -201,6 +217,9 @@ export default function NotificationsPage() {
            {/* Same as above but with filter='unread' applied in hook */}
         </TabsContent>
       </Tabs>
+    </div>
+        </div>
+      </main>
     </div>
   )
 }

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Search, UserPlus, Check, X, MoreVertical, MessageSquare, UserCheck, Users } from "lucide-react"
+import { Search, UserPlus, Check, X, MoreVertical, MessageSquare, UserCheck, Users, Menu, Mail, RefreshCw, Copy, CheckCircle2 } from "lucide-react"
+import { Sidebar } from "@/components/layout/sidebar"
+import { DynamicHeader } from "@/components/layout/dynamic-header"
 import {
   useFriends,
   useFriendRequests,
@@ -15,6 +17,8 @@ import {
   useRemoveFriend,
   useSendFriendRequest,
 } from "@/hooks/api/use-friends"
+import { useInvitations, useCreateInvitation, useResendInvitation } from "@/hooks/api/use-invitations"
+import { formatDistanceToNow } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -36,6 +40,9 @@ export default function FriendsPage() {
   const [addFriendOpen, setAddFriendOpen] = useState(false)
   const [friendEmail, setFriendEmail] = useState("")
   const [friendMessage, setFriendMessage] = useState("")
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const { toast } = useToast()
 
   const { data: friends, isLoading: friendsLoading } = useFriends(search)
@@ -47,6 +54,10 @@ export default function FriendsPage() {
   const respondMutation = useRespondToFriendRequest()
   const removeMutation = useRemoveFriend()
   const sendRequestMutation = useSendFriendRequest()
+  const { data: invitations, isLoading: invitationsLoading } = useInvitations()
+  const createInvitation = useCreateInvitation()
+  const resendInvitation = useResendInvitation()
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
   const handleAccept = async (requestId: string) => {
     try {
@@ -92,8 +103,32 @@ export default function FriendsPage() {
       setFriendEmail("")
       setFriendMessage("")
     } catch (error: any) {
-      toast({ title: error.response?.data?.error || "Failed to send request", variant: "destructive" })
+      // If user not found, suggest sending a platform invitation
+      if (error.response?.status === 404) {
+        setInviteEmail(targetEmail)
+        setInviteDialogOpen(true)
+      } else {
+        toast({ title: error.response?.data?.error || "Failed to send request", variant: "destructive" })
+      }
     }
+  }
+
+  const handleCreateInvitation = async () => {
+    if (!inviteEmail) return
+    try {
+      await createInvitation.mutateAsync({ email: inviteEmail })
+      toast({ title: "Platform invitation sent" })
+      setInviteDialogOpen(false)
+      setInviteEmail("")
+    } catch (error) {
+      toast({ title: "Failed to send invitation", variant: "destructive" })
+    }
+  }
+
+  const copyInvitationLink = (link: string, token: string) => {
+    navigator.clipboard.writeText(link)
+    setCopiedToken(token)
+    setTimeout(() => setCopiedToken(null), 2000)
   }
 
   const suggestedFriends = allUsers?.filter(u =>
@@ -103,7 +138,19 @@ export default function FriendsPage() {
   ).slice(0, 5)
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-muted/10">
+    <div className="h-screen flex overflow-hidden bg-background">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeChannel="friends"
+        onChannelSelect={() => {}}
+      />
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <DynamicHeader
+          activeView="Friends"
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <div className="flex-1 flex flex-col h-full bg-muted/10 overflow-auto">
       {/* Header */}
       <div className="border-b bg-background p-6">
         <div className="flex items-center justify-between mb-6">
@@ -154,6 +201,26 @@ export default function FriendsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>User not found</DialogTitle>
+                <DialogDescription>
+                  We couldn't find a user with the email <strong>{inviteEmail}</strong>.
+                  Would you like to invite them to join Dealio?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateInvitation} disabled={createInvitation.isPending}>
+                  {createInvitation.isPending ? "Sending..." : "Send Invitation"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="relative max-w-2xl">
@@ -181,6 +248,9 @@ export default function FriendsPage() {
                 </TabsTrigger>
                 <TabsTrigger value="sent" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">
                   Sent {sentRequests?.length ? `(${sentRequests.length})` : ""}
+                </TabsTrigger>
+                <TabsTrigger value="invitations" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">
+                  Platform Invites {invitations?.length ? `(${invitations.length})` : ""}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -283,6 +353,54 @@ export default function FriendsPage() {
               )}
             </TabsContent>
 
+            <TabsContent value="invitations" className="flex-1 overflow-auto p-6 space-y-3">
+              {invitationsLoading ? (
+                <div className="flex justify-center py-20"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
+              ) : !invitations || invitations.length === 0 ? (
+                <div className="text-center py-20 text-muted-foreground">No platform invitations sent</div>
+              ) : (
+                invitations.map((invitation: any) => (
+                  <Card key={invitation.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center">
+                            <Mail className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <div className="font-semibold">{invitation.email}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant={invitation.status === "accepted" ? "default" : "secondary"}>
+                                {invitation.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(invitation.createdAt), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {invitation.status === "pending" && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyInvitationLink(`${window.location.origin}/invite/${invitation.token}`, invitation.token)}
+                            >
+                              {copiedToken === invitation.token ? <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> : <Copy className="h-4 w-4 mr-2" />}
+                              {copiedToken === invitation.token ? "Copied" : "Link"}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => resendInvitation.mutate(invitation.token)}>
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
             <TabsContent value="sent" className="flex-1 overflow-auto p-6 space-y-3">
               {sentLoading ? (
                 <div className="flex justify-center py-20"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
@@ -359,6 +477,8 @@ export default function FriendsPage() {
           </div>
         </div>
       </div>
+        </div>
+      </main>
     </div>
   )
 }
