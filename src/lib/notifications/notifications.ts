@@ -4,10 +4,10 @@ import { sendPushNotification } from "@/lib/notifications/push-notifications"
 
 export interface NotificationPayload {
   userId: string
-  type: "mention" | "system"
+  type: "mention" | "system" | "channel_alert" | "workspace_alert"
   title: string
   message: string
-  entityType?: "channel"
+  entityType?: "channel" | "workspace" | "direct_message"
   entityId?: string
   linkUrl?: string
   metadata?: Record<string, any>
@@ -109,4 +109,40 @@ export async function notifyMention(
       messageId,
     },
   })
+}
+
+export async function notifyChannel(
+  channelId: string,
+  sentBy: string,
+  messageId: string,
+  messageContent: string,
+  isHere: boolean = false
+) {
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: {
+      members: true,
+    },
+  })
+
+  if (!channel) return
+
+  const memberIds = channel.members.map((m) => m.userId)
+
+  for (const userId of memberIds) {
+    // For @here, we would ideally check if the user is online, but for now, we notify everyone in the channel.
+    await createNotification({
+      userId,
+      type: "channel_alert",
+      title: isHere ? `@here in #${channel.name}` : `@all in #${channel.name}`,
+      message: `${sentBy}: ${messageContent.slice(0, 50)}...`,
+      entityType: "channel",
+      entityId: channelId,
+      linkUrl: `/channels/${channelId}?messageId=${messageId}`,
+      metadata: {
+        messageId,
+        sentBy,
+      },
+    })
+  }
 }

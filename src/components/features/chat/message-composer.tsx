@@ -6,15 +6,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { uploadFile, UploadedFile } from "@/lib/utils/upload-utils";
 import { mockUsers } from "@/lib/mock-data"
-import { UserMentionSelector } from "@/components/shared/user-mention-selector"
+import { MentionSelector, MentionItem } from "@/components/shared/mention-selector"
 import { EmojiPicker } from "@/components/shared/emoji-picker"
-import { ChangeEvent, useEffect, useRef, useState, ClipboardEvent } from "react"
+import { ChangeEvent, useEffect, useRef, useState, ClipboardEvent, useMemo } from "react"
+import { useChannels } from "@/hooks/api/use-channels"
+import { useParams } from "next/navigation"
+import { useTypingNotifier, TypingIndicator } from "./typing-indicator"
+import { useCurrentUser } from "@/hooks/api/use-users"
 
 interface MessageComposerProps {
   placeholder?: string
   onSend?: (message: string, attachments?: UploadedFile[]) => void
   replyingTo?: { id: string; userName: string } | null
   onCancelReply?: () => void
+  channelId?: string
 }
 
 export function MessageComposer({
@@ -22,18 +27,25 @@ export function MessageComposer({
   onSend,
   replyingTo,
   onCancelReply,
+  channelId,
 }: MessageComposerProps) {
   const [message, setMessage] = useState("")
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
   
-  const [showMentionSelector, setShowMentionSelector] = useState(false)
+  const [mentionType, setMentionType] = useState<"user" | "channel" | null>(null)
   const [mentionSearch, setMentionSearch] = useState("")
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
   const [cursorPosition, setCursorPosition] = useState(0)
   
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const params = useParams()
+  const workspaceId = params.workspaceId as string
+  const { data: channels } = useChannels(workspaceId)
+  const { data: currentUser } = useCurrentUser()
+
+  const { handleKeyPress, stopTyping } = useTypingNotifier(channelId || "", currentUser)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -43,31 +55,81 @@ export function MessageComposer({
     }
   }, [message])
 
+  // Mention items preparation
+  const mentionItems = useMemo((): MentionItem[] => {
+    if (mentionType === "user") {
+      const users: MentionItem[] = mockUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        type: "user",
+        image: u.avatar,
+        description: u.role
+      }))
+
+      const special: MentionItem[] = [
+        { id: "all", name: "all", type: "special", description: "Notify everyone in this channel" },
+        { id: "here", name: "here", type: "special", description: "Notify active members in this channel" }
+      ]
+
+      return [...special, ...users]
+    }
+
+    if (mentionType === "channel") {
+      return (channels || []).map(c => ({
+        id: c.id,
+        name: c.name,
+        type: "channel",
+        description: c.description || "Channel"
+      }))
+    }
+
+    return []
+  }, [mentionType, channels])
+
   // Mention logic
   useEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
 
     const beforeCursor = message.slice(0, cursorPosition)
-    const lastAtIndex = beforeCursor.lastIndexOf("@")
 
-    if (lastAtIndex !== -1) {
+    const lastAtIndex = beforeCursor.lastIndexOf("@")
+    const lastHashIndex = beforeCursor.lastIndexOf("#")
+
+    const isAfterAt = lastAtIndex !== -1 && (lastHashIndex === -1 || lastAtIndex > lastHashIndex)
+    const isAfterHash = lastHashIndex !== -1 && (lastAtIndex === -1 || lastHashIndex > lastAtIndex)
+
+    if (isAfterAt) {
       const afterAt = beforeCursor.slice(lastAtIndex + 1)
       if (!afterAt.includes(" ") && afterAt.length <= 20) {
         setMentionSearch(afterAt)
-        setShowMentionSelector(true)
+        setMentionType("user")
 
         const rect = textarea.getBoundingClientRect()
         setMentionPosition({
           top: rect.top - 280,
           left: rect.left,
         })
-      } else {
-        setShowMentionSelector(false)
+        return
       }
-    } else {
-      setShowMentionSelector(false)
     }
+
+    if (isAfterHash) {
+      const afterHash = beforeCursor.slice(lastHashIndex + 1)
+      if (!afterHash.includes(" ") && afterHash.length <= 20) {
+        setMentionSearch(afterHash)
+        setMentionType("channel")
+
+        const rect = textarea.getBoundingClientRect()
+        setMentionPosition({
+          top: rect.top - 280,
+          left: rect.left,
+        })
+        return
+      }
+    }
+
+    setMentionType(null)
   }, [message, cursorPosition])
 
   const handleSend = () => {
@@ -75,16 +137,19 @@ export function MessageComposer({
       onSend?.(message, attachments)
       setMessage("")
       setAttachments([])
-      setShowMentionSelector(false)
+      setMentionType(null)
+      stopTyping()
       // Reset height
       if (textareaRef.current) textareaRef.current.style.height = "auto"
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey && !showMentionSelector) {
+    if (e.key === "Enter" && !e.shiftKey && !mentionType) {
       e.preventDefault()
       handleSend()
+    } else {
+      handleKeyPress()
     }
   }
 
@@ -106,7 +171,6 @@ export function MessageComposer({
       setAttachments(prev => [...prev, ...uploadedFiles])
     } catch (error) {
       console.error("Upload failed", error)
-      // toast.error("Failed to upload files") 
     } finally {
       setIsUploading(false)
     }
@@ -116,40 +180,26 @@ export function MessageComposer({
     setAttachments(prev => prev.filter(f => f.id !== fileId))
   }
 
-  // --- Paste Handling (Files & Code) ---
-
-  const detectCodeBlock = (text: string) => {
-    const lines = text.split('\n');
-    const hasIndentation = lines.some(line => line.startsWith('  ') || line.startsWith('\t'));
-    const hasCodeSymbols = /[{};=()[\]<>]/.test(text);
-    const hasKeywords = /\b(const|let|var|function|class|import|export|if|for|return|interface|type)\b/.test(text);
-    
-    // Heuristic: If it has multiple lines AND (code symbols OR keywords), treat as code
-    return lines.length > 1 && (hasCodeSymbols || hasKeywords || hasIndentation);
-  }
-
   const handlePaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
-    // 1. Handle File Paste (e.g. Screenshots)
     if (e.clipboardData.files.length > 0) {
       e.preventDefault()
       await processFiles(Array.from(e.clipboardData.files))
       return
     }
 
-    // 2. Handle Code/Markdown Detection
     const text = e.clipboardData.getData("text")
     if (text) {
-      // If already markdown formatted (simple check), let it pass naturally
       if (text.trim().startsWith("```")) return;
 
-      if (detectCodeBlock(text)) {
+      const lines = text.split('\n');
+      const isCode = lines.length > 1 && /[{};=()[\]<>]/.test(text);
+
+      if (isCode) {
         e.preventDefault()
         insertMarkdown("\n```\n", "\n```\n", text)
       }
     }
   }
-
-  // --- Markdown Insertion Helper ---
 
   const insertMarkdown = (before: string, after: string = before, customContent?: string) => {
     const textarea = textareaRef.current
@@ -158,7 +208,6 @@ export function MessageComposer({
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
     
-    // If we have custom content (from paste), use that, otherwise use selection
     const contentToWrap = customContent !== undefined 
       ? customContent 
       : message.substring(start, end)
@@ -167,7 +216,6 @@ export function MessageComposer({
 
     setMessage(newText)
 
-    // Reset cursor position
     setTimeout(() => {
       textarea.focus()
       const newCursorPos = start + before.length + contentToWrap.length + (customContent ? after.length : 0)
@@ -176,29 +224,22 @@ export function MessageComposer({
     }, 0)
   }
 
-  const insertCodeBlock = () => {
-    insertMarkdown("\n```javascript\n", "\n```\n")
-  }
-
-  const insertLink = () => {
-    insertMarkdown("[", "](url)")
-  }
-
-  const handleMentionSelect = (user: any) => {
+  const handleMentionSelect = (item: MentionItem) => {
     const textarea = textareaRef.current
     if (!textarea) return
 
     const beforeCursor = message.slice(0, cursorPosition)
-    const lastAtIndex = beforeCursor.lastIndexOf("@")
-    const beforeMention = message.slice(0, lastAtIndex)
+    const char = item.type === "channel" ? "#" : "@"
+    const lastIndex = beforeCursor.lastIndexOf(char)
+    const beforeMention = message.slice(0, lastIndex)
     const afterCursor = message.slice(cursorPosition)
 
-    const newMessage = `${beforeMention}@${user.name} ${afterCursor}`
+    const newMessage = `${beforeMention}${char}${item.name} ${afterCursor}`
     setMessage(newMessage)
-    setShowMentionSelector(false)
+    setMentionType(null)
 
     setTimeout(() => {
-      const newPosition = lastAtIndex + user.name.length + 2
+      const newPosition = lastIndex + item.name.length + 2
       textarea.focus()
       textarea.setSelectionRange(newPosition, newPosition)
       setCursorPosition(newPosition)
@@ -208,10 +249,15 @@ export function MessageComposer({
   const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value)
     setCursorPosition(e.target.selectionStart)
+    handleKeyPress()
   }
 
   return (
     <div className="bg-background rounded-lg">
+      {channelId && currentUser && (
+        <TypingIndicator channelId={channelId} currentUserId={currentUser.id} />
+      )}
+
       <input 
         type="file" 
         multiple 
@@ -220,14 +266,15 @@ export function MessageComposer({
         onChange={handleFileSelect}
       />
 
-      {showMentionSelector && <div className="fixed inset-0 z-40" onClick={() => setShowMentionSelector(false)} />}
+      {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}
 
-      {showMentionSelector && (
-        <UserMentionSelector
-          users={mockUsers}
+      {mentionType && (
+        <MentionSelector
+          items={mentionItems}
           onSelect={handleMentionSelect}
           searchTerm={mentionSearch}
           position={mentionPosition}
+          type={mentionType}
         />
       )}
 
@@ -275,9 +322,8 @@ export function MessageComposer({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={insertCodeBlock}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("\n```javascript\n", "\n```\n")}>
                   <Code className="h-3.5 w-3.5" />
-                  <span className="text-[8px] ml-0.5">{}</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Code block</TooltipContent>
@@ -305,7 +351,7 @@ export function MessageComposer({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={insertLink}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => insertMarkdown("[", "](url)")}>
                   <LinkIcon className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>

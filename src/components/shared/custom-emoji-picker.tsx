@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, Smile, Clock, Star, Sparkles, ImageIcon } from "lucide-react"
+import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { useTheme } from "../layout/theme-provider"
+import { useCustomEmojis } from "@/hooks/api/use-custom-emojis"
 
 interface CustomEmoji {
   id: string
@@ -28,72 +29,16 @@ interface CustomEmojiPickerProps {
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡", "🎉", "🚀", "👀", "🔥", "✅", "❌"]
 
-const REACTION_CATEGORIES = [
-  { id: "frequent", name: "Frequently Used", icon: Clock },
-  { id: "custom", name: "Custom", icon: Sparkles },
-  { id: "standard", name: "Standard", icon: Smile },
-]
-
 export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: CustomEmojiPickerProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const [activeTab, setActiveTab] = React.useState("quick")
   const { theme } = useTheme()
 
-  // Mock custom emojis - replace with API call
-  const customEmojis: CustomEmoji[] = [
-    {
-      id: "1",
-      name: "Party Parrot",
-      shortcode: "party_parrot",
-      imageUrl: "/placeholder.svg?height=32&width=32",
-      animated: true,
-      category: "custom",
-    },
-    {
-      id: "2",
-      name: "This is Fine",
-      shortcode: "this_is_fine",
-      imageUrl: "/placeholder.svg?height=32&width=32",
-      animated: false,
-      category: "custom",
-    },
-    {
-      id: "3",
-      name: "Stonks",
-      shortcode: "stonks",
-      imageUrl: "/placeholder.svg?height=32&width=32",
-      animated: false,
-      category: "custom",
-    },
-    {
-      id: "4",
-      name: "Kermit Typing",
-      shortcode: "kermit_typing",
-      imageUrl: "/placeholder.svg?height=32&width=32",
-      animated: true,
-      category: "custom",
-    },
-    {
-      id: "5",
-      name: "Mind Blown",
-      shortcode: "mind_blown",
-      imageUrl: "/placeholder.svg?height=32&width=32",
-      animated: true,
-      category: "custom",
-    },
-    {
-      id: "6",
-      name: "Deal With It",
-      shortcode: "deal_with_it",
-      imageUrl: "/placeholder.svg?height=32&width=32",
-      animated: true,
-      category: "custom",
-    },
-  ]
+  const { data: customEmojis, isLoading: isLoadingCustom } = useCustomEmojis(workspaceId || "")
 
-  const filteredCustomEmojis = customEmojis.filter(
-    (emoji) =>
+  const filteredCustomEmojis = (customEmojis || []).filter(
+    (emoji: any) =>
       emoji.name.toLowerCase().includes(search.toLowerCase()) ||
       emoji.shortcode.toLowerCase().includes(search.toLowerCase()),
   )
@@ -103,8 +48,8 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
     setOpen(false)
   }
 
-  const handleCustomEmojiSelect = (emoji: CustomEmoji) => {
-    onEmojiSelect(`:${emoji.shortcode}:`, true, emoji.id)
+  const handleCustomEmojiSelect = (emoji: any) => {
+    onEmojiSelect(emoji.shortcode, true, emoji.id)
     setOpen(false)
   }
 
@@ -151,18 +96,18 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
               ))}
             </div>
 
-            {customEmojis.length > 0 && (
+            {customEmojis && customEmojis.length > 0 && (
               <>
-                <p className="text-xs text-muted-foreground mt-4 mb-2">Custom Emojis</p>
+                <p className="text-xs text-muted-foreground mt-4 mb-2">Workspace Emojis</p>
                 <div className="grid grid-cols-6 gap-1">
-                  {customEmojis.slice(0, 6).map((emoji) => (
+                  {customEmojis.slice(0, 6).map((emoji: any) => (
                     <Button
                       key={emoji.id}
                       variant="ghost"
                       size="sm"
                       className="h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative"
                       onClick={() => handleCustomEmojiSelect(emoji)}
-                      title={`:${emoji.shortcode}:`}
+                      title={emoji.shortcode}
                     >
                       <img
                         src={emoji.imageUrl || "/placeholder.svg"}
@@ -195,7 +140,11 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
             </div>
             <ScrollArea className="h-[250px]">
               <div className="p-2">
-                {filteredCustomEmojis.length === 0 ? (
+                {isLoadingCustom ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredCustomEmojis.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <ImageIcon className="h-10 w-10 text-muted-foreground/50 mb-2" />
                     <p className="text-sm text-muted-foreground">No custom emojis found</p>
@@ -203,14 +152,14 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                   </div>
                 ) : (
                   <div className="grid grid-cols-6 gap-1">
-                    {filteredCustomEmojis.map((emoji) => (
+                    {filteredCustomEmojis.map((emoji: any) => (
                       <Button
                         key={emoji.id}
                         variant="ghost"
                         size="sm"
                         className="h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group"
                         onClick={() => handleCustomEmojiSelect(emoji)}
-                        title={`:${emoji.shortcode}:`}
+                        title={emoji.shortcode}
                       >
                         <img
                           src={emoji.imageUrl || "/placeholder.svg"}

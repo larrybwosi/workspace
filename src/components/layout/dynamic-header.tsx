@@ -1,9 +1,11 @@
 "use client"
-import { Menu, Search, MoreVertical, ChevronLeft } from "lucide-react"
+import { Menu, Search, MoreVertical, ChevronLeft, Headphones } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { mockChannels } from "@/lib/mock-data"
 import { ThemeToggle } from "./theme-toggle"
+import { Huddle } from "@/components/features/chat/huddle"
+import { useCurrentUser } from "@/hooks/api/use-users"
 
 interface DynamicHeaderProps {
   activeView: string;
@@ -14,6 +16,8 @@ interface DynamicHeaderProps {
 }
 
 export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
+  const { data: currentUser } = useCurrentUser()
+
   const getBreadcrumb = () => {
     if (activeView.startsWith("dm-")) {
       return (
@@ -50,6 +54,10 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
     return <span className="font-semibold">Dealio</span>
   }
 
+  const channel = activeView && !activeView.startsWith("dm-")
+    ? mockChannels.find(c => c.id === activeView)
+    : null
+
   return (
     <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-background">
       <div className="flex items-center gap-2">
@@ -64,6 +72,14 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
         <div className="flex items-center gap-2 text-sm">{getBreadcrumb()}</div>
       </div>
       <div className="flex items-center gap-2">
+        {channel && currentUser && (
+          <Huddle
+            channelId={channel.id}
+            channelName={channel.name}
+            user={currentUser}
+            onClose={() => {}}
+          />
+        )}
         <div className="relative hidden md:block">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input placeholder="Search..." className="pl-8 w-64 h-8 cursor-pointer" onClick={onSearchClick} readOnly />

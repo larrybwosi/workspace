@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react"
+import { Settings, Link } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Metadata } from "next"
 import { GeneralTab } from "@/components/features/workspace/settings/general-tab"
@@ -10,7 +10,7 @@ import { AuditLogsTab } from "@/components/features/workspace/settings/audit-log
 import { cache } from "react"
 import { prisma } from "@/lib/db/prisma"
 import { IntegrationsTab } from "@/components/features/workspace/settings/integrations-tab"
-// import { IntegrationsTab } from "@/components/features/workspace/integrations-tab"
+import { WorkspaceInviteLinks } from "@/components/features/workspace/workspace-invite-links"
 
 const getWorkspaceBySlug = cache(async (slug: string, userId: string) => {
   const workspace = await prisma.workspace.findUnique({
@@ -18,20 +18,19 @@ const getWorkspaceBySlug = cache(async (slug: string, userId: string) => {
       slug: slug 
     },
     include: {
-      // Check membership to ensure security
       members: {
         where: { userId: userId }
       }
     }
   })
 
-  // Return null if workspace doesn't exist OR user is not a member
   if (!workspace || workspace.members.length === 0) {
     return null
   }
 
   return workspace
 })
+
 export const metadata: Metadata = {
   title: "Workspace Settings",
   description: "Manage workspace settings and integrations",
@@ -45,7 +44,7 @@ export default async function WorkspaceSettingsPage({
   const { slug } = await params
   const session = await import("@/lib/auth").then(async (mod) => mod.auth.api.getSession({ headers: await import("next/headers").then((h) => h.headers()) }))
   if (!session?.user) {
-    return null // Or redirect to login
+    return null
   }
   const workspace = await getWorkspaceBySlug(slug, session.user.id)
 
@@ -69,9 +68,10 @@ export default async function WorkspaceSettingsPage({
 
       <div className="flex-1 overflow-auto p-6">
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="invites">Invite Links</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
@@ -85,6 +85,10 @@ export default async function WorkspaceSettingsPage({
 
           <TabsContent value="members" className="space-y-6">
             <MembersTab workspaceId={workspace?.id} />
+          </TabsContent>
+
+          <TabsContent value="invites" className="space-y-6">
+            <WorkspaceInviteLinks workspaceId={workspace?.id} />
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">

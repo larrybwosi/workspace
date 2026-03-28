@@ -235,10 +235,13 @@ export function ThreadView({
     }
   };
 
-  const handleReaction = (messageId: string, emoji: string) => {
+  const handleReaction = (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => {
     const message = messages.find((m) => m.id === messageId);
     if (!message) return;
+
+    // In a real app, this comes from useCurrentUser
     const currentUserId = mockUsers[0].id;
+
     const hasReacted = message.reactions
       .find((r) => r.emoji === emoji)
       ?.users.includes(currentUserId);
@@ -254,6 +257,8 @@ export function ThreadView({
         messageId,
         emoji,
         channelId: activeChannelId,
+        isCustom,
+        customEmojiId
       });
     }
   };
