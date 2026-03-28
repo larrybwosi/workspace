@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
     const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(channelId))
+    const channel = ably.channels.get(AblyChannels.channel(channelId))
     await channel.publish(AblyEvents.MESSAGE_SENT, message)
 
     return NextResponse.json(message, { status: 201 })

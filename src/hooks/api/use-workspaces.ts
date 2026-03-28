@@ -470,6 +470,36 @@ export function useCreateTeam(workspaceId: string) {
   })
 }
 
+export function useWorkspaceInviteLinks(workspaceId: string) {
+  return useQuery({
+    queryKey: ["workspace-invite-links", workspaceId],
+    queryFn: async () => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/invite-links`)
+      if (!res.ok) throw new Error("Failed to fetch invite links")
+      return res.json()
+    },
+    enabled: !!workspaceId,
+  })
+}
+
+export function useCreateWorkspaceInviteLink(workspaceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { workspaceId: string; expiresAt?: string; maxUses?: number }) => {
+      const res = await fetch(`/api/workspaces/${workspaceId}/invite-links`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error("Failed to create invite link")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-invite-links", workspaceId] })
+    },
+  })
+}
+
 export function useWorkspaceApiTokens(workspaceId: string) {
   return useQuery({
     queryKey: ["workspace-api-tokens", workspaceId],
