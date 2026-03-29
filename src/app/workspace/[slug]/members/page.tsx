@@ -55,6 +55,7 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [inviteRole, setInviteRole] = React.useState("member")
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [generatedLink, setGeneratedLink] = React.useState("")
+  const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
 
   // Fetch workspace
   const { data: workspaces } = useWorkspaces()
@@ -162,11 +163,13 @@ export default function MembersPage({ params }: MembersPageProps) {
         onClose={() => setSidebarOpen(false)}
         currentWorkspaceId={workspaceId}
       />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <DynamicHeader
           activeView="Members"
           onMenuClick={() => setSidebarOpen(true)}
+          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
+        <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-auto">
       {/* Header */}
       <div className="border-b px-6 py-4">
@@ -335,6 +338,16 @@ export default function MembersPage({ params }: MembersPageProps) {
           )}
         </div>
       </div>
+        </div>
+        {infoPanelOpen && (
+            <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out hidden lg:block">
+                <InfoPanel
+                    isOpen={infoPanelOpen}
+                    onClose={() => setInfoPanelOpen(false)}
+                    type="workspace"
+                />
+            </aside>
+        )}
         </div>
       </main>
     </div>

@@ -3,7 +3,7 @@
 import { mockUsers } from "@/lib/mock-data"
 import { SearchView } from "@/components/layout/search-view"
 import { MembersPanel } from "@/components/features/workspace/members-panel"
-import { ThreadView } from "@/components/features/chat/thread-view"
+import { ChannelView } from "@/components/features/chat/channel-view"
 import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { InfoPanel } from "@/components/shared/info-panel"
@@ -34,27 +34,12 @@ export default function HomePage() {
     }
 
     if (activeChannel?.startsWith("dm-")) {
-      const dmUser = getDMUser()
       return (
-        <ThreadView
-          thread={{
-            id: activeChannel,
-            title: dmUser?.name || "Direct Message",
-            channelId: activeChannel,
-            messages: [],
-            creator: mockUsers[0].id,
-            dateCreated: new Date(),
-            status: "Active",
-            tags: [],
-            tasks: 0,
-            linkedThreads: [],
-            members: [mockUsers[0].id, dmUser?.id || ""],
-          }}
-        />
+        <ChannelView channelId={activeChannel} />
       )
     }
 
-    return <ThreadView />
+    return <ChannelView channelId={activeChannel || "general"} />
   }
 
   const shouldShowInfoPanel = activeChannel !== "assistant"
