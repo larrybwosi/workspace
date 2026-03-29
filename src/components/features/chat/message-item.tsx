@@ -20,6 +20,7 @@ import { CustomEmojiPicker } from "@/components/shared/custom-emoji-picker";
 import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 import { CustomMessage } from "@/components/features/chat/message-types/custom-message";
 import { MessageAttachments } from "./message-types/message-attachments"; // Import the new component
+import { LinkPreview } from "./link-preview";
 
 // Context Menu (Right Click)
 import {
@@ -183,6 +184,11 @@ export function MessageItem({
     return renderCustomMessage(message);
   }, [isImplicitCode, message]);
 
+  const detectedLinks = useMemo(() => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return message.content.match(urlRegex) || [];
+  }, [message.content]);
+
   // Shared menu items logic to ensure ContextMenu and DropdownMenu match
   const MenuItems = () => (
     <>
@@ -331,6 +337,10 @@ export function MessageItem({
               )}
 
               <MessageAttachments attachments={message.attachments} />
+
+              {detectedLinks.length > 0 && detectedLinks.slice(0, 3).map((link, idx) => (
+                <LinkPreview key={idx} url={link} />
+              ))}
 
               {message.reactions && message.reactions.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
