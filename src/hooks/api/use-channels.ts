@@ -1,117 +1,115 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
-import type { Channel } from "@/lib/types"
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import type { Channel } from '@/lib/types';
 
 // Query keys for cache management
 export const channelKeys = {
-  all: ["channels"] as const,
-  lists: () => [...channelKeys.all, "list"] as const,
+  all: ['channels'] as const,
+  lists: () => [...channelKeys.all, 'list'] as const,
   list: (filters: string) => [...channelKeys.lists(), { filters }] as const,
-  details: () => [...channelKeys.all, "detail"] as const,
+  details: () => [...channelKeys.all, 'detail'] as const,
   detail: (id: string) => [...channelKeys.details(), id] as const,
-}
+};
 
 // Fetch all channels
 export function useChannels() {
   return useQuery({
     queryKey: channelKeys.lists(),
     queryFn: async () => {
-      const { data } = await apiClient.get<Channel[]>("/channels")
-      return data
+      const { data } = await apiClient.get<Channel[]>('/channels');
+      return data;
     },
-  })
+  });
 }
 
 // Fetch single channel
 export function useChannel(id: string, workspaceId?: string) {
   return useQuery({
-    queryKey: workspaceId ? ["workspaces", workspaceId, "channels", id] : channelKeys.detail(id),
+    queryKey: workspaceId ? ['workspaces', workspaceId, 'channels', id] : channelKeys.detail(id),
     queryFn: async () => {
-      const url = workspaceId
-        ? `/api/workspaces/${workspaceId}/channels/${id}`
-        : `/api/channels/${id}`;
-      const res = await fetch(url)
-      if (!res.ok) throw new Error("Failed to fetch channel")
-      return res.json()
+      const url = `/api/workspaces/${workspaceId}/channels/${id}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch channel');
+      return res.json();
     },
     enabled: !!id,
-  })
+  });
 }
 
 // Create channel
 export function useCreateChannel() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (newChannel: any) => {
-      const { data } = await apiClient.post<Channel>("/channels", newChannel)
-      return data
+      const { data } = await apiClient.post<Channel>('/channels', newChannel);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: channelKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
     },
-  })
+  });
 }
 
 // Update channel
 export function useUpdateChannel() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Channel> & { id: string }) => {
-      const { data } = await apiClient.patch<Channel>(`/channels/${id}`, updates)
-      return data
+      const { data } = await apiClient.patch<Channel>(`/channels/${id}`, updates);
+      return data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: channelKeys.detail(data.id) })
-      queryClient.invalidateQueries({ queryKey: channelKeys.lists() })
+    onSuccess: data => {
+      queryClient.invalidateQueries({ queryKey: channelKeys.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
     },
-  })
+  });
 }
 
 // Delete channel
 export function useDeleteChannel() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(`/channels/${id}`)
-      return id
+      await apiClient.delete(`/channels/${id}`);
+      return id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: channelKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
     },
-  })
+  });
 }
 
 // Join channel
 export function useJoinChannel() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (channelId: string) => {
-      const { data } = await apiClient.post(`/channels/${channelId}/join`)
-      return data
+      const { data } = await apiClient.post(`/channels/${channelId}/join`);
+      return data;
     },
     onSuccess: (_, channelId) => {
-      queryClient.invalidateQueries({ queryKey: channelKeys.detail(channelId) })
-      queryClient.invalidateQueries({ queryKey: channelKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: channelKeys.detail(channelId) });
+      queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
     },
-  })
+  });
 }
 
 // Leave channel
 export function useLeaveChannel() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (channelId: string) => {
-      await apiClient.post(`/channels/${channelId}/leave`)
-      return channelId
+      await apiClient.post(`/channels/${channelId}/leave`);
+      return channelId;
     },
-    onSuccess: (channelId) => {
-      queryClient.invalidateQueries({ queryKey: channelKeys.detail(channelId) })
-      queryClient.invalidateQueries({ queryKey: channelKeys.lists() })
+    onSuccess: channelId => {
+      queryClient.invalidateQueries({ queryKey: channelKeys.detail(channelId) });
+      queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
     },
-  })
+  });
 }
