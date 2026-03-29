@@ -35,7 +35,8 @@ export function getAblyServer() {
 export function getAblyRest() {
   const key = process.env.ABLY_API_KEY
   if (!key) {
-    throw new Error("ABLY_API_KEY is not defined")
+    console.warn("ABLY_API_KEY is not defined, returning null")
+    return null
   }
   return new Ably.Rest({
     key,

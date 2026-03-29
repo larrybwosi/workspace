@@ -15,7 +15,7 @@ import { useCurrentUser } from "@/hooks/api/use-users"
 import { LexicalEditor } from "./editor/lexical-editor"
 import { $getRoot, EditorState, $getSelection, $isRangeSelection, $insertNodes, FORMAT_TEXT_COMMAND, $createTextNode, $createParagraphNode } from "lexical"
 import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown"
-import { useWorkspace, useWorkspaceChannels } from "@/hooks/api/use-workspaces"
+import { useWorkspace, useWorkspaceChannels, useWorkspaceMembers } from "@/hooks/api/use-workspaces"
 import { $createMentionNode } from "./editor/mention-node"
 
 interface MessageComposerProps {
@@ -47,7 +47,8 @@ export function MessageComposer({
   const workspaceSlug = params.slug as string
   const { data: workspace } = useWorkspace(workspaceSlug)
   const { data: channels } = useWorkspaceChannels(workspace?.id)
-  const { data: channel } = useChannel(channelId || "")
+  const { data: members } = useWorkspaceMembers(workspace?.id)
+  const { data: channel } = useChannel(channelId || "", workspace?.id)
 
   const { data: currentUser } = useCurrentUser()
 
@@ -62,10 +63,25 @@ export function MessageComposer({
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
     if (mentionType === "user") {
-      const users: MentionItem[] = mockUsers.map(u => ({
+      const workspaceMembers = (members || []).map((m: any) => ({
+        id: m.user.id,
+        name: m.user.name,
+        type: "user" as const,
+        image: m.user.image || m.user.avatar,
+        description: m.role || m.user.role
+      }))
+
+      let filteredMembers = workspaceMembers;
+      if (channel?.isPrivate) {
+        // If private channel, filter by channel members
+        const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
+        filteredMembers = workspaceMembers.filter(m => channelMemberIds.has(m.id));
+      }
+
+      const users = filteredMembers.length > 0 ? filteredMembers : mockUsers.map(u => ({
         id: u.id,
         name: u.name,
-        type: "user",
+        type: "user" as const,
         image: u.avatar,
         description: u.role
       }))
@@ -79,16 +95,17 @@ export function MessageComposer({
     }
 
     if (mentionType === "channel") {
-      return (channels || []).map((c: any) => ({
+      const publicChannels = (channels || []).filter((c: any) => !c.isPrivate);
+      return publicChannels.map((c: any) => ({
         id: c.id,
         name: c.name,
-        type: "channel",
+        type: "channel" as const,
         description: c.description || "Channel"
       }))
     }
 
     return []
-  }, [mentionType])
+  }, [mentionType, members, channels])
 
   const handleSend = () => {
     if ((message.trim() || attachments.length > 0) && !isUploading) {
