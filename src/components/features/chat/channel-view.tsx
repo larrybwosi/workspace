@@ -9,16 +9,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import type { Thread, Message, Attachment } from '@/lib/types';
 import { mockThread, mockUsers } from '@/lib/mock-data';
-import { useMessages, useSendMessage, useReplyToMessage, useMarkMessageAsRead } from '@/hooks/api/use-messages';
+import { useMessages, useSendMessage, useReplyToMessage, useMarkMessageAsRead, messageKeys } from '@/hooks/api/use-messages';
 import { useAddReaction, useRemoveReaction } from '@/hooks/api/use-reactions';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { getAblyClient, AblyChannels, AblyEvents } from '@/lib/integrations/ably';
 import { UploadedFile } from '@/lib/utils/upload-utils';
 import { toast } from 'sonner';
 import { useChannel } from '@/hooks/api/use-channels';
 
 interface ChannelViewProps {
   channelId: string;
+  workspaceId?: string;
 }
 
 // --- Helper Components ---
@@ -73,9 +76,10 @@ function UnreadDivider() {
 
 // --- Main Component ---
 
-export function ChannelView({ channelId }: ChannelViewProps) {
+export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
+  const queryClient = useQueryClient();
 
   const activeChannelId = channelId;
 
@@ -85,13 +89,43 @@ export function ChannelView({ channelId }: ChannelViewProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(activeChannelId);
+  } = useMessages(activeChannelId, workspaceId);
 
-  const { data: channelData } = useChannel(activeChannelId);
+  const { data: channelData } = useChannel(activeChannelId, workspaceId);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!activeChannelId) return;
+
+    const ably = getAblyClient();
+    if (!ably) return;
+
+    const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
+
+    const handleMessage = (message: any) => {
+        const queryKey = workspaceId
+            ? ["workspaces", workspaceId, "channels", activeChannelId, "messages"]
+            : messageKeys.list(activeChannelId);
+
+        queryClient.invalidateQueries({ queryKey });
+    };
+
+    channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
+    channel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
+    channel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+    channel.subscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
+
+    return () => {
+      channel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
+      channel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
+      channel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+      channel.unsubscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
+    };
+  }, [activeChannelId, workspaceId, queryClient]);
 
   // API Mutations
-  const sendMessageMutation = useSendMessage();
-  const replyToMessageMutation = useReplyToMessage();
+  const sendMessageMutation = useSendMessage(workspaceId);
+  const replyToMessageMutation = useReplyToMessage(workspaceId);
   const addReactionMutation = useAddReaction();
   const removeReactionMutation = useRemoveReaction();
   const markAsReadMutation = useMarkMessageAsRead();

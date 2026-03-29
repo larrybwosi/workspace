@@ -11,39 +11,49 @@ export const messageKeys = {
 }
 
 // Fetch messages with infinite scroll
-export function useMessages(channelId: string) {
+export function useMessages(channelId: string, workspaceId?: string) {
   return useInfiniteQuery({
-    queryKey: messageKeys.list(channelId),
-    queryFn: async ({ pageParam = 0 }) => {
+    queryKey: workspaceId ? ["workspaces", workspaceId, "channels", channelId, "messages"] : messageKeys.list(channelId),
+    queryFn: async ({ pageParam }) => {
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
+        : `/messages`;
+
       const { data } = await apiClient.get<{ messages: Message[]; nextCursor: number | null }>(
-        `/messages`,
+        url,
         { params: { channelId, cursor: pageParam, limit: 50 } },
       )
       return data
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!channelId,
-    initialPageParam: 0,
+    initialPageParam: undefined,
   })
 }
 
 // Send message
-export function useSendMessage() {
+export function useSendMessage(workspaceId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ channelId, ...message }: Omit<Message, "id" | "timestamp" | "reactions" | "userId"> & { channelId: string }) => {
-      const { data } = await apiClient.post<Message>(`/messages`, { ...message, channelId })
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
+        : `/messages`;
+      const { data } = await apiClient.post<Message>(url, { ...message, channelId })
       return data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId) })
+      const queryKey = workspaceId
+        ? ["workspaces", workspaceId, "channels", variables.channelId, "messages"]
+        : messageKeys.list(variables.channelId);
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }
 
 // Update message
-export function useUpdateMessage() {
+export function useUpdateMessage(workspaceId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -52,13 +62,16 @@ export function useUpdateMessage() {
       return { data, channelId }
     },
     onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId) })
+      const queryKey = workspaceId
+        ? ["workspaces", workspaceId, "channels", channelId, "messages"]
+        : messageKeys.list(channelId);
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }
 
 // Delete message
-export function useDeleteMessage() {
+export function useDeleteMessage(workspaceId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -67,13 +80,16 @@ export function useDeleteMessage() {
       return { id, channelId }
     },
     onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId) })
+      const queryKey = workspaceId
+        ? ["workspaces", workspaceId, "channels", channelId, "messages"]
+        : messageKeys.list(channelId);
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }
 
 // Reply to message
-export function useReplyToMessage() {
+export function useReplyToMessage(workspaceId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -82,11 +98,17 @@ export function useReplyToMessage() {
       channelId,
       ...reply
     }: Omit<Message, "id" | "timestamp" | "reactions" | "userId"> & { messageId: string; channelId: string }) => {
-      const { data } = await apiClient.post<Message>(`/messages/${messageId}/replies`, reply)
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/${messageId}/replies`
+        : `/messages/${messageId}/replies`;
+      const { data } = await apiClient.post<Message>(url, reply)
       return { data, channelId }
     },
     onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId) })
+      const queryKey = workspaceId
+        ? ["workspaces", workspaceId, "channels", channelId, "messages"]
+        : messageKeys.list(channelId);
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }

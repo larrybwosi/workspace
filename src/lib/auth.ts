@@ -22,6 +22,7 @@ export const auth = betterAuth({
     jwt(),
     organization(),
     oauthProvider({
+      silenceWarnings: true,
       loginPage: '/login',
       consentPage: '/consent',
       allowDynamicClientRegistration: true,
