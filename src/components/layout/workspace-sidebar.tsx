@@ -1,35 +1,48 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   Plus,
-  ChevronDown,
-  ChevronRight,
   LayoutDashboard,
   MessageSquare,
   Users,
   Settings,
   Sparkles,
-  BarChart3,
   Plug2,
-  CreditCard,
-  ShieldCheck,
-  FolderKanban,
-  UserPlus,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useRouter, useParams } from "next/navigation";
-import { useSession } from "@/lib/auth/auth-client";
-import { WorkspaceSwitcher } from "@/components/features/workspace/workspace-switcher";
-import { UserProfileDialog } from "@/components/features/social/user-profile-dialog";
-import { CreateChannelDialog } from "@/components/features/chat/create-channel-dialog";
-import { useCreateWorkspaceChannel, useWorkspaceChannels } from "@/hooks/api/use-workspaces";
-import { User } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
+  Hash,
+  Lock,
+  ChevronDown,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { useRouter, useParams, usePathname } from 'next/navigation';
+import { useSession } from '@/lib/auth/auth-client';
+import { WorkspaceSwitcher } from '@/components/features/workspace/workspace-switcher';
+import { UserProfileDialog } from '@/components/features/social/user-profile-dialog';
+import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
+import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@/hooks/api/use-workspaces';
+import { User } from '@/lib/types';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  onClick?: () => void;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
 
 interface WorkspaceSidebarProps {
   isOpen: boolean;
@@ -38,220 +51,295 @@ interface WorkspaceSidebarProps {
   onWorkspaceChange?: (workspaceId: string) => void;
 }
 
-export function WorkspaceSidebar({
-  isOpen,
-  onClose,
-  currentWorkspaceId,
-  onWorkspaceChange,
-}: WorkspaceSidebarProps) {
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">{children}</p>
+  );
+}
+
+function NavButton({ item, isActive, onClick }: { item: NavItem; isActive: boolean; onClick: () => void }) {
+  return (
+    <TooltipProvider delayDuration={500}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              'w-full justify-start gap-2.5 h-9 px-3 rounded-md font-medium text-sm transition-all',
+              isActive
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+            )}
+            onClick={onClick}
+          >
+            <item.icon
+              className={cn(
+                'h-4 w-4 shrink-0 transition-colors',
+                isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
+              )}
+            />
+            <span className="flex-1 truncate text-left">{item.label}</span>
+            {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="lg:hidden">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function ChannelSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex items-center h-9 px-3 gap-2.5">
+          <Skeleton className="h-4 w-4 rounded shrink-0" />
+          <Skeleton className="h-3 flex-1 rounded" />
+        </div>
+      ))}
+    </>
+  );
+}
+
+function StatusDot({ status }: { status?: string }) {
+  const colorMap: Record<string, string> = {
+    online: 'bg-green-500',
+    away: 'bg-yellow-500',
+    busy: 'bg-red-500',
+    offline: 'bg-muted-foreground/40',
+  };
+  return (
+    <span
+      className={cn(
+        'absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-sidebar',
+        colorMap[status ?? 'offline'] ?? colorMap.offline
+      )}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
+
+export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorkspaceChange }: WorkspaceSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { slug } = useParams();
+
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
-  const createChannelMutation = useCreateWorkspaceChannel(currentWorkspaceId || "");
-  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(currentWorkspaceId || "");
+
+  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(currentWorkspaceId ?? '');
+  const createChannelMutation = useCreateWorkspaceChannel(currentWorkspaceId ?? '');
 
   const session = useSession();
   const sessionUser = session.data?.user;
 
-  const currentUser: User | undefined = sessionUser ? {
-    id: sessionUser.id,
-    name: sessionUser.name,
-    avatar: sessionUser.image || "",
-    role: "Admin",
-    status: "online"
-  } : undefined;
+  const currentUser: User | undefined = sessionUser
+    ? {
+        id: sessionUser.id,
+        name: sessionUser.name,
+        avatar: sessionUser.image ?? '',
+        role: 'Admin',
+        status: 'online',
+      }
+    : undefined;
 
-  const handleCreateChannel = (channelData: {
-    name: string;
-    description: string;
-    isPrivate: boolean;
-  }) => {
-    createChannelMutation.mutate({
-      name: channelData.name,
-      description: channelData.description,
-      type: channelData.isPrivate ? "private" : "public",
-    }, {
-        onSuccess: () => {
-            setCreateChannelOpen(false);
-        }
-    });
+  const handleNavigate = (href: string) => {
+    router.push(href);
+    onClose();
   };
 
-  const menuItems = [
+  const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
+    createChannelMutation.mutate(
+      {
+        name: channelData.name,
+        description: channelData.description,
+        type: channelData.isPrivate ? 'private' : 'public',
+      },
+      { onSuccess: () => setCreateChannelOpen(false) }
+    );
+  };
+
+  const navSections: NavSection[] = [
     {
-      label: "General",
+      label: 'General',
       items: [
-        { icon: LayoutDashboard, label: "Dashboard", href: `/workspace/${slug}` },
-        { icon: Sparkles, label: "Assistant", href: "/assistant" },
-      ]
+        { icon: LayoutDashboard, label: 'Dashboard', href: `/workspace/${slug}` },
+        { icon: Sparkles, label: 'Assistant', href: `/workspace/${slug}/assistant` },
+      ],
     },
     {
-      label: "Quick Actions",
+      label: 'Manage',
       items: [
-        { icon: Plus, label: "Create Channel", onClick: () => setCreateChannelOpen(true) },
-        { icon: UserPlus, label: "Invite Members", href: `/workspace/${slug}/members` },
-      ]
+        { icon: Users, label: 'Members', href: `/workspace/${slug}/members` },
+        { icon: Plug2, label: 'Integrations', href: `/workspace/${slug}/integrations` },
+        { icon: Settings, label: 'Settings', href: `/workspace/${slug}/settings` },
+      ],
     },
-    {
-      label: "Workspace",
-      items: [
-        { icon: Users, label: "Members", href: `/workspace/${slug}/members` },
-        { icon: FolderKanban, label: "Projects", href: `/workspace/${slug}/projects` },
-      ]
-    },
-    {
-      label: "Administration",
-      items: [
-        { icon: BarChart3, label: "Analytics", href: `/workspace/${slug}/analytics` },
-        { icon: Plug2, label: "Integrations", href: `/workspace/${slug}/integrations` },
-        { icon: Settings, label: "Settings", href: `/workspace/${slug}/settings` },
-      ]
-    },
-    {
-      label: "Enterprise",
-      items: [
-        { icon: CreditCard, label: "Billing", href: `/workspace/${slug}/billing` },
-        { icon: ShieldCheck, label: "Audit Logs", href: `/workspace/${slug}/audit-logs` },
-      ]
-    }
   ];
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar panel */}
       <aside
+        role="navigation"
+        aria-label="Workspace navigation"
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-200 lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar border-r border-sidebar-border',
+          'transition-transform duration-200 ease-in-out',
+          'lg:static lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Workspace Switcher */}
-        <div className="border-b border-sidebar-border p-2 shrink-0">
-          <WorkspaceSwitcher
-            currentWorkspaceId={currentWorkspaceId}
-            onWorkspaceChange={onWorkspaceChange}
-          />
+        {/* Workspace switcher */}
+        <div className="shrink-0 border-b border-sidebar-border p-2">
+          <WorkspaceSwitcher currentWorkspaceId={currentWorkspaceId} onWorkspaceChange={onWorkspaceChange} />
         </div>
 
-        {/* Scrollable Content */}
-        <ScrollArea className="flex-1">
-          <div className="p-3 space-y-6">
-            {menuItems.map((section, idx) => (
-              <div key={idx} className="space-y-1">
-                <h4 className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  {section.label}
-                </h4>
+        {/* Scrollable nav */}
+        <ScrollArea className="flex-1 py-4">
+          <div className="space-y-5 px-2">
+            {navSections.map(section => (
+              <div key={section.label}>
+                <SectionLabel>{section.label}</SectionLabel>
                 <div className="space-y-0.5">
-                  {section.items.map((item, itemIdx) => (
-                    <Button
-                      key={itemIdx}
-                      variant="ghost"
-                      className="w-full justify-start h-9 px-2 text-sidebar-foreground hover:bg-sidebar-accent group"
-                      onClick={() => {
-                        if (item.onClick) {
-                            item.onClick();
-                        } else if (item.href) {
-                            router.push(item.href);
-                            onClose();
-                        }
-                      }}
-                    >
-                      <item.icon className="h-4 w-4 mr-2.5 shrink-0 text-muted-foreground group-hover:text-sidebar-accent-foreground" />
-                      <span className="flex-1 text-left text-sm font-medium">
-                        {item.label}
-                      </span>
-                    </Button>
+                  {section.items.map(item => (
+                    <NavButton
+                      key={item.href}
+                      item={item}
+                      isActive={pathname === item.href}
+                      onClick={() => (item.onClick ? item.onClick() : handleNavigate(item.href))}
+                    />
                   ))}
                 </div>
               </div>
             ))}
 
-            {/* Channels Section */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-2">
-                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  Channels
-                </h4>
-                <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => setCreateChannelOpen(true)}>
-                  <Plus className="h-3 w-3" />
-                </Button>
+            <Separator className="bg-sidebar-border" />
+
+            {/* Channels */}
+            <div>
+              <div className="flex items-center justify-between px-3 mb-1">
+                <SectionLabel>Channels</SectionLabel>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
+                        onClick={() => setCreateChannelOpen(true)}
+                        aria-label="Create channel"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">New channel</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
+
               <div className="space-y-0.5">
                 {channelsLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="flex items-center h-9 px-2">
-                      <Skeleton className="h-4 w-4 mr-2.5" />
-                      <Skeleton className="h-3 flex-1" />
-                    </div>
-                  ))
+                  <ChannelSkeleton />
                 ) : channels?.length > 0 ? (
-                  channels.map((channel: any) => (
-                    <Button
-                      key={channel.id}
-                      variant="ghost"
-                      className="w-full justify-start h-9 px-2 text-sidebar-foreground hover:bg-sidebar-accent group"
-                      onClick={() => {
-                        router.push(`/workspace/${slug}/channels/${channel.slug || channel.id}`);
-                        onClose();
-                      }}
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2.5 shrink-0 text-muted-foreground group-hover:text-sidebar-accent-foreground" />
-                      <span className="flex-1 text-left text-sm font-medium truncate">
-                        {channel.name}
-                      </span>
-                    </Button>
-                  ))
+                  channels.map((channel: any) => {
+                    const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
+                    const isActive = pathname === href;
+                    const Icon = channel.type === 'private' ? Lock : Hash;
+
+                    return (
+                      <Button
+                        key={channel.id}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                          isActive
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                        )}
+                        onClick={() => handleNavigate(href)}
+                      >
+                        <Icon
+                          className={cn(
+                            'h-3.5 w-3.5 shrink-0',
+                            isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
+                          )}
+                        />
+                        <span className="flex-1 truncate text-left">{channel.name}</span>
+                        {channel.unreadCount > 0 && (
+                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                            {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    );
+                  })
                 ) : (
-                  <div className="px-2 py-2 text-xs text-muted-foreground italic text-center">
-                    No channels yet
-                  </div>
+                  <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No channels yet</p>
                 )}
               </div>
             </div>
           </div>
         </ScrollArea>
 
-        {/* User Profile Footer */}
-        <button
-          className="h-14 border-t border-sidebar-border flex items-center gap-2 px-3 hover:bg-sidebar-accent transition-colors w-full text-left shrink-0"
-          onClick={() => setProfileOpen(true)}
-        >
-          <div className="relative shrink-0">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={currentUser?.avatar} />
-              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                {currentUser?.name?.slice(0, 2).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-sidebar rounded-full" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {currentUser?.name || "User"}
-            </p>
-            <p className="text-xs text-muted-foreground capitalize">
-              online
-            </p>
-          </div>
-        </button>
+        {/* User footer */}
+        <div className="shrink-0 border-t border-sidebar-border">
+          <button
+            type="button"
+            className={cn(
+              'flex w-full items-center gap-3 px-3 py-3',
+              'text-left transition-colors hover:bg-sidebar-accent',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            )}
+            onClick={() => setProfileOpen(true)}
+            aria-label="Open profile settings"
+          >
+            <div className="relative shrink-0">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                  {currentUser?.name?.slice(0, 2).toUpperCase() ?? 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <StatusDot status={currentUser?.status} />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                {currentUser?.name ?? 'User'}
+              </p>
+              <p className="text-xs text-muted-foreground capitalize leading-tight mt-0.5">
+                {currentUser?.status ?? 'offline'}
+              </p>
+            </div>
+
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+          </button>
+        </div>
       </aside>
 
-      {currentUser && (
-        <UserProfileDialog
-          user={currentUser}
-          open={profileOpen}
-          onOpenChange={setProfileOpen}
-        />
-      )}
+      {/* Dialogs */}
+      {currentUser && <UserProfileDialog user={currentUser} open={profileOpen} onOpenChange={setProfileOpen} />}
 
       <CreateChannelDialog
         open={createChannelOpen}
