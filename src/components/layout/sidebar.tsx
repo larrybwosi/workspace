@@ -1,28 +1,27 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  Plus,
-  ChevronDown,
-  Inbox,
-  Bookmark,
-  Sparkles,
-  Users,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth/auth-client";
-import { useNotifications } from "@/hooks/api/use-notifications";
-import { useDMConversations } from "@/hooks/api/use-dm";
-import { WorkspaceSwitcher } from "@/components/features/workspace/workspace-switcher";
-import { UserProfileDialog } from "@/components/features/social/user-profile-dialog";
-import { StartDMDialog } from "@/components/features/chat/start-dm-dialog";
-import { User } from "@/lib/types";
+import * as React from 'react';
+import { Plus, ChevronDown, Inbox, Bookmark, Sparkles, Users, FileText, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { useRouter, usePathname } from 'next/navigation';
+import { useSession } from '@/lib/auth/auth-client';
+import { useNotifications } from '@/hooks/api/use-notifications';
+import { useDMConversations } from '@/hooks/api/use-dm';
+import { WorkspaceSwitcher } from '@/components/features/workspace/workspace-switcher';
+import { UserProfileDialog } from '@/components/features/social/user-profile-dialog';
+import { StartDMDialog } from '@/components/features/chat/start-dm-dialog';
+import { User } from '@/lib/types';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface SidebarProps {
   isOpen: boolean;
@@ -34,6 +33,165 @@ interface SidebarProps {
   onWorkspaceChange?: (workspaceId: string) => void;
 }
 
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">{children}</p>
+  );
+}
+
+function CollapsibleSectionHeader({
+  label,
+  isOpen,
+  onToggle,
+  count,
+  onAction,
+  actionLabel = 'New',
+}: {
+  label: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  count?: number;
+  onAction?: () => void;
+  actionLabel?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-3 mb-1">
+      <button
+        type="button"
+        className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        <ChevronRight className={cn('h-2.5 w-2.5 transition-transform duration-150', isOpen && 'rotate-90')} />
+        {label}
+        {count !== undefined && count > 0 && (
+          <span className="ml-1 text-[10px] text-muted-foreground/50">({count})</span>
+        )}
+      </button>
+      {onAction && (
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
+                onClick={onAction}
+                aria-label={actionLabel}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">{actionLabel}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+}
+
+function NavButton({
+  icon: Icon,
+  label,
+  isActive,
+  badge,
+  badgeVariant = 'secondary',
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  isActive?: boolean;
+  badge?: React.ReactNode;
+  badgeVariant?: 'secondary' | 'new';
+  onClick?: () => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn(
+        'w-full justify-start gap-2.5 h-9 px-3 rounded-md font-medium text-sm transition-all',
+        isActive
+          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+          : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+      )}
+      onClick={onClick}
+    >
+      <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground')} />
+      <span className="flex-1 truncate text-left">{label}</span>
+      {badge}
+    </Button>
+  );
+}
+
+function DMSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center h-9 px-3 gap-2.5">
+          <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+          <Skeleton className="h-3 flex-1 rounded" />
+        </div>
+      ))}
+    </>
+  );
+}
+
+function StatusDot({ status }: { status?: string }) {
+  const colorMap: Record<string, string> = {
+    online: 'bg-green-500',
+    away: 'bg-yellow-500',
+    busy: 'bg-red-500',
+    offline: 'bg-muted-foreground/40',
+  };
+  return (
+    <span
+      className={cn(
+        'absolute bottom-0 right-0 h-2 w-2 rounded-full border border-sidebar',
+        colorMap[status ?? 'offline'] ?? colorMap.offline
+      )}
+    />
+  );
+}
+
+function UserFooter({ user, onClick }: { user?: User; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        'flex w-full items-center gap-3 px-3 py-3',
+        'text-left transition-colors hover:bg-sidebar-accent',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      )}
+      onClick={onClick}
+      aria-label="Open profile settings"
+    >
+      <div className="relative shrink-0">
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={user?.avatar} alt={user?.name} />
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+            {user?.name?.slice(0, 2).toUpperCase() ?? 'U'}
+          </AvatarFallback>
+        </Avatar>
+        <StatusDot status={user?.status} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">{user?.name ?? 'User'}</p>
+        <p className="text-xs text-muted-foreground capitalize leading-tight mt-0.5">{user?.status ?? 'offline'}</p>
+      </div>
+      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
+
 export function Sidebar({
   isOpen,
   onClose,
@@ -42,275 +200,203 @@ export function Sidebar({
   currentWorkspaceId,
   onWorkspaceChange,
 }: SidebarProps) {
-  const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations()
-  const { data: notificationsData } = useNotifications(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
+  const [dmsOpen, setDmsOpen] = React.useState(true);
   const [favoritesOpen, setFavoritesOpen] = React.useState(true);
-  const [directMessagesOpen, setDirectMessagesOpen] = React.useState(true);
   const [profileOpen, setProfileOpen] = React.useState(false);
-  const [startDMOpen, setStartDMOpen] = React.useState(false)
+  const [startDMOpen, setStartDMOpen] = React.useState(false);
+
   const session = useSession();
   const sessionUser = session.data?.user;
 
-  const currentUser: User | undefined = sessionUser ? {
-    id: sessionUser.id,
-    name: sessionUser.name,
-    avatar: sessionUser.image || "",
-    role: "Admin", // Default role
-    status: "online"
-  } : undefined;
+  const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations();
+  const { data: notificationsData } = useNotifications(true);
 
-  const router = useRouter();
+  const currentUser: User | undefined = sessionUser
+    ? {
+        id: sessionUser.id,
+        name: sessionUser.name,
+        avatar: sessionUser.image ?? '',
+        role: 'Admin',
+        status: 'online',
+      }
+    : undefined;
 
-  const handleAssistantClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push("/assistant");
+  const notifCount: number = notificationsData?.total ?? notificationsData?.notifications?.length ?? 0;
+
+  const handleNavigate = (href: string) => {
+    router.push(href);
     onClose();
-  };
-
-
-  const renderLoadingSkeleton = (count: number = 3) => {
-    return Array.from({ length: count }).map((_, index) => (
-      <div key={index} className="flex items-center h-8 px-2">
-        <Skeleton className="h-4 w-4 mr-2" />
-        <Skeleton className="h-3 flex-1" />
-      </div>
-    ));
   };
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar panel */}
       <aside
+        role="navigation"
+        aria-label="Main navigation"
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-200 lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar border-r border-sidebar-border',
+          'transition-transform duration-200 ease-in-out',
+          'lg:static lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-
-        {/* Workspace Switcher */}
-        <div className="border-b border-sidebar-border p-2 shrink-0">
-          <WorkspaceSwitcher
-            currentWorkspaceId={currentWorkspaceId}
-            onWorkspaceChange={onWorkspaceChange}
-          />
+        {/* Workspace switcher */}
+        <div className="shrink-0 border-b border-sidebar-border p-2">
+          <WorkspaceSwitcher currentWorkspaceId={currentWorkspaceId} onWorkspaceChange={onWorkspaceChange} />
         </div>
 
-        {/* Scrollable Content */}
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {/* Quick Actions */}
-            <Button
-              variant={activeChannel === "assistant" ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                activeChannel === "assistant" &&
-                  "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-              onClick={handleAssistantClick}
-            >
-              <Sparkles className="h-4 w-4 mr-2 shrink-0" />
-              <span className="flex-1 text-left text-sm">Assistant</span>
-              <Badge
-                variant="secondary"
-                className="text-xs px-1.5 py-0 bg-blue-500/20 text-blue-400 border-0 shrink-0"
-              >
-                NEW
-              </Badge>
-            </Button>
-
-
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <Bookmark className="h-4 w-4 mr-2 shrink-0" />
-              <span className="flex-1 text-left text-sm">Drafts</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <Bookmark className="h-4 w-4 mr-2 shrink-0" />
-              <span className="flex-1 text-left text-sm">Saved items</span>
-            </Button>
-
-            <Button
-              variant={activeChannel === "notifications" ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                activeChannel === "notifications" && "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-              onClick={() => router.push('/notifications')}
-            >
-              <Inbox className="h-4 w-4 mr-2 shrink-0" />
-              <span className="flex-1 text-left text-sm">Inbox</span>
-              {(notificationsData?.notifications?.length > 0 || notificationsData?.total > 0) && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs px-1.5 py-0 shrink-0"
-                >
-                  {notificationsData?.total || notificationsData?.notifications?.length}
-                </Badge>
-              )}
-            </Button>
-
-            <Button
-              variant={activeChannel === "friends" ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                activeChannel === "friends" && "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-              onClick={() => router.push('/friends')}
-            >
-              <Users className="h-4 w-4 mr-2 shrink-0" />
-              <span className="flex-1 text-left text-sm">Friends</span>
-            </Button>
-          </div>
-
-
-          {/* Direct messages */}
-          <div className="px-2 py-2 mt-2">
-            <div className="flex items-center justify-between mb-1">
-              <Button
-                variant="ghost"
-                className="flex-1 justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
-                onClick={() => setDirectMessagesOpen(!directMessagesOpen)}
-              >
-                <ChevronDown className={cn("h-3 w-3 mr-1 transition-transform", !directMessagesOpen && "-rotate-90")} />
-                Direct messages
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 ml-auto">
-                  {dmConversations.length}
-                </Badge>
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStartDMOpen(true)}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            {directMessagesOpen && (
+        {/* Scrollable nav */}
+        <ScrollArea className="flex-1 py-4">
+          <div className="space-y-5 px-2">
+            {/* Quick access */}
+            <div>
+              <SectionLabel>Quick access</SectionLabel>
               <div className="space-y-0.5">
-                {dmsLoading ? (
-                  renderLoadingSkeleton(3)
-                ) : dmConversations.length === 0 ? (
-                  <div className="text-center text-xs text-muted-foreground py-2">No conversations yet</div>
-                ) : (
-                  dmConversations.map((dm: any) => {
-                    const otherUser = dm.members.find((m: any) => m.id !== dm.creatorId) || dm.members[0]
-                    const dmId = `dm-${otherUser.id}`
-
-                    return (
-                      <Button
-                        key={dm.id}
-                        variant={activeChannel === dmId ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-start h-8 px-2 text-sidebar-foreground hover:bg-sidebar-accent",
-                          activeChannel === dmId && "bg-sidebar-accent text-sidebar-accent-foreground",
-                        )}
-                        onClick={() => {
-                          router.push(`/dm/${otherUser.id}`)
-                          onClose()
-                        }}
-                      >
-                        <div className="relative mr-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                              {otherUser.name.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div
-                            className={cn(
-                              "absolute bottom-0 right-0 h-2 w-2 border border-sidebar rounded-full",
-                              otherUser.status === "online"
-                                ? "bg-green-500"
-                                : otherUser.status === "away"
-                                  ? "bg-yellow-500"
-                                  : "bg-gray-400",
-                            )}
-                          />
-                        </div>
-                        <span className="flex-1 text-left truncate text-sm">{otherUser.name}</span>
-                        {dm._count?.messages > 0 && (
-                          <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                            {dm._count.messages}
-                          </Badge>
-                        )}
-                      </Button>
-                    )
-                  })
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Favorites Section */}
-          <div className="mt-4">
-            <div className="px-2 mb-1">
-              <Button
-                variant="ghost"
-                className="w-full justify-start h-7 px-2 text-xs font-semibold text-muted-foreground hover:bg-sidebar-accent"
-                onClick={() => setFavoritesOpen(!favoritesOpen)}
-              >
-                <ChevronDown
-                  className={cn(
-                    "h-3 w-3 mr-1 transition-transform shrink-0",
-                    !favoritesOpen && "-rotate-90"
-                  )}
+                <NavButton
+                  icon={Sparkles}
+                  label="Assistant"
+                  isActive={pathname === '/assistant'}
+                  badge={
+                    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500/15 text-blue-500 border-0 font-semibold">
+                      NEW
+                    </Badge>
+                  }
+                  onClick={() => handleNavigate('/assistant')}
                 />
-                Favorites
-              </Button>
-            </div>
-            {favoritesOpen && (
-              <div className="px-2 space-y-0.5">
-                
+                <NavButton
+                  icon={Inbox}
+                  label="Inbox"
+                  isActive={pathname === '/notifications' || activeChannel === 'notifications'}
+                  badge={
+                    notifCount > 0 ? (
+                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                        {notifCount > 99 ? '99+' : notifCount}
+                      </span>
+                    ) : undefined
+                  }
+                  onClick={() => handleNavigate('/notifications')}
+                />
+                <NavButton
+                  icon={Users}
+                  label="Friends"
+                  isActive={pathname === '/friends' || activeChannel === 'friends'}
+                  onClick={() => handleNavigate('/friends')}
+                />
+                <NavButton
+                  icon={FileText}
+                  label="Drafts"
+                  isActive={pathname === '/drafts'}
+                  onClick={() => handleNavigate('/drafts')}
+                />
+                <NavButton
+                  icon={Bookmark}
+                  label="Saved items"
+                  isActive={pathname === '/saved'}
+                  onClick={() => handleNavigate('/saved')}
+                />
               </div>
-            )}
-          </div>
+            </div>
 
+            <Separator className="bg-sidebar-border" />
+
+            {/* Direct messages */}
+            <div>
+              <CollapsibleSectionHeader
+                label="Direct messages"
+                isOpen={dmsOpen}
+                onToggle={() => setDmsOpen(v => !v)}
+                count={dmConversations.length}
+                onAction={() => setStartDMOpen(true)}
+                actionLabel="New message"
+              />
+
+              {dmsOpen && (
+                <div className="space-y-0.5">
+                  {dmsLoading ? (
+                    <DMSkeleton count={3} />
+                  ) : dmConversations.length === 0 ? (
+                    <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">
+                      No conversations yet
+                    </p>
+                  ) : (
+                    dmConversations.map((dm: any) => {
+                      const other = dm.members.find((m: any) => m.id !== dm.creatorId) ?? dm.members[0];
+                      const dmId = `dm-${other.id}`;
+                      const href = `/dm/${other.id}`;
+                      const isActive = activeChannel === dmId || pathname === href;
+                      const unread: number = dm._count?.messages ?? 0;
+
+                      return (
+                        <Button
+                          key={dm.id}
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                          )}
+                          onClick={() => handleNavigate(href)}
+                        >
+                          <div className="relative shrink-0">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={other.avatar} alt={other.name} />
+                              <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-semibold">
+                                {other.name?.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <StatusDot status={other.status} />
+                          </div>
+                          <span className="flex-1 truncate text-left">{other.name}</span>
+                          {unread > 0 && (
+                            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                              {unread > 99 ? '99+' : unread}
+                            </span>
+                          )}
+                        </Button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Favorites */}
+            <div>
+              <CollapsibleSectionHeader
+                label="Favorites"
+                isOpen={favoritesOpen}
+                onToggle={() => setFavoritesOpen(v => !v)}
+              />
+              {favoritesOpen && (
+                <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No favorites yet</p>
+              )}
+            </div>
+          </div>
         </ScrollArea>
 
-        {/* User Profile Footer - Fixed */}
-        <button
-          className="h-14 border-t border-sidebar-border flex items-center gap-2 px-3 hover:bg-sidebar-accent transition-colors w-full text-left shrink-0"
-          onClick={() => setProfileOpen(true)}
-        >
-          <div className="relative shrink-0">
-            <Avatar className="h-8 w-8">
-              <div className="text-xs bg-primary text-primary-foreground flex items-center justify-center h-full w-full">
-                {currentUser?.avatar}
-              </div>
-              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                {currentUser?.name?.slice(0, 2).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-sidebar rounded-full" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {currentUser?.name || "User"}
-            </p>
-            <p className="text-xs text-muted-foreground capitalize">
-              { "online"}
-            </p>
-          </div>
-        </button>
+        {/* User footer */}
+        <div className="shrink-0 border-t border-sidebar-border">
+          <UserFooter user={currentUser} onClick={() => setProfileOpen(true)} />
+        </div>
       </aside>
-        { currentUser &&
-          <UserProfileDialog
-            user={currentUser}
-            open={profileOpen}
-            onOpenChange={setProfileOpen}
-          />
-        }
 
+      {/* Dialogs */}
+      {currentUser && <UserProfileDialog user={currentUser} open={profileOpen} onOpenChange={setProfileOpen} />}
 
       <StartDMDialog open={startDMOpen} onOpenChange={setStartDMOpen} />
     </>
