@@ -1,7 +1,10 @@
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 546ms
 
-> dealio@0.1.0 dev /app
-> next dev --port 3001 --port 3001
-
-sh: 1: next: not found
- ELIFECYCLE  Command failed.
- WARN   Local package.json exists, but node_modules missing, did you mean to install?
+[2m2026-03-29T09:37:48.152Z[0m [33mWARN[0m [1m[Better Auth]:[0m Please ensure '/.well-known/oauth-authorization-server/api/auth' exists. Upon completion, clear with silenceWarnings.oauthAuthServerConfig.
+○ Compiling /login ...
+ GET /login 200 in 4.9s (next.js: 4.5s, proxy.ts: 23ms, application-code: 404ms)
+ GET /login 200 in 202ms (next.js: 13ms, proxy.ts: 9ms, application-code: 180ms)
+ECYCLE  Command failed with exit code 143.
