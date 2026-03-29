@@ -22,6 +22,7 @@ export default function WorkspaceSettingsPageClient({
   workspace: any
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const { slug } = useParams()
   const { data: workspaces, isLoading } = useWorkspaces()
 
@@ -38,11 +39,13 @@ export default function WorkspaceSettingsPageClient({
         onClose={() => setSidebarOpen(false)}
         currentWorkspaceId={currentWorkspace?.id}
       />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <DynamicHeader
           activeView="Settings"
           onMenuClick={() => setSidebarOpen(true)}
+          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
+        <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-auto">
           <div className="border-b bg-background px-6 py-4">
             <div className="flex items-center gap-4">
@@ -102,6 +105,16 @@ export default function WorkspaceSettingsPageClient({
               </TabsContent>
             </Tabs>
           </div>
+        </div>
+        {infoPanelOpen && (
+            <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out hidden lg:block">
+                <InfoPanel
+                    isOpen={infoPanelOpen}
+                    onClose={() => setInfoPanelOpen(false)}
+                    type="workspace"
+                />
+            </aside>
+        )}
         </div>
       </main>
     </div>
