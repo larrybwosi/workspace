@@ -106,7 +106,6 @@ export default function WorkspacePage() {
         <DynamicHeader
           activeView="Workspace Dashboard"
           onMenuClick={() => setSidebarOpen(true)}
-          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
 
         <div className="flex flex-1 overflow-hidden">
@@ -216,15 +215,6 @@ export default function WorkspacePage() {
             </CardContent>
           </Card>
         </div>
-        {infoPanelOpen && (
-            <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out hidden lg:block">
-                <InfoPanel
-                    isOpen={infoPanelOpen}
-                    onClose={() => setInfoPanelOpen(false)}
-                    type="workspace"
-                />
-            </aside>
-        )}
         </div>
       </main>
 
