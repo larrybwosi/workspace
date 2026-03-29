@@ -1,0 +1,64 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dealio-app
+    restart: always
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+    networks:
+      - dealio-network
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: dealio-postgres
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-main}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dealio-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: dealio-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dealio-network
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  dealio-network:
+    driver: bridge
