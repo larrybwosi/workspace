@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import type { Thread, Message, Attachment } from '@/lib/types';
 import { mockThread, mockUsers } from '@/lib/mock-data';
-import { useMessages, useSendMessage, useReplyToMessage, useMarkMessageAsRead, messageKeys } from '@/hooks/api/use-messages';
+import { useMessages, useSendMessage, useReplyToMessage, useMarkMessagesAsRead, messageKeys } from '@/hooks/api/use-messages';
 import { useAddReaction, useRemoveReaction } from '@/hooks/api/use-reactions';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -128,7 +128,7 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
   const replyToMessageMutation = useReplyToMessage(workspaceId);
   const addReactionMutation = useAddReaction();
   const removeReactionMutation = useRemoveReaction();
-  const markAsReadMutation = useMarkMessageAsRead();
+  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceId);
 
   // State & Refs
   const [replyingTo, setReplyingTo] = useState<{
@@ -159,16 +159,17 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
     }
   }, [messages.length, highlightedMessageId, isLoading]);
 
-  // 3. Read Receipts
+  // 3. Read Receipts (Batch)
   useEffect(() => {
     if (messages.length > 0) {
-      const unreadMessages = messages.filter(m => !m.readByCurrentUser);
-      if (unreadMessages.length > 0) {
-        unreadMessages.forEach(msg => {
-          markAsReadMutation.mutate({
-            messageId: msg.id,
-            channelId: activeChannelId,
-          });
+      const unreadMessageIds = messages
+        .filter(m => !m.readByCurrentUser)
+        .map(m => m.id);
+
+      if (unreadMessageIds.length > 0) {
+        markMessagesAsReadMutation.mutate({
+          messageIds: unreadMessageIds,
+          channelId: activeChannelId,
         });
       }
     }
@@ -376,19 +377,16 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
                     <div
                       key={message.id}
                       className={cn(
-                        'group relative w-full pr-2 md:pr-4 transition-colors duration-200',
-                        'hover:bg-muted/30',
-                        // On mobile, touch active state often replaces hover
-                        'active:bg-muted/30',
-                        isGrouped ? 'mt-[2px] py-0.5' : 'mt-[17px] py-0.5',
-                        isHighlighted && 'bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/20'
+                        'group relative w-full transition-colors duration-200',
+                        isGrouped ? 'mt-0' : 'mt-[1.0625rem]',
+                        isHighlighted && 'bg-yellow-500/10'
                       )}
                       ref={isHighlighted ? highlightedMessageRef : undefined}
                     >
                       <div
                         className={cn(
-                          'pl-2 md:pl-4 w-full',
-                          item.depth > 0 && 'pl-4 md:pl-12 border-l-2 border-muted ml-2 md:ml-4'
+                          'w-full',
+                          item.depth > 0 && 'pl-4 md:pl-12 border-l-2 border-muted'
                         )}
                       >
                         <MessageItem

@@ -113,6 +113,9 @@ export function MessageItem({
   const deleteMessageMutation = useDeleteMessage();
   const { toast } = useToast();
 
+  const currentUser = mockUsers[0]; // In a real app, use a hook like useCurrentUser()
+  const isMentioned = message.mentions?.some(m => m.includes(currentUser.name)) || message.content.includes(`@${currentUser.name}`);
+
   const user = mockUsers.find((u) => u.id === message.userId);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -231,10 +234,11 @@ export function MessageItem({
         <div
           ref={highlightRef}
           className={cn(
-            "group relative px-2 md:px-4 py-1 md:py-2 transition-colors w-full touch-manipulation",
-            "hover:bg-muted/30",
-            isMenuOpen && "bg-muted/30",
-            !showAvatar && "pl-12 md:pl-16",
+            "group relative px-4 py-[2px] md:py-[4px] transition-colors w-full touch-manipulation",
+            "hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]",
+            isMenuOpen && "bg-[#0000000a] dark:bg-[#ffffff05]",
+            isMentioned && "bg-[#f9c3341a] dark:bg-[#f9c3341a] border-l-2 border-[#f9c334] pl-[14px] md:pl-[14px]",
+            !isMentioned && !showAvatar && "pl-[72px]",
             isReply && "border-l-2 border-primary/30 pl-2 md:pl-4",
             depth > 0 && "ml-2 md:ml-12",
             isHighlighted && "bg-primary/20 animate-pulse"
@@ -247,9 +251,9 @@ export function MessageItem({
             <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20" />
           )}
 
-          <div className="flex gap-2 md:gap-3 items-start max-w-full">
+          <div className="flex gap-4 items-start max-w-full">
             {showAvatar ? (
-              <Avatar className="h-8 w-8 md:h-9 md:w-9 flex-shrink-0 mt-0.5">
+              <Avatar className="h-10 w-10 flex-shrink-0 mt-0.5 rounded-full overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
                 <AvatarImage
                   src={user?.avatar || "/placeholder.svg"}
                   alt={user?.name}
@@ -259,10 +263,10 @@ export function MessageItem({
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="w-8 md:w-9 flex-shrink-0 flex items-start justify-center">
+              <div className="w-10 flex-shrink-0 flex items-start justify-center pt-1">
                 {(isHovered || isMenuOpen) && (
-                  <span className="text-[10px] text-muted-foreground hidden md:inline-block">
-                    {formatTime(message.timestamp)}
+                  <span className="text-[10px] text-muted-foreground leading-[22px] scale-[0.85] origin-center opacity-70">
+                    {format(new Date(message.timestamp), "HH:mm")}
                   </span>
                 )}
               </div>
@@ -270,8 +274,8 @@ export function MessageItem({
 
             <div className="flex-1 min-w-0 overflow-hidden">
               {showAvatar && (
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-0.5 md:mb-1">
-                  <span className="font-semibold text-sm truncate max-w-[150px] md:max-w-none">
+                <div className="flex flex-wrap items-center gap-x-2 mb-0.5">
+                  <span className="font-medium text-[16px] leading-[22px] cursor-pointer hover:underline text-foreground">
                     {user?.name}
                   </span>
                   {userBadges.length > 0 && (
@@ -283,8 +287,8 @@ export function MessageItem({
                       />
                     </div>
                   )}
-                  <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">
-                    {formatTime(message.timestamp)}
+                  <span className="text-[12px] text-muted-foreground leading-[22px] opacity-70">
+                    {format(new Date(message.timestamp), "MM/dd/yyyy HH:mm")}
                   </span>
                   {isReply && (
                     <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
@@ -376,7 +380,7 @@ export function MessageItem({
           </div>
 
           {(isHovered || isMenuOpen) && (
-            <div className="hidden md:flex absolute -top-3 right-4 items-center gap-0.5 bg-background border border-border rounded-lg shadow-sm p-0.5 z-10 animate-in fade-in zoom-in-95 duration-100">
+                <div className="hidden md:flex absolute -top-4 right-4 items-center gap-0.5 bg-background border border-border rounded-[4px] shadow-sm p-0.5 z-10 animate-in fade-in zoom-in-95 duration-100">
               <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
                 <Button
                   variant="ghost"

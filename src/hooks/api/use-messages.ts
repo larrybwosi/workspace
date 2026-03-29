@@ -5,7 +5,8 @@ import type { Message } from '@/lib/types';
 export const messageKeys = {
   all: ['messages'] as const,
   lists: () => [...messageKeys.all, 'list'] as const,
-  list: (channelId: string) => [...messageKeys.lists(), channelId] as const,
+  list: (channelId: string, workspaceId?: string) =>
+    workspaceId ? ['workspaces', workspaceId, 'channels', channelId, 'messages'] : [...messageKeys.lists(), channelId] as const,
   details: () => [...messageKeys.all, 'detail'] as const,
   detail: (id: string) => [...messageKeys.details(), id] as const,
 };
@@ -13,14 +14,14 @@ export const messageKeys = {
 // Fetch messages with infinite scroll
 export function useMessages(channelId: string, workspaceId?: string) {
   return useInfiniteQuery({
-    queryKey: workspaceId
-      ? ['workspaces', workspaceId, 'channels', channelId, 'messages']
-      : messageKeys.list(channelId),
+    queryKey: messageKeys.list(channelId, workspaceId),
     queryFn: async ({ pageParam }) => {
-      const url = workspaceId ? `/workspaces/${workspaceId}/channels/${channelId}/messages` : `/messages`;
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
+        : `/channels/${channelId}/messages`;
 
-      const { data } = await apiClient.get<{ messages: Message[]; nextCursor: number | null }>(url, {
-        params: { channelId, cursor: pageParam, limit: 50 },
+      const { data } = await apiClient.get<{ messages: Message[]; nextCursor: string | null }>(url, {
+        params: { cursor: pageParam, limit: 50 },
       });
       return data;
     },
@@ -39,15 +40,14 @@ export function useSendMessage(workspaceId?: string) {
       channelId,
       ...message
     }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & { channelId: string }) => {
-      const url = workspaceId ? `/workspaces/${workspaceId}/channels/${channelId}/messages` : `/messages`;
-      const { data } = await apiClient.post<Message>(url, { ...message, channelId });
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
+        : `/channels/${channelId}/messages`;
+      const { data } = await apiClient.post<Message>(url, { ...message });
       return data;
     },
     onSuccess: (_, variables) => {
-      const queryKey = workspaceId
-        ? ['workspaces', workspaceId, 'channels', variables.channelId, 'messages']
-        : messageKeys.list(variables.channelId);
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId, workspaceId) });
     },
   });
 }
@@ -58,14 +58,14 @@ export function useUpdateMessage(workspaceId?: string) {
 
   return useMutation({
     mutationFn: async ({ id, channelId, ...updates }: Partial<Message> & { id: string; channelId: string }) => {
-      const { data } = await apiClient.patch<Message>(`/messages/${id}`, updates);
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/${id}`
+        : `/channels/${channelId}/messages/${id}`;
+      const { data } = await apiClient.patch<Message>(url, updates);
       return { data, channelId };
     },
     onSuccess: ({ channelId }) => {
-      const queryKey = workspaceId
-        ? ['workspaces', workspaceId, 'channels', channelId, 'messages']
-        : messageKeys.list(channelId);
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
     },
   });
 }
@@ -76,14 +76,14 @@ export function useDeleteMessage(workspaceId?: string) {
 
   return useMutation({
     mutationFn: async ({ id, channelId }: { id: string; channelId: string }) => {
-      await apiClient.delete(`/messages/${id}`);
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/${id}`
+        : `/channels/${channelId}/messages/${id}`;
+      await apiClient.delete(url);
       return { id, channelId };
     },
     onSuccess: ({ channelId }) => {
-      const queryKey = workspaceId
-        ? ['workspaces', workspaceId, 'channels', channelId, 'messages']
-        : messageKeys.list(channelId);
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
     },
   });
 }
@@ -100,27 +100,30 @@ export function useReplyToMessage(workspaceId?: string) {
     }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & { messageId: string; channelId: string }) => {
       const url = workspaceId
         ? `/workspaces/${workspaceId}/channels/${channelId}/messages/${messageId}/replies`
-        : `/messages/${messageId}/replies`;
+        : `/channels/${channelId}/messages/${messageId}/reply`;
       const { data } = await apiClient.post<Message>(url, reply);
       return { data, channelId };
     },
     onSuccess: ({ channelId }) => {
-      const queryKey = workspaceId
-        ? ['workspaces', workspaceId, 'channels', channelId, 'messages']
-        : messageKeys.list(channelId);
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
     },
   });
 }
 
-// Mark message as read mutation
-export function useMarkMessageAsRead() {
+// Mark messages as read mutation (Batch)
+export function useMarkMessagesAsRead(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ messageId, channelId }: { messageId: string; channelId: string }) => {
-      const { data } = await apiClient.post(`/messages/${messageId}/read`, {});
+    mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }) => {
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/read`
+        : `/channels/${channelId}/messages/read`;
+      const { data } = await apiClient.post(url, { messageIds });
       return { data, channelId };
+    },
+    onSuccess: ({ channelId }) => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
     },
   });
 }
