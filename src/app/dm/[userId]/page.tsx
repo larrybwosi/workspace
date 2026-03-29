@@ -7,7 +7,7 @@ import { mockUsers } from "@/lib/mock-data"
 import { useParams, useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
-import { ThreadView } from "@/components/features/chat/thread-view"
+import { ChannelView } from "@/components/features/chat/channel-view"
 import { InfoPanel } from "@/components/shared/info-panel"
 
 export default function DMPage() {
@@ -59,20 +59,7 @@ export default function DMPage() {
       <main className="flex-1 flex flex-col min-w-0">
         <DynamicHeader activeView={channelId} onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
 
-        <ThreadView
-          thread={{
-            id: channelId,
-            title: dmUser.name,
-            channelId: channelId,
-            messages: [],
-            creator: mockUsers[0].id,
-            dateCreated: new Date(),
-            status: "Active",
-            tags: [],
-            tasks: 0,
-            linkedThreads: [],
-            members: [mockUsers[0].id, userId],
-          }}
+        <ChannelView
           channelId={channelId}
         />
 

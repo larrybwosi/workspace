@@ -1,22 +1,19 @@
 "use client"
 
-import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, List, ListOrdered, LinkIcon, X, File, Loader2 } from "lucide-react"
+import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { uploadFile, UploadedFile } from "@/lib/utils/upload-utils";
-import { mockUsers } from "@/lib/mock-data"
 import { MentionSelector, MentionItem } from "@/components/shared/mention-selector"
 import { EmojiPicker } from "@/components/shared/emoji-picker"
-import { ChangeEvent, useEffect, useRef, useState, useMemo } from "react"
+import React, { ChangeEvent, useEffect, useRef, useState, useMemo } from "react"
 import { useChannel } from "@/hooks/api/use-channels"
 import { useParams } from "next/navigation"
 import { useTypingNotifier, TypingIndicator } from "./typing-indicator"
 import { useCurrentUser } from "@/hooks/api/use-users"
-import { LexicalEditor } from "./editor/lexical-editor"
-import { $getRoot, EditorState, $getSelection, $isRangeSelection, $insertNodes, FORMAT_TEXT_COMMAND, $createTextNode, $createParagraphNode } from "lexical"
-import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown"
 import { useWorkspace, useWorkspaceChannels, useWorkspaceMembers } from "@/hooks/api/use-workspaces"
-import { $createMentionNode } from "./editor/mention-node"
+import TextareaAutosize from 'react-textarea-autosize';
+import { cn } from "@/lib/utils";
 
 interface MessageComposerProps {
   placeholder?: string
@@ -40,9 +37,10 @@ export function MessageComposer({
   const [mentionType, setMentionType] = useState<"user" | "channel" | null>(null)
   const [mentionSearch, setMentionSearch] = useState("")
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
+  const [cursorPosition, setCursorPosition] = useState(0)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const editorRef = useRef<any>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const params = useParams()
   const workspaceSlug = params.slug as string
   const { data: workspace } = useWorkspace(workspaceSlug)
@@ -73,25 +71,16 @@ export function MessageComposer({
 
       let filteredMembers = workspaceMembers;
       if (channel?.isPrivate) {
-        // If private channel, filter by channel members
         const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
         filteredMembers = workspaceMembers.filter(m => channelMemberIds.has(m.id));
       }
-
-      const users = filteredMembers.length > 0 ? filteredMembers : mockUsers.map(u => ({
-        id: u.id,
-        name: u.name,
-        type: "user" as const,
-        image: u.avatar,
-        description: u.role
-      }))
 
       const special: MentionItem[] = [
         { id: "all", name: "all", type: "special", description: "Notify everyone in this channel" },
         { id: "here", name: "here", type: "special", description: "Notify active members in this channel" }
       ]
 
-      return [...special, ...users]
+      return [...special, ...filteredMembers]
     }
 
     if (mentionType === "channel") {
@@ -105,66 +94,138 @@ export function MessageComposer({
     }
 
     return []
-  }, [mentionType, members, channels])
+  }, [mentionType, members, channels, channel])
 
   const handleSend = () => {
     if ((message.trim() || attachments.length > 0) && !isUploading) {
-      onSend?.(message, attachments)
+      // Correcting construction to avoid API errors
+      const cleanedAttachments = attachments.map(att => ({
+        name: att.name,
+        type: att.type,
+        url: att.url,
+        size: att.size
+      }));
 
-      if (editorRef.current) {
-        editorRef.current.update(() => {
-          const root = $getRoot();
-          root.clear();
-          const paragraph = $createParagraphNode();
-          root.append(paragraph);
-        });
-      }
-
+      onSend?.(message, cleanedAttachments)
       setMessage("")
       setAttachments([])
       setMentionType(null)
       stopTyping()
+      textareaRef.current?.focus()
     }
   }
 
-  const handleEditorChange = (editorState: EditorState) => {
-    editorState.read(() => {
-        const markdown = $convertToMarkdownString(TRANSFORMERS);
-        setMessage(markdown);
-    })
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mentionType) {
+        // Handle mention selection with keyboard is handled by MentionSelector
+        // but we need to prevent Enter from sending message if selector is open
+        if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Tab') {
+            return;
+        }
+    }
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
     handleKeyPress()
   }
 
-  const formatText = (command: any) => {
-    if (editorRef.current) {
-        editorRef.current.dispatchCommand(command, undefined);
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    const pos = e.target.selectionStart;
+    setMessage(val);
+    setCursorPosition(pos);
+
+    // Detect @ or # trigger
+    const textBeforeCursor = val.slice(0, pos);
+    const lastAt = textBeforeCursor.lastIndexOf('@');
+    const lastHash = textBeforeCursor.lastIndexOf('#');
+
+    const lastTriggerPos = Math.max(lastAt, lastHash);
+
+    if (lastTriggerPos !== -1 && (lastTriggerPos === 0 || /\s/.test(textBeforeCursor[lastTriggerPos - 1]))) {
+        const type = textBeforeCursor[lastTriggerPos] === '@' ? 'user' : 'channel';
+        const search = textBeforeCursor.slice(lastTriggerPos + 1);
+
+        if (!/\s/.test(search)) {
+            setMentionType(type);
+            setMentionSearch(search);
+
+            // Calculate position for the selector (simplified)
+            const rect = e.target.getBoundingClientRect();
+            setMentionPosition({
+                top: rect.top - 200, // Show above
+                left: rect.left + 20
+            });
+            return;
+        }
     }
+    setMentionType(null);
+  }
+
+  const insertTextAtCursor = (text: string, prefixToRemove = "") => {
+    const start = textareaRef.current?.selectionStart || 0;
+    const end = textareaRef.current?.selectionEnd || 0;
+
+    let newStart = start;
+    let newMessage = message;
+
+    if (prefixToRemove) {
+        const textBeforeCursor = message.slice(0, start);
+        const lastIndex = textBeforeCursor.lastIndexOf(prefixToRemove);
+        if (lastIndex !== -1) {
+            newMessage = message.slice(0, lastIndex) + text + message.slice(end);
+            newStart = lastIndex + text.length;
+        }
+    } else {
+        newMessage = message.slice(0, start) + text + message.slice(end);
+        newStart = start + text.length;
+    }
+
+    setMessage(newMessage);
+
+    // Set focus and cursor back after state update
+    setTimeout(() => {
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(newStart, newStart);
+        }
+    }, 0);
+  }
+
+  const wrapSelection = (prefix: string, suffix: string = prefix) => {
+    const start = textareaRef.current?.selectionStart || 0;
+    const end = textareaRef.current?.selectionEnd || 0;
+    const selection = message.slice(start, end);
+
+    const newText = `${prefix}${selection}${suffix}`;
+    const newMessage = message.slice(0, start) + newText + message.slice(end);
+
+    setMessage(newMessage);
+
+    setTimeout(() => {
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+            const newPos = start + prefix.length + selection.length + suffix.length;
+            textareaRef.current.setSelectionRange(newPos, newPos);
+        }
+    }, 0);
   }
 
   const insertEmoji = (emoji: string) => {
-    if (editorRef.current) {
-        editorRef.current.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                selection.insertText(emoji);
-            } else {
-                const root = $getRoot();
-                root.append($createTextNode(emoji));
-            }
-        });
-    }
+    insertTextAtCursor(emoji);
   }
 
   const triggerMention = () => {
-    if (editorRef.current) {
-        editorRef.current.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                selection.insertText("@");
-            }
-        });
-        editorRef.current.focus();
-    }
+    insertTextAtCursor("@");
+    textareaRef.current?.focus();
+  }
+
+  const handleMentionSelect = (item: MentionItem) => {
+    const prefix = mentionType === 'user' ? '@' : '#';
+    insertTextAtCursor(`${prefix}${item.name} `, `${prefix}${mentionSearch}`);
+    setMentionType(null);
   }
 
   // --- File Upload Logic ---
@@ -193,44 +254,12 @@ export function MessageComposer({
     setAttachments(prev => prev.filter(f => f.id !== fileId))
   }
 
-  const handleMentionSelect = (item: MentionItem) => {
-    if (editorRef.current) {
-      editorRef.current.update(() => {
-        const selection = $getSelection();
-        if ($isRangeSelection(selection)) {
-          const anchorNode = selection.anchor.getNode();
-          const anchorOffset = selection.anchor.offset;
-
-          // Delete the partial mention query
-          const text = anchorNode.getTextContent();
-          const char = item.type === "channel" ? "#" : "@";
-          const lastIndex = text.lastIndexOf(char, anchorOffset - 1);
-
-          if (lastIndex !== -1) {
-            selection.anchor.set(anchorNode.getKey(), lastIndex, "text");
-            selection.focus.set(anchorNode.getKey(), anchorOffset, "text");
-            selection.removeText();
-          }
-
-          const node = $createMentionNode(item.name);
-          $insertNodes([node]);
-        }
-      });
-    }
-    setMentionType(null)
-  }
-
-  const handleMentionSearch = (search: string, type: "user" | "channel") => {
-    setMentionSearch(search);
-    setMentionType(search ? type : null);
-  }
-
-  const handleMentionPosition = (position: { top: number; left: number }) => {
-    // Offset for the selector dropdown
-    setMentionPosition({
-      top: position.top - 280,
-      left: position.left,
-    });
+  // --- Visual Decorations (Simple Highlight) ---
+  const renderDecoratedMessage = () => {
+      // This is for visual decoration ONLY, not for editing
+      // In a real "steroids" textarea, we'd overlay this behind the transparent textarea
+      // For now, let's keep it simple as requested but acknowledge the "steroids" part
+      return null;
   }
 
   return (
@@ -264,7 +293,7 @@ export function MessageComposer({
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => formatText(FORMAT_TEXT_COMMAND.bold)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => wrapSelection("**")}>
                   <Bold className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -273,7 +302,7 @@ export function MessageComposer({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => formatText(FORMAT_TEXT_COMMAND.italic)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => wrapSelection("_")}>
                   <Italic className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -282,7 +311,7 @@ export function MessageComposer({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => formatText(FORMAT_TEXT_COMMAND.code)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => wrapSelection("`")}>
                   <Code className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -291,15 +320,18 @@ export function MessageComposer({
           </TooltipProvider>
         </div>
 
-        <div className="flex-1 rounded-lg bg-background focus-within:ring-1 focus-within:ring-ring transition-all">
-          <LexicalEditor
-            onChange={handleEditorChange}
+        <div className="relative flex-1 rounded-lg bg-background focus-within:ring-1 focus-within:ring-ring transition-all min-h-[40px]">
+          <TextareaAutosize
+            ref={textareaRef}
+            value={message}
+            onChange={handleTextareaChange}
+            onKeyDown={handleKeyDown}
             placeholder={dynamicPlaceholder}
-            onEnter={handleSend}
-            onMentionSearch={handleMentionSearch}
-            onMentionPosition={handleMentionPosition}
-            onEditorRef={(editor) => { editorRef.current = editor }}
+            className="w-full bg-transparent border-none focus:ring-0 resize-none px-3 py-2 text-sm min-h-[40px]"
+            maxRows={15}
           />
+
+          {/* Mentions/Tags Highlighting Overlay could go here */}
         </div>
 
         {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}

@@ -17,9 +17,8 @@ import { UploadedFile } from '@/lib/utils/upload-utils';
 import { toast } from 'sonner';
 import { useChannel } from '@/hooks/api/use-channels';
 
-interface ThreadViewProps {
-  thread?: Thread;
-  channelId?: string;
+interface ChannelViewProps {
+  channelId: string;
 }
 
 // --- Helper Components ---
@@ -74,11 +73,11 @@ function UnreadDivider() {
 
 // --- Main Component ---
 
-export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) {
+export function ChannelView({ channelId }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
 
-  const activeChannelId = channelId || thread.channelId;
+  const activeChannelId = channelId;
 
   const {
     data: messagesData,
@@ -108,9 +107,9 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
 
   // 1. Flatten Data
   const messages = useMemo(() => {
-    if (!messagesData?.pages) return thread.messages;
+    if (!messagesData?.pages) return [];
     return messagesData.pages.flatMap(page => page.messages);
-  }, [messagesData, thread.messages]);
+  }, [messagesData]);
 
   // 2. Scroll Handling
   useEffect(() => {
@@ -274,7 +273,7 @@ export function ThreadView({ thread = mockThread, channelId }: ThreadViewProps) 
       <div className="flex items-center gap-3 px-4 py-3 border-b shadow-sm shrink-0 bg-background/95 backdrop-blur z-10 sticky top-0">
         <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shrink-0" />
         <div className="flex flex-col min-w-0">
-          <h2 className="font-bold text-base leading-none truncate">{channelData?.name || thread.title}</h2>
+          <h2 className="font-bold text-base leading-none truncate">{channelData?.name || 'Channel'}</h2>
           <span className="text-xs text-muted-foreground mt-1 truncate">
             {channelData ? `#${channelData.name}` : activeChannelId ? `#${activeChannelId}` : 'General'} •{' '}
             {messages.length} messages
