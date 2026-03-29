@@ -19,6 +19,7 @@ import { useAddReaction, useRemoveReaction } from "@/hooks/api/use-reactions";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { UploadedFile } from "@/lib/utils/upload-utils";
+import { toast } from "sonner";
 
 interface ThreadViewProps {
   thread?: Thread;
@@ -98,6 +99,8 @@ export function ThreadView({
     hasNextPage,
     isFetchingNextPage,
   } = useMessages(activeChannelId);
+
+  const { data: channelData } = useChannel(activeChannelId);
 
   // API Mutations
   const sendMessageMutation = useSendMessage();
@@ -210,6 +213,11 @@ export function ThreadView({
 
   // Handlers
   const handleSendMessage = (content: string, attachments?: UploadedFile[]) => {
+    if (!activeChannelId) {
+      console.error("No active channel ID to send message to");
+      return;
+    }
+
     const payload = {
       channelId: activeChannelId,
       content,
@@ -219,11 +227,23 @@ export function ThreadView({
     };
 
     if (replyingTo) {
-      replyToMessageMutation.mutate({ ...payload, messageId: replyingTo.id, attachments });
+      replyToMessageMutation.mutate({ ...payload, messageId: replyingTo.id, attachments }, {
+        onSuccess: () => {
+          setReplyingTo(null);
+        },
+        onError: (error) => {
+          console.error("Failed to send reply:", error);
+          toast.error("Failed to send reply. Please try again.");
+        }
+      });
     } else {
-      sendMessageMutation.mutate(payload);
+      sendMessageMutation.mutate(payload, {
+        onError: (error) => {
+          console.error("Failed to send message:", error);
+          toast.error("Failed to send message. Please try again.");
+        }
+      });
     }
-    setReplyingTo(null);
   };
 
   const handleReply = (messageId: string) => {
@@ -271,10 +291,10 @@ export function ThreadView({
         <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shrink-0" />
         <div className="flex flex-col min-w-0">
           <h2 className="font-bold text-base leading-none truncate">
-            {thread.title}
+            {channelData?.name || thread.title}
           </h2>
           <span className="text-xs text-muted-foreground mt-1 truncate">
-            {activeChannelId ? `#${activeChannelId}` : "General"} •{" "}
+            {channelData ? `#${channelData.name}` : (activeChannelId ? `#${activeChannelId}` : "General")} •{" "}
             {messages.length} messages
           </span>
         </div>
@@ -406,6 +426,7 @@ export function ThreadView({
           }
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
+          channelId={activeChannelId}
         />
       </div>
     </div>

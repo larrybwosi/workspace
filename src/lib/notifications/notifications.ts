@@ -30,13 +30,15 @@ export async function createNotification(payload: NotificationPayload) {
 
   // Send real-time notification via Ably
   const ably = getAblyRest()
-  const channel = ably.channels.get(AblyChannels.notifications(payload.userId))
+  if (ably) {
+    const channel = ably.channels.get(AblyChannels.notifications(payload.userId))
 
-  await channel.publish(AblyEvents.NOTIFICATION, {
-    id: notification.id,
-    ...payload,
-    createdAt: notification.createdAt,
-  })
+    await channel.publish(AblyEvents.NOTIFICATION, {
+      id: notification.id,
+      ...payload,
+      createdAt: notification.createdAt,
+    })
+  }
 
   try {
     await sendPushNotification({
@@ -76,9 +78,11 @@ export async function createSystemMessage(channelId: string, content: string, me
 
   // Broadcast via Ably
   const ably = getAblyRest()
-  const channel = ably.channels.get(AblyChannels.thread(channelId))
+  if (ably) {
+    const channel = ably.channels.get(AblyChannels.thread(channelId))
 
-  await channel.publish(AblyEvents.MESSAGE_SENT, message)
+    await channel.publish(AblyEvents.MESSAGE_SENT, message)
+  }
 
   return message
 }
