@@ -37,7 +37,7 @@ export default function WorkspaceChannelPageClient({channelSlug}: {channelSlug: 
 
         <div className="flex flex-1 overflow-hidden relative">
             <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
-            <ChannelView channelId={channelId} />
+            <ChannelView channelId={channelId} workspaceId={workspace?.id} />
             </main>
 
             {/* 4. Info Panel: Rendered side-by-side */}
