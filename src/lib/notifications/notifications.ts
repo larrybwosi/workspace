@@ -96,7 +96,11 @@ export async function notifyMention(
 ) {
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
+    include: { workspace: true }
   })
+
+  const workspaceSlug = channel?.workspace?.slug || "default";
+  const channelSlug = channel?.slug || channelId;
 
   await createNotification({
     userId: mentionedUserId,
@@ -105,7 +109,7 @@ export async function notifyMention(
     message: `${mentionedBy} mentioned you in #${channel?.name || "a channel"}`,
     entityType: "channel",
     entityId: channelId,
-    linkUrl: `/channels/${channelId}?messageId=${messageId}`,
+    linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
     metadata: {
       messageContent: messageContent.slice(0, 100),
       mentionedBy,
@@ -126,11 +130,14 @@ export async function notifyChannel(
     where: { id: channelId },
     include: {
       members: true,
+      workspace: true
     },
   })
 
   if (!channel) return
 
+  const workspaceSlug = channel.workspace?.slug || "default";
+  const channelSlug = channel.slug || channelId;
   const memberIds = channel.members.map((m) => m.userId)
 
   for (const userId of memberIds) {
@@ -142,7 +149,7 @@ export async function notifyChannel(
       message: `${sentBy}: ${messageContent.slice(0, 50)}...`,
       entityType: "channel",
       entityId: channelId,
-      linkUrl: `/channels/${channelId}?messageId=${messageId}`,
+      linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
       metadata: {
         messageId,
         sentBy,
