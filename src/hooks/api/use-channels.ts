@@ -27,89 +27,111 @@ export function useChannel(id: string, workspaceId?: string) {
   return useQuery({
     queryKey: workspaceId ? ['workspaces', workspaceId, 'channels', id] : channelKeys.detail(id),
     queryFn: async () => {
-      const url = `/api/workspaces/${workspaceId}/channels/${id}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch channel');
-      return res.json();
+      const url = workspaceId ? `/workspaces/${workspaceId}/channels/${id}` : `/channels/${id}`;
+      const { data } = await apiClient.get<Channel>(url);
+      return data;
     },
     enabled: !!id,
   });
 }
 
 // Create channel
-export function useCreateChannel() {
+export function useCreateChannel(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (newChannel: any) => {
-      const { data } = await apiClient.post<Channel>('/channels', newChannel);
+      const url = workspaceId ? `/workspaces/${workspaceId}/channels` : '/channels';
+      const { data } = await apiClient.post<Channel>(url, newChannel);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
+      if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceId] });
+      }
     },
   });
 }
 
 // Update channel
-export function useUpdateChannel() {
+export function useUpdateChannel(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Channel> & { id: string }) => {
-      const { data } = await apiClient.patch<Channel>(`/channels/${id}`, updates);
+      const url = workspaceId ? `/workspaces/${workspaceId}/channels/${id}` : `/channels/${id}`;
+      const { data } = await apiClient.patch<Channel>(url, updates);
       return data;
     },
     onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: channelKeys.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
+      if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceId] });
+        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'channels', data.id] });
+      }
     },
   });
 }
 
 // Delete channel
-export function useDeleteChannel() {
+export function useDeleteChannel(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(`/channels/${id}`);
+      const url = workspaceId ? `/workspaces/${workspaceId}/channels/${id}` : `/channels/${id}`;
+      await apiClient.delete(url);
       return id;
     },
-    onSuccess: () => {
+    onSuccess: id => {
       queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
+      if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceId] });
+      }
     },
   });
 }
 
 // Join channel
-export function useJoinChannel() {
+export function useJoinChannel(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (channelId: string) => {
-      const { data } = await apiClient.post(`/channels/${channelId}/join`);
+      const url = workspaceId ? `/workspaces/${workspaceId}/channels/${channelId}/join` : `/channels/${channelId}/join`;
+      const { data } = await apiClient.post(url);
       return data;
     },
     onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({ queryKey: channelKeys.detail(channelId) });
       queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
+      if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'channels', channelId] });
+      }
     },
   });
 }
 
 // Leave channel
-export function useLeaveChannel() {
+export function useLeaveChannel(workspaceId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (channelId: string) => {
-      await apiClient.post(`/channels/${channelId}/leave`);
+      const url = workspaceId
+        ? `/workspaces/${workspaceId}/channels/${channelId}/leave`
+        : `/channels/${channelId}/leave`;
+      await apiClient.post(url);
       return channelId;
     },
     onSuccess: channelId => {
       queryClient.invalidateQueries({ queryKey: channelKeys.detail(channelId) });
       queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
+      if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'channels', channelId] });
+      }
     },
   });
 }

@@ -61,7 +61,7 @@ export function MessageComposer({
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
     if (mentionType === 'user') {
-      const workspaceMembers = (members.members || []).map((m: any) => ({
+      const workspaceMembers = (members || []).map((m: any) => ({
         id: m.user.id,
         name: m.user.name,
         type: 'user' as const,
@@ -256,10 +256,25 @@ export function MessageComposer({
 
   // --- Visual Decorations (Simple Highlight) ---
   const renderDecoratedMessage = () => {
-    // This is for visual decoration ONLY, not for editing
-    // In a real "steroids" textarea, we'd overlay this behind the transparent textarea
-    // For now, let's keep it simple as requested but acknowledge the "steroids" part
-    return null;
+    if (!message) return null;
+
+    const parts = message.split(/(@\w+|#\w+)/g);
+    return (
+      <div className="absolute inset-0 px-3 py-2 text-sm pointer-events-none whitespace-pre-wrap break-words text-transparent border-none">
+        {parts.map((part, i) => {
+          if (part.startsWith('@') || part.startsWith('#')) {
+            return (
+              <span key={i} className="text-blue-400 bg-blue-400/10 rounded-sm">
+                {part}
+              </span>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        })}
+        {/* Match the trailing newline behavior of textarea */}
+        {message.endsWith('\n') && <br />}
+      </div>
+    );
   };
 
   return (
@@ -313,17 +328,16 @@ export function MessageComposer({
         </div>
 
         <div className="relative flex-1 rounded-lg bg-background focus-within:ring-1 focus-within:ring-ring transition-all min-h-[40px]">
+          {renderDecoratedMessage()}
           <TextareaAutosize
             ref={textareaRef}
             value={message}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             placeholder={dynamicPlaceholder}
-            className="w-full bg-transparent border-none focus:ring-0 resize-none px-3 py-2 text-sm min-h-[40px]"
+            className="w-full bg-transparent border-none focus:ring-0 resize-none px-3 py-2 text-sm min-h-[40px] relative z-10"
             maxRows={15}
           />
-
-          {/* Mentions/Tags Highlighting Overlay could go here */}
         </div>
 
         {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}

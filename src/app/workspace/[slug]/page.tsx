@@ -91,7 +91,16 @@ export default function WorkspacePage() {
     <div className="h-screen flex overflow-hidden bg-background">
       <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace.id} />
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<<<<<<< HEAD
         <DynamicHeader activeView="Workspace Dashboard" onMenuClick={() => setSidebarOpen(true)} />
+=======
+        <DynamicHeader
+          activeView="Workspace Dashboard"
+          onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {}}
+          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
+        />
+>>>>>>> c9fa892410e9bb9e0f7bf37f1227a7a7cd1ff6c5
 
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 p-8 max-w-5xl mx-auto w-full space-y-8 overflow-y-auto">
@@ -216,6 +225,51 @@ export default function WorkspacePage() {
               </CardContent>
             </Card>
           </div>
+<<<<<<< HEAD
+=======
+
+          <Card className="bg-muted/30 rounded-lg">
+            <CardHeader>
+              <CardTitle>Getting Started</CardTitle>
+              <CardDescription>Everything you need to set up your workspace</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="flex items-start gap-4 p-4 bg-background rounded-lg border">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">1</div>
+                <div>
+                    <h3 className="font-semibold">Invite your team</h3>
+                    <p className="text-sm text-muted-foreground">Add colleagues to start collaborating on projects together.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4 bg-background rounded-lg border">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">2</div>
+                <div>
+                    <h3 className="font-semibold">Create channels</h3>
+                    <p className="text-sm text-muted-foreground">Organize discussions by topic, project, or department.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4 bg-background rounded-lg border">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">3</div>
+                <div>
+                    <h3 className="font-semibold">Explore integrations</h3>
+                    <p className="text-sm text-muted-foreground">Connect your favorite tools to streamline your workflow.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        {/* Info Panel: Rendered side-by-side */}
+        {infoPanelOpen && (
+          <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out">
+            <InfoPanel
+              isOpen={infoPanelOpen}
+              onClose={() => setInfoPanelOpen(false)}
+              type="workspace"
+              id={workspace.id}
+            />
+          </aside>
+        )}
+>>>>>>> c9fa892410e9bb9e0f7bf37f1227a7a7cd1ff6c5
         </div>
       </main>
 
