@@ -1,0 +1,13 @@
+node_modules
+.next
+dist
+build
+*.log
+.git
+.env*
+Dockerfile
+docker-compose*
+README.md
+docs
+test-results
+playwright-report

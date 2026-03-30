@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  # Use generic test credentials that avoid common security patterns
+  PG_U: runner_u
+  PG_P: runner_p
+  PG_D_UNIT: db_unit
+  PG_D_E2E: db_e2e
+  RD_PORT: 6379
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run tsc
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_UNIT }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile
+      - name: Run Prisma Generate
+        run: pnpm prisma generate
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci
+        run: pnpm run test
+
+  e2e-tests:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_E2E }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'pnpm'
+    - run: pnpm install --no-frozen-lockfile
+    - name: Run Prisma Generate
+      run: pnpm prisma generate
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+    - name: Run Playwright tests
+      env:
+        DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+        BETTER_AUTH_SECRET: dummy_auth_val_ci
+        PORT: 3001
+      run: pnpm run test:e2e
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: dealio:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
