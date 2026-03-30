@@ -41,17 +41,19 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy built files
+# 1. Install Prisma cleanly BEFORE copying the Next.js build.
+# This avoids Corepack blocking npm because there is no package.json yet.
+# We also change ownership immediately while the folder is still small.
+RUN npm install prisma && chown -R nextjs:nodejs /app
+
+# 2. Copy built files and apply ownership inline to avoid OOM errors
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
-RUN chmod +x ./docker-entrypoint.sh
 
-# REMOVE the partial node_modules COPY commands
-# INSTEAD: Install Prisma CLI cleanly so migrations can run
-RUN npm install prisma
+RUN chmod +x ./docker-entrypoint.sh
 
 USER nextjs
 
