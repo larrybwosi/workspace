@@ -1,26 +1,17 @@
-"use client";
+'use client';
 
-import {
-  Smile,
-  MessageSquare,
-  Copy,
-  Trash2,
-  Edit,
-  LinkIcon,
-  MoreHorizontal,
-  Reply,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import type { Message } from "@/lib/types";
-import { mockUsers } from "@/lib/mock-data";
-import { cn, formatTime } from "@/lib/utils";
-import { CODE_BLOCK_REGEX, renderCustomMessage } from "@/lib/message-renderer";
-import { CustomEmojiPicker } from "@/components/shared/custom-emoji-picker";
-import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
-import { CustomMessage } from "@/components/features/chat/message-types/custom-message";
-import { MessageAttachments } from "./message-types/message-attachments"; // Import the new component
-import { LinkPreview } from "./link-preview";
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import type { Message } from '@/lib/types';
+import { mockUsers } from '@/lib/mock-data';
+import { cn, formatTime } from '@/lib/utils';
+import { CODE_BLOCK_REGEX, renderCustomMessage } from '@/lib/message-renderer';
+import { CustomEmojiPicker } from '@/components/shared/custom-emoji-picker';
+import { MarkdownRenderer } from '@/components/shared/markdown-renderer';
+import { CustomMessage } from '@/components/features/chat/message-types/custom-message';
+import { MessageAttachments } from './message-types/message-attachments'; // Import the new component
+import { LinkPreview } from './link-preview';
 
 // Context Menu (Right Click)
 import {
@@ -29,7 +20,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from "@/components/shared/context-menu";
+} from '@/components/shared/context-menu';
 
 // Dropdown Menu (Left Click on 3 dots)
 import {
@@ -38,23 +29,21 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
-import { useUpdateMessage, useDeleteMessage } from "@/hooks/api/use-messages";
-import { useToast } from "@/hooks/use-toast";
-import { useMemo, useState } from "react";
-import { UserBadgeDisplay } from "../social/user-badge-display";
+import { useUpdateMessage, useDeleteMessage } from '@/hooks/api/use-messages';
+import { useToast } from '@/hooks/use-toast';
+import { useMemo, useState } from 'react';
+import { UserBadgeDisplay } from '../social/user-badge-display';
+import { format } from 'date-fns';
+import { useSession } from '@/lib/auth/auth-client';
+import { toast } from 'sonner';
 
 interface MessageItemProps {
   message: Message;
   showAvatar?: boolean;
   onReply?: (messageId: string) => void;
-  onReaction?: (
-    messageId: string,
-    emoji: string,
-    isCustom?: boolean,
-    customEmojiId?: string
-  ) => void;
+  onReaction?: (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void;
   depth?: number;
   isReply?: boolean;
   channelId?: string;
@@ -63,36 +52,36 @@ interface MessageItemProps {
 }
 
 const mockUserBadges: Record<string, any[]> = {
-  "1": [
+  '1': [
     {
-      id: "1",
-      name: "Admin",
-      icon: "shield",
-      color: "#ef4444",
-      bgColor: "#fef2f2",
-      tier: "legendary" as const,
-      category: "role",
+      id: '1',
+      name: 'Admin',
+      icon: 'shield',
+      color: '#ef4444',
+      bgColor: '#fef2f2',
+      tier: 'legendary' as const,
+      category: 'role',
       isPrimary: true,
     },
     {
-      id: "2",
-      name: "Early Adopter",
-      icon: "star",
-      color: "#eab308",
-      bgColor: "#fefce8",
-      tier: "premium" as const,
-      category: "special",
+      id: '2',
+      name: 'Early Adopter',
+      icon: 'star',
+      color: '#eab308',
+      bgColor: '#fefce8',
+      tier: 'premium' as const,
+      category: 'special',
     },
   ],
-  "2": [
+  '2': [
     {
-      id: "3",
-      name: "Top Contributor",
-      icon: "trophy",
-      color: "#8b5cf6",
-      bgColor: "#f5f3ff",
-      tier: "elite" as const,
-      category: "achievement",
+      id: '3',
+      name: 'Top Contributor',
+      icon: 'trophy',
+      color: '#8b5cf6',
+      bgColor: '#f5f3ff',
+      tier: 'elite' as const,
+      category: 'achievement',
       isPrimary: true,
     },
   ],
@@ -111,23 +100,21 @@ export function MessageItem({
 }: MessageItemProps) {
   const updateMessageMutation = useUpdateMessage();
   const deleteMessageMutation = useDeleteMessage();
-  const { toast } = useToast();
+  const { data: session } = useSession();
+  const currentUser = session?.user;
 
-  const currentUser = mockUsers[0]; // In a real app, use a hook like useCurrentUser()
-  const isMentioned = message.mentions?.some(m => m.includes(currentUser.name)) || message.content.includes(`@${currentUser.name}`);
+  console.log(message.mentions);
+  const isMentioned = false;
+  // message.mentions?.some(m => m.includes(currentUser?.name)) || message.content.includes(`@${currentUser?.name}`);
 
-  const user = mockUsers.find((u) => u.id === message.userId);
+  const user = mockUsers.find(u => u.id === message.userId);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Track dropdown state
 
   const userBadges = mockUserBadges[message.userId] || [];
 
-  const handleAddReaction = (
-    emoji: string,
-    isCustom?: boolean,
-    customEmojiId?: string
-  ) => {
+  const handleAddReaction = (emoji: string, isCustom?: boolean, customEmojiId?: string) => {
     onReaction?.(message.id, emoji, isCustom, customEmojiId);
   };
 
@@ -145,7 +132,7 @@ export function MessageItem({
 
   const handleDeleteMessage = () => {
     if (!channelId) return;
-    if (confirm("Are you sure you want to delete this message?")) {
+    if (confirm('Are you sure you want to delete this message?')) {
       deleteMessageMutation.mutate({
         id: message.id,
         channelId,
@@ -166,15 +153,14 @@ export function MessageItem({
   const handleCopyMessageLink = () => {
     const messageUrl = `${window.location.origin}/channels/${channelId}?messageId=${message.id}`;
     navigator.clipboard.writeText(messageUrl);
-    toast({
-      title: "Link copied",
-      description: "Message link copied to clipboard",
+    toast.apply('Link copied', {
+      description: 'Message link copied to clipboard',
     });
   };
 
   const isImplicitCode = useMemo(() => {
     return (
-      (!message.messageType || message.messageType === "standard") &&
+      (!message.messageType || message.messageType === 'standard') &&
       (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit)
     );
   }, [message.content, message.messageType, message.metadata]);
@@ -199,17 +185,11 @@ export function MessageItem({
         <Reply className="mr-2 h-4 w-4" />
         Reply
       </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={handleCopyMessageLink}
-        className="cursor-pointer"
-      >
+      <DropdownMenuItem onClick={handleCopyMessageLink} className="cursor-pointer">
         <LinkIcon className="mr-2 h-4 w-4" />
         Copy Link
       </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => navigator.clipboard.writeText(message.content)}
-        className="cursor-pointer"
-      >
+      <DropdownMenuItem onClick={() => navigator.clipboard.writeText(message.content)} className="cursor-pointer">
         <Copy className="mr-2 h-4 w-4" />
         Copy Text
       </DropdownMenuItem>
@@ -234,30 +214,24 @@ export function MessageItem({
         <div
           ref={highlightRef}
           className={cn(
-            "group relative px-4 py-[2px] md:py-[4px] transition-colors w-full touch-manipulation",
-            "hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]",
-            isMenuOpen && "bg-[#0000000a] dark:bg-[#ffffff05]",
-            isMentioned && "bg-[#f9c3341a] dark:bg-[#f9c3341a] border-l-2 border-[#f9c334] pl-[14px] md:pl-[14px]",
-            !isMentioned && !showAvatar && "pl-[72px]",
-            isReply && "border-l-2 border-primary/30 pl-2 md:pl-4",
-            depth > 0 && "ml-2 md:ml-12",
-            isHighlighted && "bg-primary/20 animate-pulse"
+            'group relative px-4 py-[2px] md:py-[4px] transition-colors w-full touch-manipulation',
+            'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
+            isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
+            isMentioned && 'bg-[#f9c3341a] dark:bg-[#f9c3341a] border-l-2 border-[#f9c334] pl-[14px] md:pl-[14px]',
+            !isMentioned && !showAvatar && 'pl-[72px]',
+            isReply && 'border-l-2 border-primary/30 pl-2 md:pl-4',
+            depth > 0 && 'ml-2 md:ml-12',
+            isHighlighted && 'bg-primary/20 animate-pulse'
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-
-          {isReply && (
-            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20" />
-          )}
+          {isReply && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20" />}
 
           <div className="flex gap-4 items-start max-w-full">
             {showAvatar ? (
               <Avatar className="h-10 w-10 flex-shrink-0 mt-0.5 rounded-full overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-                <AvatarImage
-                  src={user?.avatar || "/placeholder.svg"}
-                  alt={user?.name}
-                />
+                <AvatarImage src={user?.avatar || '/placeholder.svg'} alt={user?.name} />
                 <AvatarFallback className="text-[10px] md:text-xs bg-primary text-primary-foreground">
                   {user?.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
@@ -266,7 +240,7 @@ export function MessageItem({
               <div className="w-10 flex-shrink-0 flex items-start justify-center pt-1">
                 {(isHovered || isMenuOpen) && (
                   <span className="text-[10px] text-muted-foreground leading-[22px] scale-[0.85] origin-center opacity-70">
-                    {format(new Date(message.timestamp), "HH:mm")}
+                    {format(new Date(message.timestamp), 'HH:mm')}
                   </span>
                 )}
               </div>
@@ -280,15 +254,11 @@ export function MessageItem({
                   </span>
                   {userBadges.length > 0 && (
                     <div className="flex-shrink-0">
-                      <UserBadgeDisplay
-                        badges={userBadges}
-                        maxDisplay={2}
-                        size="sm"
-                      />
+                      <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />
                     </div>
                   )}
                   <span className="text-[12px] text-muted-foreground leading-[22px] opacity-70">
-                    {format(new Date(message.timestamp), "MM/dd/yyyy HH:mm")}
+                    {format(new Date(message.timestamp), 'MM/dd/yyyy HH:mm')}
                   </span>
                   {isReply && (
                     <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
@@ -303,23 +273,16 @@ export function MessageItem({
                 <div className="w-full pr-2">
                   <textarea
                     value={message.content}
-                    onChange={(e) => handleSaveEdit(e.target.value)}
+                    onChange={e => handleSaveEdit(e.target.value)}
                     className="text-sm leading-relaxed text-foreground border border-border rounded-lg bg-card p-2 w-full font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
                     rows={5}
                     autoFocus
                   />
                   <div className="flex gap-2 mt-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleSaveEdit(message.content)}
-                    >
+                    <Button size="sm" onClick={() => handleSaveEdit(message.content)}>
                       Save
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setIsEditing(false)}
-                    >
+                    <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
                       Cancel
                     </Button>
                   </div>
@@ -334,17 +297,14 @@ export function MessageItem({
                       />
                     </div>
                   )}
-                  <div className="w-full overflow-x-auto">
-                    {customComponent}
-                  </div>
+                  <div className="w-full overflow-x-auto">{customComponent}</div>
                 </>
               )}
 
               <MessageAttachments attachments={message.attachments} />
 
-              {detectedLinks.length > 0 && detectedLinks.slice(0, 3).map((link, idx) => (
-                <LinkPreview key={idx} url={link} />
-              ))}
+              {detectedLinks.length > 0 &&
+                detectedLinks.slice(0, 3).map((link, idx) => <LinkPreview key={idx} url={link} />)}
 
               {message.reactions && message.reactions.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -354,7 +314,7 @@ export function MessageItem({
                       className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted hover:border-primary/50 transition-colors text-xs active:scale-95"
                       onClick={() => handleToggleReaction(reaction.emoji)}
                     >
-                      {reaction.emoji.startsWith(":") ? (
+                      {reaction.emoji.startsWith(':') ? (
                         <img
                           src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
                           alt={reaction.emoji}
@@ -363,9 +323,7 @@ export function MessageItem({
                       ) : (
                         <span className="text-sm">{reaction.emoji}</span>
                       )}
-                      <span className="font-medium text-muted-foreground">
-                        {reaction.count}
-                      </span>
+                      <span className="font-medium text-muted-foreground">{reaction.count}</span>
                     </button>
                   ))}
 
@@ -380,32 +338,19 @@ export function MessageItem({
           </div>
 
           {(isHovered || isMenuOpen) && (
-                <div className="hidden md:flex absolute -top-4 right-4 items-center gap-0.5 bg-background border border-border rounded-[4px] shadow-sm p-0.5 z-10 animate-in fade-in zoom-in-95 duration-100">
+            <div className="hidden md:flex absolute -top-4 right-4 items-center gap-0.5 bg-background border border-border rounded-[4px] shadow-sm p-0.5 z-10 animate-in fade-in zoom-in-95 duration-100">
               <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 hover:bg-muted"
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
                   <Smile className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </CustomEmojiPicker>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 hover:bg-muted"
-                onClick={handleReply}
-              >
+              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" onClick={handleReply}>
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </Button>
 
               <DropdownMenu onOpenChange={setIsMenuOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 hover:bg-muted"
-                  >
+                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
                     <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -427,9 +372,7 @@ export function MessageItem({
           <LinkIcon className="mr-2 h-4 w-4" />
           Copy Link
         </ContextMenuItem>
-        <ContextMenuItem
-          onClick={() => navigator.clipboard.writeText(message.content)}
-        >
+        <ContextMenuItem onClick={() => navigator.clipboard.writeText(message.content)}>
           <Copy className="mr-2 h-4 w-4" />
           Copy Text
         </ContextMenuItem>
@@ -438,10 +381,7 @@ export function MessageItem({
           <Edit className="mr-2 h-4 w-4" />
           Edit
         </ContextMenuItem>
-        <ContextMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={handleDeleteMessage}
-        >
+        <ContextMenuItem className="text-destructive focus:text-destructive" onClick={handleDeleteMessage}>
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </ContextMenuItem>

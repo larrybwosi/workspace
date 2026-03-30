@@ -9,7 +9,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import type { Thread, Message, Attachment } from '@/lib/types';
 import { mockThread, mockUsers } from '@/lib/mock-data';
-import { useMessages, useSendMessage, useReplyToMessage, useMarkMessagesAsRead, messageKeys } from '@/hooks/api/use-messages';
+import {
+  useMessages,
+  useSendMessage,
+  useReplyToMessage,
+  useMarkMessagesAsRead,
+  messageKeys,
+} from '@/hooks/api/use-messages';
 import { useAddReaction, useRemoveReaction } from '@/hooks/api/use-reactions';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -103,11 +109,11 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
     const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
 
     const handleMessage = (message: any) => {
-        const queryKey = workspaceId
-            ? ["workspaces", workspaceId, "channels", activeChannelId, "messages"]
-            : messageKeys.list(activeChannelId);
+      const queryKey = workspaceId
+        ? ['workspaces', workspaceId, 'channels', activeChannelId, 'messages']
+        : messageKeys.list(activeChannelId);
 
-        queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey });
     };
 
     channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
@@ -157,14 +163,12 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
     } else if (!isLoading && messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
-  }, [messages.length, highlightedMessageId, isLoading]);
+  }, [messages.length, highlightedMessageId]);
 
   // 3. Read Receipts (Batch)
   useEffect(() => {
     if (messages.length > 0) {
-      const unreadMessageIds = messages
-        .filter(m => !m.readByCurrentUser)
-        .map(m => m.id);
+      const unreadMessageIds = messages.filter(m => !m.readByCurrentUser).map(m => m.id);
 
       if (unreadMessageIds.length > 0) {
         markMessagesAsReadMutation.mutate({
@@ -383,12 +387,7 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
                       )}
                       ref={isHighlighted ? highlightedMessageRef : undefined}
                     >
-                      <div
-                        className={cn(
-                          'w-full',
-                          item.depth > 0 && 'pl-4 md:pl-12 border-l-2 border-muted'
-                        )}
-                      >
+                      <div className={cn('w-full', item.depth > 0 && 'pl-4 md:pl-12 border-l-2 border-muted')}>
                         <MessageItem
                           message={message}
                           showAvatar={!isGrouped}

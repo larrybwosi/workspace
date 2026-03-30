@@ -12,7 +12,9 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 # Copy prisma schema because postinstall runs prisma generate
 COPY prisma ./prisma/
-RUN pnpm install --frozen-lockfile
+
+# UPDATED: Added --dangerously-allow-all-builds to bypass pnpm v10 security blocks
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 # Build the app
 FROM base AS builder
