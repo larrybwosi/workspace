@@ -1,5 +1,8 @@
 FROM node:22-alpine AS base
 
+# Prisma needs libc6-compat and openssl on Alpine
+RUN apk add --no-cache libc6-compat openssl
+
 # Install pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -41,12 +44,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# 1. Install Prisma cleanly BEFORE copying the Next.js build.
-# This avoids Corepack blocking npm because there is no package.json yet.
-# We also change ownership immediately while the folder is still small.
-RUN npm install prisma && chown -R nextjs:nodejs /app
+# Install Prisma CLI globally for migrations
+RUN pnpm add -g prisma@6.5.0
 
-# 2. Copy built files and apply ownership inline to avoid OOM errors
+# 1. Copy built files and apply ownership inline to avoid OOM errors
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
