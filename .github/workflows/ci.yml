@@ -8,11 +8,11 @@ on:
 
 env:
   # Use generic test credentials that avoid common security patterns
-  PG_USER: pguser_ci
-  PG_PASS: pgpass_ci
-  PG_DB_UNIT: pgdb_unit_ci
-  PG_DB_E2E: pgdb_e2e_ci
-  REDIS_PORT: 6379
+  PG_U: runner_u
+  PG_P: runner_p
+  PG_D_UNIT: db_unit
+  PG_D_E2E: db_e2e
+  RD_PORT: 6379
 
 jobs:
   lint-and-typecheck:
@@ -36,9 +36,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_USER }}
-          POSTGRES_PASSWORD: ${{ env.PG_PASS }}
-          POSTGRES_DB: ${{ env.PG_DB_UNIT }}
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_UNIT }}
         ports:
           - 5432:5432
         options: >-
@@ -69,9 +69,9 @@ jobs:
         run: pnpm prisma generate
       - name: Run Tests
         env:
-          DATABASE_URL: postgresql://${{ env.PG_USER }}:${{ env.PG_PASS }}@localhost:5432/${{ env.PG_DB_UNIT }}?schema=public
-          REDIS_URL: redis://localhost:${{ env.REDIS_PORT }}
-          BETTER_AUTH_SECRET: test_auth_secret_ci_placeholder
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci
         run: pnpm run test
 
   e2e-tests:
@@ -81,9 +81,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_USER }}
-          POSTGRES_PASSWORD: ${{ env.PG_PASS }}
-          POSTGRES_DB: ${{ env.PG_DB_E2E }}
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_E2E }}
         ports:
           - 5432:5432
         options: >-
@@ -116,9 +116,9 @@ jobs:
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
       env:
-        DATABASE_URL: postgresql://${{ env.PG_USER }}:${{ env.PG_PASS }}@localhost:5432/${{ env.PG_DB_E2E }}?schema=public
-        REDIS_URL: redis://localhost:${{ env.REDIS_PORT }}
-        BETTER_AUTH_SECRET: test_auth_secret_ci_placeholder
+        DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+        BETTER_AUTH_SECRET: dummy_auth_val_ci
         PORT: 3001
       run: pnpm run test:e2e
     - uses: actions/upload-artifact@v4

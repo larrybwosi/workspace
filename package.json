@@ -95,6 +95,8 @@
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
         "@types/react-syntax-highlighter": "^15.5.13",
+        "eslint": "^10.1.0",
+        "eslint-config-next": "^16.2.1",
         "jest": "^30.3.0",
         "jest-environment-jsdom": "^30.3.0",
         "postcss": "^8.5.8",

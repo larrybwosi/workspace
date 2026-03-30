@@ -10,6 +10,8 @@ WORKDIR /app
 # Install dependencies
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
+# Copy prisma schema because postinstall runs prisma generate
+COPY prisma ./prisma/
 RUN pnpm install --frozen-lockfile
 
 # Build the app
@@ -18,9 +20,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Set necessary environment variables for build
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Generate Prisma Client
+# Generate Prisma Client (just in case, though postinstall should have handled it)
 RUN pnpm prisma generate
 
 # Build application
@@ -30,8 +32,8 @@ RUN pnpm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create a system user to run the app
 RUN addgroup --system --gid 1001 nodejs
@@ -45,8 +47,6 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/docker-entrypoint.sh ./
 
 # Include Prisma CLI for migrations in the runner stage
-# We can copy it from the builder or install it separately if needed
-# Standalone build might prune it, so let's make sure it's available.
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
@@ -58,8 +58,8 @@ USER nextjs
 
 EXPOSE 3001
 
-ENV PORT 3001
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]
