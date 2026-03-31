@@ -14,14 +14,14 @@ const actionResponseSchema = z.object({
  * POST /api/v1/messages/:messageId/actions
  * Submit a response to an interactive message action
  */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { messageId } = await params
+    const { id, messageId } = await params
     const body = await request.json()
     const data = actionResponseSchema.parse(body)
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         userId: session.user.id,
         actionValue: data.actionId,
         comment: data.comment,
-        metadata: data.metadata,
+        metadata: (data.metadata as any) || {},
         webhookUrl: callbackUrl,
         webhookSent: false,
       },
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.errors },
+        { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.issues },
         { status: 400 },
       )
     }
@@ -182,14 +182,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
  * GET /api/v1/messages/:messageId/actions
  * Get all responses for a message's actions
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { messageId } = await params
+    const { id, messageId } = await params
 
     // Fetch all action responses for this message
     const responses = await prisma.messageActionResponse.findMany({

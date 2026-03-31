@@ -8,6 +8,9 @@ const sendMessageSchema = z.object({
   recipientId: z.string().optional(),
   content: z.string().min(1),
   threadId: z.string().optional(),
+  contextId: z.string().optional(),
+  messageType: z.string().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
   attachments: z.array(z.object({
     name: z.string(),
     type: z.string(),
@@ -18,9 +21,73 @@ const sendMessageSchema = z.object({
   message: "Either channelId or recipientId must be provided"
 })
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<any> }
+) {
+  const { slug } = await params
+  const { context, error } = await authenticateV2(request, { slug })
+  if (error) return error
+
+  if (!hasScope(context!, "messages:read")) {
+    return NextResponse.json({ error: "Forbidden: Missing messages:read scope" }, { status: 403 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const channelId = searchParams.get("channelId")
+  const threadId = searchParams.get("threadId")
+  const contextId = searchParams.get("contextId")
+  const limit = parseInt(searchParams.get("limit") || "50")
+  const cursor = searchParams.get("cursor")
+
+  try {
+    let activeThreadId = threadId
+
+    if (contextId && !activeThreadId && channelId) {
+      const thread = await prisma.thread.findFirst({
+        where: {
+          channelId,
+          tags: { some: { tag: contextId } }
+        }
+      })
+
+      if (!thread) {
+        // If contextId is provided but no thread exists, return empty list
+        return NextResponse.json({ messages: [], nextCursor: null })
+      }
+      activeThreadId = thread.id
+    }
+
+    const messages = await prisma.message.findMany({
+      where: {
+        channelId: channelId || undefined,
+        threadId: activeThreadId || null, // null for root messages if no threadId and no contextId
+        channel: { workspaceId: context!.workspaceId }
+      },
+      take: limit,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      orderBy: { timestamp: "desc" },
+      include: {
+        user: { select: { id: true, name: true, avatar: true } },
+        attachments: true,
+        reactions: true,
+        actions: true,
+      }
+    })
+
+    const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null
+
+    return NextResponse.json({ messages: messages.reverse(), nextCursor })
+  } catch (err) {
+    console.error("V2 Get Messages Error:", err)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<any> }
 ) {
   const { slug } = await params
   const { context, error } = await authenticateV2(request, { slug })
@@ -32,9 +99,19 @@ export async function POST(
 
   try {
     const body = await request.json()
-    const { channelId, recipientId, content, threadId, attachments } = sendMessageSchema.parse(body)
+    const {
+      channelId,
+      recipientId,
+      content,
+      threadId,
+      contextId,
+      messageType,
+      metadata,
+      attachments
+    } = sendMessageSchema.parse(body)
 
     let createdMessage
+    let activeThreadId = threadId
 
     if (channelId) {
       // 1. Send message to a channel
@@ -44,12 +121,37 @@ export async function POST(
 
       if (!channel) return NextResponse.json({ error: "Channel not found in this workspace" }, { status: 404 })
 
+      // Handle context-aware threading
+      if (contextId && !activeThreadId) {
+        const existingThread = await prisma.thread.findFirst({
+          where: {
+            channelId: channel.id,
+            tags: { some: { tag: contextId } }
+          }
+        })
+
+        if (existingThread) {
+          activeThreadId = existingThread.id
+        } else {
+          const newThread = await prisma.thread.create({
+            data: {
+              channelId: channel.id,
+              creatorId: context!.userId,
+              tags: { create: { tag: contextId } }
+            }
+          })
+          activeThreadId = newThread.id
+        }
+      }
+
       createdMessage = await prisma.message.create({
         data: {
           content,
           channelId: channel.id,
           userId: context!.userId,
-          threadId,
+          threadId: activeThreadId,
+          messageType: messageType || "standard",
+          metadata: (metadata as any) || {},
           attachments: attachments ? {
             create: attachments.map(a => ({
               name: a.name,
@@ -124,7 +226,7 @@ export async function POST(
     return NextResponse.json({ message: createdMessage }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("V2 Send Message Error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

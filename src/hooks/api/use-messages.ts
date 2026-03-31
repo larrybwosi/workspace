@@ -5,23 +5,38 @@ import type { Message } from '@/lib/types';
 export const messageKeys = {
   all: ['messages'] as const,
   lists: () => [...messageKeys.all, 'list'] as const,
-  list: (channelId: string, workspaceId?: string) =>
-    workspaceId ? ['workspaces', workspaceId, 'channels', channelId, 'messages'] : [...messageKeys.lists(), channelId] as const,
+  list: (channelId: string, workspaceId?: string, threadId?: string) =>
+    workspaceId ? ['workspaces', workspaceId, 'channels', channelId, 'messages', { threadId }] : [...messageKeys.lists(), channelId, { threadId }] as const,
   details: () => [...messageKeys.all, 'detail'] as const,
   detail: (id: string) => [...messageKeys.details(), id] as const,
 };
 
 // Fetch messages with infinite scroll
-export function useMessages(channelId: string, workspaceId?: string) {
+export function useMessages(
+  channelId: string,
+  workspaceId?: string,
+  threadId?: string,
+  contextId?: string,
+  isV2?: boolean
+) {
   return useInfiniteQuery({
-    queryKey: messageKeys.list(channelId, workspaceId),
-    queryFn: async ({ pageParam }) => {
-      const url = workspaceId
-        ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
-        : `/channels/${channelId}/messages`;
+    queryKey: messageKeys.list(channelId, workspaceId, threadId || contextId),
+    queryFn: async ({ pageParam }: { pageParam: any }) => {
+      // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
+      const prefix = isV2 ? "/v2" : "";
+
+      let url = "";
+      if (isV2 && workspaceId) {
+        // Use V2 workspace-scoped path
+        url = `${prefix}/workspaces/${workspaceId}/messages`;
+      } else {
+        url = workspaceId
+          ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
+          : `/channels/${channelId}/messages`;
+      }
 
       const { data } = await apiClient.get<{ messages: Message[]; nextCursor: string | null }>(url, {
-        params: { cursor: pageParam, limit: 50 },
+        params: { cursor: pageParam, limit: 50, threadId, contextId, channelId },
       });
       return data;
     },
@@ -32,22 +47,33 @@ export function useMessages(channelId: string, workspaceId?: string) {
 }
 
 // Send message
-export function useSendMessage(workspaceId?: string) {
+export function useSendMessage(workspaceId?: string, isV2?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
       channelId,
       ...message
-    }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & { channelId: string }) => {
-      const url = workspaceId
-        ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
-        : `/channels/${channelId}/messages`;
-      const { data } = await apiClient.post<Message>(url, { ...message });
+    }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & {
+      channelId: string;
+      threadId?: string;
+      contextId?: string;
+    }) => {
+      const prefix = isV2 ? "/v2" : "";
+
+      let url = "";
+      if (isV2 && workspaceId) {
+        url = `${prefix}/workspaces/${workspaceId}/messages`;
+      } else {
+        url = workspaceId
+          ? `/workspaces/${workspaceId}/channels/${channelId}/messages`
+          : `/channels/${channelId}/messages`;
+      }
+      const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId, workspaceId) });
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId, workspaceId, variables.threadId) });
     },
   });
 }

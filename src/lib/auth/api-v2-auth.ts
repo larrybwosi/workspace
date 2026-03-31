@@ -28,7 +28,7 @@ export async function authenticateV2(
     try {
         // Use better-auth's verifyAccessToken (provided by oauthProviderResourceClient or available in auth.api)
         // Since we want to use the server-side API:
-        const tokenInfo = await auth.api.getOAuthAccessToken({
+        const tokenInfo = await (auth.api as any).getOAuthAccessToken({
             headers: request.headers,
             query: {
                 token: accessToken
