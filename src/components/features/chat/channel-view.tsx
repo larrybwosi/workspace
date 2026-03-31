@@ -28,6 +28,9 @@ import { useChannel } from '@/hooks/api/use-channels';
 interface ChannelViewProps {
   channelId: string;
   workspaceId?: string;
+  threadId?: string;
+  contextId?: string;
+  isWidget?: boolean;
 }
 
 // --- Helper Components ---
@@ -82,7 +85,13 @@ function UnreadDivider() {
 
 // --- Main Component ---
 
-export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
+export function ChannelView({
+  channelId,
+  workspaceId,
+  threadId: initialThreadId,
+  contextId,
+  isWidget
+}: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
   const queryClient = useQueryClient();
@@ -95,7 +104,7 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(activeChannelId, workspaceId);
+  } = useMessages(activeChannelId, workspaceId, initialThreadId, contextId, isWidget);
 
   const { data: channelData } = useChannel(activeChannelId, workspaceId);
 
@@ -130,7 +139,7 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
   }, [activeChannelId, workspaceId, queryClient]);
 
   // API Mutations
-  const sendMessageMutation = useSendMessage(workspaceId);
+  const sendMessageMutation = useSendMessage(workspaceId, isWidget);
   const replyToMessageMutation = useReplyToMessage(workspaceId);
   const addReactionMutation = useAddReaction();
   const removeReactionMutation = useRemoveReaction();
@@ -245,6 +254,8 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
       mentions: [],
       messageType: 'standard' as const,
       attachments,
+      threadId: initialThreadId,
+      contextId,
     };
 
     if (replyingTo) {
@@ -307,8 +318,12 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
 
   return (
     // Responsive: Use h-[100dvh] to fix mobile browser bar scroll issues
-    <div className="flex flex-col h-[100dvh] w-full bg-background overflow-hidden relative">
-      {/* Header */}
+    <div className={cn(
+      "flex flex-col h-[100dvh] w-full bg-background overflow-hidden relative",
+      isWidget && "border-none"
+    )}>
+      {/* Header - Hide or simplify if widget */}
+      {!isWidget && (
       <div className="flex items-center gap-3 px-4 py-3 border-b shadow-sm shrink-0 bg-background/95 backdrop-blur z-10 sticky top-0">
         <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shrink-0" />
         <div className="flex flex-col min-w-0">
@@ -319,6 +334,7 @@ export function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
           </span>
         </div>
       </div>
+      )}
 
       {/* Main Scroll Area */}
       <div className="flex-1 min-h-0 w-full relative">

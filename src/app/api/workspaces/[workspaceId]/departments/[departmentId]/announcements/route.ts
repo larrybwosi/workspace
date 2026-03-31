@@ -154,7 +154,7 @@ export async function POST(
     return NextResponse.json(announcement, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("Failed to create announcement:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

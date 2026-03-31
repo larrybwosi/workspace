@@ -10,6 +10,7 @@ import { CODE_BLOCK_REGEX, renderCustomMessage } from '@/lib/message-renderer';
 import { CustomEmojiPicker } from '@/components/shared/custom-emoji-picker';
 import { MarkdownRenderer } from '@/components/shared/markdown-renderer';
 import { CustomMessage } from '@/components/features/chat/message-types/custom-message';
+import { DocumentEmbed } from '@/components/features/chat/message-types/document-embed';
 import { MessageAttachments } from './message-types/message-attachments'; // Import the new component
 import { LinkPreview } from './link-preview';
 
@@ -300,6 +301,8 @@ export function MessageItem({
                   <div className="w-full overflow-x-auto">{customComponent}</div>
                 </>
               )}
+
+              <DocumentEmbed message={message} />
 
               <MessageAttachments attachments={message.attachments} />
 

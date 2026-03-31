@@ -1,0 +1,146 @@
+
+> dealio@0.1.0 tsc /app
+> tsc --noEmit
+
+.next/dev/types/validator.ts(549,31): error TS2344: Type 'typeof import("/app/src/app/api/invite/[code]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/invite/[code]">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { code: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ workspace: { id: string; name: string; icon: string | null; ... 6 more ...; settings: JsonValue; }; } & { ...; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ code: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ code: string; }>; }' is not assignable to type '{ params: { code: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'code' is missing in type 'Promise<{ code: string; }>' but required in type '{ code: string; }'.
+.next/dev/types/validator.ts(864,31): error TS2344: Type 'typeof import("/app/src/app/api/workspaces/[workspaceId]/emojis/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/workspaces/[workspaceId]/emojis">'.
+  Types of property 'POST' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { workspaceId: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ id: string; name: string; createdAt: Date; ... 9 more ...; isGlobal: boolean; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ workspaceId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ workspaceId: string; }>; }' is not assignable to type '{ params: { workspaceId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'workspaceId' is missing in type 'Promise<{ workspaceId: string; }>' but required in type '{ workspaceId: string; }'.
+src/__tests__/sample.test.ts(1,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/sample.test.ts(2,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/sample.test.ts(3,5): error TS2304: Cannot find name 'expect'.
+src/app/api/channels/[id]/messages/[messageId]/action/route.ts(10,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/channels/[id]/messages/[messageId]/action/route.ts(77,9): error TS2322: Type 'Record<any, unknown> | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/channels/[id]/messages/[messageId]/action/route.ts(172,87): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/channels/[id]/messages/[messageId]/reactions/route.ts(59,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/channels/[id]/messages/[messageId]/reply/route.ts(55,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/channels/[id]/messages/[messageId]/route.ts(42,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/channels/[id]/messages/[messageId]/route.ts(120,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/friends/requests/[requestId]/route.ts(122,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/friends/requests/route.ts(202,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/integrations/webhooks/route.ts(65,80): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v1/channels/route.ts(128,25): error TS18047: 'ably' is possibly 'null'.
+src/app/api/v1/channels/route.ts(160,87): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v1/messages/[messageId]/action/route.ts(10,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/v1/messages/[messageId]/action/route.ts(77,9): error TS2322: Type 'Record<any, unknown> | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/v1/messages/[messageId]/action/route.ts(172,87): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v1/messages/route.ts(14,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/v1/messages/route.ts(101,9): error TS2322: Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/v1/messages/route.ts(135,25): error TS18047: 'ably' is possibly 'null'.
+src/app/api/v1/messages/route.ts(167,87): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v1/pats/route.ts(57,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v1/workspaces/[workspaceId]/settings/route.ts(10,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/v1/workspaces/[workspaceId]/settings/route.ts(44,78): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v2/workspaces/[slug]/channels/[channelId]/route.ts(77,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v2/workspaces/[slug]/channels/route.ts(86,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v2/workspaces/[slug]/members/route.ts(98,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/v2/workspaces/[slug]/messages/route.ts(13,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/v2/workspaces/[slug]/messages/route.ts(154,11): error TS2322: Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/v2/workspaces/[slug]/messages/route.ts(229,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/webhooks/incoming/[token]/route.ts(83,25): error TS18047: 'ably' is possibly 'null'.
+src/app/api/webhooks/route.ts(57,78): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/api-tokens/route.ts(134,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/channels/[channelId]/route.ts(99,25): error TS18047: 'ably' is possibly 'null'.
+src/app/api/workspaces/[workspaceId]/channels/[channelId]/route.ts(105,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/channels/[channelId]/route.ts(146,25): error TS18047: 'ably' is possibly 'null'.
+src/app/api/workspaces/[workspaceId]/channels/route.ts(128,25): error TS18047: 'ably' is possibly 'null'.
+src/app/api/workspaces/[workspaceId]/channels/route.ts(134,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/departments/[departmentId]/announcements/route.ts(136,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/workspaces/[workspaceId]/departments/[departmentId]/announcements/route.ts(157,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/departments/[departmentId]/route.ts(13,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/workspaces/[workspaceId]/departments/[departmentId]/route.ts(97,7): error TS2322: Type '{ name?: string | undefined; description?: string | undefined; icon?: string | undefined; color?: string | undefined; parentId?: string | null | undefined; managerId?: string | null | undefined; settings?: Record<...> | undefined; }' is not assignable to type '(Without<WorkspaceDepartmentUpdateInput, WorkspaceDepartmentUncheckedUpdateInput> & WorkspaceDepartmentUncheckedUpdateInput) | (Without<...> & WorkspaceDepartmentUpdateInput)'.
+  Type '{ name?: string | undefined; description?: string | undefined; icon?: string | undefined; color?: string | undefined; parentId?: string | null | undefined; managerId?: string | null | undefined; settings?: Record<...> | undefined; }' is not assignable to type 'Without<WorkspaceDepartmentUncheckedUpdateInput, WorkspaceDepartmentUpdateInput> & WorkspaceDepartmentUpdateInput'.
+    Type '{ name?: string | undefined; description?: string | undefined; icon?: string | undefined; color?: string | undefined; parentId?: string | null | undefined; managerId?: string | null | undefined; settings?: Record<...> | undefined; }' is not assignable to type 'Without<WorkspaceDepartmentUncheckedUpdateInput, WorkspaceDepartmentUpdateInput>'.
+      Types of property 'parentId' are incompatible.
+        Type 'string | null | undefined' is not assignable to type 'undefined'.
+          Type 'null' is not assignable to type 'undefined'.
+src/app/api/workspaces/[workspaceId]/departments/[departmentId]/route.ts(108,9): error TS2322: Type '{ name?: string | undefined; description?: string | undefined; icon?: string | undefined; color?: string | undefined; parentId?: string | null | undefined; managerId?: string | null | undefined; settings?: Record<...> | undefined; }' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type '{ name?: string | undefined; description?: string | undefined; icon?: string | undefined; color?: string | undefined; parentId?: string | null | undefined; managerId?: string | null | undefined; settings?: Record<...> | undefined; }' is not assignable to type 'InputJsonObject'.
+    Property 'settings' is incompatible with index signature.
+      Type 'Record<any, unknown>' is not assignable to type 'InputJsonValue | null | undefined'.
+src/app/api/workspaces/[workspaceId]/departments/[departmentId]/route.ts(115,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/departments/route.ts(19,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/workspaces/[workspaceId]/departments/route.ts(118,9): error TS2322: Type 'Record<any, unknown> | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/workspaces/[workspaceId]/departments/route.ts(142,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/workspaces/[workspaceId]/departments/route.ts(152,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/integrations/[integrationId]/route.ts(7,13): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/workspaces/[workspaceId]/integrations/[integrationId]/route.ts(69,7): error TS2322: Type '{ active?: boolean | undefined; config?: Record<any, unknown> | undefined; }' is not assignable to type '(Without<WorkspaceIntegrationUpdateInput, WorkspaceIntegrationUncheckedUpdateInput> & WorkspaceIntegrationUncheckedUpdateInput) | (Without<...> & WorkspaceIntegrationUpdateInput)'.
+  Type '{ active?: boolean | undefined; config?: Record<any, unknown> | undefined; }' is not assignable to type 'Without<WorkspaceIntegrationUncheckedUpdateInput, WorkspaceIntegrationUpdateInput> & WorkspaceIntegrationUpdateInput'.
+    Type '{ active?: boolean | undefined; config?: Record<any, unknown> | undefined; }' is not assignable to type 'WorkspaceIntegrationUpdateInput'.
+      Types of property 'config' are incompatible.
+        Type 'Record<any, unknown> | undefined' is not assignable to type 'JsonNull | InputJsonValue | undefined'.
+          Type 'Record<any, unknown>' is not assignable to type 'JsonNull | InputJsonValue | undefined'.
+src/app/api/workspaces/[workspaceId]/integrations/[integrationId]/route.ts(82,9): error TS2322: Type '{ config?: Record<any, unknown> | undefined; active?: boolean | undefined; }' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type '{ config?: Record<any, unknown> | undefined; active?: boolean | undefined; }' is not assignable to type 'InputJsonObject'.
+    Property 'config' is incompatible with index signature.
+      Type 'Record<any, unknown>' is not assignable to type 'InputJsonValue | null | undefined'.
+src/app/api/workspaces/[workspaceId]/integrations/[integrationId]/route.ts(89,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/integrations/route.ts(33,22): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/workspaces/[workspaceId]/integrations/route.ts(215,9): error TS2322: Type '{ secret: string; name: string; description: string | undefined; webhookUrl?: string | undefined; apiKey?: string | undefined; accessToken?: string | undefined; refreshToken?: string | undefined; ... 6 more ...; events?: string[] | undefined; }' is not assignable to type 'JsonNull | InputJsonValue'.
+  Type '{ secret: string; name: string; description: string | undefined; webhookUrl?: string | undefined; apiKey?: string | undefined; accessToken?: string | undefined; refreshToken?: string | undefined; ... 6 more ...; events?: string[] | undefined; }' is not assignable to type 'string'.
+src/app/api/workspaces/[workspaceId]/integrations/route.ts(251,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/invitations/route.ts(11,18): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/workspaces/[workspaceId]/invitations/route.ts(205,9): error TS2322: Type 'Record<any, unknown> | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/workspaces/[workspaceId]/invitations/route.ts(225,73): error TS2551: Property 'workspace' does not exist on type '{ permissions: JsonValue; id: string; email: string; role: string; status: string; createdAt: Date; updatedAt: Date; expiresAt: Date; userId: string | null; token: string; workspaceId: string; invitedBy: string; acceptedAt: Date | null; }'. Did you mean 'workspaceId'?
+src/app/api/workspaces/[workspaceId]/invitations/route.ts(250,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/members/[memberId]/route.ts(73,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/route.ts(10,15): error TS2554: Expected 2-3 arguments, but got 1.
+src/app/api/workspaces/[workspaceId]/route.ts(106,7): error TS2322: Type '{ name?: string | undefined; icon?: string | undefined; description?: string | undefined; settings?: Record<any, unknown> | undefined; plan?: "free" | "pro" | "enterprise" | undefined; }' is not assignable to type '(Without<WorkspaceUpdateInput, WorkspaceUncheckedUpdateInput> & WorkspaceUncheckedUpdateInput) | (Without<...> & WorkspaceUpdateInput)'.
+  Type '{ name?: string | undefined; icon?: string | undefined; description?: string | undefined; settings?: Record<any, unknown> | undefined; plan?: "free" | "pro" | "enterprise" | undefined; }' is not assignable to type 'Without<WorkspaceUncheckedUpdateInput, WorkspaceUpdateInput> & WorkspaceUpdateInput'.
+    Type '{ name?: string | undefined; icon?: string | undefined; description?: string | undefined; settings?: Record<any, unknown> | undefined; plan?: "free" | "pro" | "enterprise" | undefined; }' is not assignable to type 'WorkspaceUpdateInput'.
+      Types of property 'settings' are incompatible.
+        Type 'Record<any, unknown> | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+          Type 'Record<any, unknown>' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+src/app/api/workspaces/[workspaceId]/route.ts(124,9): error TS2322: Type '{ name?: string | undefined; icon?: string | undefined; description?: string | undefined; settings?: Record<any, unknown> | undefined; plan?: "free" | "pro" | "enterprise" | undefined; }' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type '{ name?: string | undefined; icon?: string | undefined; description?: string | undefined; settings?: Record<any, unknown> | undefined; plan?: "free" | "pro" | "enterprise" | undefined; }' is not assignable to type 'InputJsonObject'.
+    Property 'settings' is incompatible with index signature.
+      Type 'Record<any, unknown>' is not assignable to type 'InputJsonValue | null | undefined'.
+src/app/api/workspaces/[workspaceId]/route.ts(131,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/teams/route.ts(154,21): error TS18047: 'ably' is possibly 'null'.
+src/app/api/workspaces/[workspaceId]/teams/route.ts(163,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/[workspaceId]/webhooks/route.ts(68,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/workspaces/route.ts(129,47): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/friends/page.tsx(149,10): error TS2741: Property 'onSearchClick' is missing in type '{ activeView: string; onMenuClick: () => void; }' but required in type 'DynamicHeaderProps'.
+src/app/notifications/page.tsx(89,10): error TS2741: Property 'onSearchClick' is missing in type '{ activeView: string; onMenuClick: () => void; }' but required in type 'DynamicHeaderProps'.
+src/app/workspace/[slug]/members/page.tsx(167,10): error TS2741: Property 'onSearchClick' is missing in type '{ activeView: string; onMenuClick: () => void; onInfoClick: () => void; }' but required in type 'DynamicHeaderProps'.
+src/app/workspace/[slug]/members/page.tsx(344,18): error TS2304: Cannot find name 'InfoPanel'.
+src/app/workspace/[slug]/page.tsx(32,12): error TS2741: Property 'onSearchClick' is missing in type '{ activeView: string; onMenuClick: () => void; }' but required in type 'DynamicHeaderProps'.
+src/app/workspace/[slug]/settings/client.tsx(43,10): error TS2741: Property 'onSearchClick' is missing in type '{ activeView: string; onMenuClick: () => void; onInfoClick: () => void; }' but required in type 'DynamicHeaderProps'.
+src/app/workspace/[slug]/settings/client.tsx(111,18): error TS2304: Cannot find name 'InfoPanel'.
+src/components/features/chat/message-composer.tsx(73,20): error TS2339: Property 'isPrivate' does not exist on type 'Channel'.
+src/components/features/chat/message-composer.tsx(75,51): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/components/features/chat/message-composer.tsx(109,25): error TS2345: Argument of type '{ name: string; type: string; url: string; size: string; }[]' is not assignable to parameter of type 'UploadedFile[]'.
+  Type '{ name: string; type: string; url: string; size: string; }' is missing the following properties from type 'UploadedFile': id, assetId
+src/components/features/chat/message-item.tsx(158,7): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type '[message: titleT, data?: ExternalToast | undefined]'.
+src/components/features/workspace/workspace-integrations-panel.tsx(43,3): error TS2305: Module '"lucide-react"' has no exported member 'Trello'.
+src/components/features/workspace/workspace-integrations-panel.tsx(44,3): error TS2724: '"lucide-react"' has no exported member named 'Figma'. Did you mean 'Sigma'?
+src/components/shared/info-panel.tsx(229,84): error TS2339: Property 'createdBy' does not exist on type 'Channel'.
+src/components/shared/info-panel.tsx(238,90): error TS2339: Property 'createdAt' does not exist on type 'Channel'.
+src/components/shared/info-panel.tsx(271,49): error TS2339: Property 'description' does not exist on type 'Channel'.
+src/components/shared/info-panel.tsx(276,79): error TS2339: Property 'description' does not exist on type 'Channel'.
+src/components/ui/toast.tsx(4,34): error TS2307: Cannot find module '@radix-ui/react-toast' or its corresponding type declarations.
+src/components/ui/use-toast.ts(158,22): error TS7006: Parameter 'open' implicitly has an 'any' type.
+src/hooks/use-toast.ts(158,22): error TS7006: Parameter 'open' implicitly has an 'any' type.
+src/lib/ai/assistant-security.ts(126,17): error TS2554: Expected 2-3 arguments, but got 1.
+src/lib/integrations/ably.ts(95,21): error TS18047: 'ably' is possibly 'null'.
+src/lib/integrations/ably.ts(106,21): error TS18047: 'ably' is possibly 'null'.
+src/lib/integrations/ably.ts(117,21): error TS18047: 'ably' is possibly 'null'.
+src/lib/system-messages.ts(33,21): error TS18047: 'ably' is possibly 'null'.
+src/lib/types/custom-message-schema.ts(25,12): error TS2554: Expected 2-3 arguments, but got 1.
+src/lib/types/custom-message-schema.ts(48,25): error TS2554: Expected 2-3 arguments, but got 1.
+src/lib/utils/external-message-utils.ts(121,25): error TS18047: 'ably' is possibly 'null'.
+ ELIFECYCLE  Command failed with exit code 1.

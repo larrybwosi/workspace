@@ -117,7 +117,7 @@ export async function createExternalMessage(
 
   // Publish to Ably for real-time updates (unless silent)
   if (!message.silent) {
-    const ably = getAblyRest()
+    const ably = getAblyRest(); if (!ably) return;
     const ablyChannel = ably.channels.get(AblyChannels.channel(channelId))
     await ablyChannel.publish(AblyEvents.MESSAGE_SENT, {
       ...newMessage,

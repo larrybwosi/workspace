@@ -11,7 +11,7 @@ const updateWorkspaceSchema = z.object({
   plan: z.enum(["free", "pro", "enterprise"]).optional(),
 })
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
@@ -128,14 +128,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json(workspace)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("Failed to update workspace:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })

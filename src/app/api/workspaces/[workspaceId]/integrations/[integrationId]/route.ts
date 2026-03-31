@@ -10,7 +10,7 @@ const updateIntegrationSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ workspaceId: string; integrationId: string }> },
+  { params }: { params: Promise<any> },
 ) {
   try {
     const { workspaceId, integrationId } = await params
@@ -39,7 +39,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ workspaceId: string; integrationId: string }> },
+  { params }: { params: Promise<any> },
 ) {
   try {
     const { workspaceId, integrationId } = await params
@@ -86,7 +86,7 @@ export async function PATCH(
     return NextResponse.json(integration)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("Failed to update integration:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -95,7 +95,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ workspaceId: string; integrationId: string }> },
+  { params }: { params: Promise<any> },
 ) {
   try {
     const { workspaceId, integrationId } = await params
