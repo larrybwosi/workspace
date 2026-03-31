@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
@@ -10,7 +11,7 @@ import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

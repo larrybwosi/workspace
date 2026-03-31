@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -23,7 +24,7 @@ const createTeamSchema = z.object({
 export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const { workspaceId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const { workspaceId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     // Notify workspace
-    const ably = getAblyServer()
+    const ably = getAblyServer(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
     const channel = ably.channels.get(AblyChannels.workspace(workspaceId))
     await channel.publish(EVENTS.WORKSPACE_UPDATED, {
       type: "team_created",

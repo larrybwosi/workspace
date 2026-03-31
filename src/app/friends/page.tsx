@@ -149,6 +149,7 @@ export default function FriendsPage() {
         <DynamicHeader
           activeView="Friends"
           onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {}}
         />
         <div className="flex-1 flex flex-col h-full bg-muted/10 overflow-auto">
       {/* Header */}

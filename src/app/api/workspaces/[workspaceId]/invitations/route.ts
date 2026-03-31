@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
@@ -8,7 +9,7 @@ const invitationSchema = z.object({
   email: z.string().email().optional(),
   userId: z.string().optional(),
   role: z.enum(["owner", "admin", "member", "guest"]).default("member"),
-  permissions: z.record(z.any()).optional(),
+  permissions: z.any().optional(),
 });
 
 // GET - Fetch workspace invitations
@@ -17,7 +18,7 @@ export async function GET(
   { params }: { params: Promise<any> }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
+    const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -76,7 +77,7 @@ export async function POST(
   { params }: { params: Promise<any> }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
+    const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -202,7 +203,7 @@ export async function POST(
         token,
         role: validatedData.role,
         invitedBy: session.user.id,
-        permissions: validatedData.permissions,
+        permissions: validatedData.permissions as any,
         expiresAt,
       },
       include: {

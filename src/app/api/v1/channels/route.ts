@@ -15,7 +15,7 @@ const createChannelSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
 
     if (!context) {
       return NextResponse.json({ error: "Unauthorized", code: "INVALID_TOKEN" }, { status: 401 })
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
 
     if (!context) {
       return NextResponse.json({ error: "Unauthorized", code: "INVALID_TOKEN" }, { status: 401 })

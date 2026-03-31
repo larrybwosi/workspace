@@ -154,7 +154,7 @@ export function MessageItem({
   const handleCopyMessageLink = () => {
     const messageUrl = `${window.location.origin}/channels/${channelId}?messageId=${message.id}`;
     navigator.clipboard.writeText(messageUrl);
-    toast.apply('Link copied', {
+    toast.success('Link copied', {
       description: 'Message link copied to clipboard',
     });
   };

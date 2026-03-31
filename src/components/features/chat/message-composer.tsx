@@ -70,9 +70,9 @@ export function MessageComposer({
       }));
 
       let filteredMembers = workspaceMembers;
-      if (channel?.isPrivate) {
+      if ((channel as any)?.type === "private") {
         const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
-        filteredMembers = workspaceMembers.filter(m => channelMemberIds.has(m.id));
+        filteredMembers = workspaceMembers.filter((m: any) => channelMemberIds.has(m.id));
       }
 
       const special: MentionItem[] = [
@@ -84,7 +84,7 @@ export function MessageComposer({
     }
 
     if (mentionType === 'channel') {
-      const publicChannels = (channels || []).filter((c: any) => !c.isPrivate);
+      const publicChannels = (channels || []).filter((c: any) => c.type !== "private");
       return publicChannels.map((c: any) => ({
         id: c.id,
         name: c.name,
@@ -106,7 +106,7 @@ export function MessageComposer({
         size: att.size,
       }));
 
-      onSend?.(message, cleanedAttachments);
+      onSend?.(message, cleanedAttachments as any);
       setMessage('');
       setAttachments([]);
       setMentionType(null);
@@ -135,10 +135,10 @@ export function MessageComposer({
     const val = e.target.value;
     const pos = e.target.selectionStart;
     setMessage(val);
-    setCursorPosition(pos);
+    setCursorPosition(pos || 0);
 
     // Detect @ or # trigger
-    const textBeforeCursor = val.slice(0, pos);
+    const textBeforeCursor = val.slice(0, pos || 0);
     const lastAt = textBeforeCursor.lastIndexOf('@');
     const lastHash = textBeforeCursor.lastIndexOf('#');
 

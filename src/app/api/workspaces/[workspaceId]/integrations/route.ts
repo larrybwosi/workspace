@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -30,7 +31,7 @@ const createIntegrationSchema = z.object({
     projectId: z.string().optional(),
     teamId: z.string().optional(),
     scopes: z.array(z.string()).optional(),
-    customHeaders: z.record(z.string()).optional(),
+    customHeaders: z.any().optional(),
     events: z.array(z.string()).optional(),
   }),
   description: z.string().optional(),
@@ -123,10 +124,10 @@ const INTEGRATION_METADATA = {
   },
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<any> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const { workspaceId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -180,10 +181,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<an
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<any> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
     const { workspaceId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<a
           secret: integrationSecret,
           name: validatedData.name,
           description: validatedData.description,
-        },
+        } as any,
         active: true,
       },
     })

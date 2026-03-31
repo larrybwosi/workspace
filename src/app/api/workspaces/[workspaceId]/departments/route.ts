@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -16,14 +17,14 @@ const createDepartmentSchema = z.object({
   color: z.string().optional(),
   parentId: z.string().optional(),
   managerId: z.string().optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.any().optional(),
   createChannel: z.boolean().optional().default(true),
 })
 
 export async function GET(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<an
 export async function POST(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<a
         color: data.color,
         parentId: data.parentId,
         managerId: data.managerId,
-        settings: data.settings,
+        settings: data.settings as any,
         channelId,
       },
       include: {
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<a
     })
 
     // Notify workspace
-    const ably = getAblyServer()
+    const ably = getAblyServer(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
     const channel = ably.channels.get(AblyChannels.workspace(workspaceId))
     await channel.publish(EVENTS.WORKSPACE_UPDATED, {
       type: "department_created",

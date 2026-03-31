@@ -7,12 +7,12 @@ const updateSettingsSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   icon: z.string().optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.any().optional(),
 })
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
     if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { workspaceId } = await params

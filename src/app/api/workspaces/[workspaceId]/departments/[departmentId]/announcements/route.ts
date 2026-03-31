@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -27,7 +28,7 @@ export async function GET(
 ) {
   try {
     const { workspaceId, departmentId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -89,7 +90,7 @@ export async function POST(
 ) {
   try {
     const { workspaceId, departmentId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -132,7 +133,7 @@ export async function POST(
     })
 
     // Notify department members via Ably
-    const ably = getAblyServer()
+    const ably = getAblyServer(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
     const channel = ably.channels.get(AblyChannels.workspace(workspaceId))
     await channel.publish(EVENTS.WORKSPACE_UPDATED, {
       type: "announcement_created",

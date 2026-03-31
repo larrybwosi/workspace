@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -7,7 +8,7 @@ import { sendRealtimeMessage } from "@/lib/integrations/ably"
 const actionResponseSchema = z.object({
   actionId: z.string().min(1),
   comment: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.any().optional(),
 })
 
 /**
@@ -16,7 +17,7 @@ const actionResponseSchema = z.object({
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

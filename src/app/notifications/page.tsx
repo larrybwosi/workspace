@@ -89,6 +89,7 @@ export default function NotificationsPage() {
         <DynamicHeader
           activeView="Notifications"
           onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {}}
         />
         <div className="flex-1 overflow-auto bg-background">
           <div className="max-w-4xl mx-auto p-6 space-y-8">

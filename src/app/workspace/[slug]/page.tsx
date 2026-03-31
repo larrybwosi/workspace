@@ -29,7 +29,7 @@ export default function WorkspacePage() {
       <div className="h-screen flex overflow-hidden bg-background">
         <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId="" />
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-          <DynamicHeader activeView="Loading..." onMenuClick={() => setSidebarOpen(true)} />
+          <DynamicHeader activeView="Loading..." onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
           <div className="p-8 max-w-5xl mx-auto w-full space-y-8">
             <div className="flex items-center gap-4">
               <Skeleton className="h-20 w-20 rounded-2xl" />

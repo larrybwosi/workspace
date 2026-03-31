@@ -13,7 +13,7 @@ const createWebhookSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
     if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const webhooks = await prisma.webhook.findMany({
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
     if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     if (!hasPermission(context, "webhooks:write")) {

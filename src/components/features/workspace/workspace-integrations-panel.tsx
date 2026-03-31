@@ -40,8 +40,8 @@ import {
   Activity,
   MessageSquare,
   GitBranch,
-  Trello,
-  Figma,
+  Layout,
+  Pentagon,
 } from "lucide-react"
 
 interface WorkspaceIntegrationsPanelProps {
@@ -52,10 +52,10 @@ const SERVICE_ICONS: Record<string, React.ReactNode> = {
   slack: <MessageSquare className="h-5 w-5" />,
   github: <GitBranch className="h-5 w-5" />,
   gitlab: <GitBranch className="h-5 w-5" />,
-  jira: <Trello className="h-5 w-5" />,
+  jira: <Layout className="h-5 w-5" />,
   linear: <Activity className="h-5 w-5" />,
   notion: <Globe className="h-5 w-5" />,
-  figma: <Figma className="h-5 w-5" />,
+  figma: <Pentagon className="h-5 w-5" />,
   discord: <MessageSquare className="h-5 w-5" />,
   teams: <MessageSquare className="h-5 w-5" />,
   zapier: <Zap className="h-5 w-5" />,
