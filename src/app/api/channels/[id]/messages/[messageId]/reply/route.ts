@@ -8,7 +8,7 @@ import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
  *
  * Creates a new reply for a specific message.
  */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -50,12 +50,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     // 3. Broadcast the new reply via Ably
-    const ably = getAblyRest()
-    const channelId = parentMessage.channelId || "default"
-    const channel = ably.channels.get(AblyChannels.thread(channelId))
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
+    if (ably) {
+      const channelId = parentMessage.channelId || "default"
+      const channel = ably.channels.get(AblyChannels.thread(channelId))
 
-    // Publish a "message created" event.
-    await channel.publish(AblyEvents.MESSAGE_SENT, newReply)
+      // Publish a "message created" event.
+      await channel.publish(AblyEvents.MESSAGE_SENT, newReply)
+    }
 
     return NextResponse.json(newReply, { status: 201 }) // 201 Created
   } catch (error) {

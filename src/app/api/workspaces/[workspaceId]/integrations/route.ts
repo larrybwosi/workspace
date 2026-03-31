@@ -123,7 +123,7 @@ const INTEGRATION_METADATA = {
   },
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const { workspaceId } = await params
     const session = await auth.api.getSession({ headers: request.headers })
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     console.error("Failed to create integration:", error)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }

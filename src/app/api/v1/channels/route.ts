@@ -124,9 +124,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const ably = getAblyRest()
-    const ablyChannel = ably.channels.get(`workspace:${workspaceId}`)
-    await ablyChannel.publish("channel.created", { channel })
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
+    if (ably) {
+      const ablyChannel = ably.channels.get(`workspace:${workspaceId}`)
+      await ablyChannel.publish("channel.created", { channel })
+    }
 
     if (context.workspaceId) {
       await prisma.workspaceAuditLog.create({
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.errors },
+        { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.issues },
         { status: 400 },
       )
     }

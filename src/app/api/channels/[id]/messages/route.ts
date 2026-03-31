@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       await notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere);
     }
 
-    const ably = getAblyRest();
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });;
     if (ably) {
       const channel = ably.channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_SENT, message);

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -38,9 +38,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
 
     // Broadcast update via Ably
-    const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(message.channelId))
-    await channel.publish(AblyEvents.MESSAGE_UPDATED, message)
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.thread(message.channelId))
+      await channel.publish(AblyEvents.MESSAGE_UPDATED, message)
+    }
 
     return NextResponse.json(message)
   } catch (error) {
@@ -51,7 +53,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(
   request: NextRequest, 
-  { params }: { params: Promise<{ messageId: string }> } 
+  { params }: { params: Promise<{ id: string; messageId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
@@ -116,12 +118,14 @@ export async function DELETE(
     }
 
     // 5. Broadcast deletion via Ably
-    const ably = getAblyRest()
-    const channel = ably.channels.get(AblyChannels.thread(channelId))
-    await channel.publish(AblyEvents.MESSAGE_DELETED, { 
-      messageId,
-      threadId: existingMessage.rootThread?.id 
-    })
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.thread(channelId))
+      await channel.publish(AblyEvents.MESSAGE_DELETED, {
+        messageId,
+        threadId: existingMessage.rootThread?.id
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

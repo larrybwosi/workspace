@@ -10,7 +10,7 @@ const updateSettingsSchema = z.object({
   settings: z.record(z.any()).optional(),
 })
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const context = await authenticateV1(request)
     if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(workspace)
   } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: error.errors }, { status: 400 })
+    if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues }, { status: 400 })
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

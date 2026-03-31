@@ -21,7 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { messageId } = await params
+    const { id, messageId } = await params
     const body = await request.json()
     const data = actionResponseSchema.parse(body)
 
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { messageId } = await params
+    const { id, messageId } = await params
 
     // Fetch all action responses for this message
     const responses = await prisma.messageActionResponse.findMany({

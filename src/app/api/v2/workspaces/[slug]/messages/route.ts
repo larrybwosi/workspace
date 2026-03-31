@@ -23,7 +23,7 @@ const sendMessageSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<any> }
 ) {
   const { slug } = await params
   const { context, error } = await authenticateV2(request, { slug })
@@ -87,7 +87,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<any> }
 ) {
   const { slug } = await params
   const { context, error } = await authenticateV2(request, { slug })
