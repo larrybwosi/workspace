@@ -52,7 +52,7 @@ export async function POST(
       },
     });
 
-    const ably = getAblyRest();
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });;
     if (ably) {
       const channel = ably.channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_SENT, reply);

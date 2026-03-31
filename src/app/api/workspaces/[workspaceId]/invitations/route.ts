@@ -14,7 +14,7 @@ const invitationSchema = z.object({
 // GET - Fetch workspace invitations
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ workspaceId: string }> }
+  { params }: { params: Promise<any> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -73,7 +73,7 @@ export async function GET(
 // POST - Create workspace invitation
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ workspaceId: string }> }
+  { params }: { params: Promise<any> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -247,7 +247,7 @@ export async function POST(
     return NextResponse.json({ invitation });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
     console.error("Failed to create workspace invitation:", error);
     return NextResponse.json(

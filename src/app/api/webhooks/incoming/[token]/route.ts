@@ -79,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     // Broadcast via Ably
-    const ably = getAblyRest()
+    const ably = getAblyRest(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
     const ablyChannel = ably.channels.get(AblyChannels.channel(webhookConfig.channelId))
     await ablyChannel.publish(AblyEvents.MESSAGE_SENT, message)
 

@@ -7,14 +7,14 @@ import { sendRealtimeMessage } from "@/lib/integrations/ably"
 const actionResponseSchema = z.object({
   actionId: z.string().min(1),
   comment: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 })
 
 /**
  * POST /api/v1/messages/:messageId/actions
  * Submit a response to an interactive message action
  */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         userId: session.user.id,
         actionValue: data.actionId,
         comment: data.comment,
-        metadata: data.metadata,
+        metadata: (data.metadata as any) || {},
         webhookUrl: callbackUrl,
         webhookSent: false,
       },
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.errors },
+        { error: "Invalid request body", code: "INVALID_REQUEST_BODY", details: error.issues },
         { status: 400 },
       )
     }
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
  * GET /api/v1/messages/:messageId/actions
  * Get all responses for a message's actions
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<any> }) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session) {
