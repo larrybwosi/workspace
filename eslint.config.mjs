@@ -16,18 +16,18 @@ export default tseslint.config(
       },
     },
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-empty-object-type": "off",
-      "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-require-imports": "warn",
+      "@typescript-eslint/ban-ts-comment": "warn",
       "no-unused-vars": "off",
-      "prefer-const": "off",
-      "no-case-declarations": "off",
-      "no-useless-escape": "off",
-      "no-constant-binary-expression": "off",
+      "prefer-const": "warn",
+      "no-case-declarations": "warn",
+      "no-useless-escape": "warn",
+      "no-constant-binary-expression": "warn",
       "no-undef": "off",
-      "no-useless-assignment": "off"
+      "no-useless-assignment": "warn"
     }
   }
 );

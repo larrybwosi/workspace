@@ -1,13 +1,14 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const { code } = params
+    const { code } = await params
 
     const inviteLink = await prisma.workspaceInviteLink.findUnique({
       where: { code },
@@ -39,15 +40,15 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { code } = params
+    const { code } = await params
 
     const inviteLink = await prisma.workspaceInviteLink.findUnique({
       where: { code },

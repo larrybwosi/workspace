@@ -68,7 +68,7 @@ export async function logAssistantActivity(data: {
   userAgent?: string
 }) {
   await prisma.assistantAuditLog.create({
-    data,
+    data: data as any,
   })
 }
 
@@ -123,5 +123,5 @@ export const conversationSchema = z.object({
 
 export const toolCallSchema = z.object({
   toolName: z.string(),
-  parameters: z.record(z.any()),
+  parameters: z.any(),
 })

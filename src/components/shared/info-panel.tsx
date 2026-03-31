@@ -226,7 +226,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
                         <span>{type === "workspace" ? "Owner" : "Creator"}</span>
                       </div>
                       <span className="font-medium">
-                        {type === "workspace" ? workspace?.owner?.name : (channel?.createdBy?.name || "Unknown")}
+                        {type === "workspace" ? workspace?.owner?.name : ((channel as any)?.createdBy?.name || "Unknown")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -235,7 +235,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
                         <span>Date of creation</span>
                       </div>
                       <span className="font-medium">
-                        {new Date(type === "workspace" ? workspace?.createdAt : channel?.createdAt).toLocaleDateString("en-US", {
+                        {new Date(type === "workspace" ? workspace?.createdAt : (channel as any)?.createdAt).toLocaleDateString("en-US", {
                           day: "numeric",
                           month: "short",
                           year: "numeric"
@@ -268,12 +268,12 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
                   </div>
                 </div>
 
-                {type === "channel" && channel?.description && (
+                {type === "channel" && (channel as any)?.description && (
                    <>
                     <Separator />
                     <div>
                         <h3 className="text-sm font-semibold mb-2">Description</h3>
-                        <p className="text-sm text-muted-foreground">{channel.description}</p>
+                        <p className="text-sm text-muted-foreground">{(channel as any)?.description}</p>
                     </div>
                    </>
                 )}

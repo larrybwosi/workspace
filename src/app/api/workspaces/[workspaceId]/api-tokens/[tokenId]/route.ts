@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -8,7 +9,7 @@ export async function DELETE(
 ) {
   try {
     const { workspaceId, tokenId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; channelId: string }> }
 ) {
   const { slug, channelId } = await params
-  const { context, error } = await authenticateV2(request, { slug })
+  const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
   if (!hasScope(context!, "channels:read")) {
@@ -46,7 +46,7 @@ export async function PATCH(
   { params }: { params: Promise<{ slug: string; channelId: string }> }
 ) {
   const { slug, channelId } = await params
-  const { context, error } = await authenticateV2(request, { slug })
+  const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
   if (!hasScope(context!, "channels:write")) {
@@ -85,7 +85,7 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string; channelId: string }> }
 ) {
   const { slug, channelId } = await params
-  const { context, error } = await authenticateV2(request, { slug })
+  const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
   if (!hasScope(context!, "channels:write")) {

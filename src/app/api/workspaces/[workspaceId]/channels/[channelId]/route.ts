@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -17,7 +18,7 @@ export async function GET(
 ) {
   try {
     const { workspaceId, channelId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -55,7 +56,7 @@ export async function PATCH(
 ) {
   try {
     const { workspaceId, channelId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -95,7 +96,7 @@ export async function PATCH(
     })
 
     // Notify
-    const ably = getAblyServer()
+    const ably = getAblyServer(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
     const ablyChannel = ably.channels.get(AblyChannels.workspace(workspaceId))
     await ablyChannel.publish(EVENTS.CHANNEL_UPDATED, { channel, userId: session.user.id })
 
@@ -115,7 +116,7 @@ export async function DELETE(
 ) {
   try {
     const { workspaceId, channelId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -142,7 +143,7 @@ export async function DELETE(
     })
 
     // Notify
-    const ably = getAblyServer()
+    const ably = getAblyServer(); if (!ably) return NextResponse.json({ error: "Ably not configured" }, { status: 500 });
     const ablyChannel = ably.channels.get(AblyChannels.workspace(workspaceId))
     await ablyChannel.publish(EVENTS.CHANNEL_DELETED, { channelId, userId: session.user.id })
 

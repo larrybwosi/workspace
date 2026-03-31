@@ -22,7 +22,7 @@ export const CustomMessageComponentSchema: z.ZodType<CustomMessageComponent> = z
     "approval",
     "alert",
   ]),
-  props: z.record(z.any()).optional(),
+  props: z.any().optional(),
   children: z.array(CustomMessageComponentSchema).optional(),
 }))
 
@@ -45,7 +45,7 @@ export const CustomMessageUIDefinitionSchema = z.object({
         icon: z.string().optional(),
         handler: z.enum(["link", "callback", "update", "approve", "reject"]).default("callback"),
         targetUrl: z.string().optional(),
-        callbackData: z.record(z.any()).optional(),
+        callbackData: z.any().optional(),
       }),
     )
     .optional(),

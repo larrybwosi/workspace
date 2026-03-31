@@ -7,7 +7,7 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string; userId: string }> }
 ) {
   const { slug, userId } = await params
-  const { context, error } = await authenticateV2(request, { slug })
+  const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
   if (!hasScope(context!, "members:write")) {

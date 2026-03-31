@@ -4,7 +4,7 @@ import { authenticateV1, hasPermission } from "@/lib/auth/api-auth"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ workspaceId: string }> }) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
     if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { workspaceId } = await params

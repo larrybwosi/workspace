@@ -1,10 +1,11 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
 
 const updateIntegrationSchema = z.object({
-  config: z.record(z.any()).optional(),
+  config: z.any().optional(),
   active: z.boolean().optional(),
 })
 
@@ -14,7 +15,7 @@ export async function GET(
 ) {
   try {
     const { workspaceId, integrationId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -43,7 +44,7 @@ export async function PATCH(
 ) {
   try {
     const { workspaceId, integrationId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -99,7 +100,7 @@ export async function DELETE(
 ) {
   try {
     const { workspaceId, integrationId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

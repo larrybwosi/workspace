@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
@@ -10,7 +11,7 @@ const updateDepartmentSchema = z.object({
   color: z.string().optional(),
   parentId: z.string().nullable().optional(),
   managerId: z.string().nullable().optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.any().optional(),
 })
 
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
 ) {
   try {
     const { workspaceId, departmentId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -76,7 +77,7 @@ export async function PATCH(
 ) {
   try {
     const { workspaceId, departmentId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -94,7 +95,15 @@ export async function PATCH(
 
     const department = await prisma.workspaceDepartment.update({
       where: { id: departmentId },
-      data,
+      data: {
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        color: data.color,
+        parentId: data.parentId,
+        managerId: data.managerId,
+        settings: data.settings as any,
+      },
       include: { parent: true, members: { include: { user: true } }, teams: true },
     })
 
@@ -105,7 +114,7 @@ export async function PATCH(
         action: "department.updated",
         resource: "department",
         resourceId: departmentId,
-        metadata: data,
+        metadata: data as any,
       },
     })
 
@@ -125,7 +134,7 @@ export async function DELETE(
 ) {
   try {
     const { workspaceId, departmentId } = await params
-    const session = await auth.api.getSession({ headers: request.headers })
+    const session = await auth.api.getSession({ headers: await headers() } as any)
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

@@ -38,7 +38,7 @@ const sendMessageSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const context = await authenticateV1(request)
+    const context = await authenticateV1(request as any)
 
     if (!context) {
       return NextResponse.json(

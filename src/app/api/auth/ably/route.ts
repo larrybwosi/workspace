@@ -1,11 +1,10 @@
-// app/api/ably-auth/route.ts
+import { headers } from "next/headers";
 import { NextResponse } from 'next/server';
 import { ably } from '@/lib/integrations/ably';
 import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
 
 export async function POST() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: await headers() } as any);
   // console.log(session)
   if (!session?.user?.id) {
     return new NextResponse('Unauthorized', { status: 401 });

@@ -26,7 +26,7 @@ export async function GET(
   { params }: { params: Promise<any> }
 ) {
   const { slug } = await params
-  const { context, error } = await authenticateV2(request, { slug })
+  const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
   if (!hasScope(context!, "messages:read")) {
@@ -90,7 +90,7 @@ export async function POST(
   { params }: { params: Promise<any> }
 ) {
   const { slug } = await params
-  const { context, error } = await authenticateV2(request, { slug })
+  const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
   if (!hasScope(context!, "messages:send")) {

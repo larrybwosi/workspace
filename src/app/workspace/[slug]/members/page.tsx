@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { InfoPanel } from "@/components/shared/info-panel"
 import {
   Dialog,
   DialogContent,
@@ -167,6 +168,7 @@ export default function MembersPage({ params }: MembersPageProps) {
         <DynamicHeader
           activeView="Members"
           onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {}}
           onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
         <div className="flex flex-1 overflow-hidden">
