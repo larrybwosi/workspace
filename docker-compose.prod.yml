@@ -5,34 +5,36 @@ services:
       dockerfile: Dockerfile
     container_name: dealio-app
     restart: always
-    ports:
-      - '3001:3001'
+    expose:
+      - '3001' # Tells Coolify's proxy where to route traffic; avoids host port conflicts
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
-      - REDIS_URL=redis://redis:6379
+      - 'DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public'
+      - 'REDIS_URL=redis://redis:6379'
       - NODE_ENV=production
     networks:
       - dealio-network
 
   postgres:
-    image: postgres:17-alpine
+    image: 'postgres:17-alpine'
     container_name: dealio-postgres
     restart: always
     volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
+      - 'db_data:/var/lib/postgresql/data'
+    # Removed ports binding for security and conflict prevention.
+    # App can still access it via the dealio-network on port 5432.
     environment:
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
-      - POSTGRES_DB=${DB_NAME:-main}
+      - 'POSTGRES_USER=${DB_USER:-postgres}'
+      - 'POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}'
+      - 'POSTGRES_DB=${DB_NAME:-main}'
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
+      test:
+        - CMD-SHELL
+        - 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}'
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,15 +42,17 @@ services:
       - dealio-network
 
   redis:
-    image: redis:7-alpine
+    image: 'redis:7-alpine'
     container_name: dealio-redis
     restart: always
-    ports:
-      - '6379:6379'
     volumes:
-      - redis_data:/data
+      - 'redis_data:/data'
+    # Removed ports binding for security and conflict prevention.
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test:
+        - CMD
+        - redis-cli
+        - ping
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,8 +60,8 @@ services:
       - dealio-network
 
 volumes:
-  db_data:
-  redis_data:
+  db_data: null
+  redis_data: null
 
 networks:
   dealio-network:
