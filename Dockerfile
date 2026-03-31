@@ -47,6 +47,10 @@ RUN adduser --system --uid 1001 nextjs
 # Install Prisma CLI globally for migrations
 RUN pnpm add -g prisma@6.5.0
 
+# ✅ THE FIX: Grant the nextjs user ownership of the pnpm directory
+# This allows Prisma to write its engines when docker-entrypoint.sh runs
+RUN chown -R nextjs:nodejs /pnpm
+
 # 1. Copy built files and apply ownership inline to avoid OOM errors
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
