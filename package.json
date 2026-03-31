@@ -6,6 +6,7 @@
         "build": "next build",
         "dev": "next dev --port 3001",
         "lint": "eslint .",
+        "tsc": "tsc --noEmit",
         "start": "next start",
         "init": "docker desktop start ; docker-compose up -d ; docker start redis; next dev",
         "postinstall": "prisma generate",

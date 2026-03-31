@@ -21,7 +21,7 @@ export function useMessages(
 ) {
   return useInfiniteQuery({
     queryKey: messageKeys.list(channelId, workspaceId, threadId || contextId),
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? "/v2" : "";
 

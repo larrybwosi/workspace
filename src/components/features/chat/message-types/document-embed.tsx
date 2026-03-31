@@ -19,12 +19,12 @@ export function DocumentEmbed({ message }: DocumentEmbedProps) {
     return null;
   }
 
-  const docTitle = metadata.documentTitle || "Document";
-  const docType = metadata.documentType || "PDF";
-  const docUrl = metadata.documentUrl || "#";
-  const docStatus = metadata.documentStatus;
-  const docId = metadata.documentId;
-  const docAmount = metadata.documentAmount;
+  const docTitle = (metadata as any)?.documentTitle || "Document";
+  const docType = (metadata as any)?.documentType || "PDF";
+  const docUrl = (metadata as any)?.documentUrl || "#";
+  const docStatus = (metadata as any)?.documentStatus;
+  const docId = (metadata as any)?.documentId;
+  const docAmount = (metadata as any)?.documentAmount;
 
   return (
     <Card className="p-4 border-l-4 border-l-primary bg-muted/30 max-w-md my-2">
