@@ -92,6 +92,7 @@ export const EVENTS = AblyEvents
 export async function publishMessage(channelId: string, data: any) {
   try {
     const ably = getAblyRest()
+    if (!ably) return
     const channel = ably.channels.get(AblyChannels.channel(channelId))
     await channel.publish(data.type, data.data)
   } catch (error) {
@@ -103,6 +104,7 @@ export async function publishMessage(channelId: string, data: any) {
 export async function publishNotification(userId: string, notification: any) {
   try {
     const ably = getAblyRest()
+    if (!ably) return
     const channel = ably.channels.get(AblyChannels.notifications(userId))
     await channel.publish(AblyEvents.NOTIFICATION, notification)
   } catch (error) {
@@ -114,6 +116,7 @@ export async function publishNotification(userId: string, notification: any) {
 export async function publishToAbly(channelName: string, eventName: string, data: any) {
   try {
     const ably = getAblyRest()
+    if (!ably) return
     const channel = ably.channels.get(channelName)
     await channel.publish(eventName, data)
   } catch (error) {

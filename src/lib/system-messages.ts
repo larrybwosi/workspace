@@ -29,7 +29,7 @@ export async function createSystemMessage(content: string, options: SystemMessag
   })
 
   if (options.broadcast !== false) {
-    const ably = getAblyRest()
+    const ably = getAblyRest(); if (!ably) return;
     const channel = ably.channels.get(AblyChannels.thread(options.channelId))
     await channel.publish(AblyEvents.MESSAGE_SENT, message)
   }
