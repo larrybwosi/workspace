@@ -3,8 +3,9 @@
 // ============================================
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // output   = "../prisma"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -125,8 +126,8 @@ model Verification {
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, value])
-  @@map("verifications")
   @@index([identifier])
+  @@map("verifications")
 }
 
 model Session {
@@ -141,7 +142,7 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  impersonatedBy String?
+  impersonatedBy     String?
   oauthRefreshTokens OAuthRefreshToken[]
   oauthAccessTokens  OAuthAccessToken[]
 
@@ -150,8 +151,8 @@ model Session {
   oauthrefreshtokens OauthRefreshToken[]
   oauthaccesstokens  OauthAccessToken[]
 
-  @@map("sessions")
   @@index([userId])
+  @@map("sessions")
 }
 
 model Account {
@@ -171,8 +172,8 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("account")
   @@index([userId])
+  @@map("account")
 }
 
 // ============================================
@@ -346,7 +347,7 @@ model WorkspaceInvitation {
   id          String    @id @default(cuid())
   workspaceId String
   email       String
-  userId      String?   // For linking to existing users if known
+  userId      String? // For linking to existing users if known
   token       String    @unique
   role        String    @default("member")
   invitedBy   String
@@ -509,7 +510,7 @@ model Thread {
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   creator User    @relation("ThreadCreator", fields: [creatorId], references: [id])
 
-  title String?
+  title         String?
   rootMessageId String?  @unique
   rootMessage   Message? @relation("ThreadRoot", fields: [rootMessageId], references: [id])
 
@@ -710,7 +711,7 @@ model MessageAction {
   actionId  String // Unique identifier for the action (e.g., "approve", "reject")
   label     String // Button label
   style     String   @default("default") // Button style: default, primary, danger
-  value     String?  // Optional value to send with the action
+  value     String? // Optional value to send with the action
   disabled  Boolean  @default(false)
   order     Int      @default(0)
   createdAt DateTime @default(now())
@@ -1137,7 +1138,7 @@ model UserBadge {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace  Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace  Workspace?            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   userBadges UserBadgeAssignment[]
 
   @@map("user_badges")
@@ -1240,7 +1241,7 @@ model Friend {
   id        String   @id @default(cuid())
   userId    String
   friendId  String
-  nickname  String?  // Optional custom nickname for the friend
+  nickname  String? // Optional custom nickname for the friend
   createdAt DateTime @default(now())
 
   user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
@@ -1288,9 +1289,9 @@ model OAuthClient {
   type                    String?
   requirePKCE             Boolean?
   metadata                Json?
-  oauthRefreshTokens OAuthRefreshToken[]
-  oauthAccessTokens  OAuthAccessToken[]
-  oauthConsents      OAuthConsent[]
+  oauthRefreshTokens      OAuthRefreshToken[]
+  oauthAccessTokens       OAuthAccessToken[]
+  oauthConsents           OAuthConsent[]
 
   @@map("oauth_clients")
 }
@@ -1391,8 +1392,8 @@ model FriendRequest {
   message     String?   @db.Text // Optional message with the request
   createdAt   DateTime  @default(now())
   respondedAt DateTime?
-  sender   User @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender      User      @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User      @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([senderId])
@@ -1425,9 +1426,9 @@ model Member {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("members")
   @@index([organizationId])
   @@index([userId])
+  @@map("members")
 }
 
 model OrganizationInvitation {
@@ -1452,6 +1453,7 @@ model Jwks {
   privateKey String
   createdAt  DateTime
   expiresAt  DateTime?
+
   @@map("jwks")
 }
 
