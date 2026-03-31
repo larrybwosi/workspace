@@ -10,7 +10,7 @@ const sendMessageSchema = z.object({
   threadId: z.string().optional(),
   contextId: z.string().optional(),
   messageType: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
   attachments: z.array(z.object({
     name: z.string(),
     type: z.string(),
@@ -151,7 +151,7 @@ export async function POST(
           userId: context!.userId,
           threadId: activeThreadId,
           messageType: messageType || "standard",
-          metadata: metadata || {},
+          metadata: (metadata as any) || {},
           attachments: attachments ? {
             create: attachments.map(a => ({
               name: a.name,
@@ -226,7 +226,7 @@ export async function POST(
     return NextResponse.json({ message: createdMessage }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("V2 Send Message Error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
