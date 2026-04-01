@@ -1,5 +1,6 @@
 'use client';
 import { Mail, Phone, MapPin, Calendar, Edit2, LogOut, MessageSquare } from 'lucide-react';
+import { format } from 'date-fns';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -106,20 +107,12 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 text-sm">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">
-                      {(user as any)?.email || `${user?.name.toLowerCase().replace(' ', '.')}@conceptzilla.com`}
-                    </span>
+                    <span className="truncate">{user.email}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      Joined{' '}
-                      {(user as any).createdAt
-                        ? new Date((user as any).createdAt).toLocaleDateString('en-US', {
-                            month: 'long',
-                            year: 'numeric',
-                          })
-                        : 'May 2024'}
+                      Joined {user.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : 'May 2024'}
                     </span>
                   </div>
                 </div>

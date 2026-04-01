@@ -115,6 +115,8 @@ model User {
   oauthaccesstokens  OauthAccessToken[]
   oauthconsents      OauthConsent[]
 
+  notificationPreferences Json?
+
   @@map("users")
 }
 

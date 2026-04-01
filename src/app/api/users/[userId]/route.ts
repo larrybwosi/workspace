@@ -29,6 +29,7 @@ export async function GET(
         role: true,
         status: true,
         createdAt: true,
+        notificationPreferences: true,
       },
     });
 
@@ -55,7 +56,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, username, avatar, banner, statusText, statusEmoji, status } = body;
+    const { name, username, avatar, banner, statusText, statusEmoji, status, notificationPreferences } = body;
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -67,6 +68,7 @@ export async function PATCH(
         statusText,
         statusEmoji,
         status,
+        notificationPreferences,
       },
     });
 
