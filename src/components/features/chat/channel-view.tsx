@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import type { Thread, Message, Attachment } from '@/lib/types';
-import { mockThread, mockUsers } from '@/lib/mock-data';
 import {
   useMessages,
   useSendMessage,
