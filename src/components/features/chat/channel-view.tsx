@@ -24,6 +24,7 @@ import { getAblyClient, AblyChannels, AblyEvents } from '@/lib/integrations/ably
 import { UploadedFile } from '@/lib/utils/upload-utils';
 import { toast } from 'sonner';
 import { useChannel } from '@/hooks/api/use-channels';
+import { useSession } from '@/lib/auth/auth-client';
 
 interface ChannelViewProps {
   channelId: string;
@@ -37,16 +38,15 @@ interface ChannelViewProps {
 
 function MessageSkeleton() {
   return (
-    // responsive padding: px-2 on mobile, px-4 on desktop
-    <div className="flex items-start gap-3 py-2 px-2 md:px-4 w-full">
-      <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-      <div className="flex-1 space-y-2 overflow-hidden">
+    <div className="flex items-start gap-3 py-0.5 px-4 w-full">
+      <Skeleton className="h-10 w-10 rounded-full shrink-0 mt-0.5" />
+      <div className="flex-1 space-y-1.5 overflow-hidden">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-20 md:w-24" />
-          <Skeleton className="h-3 w-8 md:w-12" />
+          <Skeleton className="h-3.5 w-20" />
+          <Skeleton className="h-3 w-10" />
         </div>
-        <Skeleton className="h-4 w-[90%]" />
-        <Skeleton className="h-4 w-[60%]" />
+        <Skeleton className="h-3.5 w-[85%]" />
+        <Skeleton className="h-3.5 w-[55%]" />
       </div>
     </div>
   );
@@ -65,20 +65,22 @@ function DateDivider({ date }: { date: Date }) {
   if (isYesterday) dateLabel = 'Yesterday';
 
   return (
-    <div className="flex items-center my-4 px-2 md:px-4">
-      <div className="flex-1 h-[1px] bg-border" />
-      <span className="px-2 text-xs font-medium text-muted-foreground whitespace-nowrap">{dateLabel}</span>
-      <div className="flex-1 h-[1px] bg-border" />
+    <div className="flex items-center my-3 mx-4">
+      <div className="flex-1 h-px bg-border" />
+      <span className="px-2 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</span>
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
 
 function UnreadDivider() {
   return (
-    <div className="flex items-center my-2 px-0 w-full group">
-      <div className="flex-1 h-[1px] bg-red-500/50 group-hover:bg-red-500 transition-colors" />
-      <span className="px-2 text-[10px] md:text-xs font-bold text-red-500 uppercase tracking-wider">New Messages</span>
-      <div className="flex-1 h-[1px] bg-red-500/50 group-hover:bg-red-500 transition-colors" />
+    <div className="flex items-center my-1 mx-4">
+      <div className="flex-1 h-px bg-red-500/60" />
+      <span className="px-2 text-[10px] font-bold text-red-500 uppercase tracking-wider whitespace-nowrap">
+        New Messages
+      </span>
+      <div className="flex-1 h-px bg-red-500/60" />
     </div>
   );
 }
@@ -90,7 +92,7 @@ export function ChannelView({
   workspaceId,
   threadId: initialThreadId,
   contextId,
-  isWidget
+  isWidget,
 }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
@@ -157,6 +159,20 @@ export function ChannelView({
   const [isAtBottom, setIsAtBottom] = useState(false);
   const markedMessageIds = useRef<Set<string>>(new Set());
 
+  const { data: session } = useSession();
+  const currentUser = session?.user;
+
+  // 1. Flatten Data
+  const messages = useMemo(() => {
+    if (!messagesData?.pages) return [];
+    return messagesData.pages.flatMap(page => page.messages);
+  }, [messagesData]);
+
+  const firstUnreadMessageId = useMemo(() => {
+    const firstUnread = messages.find(m => !m.readByCurrentUser);
+    return firstUnread?.id || null;
+  }, [messages]);
+
   // Intersection Observer for scroll position
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -179,12 +195,6 @@ export function ChannelView({
     markedMessageIds.current.clear();
     setHasInitialScrolled(false);
   }, [activeChannelId]);
-
-  // 1. Flatten Data
-  const messages = useMemo(() => {
-    if (!messagesData?.pages) return [];
-    return messagesData.pages.flatMap(page => page.messages);
-  }, [messagesData]);
 
   // 2. Scroll Handling
   useEffect(() => {
@@ -227,7 +237,6 @@ export function ChannelView({
         .map(m => m.id);
 
       if (unreadMessageIds.length > 0) {
-        // Optimistically mark as read in the local ref to prevent duplicate calls
         unreadMessageIds.forEach(id => markedMessageIds.current.add(id));
 
         markMessagesAsReadMutation.mutate({
@@ -237,11 +246,6 @@ export function ChannelView({
       }
     }
   }, [messages, activeChannelId, isAtBottom]);
-
-  const firstUnreadMessageId = useMemo(() => {
-    const firstUnread = messages.find(m => !m.readByCurrentUser);
-    return firstUnread?.id || null;
-  }, [messages]);
 
   // 4. Organize Messages
   const renderList = useMemo(() => {
@@ -336,7 +340,6 @@ export function ChannelView({
     if (replyMessage) {
       const user = (replyMessage as any).user;
       setReplyingTo({ id: messageId, userName: user?.name || 'Unknown' });
-      // Focus input logic would go here
     }
   };
 
@@ -344,10 +347,7 @@ export function ChannelView({
     const message = messages.find(m => m.id === messageId);
     if (!message) return;
 
-    // In a real app, this comes from useCurrentUser
-    const currentUserId = mockUsers[0].id;
-
-    const hasReacted = message.reactions.find(r => r.emoji === emoji)?.users.includes(currentUserId);
+    const hasReacted = message.reactions.find(r => r.emoji === emoji)?.users.includes(currentUser?.id || '');
 
     if (hasReacted) {
       removeReactionMutation.mutate({
@@ -367,56 +367,54 @@ export function ChannelView({
   };
 
   return (
-    // Responsive: Use h-[100dvh] to fix mobile browser bar scroll issues
-    <div className={cn(
-      "flex flex-col h-[100dvh] w-full bg-background overflow-hidden relative",
-      isWidget && "border-none"
-    )}>
-      {/* Header - Hide or simplify if widget */}
+    <div className={cn('flex flex-col h-dvh w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
+      {/* Header */}
       {!isWidget && (
-      <div className="flex items-center gap-3 px-4 py-3 border-b shadow-sm shrink-0 bg-background/95 backdrop-blur z-10 sticky top-0">
-        <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shrink-0" />
-        <div className="flex flex-col min-w-0">
-          <h2 className="font-bold text-base leading-none truncate">{channelData?.name || 'Channel'}</h2>
-          <span className="text-xs text-muted-foreground mt-1 truncate">
-            {channelData ? `#${channelData.name}` : activeChannelId ? `#${activeChannelId}` : 'General'} •{' '}
-            {messages.length} messages
-          </span>
+        <div className="flex items-center gap-2.5 px-4 py-2.5 border-b shrink-0 bg-background/95 backdrop-blur z-10 sticky top-0">
+          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <h2 className="font-semibold text-sm leading-none truncate">
+              # {channelData?.name || activeChannelId || 'general'}
+            </h2>
+            <span className="text-xs text-muted-foreground truncate hidden sm:block">{messages.length} messages</span>
+          </div>
         </div>
-      </div>
       )}
 
       {/* Main Scroll Area */}
       <div className="flex-1 min-h-0 w-full relative">
         <ScrollArea ref={scrollAreaRef} className="h-full w-full">
-          <div className="flex flex-col justify-end min-h-full py-4">
-            {/* Load More Trigger */}
+          {/* Top padding, then messages push to bottom */}
+          <div className="flex flex-col justify-end min-h-full pt-4 pb-2">
+            {/* Load More */}
             {hasNextPage && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
-                  className="text-xs text-muted-foreground"
+                  className="text-xs text-muted-foreground h-7"
                 >
-                  {isFetchingNextPage ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : 'Load older messages'}
+                  {isFetchingNextPage ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : 'Load older messages'}
                 </Button>
               </div>
             )}
 
-            {/* Content Render */}
+            {/* Content */}
             {isLoading ? (
-              <div className="space-y-4 px-0 md:px-2">
-                {[1, 2, 3, 4].map(i => (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map(i => (
                   <MessageSkeleton key={i} />
                 ))}
               </div>
             ) : renderList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center flex-1 p-8 text-center opacity-60">
-                <div className="h-16 w-16 bg-muted rounded-full mb-4 flex items-center justify-center text-2xl">👋</div>
-                <h3 className="font-semibold text-lg">No messages yet</h3>
-                <p className="text-sm px-4">Be the first to start the conversation in #{activeChannelId}.</p>
+              <div className="flex flex-col items-center justify-center flex-1 p-8 text-center opacity-50">
+                <div className="h-14 w-14 bg-muted rounded-full mb-3 flex items-center justify-center text-2xl">👋</div>
+                <h3 className="font-semibold text-sm">No messages yet</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Be the first to send a message in #{activeChannelId}.
+                </p>
               </div>
             ) : (
               <div className="flex flex-col w-full">
@@ -432,53 +430,81 @@ export function ChannelView({
                   const message = item.data;
                   const prevItem = renderList[index - 1];
 
+                  // Group consecutive messages from same user within 7 min
                   let isGrouped = false;
                   if (prevItem?.type === 'message') {
                     const prevMessage = prevItem.data;
                     const timeDiff = new Date(message.timestamp).getTime() - new Date(prevMessage.timestamp).getTime();
                     const isSameUser = prevMessage.userId === message.userId;
                     const isRecent = timeDiff < 7 * 60 * 1000;
-                    isGrouped = isSameUser && isRecent;
+                    // Don't group across depth changes (root vs reply)
+                    const isSameDepth = prevItem.depth === item.depth;
+                    isGrouped = isSameUser && isRecent && isSameDepth;
                   }
 
                   const isHighlighted = message.id === highlightedMessageId;
                   const isFirstUnread = message.id === firstUnreadMessageId;
+                  const isReply = item.depth > 0;
 
                   return (
                     <div
                       key={message.id}
+                      ref={isHighlighted ? highlightedMessageRef : isFirstUnread ? firstUnreadRef : undefined}
                       className={cn(
-                        'group relative w-full transition-colors duration-200',
-                        isGrouped ? 'mt-0' : 'mt-[1.0625rem]',
-                        isHighlighted && 'bg-yellow-500/10'
+                        'group relative w-full',
+                        // Discord-style: compact gap for grouped, small gap for new block
+                        isGrouped ? 'mt-0.5' : 'mt-3',
+                        isHighlighted && 'bg-yellow-500/10',
+                        // Hover highlight like Discord
+                        'hover:bg-muted/40 transition-colors duration-75'
                       )}
-                      ref={isHighlighted ? highlightedMessageRef : (isFirstUnread ? firstUnreadRef : undefined)}
                     >
-                      <div className={cn('w-full', item.depth > 0 && 'pl-4 md:pl-12 border-l-2 border-muted')}>
+                      {/* Reply indentation: left border + indent matching avatar column */}
+                      {isReply ? (
+                        // 40px avatar + 12px gap = 52px total left offset to align reply content
+                        <div className="flex">
+                          {/* Left gutter: matches avatar width (40px) + gap (12px) = 52px */}
+                          <div className="w-[52px] shrink-0 flex justify-center">
+                            <div className="w-px bg-border/60 h-full" />
+                          </div>
+                          <div className="flex-1 min-w-0 pr-4">
+                            <MessageItem
+                              message={message}
+                              showAvatar={!isGrouped}
+                              onReply={handleReply}
+                              onReaction={handleReaction}
+                              depth={item.depth}
+                              isReply={true}
+                              isHighlighted={isHighlighted}
+                              channelId={channelId}
+                            />
+                          </div>
+                        </div>
+                      ) : (
                         <MessageItem
                           message={message}
                           showAvatar={!isGrouped}
                           onReply={handleReply}
                           onReaction={handleReaction}
                           depth={item.depth}
-                          isReply={item.depth > 0}
+                          isReply={false}
                           isHighlighted={isHighlighted}
                           channelId={channelId}
                         />
-                      </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             )}
+
             <div ref={messagesEndRef} className="h-px" />
           </div>
         </ScrollArea>
       </div>
 
-      {/* Composer Area */}
-      {/* Added pb-safe or extra bottom padding can help on mobile if not handled by global layout */}
-      <div className="shrink-0 p-2 md:p-4 border-t bg-background">
+      {/* Composer */}
+      <div className="shrink-0 px-4 py-3 border-t bg-background">
         <MessageComposer
           onSend={handleSendMessage}
           placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${activeChannelId || 'thread'}`}

@@ -11,10 +11,9 @@ import { CustomEmojiPicker } from '@/components/shared/custom-emoji-picker';
 import { MarkdownRenderer } from '@/components/shared/markdown-renderer';
 import { CustomMessage } from '@/components/features/chat/message-types/custom-message';
 import { DocumentEmbed } from '@/components/features/chat/message-types/document-embed';
-import { MessageAttachments } from './message-types/message-attachments'; // Import the new component
+import { MessageAttachments } from './message-types/message-attachments';
 import { LinkPreview } from './link-preview';
 
-// Context Menu (Right Click)
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,7 +22,6 @@ import {
   ContextMenuTrigger,
 } from '@/components/shared/context-menu';
 
-// Dropdown Menu (Left Click on 3 dots)
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +31,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useUpdateMessage, useDeleteMessage } from '@/hooks/api/use-messages';
-import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
@@ -88,6 +85,10 @@ const mockUserBadges: Record<string, any[]> = {
   ],
 };
 
+// Discord uses a fixed left column of 72px (16px padding + 40px avatar + 16px gap)
+const AVATAR_COL_WIDTH = 'w-10'; // 40px
+const GAP = 'gap-3'; // 12px → total offset = 16 + 40 + 12 = 68px ≈ Discord's ~72px
+
 export function MessageItem({
   message,
   showAvatar = true,
@@ -104,14 +105,12 @@ export function MessageItem({
   const { data: session } = useSession();
   const currentUser = session?.user;
 
-  console.log(message.mentions);
   const isMentioned = false;
-  // message.mentions?.some(m => m.includes(currentUser?.name)) || message.content.includes(`@${currentUser?.name}`);
 
   const user = (message as any).user;
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Track dropdown state
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const userBadges = mockUserBadges[message.userId] || [];
 
@@ -127,36 +126,25 @@ export function MessageItem({
     onReply?.(message.id);
   };
 
-  const handleEditMessage = () => {
-    setIsEditing(true);
-  };
+  const handleEditMessage = () => setIsEditing(true);
 
   const handleDeleteMessage = () => {
     if (!channelId) return;
     if (confirm('Are you sure you want to delete this message?')) {
-      deleteMessageMutation.mutate({
-        id: message.id,
-        channelId,
-      });
+      deleteMessageMutation.mutate({ id: message.id, channelId });
     }
   };
 
   const handleSaveEdit = (newContent: string) => {
     if (!channelId) return;
-    updateMessageMutation.mutate({
-      id: message.id,
-      channelId,
-      content: newContent,
-    });
+    updateMessageMutation.mutate({ id: message.id, channelId, content: newContent });
     setIsEditing(false);
   };
 
   const handleCopyMessageLink = () => {
     const messageUrl = `${window.location.origin}/channels/${channelId}?messageId=${message.id}`;
     navigator.clipboard.writeText(messageUrl);
-    toast.success('Link copied', {
-      description: 'Message link copied to clipboard',
-    });
+    toast.success('Link copied', { description: 'Message link copied to clipboard' });
   };
 
   const isImplicitCode = useMemo(() => {
@@ -166,48 +154,31 @@ export function MessageItem({
     );
   }, [message.content, message.messageType, message.metadata]);
 
-  // RENDER COMPONENT STRATEGY
   const customComponent = useMemo(() => {
-    if (isImplicitCode) {
-      return <CustomMessage message={message} readOnly />;
-    }
+    if (isImplicitCode) return <CustomMessage message={message} readOnly />;
     return renderCustomMessage(message);
   }, [isImplicitCode, message]);
 
+  // Find unique links to avoid duplicate previews for the same URL
   const detectedLinks = useMemo(() => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return message.content.match(urlRegex) || [];
+    return Array.from(new Set(message.content.match(urlRegex) || []));
   }, [message.content]);
 
-  // Shared menu items logic to ensure ContextMenu and DropdownMenu match
-  const MenuItems = () => (
-    <>
-      <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
-        <Reply className="mr-2 h-4 w-4" />
-        Reply
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleCopyMessageLink} className="cursor-pointer">
-        <LinkIcon className="mr-2 h-4 w-4" />
-        Copy Link
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => navigator.clipboard.writeText(message.content)} className="cursor-pointer">
-        <Copy className="mr-2 h-4 w-4" />
-        Copy Text
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={handleEditMessage} className="cursor-pointer">
-        <Edit className="mr-2 h-4 w-4" />
-        Edit
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        className="text-destructive focus:text-destructive cursor-pointer"
-        onClick={handleDeleteMessage}
-      >
-        <Trash2 className="mr-2 h-4 w-4" />
-        Delete
-      </DropdownMenuItem>
-    </>
-  );
+  const linksToPreview = useMemo(() => detectedLinks.slice(0, 3), [detectedLinks]);
+
+  // Strip the previewed links from the displayed text
+  const displayContent = useMemo(() => {
+    let content = message.content;
+    linksToPreview.forEach(link => {
+      // Escape special characters in the link to safely use it in regex
+      const escapedLink = link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      content = content.replace(new RegExp(escapedLink, 'g'), '');
+    });
+    return content.trim();
+  }, [message.content, linksToPreview]);
+
+  const showToolbar = isHovered || isMenuOpen;
 
   return (
     <ContextMenu>
@@ -215,201 +186,226 @@ export function MessageItem({
         <div
           ref={highlightRef}
           className={cn(
-            'group relative px-4 py-[2px] md:py-[4px] transition-colors w-full touch-manipulation',
+            // Discord base: 16px horizontal padding, minimal vertical
+            'group relative flex items-start px-4 gap-3 w-full select-text',
+            // Vertical padding: compact for grouped, slightly more for new blocks
+            showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
+            // Hover / menu-open background
             'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
             isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
-            isMentioned && 'bg-[#f9c3341a] dark:bg-[#f9c3341a] border-l-2 border-[#f9c334] pl-[14px] md:pl-[14px]',
-            !isMentioned && !showAvatar && 'pl-[72px]',
-            isReply && 'border-l-2 border-primary/30 pl-2 md:pl-4',
-            depth > 0 && 'ml-2 md:ml-12',
-            isHighlighted && 'bg-primary/20 animate-pulse'
+            // Mention highlight
+            isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
+            // Highlighted message (linked)
+            isHighlighted && 'bg-primary/10'
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {isReply && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20" />}
-
-          <div className="flex gap-4 items-start max-w-full">
+          {/* ── Left column: avatar or compact timestamp ── */}
+          <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
             {showAvatar ? (
-              <Avatar className="h-10 w-10 flex-shrink-0 mt-0.5 rounded-full overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+              <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
                 <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
-                <AvatarFallback className="text-[10px] md:text-xs bg-primary text-primary-foreground">
+                <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
                   {user?.name?.slice(0, 2).toUpperCase() || '??'}
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="w-10 flex-shrink-0 flex items-start justify-center pt-1">
-                {(isHovered || isMenuOpen) && (
-                  <span className="text-[10px] text-muted-foreground leading-[22px] scale-[0.85] origin-center opacity-70">
-                    {format(new Date(message.timestamp), 'HH:mm')}
+              // Grouped message: show short timestamp only on hover, exactly like Discord
+              <span
+                className={cn(
+                  'text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap',
+                  showToolbar ? 'opacity-100' : 'opacity-0'
+                )}
+              >
+                {format(new Date(message.timestamp), 'HH:mm')}
+              </span>
+            )}
+          </div>
+
+          {/* ── Right column: header + content ── */}
+          <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
+            {/* Header: only shown on first message in a group */}
+            {showAvatar && (
+              <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
+                <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
+                  {user?.name}
+                </span>
+
+                {message.metadata?.isBot && (
+                  <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
+                    Bot
+                  </span>
+                )}
+
+                {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
+
+                <span className="text-[12px] text-muted-foreground/70 font-normal">
+                  {format(new Date(message.timestamp), 'MM/dd/yyyy HH:mm')}
+                </span>
+
+                {isReply && (
+                  <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
+                    <Reply className="h-3 w-3" />
+                    replied to {(message as any).replyTo?.user?.name || 'someone'}
                   </span>
                 )}
               </div>
             )}
 
-            <div className="flex-1 min-w-0 overflow-hidden">
-              {showAvatar && (
-                <div className="flex flex-wrap items-center gap-x-2 mb-0.5">
-                  <span className="font-medium text-[16px] leading-[22px] cursor-pointer hover:underline text-foreground">
-                    {user?.name}
-                  </span>
-                  {message.metadata?.isBot && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider ml-1 border border-primary/20 leading-none">
-                      Bot
-                    </span>
-                  )}
-                  {userBadges.length > 0 && (
-                    <div className="flex-shrink-0">
-                      <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />
-                    </div>
-                  )}
-                  <span className="text-[12px] text-muted-foreground leading-[22px] opacity-70">
-                    {format(new Date(message.timestamp), 'MM/dd/yyyy HH:mm')}
-                  </span>
-                  {isReply && (
-                    <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
-                      <MessageSquare className="h-3 w-3" />
-                      <span className="hidden sm:inline">
-                        replied to {(message as any).replyTo?.user?.name || 'unknown'}
-                      </span>
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {isEditing ? (
-                <div className="w-full pr-2">
-                  <textarea
-                    value={message.content}
-                    onChange={e => handleSaveEdit(e.target.value)}
-                    className="text-sm leading-relaxed text-foreground border border-border rounded-lg bg-card p-2 w-full font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    rows={5}
-                    autoFocus
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={() => handleSaveEdit(message.content)}>
-                      Save
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
-                      Cancel
-                    </Button>
+            {/* Message content */}
+            {isEditing ? (
+              <div className="w-full mt-1">
+                <textarea
+                  defaultValue={message.content}
+                  className="text-sm leading-relaxed text-foreground border border-border rounded bg-card p-2 w-full font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                  rows={4}
+                  autoFocus
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSaveEdit((e.target as HTMLTextAreaElement).value);
+                    }
+                    if (e.key === 'Escape') setIsEditing(false);
+                  }}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Enter to save · Escape to cancel</p>
+              </div>
+            ) : (
+              <>
+                {!isImplicitCode && displayContent && (
+                  <div className="text-[15px] leading-[1.375rem] text-foreground break-words">
+                    <MarkdownRenderer
+                      content={displayContent}
+                      className="whitespace-pre-wrap max-w-full overflow-x-hidden"
+                    />
                   </div>
-                </div>
-              ) : (
-                <>
-                  {!isImplicitCode && (
-                    <div className="text-sm leading-relaxed text-foreground break-words">
-                      <MarkdownRenderer
-                        content={message.content}
-                        className="whitespace-pre-wrap max-w-full overflow-x-hidden"
-                      />
-                    </div>
-                  )}
-                  <div className="w-full overflow-x-auto">{customComponent}</div>
-                </>
-              )}
+                )}
+                {customComponent && <div className="w-full overflow-x-auto mt-0.5">{customComponent}</div>}
+              </>
+            )}
 
-              <DocumentEmbed message={message} />
+            <DocumentEmbed message={message} />
+            <MessageAttachments attachments={message.attachments} />
 
-              <MessageAttachments attachments={message.attachments} />
-
-              {message.actions && message.actions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3 mb-1">
-                  {message.actions.map((action: any) => {
-                    // Map style from API/DB to Shadcn variants
-                    const variantMap: Record<string, any> = {
-                      primary: 'default',
-                      danger: 'destructive',
-                      destructive: 'destructive',
-                      default: 'outline',
-                      outline: 'outline',
-                      secondary: 'secondary',
-                      ghost: 'ghost',
-                    };
-                    const variant = variantMap[action.variant || action.style || ''] || 'outline';
-
-                    return (
-                      <Button
-                        key={action.id || action.actionId}
-                        size="sm"
-                        variant={variant}
-                        className="h-8 text-xs px-3"
-                        onClick={async () => {
-                          if (action.handler) {
-                            action.handler(message.id, action.actionId || action.id);
-                          } else {
-                            // If it's a V2 API message action from DB
-                            const response = await fetch(`/api/v2/messages/${message.id}/actions/${action.actionId || action.id}`, {
-                              method: 'POST',
-                            });
-                            if (response.ok) {
-                              toast.success('Action recorded');
-                            } else {
-                              toast.error('Failed to record action');
-                            }
-                          }
-                        }}
-                      >
-                        {action.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {detectedLinks.length > 0 &&
-                detectedLinks.slice(0, 3).map((link, idx) => <LinkPreview key={idx} url={link} />)}
-
-              {message.reactions && message.reactions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {message.reactions.map((reaction, idx) => (
-                    <button
-                      key={idx}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted hover:border-primary/50 transition-colors text-xs active:scale-95"
-                      onClick={() => handleToggleReaction(reaction.emoji)}
+            {/* Action buttons */}
+            {message.actions && message.actions.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {message.actions.map((action: any) => {
+                  const variantMap: Record<string, any> = {
+                    primary: 'default',
+                    danger: 'destructive',
+                    destructive: 'destructive',
+                    default: 'outline',
+                    outline: 'outline',
+                    secondary: 'secondary',
+                    ghost: 'ghost',
+                  };
+                  const variant = variantMap[action.variant || action.style || ''] || 'outline';
+                  return (
+                    <Button
+                      key={action.id || action.actionId}
+                      size="sm"
+                      variant={variant}
+                      className="h-7 text-xs px-3"
+                      onClick={async () => {
+                        if (action.handler) {
+                          action.handler(message.id, action.actionId || action.id);
+                        } else {
+                          const response = await fetch(
+                            `/api/v2/messages/${message.id}/actions/${action.actionId || action.id}`,
+                            { method: 'POST' }
+                          );
+                          if (response.ok) toast.success('Action recorded');
+                          else toast.error('Failed to record action');
+                        }
+                      }}
                     >
-                      {reaction.emoji.startsWith(':') ? (
-                        <img
-                          src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
-                          alt={reaction.emoji}
-                          className="h-4 w-4"
-                        />
-                      ) : (
-                        <span className="text-sm">{reaction.emoji}</span>
-                      )}
-                      <span className="font-medium text-muted-foreground">{reaction.count}</span>
-                    </button>
-                  ))}
+                      {action.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
 
-                  <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-                    <button className="flex items-center justify-center h-6 w-6 md:h-7 md:w-7 rounded-md border border-dashed border-border hover:bg-muted hover:border-primary/50 transition-colors">
-                      <Smile className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </CustomEmojiPicker>
-                </div>
-              )}
-            </div>
+            {/* Link previews */}
+            {linksToPreview.map((link, idx) => (
+              <LinkPreview key={idx} url={link} />
+            ))}
+
+            {/* Reactions */}
+            {message.reactions && message.reactions.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {message.reactions.map((reaction, idx) => (
+                  <button
+                    key={idx}
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-xs active:scale-95"
+                    onClick={() => handleToggleReaction(reaction.emoji)}
+                  >
+                    {reaction.emoji.startsWith(':') ? (
+                      <img
+                        src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
+                        alt={reaction.emoji}
+                        className="h-4 w-4"
+                      />
+                    ) : (
+                      <span className="text-sm leading-none">{reaction.emoji}</span>
+                    )}
+                    <span className="font-medium text-muted-foreground">{reaction.count}</span>
+                  </button>
+                ))}
+
+                <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
+                  <button className="flex items-center justify-center h-6 w-6 rounded border border-dashed border-border hover:bg-muted hover:border-primary/40 transition-colors">
+                    <Smile className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </CustomEmojiPicker>
+              </div>
+            )}
           </div>
 
-          {(isHovered || isMenuOpen) && (
-            <div className="hidden md:flex absolute -top-4 right-4 items-center gap-0.5 bg-background border border-border rounded-[4px] shadow-sm p-0.5 z-10 animate-in fade-in zoom-in-95 duration-100">
+          {/* ── Hover toolbar (Discord-style floating action bar) ── */}
+          {showToolbar && (
+            <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75">
               <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
                   <Smile className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </CustomEmojiPicker>
-              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" onClick={handleReply}>
+
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted" onClick={handleReply}>
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </Button>
 
               <DropdownMenu onOpenChange={setIsMenuOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
                     <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <MenuItems />
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
+                    <Reply className="mr-2 h-4 w-4" /> Reply
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleCopyMessageLink} className="cursor-pointer">
+                    <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigator.clipboard.writeText(message.content)}
+                    className="cursor-pointer"
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copy Text
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleEditMessage} className="cursor-pointer">
+                    <Edit className="mr-2 h-4 w-4" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                    onClick={handleDeleteMessage}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -417,27 +413,23 @@ export function MessageItem({
         </div>
       </ContextMenuTrigger>
 
-      <ContextMenuContent className="w-56">
+      {/* Right-click context menu */}
+      <ContextMenuContent className="w-52">
         <ContextMenuItem onClick={handleReply}>
-          <Reply className="mr-2 h-4 w-4" />
-          Reply
+          <Reply className="mr-2 h-4 w-4" /> Reply
         </ContextMenuItem>
         <ContextMenuItem onClick={handleCopyMessageLink}>
-          <LinkIcon className="mr-2 h-4 w-4" />
-          Copy Link
+          <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
         </ContextMenuItem>
         <ContextMenuItem onClick={() => navigator.clipboard.writeText(message.content)}>
-          <Copy className="mr-2 h-4 w-4" />
-          Copy Text
+          <Copy className="mr-2 h-4 w-4" /> Copy Text
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={handleEditMessage}>
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
+          <Edit className="mr-2 h-4 w-4" /> Edit
         </ContextMenuItem>
         <ContextMenuItem className="text-destructive focus:text-destructive" onClick={handleDeleteMessage}>
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
+          <Trash2 className="mr-2 h-4 w-4" /> Delete
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

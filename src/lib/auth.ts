@@ -25,6 +25,9 @@ export const auth = betterAuth({
       loginPage: '/login',
       consentPage: '/consent',
       allowDynamicClientRegistration: true,
+      silenceWarnings: {
+        oauthAuthServerConfig: true,
+      },
       scopes: [
         'openid',
         'profile',
