@@ -22,18 +22,68 @@ export async function authenticateV2(
     params: { slug?: string }
 ): Promise<{ context?: ApiV2Context; error?: NextResponse }> {
     const authHeader = request.headers.get("authorization")
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
-    }
-
-    const accessToken = authHeader.substring(7)
     let context: ApiV2Context | undefined
     let rateLimit = 100
     let rateLimitKey = ""
 
-    try {
-        if (accessToken.startsWith("wst_")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        // Fallback to Session-based auth for UI compatibility
+        const session = await auth.api.getSession({
+            headers: request.headers
+        }).catch(() => null)
+
+        if (!session?.user) {
+            return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+        }
+
+        context = {
+            userId: session.user.id,
+            clientId: `session:${session.user.id}`,
+            scopes: ["*"], // Sessions have full access for now
+        }
+
+        // Handle workspace slug from params or session
+        let workspaceId = session.session.activeOrganizationId
+        let workspaceSlug = ""
+
+        if (params.slug) {
+            const organization = await auth.api.getFullOrganization({
+                headers: request.headers,
+                query: { organizationSlug: params.slug }
+            }).catch(() => null);
+
+            if (!organization) {
+                return { error: NextResponse.json({ error: "Workspace not found" }, { status: 404 }) }
+            }
+
+            workspaceId = organization.id
+            workspaceSlug = organization.slug
+        }
+
+        if (workspaceId) {
+            const members = await auth.api.listMembers({
+                headers: request.headers,
+                query: { organizationId: workspaceId }
+            }).catch(() => []);
+
+            const isMember = (Array.isArray(members) ? members : (members as any).members || []).some((m: any) => m.userId === session.user.id);
+
+            if (!isMember) {
+                return { error: NextResponse.json({ error: "Forbidden: Not a member of this workspace" }, { status: 403 }) }
+            }
+
+            context.workspaceId = workspaceId
+            context.workspaceSlug = workspaceSlug
+        }
+
+        rateLimit = 1000 // Higher limit for UI users
+        rateLimitKey = `ratelimit:v2:session:${session.user.id}`
+    } else {
+        const accessToken = authHeader.substring(7)
+        try {
+            if (context) {
+            // Already authenticated via session
+        } else if (accessToken.startsWith("wst_")) {
             // Workspace API Token
             const hashedToken = crypto.createHash("sha256").update(accessToken).digest("hex")
             const apiToken = await prisma.workspaceApiToken.findUnique({
@@ -134,7 +184,18 @@ export async function authenticateV2(
             rateLimitKey = `ratelimit:v2:client:${context.clientId}`
         }
 
-        // Rate Limiting
+        } catch (error) {
+            console.error("V2 Auth Error:", error)
+            return { error: NextResponse.json({ error: "Internal server error" }, { status: 500 }) }
+        }
+    }
+
+    if (!context) {
+        return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+    }
+
+    // Rate Limiting
+    try {
         const window = 60 // seconds
         const currentRequests = await redis.incr(rateLimitKey)
         if (currentRequests === 1) {
@@ -147,7 +208,7 @@ export async function authenticateV2(
 
         return { context }
     } catch (error) {
-        console.error("V2 Auth Error:", error)
+        console.error("V2 Rate Limit Error:", error)
         return { error: NextResponse.json({ error: "Internal server error" }, { status: 500 }) }
     }
 }

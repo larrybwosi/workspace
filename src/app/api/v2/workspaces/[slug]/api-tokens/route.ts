@@ -50,7 +50,7 @@ export async function GET(
         select: {
             id: true,
             name: true,
-            token: true,
+            // Omit hashed token from list view
             permissions: true,
             rateLimit: true,
             expiresAt: true,
@@ -62,15 +62,9 @@ export async function GET(
         orderBy: { createdAt: "desc" },
     })
 
-    // Mask tokens
-    const maskedTokens = tokens.map((t) => ({
-        ...t,
-        token: `wst_${"*".repeat(24)}${t.token.slice(-8)}`,
-    }))
-
     await logV2Audit(context!, "tokens.list", "api_token")
 
-    return NextResponse.json({ tokens: maskedTokens })
+    return NextResponse.json({ tokens })
 }
 
 export async function POST(

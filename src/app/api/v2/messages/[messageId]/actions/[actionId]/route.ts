@@ -14,18 +14,20 @@ export async function POST(
     // If called from the UI, it will use the session cookie if authenticateV2 is updated to handle it,
     // OR we can create a separate internal callback endpoint.
 
-    // Let's assume this is a public/authenticated V2 endpoint.
     const { context, error } = await authenticateV2(request as any, {})
     if (error) return error
 
     try {
-        const message = await prisma.message.findUnique({
-            where: { id: messageId },
+        const message = await prisma.message.findFirst({
+            where: {
+                id: messageId,
+                channel: { workspaceId: context!.workspaceId }
+            },
             include: { actions: true, channel: true }
         })
 
         if (!message) {
-            return NextResponse.json({ error: "Message not found" }, { status: 404 })
+            return NextResponse.json({ error: "Message not found or access denied" }, { status: 404 })
         }
 
         const action = message.actions.find(a => a.actionId === actionId)
