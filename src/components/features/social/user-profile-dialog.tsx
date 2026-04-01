@@ -59,38 +59,42 @@ export function UserProfileDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>User Profile</DialogTitle>
-            <DialogDescription>
-              View and manage user information
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-xl font-bold">User Profile</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-0">
             {/* Banner Section */}
             <div
-              className="h-24 w-full bg-primary/10 rounded-t-lg -mx-6 -mt-6 mb-8 relative"
+              className="h-40 w-full bg-gradient-to-r from-primary/20 to-primary/40 relative"
               style={user?.banner ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
             >
-              <div className="absolute -bottom-10 left-6">
-                <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+            </div>
+
+            <div className="px-6 pb-6 relative">
+              <div className="relative -mt-16 mb-4 inline-block">
+                <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                   <AvatarImage src={user?.avatar || user?.image} />
-                  <AvatarFallback className="text-xl bg-primary text-primary-foreground font-bold">
+                  <AvatarFallback className="text-3xl bg-primary text-primary-foreground font-bold">
                     {user?.name?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
-            </div>
 
             {/* Profile Header */}
-            <div className="pt-2">
+            <div className="pt-0">
               <div className="flex-1 min-w-0">
-                <h3 className="text-xl font-bold">{user?.name}</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-2xl font-bold">{user?.name}</h3>
+                  {user?.username && (
+                    <span className="text-muted-foreground text-lg">@{user.username}</span>
+                  )}
+                </div>
 
                 {/* Custom Status */}
                 {(user?.statusText || user?.statusEmoji) && (
-                   <div className="flex items-center gap-1.5 mt-1 text-sm text-foreground/80">
+                   <div className="flex items-center gap-1.5 mt-1 text-base text-foreground/80">
                       {user.statusEmoji && <span>{user.statusEmoji}</span>}
                       {user.statusText && <span className="italic">{user.statusText}</span>}
                    </div>
@@ -119,46 +123,19 @@ export function UserProfileDialog({
 
             {/* Contact Information */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">Contact Information</h4>
-              <div className="space-y-2">
+              <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Information</h4>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {user?.name.toLowerCase().replace(" ", ".")}@conceptzilla.com
+                  <span className="truncate">
+                    {(user as any)?.email || `${user?.name.toLowerCase().replace(" ", ".")}@conceptzilla.com`}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>+1 (555) 123-4567</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>San Francisco, CA</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Joined May 2024</span>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Activity Stats */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold">Activity</h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">127</p>
-                  <p className="text-xs text-muted-foreground">Messages</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold">23</p>
-                  <p className="text-xs text-muted-foreground">Threads</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold">8</p>
-                  <p className="text-xs text-muted-foreground">Files</p>
+                  <span>
+                    Joined { (user as any).createdAt ? new Date((user as any).createdAt).toLocaleDateString("en-US", { month: 'long', year: 'numeric' }) : 'May 2024' }
+                  </span>
                 </div>
               </div>
             </div>
@@ -169,8 +146,7 @@ export function UserProfileDialog({
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  className="flex-1 gap-2 bg-transparent"
+                  className="flex-1 gap-2 h-10"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Send Message
@@ -180,7 +156,7 @@ export function UserProfileDialog({
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1 gap-2 bg-transparent"
+                    className="flex-1 gap-2 bg-muted/50 h-10 border-none hover:bg-muted"
                     onClick={() => setEditOpen(true)}
                   >
                     <Edit2 className="h-4 w-4" />
@@ -188,7 +164,7 @@ export function UserProfileDialog({
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 gap-2 bg-transparent text-destructive hover:bg-destructive/10"
+                    className="flex-1 gap-2 bg-muted/50 h-10 border-none text-destructive hover:bg-destructive/10"
                     onClick={() => {
                        window.location.href = '/api/auth/sign-out';
                     }}
@@ -198,6 +174,7 @@ export function UserProfileDialog({
                   </Button>
                 </div>
               )}
+            </div>
             </div>
           </div>
         </DialogContent>
