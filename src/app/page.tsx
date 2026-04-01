@@ -7,6 +7,7 @@ import { ChannelView } from "@/components/features/chat/channel-view"
 import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { InfoPanel } from "@/components/shared/info-panel"
+import { WelcomeState } from "@/components/layout/welcome-state"
 import { useState } from "react"
 
 export default function HomePage() {
@@ -39,10 +40,14 @@ export default function HomePage() {
       )
     }
 
-    return <ChannelView channelId={activeChannel || "general"} />
+    if (!activeChannel) {
+      return <WelcomeState />
+    }
+
+    return <ChannelView channelId={activeChannel} />
   }
 
-  const shouldShowInfoPanel = activeChannel !== "assistant"
+  const shouldShowInfoPanel = !!activeChannel && activeChannel !== "assistant"
 
   return (
     <div className="h-screen flex overflow-hidden">
