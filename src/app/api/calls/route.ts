@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from 'next/server'
+import { RtcTokenBuilder, RtcRole } from 'agora-token'
+import { agoraConfig } from '@/lib/integrations/agora-config'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { publishToAbly } from '@/lib/integrations/ably'
@@ -11,78 +13,94 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { type, participantIds, channelId } = await request.json()
+    const { type, channelId, workspaceId, recipientId } = await request.json()
 
-    // Create unique channel name for the call
-    const channelName = `call-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    if (!type || !workspaceId) {
+      return NextResponse.json({ error: 'Type and workspaceId are required' }, { status: 400 })
+    }
 
-    // Create call record
-    const call = await prisma.call.create({
-      data: {
-        channelName,
-        type,
-        initiatorId: session.user.id,
-        status: 'pending',
-        participants: {
-          create: [
-            { userId: session.user.id, role: 'host' },
-            ...participantIds.map((userId: string) => ({ userId, role: 'participant' }))
-          ]
+    // Determine channel name for Agora
+    let agoraChannelName = "";
+    if (channelId) {
+      agoraChannelName = `channel-${channelId}`;
+    } else if (recipientId) {
+      const participants = [session.user.id, recipientId].sort();
+      agoraChannelName = `dm-${participants.join('-')}`;
+    } else {
+       return NextResponse.json({ error: 'channelId or recipientId is required' }, { status: 400 })
+    }
+
+    // Check if there's an active call already
+    let call = await prisma.call.findFirst({
+        where: {
+            channelName: agoraChannelName,
+            status: { in: ['pending', 'active'] }
         }
-      },
-      include: {
-        participants: true
-      }
     })
 
-    // Notify participants via Ably
-    for (const participantId of participantIds) {
-      await publishToAbly(`user-${participantId}`, 'call-incoming', {
-        callId: call.id,
-        initiatorId: session.user.id,
-        type,
-        channelName
-      })
+    if (!call) {
+        // Create new call
+        call = await prisma.call.create({
+            data: {
+                channelName: agoraChannelName,
+                type,
+                initiatorId: session.user.id,
+                status: 'pending'
+            }
+        })
+
+        // Notify recipient if DM
+        if (recipientId) {
+             await publishToAbly(`user-${recipientId}`, 'incoming-call', {
+                callId: call.id,
+                type,
+                initiator: {
+                    id: session.user.id,
+                    name: session.user.name,
+                    image: session.user.image
+                },
+                workspaceId
+            })
+        } else if (channelId) {
+            // Notify channel members
+            await publishToAbly(`channel-${channelId}`, 'channel-call-started', {
+                callId: call.id,
+                type,
+                initiatorId: session.user.id,
+                workspaceId
+            })
+        }
     }
 
-    return NextResponse.json({ call })
-  } catch (error) {
-    console.error(' Error creating call:', error)
-    return NextResponse.json({ error: 'Failed to create call' }, { status: 500 })
-  }
-}
+    // Generate Agora RTC token
+    const uid = Math.floor(Math.random() * 1000000)
+    const expirationTimeInSeconds = 3600 // 1 hour
+    const currentTimestamp = Math.floor(Date.now() / 1000)
+    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth.api.getSession({ headers: await headers() } as any)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      agoraConfig.appId,
+      agoraConfig.appCertificate,
+      agoraChannelName,
+      uid,
+      RtcRole.PUBLISHER,
+      privilegeExpiredTs,
+      privilegeExpiredTs // Use same for privilege and token expiration
+    );
 
-    const searchParams = request.nextUrl.searchParams
-    const status = searchParams.get('status')
-
-    const calls = await prisma.call.findMany({
-      where: {
-        participants: {
-          some: {
-            userId: session.user.id
-          }
-        },
-        ...(status && { status })
-      },
-      include: {
-        participants: true
-      },
-      orderBy: {
-        startedAt: 'desc'
-      },
-      take: 50
+    return NextResponse.json({
+      callId: call.id,
+      token,
+      appId: agoraConfig.appId,
+      channelName: agoraChannelName,
+      uid,
+      type: call.type
     })
-
-    return NextResponse.json({ calls })
   } catch (error) {
-    console.error(' Error fetching calls:', error)
-    return NextResponse.json({ error: 'Failed to fetch calls' }, { status: 500 })
+    console.error(' Error starting call:', error)
+    return NextResponse.json(
+      { error: 'Failed to start call' },
+      { status: 500 }
+    )
   }
 }

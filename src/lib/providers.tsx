@@ -3,6 +3,12 @@ import type React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import dynamic from "next/dynamic";
+
+const CallContainer = dynamic(
+  () => import("@/components/features/calls/call-container").then((mod) => mod.CallContainer),
+  { ssr: false }
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +29,7 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         {children}
+        <CallContainer />
         <Toaster
           position="top-right"
           duration={4000}

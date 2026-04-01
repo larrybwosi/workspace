@@ -32,6 +32,8 @@ import { MessageSearchPanel } from '../features/chat/message-search-panel';
 import { useWorkspace, useWorkspaceMembers } from '@/hooks/api/use-workspaces';
 import { useChannel } from '@/hooks/api/use-channels';
 import { useParams } from 'next/navigation';
+import { useCallStore } from '@/hooks/features/use-call-store';
+import { toast } from 'sonner';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -61,9 +63,57 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const members = isDM ? [] : workspaceMembers?.members || [];
   const [activeTab, setActiveTab] = React.useState('info');
 
-  const handleStartCall = (type: string) => {
-    // Placeholder for new call system logic
-    console.log(`Starting ${type} call...`);
+  const { setCall } = useCallStore();
+
+  const handleStartCall = async (callType: 'voice' | 'video') => {
+    if (!workspace?.id) return;
+
+    try {
+      const response = await fetch('/api/calls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: callType,
+          workspaceId: workspace.id,
+          channelId: type === 'channel' ? id || channelSlug : undefined,
+          recipientId: dmUser?.id,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to start call');
+      const data = await response.json();
+      setCall(data);
+      toast.success(`Starting ${callType} call...`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to start call');
+    }
+  };
+
+  const [inviteLink, setInviteLink] = React.useState<string>('');
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleGenerateInviteLink = async () => {
+    if (!workspace?.id) return;
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`/api/workspaces/${workspace.id}/invite-links`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error('Failed to generate invite link');
+      const data = await response.json();
+      const fullLink = `${window.location.origin}/invite/${data.code}`;
+      setInviteLink(fullLink);
+      navigator.clipboard.writeText(fullLink);
+      toast.success('Invite link copied to clipboard!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate invite link');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (dmUser) {
@@ -237,7 +287,19 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
               <div className="p-4 space-y-6">
                 {/* Main Info */}
                 <div>
-                  <h3 className="text-sm font-semibold mb-3">Main info</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold">Main info</h3>
+                    {type === 'channel' && !isDM && (
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStartCall('voice')}>
+                          <Phone className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStartCall('video')}>
+                          <Video className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -321,6 +383,41 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                     </div>
                   </div>
                 </div>
+
+                {type === 'workspace' && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold">Invite to Workspace</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Generate a unique link to invite others to this workspace.
+                      </p>
+                      {inviteLink ? (
+                        <div className="flex gap-2">
+                          <div className="flex-1 px-2 py-1.5 bg-muted rounded text-xs truncate font-mono">
+                            {inviteLink}
+                          </div>
+                          <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={() => {
+                            navigator.clipboard.writeText(inviteLink);
+                            toast.success('Copied!');
+                          }}>
+                            Copy
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start h-8 text-xs"
+                          onClick={handleGenerateInviteLink}
+                          disabled={isGenerating}
+                        >
+                          <UserPlus className="h-3.5 w-3.5 mr-2" />
+                          {isGenerating ? 'Generating...' : 'Generate Invite Link'}
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 {type === 'channel' && (isChannelLoading || (channel as any)?.description) && (
                   <>
