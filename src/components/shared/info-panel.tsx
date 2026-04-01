@@ -70,7 +70,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
               {/* DM User Profile */}
               <div className="flex flex-col items-center text-center space-y-3">
                 <Avatar className="h-20 w-20">
-                  <img src={dmUser.avatar || "/placeholder.svg"} alt={dmUser.name} />
+                  <AvatarImage src={dmUser.avatar} alt={dmUser.name} />
                   <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                     {dmUser.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>

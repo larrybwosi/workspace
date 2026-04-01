@@ -3,6 +3,7 @@ import type React from "react"
 export interface User {
   id: string
   name: string
+  username?: string
   avatar: string
   image?: string
   banner?: string
