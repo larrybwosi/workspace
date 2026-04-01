@@ -4,6 +4,10 @@ export interface User {
   id: string
   name: string
   avatar: string
+  image?: string
+  banner?: string
+  statusText?: string
+  statusEmoji?: string
   role: "Design" | "Management" | "Development" | "Admin"
   status: "online" | "offline" | "away"
 }

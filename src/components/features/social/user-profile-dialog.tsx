@@ -16,15 +16,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { User } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { EditProfileModal } from "./edit-profile-modal";
+import { useSession } from "@/lib/auth/auth-client";
 
 interface UserProfileDialogProps {
-  user: User;
+  user: User & { banner?: string; statusText?: string; statusEmoji?: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -34,6 +37,9 @@ export function UserProfileDialog({
   open,
   onOpenChange,
 }: UserProfileDialogProps) {
+  const [editOpen, setEditOpen] = useState(false);
+  const { data: session } = useSession();
+  const isCurrentUser = session?.user?.id === user.id;
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -62,16 +68,35 @@ export function UserProfileDialog({
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Banner Section */}
+            <div
+              className="h-24 w-full bg-primary/10 rounded-t-lg -mx-6 -mt-6 mb-8 relative"
+              style={user?.banner ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+            >
+              <div className="absolute -bottom-10 left-6">
+                <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+                  <AvatarImage src={user?.avatar || user?.image} />
+                  <AvatarFallback className="text-xl bg-primary text-primary-foreground font-bold">
+                    {user?.name?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+
             {/* Profile Header */}
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                  {user?.avatar}
-                </AvatarFallback>
-              </Avatar>
+            <div className="pt-2">
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold">{user?.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
+                <h3 className="text-xl font-bold">{user?.name}</h3>
+
+                {/* Custom Status */}
+                {(user?.statusText || user?.statusEmoji) && (
+                   <div className="flex items-center gap-1.5 mt-1 text-sm text-foreground/80">
+                      {user.statusEmoji && <span>{user.statusEmoji}</span>}
+                      {user.statusText && <span className="italic">{user.statusText}</span>}
+                   </div>
+                )}
+
+                <div className="flex items-center gap-2 mt-2">
                   <div
                     className={cn(
                       "h-2 w-2 rounded-full",
@@ -84,7 +109,7 @@ export function UserProfileDialog({
                     {user?.status}
                   </span>
                 </div>
-                <Badge className={cn("mt-2", getRoleBadgeColor(user?.role))}>
+                <Badge className={cn("mt-3", getRoleBadgeColor(user?.role))}>
                   {user?.role}
                 </Badge>
               </div>
@@ -151,26 +176,40 @@ export function UserProfileDialog({
                   Send Message
                 </Button>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 gap-2 bg-transparent"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit Profile
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 gap-2 bg-transparent"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-              </div>
+              {isCurrentUser && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2 bg-transparent"
+                    onClick={() => setEditOpen(true)}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    Edit Profile
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2 bg-transparent text-destructive hover:bg-destructive/10"
+                    onClick={() => {
+                       window.location.href = '/api/auth/sign-out';
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {isCurrentUser && (
+        <EditProfileModal
+          user={user}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+        />
+      )}
     </>
   );
 }
