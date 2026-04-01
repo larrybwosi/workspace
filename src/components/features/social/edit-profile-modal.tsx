@@ -47,7 +47,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationPreferences>({
+  const [notifications, setNotifications] = useState<NotificationPreferences>((user as any).notificationPreferences || {
     channelMentions: 'mentions',
     channelMentionsSound: true,
     invites: 'all',
@@ -78,7 +78,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
         banner,
         statusText,
         statusEmoji,
-        notifications,
+        notificationPreferences: notifications,
       });
       toast.success('Profile updated successfully');
       onOpenChange(false);

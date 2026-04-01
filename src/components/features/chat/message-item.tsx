@@ -13,6 +13,7 @@ import { CustomMessage } from '@/components/features/chat/message-types/custom-m
 import { DocumentEmbed } from '@/components/features/chat/message-types/document-embed';
 import { MessageAttachments } from './message-types/message-attachments';
 import { LinkPreview } from './link-preview';
+import { useUsers } from '@/hooks/api/use-users';
 
 import {
   ContextMenu,
@@ -49,41 +50,6 @@ interface MessageItemProps {
   highlightRef?: React.RefObject<HTMLDivElement>;
 }
 
-const mockUserBadges: Record<string, any[]> = {
-  '1': [
-    {
-      id: '1',
-      name: 'Admin',
-      icon: 'shield',
-      color: '#ef4444',
-      bgColor: '#fef2f2',
-      tier: 'legendary' as const,
-      category: 'role',
-      isPrimary: true,
-    },
-    {
-      id: '2',
-      name: 'Early Adopter',
-      icon: 'star',
-      color: '#eab308',
-      bgColor: '#fefce8',
-      tier: 'premium' as const,
-      category: 'special',
-    },
-  ],
-  '2': [
-    {
-      id: '3',
-      name: 'Top Contributor',
-      icon: 'trophy',
-      color: '#8b5cf6',
-      bgColor: '#f5f3ff',
-      tier: 'elite' as const,
-      category: 'achievement',
-      isPrimary: true,
-    },
-  ],
-};
 
 // Discord uses a fixed left column of 72px (16px padding + 40px avatar + 16px gap)
 const AVATAR_COL_WIDTH = 'w-10'; // 40px
@@ -104,15 +70,16 @@ export function MessageItem({
   const deleteMessageMutation = useDeleteMessage();
   const { data: session } = useSession();
   const currentUser = session?.user;
+  const { data: users } = useUsers();
 
-  const isMentioned = false;
+  const user = (message as any).user || users?.find((u: any) => u.id === message.userId);
+  const isMentioned = currentUser?.username && message.content.includes(`@${currentUser.username}`);
 
-  const user = (message as any).user;
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const userBadges = mockUserBadges[message.userId] || [];
+  const userBadges = (user as any)?.badges || [];
 
   const handleAddReaction = (emoji: string, isCustom?: boolean, customEmojiId?: string) => {
     onReaction?.(message.id, emoji, isCustom, customEmojiId);
