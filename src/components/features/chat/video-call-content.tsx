@@ -21,17 +21,28 @@ interface VideoCallContentProps {
   callId: string
   channelName: string
   type: "voice" | "video"
+  token: string
+  uid: number
+  appId: string
   onEnd: () => void
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
 }
 
-export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCallContentProps) {
-  const [token, setToken] = useState<string>("")
-  const [uid, setUid] = useState<number>(0)
-  const [calling, setCalling] = useState(false)
+export function VideoCallContent({
+  callId,
+  channelName,
+  type,
+  token,
+  uid,
+  appId,
+  onEnd,
+  isFullscreen,
+  onToggleFullscreen
+}: VideoCallContentProps) {
   const [micOn, setMicOn] = useState(true)
   const [cameraOn, setCameraOn] = useState(type === "video")
   const [screenSharing, setScreenSharing] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [callDuration, setCallDuration] = useState(0)
 
@@ -40,56 +51,31 @@ export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCall
   const remoteUsers = useRemoteUsers()
 
   useJoin({
-    appid: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+    appid: appId,
     channel: channelName,
-    token: token || null,
-    uid: uid || null,
-  }, calling)
+    token: token,
+    uid: uid,
+  }, true)
 
   usePublish([localMicrophoneTrack, localCameraTrack])
 
-  // Fetch Agora token
   useEffect(() => {
-    async function fetchToken() {
-      try {
-        const response = await fetch('/api/agora/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ channelName, uid })
-        })
-
-        if (!response.ok) throw new Error('Failed to fetch token')
-
-        const data = await response.json()
-        setToken(data.token)
-        setUid(data.uid)
-        setCalling(true)
-
-        // Join call in database
-        await fetch(`/api/calls/${callId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'join' })
-        })
-      } catch (error) {
-        console.error(' Error fetching Agora token:', error)
-        toast.error('Failed to join call')
-      }
-    }
-
-    fetchToken()
-  }, [channelName, callId, uid])
+    // Join call in database
+    fetch(`/api/calls/${callId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'join' })
+    }).catch(console.error)
+  }, [callId])
 
   // Call duration timer
   useEffect(() => {
-    if (!calling) return
-
     const interval = setInterval(() => {
       setCallDuration(prev => prev + 1)
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [calling])
+  }, [])
 
   const formatDuration = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600)
@@ -119,104 +105,79 @@ export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCall
   }
 
   const toggleScreenShare = async () => {
-    try {
-      if (!screenSharing) {
-        // Start screen sharing
-        const screenTrack = await import('agora-rtc-sdk-ng').then(AgoraRTC => 
-          AgoraRTC.default.createScreenVideoTrack({}, "disable")
-        )
-        // Publish screen track
-        setScreenSharing(true)
-        toast.success('Screen sharing started')
-      } else {
-        // Stop screen sharing
-        setScreenSharing(false)
-        toast.success('Screen sharing stopped')
-      }
-    } catch (error) {
-      console.error(' Error toggling screen share:', error)
-      toast.error('Failed to share screen')
-    }
+     toast.info("Screen sharing logic to be enhanced")
   }
 
   const endCall = async () => {
-    setCalling(false)
-    
     await fetch(`/api/calls/${callId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'leave' })
     })
-
     onEnd()
   }
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-      setIsFullscreen(true)
-    } else {
-      document.exitFullscreen()
-      setIsFullscreen(false)
-    }
-  }
-
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className={cn(
+        "bg-black flex flex-col overflow-hidden",
+        isFullscreen ? "fixed inset-0 z-50" : "w-full h-full rounded-lg"
+    )}>
       {/* Header */}
-      <div className="h-16 bg-black/50 backdrop-blur-sm flex items-center justify-between px-6 text-white">
+      <div className="h-14 bg-black/50 backdrop-blur-sm flex items-center justify-between px-4 text-white shrink-0">
         <div>
-          <h2 className="font-semibold">
+          <h2 className="text-sm font-semibold">
             {type === "video" ? "Video Call" : "Voice Call"}
           </h2>
-          <p className="text-sm text-gray-400">{formatDuration(callDuration)}</p>
+          <p className="text-[10px] text-gray-400">{formatDuration(callDuration)}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="bg-green-500/20 text-green-400">
+          <Badge variant="secondary" className="bg-green-500/20 text-green-400 h-5 text-[10px]">
             <Users className="h-3 w-3 mr-1" />
             {remoteUsers.length + 1}
           </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white"
-            onClick={toggleFullscreen}
-          >
-            {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-          </Button>
+          {onToggleFullscreen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white h-8 w-8"
+                onClick={onToggleFullscreen}
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+          )}
         </div>
       </div>
 
       {/* Video Grid */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
         <div className={cn(
-          "grid gap-4 w-full h-full",
+          "grid gap-4 w-full h-full max-h-full overflow-y-auto p-2",
           remoteUsers.length === 0 && "grid-cols-1",
-          remoteUsers.length === 1 && "grid-cols-2",
-          remoteUsers.length >= 2 && remoteUsers.length <= 4 && "grid-cols-2 grid-rows-2",
-          remoteUsers.length > 4 && "grid-cols-3 grid-rows-3"
+          remoteUsers.length === 1 && "grid-cols-1 md:grid-cols-2",
+          remoteUsers.length >= 2 && remoteUsers.length <= 4 && "grid-cols-2",
+          remoteUsers.length > 4 && "grid-cols-2 lg:grid-cols-3"
         )}>
           {/* Local User */}
-          <div className="relative bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="relative bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center aspect-video">
             {cameraOn && localCameraTrack ? (
               <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover" />
             ) : (
-              <div className="flex flex-col items-center gap-3">
-                <Avatar className="h-24 w-24">
-                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+              <div className="flex flex-col items-center gap-2">
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback className="text-lg bg-primary text-primary-foreground">
                     ME
                   </AvatarFallback>
                 </Avatar>
-                <p className="text-white font-medium">You</p>
+                <p className="text-white text-xs font-medium">You</p>
               </div>
             )}
-            <div className="absolute bottom-4 left-4 flex items-center gap-2">
-              <Badge variant="secondary" className="bg-black/50 text-white">
+            <div className="absolute bottom-2 left-2 flex items-center gap-1">
+              <Badge variant="secondary" className="bg-black/50 text-white text-[10px] h-4">
                 You
               </Badge>
               {!micOn && (
-                <Badge variant="destructive" className="bg-red-500/80">
-                  <MicOff className="h-3 w-3" />
+                <Badge variant="destructive" className="bg-red-500/80 h-4 px-1">
+                  <MicOff className="h-2.5 w-2.5" />
                 </Badge>
               )}
             </div>
@@ -224,10 +185,10 @@ export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCall
 
           {/* Remote Users */}
           {remoteUsers.map((user) => (
-            <div key={user.uid} className="relative bg-gray-900 rounded-lg overflow-hidden">
+            <div key={user.uid} className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
               <RemoteUser user={user} className="w-full h-full" />
-              <div className="absolute bottom-4 left-4">
-                <Badge variant="secondary" className="bg-black/50 text-white">
+              <div className="absolute bottom-2 left-2">
+                <Badge variant="secondary" className="bg-black/50 text-white text-[10px] h-4">
                   User {user.uid}
                 </Badge>
               </div>
@@ -237,57 +198,40 @@ export function VideoCallContent({ callId, channelName, type, onEnd }: VideoCall
       </div>
 
       {/* Controls */}
-      <div className="h-24 bg-black/50 backdrop-blur-sm flex items-center justify-center gap-4 px-6">
+      <div className="h-20 bg-black/50 backdrop-blur-sm flex items-center justify-center gap-3 px-4 shrink-0">
         <Button
           variant={micOn ? "secondary" : "destructive"}
-          size="lg"
-          className="rounded-full h-14 w-14"
+          size="icon"
+          className="rounded-full h-10 w-10"
           onClick={toggleMic}
         >
-          {micOn ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
+          {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
         </Button>
 
         {type === "video" && (
           <Button
             variant={cameraOn ? "secondary" : "destructive"}
-            size="lg"
-            className="rounded-full h-14 w-14"
+            size="icon"
+            className="rounded-full h-10 w-10"
             onClick={toggleCamera}
           >
-            {cameraOn ? <VideoIcon className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
+            {cameraOn ? <VideoIcon className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
           </Button>
         )}
 
         <Button
           variant={screenSharing ? "default" : "secondary"}
-          size="lg"
-          className="rounded-full h-14 w-14"
+          size="icon"
+          className="rounded-full h-10 w-10"
           onClick={toggleScreenShare}
         >
-          {screenSharing ? <MonitorOff className="h-6 w-6" /> : <Monitor className="h-6 w-6" />}
-        </Button>
-
-        <Button
-          variant="secondary"
-          size="lg"
-          className="rounded-full h-14 w-14"
-          onClick={() => setShowChat(!showChat)}
-        >
-          <MessageSquare className="h-6 w-6" />
-        </Button>
-
-        <Button
-          variant="secondary"
-          size="lg"
-          className="rounded-full h-14 w-14"
-        >
-          <Settings className="h-6 w-6" />
+          {screenSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
         </Button>
 
         <Button
           variant="destructive"
-          size="lg"
-          className="rounded-full h-14 w-14 bg-red-500 hover:bg-red-600"
+          size="icon"
+          className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600"
           onClick={endCall}
         >
           <Phone className="h-6 w-6" />

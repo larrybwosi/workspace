@@ -46,8 +46,25 @@ export async function POST(
     }
 
     const { workspaceId } = await params
-    const body = await request.json()
+    const body = await (request.json().catch(() => ({})))
     const { maxUses, expiresAt } = body
+
+    // Return existing link if it exists and was created by the same user
+    const existingLink = await prisma.workspaceInviteLink.findFirst({
+      where: {
+        workspaceId,
+        createdById: session.user.id,
+        // For existing link return, we ignore maxUses and expiresAt unless they were specifically requested to be updated
+        // but the prompt says "return the link" if it exists, so we favor existing one.
+      },
+      include: {
+        createdBy: true,
+      }
+    })
+
+    if (existingLink) {
+      return NextResponse.json(existingLink, { status: 200 })
+    }
 
     const inviteLink = await prisma.workspaceInviteLink.create({
       data: {

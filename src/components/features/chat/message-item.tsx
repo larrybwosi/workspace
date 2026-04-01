@@ -313,7 +313,7 @@ export function MessageItem({
                           action.handler(message.id, action.actionId || action.id);
                         } else {
                           const response = await fetch(
-                            `/api/v2/messages/${message.id}/actions/${action.actionId || action.id}`,
+                            `/api/messages/${message.id}/actions/${action.actionId || action.id}`,
                             { method: 'POST' }
                           );
                           if (response.ok) toast.success('Action recorded');
