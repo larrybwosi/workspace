@@ -354,6 +354,7 @@ export function ChannelView({
         messageId,
         emoji,
         channelId: activeChannelId,
+        workspaceId,
       });
     } else {
       addReactionMutation.mutate({
@@ -362,6 +363,7 @@ export function ChannelView({
         channelId: activeChannelId,
         isCustom,
         customEmojiId,
+        workspaceId,
       });
     }
   };
@@ -477,6 +479,7 @@ export function ChannelView({
                               isReply={true}
                               isHighlighted={isHighlighted}
                               channelId={channelId}
+                              workspaceId={workspaceId}
                             />
                           </div>
                         </div>
@@ -490,6 +493,7 @@ export function ChannelView({
                           isReply={false}
                           isHighlighted={isHighlighted}
                           channelId={channelId}
+                          workspaceId={workspaceId}
                         />
                       )}
                     </div>
