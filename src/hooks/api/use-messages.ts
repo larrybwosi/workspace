@@ -138,8 +138,6 @@ export function useReplyToMessage(workspaceId?: string) {
 
 // Mark messages as read mutation (Batch)
 export function useMarkMessagesAsRead(workspaceId?: string) {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }) => {
       const url = workspaceId
@@ -147,9 +145,6 @@ export function useMarkMessagesAsRead(workspaceId?: string) {
         : `/channels/${channelId}/messages/read`;
       const { data } = await apiClient.post(url, { messageIds });
       return { data, channelId };
-    },
-    onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
     },
   });
 }

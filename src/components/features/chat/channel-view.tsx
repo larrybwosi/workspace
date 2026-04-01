@@ -153,6 +153,32 @@ export function ChannelView({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const highlightedMessageRef = useRef<HTMLDivElement>(null);
+  const firstUnreadRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const markedMessageIds = useRef<Set<string>>(new Set());
+
+  // Intersection Observer for scroll position
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsAtBottom(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (messagesEndRef.current) {
+      observer.observe(messagesEndRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [messages.length]);
+
+  // Reset marked messages when channel changes
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
+  useEffect(() => {
+    markedMessageIds.current.clear();
+    setHasInitialScrolled(false);
+  }, [activeChannelId]);
 
   // 1. Flatten Data
   const messages = useMemo(() => {
@@ -162,31 +188,55 @@ export function ChannelView({
 
   // 2. Scroll Handling
   useEffect(() => {
+    if (isLoading || messages.length === 0 || hasInitialScrolled) return;
+
     if (highlightedMessageId && highlightedMessageRef.current) {
       setTimeout(() => {
         highlightedMessageRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
         });
+        setHasInitialScrolled(true);
       }, 100);
-    } else if (!isLoading && messages.length > 0) {
+    } else if (firstUnreadMessageId && firstUnreadRef.current) {
+      setTimeout(() => {
+        firstUnreadRef.current?.scrollIntoView({
+          behavior: 'auto',
+          block: 'start',
+        });
+        setHasInitialScrolled(true);
+      }, 100);
+    } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      setHasInitialScrolled(true);
     }
-  }, [messages.length, highlightedMessageId]);
+  }, [messages.length, highlightedMessageId, firstUnreadMessageId, isLoading, hasInitialScrolled]);
 
-  // 3. Read Receipts (Batch)
+  // Auto-scroll to bottom on new messages if already at bottom
   useEffect(() => {
-    if (messages.length > 0) {
-      const unreadMessageIds = messages.filter(m => !m.readByCurrentUser).map(m => m.id);
+    if (hasInitialScrolled && isAtBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length]);
+
+  // 3. Read Receipts (Batch) - Trigger when at bottom
+  useEffect(() => {
+    if (messages.length > 0 && isAtBottom) {
+      const unreadMessageIds = messages
+        .filter(m => !m.readByCurrentUser && !markedMessageIds.current.has(m.id))
+        .map(m => m.id);
 
       if (unreadMessageIds.length > 0) {
+        // Optimistically mark as read in the local ref to prevent duplicate calls
+        unreadMessageIds.forEach(id => markedMessageIds.current.add(id));
+
         markMessagesAsReadMutation.mutate({
           messageIds: unreadMessageIds,
           channelId: activeChannelId,
         });
       }
     }
-  }, [messages, activeChannelId]);
+  }, [messages, activeChannelId, isAtBottom]);
 
   const firstUnreadMessageId = useMemo(() => {
     const firstUnread = messages.find(m => !m.readByCurrentUser);
@@ -392,6 +442,7 @@ export function ChannelView({
                   }
 
                   const isHighlighted = message.id === highlightedMessageId;
+                  const isFirstUnread = message.id === firstUnreadMessageId;
 
                   return (
                     <div
@@ -401,7 +452,7 @@ export function ChannelView({
                         isGrouped ? 'mt-0' : 'mt-[1.0625rem]',
                         isHighlighted && 'bg-yellow-500/10'
                       )}
-                      ref={isHighlighted ? highlightedMessageRef : undefined}
+                      ref={isHighlighted ? highlightedMessageRef : (isFirstUnread ? firstUnreadRef : undefined)}
                     >
                       <div className={cn('w-full', item.depth > 0 && 'pl-4 md:pl-12 border-l-2 border-muted')}>
                         <MessageItem
