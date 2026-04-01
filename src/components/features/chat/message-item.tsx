@@ -46,6 +46,7 @@ interface MessageItemProps {
   depth?: number;
   isReply?: boolean;
   channelId?: string;
+  workspaceId?: string;
   isHighlighted?: boolean;
   highlightRef?: React.RefObject<HTMLDivElement>;
 }
@@ -63,6 +64,7 @@ export function MessageItem({
   depth = 0,
   isReply = false,
   channelId = undefined,
+  workspaceId = undefined,
   isHighlighted = false,
   highlightRef,
 }: MessageItemProps) {
@@ -109,7 +111,8 @@ export function MessageItem({
   };
 
   const handleCopyMessageLink = () => {
-    const messageUrl = `${window.location.origin}/channels/${channelId}?messageId=${message.id}`;
+    const baseUrl = workspaceId ? `/workspace/${workspaceId}/channels` : '/channels';
+    const messageUrl = `${window.location.origin}${baseUrl}/${channelId}?messageId=${message.id}`;
     navigator.clipboard.writeText(messageUrl);
     toast.success('Link copied', { description: 'Message link copied to clipboard' });
   };

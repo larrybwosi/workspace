@@ -121,11 +121,11 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             const match = /language-(\w+)/.exec(className || "");
             const codeContent = String(children).replace(/\n$/, "");
 
-            if (!inline && match) {
+            if (!inline) {
               return (
                 <SyntaxHighlighter
                   code={codeContent}
-                  language={match[1]}
+                  language={match ? match[1] : "text"}
                   {...props}
                 />
               );
