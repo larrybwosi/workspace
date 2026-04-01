@@ -47,7 +47,7 @@ export function CallNotification({
           <Card className="p-4 w-80 shadow-lg border-2 border-primary">
             <div className="flex items-center gap-3 mb-4">
               <Avatar className="h-12 w-12 animate-pulse">
-                <img src={initiatorAvatar || "/placeholder.svg"} alt={initiatorName} />
+                <AvatarImage src={initiatorAvatar} alt={initiatorName} />
                 <AvatarFallback>{initiatorName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1">

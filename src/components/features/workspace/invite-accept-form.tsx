@@ -99,7 +99,7 @@ export default function InviteAcceptForm({ token }: { token: string }) {
         <div className="bg-muted/50 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-3 mb-3">
             <Avatar>
-              <AvatarImage src={invitation.inviter?.avatar || "/placeholder.svg"} />
+              <AvatarImage src={invitation.inviter?.avatar} />
               <AvatarFallback>{invitation.inviter?.name?.charAt(0) || "?"}</AvatarFallback>
             </Avatar>
             <div>
