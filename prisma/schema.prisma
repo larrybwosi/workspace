@@ -453,6 +453,7 @@ model Channel {
   type        String  @default("channel")
   description String?
   isPrivate   Boolean @default(false)
+  metadata    Json?
   parentId    String?
   workspaceId String?
 
