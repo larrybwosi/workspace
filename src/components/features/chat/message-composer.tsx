@@ -70,12 +70,18 @@ export function MessageComposer({
       }));
 
       let filteredMembers = workspaceMembers;
-      if ((channel as any)?.type === "private") {
+      const isDM = channelId?.startsWith('dm-');
+
+      if (isDM) {
+        // In DMs, only suggest the other user (and self)
+        const dmUserId = channelId?.replace('dm-', '');
+        filteredMembers = workspaceMembers.filter((m: any) => m.id === dmUserId || m.id === currentUser?.id);
+      } else if ((channel as any)?.type === "private") {
         const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
         filteredMembers = workspaceMembers.filter((m: any) => channelMemberIds.has(m.id));
       }
 
-      const special: MentionItem[] = [
+      const special: MentionItem[] = isDM ? [] : [
         { id: 'all', name: 'all', type: 'special', description: 'Notify everyone in this channel' },
         { id: 'here', name: 'here', type: 'special', description: 'Notify active members in this channel' },
       ];

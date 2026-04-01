@@ -334,7 +334,7 @@ export function ChannelView({
   const handleReply = (messageId: string) => {
     const replyMessage = messages.find(m => m.id === messageId);
     if (replyMessage) {
-      const user = mockUsers.find(u => u.id === replyMessage.userId);
+      const user = (replyMessage as any).user;
       setReplyingTo({ id: messageId, userName: user?.name || 'Unknown' });
       // Focus input logic would go here
     }

@@ -24,6 +24,9 @@ model User {
   emailVerified Boolean  @default(false)
   image         String?
   avatar        String?
+  banner        String?
+  statusText    String?
+  statusEmoji   String?
   role          String   @default("Development")
   status        String   @default("online")
   createdAt     DateTime @default(now())
@@ -1550,4 +1553,18 @@ model OauthConsent {
   updatedAt   DateTime?
 
   @@map("oauthConsent")
+}
+
+model ProfileAsset {
+  id              String   @id @default(cuid())
+  url             String
+  type            String   // 'avatar' or 'banner'
+  name            String?
+  requiredRole    String?
+  requiredBadgeId String?
+  isGlobal        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("profile_assets")
 }

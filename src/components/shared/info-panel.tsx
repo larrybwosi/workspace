@@ -35,11 +35,11 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
   const channelId = id || channelSlug;
 
   const { data: workspace } = useWorkspace(workspaceSlug)
-  const { data: channel } = useChannel(channelId)
+  const { data: channel } = useChannel(channelId, workspace?.id)
   const { data: workspaceMembers } = useWorkspaceMembers(workspace?.id)
 
-  const creator = mockUsers.find((u) => u.id === mockThread.creator)
-  const members = workspaceMembers || []
+  const isDM = channelId?.startsWith("dm-") || !!dmUser;
+  const members = isDM ? [] : (workspaceMembers || [])
   const [activeTab, setActiveTab] = React.useState("info")
 
   const handleStartCall = (type: string) => {
@@ -317,6 +317,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
                 <Separator />
 
                 {/* Members */}
+                {!isDM && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">Members</h3>
@@ -358,6 +359,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = "channel", id }: Inf
                     })}
                   </div>
                 </div>
+                )}
               </div>
             )}
 
