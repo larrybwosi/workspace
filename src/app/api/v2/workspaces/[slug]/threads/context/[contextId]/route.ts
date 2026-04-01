@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { authenticateV2, hasScope } from "@/lib/auth/api-v2-auth"
+import { authenticateV2, hasScope, logV2Audit } from "@/lib/auth/api-v2-auth"
 
 export async function GET(
   request: NextRequest,
@@ -10,8 +10,8 @@ export async function GET(
   const { context, error } = await authenticateV2(request as any, { slug })
   if (error) return error
 
-  if (!hasScope(context!, "channels:read")) {
-    return NextResponse.json({ error: "Forbidden: Missing channels:read scope" }, { status: 403 })
+  if (!hasScope(context!, "threads:read")) {
+    return NextResponse.json({ error: "Forbidden: Missing threads:read scope" }, { status: 403 })
   }
 
   try {
@@ -31,6 +31,8 @@ export async function GET(
     if (!thread) {
       return NextResponse.json({ error: "Thread not found for this context" }, { status: 404 })
     }
+
+    await logV2Audit(context!, "threads.get_by_context", "thread", thread.id, { contextId })
 
     return NextResponse.json({ thread })
   } catch (error) {

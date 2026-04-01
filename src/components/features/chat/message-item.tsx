@@ -253,6 +253,11 @@ export function MessageItem({
                   <span className="font-medium text-[16px] leading-[22px] cursor-pointer hover:underline text-foreground">
                     {user?.name}
                   </span>
+                  {message.metadata?.isBot && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider ml-1 border border-primary/20 leading-none">
+                      Bot
+                    </span>
+                  )}
                   {userBadges.length > 0 && (
                     <div className="flex-shrink-0">
                       <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />
@@ -305,6 +310,50 @@ export function MessageItem({
               <DocumentEmbed message={message} />
 
               <MessageAttachments attachments={message.attachments} />
+
+              {message.actions && message.actions.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3 mb-1">
+                  {message.actions.map((action: any) => {
+                    // Map style from API/DB to Shadcn variants
+                    const variantMap: Record<string, any> = {
+                      primary: 'default',
+                      danger: 'destructive',
+                      destructive: 'destructive',
+                      default: 'outline',
+                      outline: 'outline',
+                      secondary: 'secondary',
+                      ghost: 'ghost',
+                    };
+                    const variant = variantMap[action.variant || action.style || ''] || 'outline';
+
+                    return (
+                      <Button
+                        key={action.id || action.actionId}
+                        size="sm"
+                        variant={variant}
+                        className="h-8 text-xs px-3"
+                        onClick={async () => {
+                          if (action.handler) {
+                            action.handler(message.id, action.actionId || action.id);
+                          } else {
+                            // If it's a V2 API message action from DB
+                            const response = await fetch(`/api/v2/messages/${message.id}/actions/${action.actionId || action.id}`, {
+                              method: 'POST',
+                            });
+                            if (response.ok) {
+                              toast.success('Action recorded');
+                            } else {
+                              toast.error('Failed to record action');
+                            }
+                          }
+                        }}
+                      >
+                        {action.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
 
               {detectedLinks.length > 0 &&
                 detectedLinks.slice(0, 3).map((link, idx) => <LinkPreview key={idx} url={link} />)}

@@ -72,7 +72,7 @@ jobs:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
           BETTER_AUTH_SECRET: dummy_auth_val_ci
-        run: pnpm run test || true
+        run: pnpm run test
 
   e2e-tests:
     timeout-minutes: 60
@@ -120,7 +120,7 @@ jobs:
         REDIS_URL: redis://localhost:${{ env.RD_PORT }}
         BETTER_AUTH_SECRET: dummy_auth_val_ci
         PORT: 3001
-      run: pnpm run test || true:e2e
+      run: pnpm run test:e2e
     - uses: actions/upload-artifact@v4
       if: always()
       with:

@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { authenticateV2, hasScope } from "@/lib/auth/api-v2-auth"
+import { authenticateV2, hasScope, logV2Audit } from "@/lib/auth/api-v2-auth"
 import { redis } from "@/lib/redis"
+import { dispatchWebhook } from "@/lib/webhooks"
 import { z } from "zod"
 
 const createChannelSchema = z.object({
@@ -9,6 +10,7 @@ const createChannelSchema = z.object({
   icon: z.string().optional().default("Hash"),
   type: z.enum(["public", "private"]).optional().default("public"),
   description: z.string().max(500).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 })
 
 export async function GET(
@@ -46,6 +48,8 @@ export async function GET(
   // Cache for 10 minutes
   await redis.setex(cacheKey, 600, JSON.stringify(channels))
 
+  await logV2Audit(context!, "channels.list", "channel")
+
   return NextResponse.json({ channels, source: "database" })
 }
 
@@ -63,7 +67,7 @@ export async function POST(
 
   try {
     const body = await request.json()
-    const { name, icon, type, description } = createChannelSchema.parse(body)
+    const { name, icon, type, description, metadata } = createChannelSchema.parse(body)
 
     const channel = await prisma.channel.create({
       data: {
@@ -72,6 +76,7 @@ export async function POST(
         type: type === "private" ? "private" : "channel",
         isPrivate: type === "private",
         description,
+        metadata: (metadata as any) || {},
         workspaceId: context!.workspaceId!,
         createdById: context!.userId,
       },
@@ -79,6 +84,10 @@ export async function POST(
 
     // Invalidate cache
     await redis.del(`v2:channels:${context!.workspaceId}`)
+
+    await logV2Audit(context!, "channels.create", "channel", channel.id, { name: channel.name })
+
+    await dispatchWebhook(context!.workspaceId!, "channel.created", { channel })
 
     return NextResponse.json({ channel }, { status: 201 })
   } catch (error) {
