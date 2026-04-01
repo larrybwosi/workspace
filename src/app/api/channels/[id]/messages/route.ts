@@ -38,6 +38,11 @@ export async function GET(request: NextRequest) {
         attachments: true,
         mentions: true,
         readBy: true,
+        replyTo: {
+          include: {
+            user: true,
+          },
+        },
         replies: {
           include: {
             user: true,

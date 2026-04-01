@@ -108,7 +108,7 @@ export function MessageItem({
   const isMentioned = false;
   // message.mentions?.some(m => m.includes(currentUser?.name)) || message.content.includes(`@${currentUser?.name}`);
 
-  const user = mockUsers.find(u => u.id === message.userId);
+  const user = (message as any).user;
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Track dropdown state
@@ -232,9 +232,9 @@ export function MessageItem({
           <div className="flex gap-4 items-start max-w-full">
             {showAvatar ? (
               <Avatar className="h-10 w-10 flex-shrink-0 mt-0.5 rounded-full overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-                <AvatarImage src={user?.avatar || '/placeholder.svg'} alt={user?.name} />
+                <AvatarImage src={user?.avatar || user?.image || '/placeholder.svg'} alt={user?.name} />
                 <AvatarFallback className="text-[10px] md:text-xs bg-primary text-primary-foreground">
-                  {user?.name.slice(0, 2).toUpperCase()}
+                  {user?.name?.slice(0, 2).toUpperCase() || '??'}
                 </AvatarFallback>
               </Avatar>
             ) : (
@@ -269,7 +269,9 @@ export function MessageItem({
                   {isReply && (
                     <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
-                      <span className="hidden sm:inline">replied</span>
+                      <span className="hidden sm:inline">
+                        replied to {(message as any).replyTo?.user?.name || 'unknown'}
+                      </span>
                     </span>
                   )}
                 </div>
