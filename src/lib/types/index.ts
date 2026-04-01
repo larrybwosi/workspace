@@ -88,10 +88,12 @@ export interface Thread {
 export interface Channel {
   id: string
   name: string
+  slug?: string
   icon: string
   unreadCount?: number
   type: "channel" | "dm" | "favorite"
   children?: Channel[]
+  workspaceId?: string
 }
 
 export interface Attachment {

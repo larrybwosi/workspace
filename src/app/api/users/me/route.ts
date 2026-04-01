@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
         role: true,
         status: true,
         createdAt: true,
+        notificationPreferences: true,
       },
     });
 
