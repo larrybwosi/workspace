@@ -10,6 +10,7 @@ const createChannelSchema = z.object({
   icon: z.string().optional().default("Hash"),
   type: z.enum(["public", "private"]).optional().default("public"),
   description: z.string().max(500).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 })
 
 export async function GET(
@@ -66,7 +67,7 @@ export async function POST(
 
   try {
     const body = await request.json()
-    const { name, icon, type, description } = createChannelSchema.parse(body)
+    const { name, icon, type, description, metadata } = createChannelSchema.parse(body)
 
     const channel = await prisma.channel.create({
       data: {
@@ -75,6 +76,7 @@ export async function POST(
         type: type === "private" ? "private" : "channel",
         isPrivate: type === "private",
         description,
+        metadata: (metadata as any) || {},
         workspaceId: context!.workspaceId!,
         createdById: context!.userId,
       },
