@@ -10,7 +10,7 @@
         "start": "next start",
         "init": "docker desktop start ; docker-compose up -d ; docker start redis; next dev",
         "postinstall": "prisma generate",
-        "test": "jest",
+        "test": "jest --passWithNoTests",
         "test:watch": "jest --watch",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"

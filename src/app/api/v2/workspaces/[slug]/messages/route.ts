@@ -247,7 +247,11 @@ export async function POST(
       })
     }
 
-    await logV2Audit(context!, "messages.send", "message", createdMessage.id, { channelId, recipientId })
+    if (!createdMessage) {
+      return NextResponse.json({ error: "Internal server error: Message not created" }, { status: 500 })
+    }
+
+    await logV2Audit(context!, "messages.send", "message", (createdMessage as any).id, { channelId, recipientId })
 
     await dispatchWebhook(context!.workspaceId!, "message.sent", { message: createdMessage })
 
