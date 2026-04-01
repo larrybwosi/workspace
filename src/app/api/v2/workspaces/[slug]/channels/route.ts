@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { authenticateV2, hasScope } from "@/lib/auth/api-v2-auth"
+import { authenticateV2, hasScope, logV2Audit } from "@/lib/auth/api-v2-auth"
 import { redis } from "@/lib/redis"
+import { dispatchWebhook } from "@/lib/webhooks"
 import { z } from "zod"
 
 const createChannelSchema = z.object({
@@ -46,6 +47,8 @@ export async function GET(
   // Cache for 10 minutes
   await redis.setex(cacheKey, 600, JSON.stringify(channels))
 
+  await logV2Audit(context!, "channels.list", "channel")
+
   return NextResponse.json({ channels, source: "database" })
 }
 
@@ -79,6 +82,10 @@ export async function POST(
 
     // Invalidate cache
     await redis.del(`v2:channels:${context!.workspaceId}`)
+
+    await logV2Audit(context!, "channels.create", "channel", channel.id, { name: channel.name })
+
+    await dispatchWebhook(context!.workspaceId!, "channel.created", { channel })
 
     return NextResponse.json({ channel }, { status: 201 })
   } catch (error) {

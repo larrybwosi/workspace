@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { authenticateV2, hasScope } from "@/lib/auth/api-v2-auth"
+import { authenticateV2, hasScope, logV2Audit } from "@/lib/auth/api-v2-auth"
 import { z } from "zod"
+import { dispatchWebhook } from "@/lib/webhooks"
 
 const sendMessageSchema = z.object({
   channelId: z.string().optional(),
@@ -11,6 +12,12 @@ const sendMessageSchema = z.object({
   contextId: z.string().optional(),
   messageType: z.string().optional(),
   metadata: z.record(z.string(), z.any()).optional(),
+  actions: z.array(z.object({
+    actionId: z.string(),
+    label: z.string(),
+    style: z.enum(["default", "primary", "danger"]).optional().default("default"),
+    value: z.string().optional(),
+  })).optional(),
   attachments: z.array(z.object({
     name: z.string(),
     type: z.string(),
@@ -78,6 +85,8 @@ export async function GET(
 
     const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null
 
+    await logV2Audit(context!, "messages.list", "message", undefined, { channelId, threadId, contextId })
+
     return NextResponse.json({ messages: messages.reverse(), nextCursor })
   } catch (err) {
     console.error("V2 Get Messages Error:", err)
@@ -107,6 +116,7 @@ export async function POST(
       contextId,
       messageType,
       metadata,
+      actions,
       attachments
     } = sendMessageSchema.parse(body)
 
@@ -151,7 +161,20 @@ export async function POST(
           userId: context!.userId,
           threadId: activeThreadId,
           messageType: messageType || "standard",
-          metadata: (metadata as any) || {},
+          metadata: {
+            ...(metadata as any || {}),
+            isBot: context!.isBot || false,
+            tokenId: context!.tokenId || null,
+          },
+          actions: actions ? {
+            create: actions.map((a, index) => ({
+              actionId: a.actionId,
+              label: a.label,
+              style: a.style,
+              value: a.value,
+              order: index
+            }))
+          } : undefined,
           attachments: attachments ? {
             create: attachments.map(a => ({
               name: a.name,
@@ -163,6 +186,7 @@ export async function POST(
         },
         include: {
           attachments: true,
+          actions: true,
           user: { select: { id: true, name: true, avatar: true } }
         }
       })
@@ -222,6 +246,10 @@ export async function POST(
         data: { lastMessageAt: new Date() }
       })
     }
+
+    await logV2Audit(context!, "messages.send", "message", createdMessage.id, { channelId, recipientId })
+
+    await dispatchWebhook(context!.workspaceId!, "message.sent", { message: createdMessage })
 
     return NextResponse.json({ message: createdMessage }, { status: 201 })
   } catch (error) {
