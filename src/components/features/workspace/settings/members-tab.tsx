@@ -150,7 +150,7 @@ export function MembersTab({ workspaceId }: MembersTabProps) {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={member.user.avatar || "/placeholder.svg"} />
+                        <AvatarImage src={member.user.avatar} />
                         <AvatarFallback>{member.user.name?.charAt(0) || "U"}</AvatarFallback>
                       </Avatar>
                       <div>

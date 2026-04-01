@@ -19,6 +19,7 @@ export async function GET(
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         image: true,
         avatar: true,
@@ -54,12 +55,13 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, avatar, banner, statusText, statusEmoji, status } = body;
+    const { name, username, avatar, banner, statusText, statusEmoji, status } = body;
 
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
         name,
+        username,
         avatar,
         banner,
         statusText,

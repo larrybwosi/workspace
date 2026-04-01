@@ -81,7 +81,7 @@ export function MentionSelector({ items, onSelect, searchTerm, position, type }:
               >
                 {item.type === "user" && (
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={item.image || "/placeholder.svg"} alt={item.name} />
+                    <AvatarImage src={item.image} alt={item.name} />
                     <AvatarFallback className="text-xs">{item.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 )}

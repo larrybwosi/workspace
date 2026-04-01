@@ -232,7 +232,7 @@ export function MessageItem({
           <div className="flex gap-4 items-start max-w-full">
             {showAvatar ? (
               <Avatar className="h-10 w-10 flex-shrink-0 mt-0.5 rounded-full overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-                <AvatarImage src={user?.avatar || user?.image || '/placeholder.svg'} alt={user?.name} />
+                <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
                 <AvatarFallback className="text-[10px] md:text-xs bg-primary text-primary-foreground">
                   {user?.name?.slice(0, 2).toUpperCase() || '??'}
                 </AvatarFallback>

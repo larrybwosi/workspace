@@ -398,7 +398,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId }: WorkspaceDepartmentsP
                           <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border">
                             <div className="flex items-center gap-3">
                               <Avatar>
-                                <AvatarImage src={member.user?.avatar || "/placeholder.svg"} />
+                                <AvatarImage src={member.user?.avatar} />
                                 <AvatarFallback>{member.user?.name?.[0] || "U"}</AvatarFallback>
                               </Avatar>
                               <div>

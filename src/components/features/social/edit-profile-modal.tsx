@@ -34,6 +34,7 @@ export function EditProfileModal({
 }: EditProfileModalProps) {
   const updateUser = useUpdateUser();
   const [name, setName] = useState(user.name);
+  const [username, setUsername] = useState(user.username || "");
   const [avatar, setAvatar] = useState(user.avatar || user.image || "");
   const [banner, setBanner] = useState(user.banner || "");
   const [statusText, setStatusText] = useState(user.statusText || "");
@@ -57,6 +58,7 @@ export function EditProfileModal({
       await updateUser.mutateAsync({
         id: user.id,
         name,
+        username,
         avatar,
         banner,
         statusText,
@@ -71,9 +73,37 @@ export function EditProfileModal({
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      const data = await response.json();
+      if (type === 'avatar') {
+        setAvatar(data.url);
+      } else {
+        setBanner(data.url);
+      }
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error(`Failed to upload ${type}`);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-bold">Edit Profile</DialogTitle>
         </DialogHeader>
@@ -81,32 +111,44 @@ export function EditProfileModal({
         <div className="space-y-0">
           {/* Banner Preview */}
           <div
-            className="h-32 w-full bg-gradient-to-r from-primary/20 to-primary/40 relative group cursor-pointer"
+            className="h-40 w-full bg-gradient-to-r from-primary/20 to-primary/40 relative group cursor-pointer"
             style={banner ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
           >
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-               <Button variant="secondary" size="sm" className="gap-2">
+              <label className="cursor-pointer">
+                <div className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors">
                   <Upload className="h-4 w-4" /> Change Banner
-               </Button>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'banner')}
+                />
+              </label>
             </div>
           </div>
 
           <div className="px-6 pb-6 relative">
             {/* Avatar Preview */}
-            <div className="relative -mt-12 mb-4 inline-block">
-              <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
+            <div className="relative -mt-16 mb-4 inline-block">
+              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                 <AvatarImage src={avatar} />
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground font-bold">
+                <AvatarFallback className="text-3xl bg-primary text-primary-foreground font-bold">
                   {name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute bottom-0 right-0 h-8 w-8 rounded-full border-2 border-background shadow-lg"
-              >
-                <ImageIcon className="h-4 w-4" />
-              </Button>
+              <label className="absolute bottom-1 right-1 cursor-pointer">
+                <div className="h-10 w-10 rounded-full bg-secondary text-secondary-foreground border-2 border-background shadow-lg flex items-center justify-center hover:bg-secondary/80 transition-colors">
+                  <ImageIcon className="h-5 w-5" />
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'avatar')}
+                />
+              </label>
             </div>
 
             {/* Asset Library (Simplified selector) */}
@@ -153,7 +195,7 @@ export function EditProfileModal({
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
                {/* Display Name */}
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -168,6 +210,25 @@ export function EditProfileModal({
                 />
               </div>
 
+              {/* Username */}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Username
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">@</span>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="username"
+                    className="bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary pl-7"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 mt-4">
               {/* Custom Status */}
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

@@ -17,14 +17,14 @@ export async function POST() {
       clientId: userId,
       // Capability must be a JSON stringified object
       capability: JSON.stringify({
-        'channel:*': ['subscribe', 'publish', 'history'],
-        'session:*': ['subscribe', 'publish', 'history'],
-        'workspace:*': ['subscribe', 'publish', 'history'],
-        'user:*': ['subscribe', 'publish', 'history'],
-        'notifications:*': ['subscribe', 'publish', 'history'],
-        'thread:*': ['subscribe', 'publish', 'history'],
-        'dm:*': ['subscribe', 'publish', 'history'],
-        'presence:*': ['subscribe', 'publish', 'history'],
+        'channel:*': ['subscribe', 'publish', 'history', 'presence'],
+        'session:*': ['subscribe', 'publish', 'history', 'presence'],
+        'workspace:*': ['subscribe', 'publish', 'history', 'presence'],
+        'user:*': ['subscribe', 'publish', 'history', 'presence'],
+        'notifications:*': ['subscribe', 'publish', 'history', 'presence'],
+        'thread:*': ['subscribe', 'publish', 'history', 'presence'],
+        'dm:*': ['subscribe', 'publish', 'history', 'presence'],
+        'presence:*': ['subscribe', 'publish', 'history', 'presence'],
       }),
       ttl: 3600 * 1000, // 1 hour in milliseconds
       timestamp: Date.now(),
