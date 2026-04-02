@@ -10,6 +10,11 @@ const CallContainer = dynamic(
   { ssr: false }
 );
 
+const AgoraClientProvider = dynamic(
+  () => import("@/components/features/calls/agora-provider").then((mod) => mod.AgoraClientProvider),
+  { ssr: false }
+);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -29,7 +34,9 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         {children}
-        <CallContainer />
+        <AgoraClientProvider>
+          <CallContainer />
+        </AgoraClientProvider>
         <Toaster
           position="top-right"
           duration={4000}
