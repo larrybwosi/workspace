@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       uid || 0,
       role === 'publisher' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER,
       privilegeExpiredTs,
-      Number(new Date(privilegeExpiredTs * 1000).toDateString())
+      privilegeExpiredTs
     );
 
     return NextResponse.json({

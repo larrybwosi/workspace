@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { type, channelId, workspaceId, recipientId } = await request.json();
+    const { type, channelId, workspaceId, recipientId, callId: incomingCallId } = await request.json();
 
     if (!type || !workspaceId) {
       return NextResponse.json({ error: 'Type and workspaceId are required' }, { status: 400 });
@@ -21,22 +21,37 @@ export async function POST(request: NextRequest) {
 
     // Determine channel name for Agora
     let agoraChannelName = '';
-    if (channelId) {
-      agoraChannelName = `channel-${channelId}`;
-    } else if (recipientId) {
-      const participants = [session.user.id, recipientId].sort();
-      agoraChannelName = `dm-${participants.join('-')}`;
-    } else {
-      return NextResponse.json({ error: 'channelId or recipientId is required' }, { status: 400 });
+    let call = null;
+
+    if (incomingCallId) {
+      call = await prisma.call.findUnique({
+        where: { id: incomingCallId }
+      });
+      if (call) {
+        agoraChannelName = call.channelName;
+      }
+    }
+
+    if (!agoraChannelName) {
+        if (channelId) {
+          agoraChannelName = `channel-${channelId}`;
+        } else if (recipientId) {
+          const participants = [session.user.id, recipientId].sort();
+          agoraChannelName = `dm-${participants.join('-')}`;
+        } else {
+          return NextResponse.json({ error: 'channelId, recipientId, or callId is required' }, { status: 400 });
+        }
     }
 
     // Check if there's an active call already
-    let call = await prisma.call.findFirst({
-      where: {
-        channelName: agoraChannelName,
-        status: { in: ['pending', 'active'] },
-      },
-    });
+    if (!call) {
+        call = await prisma.call.findFirst({
+          where: {
+            channelName: agoraChannelName,
+            status: { in: ['pending', 'active'] },
+          },
+        });
+    }
 
     if (!call) {
       // Create new call
