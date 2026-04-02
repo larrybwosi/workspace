@@ -56,12 +56,23 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                   ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
                   : {}
               }
-            ></div>
+            >
+              {user?.banner && (
+                <img
+                  src={user.banner}
+                  alt="Profile Banner"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
+            </div>
 
             <div className="px-6 pb-6 relative">
               <div className="relative -mt-16 mb-4 inline-block">
                 <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                  <AvatarImage src={user?.avatar || user?.image} />
+                  <AvatarImage src={user?.avatar || user?.image || undefined} />
                   <AvatarFallback className="text-3xl bg-primary text-primary-foreground font-bold">
                     {user?.name?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -112,9 +123,21 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                   <div className="flex items-center gap-3 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      Joined {user.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : 'May 2024'}
+                      Joined {user.createdAt ? format(new Date(user.createdAt), 'PP') : 'May 2024'}
                     </span>
                   </div>
+                  {(user as any).phone && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{(user as any).phone}</span>
+                    </div>
+                  )}
+                  {(user as any).location && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{(user as any).location}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

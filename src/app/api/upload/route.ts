@@ -54,12 +54,23 @@ export async function POST(request: NextRequest) {
       contentType: file.type,
     })
 
+    // Format size as a string for Prisma validation (Expected String or Null, provided Int)
+    const formatSize = (bytes: number) => {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (
+        parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+      );
+    };
+
     return NextResponse.json({
       id: asset._id,
       url: asset.url,
       name: file.name,
       type: file.type,
-      size: file.size,
+      size: formatSize(file.size),
       assetId: asset._id,
       metadata: {
         dimensions: isImage ? asset.metadata?.dimensions : undefined,

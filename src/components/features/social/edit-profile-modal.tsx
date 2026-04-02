@@ -167,6 +167,16 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                     : {}
                 }
               >
+                {banner && (
+                  <img
+                    src={banner}
+                    alt="Profile Banner"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
                 {uploadingBanner ? (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <div className="flex items-center gap-2 text-white text-sm font-medium">
@@ -195,7 +205,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                 {/* Avatar Preview */}
                 <div className="relative -mt-16 mb-4 inline-block">
                   <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                    <AvatarImage src={avatar} />
+                    <AvatarImage src={avatar || undefined} />
                     <AvatarFallback className="text-3xl bg-primary text-primary-foreground font-bold">
                       {name.slice(0, 2).toUpperCase()}
                     </AvatarFallback>

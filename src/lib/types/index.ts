@@ -9,8 +9,12 @@ export interface User {
   banner?: string
   statusText?: string
   statusEmoji?: string
-  role: "Design" | "Management" | "Development" | "Admin"
-  status: "online" | "offline" | "away"
+  role: string
+  status: string
+  email?: string
+  createdAt?: string | Date
+  phone?: string
+  location?: string
 }
 
 export interface Reaction {
@@ -91,9 +95,27 @@ export interface Channel {
   slug?: string
   icon: string
   unreadCount?: number
-  type: "channel" | "dm" | "favorite"
+  type: string
+  description?: string
   children?: Channel[]
   workspaceId?: string
+  createdBy?: User
+  createdAt?: string | Date
+  threads?: (Thread & { _count?: { messages: number } })[]
+  _count?: {
+    messages: number
+    members: number
+    threads: number
+  }
+}
+
+export interface WorkspaceMember {
+  id: string
+  workspaceId: string
+  userId: string
+  role: string
+  joinedAt: string | Date
+  user: User
 }
 
 export interface Attachment {

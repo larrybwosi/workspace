@@ -41,14 +41,12 @@ export default function WorkspaceChannelPageClient({channelSlug}: {channelSlug: 
             </main>
 
             {/* 4. Info Panel: Rendered side-by-side */}
-            {infoPanelOpen && (
-            <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out">
-                <InfoPanel
+            <InfoPanel
                 isOpen={infoPanelOpen}
                 onClose={() => setInfoPanelOpen(false)}
-                />
-            </aside>
-            )}
+                id={channelId}
+                type="channel"
+            />
         </div>
       </div>
     </div>
