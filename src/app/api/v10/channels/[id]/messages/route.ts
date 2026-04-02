@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateBot, discordError } from "../../discord-utils";
+import { authenticateBot, discordError } from "../../../discord-utils";
 import { prisma } from "@/lib/db/prisma";
 import { publishToAbly, AblyChannels, AblyEvents } from "@/lib/integrations/ably";
 import { hasPermission, Permissions } from "@/lib/auth/permissions";
