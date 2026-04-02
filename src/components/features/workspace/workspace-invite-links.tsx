@@ -39,7 +39,7 @@ export function WorkspaceInviteLinks({ workspaceId }: WorkspaceInviteLinksProps)
   }
 
   const handleCopy = (code: string) => {
-    const url = `${window.location.origin}/invite/link/${code}`
+    const url = `${window.location.origin}/invite/${code}`
     navigator.clipboard.writeText(url)
     toast({ title: "Link copied to clipboard" })
   }
