@@ -34,8 +34,8 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
     <ScrollArea className="flex-1">
       <div className="p-2 space-y-0.5">
         {dmConversations.map((dm: any) => {
-          const otherUser = dm.members.find((m: any) => m.id !== dm.creatorId) || dm.members[0]
-          const lastMessage = dm.messages?.[0]
+          const otherUser = dm.user
+          const lastMessage = dm.lastMessage
 
           return (
             <Button
@@ -67,7 +67,7 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="text-sm font-medium truncate">{otherUser.name}</p>
-                  <p className="text-xs text-muted-foreground capitalize truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {lastMessage?.content || "No messages yet"}
                   </p>
                 </div>

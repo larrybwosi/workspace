@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Info } from "lucide-react"
+import { Info, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { mockUsers } from "@/lib/mock-data"
 import { useParams, useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { ChannelView } from "@/components/features/chat/channel-view"
 import { InfoPanel } from "@/components/shared/info-panel"
+import { useUser } from "@/hooks/api/use-users"
 
 export default function DMPage() {
   const params = useParams()
@@ -19,7 +19,7 @@ export default function DMPage() {
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
 
   // Find the user for this DM
-  const dmUser = mockUsers.find((u) => u.id === userId)
+  const { data: dmUser, isLoading } = useUser(userId)
   const channelId = `dm-${userId}`
 
   const handleChannelSelect = (newChannelId: string) => {
@@ -33,6 +33,14 @@ export default function DMPage() {
     } else {
       router.push(`/channels/${newChannelId}`)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   if (!dmUser) {

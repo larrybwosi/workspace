@@ -25,8 +25,11 @@ import {
   Maximize2,
   Minimize2,
   UserPlus,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CallChat } from '../calls/call-chat';
@@ -71,6 +74,7 @@ export function VideoCallContent({
   const [screenSharing, setScreenSharing] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [volume, setVolume] = useState(100);
 
   useEffect(() => {
     // Synchronize mic state with camera state for video calls initially
@@ -122,6 +126,14 @@ export function VideoCallContent({
   );
 
   usePublish([localMicrophoneTrack, localCameraTrack, screenTrack].filter(Boolean));
+
+  useEffect(() => {
+    remoteUsers.forEach(user => {
+      if (user.audioTrack) {
+        user.audioTrack.setVolume(volume);
+      }
+    });
+  }, [remoteUsers, volume]);
 
   useEffect(() => {
     if (!localMicrophoneTrack) return;
@@ -300,71 +312,121 @@ export function VideoCallContent({
 
       {/* Main Content Area (Video Grid + Chat) */}
       <div className="flex-1 flex min-h-0 overflow-hidden relative">
-        <div className="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center p-4 min-h-0 overflow-hidden gap-4">
+          {/* Main Display Area (Screen Share or Active Speaker) */}
+          {(screenSharing && screenTrack) || remoteUsers.some(u => u.hasVideo) ? (
+            <div className="flex-1 w-full relative bg-zinc-900 rounded-xl overflow-hidden shadow-2xl border border-white/5">
+              {screenSharing && screenTrack ? (
+                <div className="w-full h-full flex flex-col">
+                  <div className="flex-1 min-h-0">
+                    <LocalVideoTrack track={screenTrack} play className="w-full h-full object-contain" />
+                  </div>
+                  <div className="h-10 bg-black/60 backdrop-blur-md flex items-center px-4 border-t border-white/5">
+                    <Badge variant="secondary" className="bg-primary/20 text-primary-foreground text-[10px] h-5">
+                      <Monitor className="h-3 w-3 mr-1" />
+                      Your Screen Share
+                    </Badge>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 gap-4 p-4 auto-rows-fr">
+                  {/* Remote Users with Video */}
+                  {remoteUsers
+                    .filter(u => u.hasVideo)
+                    .map(user => (
+                      <div key={user.uid} className="relative bg-black rounded-lg overflow-hidden group">
+                        <RemoteUser user={user} className="w-full h-full" playVideo={true} playAudio={true} />
+                        <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                          <Badge
+                            variant="secondary"
+                            className="bg-black/60 backdrop-blur-md text-white text-[11px] h-6 px-2 border-none"
+                          >
+                            User {user.uid}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* Grid Area (Participants) */}
           <div
             className={cn(
-              'grid gap-4 w-full h-full max-h-full overflow-y-auto p-2',
-              (remoteUsers.length === 0 || (remoteUsers.length === 1 && showChat)) && 'grid-cols-1',
-              remoteUsers.length === 1 && !showChat && 'grid-cols-1 md:grid-cols-2',
-              remoteUsers.length >= 2 &&
-                remoteUsers.length <= 4 &&
-                (showChat ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-2'),
-              remoteUsers.length > 4 && (showChat ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-3')
+              'w-full max-h-[30%] overflow-x-auto p-2 scrollbar-hide',
+              (screenSharing || remoteUsers.some(u => u.hasVideo))
+                ? 'flex flex-row items-center justify-start gap-4 h-48 min-h-[120px] overflow-y-hidden'
+                : 'grid gap-4 h-full max-h-full overflow-y-auto grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
             )}
           >
-            {/* Local User */}
+            {/* Local User Tile */}
             <div
               className={cn(
-                'relative bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center aspect-video transition-all duration-200',
-                isSpeaking && 'ring-2 ring-green-500'
+                'relative bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center shrink-0 transition-all duration-200 border border-white/5',
+                (screenSharing || remoteUsers.some(u => u.hasVideo)) ? 'aspect-video h-full' : 'aspect-video',
+                isSpeaking && 'ring-2 ring-green-500 ring-inset'
               )}
             >
-              {screenSharing && screenTrack ? (
-                <LocalVideoTrack track={screenTrack} play className="w-full h-full object-contain bg-black" />
-              ) : cameraOn && localCameraTrack ? (
+              {cameraOn && localCameraTrack ? (
                 <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center gap-2">
-                  <Avatar className="h-20 w-20 shadow-xl">
-                    <AvatarFallback className="text-2xl bg-zinc-800 text-white">
+                  <Avatar className="h-10 w-10 shadow-xl">
+                    <AvatarFallback className="text-sm bg-zinc-800 text-white font-bold">
                       {session?.user?.name?.slice(0, 2).toUpperCase() || 'ME'}
                     </AvatarFallback>
                   </Avatar>
-                  <p className="text-white text-sm font-semibold">{session?.user?.name || 'You'}</p>
+                  <p className="text-white text-[10px] font-semibold">{session?.user?.name || 'You'}</p>
                 </div>
               )}
               <div className="absolute bottom-2 left-2 flex items-center gap-1">
-                <Badge variant="secondary" className="bg-black/50 text-white text-[10px] h-4">
+                <Badge variant="secondary" className="bg-black/50 text-white text-[10px] h-4 border-none backdrop-blur-sm">
                   You
                 </Badge>
                 {!micOn && (
-                  <Badge variant="destructive" className="bg-red-500/80 h-4 px-1">
+                  <Badge variant="destructive" className="bg-red-500/80 h-4 px-1 border-none backdrop-blur-sm">
                     <MicOff className="h-2.5 w-2.5" />
                   </Badge>
                 )}
               </div>
             </div>
 
-            {/* Remote Users */}
-            {remoteUsers.map(user => (
-              <div key={user.uid} className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video group">
-                <RemoteUser user={user} className="w-full h-full" />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none" />
-                <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="bg-black/60 backdrop-blur-md text-white text-[11px] h-6 px-2 border-none"
-                  >
-                    User {user.uid}
-                  </Badge>
-                  {user.hasAudio === false && (
-                    <Badge variant="destructive" className="bg-red-500/80 h-6 px-1.5 border-none">
-                      <MicOff className="h-3 w-3" />
-                    </Badge>
+            {/* Remote Participants without Video (or all if no screen share/active video) */}
+            {remoteUsers
+              .filter(user => (screenSharing || remoteUsers.some(u => u.hasVideo)) ? !user.hasVideo : true)
+              .map(user => (
+                <div
+                  key={user.uid}
+                  className={cn(
+                    'relative bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center shrink-0 transition-all duration-200 border border-white/5 group',
+                    (screenSharing || remoteUsers.some(u => u.hasVideo)) ? 'aspect-video h-full' : 'aspect-video'
                   )}
+                >
+                  {user.hasVideo ? (
+                    <RemoteUser user={user} className="w-full h-full" playVideo={true} playAudio={true} />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Avatar className="h-10 w-10 shadow-xl">
+                        <AvatarFallback className="text-sm bg-zinc-800 text-white font-bold">
+                          U{user.uid.toString().slice(-2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-white text-[10px] font-semibold truncate max-w-[80px]">User {user.uid}</p>
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1">
+                    <Badge variant="secondary" className="bg-black/50 text-white text-[10px] h-4 border-none backdrop-blur-sm">
+                      User {user.uid}
+                    </Badge>
+                    {user.hasAudio === false && (
+                      <Badge variant="destructive" className="bg-red-500/80 h-4 px-1 border-none backdrop-blur-sm">
+                        <MicOff className="h-2.5 w-2.5" />
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -426,6 +488,21 @@ export function VideoCallContent({
           >
             <MessageSquare className="h-5 w-5" />
           </Button>
+
+          <div className="flex items-center gap-2 px-2 ml-2 border-l border-white/10">
+            {volume === 0 ? (
+              <VolumeX className="h-4 w-4 text-zinc-500" />
+            ) : (
+              <Volume2 className="h-4 w-4 text-zinc-500" />
+            )}
+            <Slider
+              value={[volume]}
+              max={100}
+              step={1}
+              className="w-24"
+              onValueChange={vals => setVolume(vals[0])}
+            />
+          </div>
 
           {workspaceId && (
             <DropdownMenu>
