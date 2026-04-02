@@ -2,7 +2,7 @@
 
 import {
   X,
-  User,
+  User as UserIcon,
   Calendar,
   Tag,
   CheckSquare,
@@ -304,7 +304,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <User className="h-4 w-4" />
+                        <UserIcon className="h-4 w-4" />
                         <span>{type === 'workspace' ? 'Owner' : 'Creator'}</span>
                       </div>
                       <span className="font-medium">
