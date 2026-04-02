@@ -135,7 +135,7 @@ export function CallContainer() {
       {/* Active Call Modal/Fullscreen */}
       {!isFullscreen && activeCall && (
         <Dialog open={!!activeCall} onOpenChange={(open) => !open && handleEndCall()}>
-          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none h-[80vh]">
+          <DialogContent className="max-w-[95vw] sm:max-w-7xl p-0 overflow-hidden bg-black border-none h-[90vh] sm:h-[85vh] rounded-xl">
             <VideoCallContent
               {...activeCall}
               onEnd={handleEndCall}
