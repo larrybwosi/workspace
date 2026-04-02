@@ -8,6 +8,7 @@ interface CallState {
     token: string
     uid: number
     appId: string
+    workspaceId?: string
   } | null
   isIncoming: boolean
   incomingCallData: {

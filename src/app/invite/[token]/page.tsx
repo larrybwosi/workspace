@@ -1,38 +1,42 @@
-import type { Metadata } from 'next';
-import { prisma } from '@/lib/db/prisma';
-import { getInvitationSEOMetadata } from '@/lib/utils/invitation-utils';
-import InviteAcceptForm from '@/components/features/workspace/invite-accept-form';
+import type { Metadata } from "next"
+import { prisma } from "@/lib/db/prisma"
+import { getInvitationSEOMetadata } from "@/lib/utils/invitation-utils"
+import InviteAcceptForm from "@/components/features/workspace/invite-accept-form"
 
-export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>
+}): Promise<Metadata> {
   try {
-    const { token } = await params;
+    const { token } = await params
     const invitation = await prisma.invitation.findUnique({
       where: { token },
-    });
+    })
 
     if (!invitation) {
       return {
-        title: 'Invitation Not Found',
-        description: 'This invitation link is invalid or has expired.',
-      };
+        title: "Invitation Not Found",
+        description: "This invitation link is invalid or has expired.",
+      }
     }
 
     const inviter = await prisma.user.findUnique({
       where: { id: invitation.invitedBy },
       select: { name: true },
-    });
+    })
 
-    return getInvitationSEOMetadata(inviter?.name || 'A team member', undefined);
+    return getInvitationSEOMetadata(inviter?.name || "A team member", undefined)
   } catch (error) {
-    console.error(' Error generating metadata:', error);
+    console.error(" Error generating metadata:", error)
     return {
-      title: 'Invitation',
-      description: 'Accept your invitation to join the team.',
-    };
+      title: "Invitation",
+      description: "Accept your invitation to join the team.",
+    }
   }
 }
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  return <InviteAcceptForm token={token} />;
+  const { token } = await params
+  return <InviteAcceptForm token={token} />
 }

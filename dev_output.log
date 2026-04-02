@@ -1,0 +1,24 @@
+
+> dealio@0.1.0 dev /app
+> next dev --port 3001
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 606ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+○ Compiling proxy ...
+
+○ Compiling /login ...
+ GET /login 200 in 6.5s (next.js: 6.0s, proxy.ts: 22ms, application-code: 490ms)
+○ Compiling /api/auth/[...all] ...
+ GET /api/auth/get-session 200 in 9.5s (next.js: 9.4s, proxy.ts: 7ms, application-code: 81ms)
+ GET /login 200 in 112ms (next.js: 6ms, proxy.ts: 9ms, application-code: 97ms)
+ GET /api/auth/get-session 200 in 88ms (next.js: 66ms, proxy.ts: 7ms, application-code: 15ms)
+○ Compiling /widget ...
+ GET /widget 200 in 6.7s (next.js: 5.4s, proxy.ts: 5ms, application-code: 1219ms)
+ GET /api/auth/get-session 200 in 92ms (next.js: 71ms, proxy.ts: 7ms, application-code: 13ms)
