@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ import { toast } from "sonner";
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const inviteToken = searchParams.get("inviteToken");
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -30,15 +32,19 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
+            const callbackURL = inviteToken
+                ? `/invite/${inviteToken}`
+                : "/";
+
             await signIn.email({
                 email,
                 password,
-                callbackURL: "/",
+                callbackURL,
             });
 
             toast.success("Welcome back! You've successfully logged in.");
 
-            router.push("/");
+            router.push(callbackURL);
         } catch (error) {
             toast.error("Invalid email or password. Please try again.");
         } finally {
@@ -49,9 +55,13 @@ export default function LoginPage() {
     const handleSocialLogin = async (provider: "google" | "github") => {
         setIsLoading(true);
         try {
+            const callbackURL = inviteToken
+                ? `/invite/${inviteToken}`
+                : "/";
+
             await authClient.signIn.social({
                 provider,
-                callbackURL: "/",
+                callbackURL,
             });
         } catch (error) {
             toast.error(`Unable to login with ${provider}. Please try again.`);
