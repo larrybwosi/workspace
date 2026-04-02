@@ -1093,6 +1093,8 @@ model CallParticipant {
   role     String    @default("participant") // host, participant
   muted    Boolean   @default(false)
   videoOff Boolean   @default(false)
+  isBanned Boolean   @default(false)
+  agoraUid Int?
 
   call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

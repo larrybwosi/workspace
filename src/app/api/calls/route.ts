@@ -25,9 +25,13 @@ export async function POST(request: NextRequest) {
 
     if (incomingCallId) {
       call = await prisma.call.findUnique({
-        where: { id: incomingCallId }
+        where: { id: incomingCallId },
+        include: { participants: { where: { userId: session.user.id } } }
       });
       if (call) {
+        if ((call.participants[0] as any)?.isBanned) {
+          return NextResponse.json({ error: 'You are banned from this call' }, { status: 403 });
+        }
         agoraChannelName = call.channelName;
 
         // --- Security Check ---
