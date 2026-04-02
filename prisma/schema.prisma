@@ -117,6 +117,11 @@ model User {
 
   notificationPreferences Json?
 
+  isBot         Boolean  @default(false)
+  botToken      String?  @unique
+  botApplication BotApplication? @relation("BotUser")
+  ownedBotApplications BotApplication[] @relation("BotOwner")
+
   @@map("users")
 }
 
@@ -339,6 +344,7 @@ model WorkspaceMember {
   userId       String
   departmentId String?
   role         String   @default("member")
+  permissions  BigInt   @default(0)
   joinedAt     DateTime @default(now())
 
   workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -497,6 +503,7 @@ model ChannelMember {
   channelId String
   userId    String
   role      String   @default("member")
+  permissions BigInt?
   joinedAt  DateTime @default(now())
 
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
@@ -1570,4 +1577,23 @@ model ProfileAsset {
   updatedAt       DateTime @updatedAt
 
   @@map("profile_assets")
+}
+
+model BotApplication {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  icon        String?
+  clientId    String   @unique
+  clientSecret String
+  ownerId     String
+  botId       String?  @unique
+  isGlobal    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner User  @relation("BotOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  bot   User? @relation("BotUser", fields: [botId], references: [id], onDelete: SetNull)
+
+  @@map("bot_applications")
 }
