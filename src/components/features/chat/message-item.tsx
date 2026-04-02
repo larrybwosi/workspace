@@ -268,7 +268,7 @@ export function MessageItem({
             )}
 
             <DocumentEmbed message={message} />
-            <MessageAttachments attachments={message.attachments} />
+            <MessageAttachments attachments={message.attachments} message={message} />
 
             {/* Action buttons */}
             {message.actions && message.actions.length > 0 && (
