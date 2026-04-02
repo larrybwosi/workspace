@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import type { Message } from '@/lib/types';
 import { mockUsers } from '@/lib/mock-data';
 import { cn, formatTime } from '@/lib/utils';
-import { CODE_BLOCK_REGEX, renderCustomMessage } from '@/lib/message-renderer';
+import { CODE_BLOCK_REGEX, renderCustomMessage, extractCodeInfo } from '@/lib/message-renderer';
+import { SyntaxHighlighter } from '@/components/shared/syntax-highlighter';
 import { CustomEmojiPicker } from '@/components/shared/custom-emoji-picker';
 import { MarkdownRenderer } from '@/components/shared/markdown-renderer';
 import { CustomMessage } from '@/components/features/chat/message-types/custom-message';
@@ -125,7 +126,18 @@ export function MessageItem({
   }, [message.content, message.messageType, message.metadata]);
 
   const customComponent = useMemo(() => {
-    if (isImplicitCode) return <CustomMessage message={message} readOnly />;
+    if (isImplicitCode) {
+      const { language, code } = extractCodeInfo(message.content);
+      return (
+        <div className="w-full mt-2">
+          <SyntaxHighlighter
+            code={code}
+            language={language}
+            fileName={message.metadata?.fileName as string}
+          />
+        </div>
+      );
+    }
     return renderCustomMessage(message);
   }, [isImplicitCode, message]);
 

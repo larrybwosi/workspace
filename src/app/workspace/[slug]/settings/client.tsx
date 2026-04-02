@@ -47,7 +47,7 @@ export default function WorkspaceSettingsPageClient({
           onSearchClick={() => {}}
           onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
         <div className="flex-1 overflow-auto">
           <div className="border-b bg-background px-6 py-4">
             <div className="flex items-center gap-4">
@@ -108,15 +108,12 @@ export default function WorkspaceSettingsPageClient({
             </Tabs>
           </div>
         </div>
-        {infoPanelOpen && (
-            <aside className="w-[350px] shrink-0 border-l border-border bg-background h-full transition-all duration-300 ease-in-out hidden lg:block">
-                <InfoPanel
-                    isOpen={infoPanelOpen}
-                    onClose={() => setInfoPanelOpen(false)}
-                    type="workspace"
-                />
-            </aside>
-        )}
+        <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => setInfoPanelOpen(false)}
+            type="workspace"
+            id={currentWorkspace?.id}
+        />
         </div>
       </main>
     </div>

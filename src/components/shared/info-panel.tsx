@@ -34,6 +34,7 @@ import { useChannel } from '@/hooks/api/use-channels';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '@/hooks/features/use-call-store';
 import { toast } from 'sonner';
+import { User, Channel, WorkspaceMember } from '@/lib/types';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -60,7 +61,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspace?.id);
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
-  const members = isDM ? [] : workspaceMembers?.members || [];
+  const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
   const [activeTab, setActiveTab] = React.useState('info');
 
   const { setCall } = useCallStore();
@@ -123,7 +124,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
         <aside
           className={cn(
-            'fixed lg:static inset-y-0 right-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
+            'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
             isOpen ? 'translate-x-0' : 'translate-x-full'
           )}
         >
@@ -229,7 +230,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       {/* Info Panel */}
       <aside
         className={cn(
-          'fixed lg:static inset-y-0 right-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
+          'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
@@ -316,7 +317,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                         ) : isChannelLoading ? (
                           <div className="h-4 w-24 bg-muted animate-pulse rounded" />
                         ) : (
-                          (channel as any)?.createdBy?.name || 'Unknown'
+                          channel?.createdBy?.name || 'Unknown'
                         )}
                       </span>
                     </div>
@@ -341,8 +342,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                           )
                         ) : isChannelLoading ? (
                           <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                        ) : (channel as any)?.createdAt ? (
-                          new Date((channel as any).createdAt).toLocaleDateString('en-US', {
+                        ) : channel?.createdAt ? (
+                          new Date(channel.createdAt).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
@@ -384,7 +385,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                   </div>
                 </div>
 
-                {type === 'workspace' && (
+                {(type === 'workspace' || !!workspace) && (
                   <>
                     <Separator />
                     <div className="space-y-3">
@@ -419,7 +420,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                   </>
                 )}
 
-                {type === 'channel' && (isChannelLoading || (channel as any)?.description) && (
+                {type === 'channel' && (isChannelLoading || channel?.description) && (
                   <>
                     <Separator />
                     <div>
@@ -439,38 +440,45 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                 <Separator />
 
                 {/* Linked Threads */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3">Linked threads</h3>
-                  <div className="space-y-2">
-                    {mockThread.linkedThreads.map((thread, idx) => (
-                      <Button key={idx} variant="ghost" className="w-full justify-start text-sm h-auto py-2">
-                        <Hash className="h-3 w-3 mr-2 shrink-0" />
-                        <span className="truncate">{thread}</span>
-                        <Badge variant="secondary" className="ml-auto">
-                          4
-                        </Badge>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
+                {channel?.threads && channel.threads.length > 0 && (
+                  <>
+                    <div>
+                      <h3 className="text-sm font-semibold mb-3">Linked threads</h3>
+                      <div className="space-y-2">
+                        {channel.threads.map((thread, idx) => (
+                          <Button key={idx} variant="ghost" className="w-full justify-start text-sm h-auto py-2">
+                            <Hash className="h-3 w-3 mr-2 shrink-0" />
+                            <span className="truncate">{thread.title || `Thread ${thread.id.slice(0, 8)}`}</span>
+                            {thread._count && thread._count.messages > 0 && (
+                              <Badge variant="secondary" className="ml-auto">
+                                {thread._count.messages}
+                              </Badge>
+                            )}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <Separator />
+                  </>
+                )}
 
                 {/* Thread Activity */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3">Thread activity</h3>
-                  <div className="flex items-center gap-1 h-8">
-                    {Array.from({ length: 30 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          'flex-1 rounded-sm',
-                          i % 5 === 0 ? 'bg-green-500' : i % 3 === 0 ? 'bg-green-400' : 'bg-muted'
-                        )}
-                      />
-                    ))}
+                {type === 'channel' && (
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3">Thread activity</h3>
+                    <div className="flex items-center gap-1 h-8">
+                      {Array.from({ length: 30 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            'flex-1 rounded-sm',
+                            i % 5 === 0 ? 'bg-green-500' : i % 3 === 0 ? 'bg-green-400' : 'bg-muted'
+                          )}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Separator />
 
@@ -540,22 +548,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
               <div className="p-4 space-y-6">
                 <div>
                   <h3 className="text-sm font-semibold mb-3">Recent Activity</h3>
-                  <div className="space-y-3">
-                    {[
-                      { icon: MessageCircle, text: '12 new messages', time: '2 hours ago', color: 'text-blue-500' },
-                      { icon: FileText, text: '3 files uploaded', time: '5 hours ago', color: 'text-green-500' },
-                      { icon: CheckSquare, text: '2 tasks completed', time: '1 day ago', color: 'text-purple-500' },
-                      { icon: LinkIcon, text: '1 link shared', time: '2 days ago', color: 'text-orange-500' },
-                    ].map((activity, idx) => (
-                      <div key={idx} className="flex items-start gap-3 text-sm">
-                        <activity.icon className={cn('h-4 w-4 mt-0.5', activity.color)} />
-                        <div className="flex-1">
-                          <p className="font-medium">{activity.text}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-sm text-muted-foreground italic">Activity log coming soon...</p>
                 </div>
 
                 <Separator />
@@ -565,19 +558,15 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Messages</span>
-                      <span className="text-sm font-semibold">156</span>
+                      <span className="text-sm font-semibold">{channel?._count?.messages || 0}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Reactions</span>
-                      <span className="text-sm font-semibold">89</span>
+                      <span className="text-sm text-muted-foreground">Threads</span>
+                      <span className="text-sm font-semibold">{channel?._count?.threads || 0}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Files Shared</span>
-                      <span className="text-sm font-semibold">23</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Active Members</span>
-                      <span className="text-sm font-semibold">6/9</span>
+                      <span className="text-sm text-muted-foreground">Members</span>
+                      <span className="text-sm font-semibold">{channel?._count?.members || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -589,28 +578,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Shared Files</h3>
-                  <Button size="sm" variant="ghost" className="h-7 text-xs">
-                    View all
-                  </Button>
                 </div>
                 <div className="space-y-2">
-                  {[
-                    { name: 'design-system.fig', size: '2.4 MB', date: 'Today' },
-                    { name: 'wireframes.pdf', size: '1.8 MB', date: 'Yesterday' },
-                    { name: 'brand-guidelines.pdf', size: '3.2 MB', date: '2 days ago' },
-                  ].map((file, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
-                      <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {file.size} • {file.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                  <p className="text-sm text-muted-foreground italic">No files found in this channel.</p>
                 </div>
               </div>
             )}
