@@ -105,7 +105,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       });
       if (!response.ok) throw new Error('Failed to generate invite link');
       const data = await response.json();
-      const fullLink = `${window.location.origin}/invite/${data.code}`;
+      const fullLink = `${window.location.origin}/invite/link/${data.code}`;
       setInviteLink(fullLink);
       navigator.clipboard.writeText(fullLink);
       toast.success('Invite link copied to clipboard!');
@@ -292,10 +292,20 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                     <h3 className="text-sm font-semibold">Main info</h3>
                     {type === 'channel' && !isDM && (
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStartCall('voice')}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleStartCall('voice')}
+                        >
                           <Phone className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStartCall('video')}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleStartCall('video')}
+                        >
                           <Video className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -398,10 +408,15 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                           <div className="flex-1 px-2 py-1.5 bg-muted rounded text-xs truncate font-mono">
                             {inviteLink}
                           </div>
-                          <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={() => {
-                            navigator.clipboard.writeText(inviteLink);
-                            toast.success('Copied!');
-                          }}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 shrink-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(inviteLink);
+                              toast.success('Copied!');
+                            }}
+                          >
                             Copy
                           </Button>
                         </div>
