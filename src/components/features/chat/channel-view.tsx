@@ -131,11 +131,15 @@ export function ChannelView({
     channel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
     channel.subscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
 
+    const userChannel = ably.channels.get(AblyChannels.user(currentUser?.id || ''));
+    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleMessage);
+
     return () => {
       channel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
       channel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
       channel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
       channel.unsubscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
+      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleMessage);
     };
   }, [activeChannelId, workspaceId, queryClient]);
 
