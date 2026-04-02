@@ -63,7 +63,23 @@ export function CallContainer() {
         })
       })
 
+      if (!response.ok) throw new Error('Failed to join call')
       const data = await response.json()
+
+      if (!data.token) {
+        const tokenResponse = await fetch('/api/agora/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channelName: data.channelName,
+            uid: data.uid,
+          })
+        })
+        if (!tokenResponse.ok) throw new Error('Failed to fetch Agora token')
+        const tokenData = await tokenResponse.json()
+        data.token = tokenData.token
+      }
+
       setCall(data)
     } catch (error) {
       console.error(error)

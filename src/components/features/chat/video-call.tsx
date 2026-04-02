@@ -9,25 +9,6 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-// Dynamically import Agora components with SSR disabled
-const AgoraProvider = dynamic(
-  async () => {
-    const { AgoraRTCProvider, default: AgoraRTC } = await import('agora-rtc-react')
-    
-    return {
-      default: ({ children }: { children: React.ReactNode }) => {
-        const client = useMemo(
-          () => AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }),
-          []
-        )
-        
-        return <AgoraRTCProvider client={client}>{children}</AgoraRTCProvider>
-      }
-    }
-  },
-  { ssr: false }
-)
-
 const VideoCallContent = dynamic(
   () => import('./video-call-content').then(mod => ({ default: mod.VideoCallContent })),
   { ssr: false }
@@ -37,10 +18,13 @@ interface VideoCallProps {
   callId: string
   channelName: string
   type: "voice" | "video"
+  token: string
+  uid: number
+  appId: string
   onEnd: () => void
 }
 
-export function VideoCall({ callId, channelName, type, onEnd }: VideoCallProps) {
+export function VideoCall({ callId, channelName, type, token, uid, appId, onEnd }: VideoCallProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -56,13 +40,14 @@ export function VideoCall({ callId, channelName, type, onEnd }: VideoCallProps) 
   }
 
   return (
-    <AgoraProvider>
-      <VideoCallContent 
-        callId={callId}
-        channelName={channelName}
-        type={type}
-        onEnd={onEnd}
-      />
-    </AgoraProvider>
+    <VideoCallContent
+      callId={callId}
+      channelName={channelName}
+      type={type}
+      onEnd={onEnd}
+      token={token}
+      uid={uid}
+      appId={appId}
+    />
   )
 }
