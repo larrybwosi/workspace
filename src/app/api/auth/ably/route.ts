@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { ably } from '@/lib/integrations/ably';
 import { auth } from '@/lib/auth';
@@ -23,6 +23,7 @@ export async function POST() {
         'user:*': ['subscribe', 'publish', 'history', 'presence'],
         'notifications:*': ['subscribe', 'publish', 'history', 'presence'],
         'thread:*': ['subscribe', 'publish', 'history', 'presence'],
+        'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
         'dm:*': ['subscribe', 'publish', 'history', 'presence'],
         'presence:*': ['subscribe', 'publish', 'history', 'presence'],
       }),
