@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authenticateBot, discordError } from "../discord-utils";
+import { authenticateBot, discordError } from "../../discord-utils";
 
 export async function GET(request: Request) {
   const bot = await authenticateBot(request as any);
