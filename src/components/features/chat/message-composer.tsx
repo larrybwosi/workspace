@@ -45,7 +45,7 @@ export function MessageComposer({
   const workspaceSlug = params.slug as string;
   const { data: workspace } = useWorkspace(workspaceSlug);
   const { data: channels } = useWorkspaceChannels(workspace?.id);
-  const { data: members } = useWorkspaceMembers(workspace?.id);
+  const { data: membersData } = useWorkspaceMembers(workspace?.id);
   const { data: channel } = useChannel(channelId || '', workspace?.id);
 
   const { data: currentUser } = useCurrentUser();
@@ -61,7 +61,7 @@ export function MessageComposer({
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
     if (mentionType === 'user') {
-      const workspaceMembers = (members || []).map((m: any) => ({
+      const workspaceMembers = (membersData.members || []).map((m: any) => ({
         id: m.user.id,
         name: m.user.name,
         type: 'user' as const,
@@ -76,21 +76,23 @@ export function MessageComposer({
         // In DMs, only suggest the other user (and self)
         const dmUserId = channelId?.replace('dm-', '');
         filteredMembers = workspaceMembers.filter((m: any) => m.id === dmUserId || m.id === currentUser?.id);
-      } else if ((channel as any)?.type === "private") {
+      } else if ((channel as any)?.type === 'private') {
         const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
         filteredMembers = workspaceMembers.filter((m: any) => channelMemberIds.has(m.id));
       }
 
-      const special: MentionItem[] = isDM ? [] : [
-        { id: 'all', name: 'all', type: 'special', description: 'Notify everyone in this channel' },
-        { id: 'here', name: 'here', type: 'special', description: 'Notify active members in this channel' },
-      ];
+      const special: MentionItem[] = isDM
+        ? []
+        : [
+            { id: 'all', name: 'all', type: 'special', description: 'Notify everyone in this channel' },
+            { id: 'here', name: 'here', type: 'special', description: 'Notify active members in this channel' },
+          ];
 
       return [...special, ...filteredMembers];
     }
 
     if (mentionType === 'channel') {
-      const publicChannels = (channels || []).filter((c: any) => c.type !== "private");
+      const publicChannels = (channels || []).filter((c: any) => c.type !== 'private');
       return publicChannels.map((c: any) => ({
         id: c.id,
         name: c.name,
@@ -100,7 +102,7 @@ export function MessageComposer({
     }
 
     return [];
-  }, [mentionType, members, channels, channel]);
+  }, [mentionType, membersData, channels, channel]);
 
   const handleSend = () => {
     if ((message.trim() || attachments.length > 0) && !isUploading) {
