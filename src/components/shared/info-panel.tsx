@@ -159,7 +159,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       });
       if (!response.ok) throw new Error('Failed to generate invite link');
       const data = await response.json();
-      const fullLink = `${window.location.origin}/invite/link/${data.code}`;
+      const fullLink = `${window.location.origin}/invite/${data.code}`;
       setInviteLink(fullLink);
       navigator.clipboard.writeText(fullLink);
       toast.success('Invite link copied to clipboard!');
@@ -528,15 +528,10 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                           <div className="flex-1 px-2 py-1.5 bg-muted rounded text-xs truncate font-mono">
                             {inviteLink}
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 shrink-0"
-                            onClick={() => {
-                              navigator.clipboard.writeText(inviteLink);
-                              toast.success('Copied!');
-                            }}
-                          >
+                          <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={() => {
+                            navigator.clipboard.writeText(inviteLink);
+                            toast.success('Copied!');
+                          }}>
                             Copy
                           </Button>
                         </div>

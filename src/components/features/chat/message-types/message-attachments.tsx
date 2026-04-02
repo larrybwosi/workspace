@@ -7,9 +7,10 @@ import { CallInviteMessage } from "./call-invite-message";
 
 interface MessageAttachmentsProps {
   attachments?: Attachment[];
+  message?: any;
 }
 
-export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
+export function MessageAttachments({ attachments, message }: MessageAttachmentsProps) {
   if (!attachments || attachments.length === 0) return null;
 
   return (
@@ -19,7 +20,7 @@ export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
           return (
             <div key={attachment.id} className="col-span-full">
               <CallInviteMessage
-                message={(attachment as any).message || (attachments as any).message || { sender: { name: "Someone" } }}
+                message={message || (attachment as any).message || { sender: { name: "Someone" } }}
                 attachment={attachment}
               />
             </div>

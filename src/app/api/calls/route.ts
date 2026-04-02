@@ -31,9 +31,11 @@ export async function POST(request: NextRequest) {
         agoraChannelName = call.channelName;
 
         // --- Security Check ---
+        const targetWorkspaceId = (call.metadata as any)?.workspaceId || workspaceId;
+
         // 1. Verify user belongs to the workspace
         const isMember = await prisma.workspaceMember.findUnique({
-          where: { workspaceId_userId: { workspaceId, userId: session.user.id } }
+          where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: session.user.id } }
         });
         if (!isMember) {
           return NextResponse.json({ error: 'Unauthorized: Not a workspace member' }, { status: 403 });
