@@ -48,7 +48,10 @@ export async function GET(
     const formattedMessages = data.map((msg) => ({
       ...msg,
       userId: msg.senderId,
-      user: msg.sender,
+      user: {
+        ...msg.sender,
+        avatar: msg.sender.avatar || msg.sender.image
+      },
       timestamp: msg.createdAt,
       reactions: msg.reactions.map(r => ({ ...r, users: [r.userId] })), // Simplified mapping
     }));
@@ -103,17 +106,33 @@ export async function POST(
     });
 
     // Update last message timestamp
-    await prisma.directMessage.update({
+    const dm = await prisma.directMessage.update({
       where: { id: conversationId },
       data: { lastMessageAt: new Date() },
     });
 
-    return NextResponse.json({
+    const formattedMessage = {
       ...message,
       userId: message.senderId,
-      user: message.sender,
+      user: {
+        ...message.sender,
+        avatar: message.sender.avatar || message.sender.image
+      },
       timestamp: message.createdAt,
-    }, { status: 201 });
+      reactions: message.reactions.map(r => ({ ...r, users: [r.userId] })),
+    };
+
+    // Notify the other user via Ably
+    const otherUserId = dm.participant1Id === session.user.id ? dm.participant2Id : dm.participant1Id;
+    const { publishToAbly, AblyEvents, AblyChannels } = await import("@/lib/integrations/ably");
+
+    await publishToAbly(AblyChannels.user(otherUserId), AblyEvents.DM_RECEIVED, {
+      dmId: conversationId,
+      message: formattedMessage,
+      from: session.user.name,
+    });
+
+    return NextResponse.json(formattedMessage, { status: 201 });
   } catch (error) {
     console.error(" Error creating DM message:", error);
     return NextResponse.json({ error: "Failed to create message" }, { status: 500 });
