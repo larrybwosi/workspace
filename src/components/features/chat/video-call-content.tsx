@@ -11,14 +11,21 @@ import {
   LocalVideoTrack,
   RemoteUser
 } from "agora-rtc-react"
-import { Mic, MicOff, VideoIcon, VideoOff, Phone, Monitor, MonitorOff, Settings, MessageSquare, Users, Maximize2, Minimize2 } from 'lucide-react'
+import { Mic, MicOff, VideoIcon, VideoOff, Phone, Monitor, MonitorOff, Settings, MessageSquare, Users, Maximize2, Minimize2, UserPlus } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { CallChat } from "../calls/call-chat"
 import { useSession } from "@/lib/auth/auth-client"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useWorkspaceMembers } from "@/hooks/api/use-workspaces"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface VideoCallContentProps {
   callId: string
@@ -30,6 +37,7 @@ interface VideoCallContentProps {
   onEnd: () => void
   isFullscreen?: boolean
   onToggleFullscreen?: () => void
+  workspaceId?: string
 }
 
 export function VideoCallContent({
@@ -41,7 +49,8 @@ export function VideoCallContent({
   appId,
   onEnd,
   isFullscreen,
-  onToggleFullscreen
+  onToggleFullscreen,
+  workspaceId
 }: VideoCallContentProps) {
   const [micOn, setMicOn] = useState(true)
   const [cameraOn, setCameraOn] = useState(type === "video")
@@ -63,6 +72,8 @@ export function VideoCallContent({
     encoderConfig: "1080p_1",
   })
   const remoteUsers = useRemoteUsers()
+  const { data: membersData } = useWorkspaceMembers(workspaceId || "")
+  const members = membersData?.members || []
 
   useJoin({
     appid: appId,
@@ -87,9 +98,23 @@ export function VideoCallContent({
   useEffect(() => {
     if (screenError) {
       setScreenSharing(false)
-      toast.error("Failed to share screen: " + screenError.message)
+      if (screenError.message !== "Permission denied") {
+        toast.error("Failed to share screen: " + screenError.message)
+      }
     }
   }, [screenError])
+
+  useEffect(() => {
+    if (screenTrack) {
+      const handleTrackEnded = () => {
+        setScreenSharing(false)
+      }
+      screenTrack.on("track-ended", handleTrackEnded)
+      return () => {
+        screenTrack.off("track-ended", handleTrackEnded)
+      }
+    }
+  }, [screenTrack])
 
   useEffect(() => {
     // Join call in database
@@ -137,16 +162,63 @@ export function VideoCallContent({
   }
 
   const toggleScreenShare = async () => {
-     setScreenSharing(!screenSharing)
+    const newState = !screenSharing
+    setScreenSharing(newState)
+
+    // If turning on screen share, turn off camera to save bandwidth and avoid confusion
+    if (newState && cameraOn) {
+      setCameraOn(false)
+      await fetch(`/api/calls/${callId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateState', videoOff: true })
+      })
+    }
+  }
+
+  const inviteMember = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/calls/${callId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      })
+      if (!response.ok) throw new Error('Failed to send invite')
+      toast.success('Invite sent!')
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to send invite')
+    }
   }
 
   const endCall = async () => {
-    await fetch(`/api/calls/${callId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'leave' })
-    })
-    onEnd()
+    try {
+      // 1. Stop and close all local tracks to release camera/mic
+      if (localCameraTrack) {
+        localCameraTrack.stop()
+        localCameraTrack.close()
+      }
+      if (localMicrophoneTrack) {
+        localMicrophoneTrack.stop()
+        localMicrophoneTrack.close()
+      }
+      if (screenTrack) {
+        screenTrack.stop()
+        screenTrack.close()
+      }
+
+      // 2. Notify server about leaving
+      await fetch(`/api/calls/${callId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'leave' })
+      })
+    } catch (error) {
+      console.error("Error ending call:", error)
+    } finally {
+      // 3. Callback to update state and close UI
+      onEnd()
+    }
   }
 
   return (
@@ -307,6 +379,47 @@ export function VideoCallContent({
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
+
+        {workspaceId && (
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-xl h-12 w-12 bg-zinc-800 hover:bg-zinc-700 text-white transition-all duration-200"
+                >
+                <UserPlus className="h-5 w-5" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-zinc-800 text-white">
+                <div className="p-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 mb-1">
+                Invite to call
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                {members.filter((m: any) => m.userId !== session?.user?.id).map((member: any) => (
+                    <DropdownMenuItem
+                    key={member.userId}
+                    className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 transition-colors"
+                    onClick={() => inviteMember(member.userId)}
+                    >
+                    <Avatar className="h-7 w-7">
+                        <AvatarImage src={member.user.avatar || member.user.image} />
+                        <AvatarFallback className="text-[10px] bg-zinc-700 text-white font-bold">
+                        {member.user.name.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <span className="truncate font-medium">{member.user.name}</span>
+                    </DropdownMenuItem>
+                ))}
+                {members.length === 1 && (
+                    <div className="p-4 text-center text-xs text-zinc-500">
+                        No other members to invite
+                    </div>
+                )}
+                </div>
+            </DropdownMenuContent>
+            </DropdownMenu>
+        )}
         </div>
 
         <div className="w-px h-10 bg-white/10 mx-2" />
