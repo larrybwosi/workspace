@@ -13,7 +13,9 @@ import { cn } from '@/lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from '@/lib/auth/auth-client';
 import { useNotifications } from '@/hooks/api/use-notifications';
-import { useDMConversations } from '@/hooks/api/use-dm';
+import { useDMConversations, dmKeys } from '@/hooks/api/use-messages';
+import { useQueryClient } from '@tanstack/react-query';
+import { getAblyClient, AblyChannels, AblyEvents } from '@/lib/integrations/ably';
 import { WorkspaceSwitcher } from '@/components/features/workspace/workspace-switcher';
 import { UserProfileDialog } from '@/components/features/social/user-profile-dialog';
 import { StartDMDialog } from '@/components/features/chat/start-dm-dialog';
@@ -213,6 +215,27 @@ export function Sidebar({
 
   const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations();
   const { data: notificationsData } = useNotifications(true);
+  const queryClient = useQueryClient();
+
+  // Subscribe to real-time DM updates
+  React.useEffect(() => {
+    if (!sessionUser?.id) return;
+
+    const ably = getAblyClient();
+    if (!ably) return;
+
+    const userChannel = ably.channels.get(AblyChannels.user(sessionUser.id));
+
+    const handleDMUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
+    };
+
+    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
+
+    return () => {
+      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
+    };
+  }, [sessionUser?.id, queryClient]);
 
   const currentUser: User | undefined = sessionUser
     ? {

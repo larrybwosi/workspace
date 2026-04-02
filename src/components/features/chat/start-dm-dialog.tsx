@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useUserSearch } from "@/hooks/api/use-user-search"
 import { useFriends } from "@/hooks/api/use-friends"
-import { useCreateDMConversation } from "@/hooks/api/use-dm"
+import { useCreateDM as useCreateDMConversation } from "@/hooks/api/use-messages"
 import { useSendFriendRequest } from "@/hooks/api/use-friends"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -25,13 +25,25 @@ interface StartDMDialogProps {
 export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = React.useState("")
+  const [debouncedQuery, setDebouncedQuery] = React.useState("")
   const [searchTab, setSearchTab] = React.useState<"friends" | "all" | "invite">("friends")
+
+  // Debounce search
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   // Fetch friends
   const { data: friends = [], isLoading: friendsLoading } = useFriends()
 
   // Search users
-  const { data: searchResults, isLoading: searchLoading } = useUserSearch(searchQuery, searchTab === "friends")
+  const { data: searchResults, isLoading: searchLoading } = useUserSearch(
+    debouncedQuery,
+    searchTab === "friends",
+  )
 
   // Mutations
   const createDM = useCreateDMConversation()
@@ -136,6 +148,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
                     >
                       <Avatar className="h-10 w-10">
+                        <AvatarImage src={friendship.friend.avatar || friendship.friend.image} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           {friendship.friend.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
@@ -237,6 +250,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
                     >
                       <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.avatar} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           {user.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
