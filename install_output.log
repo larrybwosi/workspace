@@ -1,0 +1,22 @@
+npm warn Unknown cli config "--frozen-lockfile". This will stop working in the next major version of npm.
+npm error code ERESOLVE
+npm error ERESOLVE unable to resolve dependency tree
+npm error
+npm error While resolving: dealio@0.1.0
+npm error Found: react@19.2.4
+npm error node_modules/react
+npm error   react@"19.2.4" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error peer react@"^16.8 || ^17 || ^18" from @emoji-mart/react@1.1.1
+npm error node_modules/@emoji-mart/react
+npm error   @emoji-mart/react@"latest" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /home/jules/.npm/_logs/2026-04-02T07_19_34_477Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /home/jules/.npm/_logs/2026-04-02T07_19_34_477Z-debug-0.log

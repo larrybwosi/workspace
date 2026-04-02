@@ -3,6 +3,7 @@
 import { FileIcon } from "lucide-react";
 import type { Attachment } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { CallInviteMessage } from "./call-invite-message";
 
 interface MessageAttachmentsProps {
   attachments?: Attachment[];
@@ -14,6 +15,17 @@ export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
   return (
     <div className="mt-2 grid gap-2 grid-cols-1 sm:grid-cols-2 max-w-lg">
       {attachments.map((attachment) => {
+        if (attachment.type === 'call-invite') {
+          return (
+            <div key={attachment.id} className="col-span-full">
+              <CallInviteMessage
+                message={(attachment as any).message || (attachments as any).message || { sender: { name: "Someone" } }}
+                attachment={attachment}
+              />
+            </div>
+          )
+        }
+
         const extension =
           attachment.name.split(".").pop()?.toLowerCase() || "default";
         const isSanityImage = ["png", "jpg", "jpeg"].includes(extension);

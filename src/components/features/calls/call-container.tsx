@@ -80,7 +80,10 @@ export function CallContainer() {
         data.token = tokenData.token
       }
 
-      setCall(data)
+      setCall({
+        ...data,
+        workspaceId: data.workspaceId || incomingCallData.workspaceId
+      })
     } catch (error) {
       console.error(error)
     }
@@ -138,6 +141,7 @@ export function CallContainer() {
               onEnd={handleEndCall}
               isFullscreen={false}
               onToggleFullscreen={() => setIsFullscreen(true)}
+              workspaceId={activeCall.workspaceId}
             />
           </DialogContent>
         </Dialog>
@@ -149,6 +153,7 @@ export function CallContainer() {
           onEnd={handleEndCall}
           isFullscreen={true}
           onToggleFullscreen={() => setIsFullscreen(false)}
+          workspaceId={activeCall.workspaceId}
         />
       )}
     </>
