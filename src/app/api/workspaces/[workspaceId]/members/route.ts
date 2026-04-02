@@ -44,6 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             name: true,
             email: true,
             avatar: true,
+            image: true,
             status: true,
             // lastActiveAt: true,
           },

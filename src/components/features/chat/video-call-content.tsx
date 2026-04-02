@@ -85,11 +85,28 @@ export function VideoCallContent({
   const {
     screenTrack,
     error: screenError,
-    isLoading: isScreenLoading,
   } = useLocalScreenTrack(screenSharing, {
     encoderConfig: '1080p_1',
   });
   const remoteUsers = useRemoteUsers();
+
+  // Handle track cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (localCameraTrack) {
+        localCameraTrack.stop();
+        localCameraTrack.close();
+      }
+      if (localMicrophoneTrack) {
+        localMicrophoneTrack.stop();
+        localMicrophoneTrack.close();
+      }
+      if (screenTrack) {
+        screenTrack.stop();
+        screenTrack.close();
+      }
+    };
+  }, [localCameraTrack, localMicrophoneTrack, screenTrack]);
   const { data: membersData } = useWorkspaceMembers(workspaceId || '');
   const members = membersData?.members || [];
   const { data: session } = useSession();
@@ -104,7 +121,7 @@ export function VideoCallContent({
     true
   );
 
-  usePublish([localMicrophoneTrack, localCameraTrack, screenTrack]);
+  usePublish([localMicrophoneTrack, localCameraTrack, screenTrack].filter(Boolean));
 
   useEffect(() => {
     if (!localMicrophoneTrack) return;

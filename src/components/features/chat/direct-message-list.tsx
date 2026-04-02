@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useDMConversations } from "@/hooks/api/use-dm"
+import { useDMConversations } from "@/hooks/api/use-messages"
 import { cn } from "@/lib/utils"
 
 interface DirectMessagesListProps {
