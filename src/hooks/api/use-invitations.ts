@@ -34,7 +34,7 @@ export function useInvitation(token: string | null) {
     queryFn: async () => {
       if (!token) return null
       const response = await axios.get(`/api/invitations/${token}`)
-      return response.data.invitation
+      return response.data
     },
     enabled: !!token,
   })
@@ -42,18 +42,18 @@ export function useInvitation(token: string | null) {
 
 export function useAcceptInvitation(token: string) {
   return useMutation({
-    mutationFn: async (data: AcceptInvitationData) => {
-      const response = await axios.post(`/api/invitations/${token}/accept`, data)
+    mutationFn: async () => {
+      const response = await axios.post(`/api/invitations/${token}/accept`, {})
       return response.data
     },
   })
 }
 
-export function useInvitations(status?: string) {
+export function useInvitations(workspaceId?: string) {
   return useQuery({
-    queryKey: ["invitations", status],
+    queryKey: ["invitations", workspaceId],
     queryFn: async () => {
-      const params = status ? `?status=${status}` : ""
+      const params = workspaceId ? `?workspaceId=${workspaceId}` : ""
       const response = await axios.get(`/api/invitations${params}`)
       return response.data.invitations
     },

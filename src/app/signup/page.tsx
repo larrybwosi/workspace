@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ import { toast } from "sonner";
 
 export default function SignupPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const inviteToken = searchParams.get("inviteToken");
     const [isLoading, setIsLoading] = useState(false);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -49,18 +51,22 @@ export default function SignupPage() {
         setIsLoading(true);
 
         try {
+            const callbackURL = inviteToken
+                ? `/invite/${inviteToken}`
+                : "/";
+
             await signUp.email({
                 email,
                 password,
                 name,
-                callbackURL: "/",
+                callbackURL,
             });
 
             toast.success(
                 "Account created! Welcome! Your account has been created successfully.",
             );
 
-            // router.push("/")
+            router.push(callbackURL);
         } catch (error) {
             console.log(error);
             toast.error(
@@ -81,9 +87,13 @@ export default function SignupPage() {
 
         setIsLoading(true);
         try {
+            const callbackURL = inviteToken
+                ? `/invite/${inviteToken}`
+                : "/";
+
             await authClient.signIn.social({
                 provider,
-                callbackURL: "/",
+                callbackURL,
             });
         } catch (error) {
             toast.error(
