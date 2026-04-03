@@ -250,3 +250,111 @@ export async function getNotificationStats(userId: string) {
 
   return { total, active, sent, pending }
 }
+
+/**
+ * Process scheduled calls and notify participants
+ */
+export async function processScheduledCalls() {
+  const now = new Date()
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000)
+
+  // 1. Find calls starting in 5 minutes that haven't been notified yet
+  const upcomingCalls = await prisma.call.findMany({
+    where: {
+      status: 'scheduled',
+      scheduledFor: {
+        lte: fiveMinutesFromNow,
+        gt: now,
+      },
+      metadata: {
+        path: ['notified5m'],
+        equals: null,
+      },
+    },
+    include: {
+      initiator: true,
+    },
+  })
+
+  for (const call of upcomingCalls) {
+    await notifyCallParticipants(call, 'Starting in 5 minutes')
+
+    // Update metadata to avoid double notification
+    const metadata = (call.metadata as any) || {}
+    await prisma.call.update({
+      where: { id: call.id },
+      data: { metadata: { ...metadata, notified5m: true } }
+    })
+  }
+
+  // 2. Find calls starting now that haven't been notified yet
+  const startingCalls = await prisma.call.findMany({
+    where: {
+      status: 'scheduled',
+      scheduledFor: {
+        lte: now,
+      },
+      metadata: {
+        path: ['notifiedStart'],
+        equals: null,
+      },
+    },
+    include: {
+      initiator: true,
+    },
+  })
+
+  for (const call of startingCalls) {
+    await notifyCallParticipants(call, 'Starting now')
+
+    // Update status and metadata
+    const metadata = (call.metadata as any) || {}
+    await prisma.call.update({
+      where: { id: call.id },
+      data: {
+        status: 'pending', // Move to pending so it shows up as an active call
+        metadata: { ...metadata, notifiedStart: true }
+      }
+    })
+  }
+}
+
+async function notifyCallParticipants(call: any, timeLabel: string) {
+  const { workspaceId, channelId, title, initiator } = call
+
+  let userIds: string[] = []
+
+  if (channelId) {
+    const members = await prisma.channelMember.findMany({
+      where: { channelId },
+      select: { userId: true }
+    })
+    userIds = members.map(m => m.userId)
+  } else if (workspaceId) {
+    const members = await prisma.workspaceMember.findMany({
+      where: { workspaceId },
+      select: { userId: true }
+    })
+    userIds = members.map(m => m.userId)
+  }
+
+  const workspace = workspaceId ? await prisma.workspace.findUnique({ where: { id: workspaceId } }) : null
+
+  for (const userId of userIds) {
+    if (userId === initiator?.id) continue
+
+    await createNotification({
+      userId,
+      type: 'system',
+      title: `Call: ${title}`,
+      message: `${timeLabel}: ${title} scheduled by ${initiator?.name || 'Someone'}`,
+      entityType: channelId ? 'channel' : 'workspace',
+      entityId: channelId || workspaceId,
+      linkUrl: workspace ? `/workspace/${workspace.slug}` : undefined,
+      metadata: {
+        callId: call.id,
+        type: call.type,
+      }
+    })
+  }
+}
