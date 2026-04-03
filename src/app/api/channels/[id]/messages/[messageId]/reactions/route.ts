@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 import { getAblyRest, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
+import { isUserEligibleForAsset, logAssetUsage } from "@/lib/assets/asset-utils"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; messageId: string }> }) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const { messageId } = await params
     const body = await request.json()
-    const { emoji } = body
+    const { emoji, customEmojiId } = body
 
     // Check if reaction already exists
     const existing = await prisma.reaction.findUnique({
@@ -32,12 +33,35 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         where: { id: existing.id },
       })
     } else {
+      // Check if it's a custom emoji and if user is eligible
+      if (customEmojiId) {
+        const customEmoji = await prisma.customEmoji.findUnique({
+          where: { id: customEmojiId }
+        });
+
+        if (customEmoji && customEmoji.rules) {
+          const isEligible = await isUserEligibleForAsset(session.user.id, customEmoji.rules);
+          if (!isEligible) {
+            return NextResponse.json({ error: "You are not eligible to use this premium emoji" }, { status: 403 });
+          }
+        }
+
+        // Log usage
+        await logAssetUsage({
+          assetId: customEmojiId,
+          assetType: 'emoji',
+          userId: session.user.id,
+          workspaceId: customEmoji?.workspaceId || undefined
+        });
+      }
+
       // Add reaction
       await prisma.reaction.create({
         data: {
           messageId,
           userId: session.user.id,
           emoji,
+          customEmojiId,
         },
       })
     }
