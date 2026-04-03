@@ -6,7 +6,7 @@ RUN apk add --no-cache libc6-compat openssl
 # Install pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 WORKDIR /app
 
