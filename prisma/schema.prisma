@@ -117,6 +117,9 @@ model User {
 
   notificationPreferences Json?
 
+  plan          String   @default("free") // free, nitro_basic, nitro
+  messageCount  Int      @default(0)
+
   isBot         Boolean  @default(false)
   botToken      String?  @unique
   botApplication BotApplication? @relation("BotUser")
@@ -211,12 +214,14 @@ model Workspace {
   webhooks     WorkspaceWebhook[]
   integrations WorkspaceIntegration[]
   auditLogs    WorkspaceAuditLog[]
-  inviteLinks  WorkspaceInviteLink[]
-  customEmojis CustomEmoji[]
-  userBadges   UserBadge[]
-  departments  WorkspaceDepartment[]
-  teams        WorkspaceTeam[]
-  apiTokens    WorkspaceApiToken[]
+  inviteLinks      WorkspaceInviteLink[]
+  customEmojis     CustomEmoji[]
+  stickers         Sticker[]
+  soundboardSounds SoundboardSound[]
+  userBadges       UserBadge[]
+  departments      WorkspaceDepartment[]
+  teams            WorkspaceTeam[]
+  apiTokens        WorkspaceApiToken[]
 
   @@map("workspaces")
 }
@@ -692,14 +697,16 @@ model DMMessageRead {
 }
 
 model DMReaction {
-  id        String   @id @default(cuid())
-  messageId String
-  userId    String
-  emoji     String
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  messageId     String
+  userId        String
+  emoji         String
+  customEmojiId String?
+  createdAt     DateTime @default(now())
 
-  message DMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     DMMessage    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customEmoji CustomEmoji? @relation(fields: [customEmojiId], references: [id])
 
   @@unique([messageId, userId, emoji])
   @@map("dm_reactions")
@@ -1132,11 +1139,13 @@ model CustomEmoji {
   isGlobal    Boolean  @default(false) // Available across all workspaces
   usageCount  Int      @default(0)
   isActive    Boolean  @default(true)
+  rules       Json?    // Eligibility rules: { requiredPlan, requiredRole, requiredBadgeId, minAccountAgeDays, minMessages }
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  reactions Reaction[]
+  workspace   Workspace?   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reactions   Reaction[]
+  dmReactions DMReaction[]
 
   @@unique([shortcode, workspaceId])
   @@map("custom_emojis")
@@ -1578,15 +1587,75 @@ model OauthConsent {
 model ProfileAsset {
   id              String   @id @default(cuid())
   url             String
-  type            String   // 'avatar' or 'banner'
+  type            String   // 'avatar', 'banner', 'theme'
   name            String?
+  animated        Boolean  @default(false)
+  themeColors     Json?    // For profile themes: { primary, accent, etc. }
   requiredRole    String?
   requiredBadgeId String?
+  rules           Json?    // Eligibility rules
   isGlobal        Boolean  @default(true)
+  usageCount      Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("profile_assets")
+}
+
+model Sticker {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  animated    Boolean  @default(false)
+  workspaceId String?
+  createdById String
+  category    String?  @default("custom")
+  isGlobal    Boolean  @default(true)
+  rules       Json?    // Eligibility rules
+  usageCount  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("stickers")
+}
+
+model SoundboardSound {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  volume      Float    @default(1.0)
+  emoji       String?
+  animated    Boolean  @default(false)
+  workspaceId String?
+  createdById String
+  category    String?  @default("custom")
+  isGlobal    Boolean  @default(true)
+  rules       Json?    // Eligibility rules
+  usageCount  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("soundboard_sounds")
+}
+
+model AssetUsageLog {
+  id          String   @id @default(cuid())
+  assetId     String
+  assetType   String   // 'emoji', 'sticker', 'sound', 'profile_asset'
+  userId      String
+  workspaceId String?
+  metadata    Json?    // Additional context
+  usedAt      DateTime @default(now())
+
+  @@index([assetId, assetType])
+  @@index([userId])
+  @@map("asset_usage_logs")
 }
 
 model BotApplication {

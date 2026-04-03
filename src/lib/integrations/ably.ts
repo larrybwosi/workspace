@@ -66,6 +66,7 @@ export const AblyChannels = {
   presence: (channelId: string) => `presence:${channelId}`,
   dm: (dmId: string) => `dm:${dmId}`,
   workspace: (workspaceId: string) => `workspace:${workspaceId}`,
+  call: (callId: string) => `call:${callId}`,
 }
 
 // Event types
@@ -85,6 +86,7 @@ export const AblyEvents = {
   CHANNEL_CREATED: "channel:created",
   CHANNEL_UPDATED: "channel:updated",
   CHANNEL_DELETED: "channel:deleted",
+  SOUNDBOARD_PLAYED: "soundboard:played",
 }
 
 export const EVENTS = AblyEvents
