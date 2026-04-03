@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import dynamic from "next/dynamic";
+import { NotificationListener } from "@/components/features/notifications/notification-listener";
 
 const CallContainer = dynamic(
   () => import("@/components/features/calls/call-container").then((mod) => mod.CallContainer),
@@ -34,6 +35,7 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         {children}
+        <NotificationListener />
         <AgoraClientProvider>
           <CallContainer />
         </AgoraClientProvider>

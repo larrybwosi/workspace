@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Check } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Check, Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -9,22 +9,56 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
-  const [settings, setSettings] = useState({
-    notifyOnMemberJoin: true,
-    notifyOnProjectCreate: true,
-    notifyOnChannelCreate: false,
-    notifyOnMention: true,
-    notifyOnDM: true,
-    weeklyDigest: true,
-    securityAlerts: true,
-    emailFrequency: "realtime",
-    mutedChannels: [] as string[],
-  })
+  const [preference, setPreference] = useState<string>("all")
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  const handleSave = () => {
-    toast.success("Notification preferences saved")
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`/api/notifications/settings/workspace?workspaceId=${workspaceId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setPreference(data.notificationPreference || "all")
+        }
+      } catch (error) {
+        console.error("Failed to fetch notification settings:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchSettings()
+  }, [workspaceId])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch("/api/notifications/settings/workspace", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId, preference }),
+      })
+      if (res.ok) {
+        toast.success("Notification preferences saved")
+      } else {
+        throw new Error("Failed to save")
+      }
+    } catch (error) {
+      toast.error("Failed to save notification preferences")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -36,72 +70,45 @@ export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Activity Notifications</CardTitle>
-          <CardDescription>Choose which workspace activities trigger notifications</CardDescription>
+          <CardTitle>Workspace Notifications</CardTitle>
+          <CardDescription>Choose how you want to receive notifications for this workspace</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">New Member Joins</Label>
-              <p className="text-sm text-muted-foreground">Get notified when someone joins the workspace</p>
+        <CardContent>
+          <RadioGroup value={preference} onValueChange={setPreference} className="space-y-4">
+            <div className="flex items-start space-x-3 space-y-0">
+              <RadioGroupItem value="all" id="all" className="mt-1" />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor="all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                  All Messages
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Get notified for every message sent in this workspace.
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={settings.notifyOnMemberJoin}
-              onCheckedChange={(checked) => setSettings({ ...settings, notifyOnMemberJoin: checked })}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">Project Created</Label>
-              <p className="text-sm text-muted-foreground">Get notified when a new project is created</p>
+            <div className="flex items-start space-x-3 space-y-0">
+              <RadioGroupItem value="mentions" id="mentions" className="mt-1" />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor="mentions" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                  Only @mentions
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Get notified only when you are mentioned or @everyone/@here is used.
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={settings.notifyOnProjectCreate}
-              onCheckedChange={(checked) => setSettings({ ...settings, notifyOnProjectCreate: checked })}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">Channel Created</Label>
-              <p className="text-sm text-muted-foreground">Get notified when a new channel is created</p>
+            <div className="flex items-start space-x-3 space-y-0">
+              <RadioGroupItem value="nothing" id="nothing" className="mt-1" />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor="nothing" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                  Nothing
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  You will not receive any notifications for this workspace.
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={settings.notifyOnChannelCreate}
-              onCheckedChange={(checked) => setSettings({ ...settings, notifyOnChannelCreate: checked })}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">Mentions</Label>
-              <p className="text-sm text-muted-foreground">Get notified when someone mentions you</p>
-            </div>
-            <Switch
-              checked={settings.notifyOnMention}
-              onCheckedChange={(checked) => setSettings({ ...settings, notifyOnMention: checked })}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">Direct Messages</Label>
-              <p className="text-sm text-muted-foreground">Get notified of new direct messages</p>
-            </div>
-            <Switch
-              checked={settings.notifyOnDM}
-              onCheckedChange={(checked) => setSettings({ ...settings, notifyOnDM: checked })}
-            />
-          </div>
+          </RadioGroup>
         </CardContent>
       </Card>
 
@@ -156,8 +163,8 @@ export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave}>
-          <Check className="h-4 w-4 mr-2" />
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
           Save Notification Preferences
         </Button>
       </div>

@@ -339,13 +339,14 @@ model WorkspaceApiToken {
 }
 
 model WorkspaceMember {
-  id           String   @id @default(cuid())
-  workspaceId  String
-  userId       String
-  departmentId String?
-  role         String   @default("member")
-  permissions  BigInt   @default(0)
-  joinedAt     DateTime @default(now())
+  id                     String   @id @default(cuid())
+  workspaceId            String
+  userId                 String
+  departmentId           String?
+  role                   String   @default("member")
+  permissions            BigInt   @default(0)
+  joinedAt               DateTime @default(now())
+  notificationPreference String   @default("all") // all, mentions, nothing
 
   workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -499,12 +500,13 @@ model Channel {
 }
 
 model ChannelMember {
-  id        String   @id @default(cuid())
-  channelId String
-  userId    String
-  role      String   @default("member")
-  permissions BigInt?
-  joinedAt  DateTime @default(now())
+  id                     String   @id @default(cuid())
+  channelId              String
+  userId                 String
+  role                   String   @default("member")
+  permissions            BigInt?
+  joinedAt               DateTime @default(now())
+  notificationPreference String? // all, mentions, nothing (null means use workspace default)
 
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1073,10 +1075,15 @@ model PushNotificationLog {
 
 model Call {
   id           String            @id @default(cuid())
+  title        String?
+  description  String?
   channelName  String
   type         String // voice, video
   initiatorId  String?
-  status       String            @default("pending") // pending, active, ended, missed
+  workspaceId  String?
+  channelId    String?
+  status       String            @default("pending") // pending, active, ended, missed, scheduled
+  scheduledFor DateTime?
   startedAt    DateTime          @default(now())
   endedAt      DateTime?
   duration     Int?
@@ -1088,6 +1095,7 @@ model Call {
   @@index([channelName])
   @@index([initiatorId])
   @@index([status])
+  @@index([workspaceId])
   @@map("calls")
 }
 
