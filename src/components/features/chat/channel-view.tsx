@@ -24,6 +24,8 @@ import { UploadedFile } from '@/lib/utils/upload-utils';
 import { toast } from 'sonner';
 import { useChannel } from '@/hooks/api/use-channels';
 import { useSession } from '@/lib/auth/auth-client';
+import { Settings } from 'lucide-react';
+import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 
 interface ChannelViewProps {
   channelId: string;
@@ -164,6 +166,23 @@ export function ChannelView({
 
   const { data: session } = useSession();
   const currentUser = session?.user;
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [channelForm, setChannelForm] = useState({
+    name: '',
+    description: '',
+    type: 'public' as 'public' | 'private',
+  });
+
+  useEffect(() => {
+    if (channelData) {
+      setChannelForm({
+        name: channelData.name,
+        description: channelData.description || '',
+        type: channelData.isPrivate ? 'private' : 'public',
+      });
+    }
+  }, [channelData]);
 
   // 1. Flatten Data
   const messages = useMemo(() => {
@@ -383,6 +402,16 @@ export function ChannelView({
             </h2>
             <span className="text-xs text-muted-foreground truncate hidden sm:block">{messages.length} messages</span>
           </div>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={() => setEditDialogOpen(true)}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -520,6 +549,19 @@ export function ChannelView({
           channelId={activeChannelId}
         />
       </div>
+
+      <EditChannelDialog
+        editChannelOpen={editDialogOpen}
+        setEditChannelOpen={setEditDialogOpen}
+        channelForm={channelForm}
+        setChannelForm={setChannelForm}
+        handleEditChannel={() => {
+          // The settings UI inside handles its own save,
+          // and we could trigger a general channel update here if needed.
+          setEditDialogOpen(false);
+        }}
+        channelId={activeChannelId}
+      />
     </div>
   );
 }

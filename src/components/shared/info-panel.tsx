@@ -41,6 +41,8 @@ import { useParams } from 'next/navigation';
 import { useCallStore } from '@/hooks/features/use-call-store';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@/lib/types';
+import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
+import { format } from 'date-fns';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -72,6 +74,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
   const [activeCalls, setActiveCalls] = React.useState<any[]>([]);
+  const [scheduledCalls, setScheduledCalls] = React.useState<any[]>([]);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!workspace?.id || !isOpen) return;
@@ -88,8 +92,24 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
         }
     };
 
+    const fetchScheduledCalls = async () => {
+        try {
+            const response = await fetch(`/api/calls/scheduled?workspaceId=${workspace.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setScheduledCalls(data || []);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     fetchActiveCalls();
-    const interval = setInterval(fetchActiveCalls, 15000); // Poll every 15s
+    fetchScheduledCalls();
+    const interval = setInterval(() => {
+        fetchActiveCalls();
+        fetchScheduledCalls();
+    }, 15000); // Poll every 15s
     return () => clearInterval(interval);
   }, [workspace?.id, isOpen]);
 
@@ -380,6 +400,16 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                       </div>
                     )}
                   </div>
+                  <div className="space-y-2 mb-4">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-9 text-xs"
+                      onClick={() => setIsScheduleDialogOpen(true)}
+                    >
+                      <Calendar className="h-3.5 w-3.5 mr-2" />
+                      Schedule a Call
+                    </Button>
+                  </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -510,6 +540,53 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                                         >
                                             Join Call
                                         </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <Separator />
+                        </>
+                    )}
+
+                    {/* Scheduled Calls Section */}
+                    {scheduledCalls.length > 0 && (
+                        <>
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-semibold flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-primary" />
+                                Upcoming Calls ({scheduledCalls.length})
+                            </h3>
+                            <div className="space-y-2">
+                                {scheduledCalls.map((call) => (
+                                    <div key={call.id} className="p-3 bg-muted/20 rounded-lg border border-border/50">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-bold truncate pr-2">
+                                                {call.title}
+                                            </span>
+                                            <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">
+                                                {call.type}
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-2">
+                                            <Clock className="h-3 w-3" />
+                                            {format(new Date(call.scheduledFor), "MMM d, h:mm a")}
+                                        </div>
+                                        {call.description && (
+                                            <p className="text-[10px] text-muted-foreground line-clamp-1 mb-2 italic">
+                                                {call.description}
+                                            </p>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="h-4 w-4">
+                                                <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
+                                                <AvatarFallback className="text-[6px]">
+                                                    {call.initiator?.name?.slice(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-[10px] text-muted-foreground truncate">
+                                                By {call.initiator?.name}
+                                            </span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -717,6 +794,15 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
           </ScrollArea>
         )}
       </aside>
+
+      {workspace?.id && (
+        <ScheduleCallDialog
+          open={isScheduleDialogOpen}
+          onOpenChange={setIsScheduleDialogOpen}
+          workspaceId={workspace.id}
+          channelId={type === 'channel' ? id || channelSlug : undefined}
+        />
+      )}
     </>
   );
 }

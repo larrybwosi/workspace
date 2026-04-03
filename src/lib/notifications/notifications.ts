@@ -96,8 +96,30 @@ export async function notifyMention(
 ) {
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-    include: { workspace: true }
+    include: {
+      workspace: true,
+      members: {
+        where: { userId: mentionedUserId }
+      }
+    }
   })
+
+  if (!channel) return
+
+  // Check preferences
+  const workspaceId = channel.workspaceId
+  const channelMember = channel.members[0]
+
+  let preference = channelMember?.notificationPreference
+
+  if (!preference && workspaceId) {
+    const workspaceMember = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId: mentionedUserId } }
+    })
+    preference = workspaceMember?.notificationPreference || 'all'
+  }
+
+  if (preference === 'nothing') return
 
   const workspaceSlug = channel?.workspace?.slug || "default";
   const channelSlug = channel?.slug || channelId;
@@ -130,7 +152,11 @@ export async function notifyChannel(
     where: { id: channelId },
     include: {
       members: true,
-      workspace: true
+      workspace: {
+        include: {
+          members: true
+        }
+      }
     },
   })
 
@@ -138,10 +164,22 @@ export async function notifyChannel(
 
   const workspaceSlug = channel.workspace?.slug || "default";
   const channelSlug = channel.slug || channelId;
-  const memberIds = channel.members.map((m) => m.userId)
+  const channelMembers = channel.members
 
-  for (const userId of memberIds) {
-    // For @here, we would ideally check if the user is online, but for now, we notify everyone in the channel.
+  for (const cm of channelMembers) {
+    const userId = cm.userId
+
+    // Check preferences
+    let preference = cm.notificationPreference
+    if (!preference && channel.workspaceId) {
+      const wm = channel.workspace?.members.find(m => m.userId === userId)
+      preference = wm?.notificationPreference || 'all'
+    }
+
+    if (preference === 'nothing') continue
+
+    // For @all/@here, even if preference is 'mentions', we still notify
+
     await createNotification({
       userId,
       type: "channel_alert",
