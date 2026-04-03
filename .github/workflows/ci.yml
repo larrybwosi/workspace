@@ -123,6 +123,7 @@ jobs:
         retention-days: 30
 
   docker-publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, unit-tests, e2e-tests]
     permissions:

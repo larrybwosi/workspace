@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Users, Settings, BarChart3, Shield, Activity, Database, Clock, UserPlus, AlertTriangle, TrendingUp } from 'lucide-react'
+import { Users, Settings, BarChart3, Shield, Activity, Database, Clock, UserPlus, AlertTriangle, TrendingUp, Sparkles } from 'lucide-react'
+import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -15,6 +16,7 @@ import { AdminActivity } from "@/components/features/admin/admin-activity"
 import { AdminSecurity } from "@/components/features/admin/admin-security"
 
 export default function AdminPage() {
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState("overview")
 
@@ -49,7 +51,7 @@ export default function AdminPage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+              <TabsList className="grid grid-cols-7 w-full max-w-5xl">
                 <TabsTrigger value="overview" className="gap-2">
                   <BarChart3 className="h-4 w-4" />
                   Overview
@@ -57,6 +59,10 @@ export default function AdminPage() {
                 <TabsTrigger value="members" className="gap-2">
                   <Users className="h-4 w-4" />
                   Members
+                </TabsTrigger>
+                <TabsTrigger value="assets" className="gap-2" onClick={() => router.push('/admin/assets')}>
+                  <Sparkles className="h-4 w-4" />
+                  Assets
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-2">
                   <TrendingUp className="h-4 w-4" />

@@ -10,6 +10,7 @@ import {
   extractChannelMentions,
 } from '@/lib/utils/mention-utils';
 import { notifyMention, notifyChannel } from '@/lib/notifications/notifications';
+import { isUserEligibleForAsset, logAssetUsage } from '@/lib/assets/asset-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { channelId, content, messageType, metadata, replyToId, attachments } = body;
+    const { channelId, content, messageType, metadata, replyToId, attachments, stickerId } = body;
 
     if (!channelId) {
       return NextResponse.json({ error: 'Channel ID required' }, { status: 400 });
@@ -94,45 +95,71 @@ export async function POST(request: NextRequest) {
     const users = await prisma.user.findMany();
     const mentionedUserIds = extractUserIds(userMentions, users);
 
-    const message = await prisma.message.create({
-      data: {
-        channelId,
+    // Eligibility check for stickers
+    if (stickerId) {
+      const sticker = await prisma.sticker.findUnique({ where: { id: stickerId } });
+      if (sticker && sticker.rules) {
+        const isEligible = await isUserEligibleForAsset(session.user.id, sticker.rules);
+        if (!isEligible) {
+          return NextResponse.json({ error: "Not eligible to use this sticker" }, { status: 403 });
+        }
+      }
+      await logAssetUsage({
+        assetId: stickerId,
+        assetType: 'sticker',
         userId: session.user.id,
-        content,
-        messageType: messageType || 'standard',
-        metadata,
-        replyToId,
-        depth: replyToId ? 1 : 0,
-        mentions: {
-          create: [
-            ...userMentions.map((mention: string) => ({ mention })),
-            ...channelMentions.map((mention: string) => ({ mention: `#${mention}` })),
-            ...(mentionsAll ? [{ mention: '@all' }] : []),
-            ...(mentionsHere ? [{ mention: '@here' }] : []),
-          ],
+        workspaceId: sticker?.workspaceId || undefined
+      });
+    }
+
+    const message = await prisma.$transaction(async (tx) => {
+      // 1. Create the message
+      const msg = await tx.message.create({
+        data: {
+          channelId,
+          userId: session.user.id,
+          content,
+          messageType: messageType || 'standard',
+          metadata: { ...metadata, stickerId },
+          replyToId,
+          depth: replyToId ? 1 : 0,
+          mentions: {
+            create: [
+              ...userMentions.map((mention: string) => ({ mention })),
+              ...channelMentions.map((mention: string) => ({ mention: `#${mention}` })),
+              ...(mentionsAll ? [{ mention: '@all' }] : []),
+              ...(mentionsHere ? [{ mention: '@here' }] : []),
+            ],
+          },
+          attachments: attachments
+            ? {
+                create: attachments.map((att: any) => ({
+                  name: att.name,
+                  type: att.type,
+                  url: att.url,
+                  size: att.size,
+                })),
+              }
+            : undefined,
         },
-        attachments: attachments
-          ? {
-              create: attachments.map((att: any) => ({
-                name: att.name,
-                type: att.type,
-                url: att.url,
-                size: att.size,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        user: true,
-        reactions: true,
-        attachments: true,
-        mentions: true,
-      },
+        include: {
+          user: true,
+          reactions: true,
+          attachments: true,
+          mentions: true,
+        },
+      });
+
+      // 2. Increment user's message count
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: { messageCount: { increment: 1 } },
+      });
+
+      return msg;
     });
 
-    const sender = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
+    const sender = message.user;
 
     // Notify specific users
     for (const mentionedUserId of mentionedUserIds) {

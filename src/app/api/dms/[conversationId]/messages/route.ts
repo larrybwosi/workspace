@@ -81,34 +81,44 @@ export async function POST(
     const body = await request.json();
     const { content, replyToId, attachments } = body;
 
-    const message = await prisma.dmMessage.create({
-      data: {
-        dmId: conversationId,
-        senderId: session.user.id,
-        content,
-        replyToId,
-        attachments: attachments
-          ? {
-              create: attachments.map((att: any) => ({
-                name: att.name,
-                type: att.type,
-                url: att.url,
-                size: att.size,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        sender: true,
-        reactions: true,
-        attachments: true,
-      },
-    });
+    const { message, dm } = await prisma.$transaction(async (tx) => {
+      const msg = await tx.dmMessage.create({
+        data: {
+          dmId: conversationId,
+          senderId: session.user.id,
+          content,
+          replyToId,
+          attachments: attachments
+            ? {
+                create: attachments.map((att: any) => ({
+                  name: att.name,
+                  type: att.type,
+                  url: att.url,
+                  size: att.size,
+                })),
+              }
+            : undefined,
+        },
+        include: {
+          sender: true,
+          reactions: true,
+          attachments: true,
+        },
+      });
 
-    // Update last message timestamp
-    const dm = await prisma.directMessage.update({
-      where: { id: conversationId },
-      data: { lastMessageAt: new Date() },
+      // Update user's message count
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: { messageCount: { increment: 1 } },
+      });
+
+      // Update last message timestamp
+      const directMsg = await tx.directMessage.update({
+        where: { id: conversationId },
+        data: { lastMessageAt: new Date() },
+      });
+
+      return { message: msg, dm: directMsg };
     });
 
     const formattedMessage = {
