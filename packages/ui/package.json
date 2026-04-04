@@ -1,0 +1,10 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "dependencies": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  }
+}
