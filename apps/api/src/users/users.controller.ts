@@ -1,0 +1,29 @@
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { prisma, User } from '@repo/database';
+
+@Controller('users')
+@UseGuards(AuthGuard)
+export class UsersController {
+  @Get('me')
+  async getMe(@CurrentUser() user: User): Promise<Partial<User> | null> {
+    return prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        avatar: true,
+        banner: true,
+        statusText: true,
+        statusEmoji: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        notificationPreferences: true,
+      },
+    }) as Promise<Partial<User> | null>;
+  }
+}
