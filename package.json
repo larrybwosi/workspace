@@ -10,7 +10,8 @@
     "db:generate": "turbo  db:generate",
     "db:push": "turbo  db:push",
     "db:studio": "cd packages/database && pnpm db:studio",
-    "type-check": "turbo  type-check"
+    "type-check": "turbo  type-check",
+    "tsc": "turbo type-check"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
