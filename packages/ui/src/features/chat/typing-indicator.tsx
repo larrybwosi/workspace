@@ -74,8 +74,20 @@ export function TypingIndicator({ channelId, currentUserId }: TypingIndicatorPro
 
 export function useTypingNotifier(channelId: string, user: any) {
   const ably = getAblyClient()
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const typingTimeoutRef = useRef<any>(null)
   const isTypingRef = useRef(false)
+
+  // Ensure typing stops when component unmounts or channel changes
+  useEffect(() => {
+    return () => {
+      if (isTypingRef.current) {
+        notifyTyping(false)
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [channelId])
 
   const notifyTyping = (isTyping: boolean) => {
     if (!ably || !channelId || !user) return

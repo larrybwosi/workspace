@@ -20,6 +20,7 @@ import { WorkspaceSwitcher } from '@/components/features/workspace/workspace-swi
 import { UserProfileDialog } from '@/components/features/social/user-profile-dialog';
 import { StartDMDialog } from '@/components/features/chat/start-dm-dialog';
 import { User } from '@/lib/types';
+import { usePresence } from '@/lib/contexts/presence-context';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -212,6 +213,7 @@ export function Sidebar({
 
   const session = useSession();
   const sessionUser = session.data?.user;
+  const { onlineUsers } = usePresence();
 
   const { data: dmConversations = [], isLoading: dmsLoading } = useDMConversations();
   const { data: notificationsData } = useNotifications(true);
@@ -243,7 +245,7 @@ export function Sidebar({
         name: sessionUser.name,
         avatar: sessionUser.image ?? '',
         role: 'Admin',
-        status: 'online',
+        status: onlineUsers.has(sessionUser.id) ? 'online' : 'offline',
       }
     : undefined;
 
@@ -357,6 +359,7 @@ export function Sidebar({
                   ) : (
                     dmConversations.map((dm: any) => {
                       const other = dm.members.find((m: any) => m.id !== dm.creatorId) ?? dm.members[0];
+                      const status = onlineUsers.has(other.id) ? 'online' : 'offline';
                       const dmId = `dm-${other.id}`;
                       const href = `/dm/${other.id}`;
                       const isActive = activeChannel === dmId || pathname === href;
@@ -382,7 +385,7 @@ export function Sidebar({
                                 {other.name?.slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <StatusDot status={other.status} />
+                            <StatusDot status={status} />
                           </div>
                           <span className="flex-1 truncate text-left">{other.name}</span>
                           {unread > 0 && (
