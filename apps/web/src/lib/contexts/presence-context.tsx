@@ -21,16 +21,20 @@ export function PresenceProvider({ children, userId }: { children: React.ReactNo
     const channel = ably.channels.get(PRESENCE_CHANNEL)
 
     const updatePresence = async () => {
-      const presenceMessages = await channel.presence.get()
-      const userIds = presenceMessages.map((msg) => msg.clientId)
-      setOnlineUsers(new Set(userIds))
+      try {
+        const presenceMessages = await channel.presence.get()
+        const userIds = presenceMessages.map((msg) => msg.clientId)
+        setOnlineUsers(new Set(userIds))
+      } catch (error) {
+        console.error("Error fetching presence:", error)
+      }
     }
 
     if (userId) {
       channel.presence.enterClient(userId, { status: "online" })
     }
 
-    channel.presence.subscribe("enter", (member) => {
+    channel.presence.subscribe(["enter", "present"], (member) => {
       setOnlineUsers((prev) => new Set([...prev, member.clientId]))
     })
 

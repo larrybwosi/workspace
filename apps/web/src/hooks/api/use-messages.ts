@@ -137,14 +137,66 @@ export function useReplyToMessage(workspaceId?: string) {
 }
 
 // Mark messages as read mutation (Batch)
+// We use a simple debounce/buffer mechanism to avoid excessive API calls
+let readBuffer: { [channelId: string]: Set<string> } = {};
+let readTimeout: { [channelId: string]: any } = {};
+let readResolvers: { [channelId: string]: { resolve: (value: any) => void; reject: (reason: any) => void }[] } = {};
+
 export function useMarkMessagesAsRead(workspaceId?: string) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }) => {
-      const url = workspaceId
-        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/read`
-        : `/channels/${channelId}/messages/read`;
-      const { data } = await apiClient.post(url, { messageIds });
-      return { data, channelId };
+      // Buffer messages to be marked as read
+      if (!readBuffer[channelId]) readBuffer[channelId] = new Set();
+      messageIds.forEach(id => readBuffer[channelId].add(id));
+
+      if (!readResolvers[channelId]) readResolvers[channelId] = [];
+
+      return new Promise((resolve, reject) => {
+        readResolvers[channelId].push({ resolve, reject });
+
+        if (readTimeout[channelId]) clearTimeout(readTimeout[channelId]);
+
+        readTimeout[channelId] = setTimeout(async () => {
+          const idsToMark = Array.from(readBuffer[channelId]);
+          const resolvers = [...readResolvers[channelId]];
+
+          readBuffer[channelId].clear();
+          readResolvers[channelId] = [];
+
+          try {
+            const url = workspaceId
+              ? `/workspaces/${workspaceId}/channels/${channelId}/messages/read`
+              : `/channels/${channelId}/messages/read`;
+            const { data } = await apiClient.post(url, { messageIds: idsToMark });
+            const result = { data, channelId, messageIds: idsToMark };
+            resolvers.forEach(res => res.resolve(result));
+          } catch (error) {
+            resolvers.forEach(res => res.reject(error));
+          }
+        }, 1000); // 1 second buffer
+      });
+    },
+    onSuccess: (data: any) => {
+      // Optimistically update query data to mark messages as read in the UI
+      const { channelId, messageIds } = data;
+      const queryKey = workspaceId
+        ? ['workspaces', workspaceId, 'channels', channelId, 'messages']
+        : messageKeys.list(channelId);
+
+      queryClient.setQueriesData({ queryKey }, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            messages: page.messages.map((m: any) =>
+              messageIds.includes(m.id) ? { ...m, readByCurrentUser: true } : m
+            ),
+          })),
+        };
+      });
     },
   });
 }
