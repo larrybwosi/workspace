@@ -56,11 +56,11 @@ export class WorkspacesController {
         },
       },
       orderBy: { createdAt: 'desc' },
-    }) as Promise<Workspace[]>;
+    }) as unknown as Promise<Workspace[]>;
   }
 
   @Post()
-  async createWorkspace(@CurrentUser() user: User, @Body() body: any): Promise<Workspace> {
+  async createWorkspace(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<Workspace> {
     const validatedData = createWorkspaceSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
@@ -107,6 +107,6 @@ export class WorkspacesController {
           },
         },
       },
-    }) as Promise<Workspace>;
+    }) as unknown as Promise<Workspace>;
   }
 }
