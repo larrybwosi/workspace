@@ -74,10 +74,17 @@ export class WorkspacesController {
       throw new BadRequestException('Workspace slug already taken');
     }
 
+    const { name, slug, icon, description } = validatedData.data;
+
     return prisma.workspace.create({
       data: {
-        ...validatedData.data,
-        ownerId: user.id,
+        name,
+        slug,
+        icon,
+        description,
+        owner: {
+          connect: { id: user.id },
+        },
         members: {
           create: {
             userId: user.id,

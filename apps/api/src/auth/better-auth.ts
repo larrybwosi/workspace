@@ -13,6 +13,7 @@ export const auth = betterAuth({
   plugins: [
     jwt(),
     organization(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     admin() as any,
   ],
 });

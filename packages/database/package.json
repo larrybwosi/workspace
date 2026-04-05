@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "main": "./index.ts",
+  "scripts": {
+    "generate": "prisma generate"
+  },
   "dependencies": {
     "@prisma/client": "6.5.0"
   },
