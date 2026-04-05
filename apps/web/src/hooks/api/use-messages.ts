@@ -138,9 +138,9 @@ export function useReplyToMessage(workspaceId?: string) {
 
 // Mark messages as read mutation (Batch)
 // We use a simple debounce/buffer mechanism to avoid excessive API calls
-let readBuffer: { [channelId: string]: Set<string> } = {};
-let readTimeout: { [channelId: string]: any } = {};
-let readResolvers: { [channelId: string]: { resolve: (value: any) => void; reject: (reason: any) => void }[] } = {};
+const readBuffer: { [channelId: string]: Set<string> } = {};
+const readTimeout: { [channelId: string]: any } = {};
+const readResolvers: { [channelId: string]: { resolve: (value: any) => void; reject: (reason: any) => void }[] } = {};
 
 export function useMarkMessagesAsRead(workspaceId?: string) {
   const queryClient = useQueryClient();
