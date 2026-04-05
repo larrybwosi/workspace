@@ -10,12 +10,18 @@
     "db:generate": "turbo  db:generate",
     "db:push": "turbo  db:push",
     "db:studio": "cd packages/database && pnpm db:studio",
-    "type-check": "turbo  type-check",
-    "tsc": "turbo type-check"
+    "type-check": "turbo type-check",
+    "tsc": "turbo type-check",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "lint:api": "cd apps/api && pnpm run lint",
+    "lint:web": "cd apps/web && pnpm run lint"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "eslint": "10.1.0",
+    "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "turbo": "^2.8.1",
     "typescript": "5.9.3"

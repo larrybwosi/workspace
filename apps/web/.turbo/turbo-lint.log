@@ -4,31 +4,21 @@
 
 
 /app/apps/web/src/app/admin/assets/page.tsx
-   11:3   warning  'Award' is defined but never used            @typescript-eslint/no-unused-vars
-   15:3   warning  'Star' is defined but never used             @typescript-eslint/no-unused-vars
-   17:3   warning  'Zap' is defined but never used              @typescript-eslint/no-unused-vars
-   18:3   warning  'Heart' is defined but never used            @typescript-eslint/no-unused-vars
-   19:3   warning  'Trophy' is defined but never used           @typescript-eslint/no-unused-vars
-   36:52  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
-   37:16  warning  'TabsContent' is defined but never used      @typescript-eslint/no-unused-vars
-   40:10  warning  'Textarea' is defined but never used         @typescript-eslint/no-unused-vars
-   48:3   warning  'DialogTrigger' is defined but never used    @typescript-eslint/no-unused-vars
-   62:10  warning  'cn' is defined but never used               @typescript-eslint/no-unused-vars
-   69:9   warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
-   74:46  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-   75:54  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-   77:58  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-   79:58  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-   83:50  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-  116:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
-  130:14  warning  'e' is defined but never used                @typescript-eslint/no-unused-vars
-  140:36  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-  205:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
-  222:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
-  227:41  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-  235:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
-  639:45  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
-  775:43  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   61:9   warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   66:46  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   67:54  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   69:58  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   71:58  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   75:50  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  108:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  122:14  warning  'e' is defined but never used                @typescript-eslint/no-unused-vars
+  132:36  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  197:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  214:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  219:41  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  227:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  631:45  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  767:43  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
 
 /app/apps/web/src/app/admin/page.tsx
   4:56  warning  'Database' is defined but never used       @typescript-eslint/no-unused-vars
@@ -410,8 +400,7 @@
   63:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 /app/apps/web/src/app/api/workspaces/[workspaceId]/channels/[channelId]/messages/read/route.ts
-  11:26  warning  'channelId' is assigned a value but never used  @typescript-eslint/no-unused-vars
-  12:79  warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  12:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 /app/apps/web/src/app/api/workspaces/[workspaceId]/channels/[channelId]/messages/route.ts
    20:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -794,4 +783,4 @@
   73:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   78:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-✖ 471 problems (0 errors, 471 warnings)
+✖ 460 problems (0 errors, 460 warnings)
