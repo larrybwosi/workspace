@@ -6,7 +6,8 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "nest start",
-    "lint": "eslint \"src/**/*.ts\" --fix"
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
