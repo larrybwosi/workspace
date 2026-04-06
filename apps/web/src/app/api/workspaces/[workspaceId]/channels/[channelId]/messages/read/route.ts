@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ workspaceId: string; channelId: string }> }
 ) {
   try {
-    const { workspaceId, channelId } = await params;
+    const { workspaceId } = await params;
     const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

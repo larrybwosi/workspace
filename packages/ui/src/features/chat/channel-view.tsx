@@ -152,6 +152,10 @@ export function ChannelView({
   const removeReactionMutation = useRemoveReaction();
   const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceId);
 
+  // Keep track of channels we've already shown the "New Messages" line for in this session
+  // to satisfy the requirement: "disappear after the user leaves the channel and comes back"
+  const [viewedChannels] = useState(() => new Set<string>());
+
   // State & Refs
   const [replyingTo, setReplyingTo] = useState<{
     id: string;
@@ -163,6 +167,7 @@ export function ChannelView({
   const firstUnreadRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const markedMessageIds = useRef<Set<string>>(new Set());
+  const [initialUnreadId, setInitialUnreadId] = useState<string | null>(null);
 
   const { data: session } = useSession();
   const currentUser = session?.user;
@@ -195,6 +200,28 @@ export function ChannelView({
     return firstUnread?.id || null;
   }, [messages]);
 
+  // Set initial unread ID only once when messages load
+  useEffect(() => {
+    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled) {
+      if (!viewedChannels.has(activeChannelId)) {
+        setInitialUnreadId(firstUnreadMessageId);
+        viewedChannels.add(activeChannelId);
+      }
+    }
+  }, [isLoading, messages.length, firstUnreadMessageId, initialUnreadId, hasInitialScrolled, activeChannelId, viewedChannels]);
+
+  // Clear unread line on new message or user interaction
+  useEffect(() => {
+    if (messages.length > 0 && hasInitialScrolled) {
+      const lastMessage = messages[messages.length - 1];
+
+      // If user is at the bottom and a new message arrives, clear the unread line
+      if (isAtBottom || lastMessage.userId === currentUser?.id) {
+        setInitialUnreadId(null);
+      }
+    }
+  }, [messages, currentUser?.id, hasInitialScrolled, isAtBottom]);
+
   // Intersection Observer for scroll position
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -216,6 +243,7 @@ export function ChannelView({
   useEffect(() => {
     markedMessageIds.current.clear();
     setHasInitialScrolled(false);
+    setInitialUnreadId(null);
   }, [activeChannelId]);
 
   // 2. Scroll Handling
@@ -230,7 +258,7 @@ export function ChannelView({
         });
         setHasInitialScrolled(true);
       }, 100);
-    } else if (firstUnreadMessageId && firstUnreadRef.current) {
+    } else if (initialUnreadId && firstUnreadRef.current) {
       setTimeout(() => {
         firstUnreadRef.current?.scrollIntoView({
           behavior: 'auto',
@@ -242,7 +270,7 @@ export function ChannelView({
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       setHasInitialScrolled(true);
     }
-  }, [messages.length, highlightedMessageId, firstUnreadMessageId, isLoading, hasInitialScrolled]);
+  }, [messages.length, highlightedMessageId, initialUnreadId, isLoading, hasInitialScrolled]);
 
   // Auto-scroll to bottom on new messages if already at bottom
   useEffect(() => {
@@ -251,23 +279,68 @@ export function ChannelView({
     }
   }, [messages.length]);
 
-  // 3. Read Receipts (Batch) - Trigger when at bottom
+  // 3. Read Receipts (Intersection Observer for each message)
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Initialize observer once
   useEffect(() => {
-    if (messages.length > 0 && isAtBottom) {
-      const unreadMessageIds = messages
-        .filter(m => !m.readByCurrentUser && !markedMessageIds.current.has(m.id))
-        .map(m => m.id);
+    if (typeof window === 'undefined' || !activeChannelId) return;
 
-      if (unreadMessageIds.length > 0) {
-        unreadMessageIds.forEach(id => markedMessageIds.current.add(id));
+    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+      const visibleUnreadIds: string[] = [];
 
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const messageId = entry.target.getAttribute('data-message-id');
+          if (messageId && !markedMessageIds.current.has(messageId)) {
+            // We use the latest messages from ref or closure
+            // In this case, we'll use a small trick: look up from the DOM or state
+            visibleUnreadIds.push(messageId);
+            markedMessageIds.current.add(messageId);
+          }
+        }
+      });
+
+      if (visibleUnreadIds.length > 0) {
+        // Filter out IDs that are already read or are by current user
+        // We'll do this check inside the mutation or here if we have latest messages
         markMessagesAsReadMutation.mutate({
-          messageIds: unreadMessageIds,
+          messageIds: visibleUnreadIds,
           channelId: activeChannelId,
         });
       }
-    }
-  }, [messages, activeChannelId, isAtBottom]);
+    };
+
+    observerRef.current = new IntersectionObserver(handleIntersect, {
+      root: scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]'),
+      threshold: 0.5,
+    });
+
+    return () => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
+  }, [activeChannelId]);
+
+  // Re-observe messages when they change
+  useEffect(() => {
+    if (!observerRef.current || messages.length === 0) return;
+
+    // Observe all message elements
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (!viewport) return;
+
+    const messageElements = viewport.querySelectorAll('[data-message-id]');
+    messageElements.forEach(el => {
+      const messageId = el.getAttribute('data-message-id');
+      if (messageId && !markedMessageIds.current.has(messageId)) {
+        const message = messages.find(m => m.id === messageId);
+        if (message && !message.readByCurrentUser && message.userId !== currentUser?.id) {
+          observerRef.current?.observe(el);
+        }
+      }
+    });
+  }, [messages, currentUser?.id]);
 
   // 4. Organize Messages
   const renderList = useMemo(() => {
@@ -298,7 +371,7 @@ export function ChannelView({
         lastDate = currentDate;
       }
 
-      if (rootMsg.id === firstUnreadMessageId) list.push({ type: 'unread' });
+      if (rootMsg.id === initialUnreadId) list.push({ type: 'unread' });
 
       list.push({ type: 'message', data: rootMsg, depth: 0 });
 
@@ -309,13 +382,13 @@ export function ChannelView({
           lastDate = replyDate;
         }
 
-        if (reply.id === firstUnreadMessageId) list.push({ type: 'unread' });
+        if (reply.id === initialUnreadId) list.push({ type: 'unread' });
         list.push({ type: 'message', data: reply, depth: 1 });
       });
     });
 
     return list;
-  }, [messages, firstUnreadMessageId]);
+  }, [messages, initialUnreadId]);
 
   // Handlers
   const handleSendMessage = (content: string, attachments?: UploadedFile[]) => {
@@ -477,13 +550,17 @@ export function ChannelView({
                   }
 
                   const isHighlighted = message.id === highlightedMessageId;
-                  const isFirstUnread = message.id === firstUnreadMessageId;
+                  const isInitialUnread = message.id === initialUnreadId;
                   const isReply = item.depth > 0;
 
                   return (
                     <div
                       key={message.id}
-                      ref={isHighlighted ? highlightedMessageRef : isFirstUnread ? firstUnreadRef : undefined}
+                      ref={(el) => {
+                        if (isHighlighted) highlightedMessageRef.current = el;
+                        if (isInitialUnread) firstUnreadRef.current = el;
+                      }}
+                      data-message-id={message.id}
                       className={cn(
                         'group relative w-full',
                         // Discord-style: compact gap for grouped, small gap for new block
