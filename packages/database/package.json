@@ -4,11 +4,11 @@
   "private": true,
   "main": "./index.ts",
   "dependencies": {
-    "@prisma/client": "6.5.0"
+    "@prisma/client": "7.6.0"
   },
   "devDependencies": {
-    "prisma": "6.5.0",
-    "typescript": "^5.0.0"
+    "prisma": "7.6.0",
+    "typescript": "^6.0.2"
   },
   "scripts": {
     "type-check": "tsc --noEmit",
