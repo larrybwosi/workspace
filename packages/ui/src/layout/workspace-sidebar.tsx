@@ -27,6 +27,7 @@ import { UserProfileDialog } from '@/components/features/social/user-profile-dia
 import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
 import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@/hooks/api/use-workspaces';
 import { User } from '@/lib/types';
+import { usePresence } from '@/lib/contexts/presence-context';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -142,6 +143,7 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
 
   const session = useSession();
   const sessionUser = session.data?.user;
+  const { onlineUsers } = usePresence();
 
   const currentUser: User | undefined = sessionUser
     ? {
@@ -149,7 +151,7 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
         name: sessionUser.name,
         avatar: sessionUser.image ?? '',
         role: 'Admin',
-        status: 'online',
+        status: onlineUsers.has(sessionUser.id) ? 'online' : 'offline',
       }
     : undefined;
 
