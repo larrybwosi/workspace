@@ -26,7 +26,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm run lint
-      - run: pnpm run tsc
+      - run: pnpm run type-check
 
   unit-tests:
     runs-on: ubuntu-latest

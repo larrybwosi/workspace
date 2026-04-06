@@ -16,15 +16,18 @@ import { WorkspacesController } from './workspaces/workspaces.controller';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        throttlers: [
-          {
-            ttl: config.get<number>('THROTTLE_TTL', 60000),
-            limit: config.get<number>('THROTTLE_LIMIT', 100),
-          },
-        ],
-        storage: new ThrottlerStorageRedisService(config.get<string>('REDIS_URL', 'redis://localhost:6379')),
-      }),
+      useFactory: (config: ConfigService) => {
+        const redisUrl = config.get<string>('REDIS_URL');
+        return {
+          throttlers: [
+            {
+              ttl: config.get<number>('THROTTLE_TTL', 60000),
+              limit: config.get<number>('THROTTLE_LIMIT', 100),
+            },
+          ],
+          storage: redisUrl ? new ThrottlerStorageRedisService(redisUrl) : undefined,
+        };
+      },
     }),
   ],
   controllers: [AppController, UsersController, WorkspacesController],

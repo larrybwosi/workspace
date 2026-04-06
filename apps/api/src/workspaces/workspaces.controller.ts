@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, UseGuards, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { prisma, Workspace, User } from '@repo/database';
+import { prisma, User } from '@repo/database';
 import { z } from 'zod';
 
 const createWorkspaceSchema = z.object({
@@ -19,7 +19,8 @@ const createWorkspaceSchema = z.object({
 @UseGuards(AuthGuard)
 export class WorkspacesController {
   @Get()
-  async getWorkspaces(@CurrentUser() user: User): Promise<Workspace[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getWorkspaces(@CurrentUser() user: User): Promise<any> {
     return prisma.workspace.findMany({
       where: {
         members: {
@@ -56,11 +57,12 @@ export class WorkspacesController {
         },
       },
       orderBy: { createdAt: 'desc' },
-    }) as unknown as Promise<Workspace[]>;
+    });
   }
 
   @Post()
-  async createWorkspace(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<Workspace> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async createWorkspace(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<any> {
     const validatedData = createWorkspaceSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
@@ -114,6 +116,6 @@ export class WorkspacesController {
           },
         },
       },
-    }) as unknown as Promise<Workspace>;
+    });
   }
 }
