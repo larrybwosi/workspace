@@ -2,305 +2,145 @@
 > @repo/ui@0.0.0 type-check /app/packages/ui
 > tsc --noEmit
 
-src/features/admin/admin-analytics.tsx(8,136): error TS2307: Cannot find module 'recharts' or its corresponding type declarations.
-src/features/admin/admin-overview.tsx(9,107): error TS2307: Cannot find module 'recharts' or its corresponding type declarations.
-src/features/assistant/assistant-channel.tsx(3,25): error TS2307: Cannot find module '@ai-sdk/react' or its corresponding type declarations.
-src/features/calls/agora-provider.tsx(4,44): error TS2307: Cannot find module 'agora-rtc-react' or its corresponding type declarations.
-src/features/calls/call-container.tsx(30,45): error TS7006: Parameter 'message' implicitly has an 'any' type.
-src/features/calls/schedule-call-dialog.tsx(19,32): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/chat/call-notification.tsx(50,18): error TS2304: Cannot find name 'AvatarImage'.
-src/features/chat/channel-view.tsx(3,33): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/features/chat/channel-view.tsx(21,32): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/chat/channel-view.tsx(23,30): error TS2307: Cannot find module '@/lib/utils/upload-utils' or its corresponding type declarations.
-src/features/chat/channel-view.tsx(195,39): error TS7006: Parameter 'page' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(199,39): error TS7006: Parameter 'm' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(211,74): error TS2448: Block-scoped variable 'hasInitialScrolled' used before its declaration.
-src/features/chat/channel-view.tsx(211,74): error TS2454: Variable 'hasInitialScrolled' is used before being assigned.
-src/features/chat/channel-view.tsx(223,34): error TS2448: Block-scoped variable 'hasInitialScrolled' used before its declaration.
-src/features/chat/channel-view.tsx(223,34): error TS2454: Variable 'hasInitialScrolled' is used before being assigned.
-src/features/chat/channel-view.tsx(337,39): error TS7006: Parameter 'm' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(352,22): error TS7006: Parameter 'msg' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(355,22): error TS7006: Parameter 'msg' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(417,20): error TS7006: Parameter 'error' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(425,18): error TS7006: Parameter 'error' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(434,40): error TS7006: Parameter 'm' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(442,35): error TS7006: Parameter 'm' implicitly has an 'any' type.
-src/features/chat/channel-view.tsx(445,47): error TS7006: Parameter 'r' implicitly has an 'any' type.
-src/features/chat/direct-message-list.tsx(8,29): error TS2307: Cannot find module '@/lib/contexts/presence-context' or its corresponding type declarations.
-src/features/chat/huddle.tsx(33,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
-src/features/chat/message-composer.tsx(6,42): error TS2307: Cannot find module '@/lib/utils/upload-utils' or its corresponding type declarations.
-src/features/chat/message-composer.tsx(11,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/features/chat/message-composer.tsx(15,30): error TS2307: Cannot find module 'react-textarea-autosize' or its corresponding type declarations.
-src/features/chat/message-item.tsx(135,13): error TS2322: Type 'string | null' is not assignable to type 'string'.
-  Type 'null' is not assignable to type 'string'.
-src/features/chat/start-dm-dialog.tsx(16,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/features/chat/start-dm-dialog.tsx(151,26): error TS2304: Cannot find name 'AvatarImage'.
-src/features/chat/start-dm-dialog.tsx(253,26): error TS2304: Cannot find name 'AvatarImage'.
-src/features/chat/video-call-content.tsx(13,8): error TS2307: Cannot find module 'agora-rtc-react' or its corresponding type declarations.
-src/features/chat/video-call-content.tsx(115,25): error TS7006: Parameter 'user' implicitly has an 'any' type.
-src/features/chat/video-call-content.tsx(439,44): error TS7006: Parameter 'u' implicitly has an 'any' type.
-src/features/chat/video-call-content.tsx(468,37): error TS7006: Parameter 'u' implicitly has an 'any' type.
-src/features/chat/video-call-content.tsx(468,72): error TS7006: Parameter 'user' implicitly has an 'any' type.
-src/features/chat/video-call-content.tsx(506,32): error TS7006: Parameter 'user' implicitly has an 'any' type.
-src/features/chat/video-call.tsx(4,21): error TS2307: Cannot find module 'next/dynamic' or its corresponding type declarations.
-src/features/notifications/custom-toasts/discord-notification-toast.tsx(8,18): error TS2307: Cannot find module 'next/link' or its corresponding type declarations.
-src/features/notifications/notification-listener.tsx(6,40): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/features/notifications/scheduled-notifications-panel.tsx(4,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/social/edit-profile-modal.tsx(18,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/create-workspace-dialog.tsx(21,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/features/workspace/members-panel.tsx(28,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/features/workspace/members-panel.tsx(29,29): error TS2307: Cannot find module '@/lib/contexts/presence-context' or its corresponding type declarations.
-src/features/workspace/settings/api-keys.tsx(12,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/settings/api-keys.tsx(70,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
-src/features/workspace/settings/channel-configuration.tsx(11,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/settings/external-intergrtions.tsx(13,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/settings/external-intergrtions.tsx(62,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
-src/features/workspace/settings/notifications-tab.tsx(124,22): error TS2304: Cannot find name 'settings'.
-src/features/workspace/settings/notifications-tab.tsx(125,37): error TS2304: Cannot find name 'setSettings'.
-src/features/workspace/settings/notifications-tab.tsx(125,54): error TS2304: Cannot find name 'settings'.
-src/features/workspace/settings/notifications-tab.tsx(148,24): error TS2304: Cannot find name 'settings'.
-src/features/workspace/settings/notifications-tab.tsx(149,45): error TS2304: Cannot find name 'setSettings'.
-src/features/workspace/settings/notifications-tab.tsx(149,62): error TS2304: Cannot find name 'settings'.
-src/features/workspace/settings/notifications-tab.tsx(160,30): error TS2304: Cannot find name 'settings'.
-src/features/workspace/settings/security-tab.tsx(14,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/settings/webhooks-management.tsx(12,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/settings/webhooks-management.tsx(72,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
-src/features/workspace/workspace-departments-panel.tsx(4,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/workspace-incoming-webhooks.tsx(19,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/features/workspace/workspace-switcher.tsx(5,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/hooks/api/use-admin.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-admin.ts(2,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
-src/hooks/api/use-admin.ts(4,18): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/hooks/api/use-channels.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-channels.ts(67,16): error TS7006: Parameter 'data' implicitly has an 'any' type.
-src/hooks/api/use-channels.ts(88,16): error TS7006: Parameter 'id' implicitly has an 'any' type.
-src/hooks/api/use-channels.ts(107,17): error TS7006: Parameter '_' implicitly has an 'any' type.
-src/hooks/api/use-channels.ts(107,20): error TS7006: Parameter 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-channels.ts(129,16): error TS7006: Parameter 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-comments.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-comments.ts(48,19): error TS7031: Binding element 'entityType' implicitly has an 'any' type.
-src/hooks/api/use-comments.ts(48,31): error TS7031: Binding element 'entityId' implicitly has an 'any' type.
-src/hooks/api/use-comments.ts(71,19): error TS7031: Binding element 'entityType' implicitly has an 'any' type.
-src/hooks/api/use-comments.ts(71,31): error TS7031: Binding element 'entityId' implicitly has an 'any' type.
-src/hooks/api/use-custom-emojis.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-files.ts(1,45): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-files.ts(31,19): error TS7031: Binding element 'entityType' implicitly has an 'any' type.
-src/hooks/api/use-files.ts(31,31): error TS7031: Binding element 'entityId' implicitly has an 'any' type.
-src/hooks/api/use-files.ts(55,19): error TS7031: Binding element 'entityType' implicitly has an 'any' type.
-src/hooks/api/use-files.ts(55,31): error TS7031: Binding element 'entityId' implicitly has an 'any' type.
-src/hooks/api/use-friends.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-friends.ts(2,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
-src/hooks/api/use-integrations.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-invitations.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-invitations.ts(2,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
-src/hooks/api/use-messages.ts(1,73): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-messages.ts(43,23): error TS7006: Parameter 'lastPage' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(75,17): error TS7006: Parameter '_' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(75,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(93,19): error TS7031: Binding element 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(111,19): error TS7031: Binding element 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(133,19): error TS7031: Binding element 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(241,23): error TS7031: Binding element 'pageParam' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(247,23): error TS7006: Parameter 'lastPage' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(276,17): error TS7006: Parameter '_' implicitly has an 'any' type.
-src/hooks/api/use-messages.ts(276,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
-src/hooks/api/use-notifications.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-reactions.ts(1,45): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-reactions.ts(24,24): error TS7031: Binding element 'messageId' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(24,35): error TS7031: Binding element 'emoji' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(24,42): error TS7031: Binding element 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(58,15): error TS7006: Parameter 'err' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(58,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(58,31): error TS7006: Parameter 'context' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(63,19): error TS7031: Binding element 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(63,30): error TS7031: Binding element 'workspaceId' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(86,19): error TS7031: Binding element 'channelId' implicitly has an 'any' type.
-src/hooks/api/use-reactions.ts(86,30): error TS7031: Binding element 'workspaceId' implicitly has an 'any' type.
-src/hooks/api/use-search.ts(1,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-user-search.ts(1,26): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-user-search.ts(2,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
-src/hooks/api/use-user-search.ts(4,17): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/hooks/api/use-users.ts(3,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-users.ts(58,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
-src/hooks/api/use-workspace-invites.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-workspaces.ts(1,55): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/hooks/api/use-workspaces.ts(86,17): error TS7006: Parameter '_' implicitly has an 'any' type.
-src/hooks/api/use-workspaces.ts(86,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
-src/hooks/api/use-workspaces.ts(170,17): error TS7006: Parameter '_' implicitly has an 'any' type.
-src/hooks/api/use-workspaces.ts(170,20): error TS7006: Parameter 'variables' implicitly has an 'any' type.
-src/hooks/features/use-call-store.ts(1,24): error TS2307: Cannot find module 'zustand' or its corresponding type declarations.
-src/hooks/features/use-call-store.ts(30,48): error TS7006: Parameter 'set' implicitly has an 'any' type.
-src/hooks/features/use-call-store.ts(34,13): error TS7006: Parameter 'call' implicitly has an 'any' type.
-src/hooks/features/use-call-store.ts(35,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
-src/layout/dynamic-header.tsx(10,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/layout/sidebar.tsx(13,40): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/layout/sidebar.tsx(17,32): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/layout/sidebar.tsx(23,29): error TS2307: Cannot find module '@/lib/contexts/presence-context' or its corresponding type declarations.
-src/layout/workspace-sidebar.tsx(23,51): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/layout/workspace-sidebar.tsx(30,29): error TS2307: Cannot find module '@/lib/contexts/presence-context' or its corresponding type declarations.
-src/lib/api-client.ts(1,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
-src/lib/api-client.ts(5,15): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth.ts(1,28): error TS2307: Cannot find module 'better-auth' or its corresponding type declarations.
-src/lib/auth.ts(2,31): error TS2307: Cannot find module 'better-auth/adapters/prisma' or its corresponding type declarations.
-src/lib/auth.ts(3,29): error TS2307: Cannot find module 'better-auth/next-js' or its corresponding type declarations.
-src/lib/auth.ts(4,42): error TS2307: Cannot find module 'better-auth/plugins' or its corresponding type declarations.
-src/lib/auth.ts(5,31): error TS2307: Cannot find module '@better-auth/oauth-provider' or its corresponding type declarations.
-src/lib/auth.ts(6,24): error TS2307: Cannot find module '@/lib/db/prisma' or its corresponding type declarations.
-src/lib/auth.ts(16,12): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/api-auth.ts(1,34): error TS2307: Cannot find module 'next/server' or its corresponding type declarations.
-src/lib/auth/api-auth.ts(2,24): error TS2307: Cannot find module '@/lib/db/prisma' or its corresponding type declarations.
-src/lib/auth/api-auth.ts(3,20): error TS2307: Cannot find module 'crypto' or its corresponding type declarations.
-src/lib/auth/api-auth.ts(114,33): error TS2580: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/api-auth.ts(114,57): error TS2580: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/api-v2-auth.ts(1,48): error TS2307: Cannot find module 'next/server' or its corresponding type declarations.
-src/lib/auth/api-v2-auth.ts(4,24): error TS2307: Cannot find module '@/lib/db/prisma' or its corresponding type declarations.
-src/lib/auth/api-v2-auth.ts(5,20): error TS2307: Cannot find module 'crypto' or its corresponding type declarations.
-src/lib/auth/auth-client.ts(3,34): error TS2307: Cannot find module 'better-auth/react' or its corresponding type declarations.
-src/lib/auth/auth-client.ts(6,12): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/bot-auth.test.ts(3,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/lib/auth/bot-auth.test.ts(6,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/lib/auth/bot-auth.test.ts(8,5): error TS2304: Cannot find name 'expect'.
-src/lib/auth/bot-auth.test.ts(9,5): error TS2304: Cannot find name 'expect'.
-src/lib/auth/bot-auth.test.ts(12,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/lib/auth/bot-auth.test.ts(15,5): error TS2304: Cannot find name 'expect'.
-src/lib/auth/bot-auth.test.ts(18,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/lib/auth/bot-auth.test.ts(20,5): error TS2304: Cannot find name 'expect'.
-src/lib/auth/bot-auth.test.ts(23,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/lib/auth/bot-auth.test.ts(26,5): error TS2304: Cannot find name 'expect'.
-src/lib/auth/bot-auth.ts(1,20): error TS2307: Cannot find module 'crypto' or its corresponding type declarations.
-src/lib/auth/bot-auth.ts(9,20): error TS2580: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/bot-auth.ts(14,27): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/bot-auth.ts(35,29): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/bot-auth.ts(42,20): error TS2580: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/auth/oauth2.ts(1,24): error TS2307: Cannot find module '@/lib/db/prisma' or its corresponding type declarations.
-src/lib/auth/oauth2.ts(2,20): error TS2307: Cannot find module 'crypto' or its corresponding type declarations.
-src/lib/auth/permissions.ts(5,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(5,32): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(6,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(6,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(7,16): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(7,22): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(8,18): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(8,24): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(9,20): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(9,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(10,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(10,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(11,18): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(11,24): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(12,19): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(12,25): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(13,21): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(13,27): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(14,11): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(14,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(15,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(15,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(16,18): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(16,24): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(17,22): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(17,28): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(18,20): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(18,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(19,16): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(19,22): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(20,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(20,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(21,25): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(21,31): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(22,21): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(22,27): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(23,24): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(23,30): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(24,24): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(24,30): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(25,12): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(25,18): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(26,10): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(26,16): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(27,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(27,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(28,19): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(28,25): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(29,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(29,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(30,12): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(30,18): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(31,20): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(31,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(32,21): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(32,27): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(33,17): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(33,23): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(34,20): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(34,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(35,31): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(35,37): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(36,29): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(36,35): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(37,21): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(37,27): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(38,19): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(38,25): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(39,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(39,32): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(40,27): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(40,33): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(41,26): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(41,32): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(42,29): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(42,35): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(43,28): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(43,34): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(44,21): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/auth/permissions.ts(44,27): error TS2737: BigInt literals are not available when targeting lower than ES2020.
-src/lib/integrations/ably.ts(1,18): error TS2307: Cannot find module 'ably' or its corresponding type declarations.
-src/lib/integrations/ably.ts(8,17): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/ably.ts(36,15): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/agora-config.ts(2,10): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/agora-config.ts(3,19): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(1,58): error TS2307: Cannot find module 'firebase/app' or its corresponding type declarations.
-src/lib/integrations/firebase-config.ts(2,67): error TS2307: Cannot find module 'firebase/messaging' or its corresponding type declarations.
-src/lib/integrations/firebase-config.ts(16,11): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(17,15): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(18,14): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(19,18): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(20,22): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(21,10): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(73,17): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/firebase-config.ts(89,27): error TS7006: Parameter 'payload' implicitly has an 'any' type.
-src/lib/integrations/integration-service.ts(1,20): error TS2307: Cannot find module 'crypto' or its corresponding type declarations.
-src/lib/integrations/integration-service.ts(52,7): error TS2580: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/integration-service.ts(53,7): error TS2580: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/integrations/workspace-webhook.ts(1,20): error TS2307: Cannot find module 'crypto' or its corresponding type declarations.
-src/lib/integrations/workspace-webhook.ts(4,35): error TS2307: Cannot find module '@/lib/db/prisma' or its corresponding type declarations.
-src/lib/integrations/workspace-webhook.ts(18,40): error TS7006: Parameter 'webhook' implicitly has an 'any' type.
-src/lib/providers.tsx(3,50): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
-src/lib/providers.tsx(6,21): error TS2307: Cannot find module 'next/dynamic' or its corresponding type declarations.
-src/lib/providers.tsx(8,34): error TS2307: Cannot find module './contexts/presence-context' or its corresponding type declarations.
-src/lib/redis.ts(1,37): error TS2307: Cannot find module 'ioredis' or its corresponding type declarations.
-src/lib/redis.ts(3,18): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/redis.ts(9,22): error TS7006: Parameter 'err' implicitly has an 'any' type.
-src/lib/redis.ts(21,23): error TS7006: Parameter 'error' implicitly has an 'any' type.
-src/lib/redis.ts(29,24): error TS2304: Cannot find name 'global'.
-src/lib/redis.ts(33,5): error TS2580: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
-src/lib/system-messages.ts(1,24): error TS2307: Cannot find module '@/lib/db/prisma' or its corresponding type declarations.
-src/lib/types/custom-message-schema.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
-src/shared/custom-emoji-picker.tsx(10,18): error TS2307: Cannot find module '@emoji-mart/data' or its corresponding type declarations.
-src/shared/custom-emoji-picker.tsx(11,20): error TS2307: Cannot find module '@emoji-mart/react' or its corresponding type declarations.
-src/shared/emoji-picker.tsx(4,18): error TS2307: Cannot find module '@emoji-mart/data' or its corresponding type declarations.
-src/shared/emoji-picker.tsx(5,20): error TS2307: Cannot find module '@emoji-mart/react' or its corresponding type declarations.
-src/shared/file-upload.tsx(8,76): error TS2307: Cannot find module '@/lib/utils/upload-utils' or its corresponding type declarations.
-src/shared/info-panel.tsx(40,27): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/shared/info-panel.tsx(655,47): error TS7006: Parameter 'thread' implicitly has an 'any' type.
-src/shared/info-panel.tsx(655,55): error TS7006: Parameter 'idx' implicitly has an 'any' type.
-src/shared/markdown-renderer.tsx(7,38): error TS2307: Cannot find module 'next/navigation' or its corresponding type declarations.
-src/shared/markdown-renderer.tsx(48,38): error TS7006: Parameter 'c' implicitly has an 'any' type.
-src/shared/markdown-renderer.tsx(141,18): error TS2339: Property 'value' does not exist on type 'SVGTextElementAttributes<SVGTextElement> & ExtraProps'.
-src/shared/syntax-highlighter.tsx(5,49): error TS7016: Could not find a declaration file for module 'react-syntax-highlighter'. '/app/node_modules/.pnpm/react-syntax-highlighter@16.1.1_react@19.2.4/node_modules/react-syntax-highlighter/dist/cjs/index.js' implicitly has an 'any' type.
-  Try `npm i --save-dev @types/react-syntax-highlighter` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-syntax-highlighter';`
-src/shared/syntax-highlighter.tsx(6,29): error TS7016: Could not find a declaration file for module 'react-syntax-highlighter/dist/esm/styles/prism'. '/app/node_modules/.pnpm/react-syntax-highlighter@16.1.1_react@19.2.4/node_modules/react-syntax-highlighter/dist/esm/styles/prism/index.js' implicitly has an 'any' type.
-  Try `npm i --save-dev @types/react-syntax-highlighter` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-syntax-highlighter/dist/esm/styles/prism';`
-src/shared/user-mention.tsx(28,29): error TS7006: Parameter 'u' implicitly has an 'any' type.
-src/ui/resizable.tsx(4,37): error TS2307: Cannot find module 'react-resizable-panels' or its corresponding type declarations.
- ELIFECYCLE  Command failed with exit code 2.
+Version 5.9.3
+tsc: The TypeScript Compiler - Version 5.9.3
+
+COMMON COMMANDS
+
+  tsc
+  Compiles the current project (tsconfig.json in the working directory.)
+
+  tsc app.ts util.ts
+  Ignoring tsconfig.json, compiles the specified files with default compiler options.
+
+  tsc -b
+  Build a composite project in the working directory.
+
+  tsc --init
+  Creates a tsconfig.json with the recommended settings in the working directory.
+
+  tsc -p ./path/to/tsconfig.json
+  Compiles the TypeScript project located at the specified path.
+
+  tsc --help --all
+  An expanded version of this information, showing all possible compiler options
+
+  tsc --noEmit
+  tsc --target esnext
+  Compiles the current project, with additional settings.
+
+COMMAND LINE FLAGS
+
+--help, -h
+Print this message.
+
+--watch, -w
+Watch input files.
+
+--all
+Show all compiler options.
+
+--version, -v
+Print the compiler's version.
+
+--init
+Initializes a TypeScript project and creates a tsconfig.json file.
+
+--project, -p
+Compile the project given the path to its configuration file, or to a folder with a 'tsconfig.json'.
+
+--showConfig
+Print the final configuration instead of building.
+
+--build, -b
+Build one or more projects and their dependencies, if out of date
+
+COMMON COMPILER OPTIONS
+
+--pretty
+Enable color and formatting in TypeScript's output to make compiler errors easier to read.
+type: boolean
+default: true
+
+--declaration, -d
+Generate .d.ts files from TypeScript and JavaScript files in your project.
+type: boolean
+default: `false`, unless `composite` is set
+
+--declarationMap
+Create sourcemaps for d.ts files.
+type: boolean
+default: false
+
+--emitDeclarationOnly
+Only output d.ts files and not JavaScript files.
+type: boolean
+default: false
+
+--sourceMap
+Create source map files for emitted JavaScript files.
+type: boolean
+default: false
+
+--noEmit
+Disable emitting files from a compilation.
+type: boolean
+default: false
+
+--target, -t
+Set the JavaScript language version for emitted JavaScript and include compatible library declarations.
+one of: es5, es6/es2015, es2016, es2017, es2018, es2019, es2020, es2021, es2022, es2023, es2024, esnext
+default: es5
+
+--module, -m
+Specify what module code is generated.
+one of: none, commonjs, amd, umd, system, es6/es2015, es2020, es2022, esnext, node16, node18, node20, nodenext, preserve
+default: undefined
+
+--lib
+Specify a set of bundled library declaration files that describe the target runtime environment.
+one or more: es5, es6/es2015, es7/es2016, es2017, es2018, es2019, es2020, es2021, es2022, es2023, es2024, esnext, dom, dom.iterable, dom.asynciterable, webworker, webworker.importscripts, webworker.iterable, webworker.asynciterable, scripthost, es2015.core, es2015.collection, es2015.generator, es2015.iterable, es2015.promise, es2015.proxy, es2015.reflect, es2015.symbol, es2015.symbol.wellknown, es2016.array.include, es2016.intl, es2017.arraybuffer, es2017.date, es2017.object, es2017.sharedmemory, es2017.string, es2017.intl, es2017.typedarrays, es2018.asyncgenerator, es2018.asynciterable/esnext.asynciterable, es2018.intl, es2018.promise, es2018.regexp, es2019.array, es2019.object, es2019.string, es2019.symbol/esnext.symbol, es2019.intl, es2020.bigint/esnext.bigint, es2020.date, es2020.promise, es2020.sharedmemory, es2020.string, es2020.symbol.wellknown, es2020.intl, es2020.number, es2021.promise, es2021.string, es2021.weakref/esnext.weakref, es2021.intl, es2022.array, es2022.error, es2022.intl, es2022.object, es2022.string, es2022.regexp, es2023.array, es2023.collection, es2023.intl, es2024.arraybuffer, es2024.collection, es2024.object/esnext.object, es2024.promise, es2024.regexp/esnext.regexp, es2024.sharedmemory, es2024.string/esnext.string, esnext.array, esnext.collection, esnext.intl, esnext.disposable, esnext.promise, esnext.decorators, esnext.iterator, esnext.float16, esnext.error, esnext.sharedmemory, decorators, decorators.legacy
+default: undefined
+
+--allowJs
+Allow JavaScript files to be a part of your program. Use the 'checkJs' option to get errors from these files.
+type: boolean
+default: false
+
+--checkJs
+Enable error reporting in type-checked JavaScript files.
+type: boolean
+default: false
+
+--jsx
+Specify what JSX code is generated.
+one of: preserve, react, react-native, react-jsx, react-jsxdev
+default: undefined
+
+--outFile
+Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output.
+
+--outDir
+Specify an output folder for all emitted files.
+
+--removeComments
+Disable emitting comments.
+type: boolean
+default: false
+
+--strict
+Enable all strict type-checking options.
+type: boolean
+default: false
+
+--types
+Specify type package names to be included without being referenced in a source file.
+
+--esModuleInterop
+Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility.
+type: boolean
+default: false
+
+You can learn about all of the compiler options at https://aka.ms/tsc
+
+ ELIFECYCLE  Command failed with exit code 1.
