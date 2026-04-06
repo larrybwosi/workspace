@@ -4,13 +4,12 @@
 
 generator client {
   provider      = "prisma-client-js"
-  // output   = "../prisma"
+  output        = "../client"
   binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -117,12 +116,12 @@ model User {
 
   notificationPreferences Json?
 
-  plan          String   @default("free") // free, nitro_basic, nitro
-  messageCount  Int      @default(0)
+  plan         String @default("free") // free, nitro_basic, nitro
+  messageCount Int    @default(0)
 
-  isBot         Boolean  @default(false)
-  botToken      String?  @unique
-  botApplication BotApplication? @relation("BotUser")
+  isBot                Boolean          @default(false)
+  botToken             String?          @unique
+  botApplication       BotApplication?  @relation("BotUser")
   ownedBotApplications BotApplication[] @relation("BotOwner")
 
   @@map("users")
@@ -208,12 +207,12 @@ model Workspace {
 
   owner User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
 
-  members      WorkspaceMember[]
-  channels     Channel[]
-  invitations  WorkspaceInvitation[]
-  webhooks     WorkspaceWebhook[]
-  integrations WorkspaceIntegration[]
-  auditLogs    WorkspaceAuditLog[]
+  members          WorkspaceMember[]
+  channels         Channel[]
+  invitations      WorkspaceInvitation[]
+  webhooks         WorkspaceWebhook[]
+  integrations     WorkspaceIntegration[]
+  auditLogs        WorkspaceAuditLog[]
   inviteLinks      WorkspaceInviteLink[]
   customEmojis     CustomEmoji[]
   stickers         Sticker[]
@@ -1139,7 +1138,7 @@ model CustomEmoji {
   isGlobal    Boolean  @default(false) // Available across all workspaces
   usageCount  Int      @default(0)
   isActive    Boolean  @default(true)
-  rules       Json?    // Eligibility rules: { requiredPlan, requiredRole, requiredBadgeId, minAccountAgeDays, minMessages }
+  rules       Json? // Eligibility rules: { requiredPlan, requiredRole, requiredBadgeId, minAccountAgeDays, minMessages }
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1587,13 +1586,13 @@ model OauthConsent {
 model ProfileAsset {
   id              String   @id @default(cuid())
   url             String
-  type            String   // 'avatar', 'banner', 'theme'
+  type            String // 'avatar', 'banner', 'theme'
   name            String?
   animated        Boolean  @default(false)
-  themeColors     Json?    // For profile themes: { primary, accent, etc. }
+  themeColors     Json? // For profile themes: { primary, accent, etc. }
   requiredRole    String?
   requiredBadgeId String?
-  rules           Json?    // Eligibility rules
+  rules           Json? // Eligibility rules
   isGlobal        Boolean  @default(true)
   usageCount      Int      @default(0)
   createdAt       DateTime @default(now())
@@ -1611,7 +1610,7 @@ model Sticker {
   createdById String
   category    String?  @default("custom")
   isGlobal    Boolean  @default(true)
-  rules       Json?    // Eligibility rules
+  rules       Json? // Eligibility rules
   usageCount  Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -1633,7 +1632,7 @@ model SoundboardSound {
   createdById String
   category    String?  @default("custom")
   isGlobal    Boolean  @default(true)
-  rules       Json?    // Eligibility rules
+  rules       Json? // Eligibility rules
   usageCount  Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -1647,10 +1646,10 @@ model SoundboardSound {
 model AssetUsageLog {
   id          String   @id @default(cuid())
   assetId     String
-  assetType   String   // 'emoji', 'sticker', 'sound', 'profile_asset'
+  assetType   String // 'emoji', 'sticker', 'sound', 'profile_asset'
   userId      String
   workspaceId String?
-  metadata    Json?    // Additional context
+  metadata    Json? // Additional context
   usedAt      DateTime @default(now())
 
   @@index([assetId, assetType])
@@ -1659,17 +1658,17 @@ model AssetUsageLog {
 }
 
 model BotApplication {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  icon        String?
-  clientId    String   @unique
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  icon         String?
+  clientId     String   @unique
   clientSecret String
-  ownerId     String
-  botId       String?  @unique
-  isGlobal    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  ownerId      String
+  botId        String?  @unique
+  isGlobal     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   owner User  @relation("BotOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   bot   User? @relation("BotUser", fields: [botId], references: [id], onDelete: SetNull)
