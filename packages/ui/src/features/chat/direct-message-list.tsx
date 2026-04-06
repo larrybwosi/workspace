@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useDMConversations } from "@/hooks/api/use-messages"
 import { cn } from "@/lib/utils"
+import { usePresence } from "@/lib/contexts/presence-context"
 
 interface DirectMessagesListProps {
   activeUserId?: string
@@ -13,6 +14,7 @@ interface DirectMessagesListProps {
 
 export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessagesListProps) {
   const { data: dmConversations = [], isLoading } = useDMConversations()
+  const { onlineUsers } = usePresence()
 
   if (isLoading) {
     return (
@@ -57,7 +59,7 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                   <div
                     className={cn(
                       "absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-sidebar rounded-full",
-                      otherUser.status === "online"
+                      onlineUsers.has(otherUser.id)
                         ? "bg-green-500"
                         : otherUser.status === "away"
                           ? "bg-yellow-500"
