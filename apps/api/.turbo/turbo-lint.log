@@ -1,3 +1,0 @@
-
-> api@0.0.1 lint /app/apps/api
-> eslint "src/**/*.ts" --fix
