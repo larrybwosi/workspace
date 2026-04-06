@@ -7,6 +7,22 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
+  async rewrites() {
+    return [
+      {
+        source: '/api/users/me',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/users/me`,
+      },
+      {
+        source: '/api/workspaces',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces`,
+      },
+      {
+        source: '/api/workspaces/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces/:path*`,
+      },
+    ]
+  },
 }
 
 export default nextConfig
