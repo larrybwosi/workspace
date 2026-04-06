@@ -560,6 +560,7 @@ model Message {
   metadata    Json?
   isEdited    Boolean  @default(false)
   depth       Int      @default(0)
+  flags       Int      @default(0)
   timestamp   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1666,12 +1667,33 @@ model BotApplication {
   clientSecret String
   ownerId      String
   botId        String?  @unique
-  isGlobal     Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isGlobal               Boolean  @default(false)
+  interactionsUrl        String?
+  verifyKey              String?  @unique
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   owner User  @relation("BotOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   bot   User? @relation("BotUser", fields: [botId], references: [id], onDelete: SetNull)
 
+  commands BotCommand[]
+
   @@map("bot_applications")
+}
+
+model BotCommand {
+  id            String   @id @default(cuid())
+  applicationId String
+  name          String
+  description   String
+  options       Json?    // For command options/parameters
+  guildId       String?  // If it's a guild-specific command
+  type          Int      @default(1) // 1 for CHAT_INPUT, 2 for USER, 3 for MESSAGE
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  application   BotApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, name, guildId])
+  @@map("bot_commands")
 }
