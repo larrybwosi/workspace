@@ -21,6 +21,10 @@ const nextConfig = {
         source: '/api/workspaces/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces/:path*`,
       },
+      {
+        source: '/api/v10/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v10/:path*`,
+      },
     ]
   },
 }
