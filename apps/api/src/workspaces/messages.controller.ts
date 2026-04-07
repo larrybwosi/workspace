@@ -27,7 +27,7 @@ export class MessagesController {
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
     @Query('cursor') cursor: string,
-    @Query('limit') limitNum = '50',
+    @Query('limit') limitNum = '50'
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -99,7 +99,7 @@ export class MessagesController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -167,7 +167,7 @@ export class MessagesController {
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -220,7 +220,7 @@ export class MessagesController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Param('messageId') messageId: string,
+    @Param('messageId') messageId: string
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -261,7 +261,7 @@ export class MessagesController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -290,7 +290,7 @@ export class MessagesController {
       throw new BadRequestException('Invalid messageIds');
     }
 
-    const readPromises = messageIds.map((messageId) =>
+    const readPromises = messageIds.map(messageId =>
       prisma.messageRead.upsert({
         where: {
           messageId_userId: {
@@ -306,7 +306,7 @@ export class MessagesController {
           userId: user.id,
           readAt: new Date(),
         },
-      }),
+      })
     );
 
     await Promise.all(readPromises);
@@ -320,7 +320,7 @@ export class MessagesController {
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const { emoji } = body;
 
@@ -349,7 +349,7 @@ export class MessagesController {
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
-    @Param('emoji') emoji: string,
+    @Param('emoji') emoji: string
   ) {
     const reaction = await prisma.reaction.findUnique({
       where: {
@@ -378,7 +378,7 @@ export class MessagesController {
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

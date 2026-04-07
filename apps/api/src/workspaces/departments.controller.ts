@@ -108,11 +108,7 @@ export class DepartmentsController {
   }
 
   @Post()
-  async createDepartment(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: any,
-  ) {
+  async createDepartment(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -211,7 +207,7 @@ export class DepartmentsController {
   async getDepartment(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
-    @Param('departmentId') departmentId: string,
+    @Param('departmentId') departmentId: string
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -285,7 +281,7 @@ export class DepartmentsController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -346,7 +342,7 @@ export class DepartmentsController {
   async deleteDepartment(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
-    @Param('departmentId') departmentId: string,
+    @Param('departmentId') departmentId: string
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -391,7 +387,7 @@ export class DepartmentsController {
     @Param('departmentId') departmentId: string,
     @Query('page') pageNum = '1',
     @Query('limit') limitNum = '20',
-    @Query('priority') priority: string,
+    @Query('priority') priority: string
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -456,7 +452,7 @@ export class DepartmentsController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

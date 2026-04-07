@@ -16,7 +16,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared';
+import { AblyChannels, EVENTS, getAblyServer } from '@repo/shared';
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
@@ -86,11 +86,7 @@ export class ChannelsController {
   }
 
   @Post()
-  async createChannel(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: any,
-  ) {
+  async createChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -162,11 +158,7 @@ export class ChannelsController {
   }
 
   @Get(':channelId')
-  async getChannel(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('channelId') channelId: string,
-  ) {
+  async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -212,7 +204,7 @@ export class ChannelsController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -273,11 +265,7 @@ export class ChannelsController {
   }
 
   @Delete(':channelId')
-  async deleteChannel(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('channelId') channelId: string,
-  ) {
+  async deleteChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ApiV10Guard } from '../auth/api-v10.guard';
 import { ConfigService } from '@nestjs/config';
 import { prisma } from '@repo/database';

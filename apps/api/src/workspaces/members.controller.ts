@@ -73,7 +73,7 @@ export class MembersController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('memberId') memberId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -138,11 +138,7 @@ export class MembersController {
   }
 
   @Delete(':memberId')
-  async removeMember(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('memberId') memberId: string,
-  ) {
+  async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });

@@ -11,7 +11,8 @@
         "AGORA_APP_ID",
         "AGORA_APP_CERTIFICATE",
         "SANITY_WRITE_TOKEN",
-        "DATABASE_URL"
+        "DATABASE_URL",
+        "BETTER_AUTH_URL"
       ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
@@ -20,6 +21,14 @@
     },
     "type-check": {
       "dependsOn": ["^type-check"]
+    },
+    "test": {
+      "dependsOn": ["^test", "db:generate"],
+      "env": ["DATABASE_URL", "REDIS_URL", "BETTER_AUTH_SECRET"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build", "db:generate"],
+      "env": ["DATABASE_URL", "REDIS_URL", "BETTER_AUTH_SECRET", "PORT"]
     },
     "db:generate": {
       "cache": false
