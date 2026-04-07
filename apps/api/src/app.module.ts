@@ -13,6 +13,11 @@ import { V10Module } from './v10/v10.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { CallsModule } from './calls/calls.module';
+import { ChannelsModule } from './channels/channels.module';
+import { AdminModule } from './admin/admin.module';
+import { DmsModule } from './dms/dms.module';
+import { FriendsModule } from './friends/friends.module';
 import { CommonModule } from './common/common.module';
 
 @Module({
@@ -26,6 +31,11 @@ import { CommonModule } from './common/common.module';
     NotificationsModule,
     InvitationsModule,
     IntegrationsModule,
+    CallsModule,
+    ChannelsModule,
+    AdminModule,
+    DmsModule,
+    FriendsModule,
     CommonModule,
     WorkspacesModule,
     ThrottlerModule.forRootAsync({
