@@ -1,11 +1,11 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { Send, Download, Key, Shield, FileText } from "lucide-react"
-import { WorkspaceIncomingWebhooks } from "@/components/features/workspace/workspace-incoming-webhooks"
-import { WorkspaceOutgoingWebhooks } from "@/components/features/workspace/workspace-outgoing-webhooks"
-import { WorkspaceResourceManagement } from "@/components/features/workspace/workspace-resource-management"
+import { WorkspaceIncomingWebhooks } from "./workspace-incoming-webhooks"
+import { WorkspaceOutgoingWebhooks } from "./workspace-outgoing-webhooks"
+import { WorkspaceResourceManagement } from "./workspace-resource-management"
 
 interface WorkspaceWebhooksManagementProps {
   workspaceSlug: string

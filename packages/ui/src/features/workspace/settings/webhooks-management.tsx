@@ -2,16 +2,16 @@
 
 import { useState } from "react"
 import { Plus, Trash2, Copy, Check, Activity } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent } from "../../../ui/card"
+import { Button } from "../../../ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../ui/dialog"
+import { Input } from "../../../ui/input"
+import { Label } from "../../../ui/label"
+import { Badge } from "../../../ui/badge"
+import { Checkbox } from "../../../ui/checkbox"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useToast } from "@/hooks/use-toast"
-import { Switch } from "@/components/ui/switch"
+import { useToast } from "../../../hooks/use-toast"
+import { Switch } from "../../../ui/switch"
 
 interface WebhooksManagementProps {
   workspaceId: string

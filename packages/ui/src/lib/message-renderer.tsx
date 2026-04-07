@@ -1,11 +1,11 @@
 "use client";
 
 import type { Message, MessageMetadata, MessageType } from "./types";
-import { ApprovalMessage } from "@/components/features/chat/message-types/approval-message";
-import { CommentRequestMessage } from "@/components/features/chat/message-types/comment-request-message";
-import { CodeMessage } from "@/components/features/chat/message-types/code-message";
-import { CustomMessage } from "@/components/features/chat/message-types/custom-message";
-import { ReportMessage } from "@/components/features/chat/message-types/report-message";
+import { ApprovalMessage } from "../features/chat/message-types/approval-message";
+import { CommentRequestMessage } from "../features/chat/message-types/comment-request-message";
+import { CodeMessage } from "../features/chat/message-types/code-message";
+import { CustomMessage } from "../features/chat/message-types/custom-message";
+import { ReportMessage } from "../features/chat/message-types/report-message";
 
 // Revised Regex:
 // 1. ^\s*``` : Starts with optional whitespace and backticks

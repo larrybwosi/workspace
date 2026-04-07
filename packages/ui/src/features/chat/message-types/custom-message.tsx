@@ -23,14 +23,14 @@ import {
   Terminal,
   Copy,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
-import type { Message } from "@/lib/types";
+import { Button } from "../../../ui/button";
+import { Card } from "../../../ui/card";
+import { Badge } from "../../../ui/badge";
+import { Input } from "../../../ui/input";
+import { Textarea } from "../../../ui/textarea";
+import { Switch } from "../../../ui/switch";
+import { cn } from "../../../lib/utils";
+import type { Message } from "../../../lib/types";
 
 // --- Types & Interfaces ---
 

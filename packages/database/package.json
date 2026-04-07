@@ -12,6 +12,7 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "test": "echo 'No tests for database'"
   }
 }

@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { mockUsers } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Button } from "../../ui/button"
+import { Badge } from "../../ui/badge"
+import { ScrollArea } from "../../ui/scroll-area"
+import { mockUsers } from "../../lib/mock-data"
+import { cn } from "../../lib/utils"
 
 interface DirectMessagesListProps {
   activeUserId?: string
