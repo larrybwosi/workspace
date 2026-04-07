@@ -23,6 +23,7 @@
     "agora-token": "^2.0.5",
     "axios": "^1.7.9",
     "better-auth": "^1.1.18",
+    "firebase-admin": "^13.7.0",
     "ioredis": "^5.4.2",
     "nestjs-throttler-storage-redis": "^0.5.1",
     "reflect-metadata": "^0.2.0",
