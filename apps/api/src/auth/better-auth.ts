@@ -16,4 +16,4 @@ export const auth: any = betterAuth({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     admin() as any,
   ],
-});
+}) as any;
