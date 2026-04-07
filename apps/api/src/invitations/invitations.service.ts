@@ -123,20 +123,25 @@ export class InvitationsService {
     const inviteLink = await prisma.workspaceInviteLink.findUnique({
       where: { code: token },
       include: {
-        workspace: {
-          include: {
-            owner: { select: { name: true, avatar: true } },
-          },
-        },
+        workspace: true,
+        createdBy: { select: { id: true, name: true, avatar: true } },
       },
     });
 
     if (inviteLink) {
+      if (inviteLink.expiresAt && inviteLink.expiresAt < new Date()) {
+        throw new BadRequestException('Invite link has expired');
+      }
+      if (inviteLink.maxUses && inviteLink.maxUses > 0 && inviteLink.uses >= inviteLink.maxUses) {
+        throw new BadRequestException('Invite link has reached its use limit');
+      }
       return {
-        type: 'public_link',
+        type: 'workspace_link',
         invitation: {
-          ...inviteLink,
-          inviter: inviteLink.workspace.owner,
+          workspace: inviteLink.workspace,
+          inviter: inviteLink.createdBy,
+          uses: inviteLink.uses,
+          maxUses: inviteLink.maxUses,
         },
       };
     }
@@ -146,14 +151,24 @@ export class InvitationsService {
       where: { token },
       include: {
         workspace: true,
-        inviter: { select: { name: true, avatar: true } },
+        inviter: { select: { id: true, name: true, avatar: true } },
       },
     });
 
     if (workspaceInvite) {
+      if (workspaceInvite.expiresAt && workspaceInvite.expiresAt < new Date()) {
+        throw new BadRequestException('Invitation has expired');
+      }
+      if (workspaceInvite.status !== 'pending') {
+        throw new BadRequestException('Invitation is no longer pending');
+      }
       return {
         type: 'workspace_invitation',
-        invitation: workspaceInvite,
+        invitation: {
+          workspace: workspaceInvite.workspace,
+          inviter: workspaceInvite.inviter,
+          email: workspaceInvite.email,
+        },
       };
     }
 
@@ -161,18 +176,27 @@ export class InvitationsService {
     const generalInvite = await prisma.invitation.findUnique({
       where: { token },
       include: {
-        inviter: { select: { name: true, avatar: true } },
+        inviter: { select: { id: true, name: true, avatar: true } },
       },
     });
 
     if (generalInvite) {
+      if (generalInvite.expiresAt && generalInvite.expiresAt < new Date()) {
+        throw new BadRequestException('Invitation has expired');
+      }
+      if (generalInvite.status !== 'pending') {
+        throw new BadRequestException('Invitation is no longer pending');
+      }
       return {
         type: 'platform_invitation',
-        invitation: generalInvite,
+        invitation: {
+          inviter: generalInvite.inviter,
+          email: generalInvite.email,
+        },
       };
     }
 
-    throw new NotFoundException('Invitation not found');
+    throw new NotFoundException('Invalid invitation token');
   }
 
   async acceptInvitation(user: User, token: string) {
