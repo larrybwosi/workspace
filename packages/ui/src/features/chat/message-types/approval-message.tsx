@@ -2,14 +2,14 @@
 
 import * as React from "react"
 import { Check, X, MessageSquare, Clock, User, FileText } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import type { Message, MessageMetadata } from "@/lib/types"
-import { mockUsers } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import { Button } from "../../../ui/button"
+import { Textarea } from "../../../ui/textarea"
+import { Avatar, AvatarFallback } from "../../../ui/avatar"
+import { Badge } from "../../../ui/badge"
+import { Separator } from "../../../ui/separator"
+import type { Message, MessageMetadata } from "../../../lib/types"
+import { mockUsers } from "../../../lib/mock-data"
+import { cn } from "../../../lib/utils"
 import { toast } from "sonner"
 
 interface ApprovalMessageProps {

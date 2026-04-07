@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+import { Command, CommandGroup, CommandItem, CommandList } from "../ui/command"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { cn } from "../lib/utils"
 
 interface User {
   id: string

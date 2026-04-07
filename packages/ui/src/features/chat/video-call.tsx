@@ -3,11 +3,11 @@
 import { useEffect, useState, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { Mic, MicOff, VideoIcon, VideoOff, Phone, Monitor, MonitorOff, Settings, MessageSquare, Users } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { Button } from "../../ui/button"
+import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Card } from "../../ui/card"
+import { Badge } from "../../ui/badge"
+import { cn } from "../../lib/utils"
 
 const VideoCallContent = dynamic(
   () => import('./video-call-content').then(mod => ({ default: mod.VideoCallContent })),

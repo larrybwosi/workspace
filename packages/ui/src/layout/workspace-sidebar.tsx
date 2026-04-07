@@ -13,21 +13,21 @@ import {
   Lock,
   ChevronDown,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
+import { ScrollArea } from '../ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Separator } from '../ui/separator';
+import { Skeleton } from '../ui/skeleton';
+import { cn } from '../lib/utils';
 import { useRouter, useParams, usePathname } from 'next/navigation';
-import { useSession } from '@/lib/auth/auth-client';
-import { WorkspaceSwitcher } from '@/components/features/workspace/workspace-switcher';
-import { UserProfileDialog } from '@/components/features/social/user-profile-dialog';
-import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
-import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@/hooks/api/use-workspaces';
-import { User } from '@/lib/types';
-import { usePresence } from '@/lib/contexts/presence-context';
+import { useSession } from '../lib/auth/auth-client';
+import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
+import { UserProfileDialog } from '../features/social/user-profile-dialog';
+import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
+import { useCreateWorkspaceChannel, useWorkspaceChannels } from '../hooks/api/use-workspaces';
+import { User } from '../lib/types';
+import { usePresence } from '../lib/contexts/presence-context';
 
 // ---------------------------------------------------------------------------
 // Types

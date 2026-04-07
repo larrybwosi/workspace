@@ -2,15 +2,15 @@
 
 import * as React from "react"
 import { Search, FileText, MessageSquare, Hash, X, Clock } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mockSearchResults, mockRecentSearches } from "@/lib/mock-data"
-import type { SearchResult } from "@/lib/types"
+import { Input } from "../ui/input"
+import { Button } from "../ui/button"
+import { ScrollArea } from "../ui/scroll-area"
+import { Avatar, AvatarFallback } from "../ui/avatar"
+import { Badge } from "../ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { mockSearchResults, mockRecentSearches } from "../lib/mock-data"
+import type { SearchResult } from "../lib/types"
 
 interface SearchViewProps {
   onClose: () => void

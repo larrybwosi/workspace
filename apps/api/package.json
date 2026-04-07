@@ -7,7 +7,9 @@
     "dev": "nest start --watch",
     "start": "nest start",
     "lint": "eslint \"src/**/*.ts\" --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
