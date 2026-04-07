@@ -26,6 +26,26 @@ const nextConfig = {
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/integrations/:path*`,
       },
       {
+        source: '/api/admin/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/:path*`,
+      },
+      {
+        source: '/api/dms/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/dms/:path*`,
+      },
+      {
+        source: '/api/friends/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/friends/:path*`,
+      },
+      {
+        source: '/api/calls/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/calls/:path*`,
+      },
+      {
+        source: '/api/channels/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/channels/:path*`,
+      },
+      {
         source: '/api/v10/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v10/:path*`,
       },
