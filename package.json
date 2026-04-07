@@ -15,9 +15,11 @@
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
     "lint:api": "cd apps/api && pnpm run lint",
-    "lint:web": "cd apps/web && pnpm run lint"
+    "lint:web": "cd apps/web && pnpm run lint",
+    "version:ci": "changeset version && pnpm install --no-frozen-lockfile"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "dotenv-cli": "^11.0.0",
