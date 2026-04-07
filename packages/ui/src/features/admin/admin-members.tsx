@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, UserPlus, MoreVertical, Mail, Shield, Calendar, CheckCircle2, XCircle } from 'lucide-react'
+import { Search, UserPlus, MoreVertical, Mail, Shield, Calendar, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { Card } from "../../ui/card"
 import { Input } from "../../ui/input"
 import { Button } from "../../ui/button"
@@ -23,61 +23,31 @@ import {
   TableRow,
 } from "../../ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { useAdminMembers } from "@repo/api-client"
+import { useAdminMembers, useUpdateMemberRole } from "@repo/api-client"
 import { formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 
 export function AdminMembers() {
-  const { data: members } = useAdminMembers()
   const [searchQuery, setSearchQuery] = React.useState("")
   const [roleFilter, setRoleFilter] = React.useState<string>("all")
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
 
-  const mockMembers = [
-    {
-      id: "user-1",
-      name: "Alice Johnson",
-      email: "alice@example.com",
-      role: "Admin",
-      status: "active",
-      avatar: "AJ",
-      joinedAt: new Date(2023, 0, 15),
-      lastActive: new Date(2024, 2, 10, 14, 30),
-      invitedBy: "System",
-    },
-    {
-      id: "user-2",
-      name: "Bob Smith",
-      email: "bob@example.com",
-      role: "Member",
-      status: "active",
-      avatar: "BS",
-      joinedAt: new Date(2023, 1, 20),
-      lastActive: new Date(2024, 2, 10, 16, 45),
-      invitedBy: "Alice Johnson",
-    },
-    {
-      id: "user-3",
-      name: "Carol Davis",
-      email: "carol@example.com",
-      role: "Member",
-      status: "inactive",
-      avatar: "CD",
-      joinedAt: new Date(2023, 3, 10),
-      lastActive: new Date(2024, 1, 15, 9, 20),
-      invitedBy: "Alice Johnson",
-    },
-  ]
-
-  const data: any[] = members || mockMembers
-
-  const filteredMembers = data.filter((member) => {
-    const matchesSearch =
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === "all" || member.role.toLowerCase() === roleFilter.toLowerCase()
-    const matchesStatus = statusFilter === "all" || member.status === statusFilter
-    return matchesSearch && matchesRole && matchesStatus
+  const { data: members = [], isLoading } = useAdminMembers({
+    search: searchQuery,
+    role: roleFilter,
+    status: statusFilter
   })
+
+  const updateRoleMutation = useUpdateMemberRole()
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+      try {
+          await updateRoleMutation.mutateAsync({ userId, role: newRole })
+          toast.success("Role updated successfully")
+      } catch (e) {
+          toast.error("Failed to update role")
+      }
+  }
 
   return (
     <div className="space-y-6">
@@ -140,13 +110,25 @@ export function AdminMembers() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMembers.map((member) => (
+            {isLoading ? (
+                <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                    </TableCell>
+                </TableRow>
+            ) : members.length === 0 ? (
+                <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                        No members found.
+                    </TableCell>
+                </TableRow>
+            ) : members.map((member: any) => (
               <TableRow key={member.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={member.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>{member.avatar}</AvatarFallback>
+                      <AvatarFallback>{member.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">{member.name}</p>
@@ -176,11 +158,11 @@ export function AdminMembers() {
                 <TableCell className="text-sm">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    {formatDistanceToNow(member.joinedAt, { addSuffix: true })}
+                    {formatDistanceToNow(new Date(member.joinedAt), { addSuffix: true })}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(member.lastActive, { addSuffix: true })}
+                  {formatDistanceToNow(new Date(member.lastActive), { addSuffix: true })}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{member.invitedBy}</TableCell>
                 <TableCell>
@@ -195,7 +177,9 @@ export function AdminMembers() {
                         <Mail className="h-4 w-4 mr-2" />
                         Send Message
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Edit Role</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleUpdateRole(member.id, member.role === 'admin' ? 'member' : 'admin')}>
+                          Change to {member.role === 'admin' ? 'Member' : 'Admin'}
+                      </DropdownMenuItem>
                       <DropdownMenuItem>View Activity</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive">Remove Member</DropdownMenuItem>
