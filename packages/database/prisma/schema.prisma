@@ -3,8 +3,8 @@
 // ============================================
 
 generator client {
-  provider      = "prisma-client"
-  output        = "../client"
+  provider      = "prisma-client-js"
+  output        = "../src/generated"
   binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
