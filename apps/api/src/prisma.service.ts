@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 // 1. Import PrismaClient type from your db package
-import type { prisma, PrismaClient } from '@repo/database';
+import { prisma, PrismaClient } from '@repo/database';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {

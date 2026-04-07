@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { publishToAbly, AblyChannels } from '../lib/integrations/ably';
+import { publishToAbly, AblyChannels } from '@repo/shared';
 
 @Injectable()
 export class V10EnterpriseService {

@@ -36,7 +36,7 @@ import { useUpdateMessage, useDeleteMessage } from '@repo/api-client';
 import { useMemo, useState } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
-import { useSession } from '../../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { toast } from 'sonner';
 
 interface MessageItemProps {

@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
 import { Badge } from "../../../ui/badge"
 import { cn } from "../../../lib/utils"
-import { useCallStore } from "../../../hooks/features/use-call-store"
+import { useCallStore } from "@repo/api-client"
 import { toast } from "sonner"
 
 interface CallInviteMessageProps {

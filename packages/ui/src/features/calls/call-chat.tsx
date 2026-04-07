@@ -7,7 +7,7 @@ import { Input } from "../../ui/input"
 import { ScrollArea } from "../../ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
 import { getAblyClient } from "@repo/shared"
-import { useSession } from "../../lib/auth/auth-client"
+import { useSession } from "@repo/shared"
 
 interface Message {
   id: string

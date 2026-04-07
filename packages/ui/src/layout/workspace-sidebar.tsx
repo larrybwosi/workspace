@@ -21,7 +21,7 @@ import { Separator } from '../ui/separator';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '../lib/utils';
 import { useRouter, useParams, usePathname } from 'next/navigation';
-import { useSession } from '../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';

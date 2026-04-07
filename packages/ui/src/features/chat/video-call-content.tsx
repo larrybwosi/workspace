@@ -35,7 +35,7 @@ import { Button } from '../../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { Badge } from '../../ui/badge';
 import { CallChat } from '../calls/call-chat';
-import { useSession } from '../../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { useWorkspaceMembers } from '@repo/api-client';

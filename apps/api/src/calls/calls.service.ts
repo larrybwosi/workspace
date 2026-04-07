@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import type { prisma, User, Call, CallParticipant } from '@repo/database';
+import { prisma, User, Call, CallParticipant } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import { agoraConfig, publishToAbly, AblyChannels, AblyEvents, isUserEligibleForAsset, logAssetUsage } from '@repo/shared';
 

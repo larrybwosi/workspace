@@ -15,7 +15,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { getAblyServer, AblyChannels, EVENTS } from '../lib/integrations/ably';
+import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared';
 
 const createTeamSchema = z.object({
   name: z.string().min(1).max(100),

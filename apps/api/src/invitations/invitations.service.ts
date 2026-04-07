@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
-import type { prisma, User } from '@repo/database';
+import { prisma, User } from '@repo/database';
 import { NotificationsService } from '../notifications/notifications.service';
 import * as crypto from 'crypto';
 

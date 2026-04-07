@@ -1,4 +1,4 @@
-import type { prisma } from '@repo/database';
+import { prisma } from '@repo/database';
 import * as admin from 'firebase-admin';
 
 let firebaseAdmin: admin.app.App | undefined;
