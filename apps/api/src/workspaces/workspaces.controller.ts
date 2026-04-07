@@ -16,6 +16,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
+import { getAblyServer, AblyChannels, EVENTS } from '../lib/integrations/ably';
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),
@@ -34,6 +35,18 @@ const updateWorkspaceSchema = z.object({
   description: z.string().optional(),
   settings: z.any().optional(),
   plan: z.enum(['free', 'pro', 'enterprise']).optional(),
+});
+
+const createChannelSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+  type: z.enum(['public', 'private']).default('public'),
+  departmentId: z.string().optional(),
+  icon: z.string().optional(),
+});
+
+const updateMemberSchema = z.object({
+  role: z.enum(['owner', 'admin', 'member', 'guest']),
 });
 
 @Controller('workspaces')
@@ -340,6 +353,205 @@ export class WorkspacesController {
     });
 
     return channels;
+  }
+
+  @Post(':slug/channels')
+  async createWorkspaceChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!member || !['owner', 'admin', 'member'].includes(member.role)) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const data = createChannelSchema.parse(body);
+    const channelSlug = data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const channel = await prisma.channel.create({
+      data: {
+        name: data.name,
+        slug: channelSlug,
+        description: data.description,
+        type: data.type === 'private' ? 'private' : 'public',
+        isPrivate: data.type === 'private',
+        icon: data.icon || '#',
+        workspaceId: workspace.id,
+        createdById: user.id,
+        departmentId: data.departmentId,
+        members: {
+          create: { userId: user.id, role: 'admin' },
+        },
+      },
+      include: {
+        members: { include: { user: true } },
+      },
+    });
+
+    await prisma.workspaceAuditLog.create({
+      data: {
+        workspaceId: workspace.id,
+        userId: user.id,
+        action: 'channel.created',
+        resource: 'channel',
+        resourceId: channel.id,
+        metadata: { name: data.name, type: data.type },
+      },
+    });
+
+    const ably = getAblyServer();
+    if (ably) {
+      const ablyChannel = ably.channels.get(AblyChannels.workspace(workspace.id));
+      await ablyChannel.publish(EVENTS.CHANNEL_CREATED, { channel, userId: user.id });
+    }
+
+    return channel;
+  }
+
+  @Patch(':slug/members/:memberId')
+  async updateWorkspaceMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('memberId') memberId: string,
+    @Body() body: any,
+  ) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const requesterMember = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const { role } = updateMemberSchema.parse(body);
+
+    const updatedMember = await prisma.workspaceMember.update({
+      where: { id: memberId },
+      data: { role },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    await prisma.workspaceAuditLog.create({
+      data: {
+        workspaceId: workspace.id,
+        userId: user.id,
+        action: 'member.role_changed',
+        resource: 'member',
+        resourceId: memberId,
+        metadata: { newRole: role },
+      },
+    });
+
+    const ably = getAblyServer();
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.user(updatedMember.userId));
+      await channel.publish('NOTIFICATION', {
+        type: 'workspace.role_changed',
+        workspaceId: workspace.id,
+        newRole: role,
+      });
+    }
+
+    return updatedMember;
+  }
+
+  @Delete(':slug/members/:memberId')
+  async removeWorkspaceMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const requesterMember = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const memberToRemove = await prisma.workspaceMember.findUnique({
+      where: { id: memberId },
+    });
+
+    if (!memberToRemove) {
+      throw new NotFoundException('Member not found');
+    }
+
+    if (memberToRemove.role === 'owner') {
+      throw new BadRequestException('Cannot remove workspace owner');
+    }
+
+    await prisma.workspaceMember.delete({
+      where: { id: memberId },
+    });
+
+    await prisma.workspaceAuditLog.create({
+      data: {
+        workspaceId: workspace.id,
+        userId: user.id,
+        action: 'member.removed',
+        resource: 'member',
+        resourceId: memberId,
+      },
+    });
+
+    const ably = getAblyServer();
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.user(memberToRemove.userId));
+      await channel.publish('NOTIFICATION', {
+        type: 'workspace.removed',
+        workspaceId: workspace.id,
+      });
+    }
+
+    return { success: true };
   }
 
   @Delete(':slug')

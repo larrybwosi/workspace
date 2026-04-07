@@ -26,6 +26,10 @@ const nextConfig = {
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces/:slug/members`,
       },
       {
+        source: '/api/workspaces/:slug/members/:memberId',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces/:slug/members/:memberId`,
+      },
+      {
         source: '/api/workspaces/:slug/channels',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces/:slug/channels`,
       },
