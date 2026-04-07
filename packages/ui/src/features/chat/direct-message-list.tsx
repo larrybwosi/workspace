@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback } from "../../ui/avatar"
 import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
 import { ScrollArea } from "../../ui/scroll-area"
-import { useDMConversations } from "../../hooks/api/use-messages"
+import { useDMConversations } from "@repo/api-client"
 import { cn } from "../../lib/utils"
 import { usePresence } from "../../lib/contexts/presence-context"
 

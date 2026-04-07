@@ -14,15 +14,15 @@ import {
   useReplyToMessage,
   useMarkMessagesAsRead,
   messageKeys,
-} from '../../hooks/api/use-messages';
-import { useAddReaction, useRemoveReaction } from '../../hooks/api/use-reactions';
+} from '@repo/api-client';
+import { useAddReaction, useRemoveReaction } from '@repo/api-client';
 import { cn } from '../../lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '../../lib/integrations/ably';
+import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { UploadedFile } from '../../lib/utils/upload-utils';
 import { toast } from 'sonner';
-import { useChannel } from '../../hooks/api/use-channels';
+import { useChannel } from '@repo/api-client';
 import { useSession } from '../../lib/auth/auth-client';
 import { Settings } from 'lucide-react';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';

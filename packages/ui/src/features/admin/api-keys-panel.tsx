@@ -5,7 +5,7 @@ import { Key, Plus, Copy, Trash2, Eye, EyeOff, MoreVertical, AlertCircle, CheckC
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
 import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
-import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "../../hooks/api/use-integrations"
+import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@repo/api-client"
 import { CreateApiKeyDialog } from "../settings/create-api-key-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"

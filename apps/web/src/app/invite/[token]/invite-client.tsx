@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Users, UserPlus } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@repo/api-client";
 import { useToast } from "@/hooks/use-toast";
 import { authClient } from "@/lib/auth/auth-client";
 

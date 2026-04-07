@@ -3,7 +3,7 @@
 import { useCallStore } from "../../hooks/features/use-call-store"
 import { VideoCallContent } from "../chat/video-call-content"
 import { useState, useEffect } from "react"
-import { getAblyClient, AblyChannels } from "../../lib/integrations/ably"
+import { getAblyClient, AblyChannels } from "@repo/shared"
 import { useSession } from "../../lib/auth/auth-client"
 import {
   Dialog,

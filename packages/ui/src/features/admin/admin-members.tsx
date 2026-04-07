@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "../../ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { useAdminMembers } from "../../hooks/api/use-admin"
+import { useAdminMembers } from "@repo/api-client"
 import { formatDistanceToNow } from "date-fns"
 
 export function AdminMembers() {
