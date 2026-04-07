@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import {
   Plus,
@@ -24,14 +22,14 @@ import {
   Building2,
   Palette,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@repo/ui/ui/button"
+import { Input } from "@repo/ui/ui/input"
+import { Label } from "@repo/ui/ui/label"
+import { Badge } from "@repo/ui/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@repo/ui/ui/tabs"
+import { ScrollArea } from "@repo/ui/ui/scroll-area"
+import { Switch } from "@repo/ui/ui/switch"
 import {
   Dialog,
   DialogContent,
@@ -39,27 +37,27 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@repo/ui/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { TopBar } from "@/components/layout/top-bar"
-import { Sidebar } from "@/components/layout/sidebar"
+} from "@repo/ui/ui/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui/ui/table"
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/ui/avatar"
+import { TopBar } from "@repo/ui/layout/top-bar"
+import { AdminSidebar } from "@repo/ui/layout/admin-sidebar"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useNavigate } from "react-router-dom"
+import { apiClient } from "@repo/api-client"
 
 type AssetType = "emoji" | "sticker" | "sound" | "profile_asset"
 
-export default function AdminAssetsPage() {
-  const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+export function AdminAssetsPage() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = React.useState<AssetType>("profile_asset")
   const [searchQuery, setSearchQuery] = React.useState("")
   const [loading, setLoading] = React.useState(true)
@@ -70,6 +68,7 @@ export default function AdminAssetsPage() {
   const [statsDialogOpen, setStatsDialogOpen] = React.useState(false)
   const [currentStats, setCurrentStats] = React.useState<any[]>([])
   const [statsLoading, setStatsLoading] = React.useState(false)
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   // Form State
   const [formData, setFormData] = React.useState<any>({
@@ -101,12 +100,11 @@ export default function AdminAssetsPage() {
   const fetchAssets = React.useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/assets?type=${activeTab}`)
-      if (!res.ok) throw new Error("Failed to fetch assets")
-      const data = await res.json()
-      setAssets(data)
+      const { data } = await apiClient.get(`/admin/assets?type=${activeTab}`)
+      setAssets(Array.isArray(data) ? data : [])
     } catch (error) {
       toast.error("Failed to load assets")
+      setAssets([])
     } finally {
       setLoading(false)
     }
@@ -114,13 +112,11 @@ export default function AdminAssetsPage() {
 
   const fetchWorkspaces = async () => {
     try {
-      const res = await fetch("/api/workspaces")
-      if (res.ok) {
-        const data = await res.json()
-        setWorkspaces(data)
-      }
+      const { data } = await apiClient.get("/workspaces")
+      setWorkspaces(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error("Failed to fetch workspaces")
+      setWorkspaces([])
     }
   }
 
@@ -170,7 +166,6 @@ export default function AdminAssetsPage() {
 
   const handleSaveAsset = async () => {
     try {
-      // Ensure specific field consistency
       const dataToSave = { ...formData }
       if (activeTab === 'emoji') {
         dataToSave.imageUrl = dataToSave.imageUrl || dataToSave.url
@@ -178,18 +173,18 @@ export default function AdminAssetsPage() {
         dataToSave.url = dataToSave.url || dataToSave.imageUrl
       }
 
-      const method = editingAsset ? "PATCH" : "POST"
-      const res = await fetch("/api/admin/assets", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      if (editingAsset) {
+        await apiClient.patch("/admin/assets", {
           type: activeTab,
-          id: editingAsset?.id,
+          id: editingAsset.id,
           data: dataToSave
         })
-      })
-
-      if (!res.ok) throw new Error("Failed to save asset")
+      } else {
+        await apiClient.post("/admin/assets", {
+          type: activeTab,
+          data: dataToSave
+        })
+      }
 
       toast.success(`Asset ${editingAsset ? "updated" : "created"} successfully`)
       setIsDialogOpen(false)
@@ -203,12 +198,7 @@ export default function AdminAssetsPage() {
     if (!confirm("Are you sure you want to delete this asset?")) return
 
     try {
-      const res = await fetch(`/api/admin/assets?type=${activeTab}&id=${id}`, {
-        method: "DELETE"
-      })
-
-      if (!res.ok) throw new Error("Failed to delete asset")
-
+      await apiClient.delete(`/admin/assets?type=${activeTab}&id=${id}`)
       toast.success("Asset deleted")
       fetchAssets()
     } catch (error) {
@@ -220,12 +210,11 @@ export default function AdminAssetsPage() {
     setStatsLoading(true)
     setStatsDialogOpen(true)
     try {
-      const res = await fetch(`/api/admin/assets/stats?assetId=${asset.id}&assetType=${activeTab}`)
-      if (!res.ok) throw new Error("Failed to fetch stats")
-      const data = await res.json()
-      setCurrentStats(data)
+      const { data } = await apiClient.get(`/admin/assets/stats?assetId=${asset.id}&assetType=${activeTab}`)
+      setCurrentStats(Array.isArray(data) ? data : [])
     } catch (error) {
       toast.error("Failed to load statistics")
+      setCurrentStats([])
     } finally {
       setStatsLoading(false)
     }
@@ -233,15 +222,10 @@ export default function AdminAssetsPage() {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        activeChannel="admin-assets"
-        onChannelSelect={() => {}}
-      />
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar
-          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          onMenuClick={() => setSidebarOpen(true)}
           channelName="Asset Management"
           channelDescription="Manage custom profile pictures, banners, emojis, stickers and soundboard"
         />
