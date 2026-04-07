@@ -7,6 +7,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/users.controller';
 import { WorkspacesController } from './workspaces/workspaces.controller';
+import { RedisModule } from './common/redis/redis.module';
+import { V2Module } from './v2/v2.module';
+import { V10Module } from './v10/v10.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationsModule } from './invitations/invitations.module';
 
@@ -15,6 +18,9 @@ import { InvitationsModule } from './invitations/invitations.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    RedisModule,
+    V2Module,
+    V10Module,
     NotificationsModule,
     InvitationsModule,
     ThrottlerModule.forRootAsync({
