@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { CalendarDays, Mail, Shield, Loader2 } from "lucide-react";
-import { useUsers } from "../hooks/api/use-users";
+import { useUsers } from "@repo/api-client";
 import { cn } from "../lib/utils";
 import { format } from "date-fns";
 

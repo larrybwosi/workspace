@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
-import { prisma } from '@repo/database';
+import type { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 
 @Injectable()

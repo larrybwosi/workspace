@@ -12,10 +12,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { cn } from '../lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from '../lib/auth/auth-client';
-import { useNotifications } from '../hooks/api/use-notifications';
-import { useDMConversations, dmKeys } from '../hooks/api/use-messages';
+import { useNotifications } from '@repo/api-client';
+import { useDMConversations, dmKeys } from '@repo/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '../lib/integrations/ably';
+import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { StartDMDialog } from '../features/chat/start-dm-dialog';

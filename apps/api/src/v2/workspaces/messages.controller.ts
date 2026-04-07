@@ -12,7 +12,7 @@ import {
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
-import { prisma } from '@repo/database';
+import type { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 

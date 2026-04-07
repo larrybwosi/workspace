@@ -27,7 +27,7 @@ import {
   useUpdateWorkspaceIntegration,
   useDeleteWorkspaceIntegration,
   useTestWorkspaceIntegration,
-} from "../../hooks/api/use-workspaces"
+} from "@repo/api-client"
 import {
   Plus,
   Trash2,
