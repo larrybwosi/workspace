@@ -3,7 +3,7 @@
 import * as React from "react"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { useTheme } from "../layout/theme-provider"
 
 interface EmojiPickerProps {

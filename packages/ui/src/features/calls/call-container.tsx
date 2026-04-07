@@ -1,17 +1,17 @@
 "use client"
 
-import { useCallStore } from "@/hooks/features/use-call-store"
+import { useCallStore } from "../../hooks/features/use-call-store"
 import { VideoCallContent } from "../chat/video-call-content"
 import { useState, useEffect } from "react"
-import { getAblyClient, AblyChannels } from "@/lib/integrations/ably"
-import { useSession } from "@/lib/auth/auth-client"
+import { getAblyClient, AblyChannels } from "../../lib/integrations/ably"
+import { useSession } from "../../lib/auth/auth-client"
 import {
   Dialog,
   DialogContent,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "../../ui/dialog"
+import { Button } from "../../ui/button"
 import { Phone, PhoneOff, Video, X } from "lucide-react"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "../../ui/avatar"
 
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore()

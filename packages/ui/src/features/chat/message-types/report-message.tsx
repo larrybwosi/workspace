@@ -16,17 +16,17 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import type { Message, MessageMetadata } from "@/lib/types";
+import { Card } from "../../../ui/card";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
+import { cn } from "../../../lib/utils";
+import type { Message, MessageMetadata } from "../../../lib/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../../../ui/dropdown-menu";
 
 // --- Types ---
 

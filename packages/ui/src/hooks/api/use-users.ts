@@ -1,8 +1,8 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
-import type { User } from "@/lib/types"
+import { apiClient } from "../../lib/api-client"
+import type { User } from "../../lib/types"
 
 export const userKeys = {
   all: ["users"] as const,

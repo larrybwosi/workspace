@@ -1,3 +1,0 @@
-
-> @repo/database@0.0.0 type-check /app/packages/database
-> tsc --noEmit

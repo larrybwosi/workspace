@@ -62,7 +62,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile
       - name: Run Prisma Generate
-        run: pnpm db:generate
+        run: pnpm --filter @repo/database run generate
       - name: Run Tests
         continue-on-error: true
         env:
@@ -106,7 +106,7 @@ jobs:
         cache: 'pnpm'
     - run: pnpm install --no-frozen-lockfile
     - name: Run Prisma Generate
-      run: pnpm db:generate
+      run: pnpm --filter @repo/database run generate
     - name: Install Playwright Browsers
       continue-on-error: true
       run: pnpm exec playwright install --with-deps

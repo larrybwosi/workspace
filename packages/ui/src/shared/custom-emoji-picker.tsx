@@ -2,15 +2,15 @@
 
 import * as React from "react"
 import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2 } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Input } from "../ui/input"
+import { Button } from "../ui/button"
+import { ScrollArea } from "../ui/scroll-area"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { useTheme } from "../layout/theme-provider"
-import { useCustomEmojis } from "@/hooks/api/use-custom-emojis"
+import { useCustomEmojis } from "../hooks/api/use-custom-emojis"
 
 interface CustomEmoji {
   id: string

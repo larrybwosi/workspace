@@ -5,17 +5,17 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card";
+} from "../ui/hover-card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+} from "../ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
 import { CalendarDays, Mail, Shield, Loader2 } from "lucide-react";
-import { useUsers } from "@/hooks/api/use-users";
-import { cn } from "@/lib/utils";
+import { useUsers } from "../hooks/api/use-users";
+import { cn } from "../lib/utils";
 import { format } from "date-fns";
 
 interface UserMentionProps {

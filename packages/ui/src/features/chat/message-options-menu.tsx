@@ -1,13 +1,13 @@
 "use client"
 import { MoreVertical, Reply, Edit, Trash2, Pin, Copy, Forward, Flag, Bookmark, LinkIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "../../ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "../../ui/dropdown-menu"
 
 interface MessageOptionsMenuProps {
   onReply?: () => void
