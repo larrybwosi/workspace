@@ -38,7 +38,7 @@ import {
 import { useWorkspace, useWorkspaceMembers } from '@repo/api-client';
 import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
-import { useCallStore } from '../hooks/features/use-call-store';
+import { useCallStore } from '@repo/api-client';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '../lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';

@@ -11,7 +11,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
-import { useSession } from '../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { useNotifications } from '@repo/api-client';
 import { useDMConversations, dmKeys } from '@repo/api-client';
 import { useQueryClient } from '@tanstack/react-query';

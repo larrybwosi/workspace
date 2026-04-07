@@ -3,7 +3,7 @@
 import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2 } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
-import { uploadFile, UploadedFile } from '../../lib/utils/upload-utils';
+import { uploadFile, type UploadedFile } from '@repo/shared';
 import { MentionSelector, MentionItem } from '../../shared/mention-selector';
 import { EmojiPicker } from '../../shared/emoji-picker';
 import React, { ChangeEvent, useEffect, useRef, useState, useMemo } from 'react';

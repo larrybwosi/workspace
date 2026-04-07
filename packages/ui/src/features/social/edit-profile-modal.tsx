@@ -16,7 +16,7 @@ import { useUpdateUser } from '@repo/api-client';
 import { toast } from 'sonner';
 import { User } from '../../lib/types';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '@repo/api-client';
 import { cn } from '../../lib/utils';
 
 type NotificationLevel = 'all' | 'mentions' | 'none';

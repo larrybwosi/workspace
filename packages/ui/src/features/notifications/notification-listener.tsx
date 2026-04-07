@@ -5,7 +5,7 @@ import { useEffect, useCallback } from "react"
 import { getAblyClient, AblyChannels, AblyEvents } from "@repo/shared"
 import { useParams, usePathname } from "next/navigation"
 import { showDiscordNotification, playNotificationSound } from "./custom-toasts/notification-utils"
-import { useSession } from "../../lib/auth/auth-client"
+import { useSession } from "@repo/shared"
 
 export function NotificationListener() {
   const { data: session } = useSession() as any

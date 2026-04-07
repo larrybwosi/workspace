@@ -11,7 +11,7 @@ import type { User } from '../../lib/types';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
 import { EditProfileModal } from './edit-profile-modal';
-import { useSession } from '../../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 
 interface UserProfileDialogProps {
   user: User & { banner?: string; statusText?: string; statusEmoji?: string };

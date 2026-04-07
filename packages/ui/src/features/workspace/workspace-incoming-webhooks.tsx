@@ -17,7 +17,7 @@ import { Label } from "../../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import { Badge } from "../../ui/badge"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "../../lib/api-client"
+import { apiClient } from "@repo/api-client"
 import { toast } from "sonner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 
