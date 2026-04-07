@@ -1,38 +1,35 @@
-"use client"
-
 import * as React from "react"
-import { Users, Settings, BarChart3, Shield, Activity, Database, Clock, UserPlus, AlertTriangle, TrendingUp, Sparkles } from 'lucide-react'
-import { useRouter } from "next/navigation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
-import { TopBar } from "@/components/layout/top-bar"
-import { AdminOverview } from "@/components/features/admin/admin-overview"
-import { AdminMembers } from "@/components/features/admin/admin-members"
-import { AdminAnalytics } from "@/components/features/admin/admin-analytics"
-import { AdminSettings } from "@/components/features/admin/admin-settings"
-import { AdminActivity } from "@/components/features/admin/admin-activity"
-import { AdminSecurity } from "@/components/features/admin/admin-security"
+import { Users, Settings, BarChart3, Shield, Activity, Sparkles, TrendingUp } from 'lucide-react'
+import { useNavigate } from "react-router-dom"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/ui/tabs"
+import { ScrollArea } from "@repo/ui/ui/scroll-area"
+import { Button } from "@repo/ui/ui/button"
+import { TopBar } from "@repo/ui/layout/top-bar"
+import { AdminSidebar } from "@repo/ui/layout/admin-sidebar"
+import { AdminOverview } from "@repo/ui/features/admin/admin-overview"
+import { AdminMembers } from "@repo/ui/features/admin/admin-members"
+import { AdminAnalytics } from "@repo/ui/features/admin/admin-analytics"
+import { AdminSettings } from "@repo/ui/features/admin/admin-settings"
+import { AdminActivity } from "@repo/ui/features/admin/admin-activity"
+import { AdminSecurity } from "@repo/ui/features/admin/admin-security"
 
-export default function AdminPage() {
-  const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+export function AdminOverviewPage() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = React.useState("overview")
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   return (
     <div className="flex h-screen bg-background">
-
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar
-          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          onMenuClick={() => setSidebarOpen(true)}
           channelName="System Administration"
           channelDescription="Manage your workspace settings, members, and analytics"
         />
 
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -49,7 +46,6 @@ export default function AdminPage() {
               </Button>
             </div>
 
-            {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid grid-cols-7 w-full max-w-5xl">
                 <TabsTrigger value="overview" className="gap-2">
@@ -60,7 +56,7 @@ export default function AdminPage() {
                   <Users className="h-4 w-4" />
                   Members
                 </TabsTrigger>
-                <TabsTrigger value="assets" className="gap-2" onClick={() => router.push('/admin/assets')}>
+                <TabsTrigger value="assets" className="gap-2" onClick={() => navigate('/assets')}>
                   <Sparkles className="h-4 w-4" />
                   Assets
                 </TabsTrigger>
