@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { Download, Search, ExternalLink } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
+import { Input } from "../../../ui/input"
+import { Button } from "../../../ui/button"
+import { Badge } from "../../../ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
 
 // Mock data
 const mockAuditLogs = [

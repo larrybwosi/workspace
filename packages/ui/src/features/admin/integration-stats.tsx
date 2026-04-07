@@ -1,8 +1,8 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Key, Webhook, Activity, TrendingUp } from 'lucide-react'
-import { useIntegrationStats } from "@/hooks/api/use-integrations"
+import { useIntegrationStats } from "../../hooks/api/use-integrations"
 
 export function IntegrationStats() {
   const { data: stats, isLoading } = useIntegrationStats()

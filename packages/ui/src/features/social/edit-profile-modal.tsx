@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import { X, Upload, Smile, Loader2, Image as ImageIcon, Bell, AtSign, UserPlus, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { EmojiPicker } from '@/components/shared/emoji-picker';
-import { useUpdateUser } from '@/hooks/api/use-users';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../ui/dialog';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
+import { Switch } from '../../ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Separator } from '../../ui/separator';
+import { EmojiPicker } from '../../shared/emoji-picker';
+import { useUpdateUser } from '../../hooks/api/use-users';
 import { toast } from 'sonner';
-import { User } from '@/lib/types';
+import { User } from '../../lib/types';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
-import { cn } from '@/lib/utils';
+import { apiClient } from '../../lib/api-client';
+import { cn } from '../../lib/utils';
 
 type NotificationLevel = 'all' | 'mentions' | 'none';
 

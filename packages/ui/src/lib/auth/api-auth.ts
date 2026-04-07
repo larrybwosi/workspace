@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { prisma } from "@/lib/db/prisma"
+import { prisma } from "../db/prisma"
 import crypto from "crypto"
 import { validateOAuth2Token } from "./oauth2"
 

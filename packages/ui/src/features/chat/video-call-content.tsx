@@ -31,22 +31,22 @@ import {
   ShieldAlert,
   MoreVertical,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '../../ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
+import { Badge } from '../../ui/badge';
 import { CallChat } from '../calls/call-chat';
-import { useSession } from '@/lib/auth/auth-client';
-import { cn } from '@/lib/utils';
+import { useSession } from '../../lib/auth/auth-client';
+import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
-import { useWorkspaceMembers } from '@/hooks/api/use-workspaces';
+import { useWorkspaceMembers } from '../../hooks/api/use-workspaces';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { getAblyClient, AblyChannels } from '@/lib/integrations/ably';
+} from '../../ui/dropdown-menu';
+import { getAblyClient, AblyChannels } from '../../lib/integrations/ably';
 
 interface VideoCallContentProps {
   callId: string;

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
-import type { Channel } from '@/lib/types';
+import { apiClient } from '../../lib/api-client';
+import type { Channel } from '../../lib/types';
 
 // Query keys for cache management
 export const channelKeys = {

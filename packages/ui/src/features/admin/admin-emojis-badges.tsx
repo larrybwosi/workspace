@@ -18,15 +18,15 @@ import {
   Heart,
   Trophy,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "../../ui/button"
+import { Input } from "../../ui/input"
+import { Label } from "../../ui/label"
+import { Badge } from "../../ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
+import { ScrollArea } from "../../ui/scroll-area"
+import { Switch } from "../../ui/switch"
+import { Textarea } from "../../ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -35,18 +35,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "../../ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+} from "../../ui/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { cn } from "../../lib/utils"
 
 interface CustomEmoji {
   id: string

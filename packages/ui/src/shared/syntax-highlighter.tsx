@@ -4,8 +4,8 @@ import * as React from "react";
 import { Check, Copy, FileCode, WrapText } from "lucide-react";
 import { Prism as SyntaxHighlighterPrism } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { cn } from "../lib/utils";
 
 interface SyntaxHighlighterProps {
   code: string;

@@ -1,20 +1,20 @@
 'use client';
 
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import type { Message } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
-import { cn, formatTime } from '@/lib/utils';
-import { CODE_BLOCK_REGEX, renderCustomMessage, extractCodeInfo } from '@/lib/message-renderer';
-import { SyntaxHighlighter } from '@/components/shared/syntax-highlighter';
-import { CustomEmojiPicker } from '@/components/shared/custom-emoji-picker';
-import { MarkdownRenderer } from '@/components/shared/markdown-renderer';
-import { CustomMessage } from '@/components/features/chat/message-types/custom-message';
-import { DocumentEmbed } from '@/components/features/chat/message-types/document-embed';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
+import { Button } from '../../ui/button';
+import type { Message } from '../../lib/types';
+import { mockUsers } from '../../lib/mock-data';
+import { cn, formatTime } from '../../lib/utils';
+import { CODE_BLOCK_REGEX, renderCustomMessage, extractCodeInfo } from '../../lib/message-renderer';
+import { SyntaxHighlighter } from '../../shared/syntax-highlighter';
+import { CustomEmojiPicker } from '../../shared/custom-emoji-picker';
+import { MarkdownRenderer } from '../../shared/markdown-renderer';
+import { CustomMessage } from './message-types/custom-message';
+import { DocumentEmbed } from './message-types/document-embed';
 import { MessageAttachments } from './message-types/message-attachments';
 import { LinkPreview } from './link-preview';
-import { useUsers } from '@/hooks/api/use-users';
+import { useUsers } from '../../hooks/api/use-users';
 
 import {
   ContextMenu,
@@ -22,7 +22,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/components/shared/context-menu';
+} from '../../shared/context-menu';
 
 import {
   DropdownMenu,
@@ -30,13 +30,13 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '../../ui/dropdown-menu';
 
-import { useUpdateMessage, useDeleteMessage } from '@/hooks/api/use-messages';
+import { useUpdateMessage, useDeleteMessage } from '../../hooks/api/use-messages';
 import { useMemo, useState } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
-import { useSession } from '@/lib/auth/auth-client';
+import { useSession } from '../../lib/auth/auth-client';
 import { toast } from 'sonner';
 
 interface MessageItemProps {

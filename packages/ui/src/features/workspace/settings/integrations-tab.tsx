@@ -1,5 +1,5 @@
 "use client"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs"
 import { ApiKeysManagement } from "./api-keys"
 import { WebhooksManagement } from "./webhooks-management"
 import { ExternalIntegrations } from "./external-intergrtions"

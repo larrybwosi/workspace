@@ -7,10 +7,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { useWebhookLogs } from "@/hooks/api/use-integrations"
+} from "../../ui/dialog"
+import { ScrollArea } from "../../ui/scroll-area"
+import { Badge } from "../../ui/badge"
+import { useWebhookLogs } from "../../hooks/api/use-integrations"
 import { format } from "date-fns"
 import { CheckCircle2, XCircle, Clock } from 'lucide-react'
 

@@ -3,7 +3,7 @@
 import React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 import {
   Dialog,
@@ -12,15 +12,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useToast } from "@/hooks/use-toast"
+} from "../../ui/dialog"
+import { Button } from "../../ui/button"
+import { Label } from "../../ui/label"
+import { Input } from "../../ui/input"
+import { Textarea } from "../../ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import { Calendar } from "../../ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
+import { useToast } from "../../hooks/use-toast"
 
 interface CreateProjectDialogProps {
   open: boolean

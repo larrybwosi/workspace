@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
+import { Label } from "../../../ui/label"
+import { Input } from "../../../ui/input"
+import { Switch } from "../../../ui/switch"
+import { Button } from "../../../ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
+import { Textarea } from "../../../ui/textarea"
+import { Badge } from "../../../ui/badge"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
+import { apiClient } from "../../../lib/api-client"
 
 export function SecurityTab({ workspaceId }: { workspaceId: string }) {
   const queryClient = useQueryClient()

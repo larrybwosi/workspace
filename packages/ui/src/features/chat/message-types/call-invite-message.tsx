@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import { Phone, Video, Play, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { useCallStore } from "@/hooks/features/use-call-store"
+import { Button } from "../../../ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../../ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
+import { Badge } from "../../../ui/badge"
+import { cn } from "../../../lib/utils"
+import { useCallStore } from "../../../hooks/features/use-call-store"
 import { toast } from "sonner"
 
 interface CallInviteMessageProps {

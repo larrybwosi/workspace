@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db/prisma"
+import { prisma } from "../db/prisma"
 import crypto from "crypto"
 
 export interface OAuth2TokenContext {

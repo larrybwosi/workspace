@@ -1,11 +1,11 @@
 "use client"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useDMConversations } from "@/hooks/api/use-messages"
-import { cn } from "@/lib/utils"
-import { usePresence } from "@/lib/contexts/presence-context"
+import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Button } from "../../ui/button"
+import { Badge } from "../../ui/badge"
+import { ScrollArea } from "../../ui/scroll-area"
+import { useDMConversations } from "../../hooks/api/use-messages"
+import { cn } from "../../lib/utils"
+import { usePresence } from "../../lib/contexts/presence-context"
 
 interface DirectMessagesListProps {
   activeUserId?: string

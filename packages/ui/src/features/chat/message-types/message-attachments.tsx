@@ -1,8 +1,8 @@
 "use client";
 
 import { FileIcon } from "lucide-react";
-import type { Attachment } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import type { Attachment } from "../../../lib/types";
+import { cn } from "../../../lib/utils";
 import { CallInviteMessage } from "./call-invite-message";
 
 interface MessageAttachmentsProps {

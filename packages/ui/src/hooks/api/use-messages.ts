@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
-import type { Message } from '@/lib/types';
+import { apiClient } from '../../lib/api-client';
+import type { Message } from '../../lib/types';
 
 export const messageKeys = {
   all: ['messages'] as const,

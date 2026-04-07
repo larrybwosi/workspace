@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
+import { apiClient } from "../../lib/api-client"
 import { messageKeys } from "./use-messages"
 
 // Add reaction to message

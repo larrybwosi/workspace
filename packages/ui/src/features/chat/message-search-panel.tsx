@@ -2,18 +2,18 @@
 
 import * as React from "react"
 import { Search, X, Calendar, User, Hash, FileText } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { Button } from "../../ui/button"
+import { Input } from "../../ui/input"
+import { ScrollArea } from "../../ui/scroll-area"
+import { Badge } from "../../ui/badge"
+import { cn } from "../../lib/utils"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "../../ui/select"
 
 interface MessageSearchResult {
   id: string

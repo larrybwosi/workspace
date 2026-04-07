@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { redis } from "@/lib/redis"
-import { prisma } from "@/lib/db/prisma"
+import { auth } from "."
+import { redis } from "../redis"
+import { prisma } from "../db/prisma"
 import crypto from "crypto"
 
 export interface ApiV2Context {

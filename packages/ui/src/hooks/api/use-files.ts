@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
-import type { Attachment } from "@/lib/types"
+import { apiClient } from "../../lib/api-client"
+import type { Attachment } from "../../lib/types"
 
 // Upload file
 export function useUploadFile() {

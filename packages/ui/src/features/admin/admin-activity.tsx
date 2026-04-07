@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { Activity, User, FileText, Settings, MessageSquare, Shield } from 'lucide-react'
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card } from "../../ui/card"
+import { Badge } from "../../ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { ScrollArea } from "../../ui/scroll-area"
 import { formatDistanceToNow } from "date-fns"
 
 export function AdminActivity() {

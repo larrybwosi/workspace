@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Send } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getAblyClient } from "@/lib/integrations/ably"
-import { useSession } from "@/lib/auth/auth-client"
+import { Button } from "../../ui/button"
+import { Input } from "../../ui/input"
+import { ScrollArea } from "../../ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { getAblyClient } from "../../lib/integrations/ably"
+import { useSession } from "../../lib/auth/auth-client"
 
 interface Message {
   id: string

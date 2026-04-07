@@ -2,18 +2,18 @@
 
 import * as React from "react"
 import { Search, UserPlus, MoreVertical, Mail, Shield, Calendar, CheckCircle2, XCircle } from 'lucide-react'
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Card } from "../../ui/card"
+import { Input } from "../../ui/input"
+import { Button } from "../../ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { Badge } from "../../ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from "../../ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -21,9 +21,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAdminMembers } from "@/hooks/api/use-admin"
+} from "../../ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import { useAdminMembers } from "../../hooks/api/use-admin"
 import { formatDistanceToNow } from "date-fns"
 
 export function AdminMembers() {

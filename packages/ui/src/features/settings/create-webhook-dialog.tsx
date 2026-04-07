@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "../../ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useCreateWebhook } from "@/hooks/api/use-integrations"
+} from "../../ui/dialog"
+import { Input } from "../../ui/input"
+import { Label } from "../../ui/label"
+import { Checkbox } from "../../ui/checkbox"
+import { useCreateWebhook } from "../../hooks/api/use-integrations"
 import { toast } from "sonner"
 
 const AVAILABLE_EVENTS = [

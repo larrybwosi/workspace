@@ -15,24 +15,24 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
+import { Button } from "../../../ui/button";
+import { Card, CardFooter, CardHeader } from "../../../ui/card";
+import { Badge } from "../../../ui/badge";
+import { Textarea } from "../../../ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { cn, formatTime } from "@/lib/utils";
-import type { Message } from "@/lib/types";
-import { mockUsers } from "@/lib/mock-data";
+} from "../../../ui/dropdown-menu";
+import { cn, formatTime } from "../../../lib/utils";
+import type { Message } from "../../../lib/types";
+import { mockUsers } from "../../../lib/mock-data";
 // Ensure this path matches your project structure
-import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
-import { useSession } from "@/lib/auth/auth-client";
+import { MarkdownRenderer } from "../../../shared/markdown-renderer";
+import { useSession } from "../../../lib/auth/auth-client";
 
 // --- Styles for Markdown Content ---
 // These classes ensure headers, lists, and code blocks render correctly inside the cards.

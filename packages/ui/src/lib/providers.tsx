@@ -2,19 +2,19 @@
 import type React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/layout/theme-provider";
+import { ThemeProvider } from "../layout/theme-provider";
 import dynamic from "next/dynamic";
-import { NotificationListener } from "@/components/features/notifications/notification-listener";
+import { NotificationListener } from "../features/notifications/notification-listener";
 import { PresenceProvider } from "./contexts/presence-context";
 import { useSession } from "./auth/auth-client";
 
 const CallContainer = dynamic(
-  () => import("@/components/features/calls/call-container").then((mod) => mod.CallContainer),
+  () => import("../features/calls/call-container").then((mod) => mod.CallContainer),
   { ssr: false }
 );
 
 const AgoraClientProvider = dynamic(
-  () => import("@/components/features/calls/agora-provider").then((mod) => mod.AgoraClientProvider),
+  () => import("../features/calls/agora-provider").then((mod) => mod.AgoraClientProvider),
   { ssr: false }
 );
 

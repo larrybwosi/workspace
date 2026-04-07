@@ -2,12 +2,12 @@
 
 import { useChat } from "@ai-sdk/react"
 import { Sparkles, Send, User, Bot, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "../../ui/button"
+import { Input } from "../../ui/input"
+import { ScrollArea } from "../../ui/scroll-area"
+import { Avatar, AvatarFallback } from "../../ui/avatar"
 import { useEffect, useRef } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 export function AssistantChannel() {
   const chat = useChat({

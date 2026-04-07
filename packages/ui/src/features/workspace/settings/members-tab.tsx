@@ -2,19 +2,19 @@
 
 import { useState } from "react"
 import { UserPlus, Search, Filter, MoreHorizontal, Crown, Mail, X, Shield, ExternalLink } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
+import { Button } from "../../../ui/button"
+import { Input } from "../../../ui/input"
+import { Badge } from "../../../ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../ui/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "../../../ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -22,16 +22,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from "../../../ui/dialog"
+import { Label } from "../../../ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
 import { toast } from "sonner"
 import {
   useWorkspaceMembers,
   useInviteToWorkspace,
   useUpdateWorkspaceMember,
   useRemoveWorkspaceMember,
-} from "@/hooks/api/use-workspaces"
+} from "../../../hooks/api/use-workspaces"
 
 interface MembersTabProps {
   workspaceId: string

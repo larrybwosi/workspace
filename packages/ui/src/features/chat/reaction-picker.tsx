@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { CustomEmojiPicker } from "@/components/shared/custom-emoji-picker"
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
+import { Button } from "../../ui/button"
+import { CustomEmojiPicker } from "../../shared/custom-emoji-picker"
 import { Smile, Sparkles } from "lucide-react"
 
 const COMMON_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡", "🎉", "🚀", "👀", "🔥", "✅", "❌"]

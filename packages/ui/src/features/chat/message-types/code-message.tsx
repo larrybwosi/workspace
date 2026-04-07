@@ -2,9 +2,9 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { SyntaxHighlighter } from "@/components/shared/syntax-highlighter";
-import type { Message, MessageMetadata } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { SyntaxHighlighter } from "../../../shared/syntax-highlighter";
+import type { Message, MessageMetadata } from "../../../lib/types";
+import { cn } from "../../../lib/utils";
 
 interface CodeMessageProps {
   message: Message;

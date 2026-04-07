@@ -1,29 +1,29 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '../../ui/scroll-area';
 import { MessageItem } from './message-item';
 import { MessageComposer } from './message-composer';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '../../ui/button';
+import { Skeleton } from '../../ui/skeleton';
 import { Loader2 } from 'lucide-react';
-import type { Thread, Message, Attachment } from '@/lib/types';
+import type { Thread, Message, Attachment } from '../../lib/types';
 import {
   useMessages,
   useSendMessage,
   useReplyToMessage,
   useMarkMessagesAsRead,
   messageKeys,
-} from '@/hooks/api/use-messages';
-import { useAddReaction, useRemoveReaction } from '@/hooks/api/use-reactions';
-import { cn } from '@/lib/utils';
+} from '../../hooks/api/use-messages';
+import { useAddReaction, useRemoveReaction } from '../../hooks/api/use-reactions';
+import { cn } from '../../lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '@/lib/integrations/ably';
-import { UploadedFile } from '@/lib/utils/upload-utils';
+import { getAblyClient, AblyChannels, AblyEvents } from '../../lib/integrations/ably';
+import { UploadedFile } from '../../lib/utils/upload-utils';
 import { toast } from 'sonner';
-import { useChannel } from '@/hooks/api/use-channels';
-import { useSession } from '@/lib/auth/auth-client';
+import { useChannel } from '../../hooks/api/use-channels';
+import { useSession } from '../../lib/auth/auth-client';
 import { Settings } from 'lucide-react';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 

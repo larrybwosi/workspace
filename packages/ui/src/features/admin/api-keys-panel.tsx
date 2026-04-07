@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { Key, Plus, Copy, Trash2, Eye, EyeOff, MoreVertical, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@/hooks/api/use-integrations"
-import { CreateApiKeyDialog } from "@/components/features/settings/create-api-key-dialog"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
+import { Button } from "../../ui/button"
+import { Badge } from "../../ui/badge"
+import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "../../hooks/api/use-integrations"
+import { CreateApiKeyDialog } from "../settings/create-api-key-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import {
@@ -14,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "../../ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "../../ui/alert-dialog"
 
 export function ApiKeysPanel() {
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)

@@ -5,10 +5,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SyntaxHighlighter } from "./syntax-highlighter";
 import { useParams, useRouter } from "next/navigation";
-import { useCustomEmojis } from "@/hooks/api/use-custom-emojis";
+import { useCustomEmojis } from "../hooks/api/use-custom-emojis";
 import { UserMention } from "./user-mention";
-import { cn } from "@/lib/utils";
-import { useChannels } from "@/hooks/api/use-channels";
+import { cn } from "../lib/utils";
+import { useChannels } from "../hooks/api/use-channels";
 
 interface MarkdownRendererProps {
   content: string;

@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { Users, MessageSquare, FolderKanban, CheckCircle2, TrendingUp, TrendingDown, Activity, Clock } from 'lucide-react'
-import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { useAdminStats } from "@/hooks/api/use-admin"
+import { Card } from "../../ui/card"
+import { Progress } from "../../ui/progress"
+import { Badge } from "../../ui/badge"
+import { useAdminStats } from "../../hooks/api/use-admin"
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 
 export function AdminOverview() {

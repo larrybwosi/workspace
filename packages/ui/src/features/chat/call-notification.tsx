@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Phone, Video, X } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card } from "@/components/ui/card"
+import { Button } from "../../ui/button"
+import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Card } from "../../ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface CallNotificationProps {

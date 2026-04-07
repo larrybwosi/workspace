@@ -9,14 +9,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { IconPicker } from "@/components/shared/icon-picker"
+} from "../../ui/dialog"
+import { Button } from "../../ui/button"
+import { Input } from "../../ui/input"
+import { Label } from "../../ui/label"
+import { RadioGroup, RadioGroupItem } from "../../ui/radio-group"
+import { Textarea } from "../../ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
+import { IconPicker } from "../../shared/icon-picker"
 import { MemberSelector } from "../workspace/member-selector"
 
 interface CreateChannelDialogProps {
