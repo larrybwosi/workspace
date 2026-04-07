@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { prisma } from '@repo/database';
+import { prisma } from '@repo/database';
 import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared';
 import { sendPushNotification } from '../lib/notifications/push-notifications';
 

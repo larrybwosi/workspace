@@ -14,7 +14,7 @@ import {
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
-import type { prisma } from '@repo/database';
+import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
@@ -30,7 +30,7 @@ const addMemberSchema = z.object({
 export class V2WorkspacesController {
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
-    private readonly auditService: V2AuditService,
+    private readonly auditService: V2AuditService
   ) {}
 
   @Get()
@@ -115,10 +115,7 @@ export class V2WorkspacesController {
   }
 
   @Delete(':userId')
-  async removeMember(
-    @V2Context() context: ApiV2Context,
-    @Param('userId') userId: string,
-  ) {
+  async removeMember(@V2Context() context: ApiV2Context, @Param('userId') userId: string) {
     if (!this.hasScope(context, 'members:write')) {
       throw new ForbiddenException('Forbidden: Missing members:write scope');
     }

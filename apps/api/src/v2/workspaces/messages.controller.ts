@@ -16,12 +16,12 @@ import {
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
-import type { prisma } from '@repo/database';
+import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
-import { getAblyRest, AblyChannels, AblyEvents } from '../../lib/integrations/ably';
+import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared';
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
@@ -52,12 +52,9 @@ const sendMessageSchema = z
         z.object({
           actionId: z.string(),
           label: z.string(),
-          style: z
-            .enum(['default', 'primary', 'danger'])
-            .optional()
-            .default('default'),
+          style: z.enum(['default', 'primary', 'danger']).optional().default('default'),
           value: z.string().optional(),
-        }),
+        })
       )
       .optional(),
     attachments: z
@@ -67,11 +64,11 @@ const sendMessageSchema = z
           type: z.string(),
           url: z.string(),
           size: z.string().optional(),
-        }),
+        })
       )
       .optional(),
   })
-  .refine((data) => data.channelId || data.recipientId, {
+  .refine(data => data.channelId || data.recipientId, {
     message: 'Either channelId or recipientId must be provided',
   });
 
@@ -81,7 +78,7 @@ export class V2MessagesController {
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly auditService: V2AuditService,
-    private readonly webhooksService: V2WebhooksService,
+    private readonly webhooksService: V2WebhooksService
   ) {}
 
   @Get('channels')
@@ -143,16 +140,10 @@ export class V2MessagesController {
 
     await this.redis.del(`v2:channels:${context.workspaceId}`);
 
-    await this.auditService.log(
-      context,
-      'channels.create',
-      'channel',
-      channel.id,
-      {
-        name,
-        type,
-      },
-    );
+    await this.auditService.log(context, 'channels.create', 'channel', channel.id, {
+      name,
+      type,
+    });
 
     await this.webhooksService.dispatch(context.workspaceId!, 'channel.created', {
       channel,
@@ -162,10 +153,7 @@ export class V2MessagesController {
   }
 
   @Get('channels/:channelId')
-  async getChannel(
-    @V2Context() context: ApiV2Context,
-    @Param('channelId') channelId: string,
-  ) {
+  async getChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string) {
     if (!this.hasScope(context, 'channels:read')) {
       throw new ForbiddenException('Forbidden: Missing channels:read scope');
     }
@@ -192,11 +180,7 @@ export class V2MessagesController {
   }
 
   @Patch('channels/:channelId')
-  async updateChannel(
-    @V2Context() context: ApiV2Context,
-    @Param('channelId') channelId: string,
-    @Body() body: any,
-  ) {
+  async updateChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string, @Body() body: any) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
     }
@@ -216,36 +200,21 @@ export class V2MessagesController {
       data: {
         name,
         icon,
-        type:
-          type === 'private'
-            ? 'private'
-            : type === 'public'
-              ? 'channel'
-              : undefined,
-        isPrivate:
-          type === 'private' ? true : type === 'public' ? false : undefined,
+        type: type === 'private' ? 'private' : type === 'public' ? 'channel' : undefined,
+        isPrivate: type === 'private' ? true : type === 'public' ? false : undefined,
         description,
       },
     });
 
     await this.redis.del(`v2:channels:${context.workspaceId}`);
 
-    await this.auditService.log(
-      context,
-      'channels.update',
-      'channel',
-      channelId,
-      validatedData.data,
-    );
+    await this.auditService.log(context, 'channels.update', 'channel', channelId, validatedData.data);
 
     return { channel };
   }
 
   @Delete('channels/:channelId')
-  async deleteChannel(
-    @V2Context() context: ApiV2Context,
-    @Param('channelId') channelId: string,
-  ) {
+  async deleteChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
     }
@@ -271,7 +240,7 @@ export class V2MessagesController {
     @Query('threadId') threadId?: string,
     @Query('contextId') contextId?: string,
     @Query('limit') limitStr?: string,
-    @Query('cursor') cursor?: string,
+    @Query('cursor') cursor?: string
   ) {
     if (!this.hasScope(context, 'messages:read')) {
       throw new ForbiddenException('Forbidden: Missing messages:read scope');
@@ -313,8 +282,7 @@ export class V2MessagesController {
       },
     });
 
-    const nextCursor =
-      messages.length === limit ? messages[messages.length - 1].id : null;
+    const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
 
     await this.auditService.log(context, 'messages.list', 'message', undefined, {
       channelId,
@@ -336,17 +304,8 @@ export class V2MessagesController {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const {
-      channelId,
-      recipientId,
-      content,
-      threadId,
-      contextId,
-      messageType,
-      metadata,
-      actions,
-      attachments,
-    } = validatedData.data;
+    const { channelId, recipientId, content, threadId, contextId, messageType, metadata, actions, attachments } =
+      validatedData.data;
 
     let createdMessage;
     let activeThreadId = threadId;
@@ -356,8 +315,7 @@ export class V2MessagesController {
         where: { id: channelId, workspaceId: context.workspaceId },
       });
 
-      if (!channel)
-        throw new NotFoundException('Channel not found in this workspace');
+      if (!channel) throw new NotFoundException('Channel not found in this workspace');
 
       if (contextId && !activeThreadId) {
         const existingThread = await prisma.thread.findFirst({
@@ -406,7 +364,7 @@ export class V2MessagesController {
             : undefined,
           attachments: attachments
             ? {
-                create: attachments.map((a) => ({
+                create: attachments.map(a => ({
                   name: a.name,
                   type: a.type,
                   url: a.url,
@@ -422,16 +380,10 @@ export class V2MessagesController {
         },
       });
 
-      await this.auditService.log(
-        context,
-        'messages.send',
-        'message',
-        createdMessage.id,
-        {
-          channelId,
-          threadId: activeThreadId,
-        },
-      );
+      await this.auditService.log(context, 'messages.send', 'message', createdMessage.id, {
+        channelId,
+        threadId: activeThreadId,
+      });
 
       const ably = getAblyRest();
       if (ably) {
@@ -444,9 +396,7 @@ export class V2MessagesController {
       });
 
       if (!recipientMembership) {
-        throw new ForbiddenException(
-          'Recipient is not a member of this workspace',
-        );
+        throw new ForbiddenException('Recipient is not a member of this workspace');
       }
 
       const participants = [context.userId, recipientId].sort();
@@ -475,7 +425,7 @@ export class V2MessagesController {
           senderId: context.userId,
           attachments: attachments
             ? {
-                create: attachments.map((a) => ({
+                create: attachments.map(a => ({
                   name: a.name,
                   type: a.type,
                   url: a.url,
@@ -495,15 +445,9 @@ export class V2MessagesController {
         data: { lastMessageAt: new Date() },
       });
 
-      await this.auditService.log(
-        context,
-        'messages.send_dm',
-        'dm_message',
-        createdMessage.id,
-        {
-          recipientId,
-        },
-      );
+      await this.auditService.log(context, 'messages.send_dm', 'dm_message', createdMessage.id, {
+        recipientId,
+      });
     }
 
     if (createdMessage) {

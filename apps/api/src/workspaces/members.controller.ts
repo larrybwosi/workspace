@@ -15,7 +15,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { publishToAbly, AblyChannels } from '../lib/integrations/ably';
+import { publishToAbly, AblyChannels } from '@repo/shared';
 
 const updateMemberSchema = z.object({
   role: z.enum(['owner', 'admin', 'member', 'guest']),
@@ -73,7 +73,7 @@ export class MembersController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('memberId') memberId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -138,11 +138,7 @@ export class MembersController {
   }
 
   @Delete(':memberId')
-  async removeMember(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('memberId') memberId: string,
-  ) {
+  async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });

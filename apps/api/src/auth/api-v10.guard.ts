@@ -1,11 +1,5 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-  ForbiddenException,
-} from '@nestjs/common';
-import type { prisma } from '@repo/database';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 
 @Injectable()
