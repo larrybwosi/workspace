@@ -1,10 +1,25 @@
 import { Module } from '@nestjs/common';
 import { V2WorkspacesController } from './workspaces/workspaces.controller';
 import { V2MessagesController } from './workspaces/messages.controller';
+import { V2SearchController } from './workspaces/search.controller';
+import { V2ApiTokensController } from './workspaces/api-tokens.controller';
+import { V2WebhooksController } from './workspaces/webhooks.controller';
+import { V2ThreadsController } from './workspaces/threads.controller';
+import { V2MessageActionsController } from './workspaces/actions.controller';
 import { ApiV2Guard } from '../auth/api-v2.guard';
+import { V2AuditService } from './v2-audit.service';
+import { V2WebhooksService } from './v2-webhooks.service';
 
 @Module({
-  controllers: [V2WorkspacesController, V2MessagesController],
-  providers: [ApiV2Guard],
+  controllers: [
+    V2WorkspacesController,
+    V2MessagesController,
+    V2SearchController,
+    V2ApiTokensController,
+    V2WebhooksController,
+    V2ThreadsController,
+    V2MessageActionsController,
+  ],
+  providers: [ApiV2Guard, V2AuditService, V2WebhooksService],
 })
 export class V2Module {}
