@@ -35,8 +35,8 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-import { useWorkspace, useWorkspaceMembers } from '../hooks/api/use-workspaces';
-import { useChannel } from '../hooks/api/use-channels';
+import { useWorkspace, useWorkspaceMembers } from '@repo/api-client';
+import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '../hooks/features/use-call-store';
 import { toast } from 'sonner';

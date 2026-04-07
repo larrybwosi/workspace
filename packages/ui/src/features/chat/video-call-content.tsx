@@ -38,7 +38,7 @@ import { CallChat } from '../calls/call-chat';
 import { useSession } from '../../lib/auth/auth-client';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
-import { useWorkspaceMembers } from '../../hooks/api/use-workspaces';
+import { useWorkspaceMembers } from '@repo/api-client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +46,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '../../ui/dropdown-menu';
-import { getAblyClient, AblyChannels } from '../../lib/integrations/ably';
+import { getAblyClient, AblyChannels } from '@repo/shared';
 
 interface VideoCallContentProps {
   callId: string;

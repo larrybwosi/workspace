@@ -6,7 +6,7 @@ import { ChannelView } from "@/components/features/chat/channel-view";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import axios from "axios";
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@repo/api-client";
 
 // Create a specialized query client for the widget
 const queryClient = new QueryClient({

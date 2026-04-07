@@ -8,7 +8,7 @@ import { Label } from "../../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import { Copy, Loader2, Plus, Trash2 } from "lucide-react"
-import { useWorkspaceInviteLinks, useCreateWorkspaceInviteLink, useDeleteWorkspaceInviteLink } from "../../hooks/api/use-workspace-invites"
+import { useWorkspaceInviteLinks, useCreateWorkspaceInviteLink, useDeleteWorkspaceInviteLink } from "@repo/api-client"
 import { useToast } from "../../hooks/use-toast"
 import { format } from "date-fns"
 

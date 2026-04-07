@@ -9,7 +9,7 @@ import { Textarea } from "../../../ui/textarea"
 import { Button } from "../../../ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
 import { toast } from "sonner"
-import { useUpdateWorkspace } from "../../../hooks/api/use-workspaces"
+import { useUpdateWorkspace } from "@repo/api-client"
 
 interface GeneralTabProps {
   workspace: any

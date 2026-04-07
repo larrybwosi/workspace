@@ -8,7 +8,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { prisma } from '@repo/database';
+import type { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
 import { auth } from './better-auth';

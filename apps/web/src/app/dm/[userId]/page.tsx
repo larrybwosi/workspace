@@ -8,7 +8,7 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { ChannelView } from "@/components/features/chat/channel-view"
 import { InfoPanel } from "@/components/shared/info-panel"
-import { useUser } from "@/hooks/api/use-users"
+import { useUser } from "@repo/api-client"
 
 export default function DMPage() {
   const params = useParams()

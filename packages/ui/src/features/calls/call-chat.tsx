@@ -6,7 +6,7 @@ import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { ScrollArea } from "../../ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
-import { getAblyClient } from "../../lib/integrations/ably"
+import { getAblyClient } from "@repo/shared"
 import { useSession } from "../../lib/auth/auth-client"
 
 interface Message {
