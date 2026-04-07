@@ -5,6 +5,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "BETTER_AUTH_SECRET",
+        "ABLY_API_KEY",
+        "AGORA_APP_ID",
+        "AGORA_APP_CERTIFICATE",
+        "SANITY_WRITE_TOKEN",
+        "DATABASE_URL"
+      ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
