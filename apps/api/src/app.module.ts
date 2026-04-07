@@ -12,6 +12,8 @@ import { V2Module } from './v2/v2.module';
 import { V10Module } from './v10/v10.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { InvitationsModule } from './invitations/invitations.module';
     V10Module,
     NotificationsModule,
     InvitationsModule,
+    IntegrationsModule,
+    CommonModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
