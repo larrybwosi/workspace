@@ -68,6 +68,82 @@ export function dispatchMessageCreate(ws: any, message: any, sequence: number) {
 }
 
 /**
+ * Dispatches an INTERACTION_CREATE event for a slash command.
+ */
+export function dispatchInteractionCreate(ws: any, interaction: any, sequence: number) {
+  const payload = {
+    op: GatewayOpcode.Dispatch,
+    s: sequence,
+    t: "INTERACTION_CREATE",
+    d: {
+      id: interaction.id,
+      application_id: interaction.applicationId,
+      type: interaction.type, // 2 for slash commands, 3 for components
+      data: interaction.data,
+      guild_id: interaction.guildId,
+      channel_id: interaction.channelId,
+      member: interaction.member,
+      user: interaction.user,
+      token: interaction.token,
+      version: 1
+    }
+  };
+
+  ws.send(JSON.stringify(payload));
+}
+
+/**
+ * Dispatches a GUILD_MEMBER_ADD event.
+ */
+export function dispatchGuildMemberAdd(ws: any, member: any, sequence: number) {
+  const payload = {
+    op: GatewayOpcode.Dispatch,
+    s: sequence,
+    t: "GUILD_MEMBER_ADD",
+    d: {
+      guild_id: member.workspaceId,
+      user: {
+        id: member.user.id,
+        username: member.user.name,
+        avatar: member.user.avatar,
+        bot: member.user.isBot
+      },
+      roles: [],
+      joined_at: member.joinedAt.toISOString(),
+      premium_since: null,
+      pending: false,
+      permissions: member.permissions.toString()
+    }
+  };
+
+  ws.send(JSON.stringify(payload));
+}
+
+/**
+ * Dispatches a MESSAGE_REACTION_ADD event.
+ */
+export function dispatchMessageReactionAdd(ws: any, reaction: any, sequence: number) {
+  const payload = {
+    op: GatewayOpcode.Dispatch,
+    s: sequence,
+    t: "MESSAGE_REACTION_ADD",
+    d: {
+      user_id: reaction.userId,
+      channel_id: reaction.message.channelId,
+      message_id: reaction.messageId,
+      guild_id: reaction.message.channel.workspaceId,
+      emoji: {
+        name: reaction.emoji,
+        id: reaction.customEmojiId || null,
+        animated: false
+      }
+    }
+  };
+
+  ws.send(JSON.stringify(payload));
+}
+
+/**
  * Dispatches a MESSAGE_UPDATE event.
  */
 export function dispatchMessageUpdate(ws: any, message: any, sequence: number) {
