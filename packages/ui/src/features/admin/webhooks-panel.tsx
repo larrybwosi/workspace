@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { Webhook, Plus, Trash2, MoreVertical, CheckCircle2, XCircle, Activity } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "@/hooks/api/use-integrations"
-import { CreateWebhookDialog } from "@/components/features/settings/create-webhook-dialog"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
+import { Button } from "../../ui/button"
+import { Badge } from "../../ui/badge"
+import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "../../hooks/api/use-integrations"
+import { CreateWebhookDialog } from "../settings/create-webhook-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import {
@@ -14,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "../../ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "../../ui/alert-dialog"
 import { WebhookLogsDialog } from "./webhook-logs-dialog"
 
 export function WebhooksPanel() {

@@ -19,13 +19,13 @@ import {
   UserPlus,
   Search,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { mockThread, mockUsers } from '@/lib/mock-data';
-import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
+import { ScrollArea } from '../ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
+import { mockThread, mockUsers } from '../lib/mock-data';
+import { cn } from '../lib/utils';
 import React from 'react';
 import { MessageSearchPanel } from '../features/chat/message-search-panel';
 import {
@@ -33,14 +33,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '../ui/dropdown-menu';
 
-import { useWorkspace, useWorkspaceMembers } from '@/hooks/api/use-workspaces';
-import { useChannel } from '@/hooks/api/use-channels';
+import { useWorkspace, useWorkspaceMembers } from '../hooks/api/use-workspaces';
+import { useChannel } from '../hooks/api/use-channels';
 import { useParams } from 'next/navigation';
-import { useCallStore } from '@/hooks/features/use-call-store';
+import { useCallStore } from '../hooks/features/use-call-store';
 import { toast } from 'sonner';
-import { User, Channel, WorkspaceMember } from '@/lib/types';
+import { User, Channel, WorkspaceMember } from '../lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
 import { format } from 'date-fns';
 

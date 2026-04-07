@@ -1,11 +1,11 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "@repo/database";
-import { jwt, organization, admin } from "better-auth/plugins";
+import { betterAuth } from 'better-auth';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { prisma } from '@repo/database';
+import { admin, jwt, organization } from 'better-auth/plugins';
 
 export const auth: any = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: "postgresql",
+    provider: 'postgresql',
   }),
   emailAndPassword: {
     enabled: true,
@@ -13,7 +13,6 @@ export const auth: any = betterAuth({
   plugins: [
     jwt(),
     organization(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    admin() as any,
+    // admin()
   ],
 }) as any;

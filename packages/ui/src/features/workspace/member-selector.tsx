@@ -2,13 +2,13 @@
 
 import * as React from "react"
 import { Check } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { mockUsers } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Button } from "../../ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../../ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
+import { Badge } from "../../ui/badge"
+import { mockUsers } from "../../lib/mock-data"
+import { cn } from "../../lib/utils"
 
 interface MemberSelectorProps {
   selectedMembers: string[]

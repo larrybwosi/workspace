@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-import { apiClient } from "@/lib/api-client"
-import type { SearchResult } from "@/lib/types"
+import { apiClient } from "../../lib/api-client"
+import type { SearchResult } from "../../lib/types"
 
 export const searchKeys = {
   all: ["search"] as const,

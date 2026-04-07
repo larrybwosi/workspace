@@ -1,15 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "../../ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
+import { Input } from "../../ui/input"
+import { Label } from "../../ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import { Copy, Loader2, Plus, Trash2 } from "lucide-react"
-import { useWorkspaceInviteLinks, useCreateWorkspaceInviteLink, useDeleteWorkspaceInviteLink } from "@/hooks/api/use-workspace-invites"
-import { useToast } from "@/hooks/use-toast"
+import { useWorkspaceInviteLinks, useCreateWorkspaceInviteLink, useDeleteWorkspaceInviteLink } from "../../hooks/api/use-workspace-invites"
+import { useToast } from "../../hooks/use-toast"
 import { format } from "date-fns"
 
 interface WorkspaceInviteLinksProps {

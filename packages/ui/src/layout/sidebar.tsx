@@ -2,25 +2,25 @@
 
 import * as React from 'react';
 import { Plus, ChevronDown, Inbox, Bookmark, Sparkles, Users, FileText, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
+import { ScrollArea } from '../ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
+import { Skeleton } from '../ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { cn } from '../lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
-import { useSession } from '@/lib/auth/auth-client';
-import { useNotifications } from '@/hooks/api/use-notifications';
-import { useDMConversations, dmKeys } from '@/hooks/api/use-messages';
+import { useSession } from '../lib/auth/auth-client';
+import { useNotifications } from '../hooks/api/use-notifications';
+import { useDMConversations, dmKeys } from '../hooks/api/use-messages';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '@/lib/integrations/ably';
-import { WorkspaceSwitcher } from '@/components/features/workspace/workspace-switcher';
-import { UserProfileDialog } from '@/components/features/social/user-profile-dialog';
-import { StartDMDialog } from '@/components/features/chat/start-dm-dialog';
-import { User } from '@/lib/types';
-import { usePresence } from '@/lib/contexts/presence-context';
+import { getAblyClient, AblyChannels, AblyEvents } from '../lib/integrations/ably';
+import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
+import { UserProfileDialog } from '../features/social/user-profile-dialog';
+import { StartDMDialog } from '../features/chat/start-dm-dialog';
+import { User } from '../lib/types';
+import { usePresence } from '../lib/contexts/presence-context';
 
 // ---------------------------------------------------------------------------
 // Types

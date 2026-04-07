@@ -2,11 +2,11 @@
 
 import React from "react";
 import { FileText, ExternalLink, Download, Clock } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import type { Message } from "@/lib/types";
+import { Card } from "../../../ui/card";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
+import { cn } from "../../../lib/utils";
+import type { Message } from "../../../lib/types";
 
 export interface DocumentEmbedProps {
   message: Message;

@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { getAblyClient, AblyChannels, AblyEvents } from "@/lib/integrations/ably"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getAblyClient, AblyChannels, AblyEvents } from "../../lib/integrations/ably"
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
 
 interface TypingIndicatorProps {
   channelId: string
