@@ -36,6 +36,16 @@
   "pnpm": {
     "overrides": {
       "keyv": "5.5.4"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "eslint",
+        "react"
+      ],
+      "allowedVersions": {
+        "eslint": "10",
+        "react": "19"
+      }
     }
   }
 }
