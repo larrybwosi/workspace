@@ -10,7 +10,8 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiV2Guard, ApiV2Context } from '../../auth/api-v2.guard';
+import { ApiV2Guard } from '../../auth/api-v2.guard';
+import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
 import Redis from 'ioredis';
