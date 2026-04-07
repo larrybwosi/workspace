@@ -7,12 +7,16 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/users.controller';
 import { WorkspacesController } from './workspaces/workspaces.controller';
+import { NotificationsModule } from './notifications/notifications.module';
+import { InvitationsModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    NotificationsModule,
+    InvitationsModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
