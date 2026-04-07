@@ -21,6 +21,7 @@ import {
   Settings,
   Building2,
   Palette,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@repo/ui/ui/button"
 import { Input } from "@repo/ui/ui/input"
@@ -51,26 +52,32 @@ import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/ui/avatar"
 import { TopBar } from "@repo/ui/layout/top-bar"
 import { AdminSidebar } from "@repo/ui/layout/admin-sidebar"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
-import { apiClient } from "@repo/api-client"
+import {
+    useAdminAssets,
+    useCreateAdminAsset,
+    useUpdateAdminAsset,
+    useDeleteAdminAsset,
+    useAdminUpload
+} from "@repo/api-client"
+import { useWorkspaces } from "@repo/api-client"
 
 type AssetType = "emoji" | "sticker" | "sound" | "profile_asset"
 
 export function AdminAssetsPage() {
-  const navigate = useNavigate()
   const [activeTab, setActiveTab] = React.useState<AssetType>("profile_asset")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [loading, setLoading] = React.useState(true)
-  const [assets, setAssets] = React.useState<any[]>([])
-  const [workspaces, setWorkspaces] = React.useState<any[]>([])
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [editingAsset, setEditingAsset] = React.useState<any>(null)
-  const [statsDialogOpen, setStatsDialogOpen] = React.useState(false)
-  const [currentStats, setCurrentStats] = React.useState<any[]>([])
-  const [statsLoading, setStatsLoading] = React.useState(false)
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
-  // Form State
+  const { data: assets = [], isLoading: loading } = useAdminAssets(activeTab)
+  const { data: workspaces = [] } = useWorkspaces()
+
+  const createMutation = useCreateAdminAsset()
+  const updateMutation = useUpdateAdminAsset()
+  const deleteMutation = useDeleteAdminAsset()
+  const uploadMutation = useAdminUpload()
+
   const [formData, setFormData] = React.useState<any>({
     name: "",
     url: "",
@@ -96,34 +103,6 @@ export function AdminAssetsPage() {
       minAccountAgeDays: 0,
     }
   })
-
-  const fetchAssets = React.useCallback(async () => {
-    setLoading(true)
-    try {
-      const { data } = await apiClient.get(`/admin/assets?type=${activeTab}`)
-      setAssets(Array.isArray(data) ? data : [])
-    } catch (error) {
-      toast.error("Failed to load assets")
-      setAssets([])
-    } finally {
-      setLoading(false)
-    }
-  }, [activeTab])
-
-  const fetchWorkspaces = async () => {
-    try {
-      const { data } = await apiClient.get("/workspaces")
-      setWorkspaces(Array.isArray(data) ? data : [])
-    } catch (e) {
-      console.error("Failed to fetch workspaces")
-      setWorkspaces([])
-    }
-  }
-
-  React.useEffect(() => {
-    fetchAssets()
-    fetchWorkspaces()
-  }, [fetchAssets])
 
   const handleOpenDialog = (asset: any = null) => {
     if (asset) {
@@ -174,21 +153,21 @@ export function AdminAssetsPage() {
       }
 
       if (editingAsset) {
-        await apiClient.patch("/admin/assets", {
+        await updateMutation.mutateAsync({
           type: activeTab,
           id: editingAsset.id,
           data: dataToSave
         })
+        toast.success("Asset updated successfully")
       } else {
-        await apiClient.post("/admin/assets", {
+        await createMutation.mutateAsync({
           type: activeTab,
           data: dataToSave
         })
+        toast.success("Asset created successfully")
       }
 
-      toast.success(`Asset ${editingAsset ? "updated" : "created"} successfully`)
       setIsDialogOpen(false)
-      fetchAssets()
     } catch (error) {
       toast.error("Error saving asset")
     }
@@ -198,26 +177,27 @@ export function AdminAssetsPage() {
     if (!confirm("Are you sure you want to delete this asset?")) return
 
     try {
-      await apiClient.delete(`/admin/assets?type=${activeTab}&id=${id}`)
+      await deleteMutation.mutateAsync({ type: activeTab, id })
       toast.success("Asset deleted")
-      fetchAssets()
     } catch (error) {
       toast.error("Error deleting asset")
     }
   }
 
-  const handleShowStats = async (asset: any) => {
-    setStatsLoading(true)
-    setStatsDialogOpen(true)
-    try {
-      const { data } = await apiClient.get(`/admin/assets/stats?assetId=${asset.id}&assetType=${activeTab}`)
-      setCurrentStats(Array.isArray(data) ? data : [])
-    } catch (error) {
-      toast.error("Failed to load statistics")
-      setCurrentStats([])
-    } finally {
-      setStatsLoading(false)
-    }
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      try {
+          const res = await uploadMutation.mutateAsync(file)
+          setFormData({
+              ...formData,
+              [activeTab === 'emoji' ? 'imageUrl' : 'url']: res.url
+          })
+          toast.success("File uploaded successfully")
+      } catch (e) {
+          toast.error("Failed to upload file")
+      }
   }
 
   return (
@@ -246,53 +226,6 @@ export function AdminAssetsPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add New {activeTab.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}
               </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" /> Global Plan
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">Enterprise</div>
-                  <p className="text-xs text-muted-foreground">Managing platform-wide assets</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Crown className="h-4 w-4" /> Premium Tier
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Nitro</div>
-                  <p className="text-xs text-muted-foreground">Standard for premium assets</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Shield className="h-4 w-4" /> Security
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Enabled</div>
-                  <p className="text-xs text-muted-foreground">Eligibility rules enforced</p>
-                </CardContent>
-              </Card>
-               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" /> Usage Tracking
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Active</div>
-                  <p className="text-xs text-muted-foreground">Logging detailed analytics</p>
-                </CardContent>
-              </Card>
             </div>
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AssetType)} className="space-y-6">
@@ -343,7 +276,10 @@ export function AdminAssetsPage() {
                     <TableBody>
                       {loading ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-10">Loading assets...</TableCell>
+                          <TableCell colSpan={6} className="text-center py-10">
+                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                              <p className="mt-2 text-sm text-muted-foreground">Loading assets...</p>
+                          </TableCell>
                         </TableRow>
                       ) : assets.length === 0 ? (
                         <TableRow>
@@ -351,8 +287,8 @@ export function AdminAssetsPage() {
                         </TableRow>
                       ) : (
                         assets
-                          .filter(a => a.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                          .map((asset) => (
+                          .filter((a: any) => a.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map((asset: any) => (
                           <TableRow key={asset.id}>
                             <TableCell>
                               <div className="h-12 w-12 rounded border bg-muted flex items-center justify-center overflow-hidden">
@@ -421,9 +357,6 @@ export function AdminAssetsPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleShowStats(asset)}>
-                                    <BarChart3 className="h-4 w-4 mr-2" /> View Stats
-                                  </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleOpenDialog(asset)}>
                                     <Edit className="h-4 w-4 mr-2" /> Edit
                                   </DropdownMenuItem>
@@ -473,14 +406,22 @@ export function AdminAssetsPage() {
 
               {formData.type !== "theme" && (
                 <div className="space-y-2">
-                  <Label>URL / Source</Label>
+                  <Label>Asset File</Label>
                   <div className="flex gap-2">
                     <Input
-                      value={activeTab === 'emoji' ? formData.imageUrl : formData.url}
-                      onChange={(e) => setFormData({ ...formData, [activeTab === 'emoji' ? 'imageUrl' : 'url']: e.target.value })}
-                      placeholder="https://..."
+                      value={activeTab === 'emoji' ? (formData.imageUrl || "") : (formData.url || "")}
+                      readOnly
+                      placeholder="Upload a file..."
                     />
-                    <Button variant="outline" size="icon"><Upload className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="relative overflow-hidden">
+                        {uploadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        <input
+                            type="file"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={handleFileUpload}
+                            disabled={uploadMutation.isPending}
+                        />
+                    </Button>
                   </div>
                 </div>
               )}
@@ -719,60 +660,10 @@ export function AdminAssetsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveAsset}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Stats Dialog */}
-      <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Usage Analytics</DialogTitle>
-            <DialogDescription>
-              Real-time tracking of asset utilization across the platform.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <ScrollArea className="h-[400px] pr-4">
-              {statsLoading ? (
-                <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
-                  <BarChart3 className="h-8 w-8 animate-pulse" />
-                  <p>Loading analytics data...</p>
-                </div>
-              ) : currentStats.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground opacity-50">
-                  <Globe className="h-12 w-12" />
-                  <p>No usage data recorded yet</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {currentStats.map((log: any) => (
-                    <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={log.user?.avatar || log.user?.image} />
-                          <AvatarFallback>{log.user?.name?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium">{log.user?.name || "Unknown User"}</p>
-                          <p className="text-[10px] text-muted-foreground">User ID: {log.userId}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">{new Date(log.usedAt).toLocaleString()}</p>
-                        {log.workspaceId && <Badge variant="outline" className="text-[9px]">Local</Badge>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => setStatsDialogOpen(false)}>Close Analytics</Button>
+            <Button onClick={handleSaveAsset} disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
