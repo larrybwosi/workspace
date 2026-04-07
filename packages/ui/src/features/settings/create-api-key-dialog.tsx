@@ -13,7 +13,7 @@ import {
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Checkbox } from "../../ui/checkbox"
-import { useCreateApiKey } from "../../hooks/api/use-integrations"
+import { useCreateApiKey } from "@repo/api-client"
 import { toast } from "sonner"
 import { Copy, CheckCircle2 } from 'lucide-react'
 

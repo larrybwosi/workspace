@@ -5,7 +5,7 @@ import { Users, MessageSquare, FolderKanban, CheckCircle2, TrendingUp, TrendingD
 import { Card } from "../../ui/card"
 import { Progress } from "../../ui/progress"
 import { Badge } from "../../ui/badge"
-import { useAdminStats } from "../../hooks/api/use-admin"
+import { useAdminStats } from "@repo/api-client"
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 
 export function AdminOverview() {

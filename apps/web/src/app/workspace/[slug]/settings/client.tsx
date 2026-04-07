@@ -14,7 +14,7 @@ import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"
 import { InfoPanel } from "@/components/shared/info-panel"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { useState } from "react"
-import { useWorkspaces } from "@/hooks/api/use-workspaces"
+import { useWorkspaces } from "@repo/api-client"
 import { useParams } from "next/navigation"
 
 export default function WorkspaceSettingsPageClient({

@@ -5,7 +5,7 @@ import { Headphones, X, Mic, MicOff, Video, VideoOff, Users, PhoneOff } from "lu
 import { Button } from "../../ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
 import { cn } from "../../lib/utils"
-import { getAblyClient, AblyChannels, AblyEvents } from "../../lib/integrations/ably"
+import { getAblyClient, AblyChannels, AblyEvents } from "@repo/shared"
 import { VideoCall } from "./video-call"
 
 interface HuddleProps {

@@ -10,7 +10,7 @@ import {
 } from "../../ui/dialog"
 import { ScrollArea } from "../../ui/scroll-area"
 import { Badge } from "../../ui/badge"
-import { useWebhookLogs } from "../../hooks/api/use-integrations"
+import { useWebhookLogs } from "@repo/api-client"
 import { format } from "date-fns"
 import { CheckCircle2, XCircle, Clock } from 'lucide-react'
 

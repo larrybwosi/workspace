@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, UseGuards, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { prisma, User } from '@repo/database';
+import type { prisma, User } from '@repo/database';
 import { z } from 'zod';
 
 const createWorkspaceSchema = z.object({
