@@ -11,7 +11,8 @@
         "AGORA_APP_ID",
         "AGORA_APP_CERTIFICATE",
         "SANITY_WRITE_TOKEN",
-        "DATABASE_URL"
+        "DATABASE_URL",
+        "BETTER_AUTH_URL"
       ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
