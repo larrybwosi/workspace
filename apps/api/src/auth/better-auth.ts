@@ -13,6 +13,6 @@ export const auth: any = betterAuth({
   plugins: [
     jwt(),
     organization(),
-    // admin()
+    admin() as any,
   ],
 }) as any;

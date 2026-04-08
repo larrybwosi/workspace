@@ -13,7 +13,7 @@ import {
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Checkbox } from "../../ui/checkbox"
-import { useCreateWebhook } from "../../hooks/api/use-integrations"
+import { useCreateWebhook } from "@repo/api-client"
 import { toast } from "sonner"
 
 const AVAILABLE_EVENTS = [

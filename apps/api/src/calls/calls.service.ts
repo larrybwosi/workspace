@@ -1,7 +1,20 @@
-import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { prisma, User, Call, CallParticipant } from '@repo/database';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
+import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
-import { agoraConfig, publishToAbly, AblyChannels, AblyEvents, isUserEligibleForAsset, logAssetUsage } from '@repo/shared';
+import {
+  agoraConfig,
+  publishToAbly,
+  AblyChannels,
+  AblyEvents,
+  isUserEligibleForAsset,
+  logAssetUsage,
+} from '@repo/shared';
 
 @Injectable()
 export class CallsService {
@@ -18,7 +31,7 @@ export class CallsService {
     if (incomingCallId) {
       call = await prisma.call.findUnique({
         where: { id: incomingCallId },
-        include: { participants: { where: { userId: user.id } } }
+        include: { participants: { where: { userId: user.id } } },
       });
       if (call) {
         if ((call.participants[0] as any)?.isBanned) {
@@ -29,7 +42,7 @@ export class CallsService {
         const targetWorkspaceId = (call.metadata as any)?.workspaceId || workspaceId;
 
         const isMember = await prisma.workspaceMember.findUnique({
-          where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: user.id } }
+          where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: user.id } },
         });
         if (!isMember) {
           throw new ForbiddenException('Unauthorized: Not a workspace member');
@@ -40,7 +53,7 @@ export class CallsService {
           const channelIdMatch = channelMatch[1];
           const channel = await prisma.channel.findUnique({
             where: { id: channelIdMatch },
-            include: { members: { where: { userId: user.id } } }
+            include: { members: { where: { userId: user.id } } },
           });
           if (channel?.isPrivate && channel.members.length === 0) {
             throw new ForbiddenException('Unauthorized: Not a channel member');
@@ -80,7 +93,7 @@ export class CallsService {
           type,
           initiatorId: user.id,
           status: 'pending',
-          metadata: { workspaceId }
+          metadata: { workspaceId },
         },
       });
 
@@ -98,7 +111,7 @@ export class CallsService {
       } else if (notifyAll) {
         const members = await prisma.workspaceMember.findMany({
           where: { workspaceId },
-          include: { user: true }
+          include: { user: true },
         });
 
         for (const member of members) {
@@ -118,7 +131,7 @@ export class CallsService {
       } else if (channelId) {
         const members = await prisma.channelMember.findMany({
           where: { channelId },
-          include: { user: true }
+          include: { user: true },
         });
 
         for (const member of members) {
@@ -167,7 +180,7 @@ export class CallsService {
       channelName: agoraChannelName,
       uid,
       type: call.type,
-      workspaceId: workspaceId || (call.metadata as any)?.workspaceId
+      workspaceId: workspaceId || (call.metadata as any)?.workspaceId,
     };
   }
 
@@ -176,7 +189,7 @@ export class CallsService {
 
     const call = await prisma.call.findUnique({
       where: { id: callId },
-      include: { participants: true }
+      include: { participants: true },
     });
 
     if (!call) {
@@ -194,26 +207,26 @@ export class CallsService {
         where: {
           callId_userId: {
             callId,
-            userId: user.id
-          }
+            userId: user.id,
+          },
         },
         update: {
           leftAt: null,
           joinedAt: new Date(),
-          agoraUid: data.uid
+          agoraUid: data.uid,
         },
         create: {
           callId,
           userId: user.id,
           role: call.initiatorId === user.id ? 'host' : 'participant',
-          agoraUid: data.uid
-        }
+          agoraUid: data.uid,
+        },
       });
 
       if (call.status === 'pending') {
         await prisma.call.update({
           where: { id: callId },
-          data: { status: 'active' }
+          data: { status: 'active' },
         });
       }
 
@@ -221,7 +234,7 @@ export class CallsService {
         if (participant.userId !== user.id && !participant.leftAt) {
           await publishToAbly(AblyChannels.user(participant.userId), 'call-joined', {
             callId,
-            userId: user.id
+            userId: user.id,
           });
         }
       }
@@ -230,19 +243,19 @@ export class CallsService {
         where: {
           callId_userId: {
             callId,
-            userId: user.id
-          }
+            userId: user.id,
+          },
         },
         data: {
-          leftAt: new Date()
-        }
+          leftAt: new Date(),
+        },
       });
 
       const activeParticipants = await prisma.callParticipant.count({
         where: {
           callId,
-          leftAt: null
-        }
+          leftAt: null,
+        },
       });
 
       if (activeParticipants === 0) {
@@ -253,8 +266,8 @@ export class CallsService {
           data: {
             status: 'ended',
             endedAt: new Date(),
-            duration
-          }
+            duration,
+          },
         });
       }
     } else if (action === 'updateState') {
@@ -262,10 +275,10 @@ export class CallsService {
         where: {
           callId_userId: {
             callId,
-            userId: user.id
-          }
+            userId: user.id,
+          },
         },
-        data
+        data,
       });
 
       for (const participant of call.participants) {
@@ -273,7 +286,7 @@ export class CallsService {
           await publishToAbly(AblyChannels.user(participant.userId), 'participant-state-changed', {
             callId,
             userId: user.id,
-            ...data
+            ...data,
           });
         }
       }
@@ -289,14 +302,14 @@ export class CallsService {
 
       await prisma.callParticipant.update({
         where: { id: targetParticipant.id },
-        data: { role: 'host' }
+        data: { role: 'host' },
       });
 
       for (const participant of call.participants) {
         await publishToAbly(AblyChannels.user(participant.userId), 'participant-promoted', {
           callId,
           userId: targetParticipant.userId,
-          agoraUid: targetParticipant.agoraUid
+          agoraUid: targetParticipant.agoraUid,
         });
       }
     } else if (action === 'remove') {
@@ -313,15 +326,15 @@ export class CallsService {
         where: { id: targetParticipant.id },
         data: {
           leftAt: new Date(),
-          isBanned: true
-        }
+          isBanned: true,
+        },
       });
 
       for (const participant of call.participants) {
         await publishToAbly(AblyChannels.user(participant.userId), 'participant-removed', {
           callId,
           userId: targetParticipant.userId,
-          agoraUid: targetParticipant.agoraUid
+          agoraUid: targetParticipant.agoraUid,
         });
       }
     } else if (action === 'endForAll') {
@@ -336,13 +349,13 @@ export class CallsService {
         data: {
           status: 'ended',
           endedAt: new Date(),
-          duration
-        }
+          duration,
+        },
       });
 
       for (const participant of call.participants) {
         await publishToAbly(AblyChannels.user(participant.userId), 'call-ended', {
-          callId
+          callId,
         });
       }
     } else if (action === 'screenShareStarted') {
@@ -351,7 +364,7 @@ export class CallsService {
           await publishToAbly(AblyChannels.user(participant.userId), 'screen-share-started', {
             callId,
             userId: user.id,
-            agoraUid: call.participants.find(p => p.userId === user.id)?.agoraUid
+            agoraUid: call.participants.find(p => p.userId === user.id)?.agoraUid,
           });
         }
       }
@@ -364,7 +377,7 @@ export class CallsService {
     return prisma.callParticipant.findMany({
       where: {
         callId,
-        leftAt: null
+        leftAt: null,
       },
       include: {
         user: {
@@ -372,10 +385,10 @@ export class CallsService {
             id: true,
             name: true,
             image: true,
-            avatar: true
-          }
-        }
-      }
+            avatar: true,
+          },
+        },
+      },
     });
   }
 
@@ -430,7 +443,7 @@ export class CallsService {
     });
 
     const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId: user.id } }
+      where: { workspaceId_userId: { workspaceId, userId: user.id } },
     });
 
     if (member && (member.role === 'admin' || member.role === 'owner')) {
@@ -485,7 +498,7 @@ export class CallsService {
     const { soundId, callId } = body;
 
     const sound = await prisma.soundboardSound.findUnique({
-      where: { id: soundId }
+      where: { id: soundId },
     });
 
     if (!sound) {
@@ -503,7 +516,7 @@ export class CallsService {
       assetId: soundId,
       assetType: 'sound',
       userId: user.id,
-      workspaceId: sound.workspaceId || undefined
+      workspaceId: sound.workspaceId || undefined,
     });
 
     if (callId) {
@@ -512,7 +525,7 @@ export class CallsService {
         url: sound.url,
         userId: user.id,
         volume: sound.volume,
-        emoji: sound.emoji
+        emoji: sound.emoji,
       });
     }
 

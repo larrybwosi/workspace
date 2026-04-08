@@ -5,6 +5,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "BETTER_AUTH_SECRET",
+        "ABLY_API_KEY",
+        "AGORA_APP_ID",
+        "AGORA_APP_CERTIFICATE",
+        "SANITY_WRITE_TOKEN",
+        "BETTER_AUTH_URL"
+      ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
@@ -12,6 +20,14 @@
     },
     "type-check": {
       "dependsOn": ["^type-check"]
+    },
+    "test": {
+      "dependsOn": ["^test", "db:generate"],
+      "env": ["REDIS_URL", "BETTER_AUTH_SECRET"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build", "db:generate"],
+      "env": ["REDIS_URL", "BETTER_AUTH_SECRET", "PORT"]
     },
     "db:generate": {
       "cache": false

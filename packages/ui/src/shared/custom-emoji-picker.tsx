@@ -10,7 +10,7 @@ import { ScrollArea } from "../ui/scroll-area"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { useTheme } from "../layout/theme-provider"
-import { useCustomEmojis } from "../hooks/api/use-custom-emojis"
+import { useCustomEmojis } from "@repo/api-client"
 
 interface CustomEmoji {
   id: string

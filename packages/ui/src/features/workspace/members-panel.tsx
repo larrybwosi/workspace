@@ -24,7 +24,7 @@ import type { User } from "../../lib/types";
 import { cn } from "../../lib/utils";
 import { Skeleton } from "../../ui/skeleton";
 import { UserProfileDialog } from "../social/user-profile-dialog";
-import { useWorkspaceMembers } from "../../hooks/api/use-workspaces";
+import { useWorkspaceMembers } from "@repo/api-client";
 import { useParams } from "next/navigation";
 import { usePresence } from "../../lib/contexts/presence-context";
 

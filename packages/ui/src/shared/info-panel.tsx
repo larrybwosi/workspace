@@ -28,17 +28,12 @@ import { mockThread, mockUsers } from '../lib/mock-data';
 import { cn } from '../lib/utils';
 import React from 'react';
 import { MessageSearchPanel } from '../features/chat/message-search-panel';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-import { useWorkspace, useWorkspaceMembers } from '../hooks/api/use-workspaces';
-import { useChannel } from '../hooks/api/use-channels';
+import { useWorkspace, useWorkspaceMembers } from '@repo/api-client';
+import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
-import { useCallStore } from '../hooks/features/use-call-store';
+import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '../lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
@@ -81,61 +76,61 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     if (!workspace?.id || !isOpen) return;
 
     const fetchActiveCalls = async () => {
-        try {
-            const response = await fetch(`/api/workspaces/${workspace.id}/calls/active`);
-            if (response.ok) {
-                const data = await response.json();
-                setActiveCalls(data.calls || []);
-            }
-        } catch (error) {
-            console.error(error);
+      try {
+        const response = await fetch(`/api/workspaces/${workspace.id}/calls/active`);
+        if (response.ok) {
+          const data = await response.json();
+          setActiveCalls(data.calls || []);
         }
+      } catch (error) {
+        console.error(error);
+      }
     };
 
     const fetchScheduledCalls = async () => {
-        try {
-            const response = await fetch(`/api/calls/scheduled?workspaceId=${workspace.id}`);
-            if (response.ok) {
-                const data = await response.json();
-                setScheduledCalls(data || []);
-            }
-        } catch (error) {
-            console.error(error);
+      try {
+        const response = await fetch(`/api/calls/scheduled?workspaceId=${workspace.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setScheduledCalls(data || []);
         }
+      } catch (error) {
+        console.error(error);
+      }
     };
 
     fetchActiveCalls();
     fetchScheduledCalls();
     const interval = setInterval(() => {
-        fetchActiveCalls();
-        fetchScheduledCalls();
+      fetchActiveCalls();
+      fetchScheduledCalls();
     }, 15000); // Poll every 15s
     return () => clearInterval(interval);
   }, [workspace?.id, isOpen]);
 
   const handleJoinCall = async (call: any) => {
     if (currentActiveCall) {
-        toast.error("You are already in a call");
-        return;
+      toast.error('You are already in a call');
+      return;
     }
 
     try {
-        const response = await fetch('/api/calls', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: call.type,
-                callId: call.id,
-                workspaceId: workspace?.id
-            })
-        });
+      const response = await fetch('/api/calls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: call.type,
+          callId: call.id,
+          workspaceId: workspace?.id,
+        }),
+      });
 
-        if (!response.ok) throw new Error('Failed to join call');
-        const data = await response.json();
-        setCall(data);
+      if (!response.ok) throw new Error('Failed to join call');
+      const data = await response.json();
+      setCall(data);
     } catch (error) {
-        console.error(error);
-        toast.error("Failed to join call");
+      console.error(error);
+      toast.error('Failed to join call');
     }
   };
 
@@ -151,7 +146,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
           workspaceId: workspace.id,
           channelId: type === 'channel' ? id || channelSlug : undefined,
           recipientId: dmUser?.id,
-          notifyAll
+          notifyAll,
         }),
       });
 
@@ -373,9 +368,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStartCall('voice')}>
-                              Notify channel
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStartCall('voice')}>Notify channel</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleStartCall('voice', true)}>
                               Notify all members
                             </DropdownMenuItem>
@@ -389,9 +382,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStartCall('video')}>
-                              Notify channel
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStartCall('video')}>Notify channel</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleStartCall('video', true)}>
                               Notify all members
                             </DropdownMenuItem>
@@ -500,99 +491,104 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
                     {/* Active Calls Section */}
                     {activeCalls.length > 0 && (
-                        <>
+                      <>
                         <div className="space-y-3">
-                            <h3 className="text-sm font-semibold flex items-center gap-2">
-                                <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                                Active Calls ({activeCalls.length})
-                            </h3>
-                            <div className="space-y-2">
-                                {activeCalls.map((call) => (
-                                    <div key={call.id} className="p-3 bg-muted/40 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-primary/10 p-1.5 rounded-md">
-                                                    {call.type === 'video' ? <Video className="h-3.5 w-3.5 text-primary" /> : <Phone className="h-3.5 w-3.5 text-primary" />}
-                                                </div>
-                                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                                    {call.type} Call
-                                                </span>
-                                            </div>
-                                            <Badge variant="outline" className="text-[10px] h-4 px-1">
-                                                {call.participants?.length || 0} in call
-                                            </Badge>
-                                        </div>
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Avatar className="h-5 w-5">
-                                                <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
-                                                <AvatarFallback className="text-[8px]">
-                                                    {call.initiator?.name?.slice(0, 2).toUpperCase()}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <span className="text-xs font-medium truncate">
-                                                Started by {call.initiator?.name}
-                                            </span>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            className="w-full h-8 text-xs font-bold"
-                                            onClick={() => handleJoinCall(call)}
-                                        >
-                                            Join Call
-                                        </Button>
+                          <h3 className="text-sm font-semibold flex items-center gap-2">
+                            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                            Active Calls ({activeCalls.length})
+                          </h3>
+                          <div className="space-y-2">
+                            {activeCalls.map(call => (
+                              <div
+                                key={call.id}
+                                className="p-3 bg-muted/40 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="bg-primary/10 p-1.5 rounded-md">
+                                      {call.type === 'video' ? (
+                                        <Video className="h-3.5 w-3.5 text-primary" />
+                                      ) : (
+                                        <Phone className="h-3.5 w-3.5 text-primary" />
+                                      )}
                                     </div>
-                                ))}
-                            </div>
+                                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                      {call.type} Call
+                                    </span>
+                                  </div>
+                                  <Badge variant="outline" className="text-[10px] h-4 px-1">
+                                    {call.participants?.length || 0} in call
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Avatar className="h-5 w-5">
+                                    <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
+                                    <AvatarFallback className="text-[8px]">
+                                      {call.initiator?.name?.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs font-medium truncate">
+                                    Started by {call.initiator?.name}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="w-full h-8 text-xs font-bold"
+                                  onClick={() => handleJoinCall(call)}
+                                >
+                                  Join Call
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         <Separator />
-                        </>
+                      </>
                     )}
 
                     {/* Scheduled Calls Section */}
                     {scheduledCalls.length > 0 && (
-                        <>
+                      <>
                         <div className="space-y-3">
-                            <h3 className="text-sm font-semibold flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-primary" />
-                                Upcoming Calls ({scheduledCalls.length})
-                            </h3>
-                            <div className="space-y-2">
-                                {scheduledCalls.map((call) => (
-                                    <div key={call.id} className="p-3 bg-muted/20 rounded-lg border border-border/50">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-xs font-bold truncate pr-2">
-                                                {call.title}
-                                            </span>
-                                            <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">
-                                                {call.type}
-                                            </Badge>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-2">
-                                            <Clock className="h-3 w-3" />
-                                            {format(new Date(call.scheduledFor), "MMM d, h:mm a")}
-                                        </div>
-                                        {call.description && (
-                                            <p className="text-[10px] text-muted-foreground line-clamp-1 mb-2 italic">
-                                                {call.description}
-                                            </p>
-                                        )}
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="h-4 w-4">
-                                                <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
-                                                <AvatarFallback className="text-[6px]">
-                                                    {call.initiator?.name?.slice(0, 2).toUpperCase()}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <span className="text-[10px] text-muted-foreground truncate">
-                                                By {call.initiator?.name}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                          <h3 className="text-sm font-semibold flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-primary" />
+                            Upcoming Calls ({scheduledCalls.length})
+                          </h3>
+                          <div className="space-y-2">
+                            {scheduledCalls.map(call => (
+                              <div key={call.id} className="p-3 bg-muted/20 rounded-lg border border-border/50">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-bold truncate pr-2">{call.title}</span>
+                                  <Badge variant="secondary" className="text-[10px] h-4 px-1 shrink-0">
+                                    {call.type}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-2">
+                                  <Clock className="h-3 w-3" />
+                                  {format(new Date(call.scheduledFor), 'MMM d, h:mm a')}
+                                </div>
+                                {call.description && (
+                                  <p className="text-[10px] text-muted-foreground line-clamp-1 mb-2 italic">
+                                    {call.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-4 w-4">
+                                    <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
+                                    <AvatarFallback className="text-[6px]">
+                                      {call.initiator?.name?.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-[10px] text-muted-foreground truncate">
+                                    By {call.initiator?.name}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         <Separator />
-                        </>
+                      </>
                     )}
 
                     <div className="space-y-3">
@@ -605,10 +601,15 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                           <div className="flex-1 px-2 py-1.5 bg-muted rounded text-xs truncate font-mono">
                             {inviteLink}
                           </div>
-                          <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={() => {
-                            navigator.clipboard.writeText(inviteLink);
-                            toast.success('Copied!');
-                          }}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 shrink-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(inviteLink);
+                              toast.success('Copied!');
+                            }}
+                          >
                             Copy
                           </Button>
                         </div>
