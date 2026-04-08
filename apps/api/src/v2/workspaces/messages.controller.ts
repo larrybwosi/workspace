@@ -21,7 +21,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared';
+import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared';
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
@@ -306,6 +306,17 @@ export class V2MessagesController {
 
     const { channelId, recipientId, content, threadId, contextId, messageType, metadata, actions, attachments } =
       validatedData.data;
+
+    // Validate custom message metadata if messageType is 'custom', 'approval', or 'report'
+    if (['custom', 'approval', 'report'].includes(messageType || '')) {
+      const customMessageValidation = CustomMessageSchema.safeParse(metadata);
+      if (!customMessageValidation.success) {
+        throw new BadRequestException({
+          message: 'Invalid custom message metadata',
+          errors: customMessageValidation.error.issues,
+        });
+      }
+    }
 
     let createdMessage;
     let activeThreadId = threadId;

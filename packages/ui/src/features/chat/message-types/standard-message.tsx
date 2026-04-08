@@ -2,24 +2,17 @@
 
 import { MessageRenderer } from "../message-renderer";
 import type { Message, MessageMetadata } from "../../../lib/types";
-import { cn } from "../../../lib/utils";
 
-interface CodeMessageProps {
+interface StandardMessageProps {
   message: Message;
-  metadata: MessageMetadata;
-  className?: string;
+  metadata?: MessageMetadata;
 }
 
-export function CodeMessage({
-  message,
-  metadata,
-  className,
-}: CodeMessageProps) {
+export function StandardMessage({ message, metadata }: StandardMessageProps) {
   return (
     <MessageRenderer
       content={message.content}
       metadata={metadata}
-      className={className}
     />
   );
 }
