@@ -14,6 +14,7 @@
     "agora-token": "^2.0.5",
     "better-auth": "1.6.0",
     "date-fns": "latest",
+    "firebase-admin": "^13.7.0",
     "react": "19.2.4",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
