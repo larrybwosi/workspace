@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
-import { isUserEligibleForAsset, logAssetUsage } from "@/lib/assets/asset-utils";
+import { isUserEligibleForAsset, logAssetUsage } from "@repo/shared";
 
 export async function POST(
   request: NextRequest,
