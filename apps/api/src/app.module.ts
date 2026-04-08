@@ -15,6 +15,7 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { CommonModule } from './common/common.module';
 import { AdminModule } from './admin/admin.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AdminModule } from './admin/admin.module';
     CommonModule,
     WorkspacesModule,
     AdminModule,
+    AssetsModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
