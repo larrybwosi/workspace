@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
@@ -23,17 +34,13 @@ export class ChannelsController {
   async getMessages(
     @Param('channelId') channelId: string,
     @Query('cursor') cursor?: string,
-    @Query('limit') limitNum = '50',
+    @Query('limit') limitNum = '50'
   ) {
     return this.channelsService.getMessages(channelId, cursor, parseInt(limitNum));
   }
 
   @Post(':channelId/messages')
-  async createMessage(
-    @Param('channelId') channelId: string,
-    @CurrentUser() user: User,
-    @Body() body: any,
-  ) {
+  async createMessage(@Param('channelId') channelId: string, @CurrentUser() user: User, @Body() body: any) {
     return this.channelsService.createMessage(channelId, user.id, body);
   }
 
@@ -42,24 +49,18 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
     @CurrentUser() user: User,
-    @Body() body: { content: string },
+    @Body() body: { content: string }
   ) {
     return this.channelsService.updateMessage(channelId, messageId, user.id, body.content);
   }
 
   @Delete(':channelId/messages/:messageId')
-  async deleteMessage(
-    @Param('channelId') channelId: string,
-    @Param('messageId') messageId: string,
-  ) {
+  async deleteMessage(@Param('channelId') channelId: string, @Param('messageId') messageId: string) {
     return this.channelsService.deleteMessage(channelId, messageId);
   }
 
   @Post(':channelId/messages/read')
-  async markAsRead(
-    @CurrentUser() user: User,
-    @Body() body: { messageIds: string[] },
-  ) {
+  async markAsRead(@CurrentUser() user: User, @Body() body: { messageIds: string[] }) {
     return this.channelsService.markAsRead(user.id, body.messageIds);
   }
 
@@ -68,7 +69,7 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
     @CurrentUser() user: User,
-    @Body() body: { emoji: string },
+    @Body() body: { emoji: string }
   ) {
     return this.channelsService.addReaction(channelId, messageId, user.id, body.emoji);
   }
@@ -78,7 +79,7 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
     @Param('emoji') emoji: string,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.channelsService.removeReaction(channelId, messageId, user.id, emoji);
   }
@@ -88,7 +89,7 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string,
     @CurrentUser() user: User,
-    @Body() body: any,
+    @Body() body: any
   ) {
     return this.channelsService.createReply(channelId, messageId, user.id, body);
   }

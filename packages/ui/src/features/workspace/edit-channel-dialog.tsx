@@ -6,15 +6,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Button } from "../../ui/button"
-import { Label } from "../../ui/label"
-import { Input } from "../../ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+} from "../../components/dialog"
+import { Button } from "../../components/button"
+import { Label } from "../../components/label"
+import { Input } from "../../components/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 import { useState, useEffect } from "react"
-import { Separator } from "../../ui/separator"
+import { Separator } from "../../components/separator"
 import { toast } from "sonner"
-import { RadioGroup, RadioGroupItem } from "../../ui/radio-group"
+import { RadioGroup, RadioGroupItem } from "../../components/radio-group"
 
 interface EditChannelDialogProps {
   editChannelOpen: boolean

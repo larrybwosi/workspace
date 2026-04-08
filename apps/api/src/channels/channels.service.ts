@@ -1,9 +1,13 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents } from '../lib/integrations/ably';
-import { extractUserMentions, extractChannelMentions, hasSpecialMention, extractUserIds } from '../common/utils/mention-utils';
+import {
+  extractUserMentions,
+  extractChannelMentions,
+  hasSpecialMention,
+  extractUserIds,
+} from '../common/utils/mention-utils';
 import { NotificationsService } from '../notifications/notifications.service';
-import { isUserEligibleForAsset, logAssetUsage } from '@repo/shared';
+import { AblyChannels, AblyEvents, getAblyRest, isUserEligibleForAsset, logAssetUsage } from '@repo/shared';
 
 @Injectable()
 export class ChannelsService {
@@ -23,7 +27,7 @@ export class ChannelsService {
         },
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: 'asc',
       },
     });
   }
@@ -34,8 +38,8 @@ export class ChannelsService {
     return prisma.channel.create({
       data: {
         name,
-        icon: icon || "#",
-        type: type || "channel",
+        icon: icon || '#',
+        type: type || 'channel',
         description,
         isPrivate: isPrivate || false,
         parentId,
@@ -43,7 +47,7 @@ export class ChannelsService {
           ? {
               create: members.map((userId: string) => ({
                 userId,
-                role: "member",
+                role: 'member',
               })),
             }
           : undefined,
@@ -124,11 +128,11 @@ export class ChannelsService {
         assetId: stickerId,
         assetType: 'sticker',
         userId: userId,
-        workspaceId: sticker?.workspaceId || undefined
+        workspaceId: sticker?.workspaceId || undefined,
       });
     }
 
-    const message = await prisma.$transaction(async (tx) => {
+    const message = await prisma.$transaction(async tx => {
       const msg = await tx.message.create({
         data: {
           channelId,
@@ -178,13 +182,25 @@ export class ChannelsService {
     // Notify specific users
     for (const mentionedUserId of mentionedUserIds) {
       if (mentionedUserId !== userId) {
-        await this.notificationsService.notifyMention(message.id, mentionedUserId, sender?.name || 'Someone', channelId, content);
+        await this.notificationsService.notifyMention(
+          message.id,
+          mentionedUserId,
+          sender?.name || 'Someone',
+          channelId,
+          content
+        );
       }
     }
 
     // Notify @all / @here
     if (mentionsAll || mentionsHere) {
-      await this.notificationsService.notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere);
+      await this.notificationsService.notifyChannel(
+        channelId,
+        sender?.name || 'Someone',
+        message.id,
+        content,
+        mentionsHere
+      );
     }
 
     const ably = getAblyRest();
@@ -235,7 +251,7 @@ export class ChannelsService {
   }
 
   async markAsRead(userId: string, messageIds: string[]) {
-    const readPromises = messageIds.map((messageId) =>
+    const readPromises = messageIds.map(messageId =>
       prisma.messageRead.upsert({
         where: {
           messageId_userId: {
@@ -251,7 +267,7 @@ export class ChannelsService {
           userId,
           readAt: new Date(),
         },
-      }),
+      })
     );
 
     await Promise.all(readPromises);

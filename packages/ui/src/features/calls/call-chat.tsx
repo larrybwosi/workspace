@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Send } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { ScrollArea } from "../../ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { ScrollArea } from "../../components/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
 import { getAblyClient } from "@repo/shared"
 import { useSession } from "@repo/shared"
 

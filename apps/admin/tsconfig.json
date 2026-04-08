@@ -20,6 +20,9 @@
     "types": ["node"],
     "paths": {
       "@/*": ["./src/*"],
+      "@repo/ui/components/*": ["../../packages/ui/src/components/*"],
+      "@repo/ui/lib/*": ["../../packages/ui/src/lib/*"],
+      "@repo/ui/hooks/*": ["../../packages/ui/src/hooks/*"],
       "@repo/ui/*": ["../../packages/ui/src/*"],
       "@repo/api-client": ["../../packages/api-client/src/index.ts"],
       "@repo/api-client/*": ["../../packages/api-client/src/*"]

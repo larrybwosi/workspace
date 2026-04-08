@@ -2,18 +2,18 @@
 
 import * as React from "react"
 import { Search, UserPlus, MoreVertical, Mail, Shield, Calendar, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { Card } from "../../ui/card"
-import { Input } from "../../ui/input"
-import { Button } from "../../ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
-import { Badge } from "../../ui/badge"
+import { Card } from "../../components/card"
+import { Input } from "../../components/input"
+import { Button } from "../../components/button"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
+import { Badge } from "../../components/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../ui/dropdown-menu"
+} from "../../components/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -21,8 +21,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+} from "../../components/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 import { useAdminMembers, useUpdateMemberRole } from "@repo/api-client"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"

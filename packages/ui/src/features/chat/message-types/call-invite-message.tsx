@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import { Phone, Video, Play, ExternalLink } from 'lucide-react';
-import { Button } from '../../../ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../../ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
-import { Badge } from '../../../ui/badge';
+import { Button } from '../../../components/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../../components/card';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../components/avatar';
+import { Badge } from '../../../components/badge';
 import { cn } from '../../../lib/utils';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';

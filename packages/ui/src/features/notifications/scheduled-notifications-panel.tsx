@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Button } from "../../ui/button"
-import { Card } from "../../ui/card"
-import { Badge } from "../../ui/badge"
+import { Button } from "../../components/button"
+import { Card } from "../../components/card"
+import { Badge } from "../../components/badge"
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Textarea } from "../../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+} from "../../components/dialog"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Textarea } from "../../components/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 import { Bell, Calendar, Clock, Plus, Pause, Play, Trash2, Repeat } from 'lucide-react'
 import { format } from "date-fns"
 

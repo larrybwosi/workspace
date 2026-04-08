@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Bell, X } from 'lucide-react'
-import { Button } from "../../ui/button"
-import { Card } from "../../ui/card"
+import { Button } from "../../components/button"
+import { Card } from "../../components/card"
 import { getFirebaseToken } from "../../lib/integrations/firebase-config"
 
 export function NotificationPermissionPrompt() {

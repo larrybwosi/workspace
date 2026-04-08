@@ -2,10 +2,10 @@
 
 import { useChat } from "@ai-sdk/react"
 import { Sparkles, Send, User, Bot, Loader2 } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { ScrollArea } from "../../ui/scroll-area"
-import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { ScrollArea } from "../../components/scroll-area"
+import { Avatar, AvatarFallback } from "../../components/avatar"
 import { useEffect, useRef } from "react"
 import { cn } from "../../lib/utils"
 

@@ -18,15 +18,15 @@ import {
   Heart,
   Trophy,
 } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Badge } from "../../ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { ScrollArea } from "../../ui/scroll-area"
-import { Switch } from "../../ui/switch"
-import { Textarea } from "../../ui/textarea"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Badge } from "../../components/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
+import { ScrollArea } from "../../components/scroll-area"
+import { Switch } from "../../components/switch"
+import { Textarea } from "../../components/textarea"
 import {
   Dialog,
   DialogContent,
@@ -35,17 +35,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../ui/dialog"
+} from "../../components/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+} from "../../components/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
 import { cn } from "../../lib/utils"
 
 interface CustomEmoji {

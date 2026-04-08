@@ -1,8 +1,8 @@
 'use client';
 
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Button } from '../../ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Button } from '../../components/button';
 import type { Message } from '../../lib/types';
 import { mockUsers } from '../../lib/mock-data';
 import { cn, formatTime } from '../../lib/utils';
@@ -30,7 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../ui/dropdown-menu';
+} from '../../components/dropdown-menu';
 
 import { useUpdateMessage, useDeleteMessage } from '@repo/api-client';
 import { useMemo, useState } from 'react';

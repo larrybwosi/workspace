@@ -2,15 +2,16 @@
 
 import * as React from "react"
 import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2 } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { Input } from "../ui/input"
-import { Button } from "../ui/button"
-import { ScrollArea } from "../ui/scroll-area"
+import { Popover, PopoverContent, PopoverTrigger } from "../components/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/tabs"
+import { Input } from "../components/input"
+import { Button } from "../components/button"
+import { ScrollArea } from "../components/scroll-area"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { useTheme } from "../layout/theme-provider"
-import { useCustomEmojis } from "@repo/api-client"
+import { useCustomEmojis, useEligibleAssets } from "@repo/api-client"
+import { cn } from "../lib/utils"
 
 interface CustomEmoji {
   id: string
@@ -35,7 +36,10 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
   const [activeTab, setActiveTab] = React.useState("quick")
   const { theme } = useTheme()
 
-  const { data: customEmojis, isLoading: isLoadingCustom } = useCustomEmojis(workspaceId || "")
+  const { data: eligibleAssets, isLoading: isLoadingEligible } = useEligibleAssets()
+
+  const customEmojis = eligibleAssets?.emojis || []
+  const isLoadingCustom = isLoadingEligible
 
   const filteredCustomEmojis = (customEmojis || []).filter(
     (emoji: any) =>
@@ -105,7 +109,11 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                       key={emoji.id}
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative"
+                      disabled={!emoji.isEligible}
+                      className={cn(
+                        "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative",
+                        !emoji.isEligible && "opacity-60 grayscale cursor-not-allowed"
+                      )}
                       onClick={() => handleCustomEmojiSelect(emoji)}
                       title={emoji.shortcode}
                     >
@@ -114,6 +122,11 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                         alt={emoji.name}
                         className="h-6 w-6 object-contain"
                       />
+                      {!emoji.isEligible && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
+                          <Lock className="h-3 w-3 text-white" />
+                        </div>
+                      )}
                       {emoji.animated && (
                         <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground rounded px-0.5">
                           GIF
@@ -157,7 +170,11 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                         key={emoji.id}
                         variant="ghost"
                         size="sm"
-                        className="h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group"
+                        disabled={!emoji.isEligible}
+                        className={cn(
+                          "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group",
+                          !emoji.isEligible && "opacity-60 grayscale cursor-not-allowed"
+                        )}
                         onClick={() => handleCustomEmojiSelect(emoji)}
                         title={emoji.shortcode}
                       >
@@ -166,6 +183,11 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                           alt={emoji.name}
                           className="h-6 w-6 object-contain"
                         />
+                        {!emoji.isEligible && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
+                            <Lock className="h-3 w-3 text-white" />
+                          </div>
+                        )}
                         {emoji.animated && (
                           <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground rounded px-0.5">
                             GIF

@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Button } from "../ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Button } from "../components/button"
+import { Popover, PopoverContent, PopoverTrigger } from "../components/popover"
 import { cn } from "../lib/utils"
 
 const EMOJI_ICONS = [

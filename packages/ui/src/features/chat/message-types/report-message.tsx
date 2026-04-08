@@ -16,9 +16,9 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import { Card } from "../../../ui/card";
-import { Button } from "../../../ui/button";
-import { Badge } from "../../../ui/badge";
+import { Card } from "../../../components/card";
+import { Button } from "../../../components/button";
+import { Badge } from "../../../components/badge";
 import { cn } from "../../../lib/utils";
 import type { Message, MessageMetadata } from "../../../lib/types";
 import {
@@ -26,7 +26,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../ui/dropdown-menu";
+} from "../../../components/dropdown-menu";
 
 // --- Types ---
 

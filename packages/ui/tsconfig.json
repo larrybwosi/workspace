@@ -3,8 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "paths": {
-      "@/components/*": ["./*"],
-      "@/*": ["./*"]
+      "@repo/ui/components/*": ["./src/components/*"],
+      "@repo/ui/lib/*": ["./src/lib/*"],
+      "@repo/ui/hooks/*": ["./src/hooks/*"],
+      "@repo/ui/*": ["./src/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

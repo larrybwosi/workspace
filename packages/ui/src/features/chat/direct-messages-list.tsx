@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Avatar, AvatarFallback } from "../../ui/avatar"
-import { Button } from "../../ui/button"
-import { Badge } from "../../ui/badge"
-import { ScrollArea } from "../../ui/scroll-area"
+import { Avatar, AvatarFallback } from "../../components/avatar"
+import { Button } from "../../components/button"
+import { Badge } from "../../components/badge"
+import { ScrollArea } from "../../components/scroll-area"
 import { mockUsers } from "../../lib/mock-data"
 import { cn } from "../../lib/utils"
 

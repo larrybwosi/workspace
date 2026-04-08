@@ -1,11 +1,11 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { ScrollArea } from '../../ui/scroll-area';
+import { ScrollArea } from '../../components/scroll-area';
 import { MessageItem } from './message-item';
 import { MessageComposer } from './message-composer';
-import { Button } from '../../ui/button';
-import { Skeleton } from '../../ui/skeleton';
+import { Button } from '../../components/button';
+import { Skeleton } from '../../components/skeleton';
 import { Loader2 } from 'lucide-react';
 import type { Thread, Message, Attachment } from '../../lib/types';
 import {
