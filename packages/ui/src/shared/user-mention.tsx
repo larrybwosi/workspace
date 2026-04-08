@@ -5,14 +5,14 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "../ui/hover-card";
+} from "../components/hover-card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "../ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
+} from "../components/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/avatar";
+import { Button } from "../components/button";
 import { CalendarDays, Mail, Shield, Loader2 } from "lucide-react";
 import { useUsers } from "@repo/api-client";
 import { cn } from "../lib/utils";

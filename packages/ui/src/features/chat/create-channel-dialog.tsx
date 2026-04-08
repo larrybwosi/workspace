@@ -9,13 +9,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { RadioGroup, RadioGroupItem } from "../../ui/radio-group"
-import { Textarea } from "../../ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
+} from "../../components/dialog"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { RadioGroup, RadioGroupItem } from "../../components/radio-group"
+import { Textarea } from "../../components/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
 import { IconPicker } from "../../shared/icon-picker"
 import { MemberSelector } from "../workspace/member-selector"
 

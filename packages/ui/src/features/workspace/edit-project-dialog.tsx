@@ -6,11 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Button } from "../../ui/button"
-import { Label } from "../../ui/label"
-import { Input } from "../../ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+} from "../../components/dialog"
+import { Button } from "../../components/button"
+import { Label } from "../../components/label"
+import { Input } from "../../components/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 
 interface EditProjectDialogProps {
   editProjectOpen: boolean

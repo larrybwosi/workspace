@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BarChart3, Users, Sparkles, Activity, Shield, Settings } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '../components/button';
 import { cn } from '../lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 
