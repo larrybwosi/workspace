@@ -140,6 +140,51 @@ export class ApiV2Guard implements CanActivate {
             usageCount: { increment: 1 },
           },
         });
+      } else if (accessToken.startsWith('oat_')) {
+        const hashedToken = crypto.createHash('sha256').update(accessToken).digest('hex');
+        const oauthToken = await prisma.oAuthAccessToken.findUnique({
+          where: { token: hashedToken },
+          include: { client: true },
+        });
+
+        if (!oauthToken || oauthToken.expiresAt < new Date()) {
+          throw new UnauthorizedException('Invalid or expired OAuth token');
+        }
+
+        context = {
+          userId: oauthToken.userId || oauthToken.client.userId || '',
+          clientId: oauthToken.clientId,
+          scopes: oauthToken.scopes,
+          isBot: true,
+          tokenId: oauthToken.id,
+        };
+
+        if (slug) {
+          const organization = await prisma.workspace.findUnique({
+            where: { slug },
+          });
+
+          if (!organization) {
+            throw new NotFoundException('Workspace not found');
+          }
+
+          const member = await prisma.workspaceMember.findFirst({
+            where: {
+              workspaceId: organization.id,
+              userId: context.userId,
+            },
+          });
+
+          if (!member) {
+            throw new ForbiddenException('Forbidden: Not a member of this workspace');
+          }
+
+          context.workspaceId = organization.id;
+          context.workspaceSlug = organization.slug;
+        }
+
+        rateLimit = 1000;
+        rateLimitKey = `ratelimit:v2:oauth:${oauthToken.id}`;
       } else {
         const tokenInfo = await (auth.api as any)
           .getOAuthAccessToken({
