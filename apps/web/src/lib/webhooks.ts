@@ -1,3 +1,4 @@
+import "server-only"
 import crypto from "crypto"
 import axios from "axios"
 import { prisma } from "@/lib/db/prisma"
