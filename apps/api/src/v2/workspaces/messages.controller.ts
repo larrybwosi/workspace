@@ -12,7 +12,10 @@ import {
   Query,
   BadRequestException,
   NotFoundException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -21,6 +24,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
+import { SanityService } from '../../common/sanity/sanity.service';
 import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared';
 
 const createChannelSchema = z.object({
@@ -78,7 +82,8 @@ export class V2MessagesController {
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly auditService: V2AuditService,
-    private readonly webhooksService: V2WebhooksService
+    private readonly webhooksService: V2WebhooksService,
+    private readonly sanityService: SanityService
   ) {}
 
   @Get('channels')
@@ -150,6 +155,45 @@ export class V2MessagesController {
     });
 
     return { channel };
+  }
+
+  @Post('channels/:channelId/icon')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadChannelIcon(
+    @V2Context() context: ApiV2Context,
+    @Param('channelId') channelId: string,
+    @UploadedFile() file: any
+  ) {
+    if (!this.hasScope(context, 'channels:write')) {
+      throw new ForbiddenException('Forbidden: Missing channels:write scope');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const channel = await prisma.channel.findFirst({
+      where: { id: channelId, workspaceId: context.workspaceId },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    const asset = await this.sanityService.uploadFile(file);
+
+    const updatedChannel = await prisma.channel.update({
+      where: { id: channelId },
+      data: { icon: asset.url },
+    });
+
+    await this.redis.del(`v2:channels:${context.workspaceId}`);
+
+    await this.auditService.log(context, 'channels.update_icon', 'channel', channelId, {
+      url: asset.url,
+    });
+
+    return { channel: updatedChannel };
   }
 
   @Get('channels/:channelId')
@@ -294,7 +338,8 @@ export class V2MessagesController {
   }
 
   @Post('messages')
-  async sendMessage(@V2Context() context: ApiV2Context, @Body() body: any) {
+  @UseInterceptors(FileInterceptor('file'))
+  async sendMessage(@V2Context() context: ApiV2Context, @Body() body: any, @UploadedFile() file?: any) {
     if (!this.hasScope(context, 'messages:send')) {
       throw new ForbiddenException('Forbidden: Missing messages:send scope');
     }
@@ -304,8 +349,18 @@ export class V2MessagesController {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const { channelId, recipientId, content, threadId, contextId, messageType, metadata, actions, attachments } =
+    const { channelId, recipientId, content, threadId, contextId, messageType, metadata, actions, attachments = [] } =
       validatedData.data;
+
+    if (file) {
+      const asset = await this.sanityService.uploadFile(file);
+      attachments.push({
+        name: asset.name,
+        type: asset.type,
+        url: asset.url,
+        size: asset.size,
+      });
+    }
 
     // Validate custom message metadata if messageType is 'custom', 'approval', or 'report'
     if (['custom', 'approval', 'report'].includes(messageType || '')) {

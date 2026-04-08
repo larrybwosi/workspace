@@ -114,6 +114,41 @@ export class V2WorkspacesController {
     return { member: membership };
   }
 
+  @Get(':userId')
+  async getMember(@V2Context() context: ApiV2Context, @Param('userId') userId: string) {
+    if (!this.hasScope(context, 'members:read')) {
+      throw new ForbiddenException('Forbidden: Missing members:read scope');
+    }
+
+    const member = await prisma.workspaceMember.findFirst({
+      where: {
+        userId,
+        workspaceId: context.workspaceId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            status: true,
+            role: true,
+          },
+        },
+        department: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
+    await this.auditService.log(context, 'members.get', 'member', userId);
+
+    return { member };
+  }
+
   @Delete(':userId')
   async removeMember(@V2Context() context: ApiV2Context, @Param('userId') userId: string) {
     if (!this.hasScope(context, 'members:write')) {

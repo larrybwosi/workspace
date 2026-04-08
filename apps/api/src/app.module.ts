@@ -20,12 +20,9 @@ import { AdminModule } from './admin/admin.module';
 import { DmsModule } from './dms/dms.module';
 import { FriendsModule } from './friends/friends.module';
 import { CommonModule } from './common/common.module';
-import { AdminModule } from './admin/admin.module';
 import { AssetsModule } from './assets/assets.module';
-import { ChannelsModule } from './channels/channels.module';
 import { MessagesModule } from './messages/messages.module';
 import { TasksModule } from './common/tasks/tasks.module';
-import { CallsModule } from './calls/calls.module';
 import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
 
 @Module({
@@ -47,12 +44,9 @@ import { ScheduledNotificationsModule } from './scheduled-notifications/schedule
     FriendsModule,
     CommonModule,
     WorkspacesModule,
-    ChannelsModule,
     MessagesModule,
     TasksModule,
-    CallsModule,
     ScheduledNotificationsModule,
-    AdminModule,
     AssetsModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
