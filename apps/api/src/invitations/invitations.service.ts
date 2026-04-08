@@ -138,10 +138,8 @@ export class InvitationsService {
       return {
         type: 'workspace_link',
         invitation: {
-          workspace: inviteLink.workspace,
+          ...inviteLink,
           inviter: inviteLink.createdBy,
-          uses: inviteLink.uses,
-          maxUses: inviteLink.maxUses,
         },
       };
     }
@@ -165,9 +163,8 @@ export class InvitationsService {
       return {
         type: 'workspace_invitation',
         invitation: {
-          workspace: workspaceInvite.workspace,
+          ...workspaceInvite,
           inviter: workspaceInvite.inviter,
-          email: workspaceInvite.email,
         },
       };
     }
@@ -190,8 +187,8 @@ export class InvitationsService {
       return {
         type: 'platform_invitation',
         invitation: {
+          ...generalInvite,
           inviter: generalInvite.inviter,
-          email: generalInvite.email,
         },
       };
     }
