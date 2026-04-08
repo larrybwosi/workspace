@@ -1,11 +1,11 @@
 "use client"
 import * as React from "react"
 import { Plus, Trash2, GripVertical } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Card } from "../../ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Card } from "../../components/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../ui/dialog"
+} from "../../components/dialog"
 
 interface CustomField {
   id: string

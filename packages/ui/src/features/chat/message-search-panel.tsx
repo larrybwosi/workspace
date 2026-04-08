@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { Search, X, Calendar, User, Hash, FileText } from 'lucide-react'
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { ScrollArea } from "../../ui/scroll-area"
-import { Badge } from "../../ui/badge"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { ScrollArea } from "../../components/scroll-area"
+import { Badge } from "../../components/badge"
 import { cn } from "../../lib/utils"
 import {
   Select,
@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../ui/select"
+} from "../../components/select"
 
 interface MessageSearchResult {
   id: string

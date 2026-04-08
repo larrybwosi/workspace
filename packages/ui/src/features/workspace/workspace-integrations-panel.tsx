@@ -3,13 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Button } from "../../ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
-import { Badge } from "../../ui/badge"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Switch } from "../../ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
+import { Button } from "../../components/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
+import { Badge } from "../../components/badge"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Switch } from "../../components/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
 import {
   Dialog,
   DialogContent,
@@ -17,9 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../ui/dialog"
-import { Textarea } from "../../ui/textarea"
-import { ScrollArea } from "../../ui/scroll-area"
+} from "../../components/dialog"
+import { Textarea } from "../../components/textarea"
+import { ScrollArea } from "../../components/scroll-area"
 import { toast } from "sonner"
 import {
   useWorkspaceIntegrations,

@@ -2,7 +2,7 @@
   "name": "@repo/ui",
   "version": "0.0.0",
   "private": true,
-  "main": "./index.ts",
+  "main": "./src/index.ts",
   "scripts": {
     "type-check": "tsc --noEmit"
   },
@@ -12,6 +12,7 @@
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
+    "@tanstack/react-query": "5.96.2",
     "agora-rtc-react": "latest",
     "axios": "latest",
     "class-variance-authority": "^0.7.1",

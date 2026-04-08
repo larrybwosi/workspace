@@ -12,14 +12,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Button } from "../../ui/button"
-import { Label } from "../../ui/label"
-import { Input } from "../../ui/input"
-import { Textarea } from "../../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Calendar } from "../../ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
+} from "../../components/dialog"
+import { Button } from "../../components/button"
+import { Label } from "../../components/label"
+import { Input } from "../../components/input"
+import { Textarea } from "../../components/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
+import { Calendar } from "../../components/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/popover"
 import { useToast } from "../../hooks/use-toast"
 
 interface CreateProjectDialogProps {

@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import { Users, MessageSquare, FolderKanban, CheckCircle2, TrendingUp, TrendingDown, Activity, Clock, Loader2 } from 'lucide-react'
-import { Card } from "../../ui/card"
-import { Progress } from "../../ui/progress"
-import { Badge } from "../../ui/badge"
+import { Card } from "../../components/card"
+import { Progress } from "../../components/progress"
+import { Badge } from "../../components/badge"
 import { useAdminStats } from "@repo/api-client"
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 

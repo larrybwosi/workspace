@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared';
-import { sendPushNotification } from '../lib/notifications/push-notifications';
+import { getAblyRest, AblyChannels, AblyEvents, sendPushNotification } from '@repo/shared';
 
 export interface NotificationPayload {
   userId: string;
@@ -82,7 +81,7 @@ export class NotificationsService {
     mentionedUserId: string,
     mentionedBy: string,
     channelId: string,
-    messageContent: string,
+    messageContent: string
   ) {
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -136,7 +135,7 @@ export class NotificationsService {
     sentBy: string,
     messageId: string,
     messageContent: string,
-    isHere: boolean = false,
+    isHere: boolean = false
   ) {
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -162,7 +161,7 @@ export class NotificationsService {
       // Check preferences
       let preference = cm.notificationPreference;
       if (!preference && channel.workspaceId) {
-        const wm = channel.workspace?.members.find((m) => m.userId === userId);
+        const wm = channel.workspace?.members.find(m => m.userId === userId);
         preference = wm?.notificationPreference || 'all';
       }
 
@@ -182,5 +181,98 @@ export class NotificationsService {
         },
       });
     }
+  }
+
+  async markAllRead(userId: string) {
+    await prisma.notification.updateMany({
+      where: {
+        userId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+      },
+    });
+    return { success: true };
+  }
+
+  async updateNotification(userId: string, notificationId: string, isRead: boolean) {
+    return prisma.notification.update({
+      where: {
+        id: notificationId,
+        userId,
+      },
+      data: {
+        isRead: isRead !== undefined ? isRead : true,
+      },
+    });
+  }
+
+  async deleteNotification(userId: string, notificationId: string) {
+    await prisma.notification.delete({
+      where: {
+        id: notificationId,
+        userId,
+      },
+    });
+    return { success: true };
+  }
+
+  async getWorkspaceSettings(userId: string, workspaceId: string) {
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+      select: {
+        notificationPreference: true,
+      },
+    });
+    return member || { notificationPreference: 'all' };
+  }
+
+  async updateWorkspaceSettings(userId: string, workspaceId: string, preference: string) {
+    return prisma.workspaceMember.update({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+      data: {
+        notificationPreference: preference,
+      },
+    });
+  }
+
+  async getChannelSettings(userId: string, channelId: string) {
+    const member = await prisma.channelMember.findUnique({
+      where: {
+        channelId_userId: {
+          channelId,
+          userId,
+        },
+      },
+      select: {
+        notificationPreference: true,
+      },
+    });
+    return member || { notificationPreference: null };
+  }
+
+  async updateChannelSettings(userId: string, channelId: string, preference: string) {
+    return prisma.channelMember.update({
+      where: {
+        channelId_userId: {
+          channelId,
+          userId,
+        },
+      },
+      data: {
+        notificationPreference: preference,
+      },
+    });
   }
 }
