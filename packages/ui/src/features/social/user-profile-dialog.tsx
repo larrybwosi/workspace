@@ -2,16 +2,16 @@
 import { Mail, Phone, MapPin, Calendar, Edit2, LogOut, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Badge } from '../../ui/badge';
-import { Button } from '../../ui/button';
-import { Separator } from '../../ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Badge } from '../../components/badge';
+import { Button } from '../../components/button';
+import { Separator } from '../../components/separator';
 import type { User } from '../../lib/types';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
 import { EditProfileModal } from './edit-profile-modal';
-import { useSession } from '../../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 
 interface UserProfileDialogProps {
   user: User & { banner?: string; statusText?: string; statusEmoji?: string };

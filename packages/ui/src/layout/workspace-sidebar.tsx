@@ -13,19 +13,19 @@ import {
   Lock,
   ChevronDown,
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { ScrollArea } from '../ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Separator } from '../ui/separator';
-import { Skeleton } from '../ui/skeleton';
+import { Button } from '../components/button';
+import { ScrollArea } from '../components/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/tooltip';
+import { Separator } from '../components/separator';
+import { Skeleton } from '../components/skeleton';
 import { cn } from '../lib/utils';
 import { useRouter, useParams, usePathname } from 'next/navigation';
-import { useSession } from '../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
-import { useCreateWorkspaceChannel, useWorkspaceChannels } from '../hooks/api/use-workspaces';
+import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@repo/api-client';
 import { User } from '../lib/types';
 import { usePresence } from '../lib/contexts/presence-context';
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Button } from '../../ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Button } from '../../components/button';
 import type { Message } from '../../lib/types';
 import { mockUsers } from '../../lib/mock-data';
 import { cn, formatTime } from '../../lib/utils';
@@ -14,7 +14,7 @@ import { CustomMessage } from './message-types/custom-message';
 import { DocumentEmbed } from './message-types/document-embed';
 import { MessageAttachments } from './message-types/message-attachments';
 import { LinkPreview } from './link-preview';
-import { useUsers } from '../../hooks/api/use-users';
+import { useUsers } from '@repo/api-client';
 
 import {
   ContextMenu,
@@ -30,13 +30,13 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../ui/dropdown-menu';
+} from '../../components/dropdown-menu';
 
-import { useUpdateMessage, useDeleteMessage } from '../../hooks/api/use-messages';
+import { useUpdateMessage, useDeleteMessage } from '@repo/api-client';
 import { useMemo, useState } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
-import { useSession } from '../../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { toast } from 'sonner';
 
 interface MessageItemProps {

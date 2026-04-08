@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Building2, Globe, Lock, Users, Sparkles } from "lucide-react"
-import { Button } from "../../ui/button"
+import { Button } from "../../components/button"
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Textarea } from "../../ui/textarea"
-import { RadioGroup, RadioGroupItem } from "../../ui/radio-group"
-import { useCreateWorkspace } from "../../hooks/api/use-workspaces"
+} from "../../components/dialog"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Textarea } from "../../components/textarea"
+import { RadioGroup, RadioGroupItem } from "../../components/radio-group"
+import { useCreateWorkspace } from "@repo/api-client"
 import { toast } from "sonner"
 import { cn } from "../../lib/utils"
 import { useRouter } from "next/navigation"

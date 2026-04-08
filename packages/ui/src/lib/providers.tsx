@@ -6,7 +6,7 @@ import { ThemeProvider } from "../layout/theme-provider";
 import dynamic from "next/dynamic";
 import { NotificationListener } from "../features/notifications/notification-listener";
 import { PresenceProvider } from "./contexts/presence-context";
-import { useSession } from "./auth/auth-client";
+import { useSession } from "@repo/shared";
 
 const CallContainer = dynamic(
   () => import("../features/calls/call-container").then((mod) => mod.CallContainer),
@@ -33,17 +33,21 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
-  const { data: session } = useSession();
+  const { data: session } = useSession() as { data: any };
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <PresenceProvider userId={session?.user?.id}>
           {children}
-          <NotificationListener />
-          <AgoraClientProvider>
-            <CallContainer />
-          </AgoraClientProvider>
+          {session && (
+            <>
+              <NotificationListener />
+              <AgoraClientProvider>
+                <CallContainer />
+              </AgoraClientProvider>
+            </>
+          )}
           <Toaster
             position="top-right"
             duration={4000}

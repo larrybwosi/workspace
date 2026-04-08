@@ -7,7 +7,6 @@ on:
     branches: [ main, master ]
 
 env:
-  # Use generic test credentials that avoid common security patterns
   PG_U: runner_u
   PG_P: runner_p
   PG_D_UNIT: db_unit
@@ -24,8 +23,8 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm run lint:web
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - run: pnpm run lint
       - run: pnpm run tsc
 
   unit-tests:
@@ -60,11 +59,10 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run generate
       - name: Run Tests
-        continue-on-error: true
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
@@ -104,11 +102,10 @@ jobs:
       with:
         node-version: 22
         cache: 'pnpm'
-    - run: pnpm install --no-frozen-lockfile
+    - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
     - name: Run Prisma Generate
       run: pnpm --filter @repo/database run generate
     - name: Install Playwright Browsers
-      continue-on-error: true
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
       env:
@@ -124,26 +121,62 @@ jobs:
         path: playwright-report/
         retention-days: 30
 
-  docker-publish:
+  version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, unit-tests, e2e-tests]
     permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm run version:ci
+          publish: npx changeset tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [version]
+    permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        apps: [api, web]
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(node -p "require('./apps/${{ matrix.apps }}/package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Lowercase repo name
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=ghcr.io/$REPO_LOWER" >> $GITHUB_ENV
+          echo "IMAGE_NAME=ghcr.io/$REPO_LOWER/${{ matrix.apps }}" >> $GITHUB_ENV
 
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -154,7 +187,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-          tags: ${{ env.IMAGE_NAME }}:latest
+          file: apps/${{ matrix.apps }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

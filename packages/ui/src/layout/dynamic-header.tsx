@@ -1,12 +1,12 @@
 "use client"
 import { Menu, Search, MoreVertical, ChevronLeft, Headphones } from "lucide-react"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
+import { Button } from "../components/button"
+import { Input } from "../components/input"
 import { mockChannels } from "../lib/mock-data"
 import { ThemeToggle } from "./theme-toggle"
 import { Huddle } from "../features/chat/huddle"
-import { useCurrentUser } from "../hooks/api/use-users"
-import { useWorkspace, useWorkspaceChannels } from "../hooks/api/use-workspaces";
+import { useCurrentUser } from "@repo/api-client"
+import { useWorkspace, useWorkspaceChannels } from "@repo/api-client";
 import { useParams } from "next/navigation";
 
 interface DynamicHeaderProps {

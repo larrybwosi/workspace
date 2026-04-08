@@ -2,31 +2,58 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/users.controller';
-import { WorkspacesController } from './workspaces/workspaces.controller';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 import { RedisModule } from './common/redis/redis.module';
 import { V2Module } from './v2/v2.module';
 import { V10Module } from './v10/v10.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { CallsModule } from './calls/calls.module';
+import { ChannelsModule } from './channels/channels.module';
+import { AdminModule } from './admin/admin.module';
+import { DmsModule } from './dms/dms.module';
+import { FriendsModule } from './friends/friends.module';
 import { CommonModule } from './common/common.module';
+import { AdminModule } from './admin/admin.module';
+import { AssetsModule } from './assets/assets.module';
+import { ChannelsModule } from './channels/channels.module';
+import { MessagesModule } from './messages/messages.module';
+import { TasksModule } from './common/tasks/tasks.module';
+import { CallsModule } from './calls/calls.module';
+import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     RedisModule,
     V2Module,
     V10Module,
     NotificationsModule,
     InvitationsModule,
     IntegrationsModule,
+    CallsModule,
+    ChannelsModule,
+    AdminModule,
+    DmsModule,
+    FriendsModule,
     CommonModule,
+    WorkspacesModule,
+    ChannelsModule,
+    MessagesModule,
+    TasksModule,
+    CallsModule,
+    ScheduledNotificationsModule,
+    AdminModule,
+    AssetsModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -44,7 +71,7 @@ import { CommonModule } from './common/common.module';
       },
     }),
   ],
-  controllers: [AppController, UsersController, WorkspacesController],
+  controllers: [AppController, UsersController],
   providers: [
     AppService,
     {

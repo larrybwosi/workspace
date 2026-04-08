@@ -23,12 +23,12 @@ import {
   Terminal,
   Copy,
 } from "lucide-react";
-import { Button } from "../../../ui/button";
-import { Card } from "../../../ui/card";
-import { Badge } from "../../../ui/badge";
-import { Input } from "../../../ui/input";
-import { Textarea } from "../../../ui/textarea";
-import { Switch } from "../../../ui/switch";
+import { Button } from "../../../components/button";
+import { Card } from "../../../components/card";
+import { Badge } from "../../../components/badge";
+import { Input } from "../../../components/input";
+import { Textarea } from "../../../components/textarea";
+import { Switch } from "../../../components/switch";
 import { cn } from "../../../lib/utils";
 import type { Message } from "../../../lib/types";
 

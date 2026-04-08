@@ -83,7 +83,7 @@ The API client automatically includes authentication tokens from localStorage.
 ## Example
 
 \`\`\`typescript
-import { useProjects } from '@/hooks/api/use-projects'
+import { useProjects } from '@repo/api-clientprojects'
 
 export function ProjectsList() {
   const { data, isLoading, error } = useProjects()
@@ -214,7 +214,7 @@ POST /api/invitations
 ### Using React Hook
 
 \`\`\`typescript
-import { useCreateInvitation } from '@/hooks/api/use-invitations'
+import { useCreateInvitation } from '@repo/api-client'
 
 function InviteButton() {
   const createInvitation = useCreateInvitation()

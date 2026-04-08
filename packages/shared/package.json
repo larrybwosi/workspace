@@ -4,12 +4,21 @@
   "private": true,
   "main": "./src/index.ts",
   "scripts": {
+    "build": "tsc",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/database": "workspace:*",
     "ably": "^2.21.0",
     "agora-token": "^2.0.5",
-    "@repo/database": "workspace:*",
-    "zod": "^3.24.1"
+    "better-auth": "1.6.0",
+    "date-fns": "latest",
+    "firebase-admin": "^13.7.0",
+    "react": "19.2.4",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14"
   }
 }

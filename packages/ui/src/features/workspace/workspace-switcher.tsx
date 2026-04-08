@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Check, ChevronsUpDown, Plus, Settings, Users, Building2, User } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Button } from "../../ui/button"
+import { Button } from "../../components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup,
-} from "../../ui/dropdown-menu"
-import { useWorkspaces } from "../../hooks/api/use-workspaces"
+} from "../../components/dropdown-menu"
+import { useWorkspaces } from "@repo/api-client"
 import { CreateWorkspaceDialog } from "./create-workspace-dialog"
-import { Badge } from "../../ui/badge"
+import { Badge } from "../../components/badge"
 import { cn } from "../../lib/utils"
 
 interface WorkspaceSwitcherProps {
