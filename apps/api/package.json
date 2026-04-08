@@ -22,6 +22,7 @@
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
+    "@sanity/client": "^7.20.0",
     "ably": "^2.21.0",
     "agora-token": "^2.0.5",
     "axios": "^1.7.9",

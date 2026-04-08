@@ -217,6 +217,7 @@ model Workspace {
   customEmojis     CustomEmoji[]
   stickers         Sticker[]
   soundboardSounds SoundboardSound[]
+  profileAssets    ProfileAsset[]
   userBadges       UserBadge[]
   departments      WorkspaceDepartment[]
   teams            WorkspaceTeam[]
@@ -1585,19 +1586,20 @@ model OauthConsent {
 }
 
 model ProfileAsset {
-  id              String   @id @default(cuid())
-  url             String
-  type            String // 'avatar', 'banner', 'theme'
-  name            String?
-  animated        Boolean  @default(false)
-  themeColors     Json? // For profile themes: { primary, accent, etc. }
-  requiredRole    String?
-  requiredBadgeId String?
-  rules           Json? // Eligibility rules
-  isGlobal        Boolean  @default(true)
-  usageCount      Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String   @id @default(cuid())
+  url         String
+  type        String // 'avatar', 'banner', 'theme'
+  name        String?
+  animated    Boolean  @default(false)
+  themeColors Json? // For profile themes: { primary, accent, etc. }
+  workspaceId String?
+  rules       Json? // Eligibility rules
+  isGlobal    Boolean  @default(true)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@map("profile_assets")
 }
