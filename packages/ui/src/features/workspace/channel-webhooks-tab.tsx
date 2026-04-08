@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { Webhook, Copy, Check, Trash2, Plus, ExternalLink } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
-import { Badge } from "../../ui/badge"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Textarea } from "../../ui/textarea"
+import { Button } from "../../components/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
+import { Badge } from "../../components/badge"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Textarea } from "../../components/textarea"
 import {
   Dialog,
   DialogContent,
@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
+} from "../../components/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
 import { toast } from "sonner"
 
 interface ChannelWebhooksTabProps {

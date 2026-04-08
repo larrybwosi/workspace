@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@repo/ui/ui/button";
-import { Input } from "@repo/ui/ui/input";
-import { Label } from "@repo/ui/ui/label";
+import { Button } from "@repo/ui/components/button";
+import { Input } from "@repo/ui/components/input";
+import { Label } from "@repo/ui/components/label";
 import {
     Card,
     CardContent,
@@ -12,8 +12,8 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@repo/ui/ui/card";
-import { Separator } from "@repo/ui/ui/separator";
+} from "@repo/ui/components/card";
+import { Separator } from "@repo/ui/components/separator";
 import { signIn } from "../lib/auth/auth-client";
 import { Loader2, Mail, Lock, Shield } from "lucide-react";
 import { toast } from "sonner";

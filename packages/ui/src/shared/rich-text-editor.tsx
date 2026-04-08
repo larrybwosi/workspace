@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { Bold, Italic, Link2, List, ListOrdered, Code, Quote } from "lucide-react"
-import { Button } from "../ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Button } from "../components/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/tooltip"
 import { cn } from "../lib/utils"
 
 interface RichTextEditorProps {

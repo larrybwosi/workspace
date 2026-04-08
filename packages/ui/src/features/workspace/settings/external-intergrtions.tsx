@@ -2,17 +2,17 @@
 
 import { useState } from "react"
 import { Plus, Trash2, Power, PowerOff, SettingsIcon, ExternalLink, Copy, Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
-import { Button } from "../../../ui/button"
-import { Badge } from "../../../ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../ui/dialog"
-import { Input } from "../../../ui/input"
-import { Label } from "../../../ui/label"
-import { Textarea } from "../../../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
+import { Button } from "../../../components/button"
+import { Badge } from "../../../components/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/dialog"
+import { Input } from "../../../components/input"
+import { Label } from "../../../components/label"
+import { Textarea } from "../../../components/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "../../../hooks/use-toast"
-import { Switch } from "../../../ui/switch"
+import { Switch } from "../../../components/switch"
 
 interface ExternalIntegrationsProps {
   workspaceId: string

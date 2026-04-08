@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { getAblyClient, AblyChannels, AblyEvents } from "@repo/shared"
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
 
 interface TypingIndicatorProps {
   channelId: string

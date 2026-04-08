@@ -5,10 +5,10 @@ import { VideoCallContent } from '../chat/video-call-content';
 import { useState, useEffect } from 'react';
 import { getAblyClient, AblyChannels } from '@repo/shared';
 import { useSession } from '@repo/shared';
-import { Dialog, DialogContent } from '../../ui/dialog';
-import { Button } from '../../ui/button';
+import { Dialog, DialogContent } from '../../components/dialog';
+import { Button } from '../../components/button';
 import { Phone, PhoneOff, Video, X } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '../../ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
 
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();

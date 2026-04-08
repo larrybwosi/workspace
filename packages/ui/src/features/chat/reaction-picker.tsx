@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { Button } from "../../ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/popover"
+import { Button } from "../../components/button"
 import { CustomEmojiPicker } from "../../shared/custom-emoji-picker"
 import { Smile, Sparkles } from "lucide-react"
 

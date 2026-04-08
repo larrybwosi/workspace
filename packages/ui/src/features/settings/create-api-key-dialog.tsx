@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Button } from "../../ui/button"
+import { Button } from "../../components/button"
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Checkbox } from "../../ui/checkbox"
+} from "../../components/dialog"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Checkbox } from "../../components/checkbox"
 import { useCreateApiKey } from "@repo/api-client"
 import { toast } from "sonner"
 import { Copy, CheckCircle2 } from 'lucide-react'
