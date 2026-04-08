@@ -82,6 +82,10 @@ model User {
   teamMemberships WorkspaceTeamMember[]
   announcements   DepartmentAnnouncement[]
 
+  teamFiles        WorkspaceTeamFile[]
+  teamApprovals    WorkspaceTeamApproval[]         @relation("ApprovalRequester")
+  approvalResponses WorkspaceTeamApprovalResponse[]
+
   // Social & Webhooks (Added for consistency with lower models)
   friends                 Friend[]                 @relation("UserFriends")
   friendOf                Friend[]                 @relation("FriendOf")
@@ -282,6 +286,11 @@ model WorkspaceTeam {
   department WorkspaceDepartment?  @relation(fields: [departmentId], references: [id])
   members    WorkspaceTeamMember[]
 
+  files        WorkspaceTeamFile[]
+  approvals    WorkspaceTeamApproval[]
+  analytics    WorkspaceTeamAnalytics[]
+  integrations WorkspaceIntegration[]
+
   @@unique([workspaceId, slug])
   @@map("workspace_teams")
 }
@@ -418,14 +427,79 @@ model WorkspaceWebhookLog {
 model WorkspaceIntegration {
   id          String   @id @default(cuid())
   workspaceId String
+  teamId      String?
   service     String // slack, github, jira, etc.
   config      Json
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team      WorkspaceTeam? @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@map("workspace_integrations")
+}
+
+model WorkspaceTeamFile {
+  id           String   @id @default(cuid())
+  teamId       String
+  name         String
+  url          String
+  type         String
+  size         Int
+  uploadedById String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  team       WorkspaceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  uploadedBy User          @relation(fields: [uploadedById], references: [id])
+
+  @@map("workspace_team_files")
+}
+
+model WorkspaceTeamApproval {
+  id            String   @id @default(cuid())
+  teamId        String
+  title         String
+  description   String?
+  status        String   @default("pending") // pending, approved, rejected, cancelled
+  requestedById String
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  team        WorkspaceTeam                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  requestedBy User                            @relation("ApprovalRequester", fields: [requestedById], references: [id])
+  responses   WorkspaceTeamApprovalResponse[]
+
+  @@map("workspace_team_approvals")
+}
+
+model WorkspaceTeamApprovalResponse {
+  id          String   @id @default(cuid())
+  approvalId  String
+  userId      String
+  decision    String // approved, rejected
+  comment     String?
+  respondedAt DateTime @default(now())
+
+  approval WorkspaceTeamApproval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  user     User                  @relation(fields: [userId], references: [id])
+
+  @@unique([approvalId, userId])
+  @@map("workspace_team_approval_responses")
+}
+
+model WorkspaceTeamAnalytics {
+  id        String   @id @default(cuid())
+  teamId    String
+  date      DateTime @default(now())
+  metrics   Json // { messages: 10, filesShared: 5, approvalsCompleted: 2, etc. }
+  createdAt DateTime @default(now())
+
+  team WorkspaceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, date])
+  @@map("workspace_team_analytics")
 }
 
 model WorkspaceAuditLog {
