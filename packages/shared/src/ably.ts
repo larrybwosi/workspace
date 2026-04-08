@@ -40,18 +40,29 @@ export const EVENTS = AblyEvents;
 let ablyClientInstance: any = null;
 
 export function getAblyClient() {
-  config({ path: resolve(process.cwd(), '../../.env') });
-  const key = process.env.ABLY_API_KEY;
-  if (!key) {
-    console.warn('ABLY_API_KEY is not defined');
-    return null;
-  }
-  if (!ablyClientInstance) {
-    // @ts-ignore
-    ablyClientInstance = new Ably.Realtime({
-      key,
-      clientId: 'server',
-    });
+  if (typeof window === "undefined") {
+    // Server-side
+    const key = process.env.ABLY_API_KEY
+    if (!key) {
+      console.warn("ABLY_API_KEY is not defined")
+      return null
+    }
+    if (!ablyClientInstance) {
+      // @ts-ignore
+      ablyClientInstance = new Ably.Realtime({
+        key,
+        clientId: "server",
+      })
+    }
+  } else {
+    // Client-side
+    if (!ablyClientInstance) {
+      // @ts-ignore
+      ablyClientInstance = new Ably.Realtime({
+        authUrl: "/api/ably/token",
+        authMethod: "POST",
+      })
+    }
   }
   return ablyClientInstance;
 }
@@ -61,7 +72,10 @@ export function getAblyServer() {
 }
 
 export function getAblyRest() {
-  const key = process.env.ABLY_API_KEY;
+  if (typeof window !== "undefined") {
+    throw new Error("getAblyRest should only be called on the server")
+  }
+  const key = process.env.ABLY_API_KEY
   if (!key) {
     console.warn('ABLY_API_KEY is not defined, returning null');
     return null;
@@ -72,19 +86,19 @@ export function getAblyRest() {
   });
 }
 
-// Lazy load ably instance to avoid build-time errors when ABLY_API_KEY is missing
+// Lazy load ably instance to avoid build-time errors
 export const ably = {
   get auth() {
-    const client = getAblyServer();
-    if (!client) throw new Error('Ably client not initialized');
-    return client.auth;
+    const client = getAblyClient()
+    if (!client) throw new Error("Ably client not initialized")
+    return client.auth
   },
   get channels() {
-    const client = getAblyServer();
-    if (!client) throw new Error('Ably client not initialized');
-    return client.channels;
-  },
-} as any;
+    const client = getAblyClient()
+    if (!client) throw new Error("Ably client not initialized")
+    return client.channels
+  }
+} as any
 
 export async function publishMessage(channelId: string, data: any) {
   try {
