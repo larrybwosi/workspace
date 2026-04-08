@@ -6,6 +6,7 @@ import { CommentRequestMessage } from "@repo/ui/features/chat/message-types/comm
 import { CodeMessage } from "@repo/ui/features/chat/message-types/code-message";
 import { CustomMessage } from "@repo/ui/features/chat/message-types/custom-message";
 import { ReportMessage } from "@repo/ui/features/chat/message-types/report-message";
+import { StandardMessage } from "@repo/ui/features/chat/message-types/standard-message";
 
 // Revised Regex:
 // 1. ^\s*``` : Starts with optional whitespace and backticks
@@ -53,16 +54,13 @@ export class MessageRendererFactory {
 }
 
 // Register built-in message types
-MessageRendererFactory.register("approval", ApprovalMessage);
+MessageRendererFactory.register("standard", StandardMessage);
+MessageRendererFactory.register("approval", CustomMessage);
 MessageRendererFactory.register("comment-request", CommentRequestMessage);
 MessageRendererFactory.register("code", CodeMessage);
 MessageRendererFactory.register("custom" as MessageType, CustomMessage);
-MessageRendererFactory.register("report", ReportMessage);
+MessageRendererFactory.register("report", CustomMessage);
 
 export function renderCustomMessage(message: Message) {
-  if (!message.messageType || message.messageType === "standard") {
-    return null;
-  }
-
   return MessageRendererFactory.render(message, message.metadata || {});
 }
