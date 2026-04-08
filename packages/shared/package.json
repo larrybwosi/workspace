@@ -2,8 +2,7 @@
   "name": "@repo/shared",
   "version": "0.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit"
