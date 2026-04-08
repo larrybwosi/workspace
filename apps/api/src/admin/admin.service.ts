@@ -235,8 +235,8 @@ export class AdminService {
             duration: asset.metadata?.duration,
           },
         };
-      } catch (error) {
-        this.logger.error(`Sanity upload failed: ${error.message}`, error.stack);
+      } catch (error: any) {
+        this.logger.error(`Sanity upload failed: ${error?.message}`, error?.stack);
         throw new InternalServerErrorException('Failed to upload file to Sanity');
       }
     }

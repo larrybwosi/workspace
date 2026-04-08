@@ -16,7 +16,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { getAblyServer, AblyChannels, EVENTS } from '../lib/integrations/ably';
+import { AblyChannels, EVENTS, getAblyRest } from '@repo/shared';
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),
@@ -199,7 +199,7 @@ export class WorkspacesController {
       throw new NotFoundException('Workspace not found');
     }
 
-    const isMember = workspace.members.some((m) => m.userId === user.id);
+    const isMember = workspace.members.some(m => m.userId === user.id);
     if (!isMember) {
       throw new ForbiddenException('You are not a member of this workspace');
     }
@@ -415,7 +415,7 @@ export class WorkspacesController {
       },
     });
 
-    const ably = getAblyServer();
+    const ably = getAblyRest();
     if (ably) {
       const ablyChannel = ably.channels.get(AblyChannels.workspace(workspace.id));
       await ablyChannel.publish(EVENTS.CHANNEL_CREATED, { channel, userId: user.id });
@@ -429,7 +429,7 @@ export class WorkspacesController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('memberId') memberId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -480,7 +480,7 @@ export class WorkspacesController {
       },
     });
 
-    const ably = getAblyServer();
+    const ably = getAblyRest();
     if (ably) {
       const channel = ably.channels.get(AblyChannels.user(updatedMember.userId));
       await channel.publish('NOTIFICATION', {
@@ -494,7 +494,11 @@ export class WorkspacesController {
   }
 
   @Delete(':slug/members/:memberId')
-  async removeWorkspaceMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
+  async removeWorkspaceMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('memberId') memberId: string
+  ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -542,7 +546,7 @@ export class WorkspacesController {
       },
     });
 
-    const ably = getAblyServer();
+    const ably = getAblyRest();
     if (ably) {
       const channel = ably.channels.get(AblyChannels.user(memberToRemove.userId));
       await channel.publish('NOTIFICATION', {
