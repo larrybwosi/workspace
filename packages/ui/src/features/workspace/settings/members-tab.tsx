@@ -2,19 +2,19 @@
 
 import { useState } from "react"
 import { UserPlus, Search, Filter, MoreHorizontal, Crown, Mail, X, Shield, ExternalLink } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
-import { Button } from "../../../ui/button"
-import { Input } from "../../../ui/input"
-import { Badge } from "../../../ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../ui/table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
+import { Button } from "../../../components/button"
+import { Input } from "../../../components/input"
+import { Badge } from "../../../components/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../components/avatar"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../../ui/dropdown-menu"
+} from "../../../components/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -22,9 +22,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../ui/dialog"
-import { Label } from "../../../ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
+} from "../../../components/dialog"
+import { Label } from "../../../components/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
 import { toast } from "sonner"
 import {
   useWorkspaceMembers,

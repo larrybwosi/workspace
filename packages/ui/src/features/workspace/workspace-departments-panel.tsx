@@ -2,13 +2,13 @@
 
 import * as React from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Button } from "../../ui/button"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Textarea } from "../../ui/textarea"
-import { Badge } from "../../ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Textarea } from "../../components/textarea"
+import { Badge } from "../../components/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/card"
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../ui/dialog"
+} from "../../components/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { ScrollArea } from "../../ui/scroll-area"
+} from "../../components/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
+import { ScrollArea } from "../../components/scroll-area"
 import { toast } from "sonner"
 import {
   Building2,

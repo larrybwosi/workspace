@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 import { Plus, ChevronDown, Inbox, Bookmark, Sparkles, Users, FileText, ChevronRight } from 'lucide-react';
-import { Button } from '../ui/button';
-import { ScrollArea } from '../ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
-import { Separator } from '../ui/separator';
-import { Skeleton } from '../ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Button } from '../components/button';
+import { ScrollArea } from '../components/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
+import { Badge } from '../components/badge';
+import { Separator } from '../components/separator';
+import { Skeleton } from '../components/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/tooltip';
 import { cn } from '../lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from '@repo/shared';

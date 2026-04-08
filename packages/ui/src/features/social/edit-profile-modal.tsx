@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { X, Upload, Smile, Loader2, Image as ImageIcon, Bell, AtSign, UserPlus, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../ui/dialog';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
-import { Label } from '../../ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Switch } from '../../ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-import { Separator } from '../../ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/dialog';
+import { Button } from '../../components/button';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Switch } from '../../components/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { Separator } from '../../components/separator';
 import { EmojiPicker } from '../../shared/emoji-picker';
 import { useUpdateUser, useEligibleAssets } from '@repo/api-client';
 import { toast } from 'sonner';

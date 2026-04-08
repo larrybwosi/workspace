@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
 import { Send, Download, Key, Shield, FileText } from "lucide-react"
 import { WorkspaceIncomingWebhooks } from "./workspace-incoming-webhooks"
 import { WorkspaceOutgoingWebhooks } from "./workspace-outgoing-webhooks"
