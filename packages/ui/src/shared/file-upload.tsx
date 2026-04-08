@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { Upload, X, File, Loader2 } from 'lucide-react'
-import { Button } from "../ui/button"
-import { Progress } from "../ui/progress"
+import { Button } from "../components/button"
+import { Progress } from "../components/progress"
 import { cn } from "../lib/utils"
 import { uploadFile, formatFileSize, getFileIcon, type UploadedFile } from "@repo/shared"
 import { useToast } from "../hooks/use-toast"

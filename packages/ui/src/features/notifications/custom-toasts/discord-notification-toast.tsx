@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { X, MessageSquare, Bell, Calendar, Video, Phone } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
-import { Button } from "../../../ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../components/avatar"
+import { Button } from "../../../components/button"
 import { cn } from "../../../lib/utils"
 import Link from "next/link"
 

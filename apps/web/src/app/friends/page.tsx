@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useUsers } from "@repo/api-client"
-import { cn } from "@/lib/utils"
+import { cn } from "@repo/ui/lib/utils"
 import { usePresence } from "@/lib/contexts/presence-context"
 
 export default function FriendsPage() {

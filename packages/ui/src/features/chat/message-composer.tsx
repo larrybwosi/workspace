@@ -1,8 +1,8 @@
 'use client';
 
 import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2 } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
+import { Button } from '../../components/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/tooltip';
 import { uploadFile, type UploadedFile } from '@repo/shared';
 import { MentionSelector, MentionItem } from '../../shared/mention-selector';
 import { EmojiPicker } from '../../shared/emoji-picker';

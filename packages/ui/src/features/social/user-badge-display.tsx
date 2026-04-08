@@ -2,8 +2,8 @@
 
 import type * as React from "react"
 import { cn } from "../../lib/utils"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/tooltip"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../components/hover-card"
 import { Shield, Star, Crown, Sparkles, Award, Zap, Heart, Trophy } from "lucide-react"
 
 interface Badge {

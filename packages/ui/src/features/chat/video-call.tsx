@@ -3,10 +3,10 @@
 import { useEffect, useState, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { Mic, MicOff, VideoIcon, VideoOff, Phone, Monitor, MonitorOff, Settings, MessageSquare, Users } from 'lucide-react'
-import { Button } from "../../ui/button"
-import { Avatar, AvatarFallback } from "../../ui/avatar"
-import { Card } from "../../ui/card"
-import { Badge } from "../../ui/badge"
+import { Button } from "../../components/button"
+import { Avatar, AvatarFallback } from "../../components/avatar"
+import { Card } from "../../components/card"
+import { Badge } from "../../components/badge"
 import { cn } from "../../lib/utils"
 
 const VideoCallContent = dynamic(

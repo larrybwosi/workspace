@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Headphones, X, Mic, MicOff, Video, VideoOff, Users, PhoneOff } from "lucide-react"
-import { Button } from "../../ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
+import { Button } from "../../components/button"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
 import { cn } from "../../lib/utils"
 import { getAblyClient, AblyChannels, AblyEvents } from "@repo/shared"
 import { VideoCall } from "./video-call"

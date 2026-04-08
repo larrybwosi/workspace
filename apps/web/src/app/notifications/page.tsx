@@ -12,7 +12,7 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { useToast } from "@/hooks/use-toast"
 import { format, isToday, isYesterday } from "date-fns"
-import { cn } from "@/lib/utils"
+import { cn } from "@repo/ui/lib/utils"
 import Link from "next/link"
 
 export default function NotificationsPage() {

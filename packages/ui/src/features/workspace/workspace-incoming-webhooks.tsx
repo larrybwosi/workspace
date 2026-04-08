@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
-import { Button } from "../../ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
+import { Button } from "../../components/button"
 import { Plus, Trash2, Copy, RefreshCw, CheckCircle2, XCircle } from "lucide-react"
 import {
   Dialog,
@@ -11,15 +11,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Input } from "../../ui/input"
-import { Label } from "../../ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Badge } from "../../ui/badge"
+} from "../../components/dialog"
+import { Input } from "../../components/input"
+import { Label } from "../../components/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
+import { Badge } from "../../components/badge"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@repo/api-client"
 import { toast } from "sonner"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
 
 interface WorkspaceIncomingWebhooksProps {
   workspaceSlug: string

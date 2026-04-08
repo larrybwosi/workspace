@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import { Settings, Globe, Bell, Mail, Database } from 'lucide-react'
-import { Card } from "../../ui/card"
-import { Label } from "../../ui/label"
-import { Input } from "../../ui/input"
-import { Button } from "../../ui/button"
-import { Switch } from "../../ui/switch"
-import { Textarea } from "../../ui/textarea"
+import { Card } from "../../components/card"
+import { Label } from "../../components/label"
+import { Input } from "../../components/input"
+import { Button } from "../../components/button"
+import { Switch } from "../../components/switch"
+import { Textarea } from "../../components/textarea"
 
 export function AdminSettings() {
   return (
