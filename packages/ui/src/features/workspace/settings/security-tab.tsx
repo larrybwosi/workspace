@@ -12,7 +12,7 @@ import { Textarea } from "../../../ui/textarea"
 import { Badge } from "../../../ui/badge"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "../../../lib/api-client"
+import { apiClient } from "@repo/api-client"
 
 export function SecurityTab({ workspaceId }: { workspaceId: string }) {
   const queryClient = useQueryClient()

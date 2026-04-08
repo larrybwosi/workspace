@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { User } from '@repo/database';
+import type { User } from '@repo/database';
 import { CallsService } from './calls.service';
 
 @Controller('calls')

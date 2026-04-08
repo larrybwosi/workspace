@@ -1,35 +1,35 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Phone, Video, Play, ExternalLink } from "lucide-react"
-import { Button } from "../../../ui/button"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../../ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
-import { Badge } from "../../../ui/badge"
-import { cn } from "../../../lib/utils"
-import { useCallStore } from "../../../hooks/features/use-call-store"
-import { toast } from "sonner"
+import * as React from 'react';
+import { Phone, Video, Play, ExternalLink } from 'lucide-react';
+import { Button } from '../../../ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../../ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
+import { Badge } from '../../../ui/badge';
+import { cn } from '../../../lib/utils';
+import { useCallStore } from '@repo/shared';
+import { toast } from 'sonner';
 
 interface CallInviteMessageProps {
-  message: any
-  attachment: any
+  message: any;
+  attachment: any;
 }
 
 export function CallInviteMessage({ message, attachment }: CallInviteMessageProps) {
-  const { setCall, activeCall } = useCallStore()
-  const [isJoining, setIsJoining] = React.useState(false)
+  const { setCall, activeCall } = useCallStore();
+  const [isJoining, setIsJoining] = React.useState(false);
 
-  const callId = message.metadata?.callId || attachment.url.split("/").pop()
-  const callType = message.metadata?.callType || "video"
-  const workspaceId = message.metadata?.workspaceId
+  const callId = message.metadata?.callId || attachment.url.split('/').pop();
+  const callType = message.metadata?.callType || 'video';
+  const workspaceId = message.metadata?.workspaceId;
 
   const handleJoin = async () => {
     if (activeCall) {
-      toast.error("You are already in a call")
-      return
+      toast.error('You are already in a call');
+      return;
     }
 
-    setIsJoining(true)
+    setIsJoining(true);
     try {
       const response = await fetch('/api/calls', {
         method: 'POST',
@@ -37,27 +37,27 @@ export function CallInviteMessage({ message, attachment }: CallInviteMessageProp
         body: JSON.stringify({
           type: callType,
           callId: callId,
-          workspaceId: workspaceId
-        })
-      })
+          workspaceId: workspaceId,
+        }),
+      });
 
-      if (!response.ok) throw new Error('Failed to join call')
-      const data = await response.json()
-      setCall(data)
+      if (!response.ok) throw new Error('Failed to join call');
+      const data = await response.json();
+      setCall(data);
     } catch (error) {
-      console.error(error)
-      toast.error("Failed to join call")
+      console.error(error);
+      toast.error('Failed to join call');
     } finally {
-      setIsJoining(false)
+      setIsJoining(false);
     }
-  }
+  };
 
   return (
     <Card className="max-w-sm overflow-hidden border-2 border-primary/20 bg-primary/5 dark:bg-primary/10">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <div className="bg-primary/20 p-2 rounded-lg">
-            {callType === "video" ? (
+            {callType === 'video' ? (
               <Video className="h-5 w-5 text-primary" />
             ) : (
               <Phone className="h-5 w-5 text-primary" />
@@ -65,9 +65,7 @@ export function CallInviteMessage({ message, attachment }: CallInviteMessageProp
           </div>
           <div>
             <CardTitle className="text-sm font-bold">Call Invitation</CardTitle>
-            <CardDescription className="text-xs">
-              {message.sender.name} is inviting you to join
-            </CardDescription>
+            <CardDescription className="text-xs">{message.sender.name} is inviting you to join</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -92,7 +90,7 @@ export function CallInviteMessage({ message, attachment }: CallInviteMessageProp
           disabled={isJoining}
         >
           {isJoining ? (
-            "Joining..."
+            'Joining...'
           ) : (
             <>
               <Play className="h-4 w-4 fill-current" />
@@ -102,5 +100,5 @@ export function CallInviteMessage({ message, attachment }: CallInviteMessageProp
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }

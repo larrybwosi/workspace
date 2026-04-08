@@ -2,16 +2,19 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/users.controller';
-import { WorkspacesController } from './workspaces/workspaces.controller';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 import { RedisModule } from './common/redis/redis.module';
 import { V2Module } from './v2/v2.module';
 import { V10Module } from './v10/v10.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { CommonModule } from './common/common.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -23,6 +26,10 @@ import { InvitationsModule } from './invitations/invitations.module';
     V10Module,
     NotificationsModule,
     InvitationsModule,
+    IntegrationsModule,
+    CommonModule,
+    WorkspacesModule,
+    AdminModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -40,7 +47,7 @@ import { InvitationsModule } from './invitations/invitations.module';
       },
     }),
   ],
-  controllers: [AppController, UsersController, WorkspacesController],
+  controllers: [AppController, UsersController],
   providers: [
     AppService,
     {

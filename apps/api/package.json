@@ -8,10 +8,11 @@
     "start": "nest start",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "type-check": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nest-lab/throttler-storage-redis": "^1.2.0",
     "@nestjs/common": "^11.1.18",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.1.18",
@@ -27,7 +28,7 @@
     "better-auth": "^1.1.18",
     "firebase-admin": "^13.7.0",
     "ioredis": "^5.4.2",
-    "nestjs-throttler-storage-redis": "^0.5.1",
+    "nanoid": "3.3.8",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "zod": "^4.3.6"

@@ -1,7 +1,20 @@
-import { Controller, Get, Post, Body, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { prisma, User } from '@repo/database';
+import { prisma } from '@repo/database';
+import type { User } from '@repo/database';
 import { z } from 'zod';
 
 const createWorkspaceSchema = z.object({
@@ -13,6 +26,14 @@ const createWorkspaceSchema = z.object({
     .regex(/^[a-z0-9-]+$/),
   icon: z.string().optional(),
   description: z.string().optional(),
+});
+
+const updateWorkspaceSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  icon: z.string().optional(),
+  description: z.string().optional(),
+  settings: z.any().optional(),
+  plan: z.enum(['free', 'pro', 'enterprise']).optional(),
 });
 
 @Controller('workspaces')
@@ -117,5 +138,228 @@ export class WorkspacesController {
         },
       },
     });
+  }
+
+  @Get(':slug')
+  async getWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                status: true,
+              },
+            },
+          },
+        },
+        channels: {
+          select: {
+            id: true,
+            name: true,
+            icon: true,
+            type: true,
+          },
+        },
+        _count: {
+          select: {
+            channels: true,
+          },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const isMember = workspace.members.some((m) => m.userId === user.id);
+    if (!isMember) {
+      throw new ForbiddenException('You are not a member of this workspace');
+    }
+
+    return workspace;
+  }
+
+  @Patch(':slug')
+  async updateWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to update this workspace');
+    }
+
+    const validatedData = updateWorkspaceSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+
+    const updatedWorkspace = await prisma.workspace.update({
+      where: { id: workspace.id },
+      data: validatedData.data,
+      include: {
+        owner: true,
+        members: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    await prisma.workspaceAuditLog.create({
+      data: {
+        workspaceId: workspace.id,
+        userId: user.id,
+        action: 'workspace.updated',
+        resource: 'workspace',
+        resourceId: workspace.id,
+        metadata: validatedData.data as any,
+      },
+    });
+
+    return updatedWorkspace;
+  }
+
+  @Get(':slug/members')
+  async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const members = await prisma.workspaceMember.findMany({
+      where: {
+        workspaceId: workspace.id,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            image: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    return { members };
+  }
+
+  @Get(':slug/channels')
+  async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const channels = await prisma.channel.findMany({
+      where: {
+        workspaceId: workspace.id,
+        OR: [
+          { isPrivate: false },
+          {
+            isPrivate: true,
+            members: {
+              some: {
+                userId: user.id,
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        _count: { select: { messages: true } },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    return channels;
+  }
+
+  @Delete(':slug')
+  async deleteWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.ownerId !== user.id) {
+      throw new ForbiddenException('Only the owner can delete the workspace');
+    }
+
+    await prisma.workspace.delete({
+      where: { id: workspace.id },
+    });
+
+    return { success: true };
   }
 }

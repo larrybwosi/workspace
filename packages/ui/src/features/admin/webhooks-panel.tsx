@@ -5,7 +5,7 @@ import { Webhook, Plus, Trash2, MoreVertical, CheckCircle2, XCircle, Activity } 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
 import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
-import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "../../hooks/api/use-integrations"
+import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "@repo/api-client"
 import { CreateWebhookDialog } from "../settings/create-webhook-dialog"
 import { toast } from "sonner"
 import { format } from "date-fns"

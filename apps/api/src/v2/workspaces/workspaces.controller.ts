@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -10,23 +11,29 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiV2Guard, ApiV2Context } from '../../auth/api-v2.guard';
+import { ApiV2Guard } from '../../auth/api-v2.guard';
+import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
+import { V2AuditService } from '../v2-audit.service';
+import { auth } from '../../auth/better-auth';
 
 const addMemberSchema = z.object({
   email: z.string().email(),
   role: z.string().optional().default('member'),
 });
 
-@Controller('v2/workspaces/:slug')
+@Controller('v2/workspaces/:slug/members')
 @UseGuards(ApiV2Guard)
 export class V2WorkspacesController {
-  constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly auditService: V2AuditService
+  ) {}
 
-  @Get('members')
+  @Get()
   async getMembers(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'members:read')) {
       throw new ForbiddenException('Forbidden: Missing members:read scope');
@@ -58,10 +65,12 @@ export class V2WorkspacesController {
 
     await this.redis.setex(cacheKey, 600, JSON.stringify(members));
 
+    await this.auditService.log(context, 'members.list', 'member');
+
     return { members, source: 'database' };
   }
 
-  @Post('members')
+  @Post()
   async addMember(@V2Context() context: ApiV2Context, @Body() body: any) {
     if (!this.hasScope(context, 'members:write')) {
       throw new ForbiddenException('Forbidden: Missing members:write scope');
@@ -97,7 +106,50 @@ export class V2WorkspacesController {
 
     await this.redis.del(`v2:members:${context.workspaceId}`);
 
+    await this.auditService.log(context, 'members.add', 'member', userToAdd.id, {
+      email,
+      role,
+    });
+
     return { member: membership };
+  }
+
+  @Delete(':userId')
+  async removeMember(@V2Context() context: ApiV2Context, @Param('userId') userId: string) {
+    if (!this.hasScope(context, 'members:write')) {
+      throw new ForbiddenException('Forbidden: Missing members:write scope');
+    }
+
+    const member = await prisma.workspaceMember.findFirst({
+      where: {
+        userId,
+        workspaceId: context.workspaceId,
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: context.workspaceId },
+    });
+
+    if (workspace?.ownerId === userId) {
+      throw new BadRequestException('Cannot remove workspace owner');
+    }
+
+    await prisma.workspaceMember.delete({
+      where: {
+        id: member.id,
+      },
+    });
+
+    await this.redis.del(`v2:members:${context.workspaceId}`);
+
+    await this.auditService.log(context, 'members.remove', 'member', userId);
+
+    return { success: true };
   }
 
   private hasScope(context: ApiV2Context, scope: string): boolean {

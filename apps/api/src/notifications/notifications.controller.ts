@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { User } from '@repo/database';
+import type { User } from '@repo/database';
 import { NotificationsService } from './notifications.service';
 
 @Controller('notifications')

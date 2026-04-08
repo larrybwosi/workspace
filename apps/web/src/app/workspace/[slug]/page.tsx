@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useWorkspaces, useCreateWorkspaceChannel } from '@/hooks/api/use-workspaces';
+import { useWorkspaces, useCreateWorkspaceChannel } from '@repo/api-client';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { useState } from 'react';

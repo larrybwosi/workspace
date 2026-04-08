@@ -12,11 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Separator } from '../../ui/separator';
 import { EmojiPicker } from '../../shared/emoji-picker';
-import { useUpdateUser } from '../../hooks/api/use-users';
+import { useUpdateUser } from '@repo/api-client';
 import { toast } from 'sonner';
 import { User } from '../../lib/types';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '@repo/api-client';
 import { cn } from '../../lib/utils';
 
 type NotificationLevel = 'all' | 'mentions' | 'none';

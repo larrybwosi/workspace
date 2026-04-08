@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Key, Webhook, Activity, TrendingUp } from 'lucide-react'
-import { useIntegrationStats } from "../../hooks/api/use-integrations"
+import { useIntegrationStats } from "@repo/api-client"
 
 export function IntegrationStats() {
   const { data: stats, isLoading } = useIntegrationStats()
