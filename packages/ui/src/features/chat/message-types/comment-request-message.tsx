@@ -15,18 +15,18 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
-import { Button } from "../../../ui/button";
-import { Card, CardFooter, CardHeader } from "../../../ui/card";
-import { Badge } from "../../../ui/badge";
-import { Textarea } from "../../../ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../components/avatar";
+import { Button } from "../../../components/button";
+import { Card, CardFooter, CardHeader } from "../../../components/card";
+import { Badge } from "../../../components/badge";
+import { Textarea } from "../../../components/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../../ui/dropdown-menu";
+} from "../../../components/dropdown-menu";
 import { cn, formatTime } from "../../../lib/utils";
 import type { Message } from "../../../lib/types";
 import { mockUsers } from "../../../lib/mock-data";

@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { Shield, Lock, Eye, AlertTriangle, Key } from 'lucide-react'
-import { Card } from "../../ui/card"
-import { Badge } from "../../ui/badge"
-import { Button } from "../../ui/button"
-import { Switch } from "../../ui/switch"
-import { Label } from "../../ui/label"
+import { Card } from "../../components/card"
+import { Badge } from "../../components/badge"
+import { Button } from "../../components/button"
+import { Switch } from "../../components/switch"
+import { Label } from "../../components/label"
 
 export function AdminSecurity() {
   return (

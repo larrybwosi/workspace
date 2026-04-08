@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { Settings, Shield, Lock, Globe } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
-import { Button } from "../../../ui/button"
-import { Badge } from "../../../ui/badge"
-import { Label } from "../../../ui/label"
-import { Switch } from "../../../ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
+import { Button } from "../../../components/button"
+import { Badge } from "../../../components/badge"
+import { Label } from "../../../components/label"
+import { Switch } from "../../../components/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
 import { useQuery } from "@tanstack/react-query"
 
 interface ChannelConfigurationsProps {

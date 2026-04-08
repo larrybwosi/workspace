@@ -8,12 +8,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog"
-import { Button } from "../../ui/button"
-import { Label } from "../../ui/label"
-import { Input } from "../../ui/input"
-import { Textarea } from "../../ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+} from "../../components/dialog"
+import { Button } from "../../components/button"
+import { Label } from "../../components/label"
+import { Input } from "../../components/input"
+import { Textarea } from "../../components/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 import { Video, Phone, Calendar, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"

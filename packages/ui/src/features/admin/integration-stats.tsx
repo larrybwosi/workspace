@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/card"
 import { Key, Webhook, Activity, TrendingUp } from 'lucide-react'
 import { useIntegrationStats } from "@repo/api-client"
 

@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Command, CommandGroup, CommandItem, CommandList } from "../ui/command"
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { Command, CommandGroup, CommandItem, CommandList } from "../components/command"
+import { Avatar, AvatarFallback, AvatarImage } from "../components/avatar"
 import { Hash, Users, Zap } from "lucide-react"
 import { cn } from "../lib/utils"
 

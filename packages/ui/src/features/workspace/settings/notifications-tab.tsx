@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { Check, Loader2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../ui/card"
-import { Label } from "../../../ui/label"
-import { Switch } from "../../../ui/switch"
-import { Button } from "../../../ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select"
-import { Separator } from "../../../ui/separator"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
+import { Label } from "../../../components/label"
+import { Switch } from "../../../components/switch"
+import { Button } from "../../../components/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
+import { Separator } from "../../../components/separator"
 import { toast } from "sonner"
-import { RadioGroup, RadioGroupItem } from "../../../ui/radio-group"
+import { RadioGroup, RadioGroupItem } from "../../../components/radio-group"
 
 export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
   const [preference, setPreference] = useState<string>("all")

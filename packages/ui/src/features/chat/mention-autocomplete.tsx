@@ -1,6 +1,6 @@
 "use client"
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "../../ui/command"
-import { Avatar, AvatarFallback } from "../../ui/avatar"
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "../../components/command"
+import { Avatar, AvatarFallback } from "../../components/avatar"
 import { mockUsers } from "../../lib/mock-data"
 
 interface MentionAutocompleteProps {

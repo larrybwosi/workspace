@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { Check } from "lucide-react"
-import { Avatar, AvatarFallback } from "../../ui/avatar"
-import { Button } from "../../ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../../ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { Badge } from "../../ui/badge"
+import { Avatar, AvatarFallback } from "../../components/avatar"
+import { Button } from "../../components/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../../components/command"
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/popover"
+import { Badge } from "../../components/badge"
 import { mockUsers } from "../../lib/mock-data"
 import { cn } from "../../lib/utils"
 

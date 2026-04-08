@@ -1,9 +1,9 @@
 import * as React from "react"
 import { Users, Settings, BarChart3, Shield, Activity, Sparkles, TrendingUp } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/ui/tabs"
-import { ScrollArea } from "@repo/ui/ui/scroll-area"
-import { Button } from "@repo/ui/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/tabs"
+import { ScrollArea } from "@repo/ui/components/scroll-area"
+import { Button } from "@repo/ui/components/button"
 import { TopBar } from "@repo/ui/layout/top-bar"
 import { AdminSidebar } from "@repo/ui/layout/admin-sidebar"
 import { AdminOverview } from "@repo/ui/features/admin/admin-overview"

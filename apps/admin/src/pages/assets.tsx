@@ -23,14 +23,14 @@ import {
   Palette,
   Loader2,
 } from "lucide-react"
-import { Button } from "@repo/ui/ui/button"
-import { Input } from "@repo/ui/ui/input"
-import { Label } from "@repo/ui/ui/label"
-import { Badge } from "@repo/ui/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@repo/ui/ui/tabs"
-import { ScrollArea } from "@repo/ui/ui/scroll-area"
-import { Switch } from "@repo/ui/ui/switch"
+import { Button } from "@repo/ui/components/button"
+import { Input } from "@repo/ui/components/input"
+import { Label } from "@repo/ui/components/label"
+import { Badge } from "@repo/ui/components/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card"
+import { Tabs, TabsList, TabsTrigger } from "@repo/ui/components/tabs"
+import { ScrollArea } from "@repo/ui/components/scroll-area"
+import { Switch } from "@repo/ui/components/switch"
 import {
   Dialog,
   DialogContent,
@@ -38,17 +38,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@repo/ui/ui/dialog"
+} from "@repo/ui/components/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/ui/avatar"
+} from "@repo/ui/components/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/components/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui/components/table"
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar"
 import { TopBar } from "@repo/ui/layout/top-bar"
 import { AdminSidebar } from "@repo/ui/layout/admin-sidebar"
 import { toast } from "sonner"
