@@ -12,11 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Separator } from '../../ui/separator';
 import { EmojiPicker } from '../../shared/emoji-picker';
-import { useUpdateUser } from '@repo/api-client';
+import { useUpdateUser, useEligibleAssets } from '@repo/api-client';
 import { toast } from 'sonner';
 import { User } from '../../lib/types';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@repo/api-client';
 import { cn } from '../../lib/utils';
 
 type NotificationLevel = 'all' | 'mentions' | 'none';
@@ -56,16 +54,10 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
     directMessagesSound: true,
   });
 
-  const { data: assets } = useQuery({
-    queryKey: ['profile-assets'],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/profile-assets');
-      return data;
-    },
-  });
+  const { data: assets } = useEligibleAssets();
 
-  const avatars = (assets || []).filter((a: any) => a.type === 'avatar');
-  const banners = (assets || []).filter((a: any) => a.type === 'banner');
+  const avatars = (assets?.profileAssets || []).filter((a: any) => a.type === 'avatar');
+  const banners = (assets?.profileAssets || []).filter((a: any) => a.type === 'banner');
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -246,15 +238,22 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                           {avatars.map((a: any) => (
                             <button
                               key={a.id}
+                              disabled={!a.isEligible}
                               onClick={() => setAvatar(a.url)}
                               className={cn(
-                                'h-10 w-10 rounded-full border-2 transition-all overflow-hidden',
+                                'h-10 w-10 rounded-full border-2 transition-all overflow-hidden relative',
                                 avatar === a.url
                                   ? 'border-primary scale-110 shadow-md'
-                                  : 'border-transparent hover:border-muted-foreground/30'
+                                  : 'border-transparent hover:border-muted-foreground/30',
+                                !a.isEligible && 'opacity-60 grayscale cursor-not-allowed'
                               )}
                             >
                               <img src={a.url} alt="asset" className="h-full w-full object-cover" />
+                              {!a.isEligible && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <Lock className="h-4 w-4 text-white" />
+                                </div>
+                              )}
                             </button>
                           ))}
                         </div>
@@ -269,15 +268,22 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                           {banners.map((a: any) => (
                             <button
                               key={a.id}
+                              disabled={!a.isEligible}
                               onClick={() => setBanner(a.url)}
                               className={cn(
-                                'h-12 w-24 rounded border-2 transition-all overflow-hidden',
+                                'h-12 w-24 rounded border-2 transition-all overflow-hidden relative',
                                 banner === a.url
                                   ? 'border-primary scale-105 shadow-md'
-                                  : 'border-transparent hover:border-muted-foreground/30'
+                                  : 'border-transparent hover:border-muted-foreground/30',
+                                !a.isEligible && 'opacity-60 grayscale cursor-not-allowed'
                               )}
                             >
                               <img src={a.url} alt="asset" className="h-full w-full object-cover" />
+                              {!a.isEligible && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <Lock className="h-4 w-4 text-white" />
+                                </div>
+                              )}
                             </button>
                           ))}
                         </div>
