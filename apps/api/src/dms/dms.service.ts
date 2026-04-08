@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents, publishToAbly } from '../lib/integrations/ably';
+import { getAblyRest, AblyChannels, AblyEvents, publishToAbly } from '@repo/shared';
 
 @Injectable()
 export class DmsService {
