@@ -26,6 +26,21 @@ const nextConfig = {
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/integrations/:path*`,
       },
       {
+<<<<<<< HEAD
+        source: '/api/admin/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/:path*`,
+      },
+      {
+        source: '/api/dms/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/dms/:path*`,
+      },
+      {
+        source: '/api/friends/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/friends/:path*`,
+      },
+      {
+=======
+>>>>>>> main
         source: '/api/calls/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/calls/:path*`,
       },
@@ -34,6 +49,8 @@ const nextConfig = {
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/channels/:path*`,
       },
       {
+<<<<<<< HEAD
+=======
         source: '/api/notifications/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/:path*`,
       },
@@ -50,6 +67,7 @@ const nextConfig = {
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/scheduled-notifications/:path*`,
       },
       {
+>>>>>>> main
         source: '/api/v10/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v10/:path*`,
       },

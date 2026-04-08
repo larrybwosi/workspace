@@ -340,6 +340,12 @@ export class MessagesController {
       },
     });
 
+    const ably = getAblyRest();
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.channel(channelId));
+      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, reaction, action: 'add' });
+    }
+
     return reaction;
   }
 
@@ -368,6 +374,12 @@ export class MessagesController {
     await prisma.reaction.delete({
       where: { id: reaction.id },
     });
+
+    const ably = getAblyRest();
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.channel(channelId));
+      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId: user.id, action: 'remove' });
+    }
 
     return { success: true };
   }
