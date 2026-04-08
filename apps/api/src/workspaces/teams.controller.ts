@@ -15,7 +15,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { getAblyServer, AblyChannels, EVENTS } from '../lib/integrations/ably';
+import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared';
 
 const createTeamSchema = z.object({
   name: z.string().min(1).max(100),
@@ -37,11 +37,7 @@ const createTeamSchema = z.object({
 @UseGuards(AuthGuard)
 export class TeamsController {
   @Get()
-  async getTeams(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Query('departmentId') departmentId: string,
-  ) {
+  async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -86,11 +82,7 @@ export class TeamsController {
   }
 
   @Post()
-  async createTeam(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: any,
-  ) {
+  async createTeam(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -161,7 +153,7 @@ export class TeamsController {
 
     if (data.memberIds && data.memberIds.length > 0) {
       await prisma.workspaceTeamMember.createMany({
-        data: data.memberIds.map((userId) => ({
+        data: data.memberIds.map(userId => ({
           teamId: team.id,
           userId,
           role: userId === data.leadId ? 'lead' : 'member',

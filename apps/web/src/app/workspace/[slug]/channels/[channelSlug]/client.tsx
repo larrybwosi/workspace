@@ -4,11 +4,11 @@ import { ChannelView } from "@/components/features/chat/channel-view";
 import { DynamicHeader } from "@/components/layout/dynamic-header";
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar";
 import { InfoPanel } from "@/components/shared/info-panel";
-import { useWorkspaces } from "@/hooks/api/use-workspaces";
+import { useWorkspaces } from "@repo/api-client";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
-import { useWorkspaceChannels } from "@/hooks/api/use-workspaces";
+import { useWorkspaceChannels } from "@repo/api-client";
 
 export default function WorkspaceChannelPageClient({channelSlug}: {channelSlug: string}) {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);

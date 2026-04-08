@@ -31,7 +31,7 @@ import {
   useInviteToWorkspace,
   useUpdateWorkspaceMember,
   useRemoveWorkspaceMember,
-} from "../../../hooks/api/use-workspaces"
+} from "@repo/api-client"
 
 interface MembersTabProps {
   workspaceId: string

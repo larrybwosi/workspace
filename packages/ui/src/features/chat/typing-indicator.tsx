@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { getAblyClient, AblyChannels, AblyEvents } from "../../lib/integrations/ably"
+import { getAblyClient, AblyChannels, AblyEvents } from "@repo/shared"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
 
 interface TypingIndicatorProps {

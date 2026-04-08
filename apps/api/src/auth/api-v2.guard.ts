@@ -27,7 +27,7 @@ export interface ApiV2Context {
 export class ApiV2Guard implements CanActivate {
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
@@ -41,9 +41,11 @@ export class ApiV2Guard implements CanActivate {
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // Fallback to Session-based auth
-      const session = await auth.api.getSession({
-        headers: request.headers,
-      }).catch(() => null);
+      const session = await auth.api
+        .getSession({
+          headers: request.headers,
+        })
+        .catch(() => null);
 
       if (!session?.user) {
         throw new UnauthorizedException('Unauthorized');
@@ -59,10 +61,12 @@ export class ApiV2Guard implements CanActivate {
       let workspaceSlug = '';
 
       if (slug) {
-        const organization = await auth.api.getFullOrganization({
-          headers: request.headers,
-          query: { organizationSlug: slug }
-        }).catch(() => null);
+        const organization = await auth.api
+          .getFullOrganization({
+            headers: request.headers,
+            query: { organizationSlug: slug },
+          })
+          .catch(() => null);
 
         if (!organization) {
           throw new NotFoundException('Workspace not found');
@@ -73,10 +77,12 @@ export class ApiV2Guard implements CanActivate {
       }
 
       if (workspaceId) {
-        const members = await auth.api.listMembers({
-          headers: request.headers,
-          query: { organizationId: workspaceId }
-        }).catch(() => []);
+        const members = await auth.api
+          .listMembers({
+            headers: request.headers,
+            query: { organizationId: workspaceId },
+          })
+          .catch(() => []);
 
         const membersList = Array.isArray(members) ? members : (members as any).members || [];
         const isMember = membersList.some((m: any) => m.userId === session.user.id);
@@ -135,10 +141,12 @@ export class ApiV2Guard implements CanActivate {
           },
         });
       } else {
-        const tokenInfo = await (auth.api as any).getOAuthAccessToken({
-          headers: request.headers,
-          query: { token: accessToken },
-        }).catch(() => null);
+        const tokenInfo = await (auth.api as any)
+          .getOAuthAccessToken({
+            headers: request.headers,
+            query: { token: accessToken },
+          })
+          .catch(() => null);
 
         if (!tokenInfo || new Date(tokenInfo.expiresAt) < new Date()) {
           throw new UnauthorizedException('Invalid or expired token');
@@ -151,19 +159,23 @@ export class ApiV2Guard implements CanActivate {
         };
 
         if (slug) {
-          const organization = await auth.api.getFullOrganization({
-            headers: request.headers,
-            query: { organizationSlug: slug },
-          }).catch(() => null);
+          const organization = await auth.api
+            .getFullOrganization({
+              headers: request.headers,
+              query: { organizationSlug: slug },
+            })
+            .catch(() => null);
 
           if (!organization) {
             throw new NotFoundException('Workspace not found');
           }
 
-          const members = await auth.api.listMembers({
-            headers: request.headers,
-            query: { organizationId: organization.id },
-          }).catch(() => []);
+          const members = await auth.api
+            .listMembers({
+              headers: request.headers,
+              query: { organizationId: organization.id },
+            })
+            .catch(() => []);
 
           const membersList = Array.isArray(members) ? members : (members as any).members || [];
           const isMember = membersList.some((m: any) => m.userId === tokenInfo.userId);

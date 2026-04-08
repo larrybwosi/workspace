@@ -16,8 +16,8 @@ import {
   useRespondToFriendRequest,
   useRemoveFriend,
   useSendFriendRequest,
-} from "@/hooks/api/use-friends"
-import { useInvitations, useCreateInvitation, useResendInvitation } from "@/hooks/api/use-invitations"
+} from "@repo/api-client"
+import { useInvitations, useCreateInvitation, useResendInvitation } from "@repo/api-client"
 import { formatDistanceToNow } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -31,7 +31,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { useUsers } from "@/hooks/api/use-users"
+import { useUsers } from "@repo/api-client"
 import { cn } from "@/lib/utils"
 import { usePresence } from "@/lib/contexts/presence-context"
 

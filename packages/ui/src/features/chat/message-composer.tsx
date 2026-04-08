@@ -3,15 +3,15 @@
 import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2 } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
-import { uploadFile, UploadedFile } from '../../lib/utils/upload-utils';
+import { uploadFile, type UploadedFile } from '@repo/shared';
 import { MentionSelector, MentionItem } from '../../shared/mention-selector';
 import { EmojiPicker } from '../../shared/emoji-picker';
 import React, { ChangeEvent, useEffect, useRef, useState, useMemo } from 'react';
-import { useChannel } from '../../hooks/api/use-channels';
+import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useTypingNotifier, TypingIndicator } from './typing-indicator';
-import { useCurrentUser } from '../../hooks/api/use-users';
-import { useWorkspace, useWorkspaceChannels, useWorkspaceMembers } from '../../hooks/api/use-workspaces';
+import { useCurrentUser } from '@repo/api-client';
+import { useWorkspace, useWorkspaceChannels, useWorkspaceMembers } from '@repo/api-client';
 import TextareaAutosize from 'react-textarea-autosize';
 import { cn } from '../../lib/utils';
 

@@ -14,7 +14,7 @@ import { CustomMessage } from './message-types/custom-message';
 import { DocumentEmbed } from './message-types/document-embed';
 import { MessageAttachments } from './message-types/message-attachments';
 import { LinkPreview } from './link-preview';
-import { useUsers } from '../../hooks/api/use-users';
+import { useUsers } from '@repo/api-client';
 
 import {
   ContextMenu,
@@ -32,11 +32,11 @@ import {
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
 
-import { useUpdateMessage, useDeleteMessage } from '../../hooks/api/use-messages';
+import { useUpdateMessage, useDeleteMessage } from '@repo/api-client';
 import { useMemo, useState } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
-import { useSession } from '../../lib/auth/auth-client';
+import { useSession } from '@repo/shared';
 import { toast } from 'sonner';
 
 interface MessageItemProps {

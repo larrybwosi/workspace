@@ -6,7 +6,7 @@ import { ThemeProvider } from "../layout/theme-provider";
 import dynamic from "next/dynamic";
 import { NotificationListener } from "../features/notifications/notification-listener";
 import { PresenceProvider } from "./contexts/presence-context";
-import { useSession } from "./auth/auth-client";
+import { useSession } from "@repo/shared";
 
 const CallContainer = dynamic(
   () => import("../features/calls/call-container").then((mod) => mod.CallContainer),

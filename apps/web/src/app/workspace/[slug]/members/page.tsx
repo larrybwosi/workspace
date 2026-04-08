@@ -37,7 +37,7 @@ import {
   useRemoveWorkspaceMember,
   useWorkspaceInviteLinks,
   useCreateWorkspaceInviteLink,
-} from "@/hooks/api/use-workspaces"
+} from "@repo/api-client"
 import { useToast } from "@/hooks/use-toast"
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"

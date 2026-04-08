@@ -6,6 +6,8 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
+    "test": "jest --passWithNoTests",
+    "test:e2e": "playwright test",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "type-check": "tsc --noEmit"
   },
@@ -31,6 +33,7 @@
     "@lexical/utils": "^0.42.0",
     "@repo/database": "workspace:*",
     "@repo/types": "workspace:*",
+    "@repo/api-client": "workspace:*",
     "@repo/ui": "workspace:*",
     "@sanity/client": "latest",
     "@tanstack/react-query": "5.96.2",

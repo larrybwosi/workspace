@@ -1,45 +1,109 @@
-import { Injectable } from '@nestjs/common';
-import { prisma } from '@repo/database';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class AdminService {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async getStats() {
+    const totalUsers = await this.prismaService.client.user.count();
+    const activeUsers = await this.prismaService.client.user.count();
+    const totalWorkspaces = await this.prismaService.client.workspace.count();
+    const totalMessages = await this.prismaService.client.message.count();
+
+    // Mock growth and storage stats for now
+    return {
+      totalUsers,
+      activeUsers,
+      totalWorkspaces,
+      totalMessages,
+      totalProjects: totalWorkspaces, // Use workspaces as projects
+      totalTasks: 0,
+      completedTasks: 0,
+      storageUsed: 1.2,
+      storageTotal: 100,
+      userGrowth: 5.2,
+      activityGrowth: 3.1,
+    };
+  }
+
+  async getMembers(filters: { search?: string; role?: string; status?: string }) {
+    const where: any = {};
+    if (filters.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+    if (filters.role && filters.role !== 'all') {
+      where.role = filters.role;
+    }
+
+    const users = await this.prismaService.client.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    return users.map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role || 'Member',
+      status: 'active', // Mock status
+      avatar: user.image || user.avatar,
+      joinedAt: user.createdAt,
+      lastActive: user.updatedAt,
+      invitedBy: 'System',
+    }));
+  }
+
+  async updateMemberRole(userId: string, role: string) {
+    return this.prismaService.client.user.update({
+      where: { id: userId },
+      data: { role },
+    });
+  }
+
   async getAssets(type: string) {
+    const query = { where: { isGlobal: true }, orderBy: { createdAt: 'desc' as const } };
+
     if (type === 'emoji') {
-      return prisma.customEmoji.findMany({ orderBy: { createdAt: 'desc' } });
+      return this.prismaService.client.customEmoji.findMany(query);
     } else if (type === 'sticker') {
-      return prisma.sticker.findMany({ orderBy: { createdAt: 'desc' } });
+      return this.prismaService.client.sticker.findMany(query);
     } else if (type === 'sound') {
-      return prisma.soundboardSound.findMany({ orderBy: { createdAt: 'desc' } });
+      return this.prismaService.client.soundboardSound.findMany(query);
     } else if (type === 'profile_asset') {
-      return prisma.profileAsset.findMany({ orderBy: { createdAt: 'desc' } });
+      return this.prismaService.client.profileAsset.findMany(query);
     }
     return [];
   }
 
-  async createAsset(type: string, data: any, userId: string) {
+  async createAsset(type: string, data: any, userId?: string) {
     if (type === 'emoji') {
-      return prisma.customEmoji.create({
+      return this.prismaService.client.customEmoji.create({
         data: {
           ...this.filterFields(data, EMOJI_FIELDS),
-          createdById: userId,
+          ...(userId && { createdById: userId }),
         },
       });
     } else if (type === 'sticker') {
-      return prisma.sticker.create({
+      return this.prismaService.client.sticker.create({
         data: {
           ...this.filterFields(data, STICKER_FIELDS),
-          createdById: userId,
+          ...(userId && { createdById: userId }),
         },
       });
     } else if (type === 'sound') {
-      return prisma.soundboardSound.create({
+      return this.prismaService.client.soundboardSound.create({
         data: {
           ...this.filterFields(data, SOUND_FIELDS),
-          createdById: userId,
+          ...(userId && { createdById: userId }),
         },
       });
     } else if (type === 'profile_asset') {
-      return prisma.profileAsset.create({
+      return this.prismaService.client.profileAsset.create({
         data: this.filterFields(data, PROFILE_ASSET_FIELDS),
       });
     }
@@ -48,24 +112,24 @@ export class AdminService {
 
   async updateAsset(type: string, id: string, data: any) {
     if (type === 'emoji') {
-      return prisma.customEmoji.update({
+      return this.prismaService.client.customEmoji.update({
         where: { id },
-        data: this.filterFields(data, EMOJI_FIELDS)
+        data: this.filterFields(data, EMOJI_FIELDS),
       });
     } else if (type === 'sticker') {
-      return prisma.sticker.update({
+      return this.prismaService.client.sticker.update({
         where: { id },
-        data: this.filterFields(data, STICKER_FIELDS)
+        data: this.filterFields(data, STICKER_FIELDS),
       });
     } else if (type === 'sound') {
-      return prisma.soundboardSound.update({
+      return this.prismaService.client.soundboardSound.update({
         where: { id },
-        data: this.filterFields(data, SOUND_FIELDS)
+        data: this.filterFields(data, SOUND_FIELDS),
       });
     } else if (type === 'profile_asset') {
-      return prisma.profileAsset.update({
+      return this.prismaService.client.profileAsset.update({
         where: { id },
-        data: this.filterFields(data, PROFILE_ASSET_FIELDS)
+        data: this.filterFields(data, PROFILE_ASSET_FIELDS),
       });
     }
     throw new Error('Invalid asset type');
@@ -73,13 +137,13 @@ export class AdminService {
 
   async deleteAsset(type: string, id: string) {
     if (type === 'emoji') {
-      await prisma.customEmoji.delete({ where: { id } });
+      await this.prismaService.client.customEmoji.delete({ where: { id } });
     } else if (type === 'sticker') {
-      await prisma.sticker.delete({ where: { id } });
+      await this.prismaService.client.sticker.delete({ where: { id } });
     } else if (type === 'sound') {
-      await prisma.soundboardSound.delete({ where: { id } });
+      await this.prismaService.client.soundboardSound.delete({ where: { id } });
     } else if (type === 'profile_asset') {
-      await prisma.profileAsset.delete({ where: { id } });
+      await this.prismaService.client.profileAsset.delete({ where: { id } });
     } else {
       throw new Error('Invalid asset type');
     }
@@ -87,16 +151,16 @@ export class AdminService {
   }
 
   async getProfileAssets() {
-    return prisma.profileAsset.findMany({
+    return this.prismaService.client.profileAsset.findMany({
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async getAssetStats(assetId: string, assetType: string) {
-    const logs = await prisma.assetUsageLog.findMany({
+    const logs = await this.prismaService.client.assetUsageLog.findMany({
       where: {
         assetId,
-        assetType: assetType === 'profile_asset' ? 'profile_asset' : assetType as any,
+        assetType: assetType === 'profile_asset' ? 'profile_asset' : (assetType as any),
       },
       orderBy: {
         usedAt: 'desc',
@@ -104,21 +168,45 @@ export class AdminService {
       take: 100,
     });
 
-    const userIds = Array.from(new Set(logs.map(l => l.userId)));
-    const users = await prisma.user.findMany({
+    const userIds = Array.from(new Set(logs.map((l) => l.userId)));
+    const users = await this.prismaService.client.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, name: true, image: true, avatar: true }
+      select: { id: true, name: true, image: true, avatar: true },
     });
 
-    return logs.map(log => ({
+    return logs.map((log) => ({
       ...log,
-      user: users.find(u => u.id === log.userId)
+      user: users.find((u) => u.id === log.userId),
     }));
+  }
+
+  async uploadFile(file: any) {
+    if (!file) {
+      throw new InternalServerErrorException('No file provided');
+    }
+
+    // Mocking Sanity upload
+    console.log('Mock uploading to Sanity:', file.originalname);
+
+    // Simulate a short delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    return {
+      id: `mock-sanity-id-${Date.now()}`,
+      url: `https://mock-sanity-url.com/${file.originalname}`,
+      name: file.originalname,
+      type: file.mimetype,
+      size: `${(file.size / 1024).toFixed(2)} KB`,
+      assetId: `mock-asset-id-${Date.now()}`,
+      metadata: {
+        dimensions: { width: 800, height: 600 },
+      },
+    };
   }
 
   private filterFields(data: any, allowedFields: string[]) {
     const filtered: any = {};
-    allowedFields.forEach(field => {
+    allowedFields.forEach((field) => {
       if (data[field] !== undefined) {
         filtered[field] = data[field];
       }

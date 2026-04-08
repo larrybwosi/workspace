@@ -56,10 +56,18 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
   }
 
   const results = await Promise.allSettled(
-    deviceTokens.map(async (device) => {
+    deviceTokens.map(async device => {
       switch (device.platform) {
         case 'web':
-          return sendWebPushNotification(device.token, { title, body, data, imageUrl, linkUrl, notificationId, userId });
+          return sendWebPushNotification(device.token, {
+            title,
+            body,
+            data,
+            imageUrl,
+            linkUrl,
+            notificationId,
+            userId,
+          });
         case 'ios':
         case 'android':
           return sendExpoPushNotification(device.token, { title, body, data, imageUrl, notificationId, userId });
@@ -68,7 +76,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
         default:
           throw new Error(`Unsupported platform: ${device.platform}`);
       }
-    }),
+    })
   );
 
   return results;
@@ -84,7 +92,7 @@ async function sendWebPushNotification(
     linkUrl?: string;
     notificationId?: string;
     userId: string;
-  },
+  }
 ) {
   try {
     const firebaseAdmin = getFirebaseAdmin();
@@ -154,7 +162,10 @@ async function sendWebPushNotification(
     });
 
     // Deactivate invalid tokens
-    if (error.code === 'messaging/invalid-registration-token' || error.code === 'messaging/registration-token-not-registered') {
+    if (
+      error.code === 'messaging/invalid-registration-token' ||
+      error.code === 'messaging/registration-token-not-registered'
+    ) {
       await prisma.deviceToken.updateMany({
         where: { token },
         data: { isActive: false },
@@ -174,7 +185,7 @@ async function sendExpoPushNotification(
     imageUrl?: string;
     notificationId?: string;
     userId: string;
-  },
+  }
 ) {
   try {
     const response = await fetch('https://exp.host/--/api/v2/push/send', {
@@ -257,7 +268,7 @@ async function sendDesktopPushNotification(
     linkUrl?: string;
     notificationId?: string;
     userId: string;
-  },
+  }
 ) {
   try {
     // For Tauri, we'll use a WebSocket or HTTP endpoint that the desktop app polls

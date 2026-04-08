@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "../../ui/dropdown-menu"
-import { useWorkspaces } from "../../hooks/api/use-workspaces"
+import { useWorkspaces } from "@repo/api-client"
 import { CreateWorkspaceDialog } from "./create-workspace-dialog"
 import { Badge } from "../../ui/badge"
 import { cn } from "../../lib/utils"

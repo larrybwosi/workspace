@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
-import { prisma, User } from '@repo/database';
+import { prisma, type User } from '@repo/database';
 import { NotificationsService } from '../notifications/notifications.service';
 import * as crypto from 'crypto';
 
@@ -51,7 +51,7 @@ export class InvitationsService {
       workspaceId?: string;
       channelId?: string;
       permissions?: any;
-    },
+    }
   ) {
     const token = `inv_${crypto.randomBytes(16).toString('hex')}`;
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days

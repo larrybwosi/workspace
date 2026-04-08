@@ -1,4 +1,6 @@
-import { prisma } from "@repo/database";
+'use server';
+
+import { prisma } from '@repo/database';
 
 export interface AssetRules {
   requiredPlan?: string;
