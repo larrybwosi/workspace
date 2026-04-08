@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, createContext, useContext } from "react"
-import { getAblyClient } from "@/lib/integrations/ably"
+import { getAblyClient } from "@repo/shared"
 
 const PRESENCE_CHANNEL = "global-presence"
 
