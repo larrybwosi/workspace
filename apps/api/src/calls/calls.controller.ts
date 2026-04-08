@@ -23,6 +23,15 @@ export class CallsController {
     return this.callsService.updateCall(user, callId, body);
   }
 
+  @Post(':callId/invite')
+  async inviteToCall(
+    @CurrentUser() user: User,
+    @Param('callId') callId: string,
+    @Body('userId') userId: string,
+  ) {
+    return this.callsService.inviteToCall(user, callId, userId);
+  }
+
   @Get(':callId/participants')
   async getParticipants(@Param('callId') callId: string) {
     return this.callsService.getParticipants(callId);

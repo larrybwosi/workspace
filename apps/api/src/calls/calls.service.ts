@@ -373,6 +373,73 @@ export class CallsService {
     return { success: true };
   }
 
+  async inviteToCall(user: User, callId: string, targetUserId: string) {
+    if (!targetUserId) {
+      throw new BadRequestException('userId is required');
+    }
+
+    const call = await prisma.call.findUnique({
+      where: { id: callId },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Call not found');
+    }
+
+    // Find or create DM conversation
+    let dm = await prisma.directMessage.findFirst({
+      where: {
+        OR: [
+          { participant1Id: user.id, participant2Id: targetUserId },
+          { participant1Id: targetUserId, participant2Id: user.id },
+        ],
+      },
+    });
+
+    if (!dm) {
+      dm = await prisma.directMessage.create({
+        data: {
+          participant1Id: user.id,
+          participant2Id: targetUserId,
+        },
+      });
+    }
+
+    // Send invite message in DM
+    const message = await prisma.dMMessage.create({
+      data: {
+        dmId: dm.id,
+        senderId: user.id,
+        content: `I'm inviting you to a ${call.type} call`,
+        attachments: {
+          create: {
+            name: 'Call Invite',
+            type: 'call-invite',
+            url: `/calls/${callId}`,
+            size: '0',
+          },
+        },
+      },
+      include: {
+        attachments: true,
+        sender: true,
+      },
+    });
+
+    // Notify recipient via Ably
+    await publishToAbly(AblyChannels.user(targetUserId), 'dm:received', {
+      dmId: dm.id,
+      message,
+      callMetadata: {
+        callId: call.id,
+        callType: call.type,
+        workspaceId: call.metadata ? (call.metadata as any).workspaceId : null,
+      },
+    });
+
+    return { success: true, messageId: message.id };
+  }
+
   async getParticipants(callId: string) {
     return prisma.callParticipant.findMany({
       where: {

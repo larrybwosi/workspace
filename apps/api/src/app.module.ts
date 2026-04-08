@@ -3,6 +3,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/users.controller';
@@ -16,12 +17,18 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { CommonModule } from './common/common.module';
 import { AdminModule } from './admin/admin.module';
 import { AssetsModule } from './assets/assets.module';
+import { ChannelsModule } from './channels/channels.module';
+import { MessagesModule } from './messages/messages.module';
+import { TasksModule } from './common/tasks/tasks.module';
+import { CallsModule } from './calls/calls.module';
+import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     RedisModule,
     V2Module,
     V10Module,
@@ -30,6 +37,11 @@ import { AssetsModule } from './assets/assets.module';
     IntegrationsModule,
     CommonModule,
     WorkspacesModule,
+    ChannelsModule,
+    MessagesModule,
+    TasksModule,
+    CallsModule,
+    ScheduledNotificationsModule,
     AdminModule,
     AssetsModule,
     ThrottlerModule.forRootAsync({
