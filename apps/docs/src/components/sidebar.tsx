@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
   const isUserGuide = type === 'user-guide';
@@ -27,7 +27,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
           {links.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              to={link.href}
               className="group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:underline text-muted-foreground"
             >
               {link.label}

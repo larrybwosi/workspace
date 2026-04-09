@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function HomePage() {
   return (
@@ -12,13 +12,13 @@ export default function HomePage() {
         </p>
         <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-10">
           <Link
-            href="/user-guide"
+            to="/user-guide"
             className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
           >
             User Guide
           </Link>
           <Link
-            href="/api-reference"
+            to="/api-reference"
             className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
           >
             API Reference
@@ -33,9 +33,9 @@ export default function HomePage() {
             Learn how to use the app, manage your workspace, and communicate with your team.
           </p>
           <ul className="space-y-2">
-            <li><Link href="/user-guide/joining-workspace" className="text-primary hover:underline">Joining a Workspace</Link></li>
-            <li><Link href="/user-guide/sending-messages" className="text-primary hover:underline">Sending Messages</Link></li>
-            <li><Link href="/user-guide/making-calls" className="text-primary hover:underline">Making Calls</Link></li>
+            <li><Link to="/user-guide/joining-workspace" className="text-primary hover:underline">Joining a Workspace</Link></li>
+            <li><Link to="/user-guide/sending-messages" className="text-primary hover:underline">Sending Messages</Link></li>
+            <li><Link to="/user-guide/making-calls" className="text-primary hover:underline">Making Calls</Link></li>
           </ul>
         </div>
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
@@ -44,9 +44,9 @@ export default function HomePage() {
             Deep dive into our V2 API. Learn about authentication, endpoints, and webhooks.
           </p>
           <ul className="space-y-2">
-            <li><Link href="/api-reference/authentication" className="text-primary hover:underline">Authentication (OAuth2)</Link></li>
-            <li><Link href="/api-reference/messages" className="text-primary hover:underline">Messaging API</Link></li>
-            <li><Link href="/api-reference/workspaces" className="text-primary hover:underline">Workspace Management</Link></li>
+            <li><Link to="/api-reference/authentication" className="text-primary hover:underline">Authentication (OAuth2)</Link></li>
+            <li><Link to="/api-reference/messages" className="text-primary hover:underline">Messaging API</Link></li>
+            <li><Link to="/api-reference/workspaces" className="text-primary hover:underline">Workspace Management</Link></li>
           </ul>
         </div>
       </div>

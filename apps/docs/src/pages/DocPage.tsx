@@ -1,61 +1,71 @@
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
+import { useEffect, useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import fs from 'fs';
-import path from 'path';
 import { Sidebar } from '@/components/sidebar';
 
 interface DocPageProps {
-  params: Promise<{ slug: string }>;
+  type: 'user-guide' | 'api-reference';
+  defaultSlug?: string;
 }
 
-async function getDocContent(slug: string, type: 'user-guide' | 'api-reference') {
-  const contentPath = path.join(process.cwd(), 'src/content', type === 'user-guide' ? 'docs' : 'api', `${slug}.md`);
+export default function DocPage({ type, defaultSlug }: DocPageProps) {
+  const { slug } = useParams();
+  const activeSlug = slug || defaultSlug;
+  const [content, setContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!fs.existsSync(contentPath)) {
-    return null;
+  useEffect(() => {
+    if (!activeSlug) return;
+
+    setLoading(true);
+    const folder = type === 'user-guide' ? 'docs' : 'api';
+
+    // @ts-ignore
+    const modules = import.meta.glob('../content/**/*.md', { query: '?raw', import: 'default' });
+    const path = `../content/${folder}/${activeSlug}.md`;
+
+    if (modules[path]) {
+      // @ts-ignore
+      modules[path]().then((mod: string) => {
+        setContent(mod);
+        setLoading(false);
+      });
+    } else {
+      setContent(null);
+      setLoading(false);
+    }
+  }, [activeSlug, type]);
+
+  if (!activeSlug && !defaultSlug) {
+    return <Navigate to="/" />;
   }
 
-  return fs.readFileSync(contentPath, 'utf8');
-}
+  if (loading) {
+    return <div className="container py-10">Loading...</div>;
+  }
 
-function extractToC(content: string) {
+  if (!content) {
+    return <div className="container py-10">Page not found</div>;
+  }
+
   const headings = content.match(/^##\s+.+$/gm) || [];
-  return headings.map(h => {
+  const toc = headings.map(h => {
     const title = h.replace(/^##\s+/, '');
     const id = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
     return { title, id };
   });
-}
-
-export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  return {
-    title: `${slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ')} - API Reference`,
-  };
-}
-
-export default async function ApiDocPage({ params }: DocPageProps) {
-  const { slug } = await params;
-  const content = await getDocContent(slug, 'api-reference');
-
-  if (!content) {
-    notFound();
-  }
-
-  const toc = extractToC(content);
 
   return (
     <div className="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 py-10">
-      <Sidebar type="api-reference" />
+      <Sidebar type={type} />
       <main className="relative py-6 lg:gap-10 lg:py-8 xl:grid xl:grid-cols-[1fr_250px]">
         <div className="mx-auto w-full min-w-0">
           <div className="prose prose-slate dark:prose-invert max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h2: ({ node, ...props }) => {
+                h2: ({ ...props }) => {
                   const id = props.children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
                   return <h2 id={id} {...props} />
                 }
