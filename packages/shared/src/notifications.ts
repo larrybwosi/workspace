@@ -1,10 +1,17 @@
 import { prisma } from '@repo/database';
 import { getAblyRest, AblyChannels, AblyEvents } from './ably';
-import { sendPushNotification } from './push-notifications';
+import { sendPushNotification } from '@repo/shared';
 
 export interface NotificationPayload {
   userId: string;
-  type: 'mention' | 'system' | 'channel_alert' | 'workspace_alert' | 'workspace_invitation' | 'platform_invitation' | 'direct_message';
+  type:
+    | 'mention'
+    | 'system'
+    | 'channel_alert'
+    | 'workspace_alert'
+    | 'workspace_invitation'
+    | 'platform_invitation'
+    | 'direct_message';
   title: string;
   message: string;
   entityType?: 'channel' | 'workspace' | 'direct_message' | 'invitation';
