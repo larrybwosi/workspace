@@ -44,12 +44,9 @@ import { ScheduledNotificationsModule } from './scheduled-notifications/schedule
     FriendsModule,
     CommonModule,
     WorkspacesModule,
-    ChannelsModule,
     MessagesModule,
     TasksModule,
-    CallsModule,
     ScheduledNotificationsModule,
-    AdminModule,
     AssetsModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],

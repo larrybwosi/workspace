@@ -1,4 +1,4 @@
-import { Providers as UIProviders } from "@repo/ui";
+import { AdminProviders } from "@repo/ui";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AdminOverviewPage } from "./pages/overview";
 import { AdminAssetsPage } from "./pages/assets";
@@ -33,7 +33,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <UIProviders>
+    <AdminProviders>
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -56,7 +56,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
-    </UIProviders>
+    </AdminProviders>
   );
 }
 
