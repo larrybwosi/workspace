@@ -287,8 +287,6 @@ export function MessageComposer({
 
   return (
     <div className="bg-background rounded-lg border border-border">
-      {channelId && currentUser && <TypingIndicator channelId={channelId} currentUserId={currentUser.id} />}
-
       <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
 
       {replyingTo && (

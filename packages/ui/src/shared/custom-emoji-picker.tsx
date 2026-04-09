@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2 } from "lucide-react"
+import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2, Lock } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "../components/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/tabs"
 import { Input } from "../components/input"
@@ -12,6 +12,7 @@ import Picker from "@emoji-mart/react"
 import { useTheme } from "../layout/theme-provider"
 import { useCustomEmojis, useEligibleAssets } from "@repo/api-client"
 import { cn } from "../lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/tooltip"
 
 interface CustomEmoji {
   id: string
@@ -30,7 +31,7 @@ interface CustomEmojiPickerProps {
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡", "🎉", "🚀", "👀", "🔥", "✅", "❌"]
 
-export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: CustomEmojiPickerProps) {
+export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId, isReactionPicker = false }: CustomEmojiPickerProps & { isReactionPicker?: boolean }) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const [activeTab, setActiveTab] = React.useState("quick")
@@ -53,6 +54,12 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
   }
 
   const handleCustomEmojiSelect = (emoji: any) => {
+    onEmojiSelect(emoji.shortcode, true, emoji.id)
+    setOpen(false)
+  }
+
+  const handleCustomEmojiReact = (emoji: any) => {
+    // When used as a reaction picker, we allow all users to use it
     onEmojiSelect(emoji.shortcode, true, emoji.id)
     setOpen(false)
   }
@@ -105,34 +112,55 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                 <p className="text-xs text-muted-foreground mt-4 mb-2">Workspace Emojis</p>
                 <div className="grid grid-cols-6 gap-1">
                   {customEmojis.slice(0, 6).map((emoji: any) => (
-                    <Button
-                      key={emoji.id}
-                      variant="ghost"
-                      size="sm"
-                      disabled={!emoji.isEligible}
-                      className={cn(
-                        "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative",
-                        !emoji.isEligible && "opacity-60 grayscale cursor-not-allowed"
-                      )}
-                      onClick={() => handleCustomEmojiSelect(emoji)}
-                      title={emoji.shortcode}
-                    >
-                      <img
-                        src={emoji.imageUrl || "/placeholder.svg"}
-                        alt={emoji.name}
-                        className="h-6 w-6 object-contain"
-                      />
-                      {!emoji.isEligible && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-                          <Lock className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                      {emoji.animated && (
-                        <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground rounded px-0.5">
-                          GIF
-                        </span>
-                      )}
-                    </Button>
+                    <TooltipProvider key={emoji.id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={!emoji.isEligible && !isReactionPicker}
+                              className={cn(
+                                "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative",
+                                (!emoji.isEligible && !isReactionPicker) && "opacity-60 grayscale cursor-not-allowed"
+                              )}
+                              onClick={() => isReactionPicker ? handleCustomEmojiReact(emoji) : handleCustomEmojiSelect(emoji)}
+                            >
+                              <img
+                                src={emoji.imageUrl || "/placeholder.svg"}
+                                alt={emoji.name}
+                                className="h-6 w-6 object-contain"
+                              />
+                              {!emoji.isEligible && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
+                                  <Lock className="h-3 w-3 text-white" />
+                                </div>
+                              )}
+                              {emoji.animated && (
+                                <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground rounded px-0.5">
+                                  GIF
+                                </span>
+                              )}
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="text-center">
+                            <p className="font-bold">{emoji.shortcode}</p>
+                            {!emoji.isEligible && !isReactionPicker && (
+                              <p className="text-[10px] text-yellow-500 mt-1">
+                                Premium feature: Upgrade to use this emoji!
+                              </p>
+                            )}
+                            {!emoji.isEligible && isReactionPicker && (
+                              <p className="text-[10px] text-green-500 mt-1">
+                                Workspace emoji: Available for reactions!
+                              </p>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ))}
                 </div>
               </>
@@ -166,34 +194,55 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                 ) : (
                   <div className="grid grid-cols-6 gap-1">
                     {filteredCustomEmojis.map((emoji: any) => (
-                      <Button
-                        key={emoji.id}
-                        variant="ghost"
-                        size="sm"
-                        disabled={!emoji.isEligible}
-                        className={cn(
-                          "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group",
-                          !emoji.isEligible && "opacity-60 grayscale cursor-not-allowed"
-                        )}
-                        onClick={() => handleCustomEmojiSelect(emoji)}
-                        title={emoji.shortcode}
-                      >
-                        <img
-                          src={emoji.imageUrl || "/placeholder.svg"}
-                          alt={emoji.name}
-                          className="h-6 w-6 object-contain"
-                        />
-                        {!emoji.isEligible && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-                            <Lock className="h-3 w-3 text-white" />
-                          </div>
-                        )}
-                        {emoji.animated && (
-                          <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground rounded px-0.5">
-                            GIF
-                          </span>
-                        )}
-                      </Button>
+                      <TooltipProvider key={emoji.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={!emoji.isEligible && !isReactionPicker}
+                                className={cn(
+                                  "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group",
+                                  (!emoji.isEligible && !isReactionPicker) && "opacity-60 grayscale cursor-not-allowed"
+                                )}
+                                onClick={() => isReactionPicker ? handleCustomEmojiReact(emoji) : handleCustomEmojiSelect(emoji)}
+                              >
+                                <img
+                                  src={emoji.imageUrl || "/placeholder.svg"}
+                                  alt={emoji.name}
+                                  className="h-6 w-6 object-contain"
+                                />
+                                {!emoji.isEligible && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
+                                    <Lock className="h-3 w-3 text-white" />
+                                  </div>
+                                )}
+                                {emoji.animated && (
+                                  <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground rounded px-0.5">
+                                    GIF
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-center">
+                              <p className="font-bold">{emoji.shortcode}</p>
+                              {!emoji.isEligible && !isReactionPicker && (
+                                <p className="text-[10px] text-yellow-500 mt-1">
+                                  Premium feature: Upgrade to use this emoji!
+                                </p>
+                              )}
+                              {!emoji.isEligible && isReactionPicker && (
+                                <p className="text-[10px] text-green-500 mt-1">
+                                  Workspace emoji: Available for reactions!
+                                </p>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     ))}
                   </div>
                 )}
