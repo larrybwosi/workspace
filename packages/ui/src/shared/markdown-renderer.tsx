@@ -25,7 +25,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   // Custom component for mentions and emojis within text
   const renderText = (text: string) => {
     const mentionRegex = /@([\w.]+)/g;
-    const emojiRegex = /:[a-z0-9_]+:/g;
+    const emojiRegex = /:([a-z0-9_]+):/g;
     const channelRegex = /#([\w-]+)/g;
 
     const tokens: { index: number; length: number; element: React.ReactNode }[] = [];
@@ -68,25 +68,24 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     }
 
     // Find custom emojis
-    if (customEmojis && customEmojis.length > 0) {
-      customEmojis.forEach((emoji: any) => {
-        const regex = new RegExp(emoji.shortcode, 'g');
-        while ((match = regex.exec(text)) !== null) {
-          tokens.push({
-            index: match.index,
-            length: match[0].length,
-            element: (
-              <img
-                key={`emoji-${match.index}-${emoji.id}`}
-                src={emoji.imageUrl}
-                alt={emoji.name}
-                title={emoji.shortcode}
-                className="inline-block h-5 w-5 align-text-bottom mx-0.5"
-              />
-            )
-          });
-        }
-      });
+    while ((match = emojiRegex.exec(text)) !== null) {
+      const shortcode = match[0];
+      const emoji = customEmojis?.find((e: any) => e.shortcode === shortcode);
+      if (emoji) {
+        tokens.push({
+          index: match.index,
+          length: match[0].length,
+          element: (
+            <img
+              key={`emoji-${match.index}-${emoji.id}`}
+              src={emoji.imageUrl}
+              alt={emoji.name}
+              title={emoji.shortcode}
+              className="inline-block h-5 w-5 align-text-bottom mx-0.5"
+            />
+          )
+        });
+      }
     }
 
     if (tokens.length === 0) return text;
