@@ -72,7 +72,77 @@ export function useSendMessage(workspaceId?: string, isV2?: boolean) {
       const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onMutate: async (newMessage) => {
+      const queryKey = messageKeys.list(newMessage.channelId, workspaceId, newMessage.threadId);
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousMessages = queryClient.getQueryData(queryKey);
+      const currentUser = queryClient.getQueryData(['users', 'current']) as any;
+
+      const tempId = `temp-${Math.random().toString(36).substring(2, 11)}`;
+      const optimisticMessage: Message = {
+        id: tempId,
+        timestamp: new Date().toISOString(),
+        userId: currentUser?.id || 'me',
+        reactions: [],
+        ...newMessage,
+        status: 'sending' as any,
+        user: currentUser,
+      } as any;
+
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old?.pages) return {
+          pages: [{ messages: [optimisticMessage], nextCursor: null }],
+          pageParams: [undefined],
+        };
+
+        const newPages = [...old.pages];
+        const lastPageIndex = newPages.length - 1;
+        newPages[lastPageIndex] = {
+          ...newPages[lastPageIndex],
+          messages: [...newPages[lastPageIndex].messages, optimisticMessage],
+        };
+
+        return {
+          ...old,
+          pages: newPages,
+        };
+      });
+
+      return { previousMessages, queryKey, tempId };
+    },
+    onError: (err, newMessage, context: any) => {
+      if (context?.queryKey && context.tempId) {
+        queryClient.setQueryData(context.queryKey, (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              messages: page.messages.map((m: any) =>
+                m.id === context.tempId ? { ...m, status: 'error' } : m
+              ),
+            })),
+          };
+        });
+      }
+    },
+    onSuccess: (data, variables, context) => {
+      const queryKey = messageKeys.list(variables.channelId, workspaceId, variables.threadId);
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            messages: page.messages.map((m: any) =>
+              m.id === context.tempId ? data : m
+            ),
+          })),
+        };
+      });
+    },
+    onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId, workspaceId, variables.threadId) });
     },
   });
@@ -130,8 +200,83 @@ export function useReplyToMessage(workspaceId?: string) {
       const { data } = await apiClient.post<Message>(url, reply);
       return { data, channelId };
     },
-    onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
+    onMutate: async (newReply) => {
+      const queryKey = messageKeys.list(newReply.channelId, workspaceId);
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousMessages = queryClient.getQueryData(queryKey);
+      const currentUser = queryClient.getQueryData(['users', 'current']) as any;
+
+      const tempId = `temp-${Math.random().toString(36).substring(2, 11)}`;
+      const optimisticReply: Message = {
+        id: tempId,
+        timestamp: new Date().toISOString(),
+        userId: currentUser?.id || 'me',
+        reactions: [],
+        ...newReply,
+        replyTo: newReply.messageId,
+        status: 'sending' as any,
+        user: currentUser,
+      } as any;
+
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old?.pages) return {
+          pages: [{ messages: [optimisticReply], nextCursor: null }],
+          pageParams: [undefined],
+        };
+
+        const newPages = [...old.pages];
+        const lastPageIndex = newPages.length - 1;
+        newPages[lastPageIndex] = {
+          ...newPages[lastPageIndex],
+          messages: [...newPages[lastPageIndex].messages, optimisticReply],
+        };
+
+        return {
+          ...old,
+          pages: newPages,
+        };
+      });
+
+      return { previousMessages, queryKey, tempId };
+    },
+    onError: (err, newReply, context: any) => {
+      if (context?.queryKey && context.tempId) {
+        queryClient.setQueryData(context.queryKey, (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              messages: page.messages.map((m: any) =>
+                m.id === context.tempId ? { ...m, status: 'error' } : m
+              ),
+            })),
+          };
+        });
+      }
+    },
+    onSuccess: (data, variables, context) => {
+      const { channelId } = data as any;
+      const queryKey = messageKeys.list(variables.channelId, workspaceId);
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            messages: page.messages.map((m: any) =>
+              m.id === context.tempId ? (data as any).data || data : m
+            ),
+          })),
+        };
+      });
+    },
+    onSettled: (data) => {
+      const channelId = (data as any)?.channelId || (data as any)?.data?.channelId;
+      if (channelId) {
+        queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) });
+      }
     },
   });
 }
