@@ -1,0 +1,35 @@
+{
+  "name": "docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3005",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "16.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "lucide-react": "^1.7.0",
+    "@repo/ui": "workspace:*",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "class-variance-authority": "^0.7.1",
+    "@radix-ui/react-slot": "^1.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.2",
+    "tailwindcss": "^4.2.2",
+    "postcss": "^8.5.8",
+    "autoprefixer": "^10.4.27",
+    "@repo/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.2"
+  }
+}
