@@ -25,7 +25,6 @@ import { toast } from 'sonner';
 import { useChannel } from '@repo/api-client';
 import { useSession } from '@repo/shared';
 import { Settings } from 'lucide-react';
-import { TypingIndicator } from './typing-indicator';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 
 interface ChannelViewProps {
@@ -158,7 +157,6 @@ export function ChannelView({
   const [viewedChannels] = useState(() => new Set<string>());
 
   // State & Refs
-  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
   const [replyingTo, setReplyingTo] = useState<{
     id: string;
     userName: string;
@@ -241,6 +239,7 @@ export function ChannelView({
   }, [messages.length]);
 
   // Reset marked messages when channel changes
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
   useEffect(() => {
     markedMessageIds.current.clear();
     setHasInitialScrolled(false);
@@ -618,12 +617,7 @@ export function ChannelView({
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 px-4 py-3 border-t bg-background relative">
-        {activeChannelId && currentUser && (
-          <div className="absolute bottom-full left-0 right-0 px-4 py-1">
-            <TypingIndicator channelId={activeChannelId} currentUserId={currentUser.id} />
-          </div>
-        )}
+      <div className="shrink-0 px-4 py-3 border-t bg-background">
         <MessageComposer
           onSend={handleSendMessage}
           placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${activeChannelId || 'thread'}`}
