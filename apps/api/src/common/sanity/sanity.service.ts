@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, Global, Module } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, PayloadTooLargeException, Logger, Global, Module } from '@nestjs/common';
 import { createClient } from '@sanity/client';
 
 @Injectable()
@@ -27,6 +27,12 @@ export class SanityService {
   async uploadFile(file: { buffer: Buffer; originalname: string; mimetype: string; size: number }) {
     if (!file) {
       throw new InternalServerErrorException('No file provided');
+    }
+
+    // Maximum file size of 30MB
+    const MAX_FILE_SIZE = 30 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new PayloadTooLargeException(`File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`);
     }
 
     if (this.sanityClient) {
