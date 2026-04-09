@@ -1,9 +1,10 @@
-import { Injectable, InternalServerErrorException, PayloadTooLargeException, Logger, Global, Module } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, PayloadTooLargeException } from '@nestjs/common';
 import { createClient } from '@sanity/client';
+import { FileData, StorageProvider, UploadResult } from '../storage.interface';
 
 @Injectable()
-export class SanityService {
-  private readonly logger = new Logger(SanityService.name);
+export class SanityStorageProvider implements StorageProvider {
+  private readonly logger = new Logger(SanityStorageProvider.name);
   private readonly sanityClient;
 
   constructor() {
@@ -24,7 +25,7 @@ export class SanityService {
     }
   }
 
-  async uploadFile(file: { buffer: Buffer; originalname: string; mimetype: string; size: number }) {
+  async uploadFile(file: FileData): Promise<UploadResult> {
     if (!file) {
       throw new InternalServerErrorException('No file provided');
     }
@@ -88,10 +89,3 @@ export class SanityService {
     };
   }
 }
-
-@Global()
-@Module({
-  providers: [SanityService],
-  exports: [SanityService],
-})
-export class SanityModule {}
