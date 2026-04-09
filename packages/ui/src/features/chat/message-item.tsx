@@ -32,12 +32,13 @@ import {
   DropdownMenuTrigger,
 } from '../../components/dropdown-menu';
 
-import { useUpdateMessage, useDeleteMessage } from '@repo/api-client';
+import { useUpdateMessage, useDeleteMessage, useSendMessage, useReplyToMessage } from '@repo/api-client';
 import { useMemo, useState } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
 import { useSession } from '@repo/shared';
 import { toast } from 'sonner';
+import { AlertCircle, RefreshCcw } from 'lucide-react';
 
 interface MessageItemProps {
   message: Message;
@@ -160,7 +161,47 @@ export function MessageItem({
     return content.trim();
   }, [message.content, linksToPreview]);
 
-  const showToolbar = isHovered || isMenuOpen;
+  const showToolbar = (isHovered || isMenuOpen) && !message.id.startsWith('temp-');
+  const isOptimistic = message.id.startsWith('temp-');
+  const isError = (message as any).status === 'error';
+  const isSending = (message as any).status === 'sending';
+
+  const sendMessageMutation = useSendMessage(workspaceId);
+  const replyToMessageMutation = useReplyToMessage(workspaceId);
+  const queryClient = useQueryClient();
+
+  const handleRetry = () => {
+    // Remove the failed optimistic message first
+    const queryKey = messageKeys.list(channelId!, workspaceId, message.threadId);
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old?.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.filter((m: any) => m.id !== message.id),
+        })),
+      };
+    });
+
+    if (message.replyTo) {
+      replyToMessageMutation.mutate({
+        messageId: message.replyTo,
+        channelId: channelId!,
+        content: message.content,
+        attachments: message.attachments,
+      });
+    } else {
+      sendMessageMutation.mutate({
+        channelId: channelId!,
+        content: message.content,
+        attachments: message.attachments,
+        messageType: message.messageType as any || 'standard',
+        metadata: message.metadata,
+        threadId: message.threadId,
+      });
+    }
+  };
 
   return (
     <ContextMenu>
@@ -178,7 +219,10 @@ export function MessageItem({
             // Mention highlight
             isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
             // Highlighted message (linked)
-            isHighlighted && 'bg-primary/10'
+            isHighlighted && 'bg-primary/10',
+            // Optimistic state
+            isSending && 'opacity-60 cursor-default',
+            isError && 'bg-destructive/10 border-l-2 border-destructive pl-[14px]'
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -315,6 +359,23 @@ export function MessageItem({
               <LinkPreview key={idx} url={link} />
             ))}
 
+            {/* Error state and retry */}
+            {isError && (
+              <div className="flex items-center gap-2 mt-2 text-destructive text-xs font-medium">
+                <AlertCircle className="h-3 w-3" />
+                <span>Failed to send message</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs gap-1 hover:bg-destructive/20 text-destructive"
+                  onClick={handleRetry}
+                >
+                  <RefreshCcw className="h-3 w-3" />
+                  Retry
+                </Button>
+              </div>
+            )}
+
             {/* Reactions */}
             {message.reactions && message.reactions.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1.5">
@@ -337,7 +398,7 @@ export function MessageItem({
                   </button>
                 ))}
 
-                <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
+                <CustomEmojiPicker onEmojiSelect={handleAddReaction} isReactionPicker={true}>
                   <button className="flex items-center justify-center h-6 w-6 rounded border border-dashed border-border hover:bg-muted hover:border-primary/40 transition-colors">
                     <Smile className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
@@ -349,7 +410,7 @@ export function MessageItem({
           {/* ── Hover toolbar (Discord-style floating action bar) ── */}
           {showToolbar && (
             <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75">
-              <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
+              <CustomEmojiPicker onEmojiSelect={handleAddReaction} isReactionPicker={true}>
                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
                   <Smile className="h-4 w-4 text-muted-foreground" />
                 </Button>

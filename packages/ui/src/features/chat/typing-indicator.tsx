@@ -57,10 +57,12 @@ export function TypingIndicator({ channelId, currentUserId }: TypingIndicatorPro
       <div className="flex items-center gap-1">
         <span className="text-xs text-muted-foreground font-medium">
           {typingUsers.length === 1
-            ? `${typingUsers[0].name} is typing`
+            ? `${typingUsers[0].name} is typing...`
             : typingUsers.length === 2
-            ? `${typingUsers[0].name} and ${typingUsers[1].name} are typing`
-            : `${typingUsers.length} people are typing`}
+            ? `${typingUsers[0].name} and ${typingUsers[1].name} are typing...`
+            : typingUsers.length === 3
+            ? `${typingUsers[0].name}, ${typingUsers[1].name} and ${typingUsers[2].name} are typing...`
+            : "Several people are typing..."}
         </span>
         <span className="flex gap-0.5 mt-0.5">
           <span className="h-1 w-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
