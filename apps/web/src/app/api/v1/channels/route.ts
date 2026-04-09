@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { authenticateV1, hasPermission, isRateLimitExceeded } from "@/lib/auth/api-auth"
 import { z } from "zod"
-import { getAblyRest, AblyChannels } from "@/lib/integrations/ably"
+import { getAblyRest, AblyChannels } from "@repo/shared"
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),

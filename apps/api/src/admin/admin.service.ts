@@ -1,29 +1,15 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { createClient } from '@sanity/client';
+import { SanityService } from '../common/sanity/sanity.service';
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
-  private readonly sanityClient;
 
-  constructor(private readonly prismaService: PrismaService) {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
-    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-    const token = process.env.SANITY_WRITE_TOKEN;
-
-    if (projectId && token) {
-      this.sanityClient = createClient({
-        projectId,
-        dataset,
-        apiVersion: '2024-01-01',
-        token,
-        useCdn: false,
-      });
-    } else {
-      this.logger.warn('Sanity client not configured. File uploads will use mock.');
-    }
-  }
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly sanityService: SanityService
+  ) {}
 
   async getStats() {
     const totalUsers = await this.prismaService.client.user.count();
