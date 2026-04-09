@@ -124,14 +124,19 @@ export async function publishNotification(userId: string, notification: any) {
   }
 }
 
-export async function publishToAbly(channelName: string, eventName: string, data: any) {
+export async function publishToAbly(channelName: string, eventName: string, data: any, retries = 3) {
   try {
     const ably = getAblyRest();
     if (!ably) return;
     const channel = (ably as any).channels.get(channelName);
     await channel.publish(eventName, data);
   } catch (error) {
-    console.error(' Error publishing to Ably:', error);
+    if (retries > 0) {
+      console.warn(`Retrying Ably publish to ${channelName} (${eventName}). Retries left: ${retries - 1}`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return publishToAbly(channelName, eventName, data, retries - 1);
+    }
+    console.error(' Error publishing to Ably after retries:', error);
     throw error;
   }
 }
