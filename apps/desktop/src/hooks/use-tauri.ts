@@ -14,12 +14,10 @@ export function useTauri() {
         console.log("Opened URLs:", urls);
         for (const url of urls) {
           try {
-            const parsedUrl = new URL(url);
             // Example: workspace://workspace/slug/channels/channelSlug
-            if (parsedUrl.protocol === "workspace:") {
-              const path = parsedUrl.pathname + parsedUrl.search;
-              navigate(path);
-            }
+            // or workspace://dm/userId
+            const path = url.replace("workspace://", "/");
+            navigate(path);
           } catch (e) {
             console.error("Failed to parse deep link URL", e);
           }
