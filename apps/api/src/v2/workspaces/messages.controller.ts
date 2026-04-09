@@ -24,7 +24,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
-import { SanityService } from '../../common/sanity/sanity.service';
+import { StorageService } from '../../common/storage/storage.service';
 import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared';
 
 const createChannelSchema = z.object({
@@ -83,7 +83,7 @@ export class V2MessagesController {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly auditService: V2AuditService,
     private readonly webhooksService: V2WebhooksService,
-    private readonly sanityService: SanityService
+    private readonly storageService: StorageService
   ) {}
 
   @Get('channels')
@@ -180,7 +180,7 @@ export class V2MessagesController {
       throw new NotFoundException('Channel not found');
     }
 
-    const asset = await this.sanityService.uploadFile(file);
+    const asset = await this.storageService.uploadFile(file);
 
     const updatedChannel = await prisma.channel.update({
       where: { id: channelId },
@@ -353,7 +353,7 @@ export class V2MessagesController {
       validatedData.data;
 
     if (file) {
-      const asset = await this.sanityService.uploadFile(file);
+      const asset = await this.storageService.uploadFile(file);
       attachments.push({
         name: asset.name,
         type: asset.type,
