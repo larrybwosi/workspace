@@ -7,3 +7,4 @@ export * from './src/hooks/use-callstore';
 export * from './src/utils/upload-utils';
 export * from './src/utils/date-utils';
 export * from './src/messages/custom-message-schema';
+export * from './src/env';

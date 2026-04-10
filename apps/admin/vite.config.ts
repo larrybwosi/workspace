@@ -20,6 +20,7 @@ export default defineConfig({
   server: {
     port: 3002,
   },
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   define: {
     'process.env': {},
   },
