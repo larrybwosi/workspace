@@ -25,6 +25,7 @@ import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { CustomMessageSchema } from '@repo/shared';
 import { StorageService } from '../../common/storage/storage.service';
 
 const createChannelSchema = z.object({
