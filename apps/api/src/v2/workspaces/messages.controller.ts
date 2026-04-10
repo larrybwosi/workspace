@@ -24,7 +24,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
-import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared/server';
+import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
 import { StorageService } from '../../common/storage/storage.service';
 
 const createChannelSchema = z.object({
@@ -349,8 +349,17 @@ export class V2MessagesController {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const { channelId, recipientId, content, threadId, contextId, messageType, metadata, actions, attachments = [] } =
-      validatedData.data;
+    const {
+      channelId,
+      recipientId,
+      content,
+      threadId,
+      contextId,
+      messageType,
+      metadata,
+      actions,
+      attachments = [],
+    } = validatedData.data;
 
     if (file) {
       const asset = await this.storageService.uploadFile(file);

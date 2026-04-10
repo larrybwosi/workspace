@@ -4,10 +4,10 @@ import {
   getAblyRest,
   AblyChannels,
   AblyEvents,
-  extractUserMentions,
-  extractUserIds,
-  hasSpecialMention,
-  extractChannelMentions,
+  // extractUserMentions,
+  // extractUserIds,
+  // hasSpecialMention,
+  // extractChannelMentions,
   notifyMention,
   notifyChannel,
   isUserEligibleForAsset,
@@ -15,6 +15,12 @@ import {
 } from '@repo/shared/server';
 import * as crypto from 'crypto';
 import axios from 'axios';
+import {
+  extractChannelMentions,
+  extractUserIds,
+  extractUserMentions,
+  hasSpecialMention,
+} from '@/common/utils/mention-utils';
 
 @Injectable()
 export class MessagesService {
@@ -77,17 +83,18 @@ export class MessagesService {
     const mentionsHere = hasSpecialMention(content, 'here');
 
     // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
-    const mentionedUsers = userMentions.length > 0
-      ? await prisma.user.findMany({
-          where: {
-            name: {
-              in: userMentions,
-              mode: 'insensitive',
+    const mentionedUsers =
+      userMentions.length > 0
+        ? await prisma.user.findMany({
+            where: {
+              name: {
+                in: userMentions,
+                mode: 'insensitive',
+              },
             },
-          },
-          select: { id: true, name: true },
-        })
-      : [];
+            select: { id: true, name: true },
+          })
+        : [];
     const mentionedUserIds = extractUserIds(userMentions, mentionedUsers);
 
     // Eligibility check for stickers
@@ -589,10 +596,7 @@ export class MessagesService {
         };
 
         const secret = process.env.WEBHOOK_SECRET || 'default_secret';
-        const signature = crypto
-          .createHmac('sha256', secret)
-          .update(JSON.stringify(payload))
-          .digest('hex');
+        const signature = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
 
         await axios.post(callbackUrl, payload, {
           headers: {

@@ -9,7 +9,6 @@ import { Footer } from './components/Footer';
 function App() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900">
-      <Header />
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -18,7 +17,6 @@ function App() {
           <Route path="/developer" element={<DeveloperDashboard />} />
         </Routes>
       </main>
-      <Footer />
     </div>
   );
 }

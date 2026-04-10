@@ -1,27 +1,27 @@
 import * as Ably from 'ably';
-import { AblyChannels, AblyEvents } from './ably';
+import { AblyChannels, AblyEvents, EVENTS } from './ably';
 
 // Singleton pattern for Ably client on server
 let ablyClientInstance: any = null;
 
 export function getAblyServer() {
-  const key = process.env.ABLY_API_KEY
+  const key = process.env.ABLY_API_KEY;
   if (!key) {
-    console.warn("ABLY_API_KEY is not defined")
-    return null
+    console.warn('ABLY_API_KEY is not defined');
+    return null;
   }
   if (!ablyClientInstance) {
     // @ts-ignore
     ablyClientInstance = new Ably.Realtime({
       key,
-      clientId: "server",
-    })
+      clientId: 'server',
+    });
   }
   return ablyClientInstance;
 }
 
 export function getAblyRest() {
-  const key = process.env.ABLY_API_KEY
+  const key = process.env.ABLY_API_KEY;
   if (!key) {
     console.warn('ABLY_API_KEY is not defined, returning null');
     return null;
@@ -76,3 +76,4 @@ export async function publishToAbly(channelName: string, eventName: string, data
 export async function sendRealtimeMessage(channelName: string, eventName: string, data: any) {
   return publishToAbly(channelName, eventName, data);
 }
+export { AblyChannels, AblyEvents, EVENTS };

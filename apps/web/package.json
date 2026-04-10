@@ -66,7 +66,7 @@
     "next-mdx-remote": "latest",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",
-    "react": "19.2.4",
+    "react": "19.2.5",
     "react-day-picker": "9.14.0",
     "react-dom": "latest",
     "react-hook-form": "^7.72.0",

@@ -1,20 +1,20 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Upload, X, File, Loader2 } from 'lucide-react'
-import { Button } from "../components/button"
-import { Progress } from "../components/progress"
-import { cn } from "../lib/utils"
-import { uploadFile, formatFileSize, getFileIcon, type UploadedFile } from "@repo/shared"
-import { useToast } from "../hooks/use-toast"
+import { Upload, X, File, Loader2 } from 'lucide-react';
+import { Button } from '../components/button';
+import { Progress } from '../components/progress';
+import { cn } from '../lib/utils';
+import { uploadFile, formatFileSize, getFileIcon, type UploadedFile } from '@repo/shared';
+import { useToast } from '../hooks/use-toast';
+import { ChangeEvent, useState } from 'react';
 
 interface FileUploadProps {
-  onUploadComplete?: (files: UploadedFile[]) => void
-  onRemove?: (file: UploadedFile) => void
-  multiple?: boolean
-  maxSize?: number // in MB
-  accept?: string
-  className?: string
+  onUploadComplete?: (files: UploadedFile[]) => void;
+  onRemove?: (file: UploadedFile) => void;
+  multiple?: boolean;
+  maxSize?: number; // in MB
+  accept?: string;
+  className?: string;
 }
 
 export function FileUpload({
@@ -25,92 +25,88 @@ export function FileUpload({
   accept,
   className,
 }: FileUploadProps) {
-  const [files, setFiles] = React.useState<File[]>([])
-  const [uploadedFiles, setUploadedFiles] = React.useState<UploadedFile[]>([])
-  const [uploading, setUploading] = React.useState(false)
-  const [progress, setProgress] = React.useState(0)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || [])
-    
-    const validFiles = selectedFiles.filter((file) => {
-      const sizeMB = file.size / (1024 * 1024)
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+
+    const validFiles = selectedFiles.filter(file => {
+      const sizeMB = file.size / (1024 * 1024);
       if (sizeMB > maxSize) {
         toast({
-          title: "File too large",
+          title: 'File too large',
           description: `${file.name} exceeds ${maxSize}MB limit`,
-          variant: "destructive",
-        })
-        return false
+          variant: 'destructive',
+        });
+        return false;
       }
-      return true
-    })
+      return true;
+    });
 
-    setFiles((prev) => (multiple ? [...prev, ...validFiles] : validFiles))
-  }
+    setFiles(prev => (multiple ? [...prev, ...validFiles] : validFiles));
+  };
 
   const handleUpload = async () => {
-    if (files.length === 0) return
+    if (files.length === 0) return;
 
-    setUploading(true)
-    setProgress(0)
+    setUploading(true);
+    setProgress(0);
 
     try {
-      const uploaded: UploadedFile[] = []
-      const total = files.length
+      const uploaded: UploadedFile[] = [];
+      const total = files.length;
 
       for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const uploadedFile = await uploadFile(file)
-        uploaded.push(uploadedFile)
-        setProgress(((i + 1) / total) * 100)
+        const file = files[i];
+        const uploadedFile = await uploadFile(file);
+        uploaded.push(uploadedFile);
+        setProgress(((i + 1) / total) * 100);
       }
 
-      setUploadedFiles((prev) => [...prev, ...uploaded])
-      setFiles([])
-      onUploadComplete?.(uploaded)
+      setUploadedFiles(prev => [...prev, ...uploaded]);
+      setFiles([]);
+      onUploadComplete?.(uploaded);
 
       toast({
-        title: "Upload successful",
+        title: 'Upload successful',
         description: `${uploaded.length} file(s) uploaded successfully`,
-      })
+      });
     } catch (error) {
-      console.error(" Upload failed:", error)
+      console.error(' Upload failed:', error);
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload files",
-        variant: "destructive",
-      })
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'Failed to upload files',
+        variant: 'destructive',
+      });
     } finally {
-      setUploading(false)
-      setProgress(0)
+      setUploading(false);
+      setProgress(0);
     }
-  }
+  };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
-  }
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   const removeUploadedFile = (file: UploadedFile) => {
-    setUploadedFiles((prev) => prev.filter((f) => f.id !== file.id))
-    onRemove?.(file)
-  }
+    setUploadedFiles(prev => prev.filter(f => f.id !== file.id));
+    onRemove?.(file);
+  };
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn('space-y-4', className)}>
       <div
         className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
         onClick={() => fileInputRef.current?.click()}
       >
         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground mb-1">
-          Click to upload or drag and drop
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Max file size: {maxSize}MB
-        </p>
+        <p className="text-sm text-muted-foreground mb-1">Click to upload or drag and drop</p>
+        <p className="text-xs text-muted-foreground">Max file size: {maxSize}MB</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -132,7 +128,7 @@ export function FileUpload({
                   Uploading...
                 </>
               ) : (
-                "Upload All"
+                'Upload All'
               )}
             </Button>
           </div>
@@ -141,16 +137,11 @@ export function FileUpload({
 
           <div className="space-y-2">
             {files.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 p-2 bg-muted rounded-lg"
-              >
+              <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                 <span className="text-xl">{getFileIcon(file.type)}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(Number(file.size))}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(Number(file.size))}</p>
                 </div>
                 <Button
                   variant="ghost"
@@ -171,7 +162,7 @@ export function FileUpload({
         <div className="space-y-2">
           <p className="text-sm font-medium">Uploaded Files ({uploadedFiles.length})</p>
           <div className="space-y-2">
-            {uploadedFiles.map((file) => (
+            {uploadedFiles.map(file => (
               <div
                 key={file.id}
                 className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
@@ -179,16 +170,9 @@ export function FileUpload({
                 <span className="text-xl">{getFileIcon(file.type)}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(Number(file.size))}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(Number(file.size))}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => removeUploadedFile(file)}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeUploadedFile(file)}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -197,5 +181,5 @@ export function FileUpload({
         </div>
       )}
     </div>
-  )
+  );
 }
