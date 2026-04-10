@@ -15,7 +15,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { publishToAbly, AblyChannels } from '@repo/shared';
+import { publishToAbly, AblyChannels } from '@repo/shared/server';
 
 const updateMemberSchema = z.object({
   role: z.enum(['owner', 'admin', 'member', 'guest']),
