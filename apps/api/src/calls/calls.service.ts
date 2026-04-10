@@ -8,7 +8,7 @@ import {
 import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import {
-  agoraConfig,
+  agoraServerConfig as agoraConfig,
   publishToAbly,
   AblyChannels,
   AblyEvents,
