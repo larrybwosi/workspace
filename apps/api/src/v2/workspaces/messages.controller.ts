@@ -24,8 +24,8 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
+import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared/server';
 import { StorageService } from '../../common/storage/storage.service';
-import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared';
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),

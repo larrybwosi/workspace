@@ -16,7 +16,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { AblyChannels, EVENTS, getAblyRest } from '@repo/shared';
+import { AblyChannels, EVENTS, getAblyRest } from '@repo/shared/server';
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),

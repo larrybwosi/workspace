@@ -1,4 +1,4 @@
-import { prisma } from '@repo/database';
+import { prisma, Prisma } from '@repo/database';
 import { createNotification } from './notifications';
 
 export interface ScheduledNotificationConfig {
@@ -268,7 +268,7 @@ export async function processScheduledCalls() {
       },
       metadata: {
         path: ['notified5m'],
-        equals: null,
+        equals: Prisma.DbNull,
       },
     },
     include: {
@@ -296,7 +296,7 @@ export async function processScheduledCalls() {
       },
       metadata: {
         path: ['notifiedStart'],
-        equals: null,
+        equals: Prisma.DbNull,
       },
     },
     include: {

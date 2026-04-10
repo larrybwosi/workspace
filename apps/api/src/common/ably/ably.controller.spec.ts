@@ -35,7 +35,7 @@ describe('AblyController', () => {
 
       // Mock getAblyRest
       const mockCreateTokenRequest = jest.fn().mockResolvedValue({ keyName: 'mock.key' });
-      const shared = require('@repo/shared');
+      const shared = require('@repo/shared/server');
       jest.spyOn(shared, 'getAblyRest').mockReturnValue({
         auth: {
           createTokenRequest: mockCreateTokenRequest,
