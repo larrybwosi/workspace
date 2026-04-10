@@ -3,7 +3,8 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "builder": "swc",
-    "typeCheck": true
+    "builder": "webpack",
+    "typeCheck": true,
+    "webpackConfigPath": "webpack.config.cjs"
   }
 }
