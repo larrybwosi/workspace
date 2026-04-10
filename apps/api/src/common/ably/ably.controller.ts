@@ -2,7 +2,7 @@ import { Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../../auth/auth.guard';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import type { User } from '@repo/database';
-import { getAblyRest } from '@repo/shared/server';
+import { getAblyRest } from '@repo/shared';
 
 @Controller('ably')
 @UseGuards(AuthGuard)
