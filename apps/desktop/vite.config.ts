@@ -21,4 +21,7 @@ export default defineConfig({
     host: true,
   },
   envPrefix: ['VITE_', 'TAURI_'],
+  define: {
+    'process.env': {},
+  },
 })
