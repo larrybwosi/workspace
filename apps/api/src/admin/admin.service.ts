@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { SanityService } from '../common/sanity/sanity.service';
+import { StorageService } from '../common/storage/storage.service';
 
 @Injectable()
 export class AdminService {
@@ -8,7 +8,7 @@ export class AdminService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly sanityService: SanityService
+    private readonly storageService: StorageService
   ) {}
 
   async getStats() {
@@ -191,7 +191,7 @@ export class AdminService {
       throw new InternalServerErrorException('No file provided');
     }
 
-    return this.sanityService.uploadFile(file);
+    return this.storageService.uploadFile(file);
   }
 
   private filterFields(data: any, allowedFields: string[]) {
