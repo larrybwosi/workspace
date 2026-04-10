@@ -1,6 +1,4 @@
 import * as Ably from 'ably';
-import { config } from 'dotenv';
-import { resolve } from 'path';
 
 // Channel naming conventions
 export const AblyChannels = {
@@ -41,19 +39,13 @@ let ablyClientInstance: any = null;
 
 export function getAblyClient() {
   if (typeof window === "undefined") {
-    // Server-side
-    const key = process.env.ABLY_API_KEY
-    if (!key) {
-      console.warn("ABLY_API_KEY is not defined")
-      return null
-    }
-    if (!ablyClientInstance) {
-      // @ts-ignore
-      ablyClientInstance = new Ably.Realtime({
-        key,
-        clientId: "server",
-      })
-    }
+    // This part should technically be in ably.server.ts if we want strictly separated code,
+    // but for now, we'll keep it here for compatibility if needed,
+    // or just make it return null/throw if we want strict client-only in this file.
+    // However, some "universal" code might still use it.
+
+    // Better to keep it minimal and let server use ably.server.ts
+    return null;
   } else {
     // Client-side
     if (!ablyClientInstance) {
@@ -65,25 +57,6 @@ export function getAblyClient() {
     }
   }
   return ablyClientInstance;
-}
-
-export function getAblyServer() {
-  return getAblyClient();
-}
-
-export function getAblyRest() {
-  if (typeof window !== "undefined") {
-    throw new Error("getAblyRest should only be called on the server")
-  }
-  const key = process.env.ABLY_API_KEY
-  if (!key) {
-    console.warn('ABLY_API_KEY is not defined, returning null');
-    return null;
-  }
-  // @ts-ignore
-  return new Ably.Rest({
-    key,
-  });
 }
 
 // Lazy load ably instance to avoid build-time errors
@@ -99,48 +72,3 @@ export const ably = {
     return client.channels
   }
 } as any
-
-export async function publishMessage(channelId: string, data: any) {
-  try {
-    const ably = getAblyRest();
-    if (!ably) return;
-    const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-    await channel.publish(data.type, data.data);
-  } catch (error) {
-    console.error(' Error publishing message to Ably:', error);
-    throw error;
-  }
-}
-
-export async function publishNotification(userId: string, notification: any) {
-  try {
-    const ably = getAblyRest();
-    if (!ably) return;
-    const channel = (ably as any).channels.get(AblyChannels.notifications(userId));
-    await channel.publish(AblyEvents.NOTIFICATION, notification);
-  } catch (error) {
-    console.error(' Error publishing notification to Ably:', error);
-    throw error;
-  }
-}
-
-export async function publishToAbly(channelName: string, eventName: string, data: any, retries = 3) {
-  try {
-    const ably = getAblyRest();
-    if (!ably) return;
-    const channel = (ably as any).channels.get(channelName);
-    await channel.publish(eventName, data);
-  } catch (error) {
-    if (retries > 0) {
-      console.warn(`Retrying Ably publish to ${channelName} (${eventName}). Retries left: ${retries - 1}`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return publishToAbly(channelName, eventName, data, retries - 1);
-    }
-    console.error(' Error publishing to Ably after retries:', error);
-    throw error;
-  }
-}
-
-export async function sendRealtimeMessage(channelName: string, eventName: string, data: any) {
-  return publishToAbly(channelName, eventName, data);
-}
