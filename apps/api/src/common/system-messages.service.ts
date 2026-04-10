@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared';
+import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
 
 interface SystemMessageOptions {
   channelId: string;

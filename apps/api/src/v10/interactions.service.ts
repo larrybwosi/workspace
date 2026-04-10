@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { publishToAbly, AblyChannels, AblyEvents } from '@repo/shared';
+import { publishToAbly, AblyChannels, AblyEvents } from '@repo/shared/server';
 import * as crypto from 'crypto';
 
 @Injectable()

@@ -10,7 +10,7 @@ import {
   deleteScheduledNotification,
   pauseScheduledNotification,
   resumeScheduledNotification,
-} from '@repo/shared';
+} from '@repo/shared/server';
 
 @Controller('scheduled-notifications')
 @UseGuards(AuthGuard)

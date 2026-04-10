@@ -25,7 +25,7 @@ import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { SanityService } from '../../common/sanity/sanity.service';
-import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared';
+import { getAblyRest, AblyChannels, AblyEvents, CustomMessageSchema } from '@repo/shared/server';
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
