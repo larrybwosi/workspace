@@ -187,6 +187,10 @@ export class AdminService {
   }
 
   async uploadFile(file: any) {
+    if (!file) {
+      throw new InternalServerErrorException('No file provided');
+    }
+
     return this.storageService.uploadFile(file);
   }
 

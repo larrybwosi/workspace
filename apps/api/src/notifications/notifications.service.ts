@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents, sendPushNotification } from '@repo/shared';
+import { getAblyRest, AblyChannels, AblyEvents, sendPushNotification } from '@repo/shared/server';
 
 export interface NotificationPayload {
   userId: string;

@@ -7,7 +7,7 @@ import {
   extractUserIds,
 } from '../common/utils/mention-utils';
 import { NotificationsService } from '../notifications/notifications.service';
-import { AblyChannels, AblyEvents, getAblyRest, isUserEligibleForAsset, logAssetUsage } from '@repo/shared';
+import { AblyChannels, AblyEvents, getAblyRest, isUserEligibleForAsset, logAssetUsage } from '@repo/shared/server';
 
 @Injectable()
 export class ChannelsService {

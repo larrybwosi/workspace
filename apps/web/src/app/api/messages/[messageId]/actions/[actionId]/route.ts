@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/lib/auth"
-import { publishToAbly } from "@repo/shared"
+import { publishToAbly } from "@repo/shared/server"
 
 export async function POST(
     request: NextRequest,

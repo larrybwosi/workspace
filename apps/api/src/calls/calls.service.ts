@@ -14,7 +14,7 @@ import {
   AblyEvents,
   isUserEligibleForAsset,
   logAssetUsage,
-} from '@repo/shared';
+} from '@repo/shared/server';
 
 @Injectable()
 export class CallsService {
