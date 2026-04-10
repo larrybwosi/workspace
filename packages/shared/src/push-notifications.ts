@@ -1,5 +1,8 @@
 import { prisma } from '@repo/database';
 import * as admin from 'firebase-admin';
+import { validateEnv } from './env';
+
+const env = validateEnv();
 
 let firebaseAdmin: admin.app.App | undefined;
 
@@ -7,17 +10,17 @@ function getFirebaseAdmin() {
   if (firebaseAdmin) return firebaseAdmin;
 
   try {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const privateKey = env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
+    if (!env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || !env.FIREBASE_CLIENT_EMAIL || !privateKey) {
       console.warn('Firebase environment variables are not fully defined');
       return undefined;
     }
 
     firebaseAdmin = admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        clientEmail: env.FIREBASE_CLIENT_EMAIL,
         privateKey,
       }),
     });
@@ -192,7 +195,7 @@ async function sendExpoPushNotification(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.EXPO_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${env.EXPO_ACCESS_TOKEN}`,
       },
       body: JSON.stringify({
         to: token,
@@ -273,7 +276,7 @@ async function sendDesktopPushNotification(
   try {
     // For Tauri, we'll use a WebSocket or HTTP endpoint that the desktop app polls
     // This is a placeholder implementation - adjust based on your Tauri setup
-    const response = await fetch(`${process.env.DESKTOP_NOTIFICATION_ENDPOINT}/notify`, {
+    const response = await fetch(`${env.DESKTOP_NOTIFICATION_ENDPOINT}/notify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

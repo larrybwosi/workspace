@@ -4,6 +4,9 @@ import { nextCookies } from 'better-auth/next-js';
 import { admin, jwt, organization } from 'better-auth/plugins';
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { prisma } from '@/lib/db/prisma';
+import { validateEnv } from '@repo/shared';
+
+const env = validateEnv();
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -13,7 +16,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
   },
-  baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+  baseURL: env.BETTER_AUTH_URL || env.NEXT_PUBLIC_APP_URL,
   plugins: [
     admin({
       defaultRole: 'Member',

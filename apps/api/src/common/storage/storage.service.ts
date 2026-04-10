@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FileData, StorageProvider, UploadResult } from './storage.interface';
 import { SanityStorageProvider } from './providers/sanity.provider';
 import { MinioStorageProvider } from './providers/minio.provider';
+import { validateEnv } from '@repo/shared';
+
+const env = validateEnv();
 
 @Injectable()
 export class StorageService {
@@ -12,7 +15,7 @@ export class StorageService {
     private readonly sanityProvider: SanityStorageProvider,
     private readonly minioProvider: MinioStorageProvider
   ) {
-    const storageType = (process.env.STORAGE_PROVIDER || 'sanity').toLowerCase();
+    const storageType = env.STORAGE_PROVIDER.toLowerCase();
 
     if (storageType === 'minio') {
       this.provider = this.minioProvider;
