@@ -26,7 +26,6 @@ import { Badge } from '../components/badge';
 import { Separator } from '../components/separator';
 import { mockThread, mockUsers } from '../lib/mock-data';
 import { cn } from '../lib/utils';
-import React from 'react';
 import { MessageSearchPanel } from '../features/chat/message-search-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/dropdown-menu';
 
@@ -38,6 +37,7 @@ import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '../lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
 import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -65,14 +65,14 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
-  const [activeTab, setActiveTab] = React.useState('info');
+  const [activeTab, setActiveTab] = useState('info');
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
-  const [activeCalls, setActiveCalls] = React.useState<any[]>([]);
-  const [scheduledCalls, setScheduledCalls] = React.useState<any[]>([]);
-  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = React.useState(false);
+  const [activeCalls, setActiveCalls] = useState<any[]>([]);
+  const [scheduledCalls, setScheduledCalls] = useState<any[]>([]);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!workspace?.id || !isOpen) return;
 
     const fetchActiveCalls = async () => {
@@ -160,8 +160,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     }
   };
 
-  const [inviteLink, setInviteLink] = React.useState<string>('');
-  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [inviteLink, setInviteLink] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerateInviteLink = async () => {
     if (!workspace?.id) return;
