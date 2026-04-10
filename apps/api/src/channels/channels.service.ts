@@ -112,18 +112,19 @@ export class ChannelsService {
     const mentionsAll = hasSpecialMention(content, 'all');
     const mentionsHere = hasSpecialMention(content, 'here');
 
-    // ⚡ Bolt Optimization: Fetch only mentioned users instead of the entire users table.
-    // This reduces memory usage and database load from O(N) to O(M) where M is number of mentions.
-    const users =
-      userMentions.length > 0
-        ? await prisma.user.findMany({
-            where: {
-              name: { in: userMentions, mode: 'insensitive' },
+    // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
+    const mentionedUsers = userMentions.length > 0
+      ? await prisma.user.findMany({
+          where: {
+            name: {
+              in: userMentions,
+              mode: 'insensitive',
             },
-            select: { id: true, name: true },
-          })
-        : [];
-    const mentionedUserIds = extractUserIds(userMentions, users);
+          },
+          select: { id: true, name: true },
+        })
+      : [];
+    const mentionedUserIds = extractUserIds(userMentions, mentionedUsers);
 
     // Eligibility check for stickers
     if (stickerId) {
