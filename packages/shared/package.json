@@ -2,18 +2,7 @@
   "name": "@repo/shared",
   "version": "0.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "default": "./dist/server.js"
-    }
-  },
+  "main": "./src/index.ts",
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit"

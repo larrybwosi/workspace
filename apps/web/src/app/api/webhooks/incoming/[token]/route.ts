@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@repo/shared/server"
+import { getAblyRest, AblyChannels, AblyEvents } from "@repo/shared"
 
 /**
  * POST /api/webhooks/incoming/[token]

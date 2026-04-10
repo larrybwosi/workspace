@@ -12,7 +12,7 @@ import {
   notifyChannel,
   isUserEligibleForAsset,
   logAssetUsage,
-} from '@repo/shared/server';
+} from '@repo/shared';
 import * as crypto from 'crypto';
 import axios from 'axios';
 

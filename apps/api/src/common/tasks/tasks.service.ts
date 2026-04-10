@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { processScheduledNotifications, processScheduledCalls } from '@repo/shared/server';
+import { processScheduledNotifications, processScheduledCalls } from '@repo/shared';
 
 @Injectable()
 export class TasksService {
