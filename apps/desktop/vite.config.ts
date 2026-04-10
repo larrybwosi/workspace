@@ -20,7 +20,7 @@ export default defineConfig({
     strictPort: true,
     host: true,
   },
-  envPrefix: ['VITE_', 'TAURI_'],
+  envPrefix: ['VITE_', 'TAURI_', 'NEXT_PUBLIC_'],
   define: {
     'process.env': {},
   },

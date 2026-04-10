@@ -32,6 +32,8 @@ const nextConfig = {
       {
         source: '/api/workspaces/:slug/channels',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspaces/:slug/channels`,
+      },
+      {
         source: '/api/admin/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/:path*`,
       },

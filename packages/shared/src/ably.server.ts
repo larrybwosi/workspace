@@ -1,11 +1,14 @@
 import * as Ably from 'ably';
 import { AblyChannels, AblyEvents, EVENTS } from './ably';
+import { validateEnv } from './env';
+
+const env = validateEnv();
 
 // Singleton pattern for Ably client on server
 let ablyClientInstance: any = null;
 
 export function getAblyServer() {
-  const key = process.env.ABLY_API_KEY;
+  const key = env.ABLY_API_KEY;
   if (!key) {
     console.warn('ABLY_API_KEY is not defined');
     return null;
@@ -21,7 +24,7 @@ export function getAblyServer() {
 }
 
 export function getAblyRest() {
-  const key = process.env.ABLY_API_KEY;
+  const key = env.ABLY_API_KEY;
   if (!key) {
     console.warn('ABLY_API_KEY is not defined, returning null');
     return null;
