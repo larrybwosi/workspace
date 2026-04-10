@@ -23,6 +23,25 @@ export class V2ApplicationsController {
     return this.applicationsService.getApplication(context.userId, id);
   }
 
+  @Post(':id')
+  async updateApplication(
+    @V2Context() context: ApiV2Context,
+    @Param('id') id: string,
+    @Body() body: { name?: string; description?: string },
+  ) {
+    return this.applicationsService.updateApplication(context.userId, id, body);
+  }
+
+  @Post(':id/delete')
+  async deleteApplication(@V2Context() context: ApiV2Context, @Param('id') id: string) {
+    return this.applicationsService.deleteApplication(context.userId, id);
+  }
+
+  @Post(':id/reset-token')
+  async resetBotToken(@V2Context() context: ApiV2Context, @Param('id') id: string) {
+    return this.applicationsService.resetBotToken(context.userId, id);
+  }
+
   @Post(':id/install')
   async installBot(
     @V2Context() context: ApiV2Context,
