@@ -21,6 +21,7 @@
       "@/*": ["./src/*"],
       "@repo/ui/components/*": ["../../packages/ui/src/components/*"],
       "@repo/ui/*": ["../../packages/ui/src/*"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
       "@repo/shared/*": ["../../packages/shared/src/*"]
     }
   },

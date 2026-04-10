@@ -26,7 +26,7 @@
     "esModuleInterop": true,
     "paths": {
       "@/*": ["src/*"],
-      "@repo/shared": ["../../packages/shared/src/index.ts"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
       "@repo/shared/*": ["../../packages/shared/src/*"],
       "@repo/types": ["../../packages/types/src/index.ts"],
       "@repo/types/*": ["../../packages/types/src/*"],

@@ -16,7 +16,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@repo/ui": ["../../packages/ui/src"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
+      "@repo/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src"],
