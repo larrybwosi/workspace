@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { validateEnv } from '@repo/shared';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
@@ -29,6 +30,7 @@ import { ScheduledNotificationsModule } from './scheduled-notifications/schedule
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: (config) => validateEnv(config),
     }),
     ScheduleModule.forRoot(),
     RedisModule,
