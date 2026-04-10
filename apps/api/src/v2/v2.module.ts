@@ -10,6 +10,8 @@ import { V2DepartmentsController } from './workspaces/departments.controller';
 import { V2TeamsController } from './workspaces/teams.controller';
 import { V2AnnouncementsController } from './workspaces/announcements.controller';
 import { V2OAuthController } from './oauth.controller';
+import { V2ApplicationsController } from './applications.controller';
+import { V2ApplicationsService } from './applications.service';
 import { ApiV2Guard } from '../auth/api-v2.guard';
 import { V2AuditService } from './v2-audit.service';
 import { V2WebhooksService } from './v2-webhooks.service';
@@ -27,7 +29,8 @@ import { V2WebhooksService } from './v2-webhooks.service';
     V2TeamsController,
     V2AnnouncementsController,
     V2OAuthController,
+    V2ApplicationsController,
   ],
-  providers: [ApiV2Guard, V2AuditService, V2WebhooksService],
+  providers: [ApiV2Guard, V2AuditService, V2WebhooksService, V2ApplicationsService],
 })
 export class V2Module {}
