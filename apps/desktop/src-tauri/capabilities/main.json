@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/capability.json",
+  "identifier": "main-capability",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "shell:default",
+    "shell:allow-open",
+    "notification:default",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-send-notification",
+    "deep-link:default"
+  ]
+}

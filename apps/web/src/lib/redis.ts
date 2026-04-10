@@ -1,3 +1,4 @@
+import "server-only"
 import Redis, { RedisOptions } from "ioredis"
 
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379"
