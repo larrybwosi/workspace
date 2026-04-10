@@ -7,3 +7,4 @@
 
   ➜  Local:   http://localhost:8080/
   ➜  Network: use --host to expose
+6:31:10 AM [vite] (client) hmr update /src/pages/developer/Dashboard.tsx, /src/index.css

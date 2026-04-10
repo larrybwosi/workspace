@@ -70,6 +70,41 @@ export class V2ApplicationsService {
     return app;
   }
 
+  async updateApplication(ownerId: string, id: string, data: { name?: string; description?: string }) {
+    const app = await this.getApplication(ownerId, id);
+
+    return prisma.botApplication.update({
+      where: { id: app.id },
+      data,
+      include: { bot: true },
+    });
+  }
+
+  async deleteApplication(ownerId: string, id: string) {
+    const app = await this.getApplication(ownerId, id);
+
+    // Delete the bot user if it exists
+    if (app.botId) {
+      await prisma.user.delete({ where: { id: app.botId } });
+    }
+
+    return prisma.botApplication.delete({ where: { id: app.id } });
+  }
+
+  async resetBotToken(ownerId: string, id: string) {
+    const app = await this.getApplication(ownerId, id);
+    if (!app.botId) throw new NotFoundException('Bot not found for this application');
+
+    const newToken = this.generateBotToken(app.botId);
+
+    await prisma.user.update({
+      where: { id: app.botId },
+      data: { botToken: newToken },
+    });
+
+    return { token: newToken };
+  }
+
   async installBot(userId: string, applicationId: string, workspaceId: string) {
     const app = await prisma.botApplication.findUnique({
       where: { id: applicationId },
