@@ -5,14 +5,17 @@ import { createAuthClient } from 'better-auth/react';
 // Helper to safely access env variables across Vite and Next.js
 const getEnv = (name: string) => {
   if (typeof window !== 'undefined') {
-    // Vite uses import.meta.env
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      const viteVal = (import.meta as any).env[name];
-      if (viteVal) return viteVal;
-      // Also check VITE_ prefix for Vite apps
-      const vitePrefixVal = (import.meta as any).env[`VITE_${name}`];
-      if (vitePrefixVal) return vitePrefixVal;
+    try {
+      // @ts-ignore
+      const metaEnv = import.meta.env;
+      if (metaEnv) {
+        const viteVal = metaEnv[name] || metaEnv[`VITE_${name}`];
+        if (viteVal) return viteVal;
+      }
+    } catch (e) {
+      // Ignore errors in environments that don't support import.meta
     }
+
     // Next.js and others might use window.process.env
     return (window as any).process?.env?.[name];
   }
