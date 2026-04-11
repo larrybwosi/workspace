@@ -113,9 +113,9 @@ export function VideoCallContent({
   // Apply Master Volume to Remote Tracks
   useEffect(() => {
     remoteUsers.forEach(user => {
-        if (user.audioTrack) {
-            user.audioTrack.setVolume(masterVolume);
-        }
+      if (user.audioTrack) {
+        user.audioTrack.setVolume(masterVolume);
+      }
     });
   }, [masterVolume, remoteUsers]);
 
@@ -123,10 +123,10 @@ export function VideoCallContent({
   useEffect(() => {
     return () => {
       [localCameraTrack, localMicrophoneTrack, screenTrack].forEach(track => {
-          if (track) {
-              track.stop();
-              track.close();
-          }
+        if (track) {
+          track.stop();
+          track.close();
+        }
       });
     };
   }, [localCameraTrack, localMicrophoneTrack, screenTrack]);
@@ -168,11 +168,11 @@ export function VideoCallContent({
   }, [screenError]);
 
   const broadcastScreenShare = useCallback(async () => {
-      await fetch(`/api/calls/${callId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'screenShareStarted' }),
-      });
+    await fetch(`/api/calls/${callId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'screenShareStarted' }),
+    });
   }, [callId]);
 
   useEffect(() => {
@@ -194,37 +194,40 @@ export function VideoCallContent({
   }, [screenTrack, broadcastScreenShare]);
 
   const fetchParticipants = useCallback(async () => {
-      try {
-          const res = await fetch(`/api/calls/${callId}/participants`);
-          if (res.ok) {
-              const data = await res.json();
-              setParticipants(data);
-          }
-      } catch (err) {
-          console.error('Failed to fetch participants', err);
+    try {
+      const res = await fetch(`/api/calls/${callId}/participants`);
+      if (res.ok) {
+        const data = await res.json();
+        setParticipants(data);
       }
+    } catch (err) {
+      console.error('Failed to fetch participants', err);
+    }
   }, [callId]);
 
-  const leaveCallLogic = useCallback(async (action: 'leave' | 'endForAll' = 'leave') => {
+  const leaveCallLogic = useCallback(
+    async (action: 'leave' | 'endForAll' = 'leave') => {
       try {
-          [localCameraTrack, localMicrophoneTrack, screenTrack].forEach(track => {
-              if (track) {
-                  track.stop();
-                  track.close();
-              }
-          });
+        [localCameraTrack, localMicrophoneTrack, screenTrack].forEach(track => {
+          if (track) {
+            track.stop();
+            track.close();
+          }
+        });
 
-          await fetch(`/api/calls/${callId}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action }),
-          });
+        await fetch(`/api/calls/${callId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        });
       } catch (error) {
-          console.error('Error leaving call:', error);
+        console.error('Error leaving call:', error);
       } finally {
-          onEnd();
+        onEnd();
       }
-  }, [callId, localCameraTrack, localMicrophoneTrack, screenTrack, onEnd]);
+    },
+    [callId, localCameraTrack, localMicrophoneTrack, screenTrack, onEnd]
+  );
 
   // Ably Realtime Listeners
   useEffect(() => {
@@ -236,24 +239,24 @@ export function VideoCallContent({
     const userChannel = ably.channels.get(AblyChannels.user(session.user.id));
 
     const handleCallEnded = () => {
-        toast.info('The call has been ended by a moderator');
-        onEnd();
+      toast.info('The call has been ended by a moderator');
+      onEnd();
     };
 
     const handleParticipantRemoved = (message: any) => {
-        if (message.data.userId === session.user.id) {
-            toast.error('You have been removed from the call');
-            onEnd();
-        } else {
-            fetchParticipants();
-        }
+      if (message.data.userId === session.user.id) {
+        toast.error('You have been removed from the call');
+        onEnd();
+      } else {
+        fetchParticipants();
+      }
     };
 
     const handleScreenShareStarted = (message: any) => {
-        if (message.data.agoraUid) {
-            setFocusedVideoId(message.data.agoraUid);
-            toast.info('Someone started sharing their screen');
-        }
+      if (message.data.agoraUid) {
+        setFocusedVideoId(message.data.agoraUid);
+        toast.info('Someone started sharing their screen');
+      }
     };
 
     userChannel.subscribe('call-ended', handleCallEnded);
@@ -263,11 +266,11 @@ export function VideoCallContent({
     userChannel.subscribe('participant-promoted', fetchParticipants);
 
     return () => {
-        userChannel.unsubscribe('call-ended', handleCallEnded);
-        userChannel.unsubscribe('participant-removed', handleParticipantRemoved);
-        userChannel.unsubscribe('screen-share-started', handleScreenShareStarted);
-        userChannel.unsubscribe('call-joined', fetchParticipants);
-        userChannel.unsubscribe('participant-promoted', fetchParticipants);
+      userChannel.unsubscribe('call-ended', handleCallEnded);
+      userChannel.unsubscribe('participant-removed', handleParticipantRemoved);
+      userChannel.unsubscribe('screen-share-started', handleScreenShareStarted);
+      userChannel.unsubscribe('call-joined', fetchParticipants);
+      userChannel.unsubscribe('participant-promoted', fetchParticipants);
     };
   }, [session?.user?.id, onEnd, fetchParticipants]);
 
@@ -328,29 +331,29 @@ export function VideoCallContent({
   };
 
   const promoteParticipant = async (targetUid: number) => {
-      try {
-          const res = await fetch(`/api/calls/${callId}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'promote', uid: targetUid }),
-          });
-          if (res.ok) toast.success('Participant promoted to moderator');
-      } catch (err) {
-          toast.error('Failed to promote participant');
-      }
+    try {
+      const res = await fetch(`/api/calls/${callId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'promote', uid: targetUid }),
+      });
+      if (res.ok) toast.success('Participant promoted to moderator');
+    } catch (err) {
+      toast.error('Failed to promote participant');
+    }
   };
 
   const removeParticipant = async (targetUid: number) => {
-      try {
-          const res = await fetch(`/api/calls/${callId}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'remove', uid: targetUid }),
-          });
-          if (res.ok) toast.success('Participant removed from call');
-      } catch (err) {
-          toast.error('Failed to remove participant');
-      }
+    try {
+      const res = await fetch(`/api/calls/${callId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remove', uid: targetUid }),
+      });
+      if (res.ok) toast.success('Participant removed from call');
+    } catch (err) {
+      toast.error('Failed to remove participant');
+    }
   };
 
   const inviteMember = async (userId: string) => {
@@ -396,12 +399,16 @@ export function VideoCallContent({
       <div className="h-14 bg-zinc-900/95 backdrop-blur-md flex items-center justify-between px-4 md:px-6 text-white shrink-0 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="bg-primary/20 p-2 rounded-lg hidden sm:block">
-            {type === 'video' ? <VideoIcon className="h-4 w-4 text-primary" /> : <Phone className="h-4 w-4 text-primary" />}
+            {type === 'video' ? (
+              <VideoIcon className="h-4 w-4 text-primary" />
+            ) : (
+              <Phone className="h-4 w-4 text-primary" />
+            )}
           </div>
           <div>
             <h2 className="text-sm font-bold tracking-tight truncate max-w-[150px] md:max-w-none">
-                {type === 'video' ? 'Video Call' : 'Voice Call'}
-                {isHost && <Badge className="ml-2 bg-primary/20 text-primary border-none text-[10px] py-0">Host</Badge>}
+              {type === 'video' ? 'Video Call' : 'Voice Call'}
+              {isHost && <Badge className="ml-2 bg-primary/20 text-primary border-none text-[10px] py-0">Host</Badge>}
             </h2>
             <div className="flex items-center gap-2">
               <span className="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -415,7 +422,12 @@ export function VideoCallContent({
             {remoteUsers.length + 1}
           </Badge>
           {onToggleFullscreen && (
-            <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white h-8 w-8" onClick={onToggleFullscreen}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-zinc-400 hover:text-white h-8 w-8"
+              onClick={onToggleFullscreen}
+            >
               {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
           )}
@@ -444,10 +456,20 @@ export function VideoCallContent({
                 )}
 
                 <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="secondary" size="icon" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none" onClick={handleTogglePiP}>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none"
+                    onClick={handleTogglePiP}
+                  >
                     <PictureInPicture className="h-4 w-4" />
                   </Button>
-                  <Button variant="secondary" size="icon" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none" onClick={() => setFocusedVideoId(null)}>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none"
+                    onClick={() => setFocusedVideoId(null)}
+                  >
                     <Minimize2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -455,35 +477,61 @@ export function VideoCallContent({
 
               <div className="flex md:flex-col gap-2 overflow-auto md:w-56 shrink-0 md:h-full h-24 scrollbar-hide">
                 {(!focusedVideoId || focusedVideoId !== 'local-camera') && (
-                  <div className="relative bg-zinc-900 rounded-lg overflow-hidden aspect-video shrink-0 video-container group cursor-pointer border border-white/5" onClick={() => cameraOn && setFocusedVideoId('local-camera')}>
+                  <div
+                    className="relative bg-zinc-900 rounded-lg overflow-hidden aspect-video shrink-0 video-container group cursor-pointer border border-white/5"
+                    onClick={() => cameraOn && setFocusedVideoId('local-camera')}
+                  >
                     {cameraOn && localCameraTrack ? (
                       <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex w-full h-full items-center justify-center bg-zinc-800">
-                        <Avatar className="h-8 w-8"><AvatarFallback className="text-xs bg-zinc-700">ME</AvatarFallback></Avatar>
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-xs bg-zinc-700">ME</AvatarFallback>
+                        </Avatar>
                       </div>
                     )}
                   </div>
                 )}
-                {remoteUsers.filter(u => u.uid !== focusedVideoId).map(user => (
-                    <div key={user.uid} className="relative bg-zinc-900 rounded-lg overflow-hidden aspect-video shrink-0 video-container group cursor-pointer border border-white/5" onClick={() => setFocusedVideoId(user.uid)}>
+                {remoteUsers
+                  .filter(u => u.uid !== focusedVideoId)
+                  .map(user => (
+                    <div
+                      key={user.uid}
+                      className="relative bg-zinc-900 rounded-lg overflow-hidden aspect-video shrink-0 video-container group cursor-pointer border border-white/5"
+                      onClick={() => setFocusedVideoId(user.uid)}
+                    >
                       <RemoteUser user={user} className="w-full h-full object-cover" playAudio={true} />
-                      <Badge variant="secondary" className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 border-none">
+                      <Badge
+                        variant="secondary"
+                        className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 border-none"
+                      >
                         User {user.uid}
                       </Badge>
                     </div>
-                ))}
+                  ))}
               </div>
             </div>
           ) : (
-            <div className={cn(
+            <div
+              className={cn(
                 'grid gap-2 md:gap-4 w-full h-full max-h-full overflow-y-auto content-center',
-                (remoteUsers.length === 0 || (remoteUsers.length === 1 && showChat)) ? 'grid-cols-1' :
-                remoteUsers.length === 1 && !showChat ? 'grid-cols-1 md:grid-cols-2' :
-                remoteUsers.length >= 2 && remoteUsers.length <= 4 ? (showChat ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-2') :
-                'grid-cols-2 lg:grid-cols-3'
-            )}>
-              <div className={cn('relative bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center aspect-video transition-all duration-200 video-container group border border-white/5', isSpeaking && 'ring-2 ring-primary')}>
+                remoteUsers.length === 0 || (remoteUsers.length === 1 && showChat)
+                  ? 'grid-cols-1'
+                  : remoteUsers.length === 1 && !showChat
+                    ? 'grid-cols-1 md:grid-cols-2'
+                    : remoteUsers.length >= 2 && remoteUsers.length <= 4
+                      ? showChat
+                        ? 'grid-cols-1 lg:grid-cols-2'
+                        : 'grid-cols-2'
+                      : 'grid-cols-2 lg:grid-cols-3'
+              )}
+            >
+              <div
+                className={cn(
+                  'relative bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center aspect-video transition-all duration-200 video-container group border border-white/5',
+                  isSpeaking && 'ring-2 ring-primary'
+                )}
+              >
                 {cameraOn && localCameraTrack ? (
                   <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover" />
                 ) : (
@@ -498,46 +546,86 @@ export function VideoCallContent({
                   </div>
                 )}
                 <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                  <Badge variant="secondary" className="bg-black/40 backdrop-blur-md text-white text-[10px] h-5 px-2 border-none">You</Badge>
-                  {!micOn && <Badge variant="destructive" className="bg-red-500/80 h-5 px-1.5 border-none"><MicOff className="h-3 w-3" /></Badge>}
+                  <Badge
+                    variant="secondary"
+                    className="bg-black/40 backdrop-blur-md text-white text-[10px] h-5 px-2 border-none"
+                  >
+                    You
+                  </Badge>
+                  {!micOn && (
+                    <Badge variant="destructive" className="bg-red-500/80 h-5 px-1.5 border-none">
+                      <MicOff className="h-3 w-3" />
+                    </Badge>
+                  )}
                 </div>
               </div>
 
               {remoteUsers.map(user => (
-                <div key={user.uid} className="relative bg-zinc-900 rounded-xl overflow-hidden aspect-video group video-container border border-white/5">
+                <div
+                  key={user.uid}
+                  className="relative bg-zinc-900 rounded-xl overflow-hidden aspect-video group video-container border border-white/5"
+                >
                   <RemoteUser user={user} className="w-full h-full" playAudio={true} playVideo={true} />
 
                   {/* Participant Moderation Controls */}
                   {isHost && (
-                      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                          <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="secondary" size="icon" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none">
-                                      <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent className="bg-zinc-900 border-zinc-800 text-white">
-                                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => promoteParticipant(user.uid)}>
-                                      <Shield className="h-4 w-4 text-primary" /> Promote to Moderator
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400" onClick={() => removeParticipant(user.uid)}>
-                                      <UserX className="h-4 w-4" /> Remove & Ban
-                                  </DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
-                      </div>
+                    <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-zinc-900 border-zinc-800 text-white">
+                          <DropdownMenuItem
+                            className="gap-2 cursor-pointer"
+                            onClick={() => promoteParticipant(Number(user.uid))}
+                          >
+                            <Shield className="h-4 w-4 text-primary" /> Promote to Moderator
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="gap-2 cursor-pointer text-red-400 focus:text-red-400"
+                            onClick={() => removeParticipant(Number(user.uid))}
+                          >
+                            <UserX className="h-4 w-4" /> Remove & Ban
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   )}
 
                   <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                    <Button variant="secondary" size="icon" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none" onClick={handleTogglePiP}><PictureInPicture className="h-4 w-4" /></Button>
-                    <Button variant="secondary" size="icon" className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none" onClick={() => setFocusedVideoId(user.uid)}><Maximize2 className="h-4 w-4" /></Button>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none"
+                      onClick={handleTogglePiP}
+                    >
+                      <PictureInPicture className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white border-none"
+                      onClick={() => setFocusedVideoId(user.uid)}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-        {showChat && <div className="shrink-0 border-l border-white/10 w-80 h-full hidden lg:block"><CallChat callId={callId} /></div>}
+        {showChat && (
+          <div className="shrink-0 border-l border-white/10 w-80 h-full hidden lg:block">
+            <CallChat callId={callId} />
+          </div>
+        )}
       </div>
 
       {/* Controls Bar */}
@@ -545,59 +633,126 @@ export function VideoCallContent({
         <div className="flex items-center gap-2 md:gap-3 bg-zinc-900/60 p-2 rounded-2xl border border-white/5">
           {/* Audio Controls Group */}
           <div className="flex items-center gap-1 border-r border-white/10 pr-2 md:pr-3">
-             {/* Mic Button */}
+            {/* Mic Button */}
             <div className="relative group/mic flex flex-col items-center">
-                <div className="absolute -top-14 bg-zinc-800/95 border border-white/10 p-3 rounded-xl opacity-0 group-hover/mic:opacity-100 transition-all pointer-events-none group-hover/mic:pointer-events-auto flex items-center gap-3 shadow-2xl z-50">
+              <div className="absolute -top-14 bg-zinc-800/95 border border-white/10 p-3 rounded-xl opacity-0 group-hover/mic:opacity-100 transition-all pointer-events-none group-hover/mic:pointer-events-auto flex items-center gap-3 shadow-2xl z-50">
                 <Mic className="h-4 w-4 text-primary" />
-                <input type="range" min="0" max="100" value={micVolume} onChange={e => setMicVolume(Number(e.target.value))} className="w-24 h-1.5 accent-primary bg-zinc-600 rounded-full appearance-none cursor-pointer" />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={micVolume}
+                  onChange={e => setMicVolume(Number(e.target.value))}
+                  className="w-24 h-1.5 accent-primary bg-zinc-600 rounded-full appearance-none cursor-pointer"
+                />
                 <span className="text-[10px] text-zinc-400 w-6 font-mono">{micVolume}%</span>
-                </div>
-                <Button variant={micOn ? 'secondary' : 'destructive'} size="icon" className={cn('rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all', micOn ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white')} onClick={toggleMic}>
+              </div>
+              <Button
+                variant={micOn ? 'secondary' : 'destructive'}
+                size="icon"
+                className={cn(
+                  'rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all',
+                  micOn ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'
+                )}
+                onClick={toggleMic}
+              >
                 {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-                </Button>
+              </Button>
             </div>
 
             {/* Master Volume Button */}
             <div className="relative group/vol flex flex-col items-center">
-                <div className="absolute -top-14 bg-zinc-800/95 border border-white/10 p-3 rounded-xl opacity-0 group-hover/vol:opacity-100 transition-all pointer-events-none group-hover/vol:pointer-events-auto flex items-center gap-3 shadow-2xl z-50">
+              <div className="absolute -top-14 bg-zinc-800/95 border border-white/10 p-3 rounded-xl opacity-0 group-hover/vol:opacity-100 transition-all pointer-events-none group-hover/vol:pointer-events-auto flex items-center gap-3 shadow-2xl z-50">
                 <Volume2 className="h-4 w-4 text-green-500" />
-                <input type="range" min="0" max="100" value={masterVolume} onChange={e => setMasterVolume(Number(e.target.value))} className="w-24 h-1.5 accent-green-500 bg-zinc-600 rounded-full appearance-none cursor-pointer" />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={masterVolume}
+                  onChange={e => setMasterVolume(Number(e.target.value))}
+                  className="w-24 h-1.5 accent-green-500 bg-zinc-600 rounded-full appearance-none cursor-pointer"
+                />
                 <span className="text-[10px] text-zinc-400 w-6 font-mono">{masterVolume}%</span>
-                </div>
-                <Button variant="secondary" size="icon" className="rounded-xl h-11 w-11 md:h-12 md:w-12 bg-zinc-800 hover:bg-zinc-700 text-white transition-all">
-                    <Volume2 className="h-5 w-5" />
-                </Button>
+              </div>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-xl h-11 w-11 md:h-12 md:w-12 bg-zinc-800 hover:bg-zinc-700 text-white transition-all"
+              >
+                <Volume2 className="h-5 w-5" />
+              </Button>
             </div>
           </div>
 
-          <Button variant={cameraOn ? 'secondary' : 'destructive'} size="icon" className={cn('rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all', cameraOn ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-500')} onClick={toggleCamera}>
+          <Button
+            variant={cameraOn ? 'secondary' : 'destructive'}
+            size="icon"
+            className={cn(
+              'rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all',
+              cameraOn ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-500'
+            )}
+            onClick={toggleCamera}
+          >
             {cameraOn ? <VideoIcon className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
           </Button>
 
-          <Button variant={screenSharing ? 'default' : 'secondary'} size="icon" className={cn('rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all', screenSharing ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-white')} onClick={toggleScreenShare}>
+          <Button
+            variant={screenSharing ? 'default' : 'secondary'}
+            size="icon"
+            className={cn(
+              'rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all',
+              screenSharing ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+            )}
+            onClick={toggleScreenShare}
+          >
             {screenSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
           </Button>
 
-          <Button variant={showChat ? 'default' : 'secondary'} size="icon" className={cn('rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all', showChat ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-white')} onClick={() => setShowChat(!showChat)}>
+          <Button
+            variant={showChat ? 'default' : 'secondary'}
+            size="icon"
+            className={cn(
+              'rounded-xl h-11 w-11 md:h-12 md:w-12 transition-all',
+              showChat ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+            )}
+            onClick={() => setShowChat(!showChat)}
+          >
             <MessageSquare className="h-5 w-5" />
           </Button>
 
           {workspaceId && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-xl h-11 w-11 md:h-12 md:w-12 bg-zinc-800 hover:bg-zinc-700 text-white transition-all">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-xl h-11 w-11 md:h-12 md:w-12 bg-zinc-800 hover:bg-zinc-700 text-white transition-all"
+                >
                   <UserPlus className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-zinc-800 text-white">
-                <div className="p-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 mb-1">Invite to call</div>
+                <div className="p-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 mb-1">
+                  Invite to call
+                </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {workspaceMembers.filter((m: any) => m.userId !== session?.user?.id).map((member: any) => (
-                      <DropdownMenuItem key={member.userId} className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800" onClick={() => inviteMember(member.userId)}>
-                        <Avatar className="h-7 w-7"><AvatarImage src={member.user.avatar || member.user.image} /><AvatarFallback className="text-[10px] bg-zinc-700 font-bold">{member.user.name.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                  {workspaceMembers
+                    .filter((m: any) => m.userId !== session?.user?.id)
+                    .map((member: any) => (
+                      <DropdownMenuItem
+                        key={member.userId}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
+                        onClick={() => inviteMember(member.userId)}
+                      >
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={member.user.avatar || member.user.image} />
+                          <AvatarFallback className="text-[10px] bg-zinc-700 font-bold">
+                            {member.user.name.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         <span className="truncate font-medium">{member.user.name}</span>
                       </DropdownMenuItem>
-                  ))}
+                    ))}
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -607,24 +762,31 @@ export function VideoCallContent({
         <div className="w-px h-8 bg-white/10 mx-1 md:mx-2" />
 
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="destructive" size="icon" className="rounded-xl h-11 w-11 md:h-12 md:w-12 bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20">
-                    <Phone className="h-6 w-6 rotate-135" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="bg-zinc-900 border-zinc-800 text-white">
-                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => leaveCallLogic('leave')}>
-                    <Phone className="h-4 w-4 rotate-135 text-red-400" /> Leave Call
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="destructive"
+              size="icon"
+              className="rounded-xl h-11 w-11 md:h-12 md:w-12 bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20"
+            >
+              <Phone className="h-6 w-6 rotate-135" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="bg-zinc-900 border-zinc-800 text-white">
+            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => leaveCallLogic('leave')}>
+              <Phone className="h-4 w-4 rotate-135 text-red-400" /> Leave Call
+            </DropdownMenuItem>
+            {isHost && (
+              <>
+                <DropdownMenuSeparator className="bg-zinc-800" />
+                <DropdownMenuItem
+                  className="gap-2 cursor-pointer text-red-400 focus:text-red-400 font-bold"
+                  onClick={() => leaveCallLogic('endForAll')}
+                >
+                  <ShieldAlert className="h-4 w-4" /> End Call for Everyone
                 </DropdownMenuItem>
-                {isHost && (
-                    <>
-                        <DropdownMenuSeparator className="bg-zinc-800" />
-                        <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400 font-bold" onClick={() => leaveCallLogic('endForAll')}>
-                            <ShieldAlert className="h-4 w-4" /> End Call for Everyone
-                        </DropdownMenuItem>
-                    </>
-                )}
-            </DropdownMenuContent>
+              </>
+            )}
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </div>
