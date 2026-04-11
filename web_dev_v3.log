@@ -1,0 +1,62 @@
+
+> web@0.1.0 dev /app/apps/web
+> next dev --port 3001 --webpack
+
+▲ Next.js 16.2.1 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 574ms
+ ○ (pwa) PWA support is disabled.
+
+○ Compiling proxy ...
+◇ injected env (0) from ../../.env // tip: ⌁ auth for agents [www.vestauth.com]
+○ Compiling /login ...
+⨯ ReferenceError: window is not defined
+    at (ssr)/../../node_modules/.pnpm/agora-rtc-react@2.5.1_react@19.2.4/node_modules/agora-rtc-react/dist/agora-rtc-react.mjs (.next/dev/server/vendor-chunks/agora-rtc-react@2.5.1_react@19.2.4.js:20:1)
+    at eval (webpack-internal:///(ssr)/../../packages/ui/src/features/chat/video-call-content.tsx:9:74)
+    at (ssr)/../../packages/ui/src/features/chat/video-call-content.tsx (.next/dev/server/app/login/page.js:1167:1)
+    at eval (webpack-internal:///(ssr)/../../packages/ui/src/features/calls/call-container.tsx:8:82)
+    at (ssr)/../../packages/ui/src/features/calls/call-container.tsx (.next/dev/server/app/login/page.js:947:1)
+    at eval (webpack-internal:///(ssr)/../../packages/ui/src/index.ts:406:89)
+    at (ssr)/../../packages/ui/src/index.ts (.next/dev/server/app/login/page.js:1299:1)
+    at eval (webpack-internal:///(ssr)/./src/lib/providers.tsx:7:66)
+    at (ssr)/./src/lib/providers.tsx (.next/dev/server/app/login/page.js:1640:1) {
+  digest: '2308177738'
+}
+ GET /login 500 in 51s (next.js: 48s, proxy.ts: 10ms, application-code: 3.6s)
+◇ injected env (0) from ../../.env // tip: ⌁ auth for agents [www.vestauth.com]
+⨯ ReferenceError: window is not defined
+    at (ssr)/../../node_modules/.pnpm/agora-rtc-react@2.5.1_react@19.2.4/node_modules/agora-rtc-react/dist/agora-rtc-react.mjs (.next/dev/server/vendor-chunks/agora-rtc-react@2.5.1_react@19.2.4.js:20:1)
+    at eval (webpack-internal:///(ssr)/../../packages/ui/src/features/chat/video-call-content.tsx:9:74)
+    at (ssr)/../../packages/ui/src/features/chat/video-call-content.tsx (.next/dev/server/app/login/page.js:1167:1)
+    at eval (webpack-internal:///(ssr)/../../packages/ui/src/features/calls/call-container.tsx:8:82)
+    at (ssr)/../../packages/ui/src/features/calls/call-container.tsx (.next/dev/server/app/login/page.js:947:1)
+    at eval (webpack-internal:///(ssr)/../../packages/ui/src/index.ts:406:89)
+    at (ssr)/../../packages/ui/src/index.ts (.next/dev/server/app/login/page.js:1299:1)
+    at eval (webpack-internal:///(ssr)/./src/lib/providers.tsx:7:66)
+    at (ssr)/./src/lib/providers.tsx (.next/dev/server/app/login/page.js:1640:1) {
+  digest: '2308177738'
+}
+ GET /login 500 in 2.1s (next.js: 8ms, proxy.ts: 10ms, application-code: 2.1s)
+○ Compiling /api/auth/[...all] ...
+◇ injected env (0) from ../../.env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from ../../.env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from ../../.env // tip: ◈ secrets for agents [www.dotenvx.com]
+⚠ ./src/hooks/use-push-notifications.ts
+Attempted import error: 'useUpdateUserDeviceToken' is not exported from '@repo/api-client' (imported as 'useUpdateUserDeviceToken').
+
+Import trace for requested module:
+./src/hooks/use-push-notifications.ts
+./src/lib/providers.tsx
+⚠ ./src/hooks/use-push-notifications.ts
+Attempted import error: 'useUpdateUserDeviceToken' is not exported from '@repo/api-client' (imported as 'useUpdateUserDeviceToken').
+
+Import trace for requested module:
+./src/hooks/use-push-notifications.ts
+./src/lib/providers.tsx
+⚠ ./src/hooks/use-push-notifications.ts
+Attempted import error: 'useUpdateUserDeviceToken' is not exported from '@repo/api-client' (imported as 'useUpdateUserDeviceToken').
+
+Import trace for requested module:
+./src/hooks/use-push-notifications.ts
+./src/lib/providers.tsx

@@ -19,6 +19,15 @@ export function useNotifications(unreadOnly = false) {
   })
 }
 
+export function useUpdateUserDeviceToken() {
+  return useMutation({
+    mutationFn: async (data: { token: string; platform: string; deviceInfo?: any }) => {
+      const response = await apiClient.post("/device-tokens", data)
+      return response.data
+    },
+  })
+}
+
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient()
   return useMutation({
