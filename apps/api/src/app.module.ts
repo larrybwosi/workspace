@@ -26,6 +26,7 @@ import { MessagesModule } from './messages/messages.module';
 import { TasksModule } from './common/tasks/tasks.module';
 import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
 import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
     WorkspacesModule,
     MessagesModule,
     TasksModule,
+    AuthModule,
     DeviceAuthModule,
     ScheduledNotificationsModule,
     AssetsModule,
