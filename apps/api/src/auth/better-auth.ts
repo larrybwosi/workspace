@@ -2,6 +2,9 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@repo/database';
 import { admin, jwt, organization } from 'better-auth/plugins';
+import { validateEnv } from '@repo/shared';
+
+const env = validateEnv();
 
 const getBaseURL = () => {
   const url = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -10,7 +13,7 @@ const getBaseURL = () => {
   }
   return url.replace(/\/$/, '') + '/api/auth';
 };
-
+const allowedOrigins = env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
 export const auth: any = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
@@ -19,6 +22,7 @@ export const auth: any = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  trustedOrigins: allowedOrigins,
   user: {
     additionalFields: {
       role: {
@@ -27,9 +31,5 @@ export const auth: any = betterAuth({
       },
     },
   },
-  plugins: [
-    jwt(),
-    organization(),
-    admin() as any,
-  ],
+  plugins: [jwt(), organization(), admin() as any],
 }) as any;

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { useParams, Navigate, Link } from 'react-router';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Sidebar } from '@/components/sidebar';
 import { SyntaxHighlighter, Button, Input, cn } from '@repo/ui';
-import { ChevronRight, Github as GithubIcon, MessageCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ChevronRight, MessageCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface DocPageProps {
   type: 'user-guide' | 'api-reference';
@@ -54,7 +54,10 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
   const headings = content.match(/^##\s+.+$/gm) || [];
   const toc = headings.map(h => {
     const title = h.replace(/^##\s+/, '');
-    const id = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+    const id = title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-');
     return { title, id };
   });
 
@@ -67,9 +70,14 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
         <div className="mx-auto w-full min-w-0">
           {/* Breadcrumbs */}
           <nav className="flex items-center space-x-1 text-sm text-muted-foreground mb-4">
-            <Link to="/" className="hover:text-foreground transition-colors">Docs</Link>
+            <Link to="/" className="hover:text-foreground transition-colors">
+              Docs
+            </Link>
             <ChevronRight className="h-4 w-4" />
-            <Link to={type === 'user-guide' ? '/user-guide' : '/api-reference'} className="hover:text-foreground transition-colors">
+            <Link
+              to={type === 'user-guide' ? '/user-guide' : '/api-reference'}
+              className="hover:text-foreground transition-colors"
+            >
               {type === 'user-guide' ? 'User Guide' : 'API Reference'}
             </Link>
             <ChevronRight className="h-4 w-4" />
@@ -81,25 +89,33 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
               remarkPlugins={[remarkGfm]}
               components={{
                 h2: ({ ...props }) => {
-                  const id = props.children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-                  return <h2 id={id} className="group flex items-center" {...props}>
-                    {props.children}
-                    <a href={`#${id}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary">#</a>
-                  </h2>
+                  const id = props.children
+                    ?.toString()
+                    .toLowerCase()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-');
+                  return (
+                    <h2 id={id} className="group flex items-center" {...props}>
+                      {props.children}
+                      <a
+                        href={`#${id}`}
+                        className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary"
+                      >
+                        #
+                      </a>
+                    </h2>
+                  );
                 },
                 code: ({ node, inline, className, children, ...props }: any) => {
                   const match = /language-(\w+)/.exec(className || '');
                   return !inline && match ? (
-                    <SyntaxHighlighter
-                      code={String(children).replace(/\n$/, '')}
-                      language={match[1]}
-                    />
+                    <SyntaxHighlighter code={String(children).replace(/\n$/, '')} language={match[1]} />
                   ) : (
-                    <code className={cn("bg-muted px-1.5 py-0.5 rounded-sm font-mono text-sm", className)} {...props}>
+                    <code className={cn('bg-muted px-1.5 py-0.5 rounded-sm font-mono text-sm', className)} {...props}>
                       {children}
                     </code>
                   );
-                }
+                },
               }}
             >
               {content}
@@ -120,10 +136,20 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
             </div>
 
             <div className="flex flex-col items-start sm:items-end gap-2 text-sm text-muted-foreground">
-              <a href={githubUrl} target="_blank" rel="noreferrer" className="flex items-center hover:text-foreground transition-colors">
-                <GithubIcon className="mr-2 h-4 w-4" /> Edit this page on GitHub
+              <a
+                href={githubUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center hover:text-foreground transition-colors"
+              >
+                Edit this page on GitHub
               </a>
-              <a href="https://discord.gg/skyrmechat" target="_blank" rel="noreferrer" className="flex items-center hover:text-foreground transition-colors">
+              <a
+                href="https://discord.gg/skyrmechat"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center hover:text-foreground transition-colors"
+              >
                 <MessageCircle className="mr-2 h-4 w-4" /> Join our Discord community
               </a>
             </div>
@@ -133,7 +159,7 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
           <div className="sticky top-20 -mt-10 pt-4 h-[calc(100vh-5rem)] overflow-y-auto scrollbar-hide">
             <h4 className="font-bold text-xs uppercase tracking-widest text-foreground/70 mb-4 px-2">On This Page</h4>
             <ul className="space-y-1 border-l border-border/40 ml-2">
-              {toc.map((item) => (
+              {toc.map(item => (
                 <li key={item.id}>
                   <a
                     href={`#${item.id}`}
@@ -157,8 +183,12 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
               <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
                 <h5 className="text-xs font-bold text-primary mb-1">Need help?</h5>
-                <p className="text-[11px] text-muted-foreground mb-3">Our engineers are available to help you integrate Skyrme Chat.</p>
-                <Button variant="link" size="xs" className="p-0 h-auto text-primary font-bold">Contact Support &rarr;</Button>
+                <p className="text-[11px] text-muted-foreground mb-3">
+                  Our engineers are available to help you integrate Skyrme Chat.
+                </p>
+                <Button variant="link" size="xs" className="p-0 h-auto text-primary font-bold">
+                  Contact Support &rarr;
+                </Button>
               </div>
             </div>
           </div>

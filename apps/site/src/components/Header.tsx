@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Button } from '@repo/ui/components/button';
 import { Layout } from 'lucide-react';
 
@@ -12,10 +12,18 @@ export function Header() {
             <span className="text-xl font-bold tracking-tight">Workspace</span>
           </Link>
           <nav className="ml-8 hidden md:flex gap-6">
-            <Link to="/" className="text-sm font-medium transition-colors hover:text-blue-600">Product</Link>
-            <Link to="/pricing" className="text-sm font-medium transition-colors hover:text-blue-600">Pricing</Link>
-            <Link to="/developer" className="text-sm font-medium transition-colors hover:text-blue-600">Developers</Link>
-            <Link to="/contact" className="text-sm font-medium transition-colors hover:text-blue-600">Contact</Link>
+            <Link to="/" className="text-sm font-medium transition-colors hover:text-blue-600">
+              Product
+            </Link>
+            <Link to="/pricing" className="text-sm font-medium transition-colors hover:text-blue-600">
+              Pricing
+            </Link>
+            <Link to="/developer" className="text-sm font-medium transition-colors hover:text-blue-600">
+              Developers
+            </Link>
+            <Link to="/contact" className="text-sm font-medium transition-colors hover:text-blue-600">
+              Contact
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">

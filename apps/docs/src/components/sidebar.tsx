@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 import { cn } from '@repo/ui';
 
 export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
@@ -22,12 +22,15 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/api-reference/recipe-sync-members', label: 'Syncing members', category: 'Recipes' },
       ];
 
-  const groupedLinks = links.reduce((acc, link) => {
-    const category = (link as any).category || 'General';
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(link as any);
-    return acc;
-  }, {} as Record<string, any[]>);
+  const groupedLinks = links.reduce(
+    (acc, link) => {
+      const category = (link as any).category || 'General';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(link as any);
+      return acc;
+    },
+    {} as Record<string, any[]>
+  );
 
   return (
     <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
@@ -44,17 +47,17 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
                 </h5>
               )}
               <div className="flex flex-col gap-0.5">
-                {items.map((link) => {
+                {items.map(link => {
                   const isActive = location.pathname === link.href;
                   return (
                     <Link
                       key={link.href}
                       to={link.href}
                       className={cn(
-                        "group flex w-full items-center rounded-md border border-transparent px-2 py-1.5 text-sm transition-all duration-200",
+                        'group flex w-full items-center rounded-md border border-transparent px-2 py-1.5 text-sm transition-all duration-200',
                         isActive
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
                       {link.label}

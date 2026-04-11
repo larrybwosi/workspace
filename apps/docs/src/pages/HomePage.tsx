@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Button } from '@repo/ui';
 import { ArrowRight, BookOpen, Code2, Rocket, Shield, Zap } from 'lucide-react';
 
@@ -8,7 +8,13 @@ export default function HomePage() {
       {/* Hero Section */}
       <div className="relative isolate">
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-          <div className="relative left-[calc(50%-11rem)] aspect-1155/678 w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-linear-to-tr from-primary to-primary/20 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }} />
+          <div
+            className="relative left-[calc(50%-11rem)] aspect-1155/678 w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-linear-to-tr from-primary to-primary/20 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+            style={{
+              clipPath:
+                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
+            }}
+          />
         </div>
 
         <div className="container py-24 sm:py-32">
@@ -17,7 +23,8 @@ export default function HomePage() {
               Build the future of communication
             </h1>
             <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Everything you need to integrate Skyrme Chat into your workflow or build powerful bots using our developer-first V2 API.
+              Everything you need to integrate Skyrme Chat into your workflow or build powerful bots using our
+              developer-first V2 API.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button size="lg" asChild>
@@ -36,7 +43,10 @@ export default function HomePage() {
       {/* Feature Grid */}
       <div className="container pb-24 sm:pb-32">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Link to="/user-guide" className="group relative rounded-2xl border border-border/40 bg-card p-8 transition-all hover:bg-muted/50 hover:shadow-xl hover:-translate-y-1">
+          <Link
+            to="/user-guide"
+            className="group relative rounded-2xl border border-border/40 bg-card p-8 transition-all hover:bg-muted/50 hover:shadow-xl hover:-translate-y-1"
+          >
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
               <BookOpen className="h-6 w-6" />
             </div>
@@ -49,7 +59,10 @@ export default function HomePage() {
             </div>
           </Link>
 
-          <Link to="/api-reference" className="group relative rounded-2xl border border-border/40 bg-card p-8 transition-all hover:bg-muted/50 hover:shadow-xl hover:-translate-y-1">
+          <Link
+            to="/api-reference"
+            className="group relative rounded-2xl border border-border/40 bg-card p-8 transition-all hover:bg-muted/50 hover:shadow-xl hover:-translate-y-1"
+          >
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
               <Code2 className="h-6 w-6" />
             </div>
@@ -70,21 +83,27 @@ export default function HomePage() {
               <Rocket className="h-5 w-5" />
             </div>
             <h3 className="font-bold">Fast Integration</h3>
-            <p className="text-sm text-muted-foreground">Get up and running in minutes with our lightweight client libraries and clean API design.</p>
+            <p className="text-sm text-muted-foreground">
+              Get up and running in minutes with our lightweight client libraries and clean API design.
+            </p>
           </div>
           <div className="space-y-4 text-center sm:text-left">
             <div className="mx-auto sm:mx-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Shield className="h-5 w-5" />
             </div>
             <h3 className="font-bold">Enterprise Security</h3>
-            <p className="text-sm text-muted-foreground">Built-in support for OAuth2, granular scopes, and webhook signature verification.</p>
+            <p className="text-sm text-muted-foreground">
+              Built-in support for OAuth2, granular scopes, and webhook signature verification.
+            </p>
           </div>
           <div className="space-y-4 text-center sm:text-left">
             <div className="mx-auto sm:mx-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Zap className="h-5 w-5" />
             </div>
             <h3 className="font-bold">Real-time Ready</h3>
-            <p className="text-sm text-muted-foreground">Leverage our powerful Ably-powered WebSocket layer for instant updates and notifications.</p>
+            <p className="text-sm text-muted-foreground">
+              Leverage our powerful Ably-powered WebSocket layer for instant updates and notifications.
+            </p>
           </div>
         </div>
       </div>
