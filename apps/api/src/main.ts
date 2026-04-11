@@ -7,9 +7,21 @@ import { validateEnv } from '@repo/shared';
 
 async function bootstrap() {
   const env = validateEnv();
-  const app = await NestFactory.create(AppModule);
-  app.use(json({ limit: '30mb' }));
-  app.use(urlencoded({ limit: '30mb', extended: true }));
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
+  });
+  app.use((req, res, next) => {
+    if (req.url.startsWith('/api/auth')) {
+      return next();
+    }
+    json({ limit: '30mb' })(req, res, next);
+  });
+  app.use((req, res, next) => {
+    if (req.url.startsWith('/api/auth')) {
+      return next();
+    }
+    urlencoded({ limit: '30mb', extended: true })(req, res, next);
+  });
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
