@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@repo/ui';
 
 export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
   const isUserGuide = type === 'user-guide';
+  const location = useLocation();
 
   const links = isUserGuide
     ? [
@@ -23,30 +25,42 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
   const groupedLinks = links.reduce((acc, link) => {
     const category = (link as any).category || 'General';
     if (!acc[category]) acc[category] = [];
-    acc[category].push(link);
+    acc[category].push(link as any);
     return acc;
-  }, {} as Record<string, typeof links>);
+  }, {} as Record<string, any[]>);
 
   return (
     <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
-      <div className="h-full py-6 pr-6 lg:py-8 overflow-y-auto">
-        <h4 className="mb-1 rounded-md px-2 py-1 text-sm font-bold uppercase tracking-wider text-foreground">
+      <div className="h-full py-6 pr-6 lg:py-8 overflow-y-auto scrollbar-hide">
+        <h4 className="mb-2 px-2 text-xs font-semibold uppercase tracking-widest text-foreground/70">
           {isUserGuide ? 'User Guide' : 'API Reference'}
         </h4>
-        <div className="grid grid-flow-row auto-rows-max text-sm gap-4 mt-4">
+        <div className="flex flex-col gap-6 mt-4">
           {Object.entries(groupedLinks).map(([category, items]) => (
-            <div key={category}>
-              {!isUserGuide && <h5 className="mb-2 px-2 text-xs font-semibold text-muted-foreground uppercase">{category}</h5>}
-              <div className="grid grid-flow-row auto-rows-max gap-1">
-                {items.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className="group flex w-full items-center rounded-md border border-transparent px-2 py-1.5 hover:bg-accent hover:text-accent-foreground transition-colors text-muted-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+            <div key={category} className="space-y-1">
+              {!isUserGuide && (
+                <h5 className="mb-2 px-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  {category}
+                </h5>
+              )}
+              <div className="flex flex-col gap-0.5">
+                {items.map((link) => {
+                  const isActive = location.pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      className={cn(
+                        "group flex w-full items-center rounded-md border border-transparent px-2 py-1.5 text-sm transition-all duration-200",
+                        isActive
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}

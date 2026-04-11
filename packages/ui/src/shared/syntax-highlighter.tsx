@@ -3,9 +3,10 @@
 import * as React from "react";
 import { Check, Copy, FileCode, WrapText } from "lucide-react";
 import { Prism as SyntaxHighlighterPrism } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneDark, prism } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Button } from "../components/button";
 import { cn } from "../lib/utils";
+import { useTheme } from "../layout/theme-provider";
 
 interface SyntaxHighlighterProps {
   code: string;
@@ -24,6 +25,7 @@ export function SyntaxHighlighter({
 }: SyntaxHighlighterProps) {
   const [copied, setCopied] = React.useState(false);
   const [isWrapped, setIsWrapped] = React.useState(false);
+  const { theme } = useTheme();
 
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(code);
@@ -37,12 +39,12 @@ export function SyntaxHighlighter({
   return (
     <div
       className={cn(
-        "group relative my-4 overflow-hidden rounded-lg border border-border bg-[#1e1e1e]",
+        "group relative my-4 overflow-hidden rounded-lg border border-border bg-muted/30 dark:bg-[#0d1117]",
         className
       )}
     >
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-[#2d2d2d] px-4 py-2 text-xs text-zinc-400">
+      <div className="flex items-center justify-between border-b border-border bg-muted/50 dark:bg-[#161b22] px-4 py-2 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
           <FileCode className="h-4 w-4" />
           <span className="font-mono">
@@ -86,7 +88,7 @@ export function SyntaxHighlighter({
       <div className="relative">
         <SyntaxHighlighterPrism
           language={normalizedLang}
-          style={vscDarkPlus}
+          style={theme === 'dark' ? oneDark : prism}
           showLineNumbers={showLineNumbers}
           wrapLines={isWrapped}
           wrapLongLines={isWrapped}
