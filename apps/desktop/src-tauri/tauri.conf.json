@@ -13,7 +13,8 @@
       {
         "title": "Workspace",
         "width": 1200,
-        "height": 800
+        "height": 800,
+        "decorations": false
       }
     ],
     "security": {
@@ -29,7 +30,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "Workspace",
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/your-username/your-repo/releases/latest/download/latest.json"
+      ],
+      "pubkey": ""
+    }
   },
   "plugins": {
     "shell": {
@@ -37,7 +46,22 @@
     },
     "notification": {},
     "deep-link": {
-      "schemes": ["workspace"]
-    }
+      "schemes": [
+        "workspace"
+      ]
+    },
+    "sql": {
+      "db": "sqlite:workspace.db"
+    },
+    "updater": {},
+    "fs": {
+      "scope": [
+        "$APPDATA/**",
+        "$DOWNLOAD/**"
+      ]
+    },
+    "os": {},
+    "store": {},
+    "process": {}
   }
 }
