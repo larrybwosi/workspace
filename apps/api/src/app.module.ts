@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { validateEnv } from '@repo/shared';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
@@ -24,11 +25,13 @@ import { AssetsModule } from './assets/assets.module';
 import { MessagesModule } from './messages/messages.module';
 import { TasksModule } from './common/tasks/tasks.module';
 import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
+import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: (config) => validateEnv(config),
     }),
     ScheduleModule.forRoot(),
     RedisModule,
@@ -44,12 +47,10 @@ import { ScheduledNotificationsModule } from './scheduled-notifications/schedule
     FriendsModule,
     CommonModule,
     WorkspacesModule,
-    ChannelsModule,
     MessagesModule,
     TasksModule,
-    CallsModule,
+    DeviceAuthModule,
     ScheduledNotificationsModule,
-    AdminModule,
     AssetsModule,
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],

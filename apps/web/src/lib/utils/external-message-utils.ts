@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@repo/shared"
+import { getAblyRest, AblyChannels, AblyEvents } from "@repo/shared/server"
 import crypto from "crypto"
 
 export interface ExternalMessage {

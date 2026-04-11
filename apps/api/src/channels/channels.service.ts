@@ -7,7 +7,7 @@ import {
   extractUserIds,
 } from '../common/utils/mention-utils';
 import { NotificationsService } from '../notifications/notifications.service';
-import { AblyChannels, AblyEvents, getAblyRest, isUserEligibleForAsset, logAssetUsage } from '@repo/shared';
+import { AblyChannels, AblyEvents, getAblyRest, isUserEligibleForAsset, logAssetUsage } from '@repo/shared/server';
 
 @Injectable()
 export class ChannelsService {
@@ -112,8 +112,19 @@ export class ChannelsService {
     const mentionsAll = hasSpecialMention(content, 'all');
     const mentionsHere = hasSpecialMention(content, 'here');
 
-    const users = await prisma.user.findMany();
-    const mentionedUserIds = extractUserIds(userMentions, users);
+    // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
+    const mentionedUsers = userMentions.length > 0
+      ? await prisma.user.findMany({
+          where: {
+            name: {
+              in: userMentions,
+              mode: 'insensitive',
+            },
+          },
+          select: { id: true, name: true },
+        })
+      : [];
+    const mentionedUserIds = extractUserIds(userMentions, mentionedUsers);
 
     // Eligibility check for stickers
     if (stickerId) {

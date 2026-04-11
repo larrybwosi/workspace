@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma, User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
@@ -89,6 +89,13 @@ export const INTEGRATION_METADATA = {
     events: ["*"],
     scopes: [],
   },
+  huly: {
+    name: "Huly",
+    icon: "huly",
+    color: "#00A3FF",
+    events: ["task.created", "task.updated", "issue.created", "issue.updated"],
+    scopes: ["api"],
+  },
 };
 
 @Injectable()
@@ -119,6 +126,84 @@ export class IntegrationsService {
     await this.systemMessagesService.createSystemMessage(message, {
       channelId: channel.id,
       metadata: { source: 'plane', event, data },
+      broadcast: true,
+    });
+
+    return { success: true };
+  }
+
+  async createHulyTask(workspaceId: string, data: { title: string; description?: string }) {
+    const integration = await prisma.workspaceIntegration.findFirst({
+      where: {
+        workspaceId,
+        service: 'huly',
+        active: true,
+      },
+    });
+
+    if (!integration) throw new NotFoundException('Huly integration not found or inactive');
+
+    const config = integration.config as Record<string, any>;
+    if (!config.hulyUrl || !config.apiKey) {
+      throw new BadRequestException('Huly integration is not fully configured');
+    }
+
+    const response = await fetch(`${config.hulyUrl}/api/v1/projects/${config.projectId || 'default'}/tasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        title: data.title,
+        description: data.description,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Failed to create Huly task: ${errorData.message || response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async handleHulyWebhook(id: string, body: any) {
+    const integration = await prisma.workspaceIntegration.findUnique({
+      where: { id },
+    });
+
+    if (!integration || integration.service !== 'huly') {
+      throw new NotFoundException('Integration not found');
+    }
+
+    const config = integration.config as Record<string, any>;
+    const { event, data } = body;
+
+    const channelId = config.channelId;
+    if (!channelId) throw new BadRequestException('No channel configured for this integration');
+
+    let message = '';
+    switch (event) {
+      case 'task.created':
+        message = `✅ Task created in Huly: **${data.title}**`;
+        break;
+      case 'task.updated':
+        message = `🔄 Task updated in Huly: **${data.title}** (Status: ${data.status})`;
+        break;
+      case 'issue.created':
+        message = `🐛 Issue created in Huly: **${data.title}**`;
+        break;
+      case 'issue.updated':
+        message = `🔄 Issue updated in Huly: **${data.title}** (Status: ${data.status})`;
+        break;
+      default:
+        message = `🔗 Huly integration update: ${event}`;
+    }
+
+    await this.systemMessagesService.createSystemMessage(message, {
+      channelId: channelId,
+      metadata: { source: 'huly', event, data },
       broadcast: true,
     });
 

@@ -1,5 +1,8 @@
 @import 'tailwindcss';
-@source "../../../apps/**/*.{ts,tsx}";
+@source "../../../apps/web/src/**/*.{ts,tsx}";
+@source "../../../apps/admin/src/**/*.{ts,tsx}";
+@source "../../../apps/docs/src/**/*.{ts,tsx}";
+@source "../../../apps/site/src/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
 
 @import 'tw-animate-css';
@@ -163,5 +166,35 @@
 
   .dark ::-webkit-scrollbar-thumb:hover {
     background: oklch(0.45 0 0);
+  }
+
+  /* PWA & Mobile Optimizations */
+  html,
+  body {
+    overscroll-behavior-y: none; /* Disable pull-to-refresh pull-down bounce on mobile */
+    -webkit-tap-highlight-color: transparent; /* Disable tap highlight on iOS */
+    touch-action: manipulation; /* Faster taps by disabling double-tap zoom */
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Make sure inputs don't zoom on iOS */
+  @media screen and (max-width: 768px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
   }
 }

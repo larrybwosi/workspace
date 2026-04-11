@@ -16,7 +16,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared';
+import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
 
 @Controller('workspaces/:slug/channels/:channelId/messages')
 @UseGuards(AuthGuard)

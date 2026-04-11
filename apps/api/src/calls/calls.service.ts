@@ -8,13 +8,13 @@ import {
 import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import {
-  agoraConfig,
+  agoraServerConfig as agoraConfig,
   publishToAbly,
   AblyChannels,
   AblyEvents,
   isUserEligibleForAsset,
   logAssetUsage,
-} from '@repo/shared';
+} from '@repo/shared/server';
 
 @Injectable()
 export class CallsService {

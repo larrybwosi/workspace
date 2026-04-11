@@ -25,7 +25,9 @@
       "@repo/ui/hooks/*": ["../../packages/ui/src/hooks/*"],
       "@repo/ui/*": ["../../packages/ui/src/*"],
       "@repo/api-client": ["../../packages/api-client/src/index.ts"],
-      "@repo/api-client/*": ["../../packages/api-client/src/*"]
+      "@repo/api-client/*": ["../../packages/api-client/src/*"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
+      "@repo/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src"],

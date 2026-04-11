@@ -1,11 +1,11 @@
-import { AdminProviders } from "@repo/ui";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AdminOverviewPage } from "./pages/overview";
-import { AdminAssetsPage } from "./pages/assets";
-import { LoginPage } from "./pages/login";
-import { useSession } from "./lib/auth/auth-client";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { AdminProviders } from '@repo/ui';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AdminOverviewPage } from './pages/overview';
+import { AdminAssetsPage } from './pages/assets';
+import { LoginPage } from './pages/login';
+import { useSession } from './lib/auth';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = useSession();
@@ -23,8 +23,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if ((session.user as any).role !== "admin") {
-    toast.error("Unauthorized: Admin access required.");
+  if ((session.user as any).role !== 'admin') {
+    toast.error('Unauthorized: Admin access required.');
     return <Navigate to="/login" replace />;
   }
 

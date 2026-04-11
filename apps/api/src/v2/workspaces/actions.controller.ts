@@ -11,6 +11,7 @@ import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
+import { IntegrationsService } from '../../integrations/integrations.service';
 
 @Controller('v2/messages/:messageId/actions/:actionId')
 @UseGuards(ApiV2Guard)
@@ -18,6 +19,7 @@ export class V2MessageActionsController {
   constructor(
     private readonly auditService: V2AuditService,
     private readonly webhooksService: V2WebhooksService,
+    private readonly integrationsService: IntegrationsService,
   ) {}
 
   @Post()
@@ -60,6 +62,18 @@ export class V2MessageActionsController {
       action.id,
       { messageId, actionId },
     );
+
+    // Handle specific actions
+    if (actionId === 'create-huly-task') {
+      try {
+        await this.integrationsService.createHulyTask(context.workspaceId, {
+          title: `Task from message: ${message.content.slice(0, 50)}...`,
+          description: `Message: ${message.content}\n\nLink: /workspace/${context.workspaceId}/channels/${message.channelId}/messages/${message.id}`,
+        });
+      } catch (err) {
+        console.error('Failed to create Huly task:', err);
+      }
+    }
 
     // Dispatch webhook
     await this.webhooksService.dispatch(

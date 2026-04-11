@@ -40,7 +40,7 @@ export * from './components/scroll-area';
 export * from './components/select';
 export * from './components/separator';
 export * from './components/sheet';
-export * from './components/sidebar';
+export * from './components/sidebar'
 export * from './components/skeleton';
 export * from './components/slider';
 export * from './components/sonner';
@@ -73,12 +73,14 @@ export * from './layout/theme-toggle';
 export * from './layout/welcome-state';
 export * from './layout/dynamic-header';
 export * from './layout/theme-provider';
-export * from './layout/sidebar';
+export { Sidebar } from './layout/sidebar'
 export * from './layout/top-bar';
 export * from './layout/search-view';
 export * from './layout/workspace-sidebar';
+export * from './layout/mobile-nav';
 
 export * from './lib/contexts/presence-context';
 export * from './lib/providers';
 export * from './lib/utils';
 export * from './lib/types';
+export * from './lib/haptics';

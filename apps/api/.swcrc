@@ -1,0 +1,27 @@
+{
+  "module": {
+    "type": "es6"
+  },
+  "jsc": {
+    "target": "esnext",
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true
+    },
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
+      "@repo/shared/*": ["../../packages/shared/src/*"],
+      "@repo/types": ["../../packages/types/src/index.ts"],
+      "@repo/types/*": ["../../packages/types/src/*"],
+      "@repo/database": ["../../packages/database/index.ts"],
+      "@repo/database/*": ["../../packages/database/*"]
+    }
+  }
+}

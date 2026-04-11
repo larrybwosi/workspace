@@ -1,18 +1,20 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
+    "target": "esnext",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
+    "isolatedModules": false,
+    "verbatimModuleSyntax": false,
     "noEmit": false,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -23,7 +25,13 @@
     "types": ["node", "jest"],
     "esModuleInterop": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
+      "@repo/shared/*": ["../../packages/shared/src/*"],
+      "@repo/types": ["../../packages/types/src/index.ts"],
+      "@repo/types/*": ["../../packages/types/src/*"],
+      "@repo/database": ["../../packages/database/index.ts"],
+      "@repo/database/*": ["../../packages/database/*"]
     }
   },
   "exclude": ["node_modules", "dist", "eslint.config.mjs"]
