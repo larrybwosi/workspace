@@ -14,11 +14,12 @@ const createWebhookSchema = z.object({
 const createIntegrationSchema = z.object({
   service: z.enum([
     "slack", "github", "gitlab", "jira", "linear", "notion",
-    "figma", "discord", "teams", "zapier", "make", "custom",
+    "figma", "discord", "teams", "zapier", "make", "custom", "huly",
   ]),
   name: z.string().min(1).max(100),
   config: z.object({
     webhookUrl: z.string().url().optional(),
+    hulyUrl: z.string().url().optional(),
     apiKey: z.string().optional(),
     accessToken: z.string().optional(),
     refreshToken: z.string().optional(),
@@ -42,6 +43,11 @@ export class IntegrationsController {
   @Post('plane/webhook')
   async handlePlaneWebhook(@Body() body: any) {
     return this.integrationsService.handlePlaneWebhook(body);
+  }
+
+  @Post('huly/webhook/:id')
+  async handleHulyWebhook(@Param('id') id: string, @Body() body: any) {
+    return this.integrationsService.handleHulyWebhook(id, body);
   }
 
   @Get('stats')

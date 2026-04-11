@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "../../../hooks/use-toast"
 import { Switch } from "../../../components/switch"
+import { useWorkspaceChannels } from "@repo/api-client"
 
 interface ExternalIntegrationsProps {
   workspaceId: string
@@ -31,6 +32,9 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
     name: "",
     description: "",
     webhookUrl: "",
+    hulyUrl: "",
+    channelId: "",
+    projectId: "",
     apiKey: "",
     events: [] as string[],
   })
@@ -47,6 +51,8 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
 
   const integrations = data?.integrations || []
   const availableServices = data?.availableServices || []
+
+  const { data: channels } = useWorkspaceChannels(workspaceId)
 
   // Create integration mutation
   const createMutation = useMutation({
@@ -67,6 +73,9 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
         name: "",
         description: "",
         webhookUrl: "",
+        hulyUrl: "",
+        channelId: "",
+        projectId: "",
         apiKey: "",
         events: [],
       })
@@ -139,6 +148,9 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
       description: formData.description,
       config: {
         webhookUrl: formData.webhookUrl,
+        hulyUrl: formData.hulyUrl,
+        channelId: formData.channelId,
+        projectId: formData.projectId,
         apiKey: formData.apiKey,
         events: formData.events,
       },
@@ -303,7 +315,47 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
 
             {selectedService && (
               <>
-                {selectedService.id !== "custom" && (
+                {selectedService.id === "huly" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Huly URL (Self-hosted)</Label>
+                      <Input
+                        type="url"
+                        placeholder="https://huly.your-domain.com"
+                        value={formData.hulyUrl}
+                        onChange={(e) => setFormData({ ...formData, hulyUrl: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Target Channel (for Notifications)</Label>
+                      <Select
+                        value={formData.channelId}
+                        onValueChange={(value) => setFormData({ ...formData, channelId: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a channel" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {channels?.map((channel: any) => (
+                            <SelectItem key={channel.id} value={channel.id}>
+                              # {channel.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Default Project ID (Optional)</Label>
+                      <Input
+                        placeholder="e.g., default-project-id"
+                        value={formData.projectId}
+                        onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {selectedService.id !== "custom" && selectedService.id !== "huly" && (
                   <div className="space-y-2">
                     <Label>Webhook URL (Optional)</Label>
                     <Input
@@ -316,10 +368,10 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
                 )}
 
                 <div className="space-y-2">
-                  <Label>API Key / Access Token (Optional)</Label>
+                  <Label>{selectedService.id === "huly" ? "Huly API Token" : "API Key / Access Token (Optional)"}</Label>
                   <Input
                     type="password"
-                    placeholder="Enter your API key or token"
+                    placeholder={selectedService.id === "huly" ? "Enter your Huly API token" : "Enter your API key or token"}
                     value={formData.apiKey}
                     onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
                   />
@@ -401,6 +453,31 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
                 <Label>Service</Label>
                 <p className="text-sm">{selectedIntegration.metadata?.name || selectedIntegration.service}</p>
               </div>
+              {selectedIntegration?.service === 'huly' && !selectedIntegration?.newSecret && (
+                <div className="space-y-2">
+                  <Label>Webhook URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/integrations/huly/webhook/${selectedIntegration.id}`}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/api/integrations/huly/webhook/${selectedIntegration.id}`)
+                        toast({ title: "Copied", description: "Webhook URL copied to clipboard" })
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Paste this URL into your Huly project webhook settings.
+                  </p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Status</Label>
                 <div className="flex items-center gap-2">
