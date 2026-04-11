@@ -14,6 +14,7 @@ import { useCurrentUser } from '@repo/api-client';
 import { useWorkspace, useWorkspaceChannels, useWorkspaceMembers } from '@repo/api-client';
 import TextareaAutosize from 'react-textarea-autosize';
 import { cn } from '../../lib/utils';
+import { haptic } from '../../lib/haptics';
 
 interface MessageComposerProps {
   placeholder?: string;
@@ -115,6 +116,7 @@ export function MessageComposer({
       }));
 
       onSend?.(message, cleanedAttachments as any);
+      haptic.light();
       setMessage('');
       setAttachments([]);
       setMentionType(null);

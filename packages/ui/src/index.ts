@@ -77,8 +77,10 @@ export { Sidebar } from './layout/sidebar'
 export * from './layout/top-bar';
 export * from './layout/search-view';
 export * from './layout/workspace-sidebar';
+export * from './layout/mobile-nav';
 
 export * from './lib/contexts/presence-context';
 export * from './lib/providers';
 export * from './lib/utils';
 export * from './lib/types';
+export * from './lib/haptics';
