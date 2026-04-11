@@ -33,9 +33,7 @@ export const serverEnvSchema = baseEnvSchema.extend({
   SANITY_WRITE_TOKEN: z.string().optional(),
   MINIO_ENDPOINT: z.string().default('localhost'),
   MINIO_PORT: z.coerce.number().default(9000),
-  MINIO_USE_SSL: z
-    .preprocess((v) => v === 'true' || v === true, z.boolean())
-    .default(false),
+  MINIO_USE_SSL: z.preprocess(v => v === 'true' || v === true, z.boolean()).default(false),
   MINIO_ACCESS_KEY: z.string().optional(),
   MINIO_SECRET_KEY: z.string().optional(),
   MINIO_BUCKET: z.string().default('uploads'),
@@ -47,7 +45,7 @@ export const serverEnvSchema = baseEnvSchema.extend({
   DESKTOP_NOTIFICATION_ENDPOINT: z.string().url().default('http://localhost:3005'),
   BOT_TOKEN_SECRET: z.string().default('default_secret'),
   WEBHOOK_SECRET: z.string().default('default_secret'),
-  CORS_ORIGIN: z.string().default('http://localhost:3001'),
+  ALLOWED_ORIGINS: z.string().default('http://localhost:3001'),
 });
 
 /**
@@ -63,7 +61,11 @@ export function validateEnv(envInput?: Record<string, any>) {
     sourceEnv = envInput;
   } else if (typeof process !== 'undefined' && process.env && Object.keys(process.env).length > 0) {
     sourceEnv = process.env;
-  } else if (typeof (globalThis as any).import !== 'undefined' && (globalThis as any).import.meta && (globalThis as any).import.meta.env) {
+  } else if (
+    typeof (globalThis as any).import !== 'undefined' &&
+    (globalThis as any).import.meta &&
+    (globalThis as any).import.meta.env
+  ) {
     sourceEnv = (globalThis as any).import.meta.env;
   } else {
     sourceEnv = {};

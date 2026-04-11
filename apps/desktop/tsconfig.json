@@ -21,8 +21,7 @@
       "@repo/ui": ["../../packages/ui/src"],
       "@repo/shared": ["../../packages/shared/index.ts"],
       "@repo/shared/*": ["../../packages/shared/src/*"]
-    },
-    "ignoreDeprecations": "6.0"
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

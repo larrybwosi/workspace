@@ -8,7 +8,9 @@ const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
 const getEnv = (name: string) => {
   if (typeof window !== 'undefined') {
     // @ts-ignore
-    return (typeof import.meta !== 'undefined' && (import.meta as any).env?.[name]) || (window as any).process?.env?.[name];
+    return (
+      (typeof import.meta !== 'undefined' && (import.meta as any).env?.[name]) || (window as any).process?.env?.[name]
+    );
   }
   return process.env[name];
 };

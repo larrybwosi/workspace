@@ -12,9 +12,19 @@ async function bootstrap() {
   app.use(urlencoded({ limit: '30mb', extended: true }));
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  const allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || [];
+
   app.enableCors({
-    origin: env.CORS_ORIGIN,
     credentials: true,
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
   });
 
   const config = new DocumentBuilder()
