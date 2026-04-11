@@ -27,7 +27,7 @@ model User {
   banner        String?
   statusText    String?
   statusEmoji   String?
-  role          String   @default("Development")
+  role          String   @default("user")
   status        String   @default("online")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
