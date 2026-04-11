@@ -8,8 +8,8 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="container flex h-14 items-center">
           <div className="mr-4 hidden md:flex">
             <Link className="mr-6 flex items-center space-x-2" to="/">
-              <span className="hidden font-bold sm:inline-block">
-                App Documentation
+              <span className="hidden font-bold sm:inline-block text-xl tracking-tight">
+                Skyrme Chat <span className="text-muted-foreground font-normal">Docs</span>
               </span>
             </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -25,8 +25,12 @@ export default function Layout({ children }: { children: ReactNode }) {
       <footer className="py-6 md:px-8 md:py-0 border-t">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built for developers and users.
+            &copy; {new Date().getFullYear()} Skyrme Chat. Built for developers and teams.
           </p>
+          <div className="flex items-center space-x-4 text-sm font-medium text-muted-foreground">
+            <a href="https://skyrme.chat" className="hover:text-foreground">Website</a>
+            <a href="https://app.skyrme.chat" className="hover:text-foreground">Open App</a>
+          </div>
         </div>
       </footer>
     </div>

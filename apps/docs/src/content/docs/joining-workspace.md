@@ -1,30 +1,25 @@
 # Joining a Workspace
 
-Welcome to the platform! Getting into a workspace is the first step to collaborating with your team.
+Getting started with Skyrme Chat is easy. You can join a workspace through an email invitation or a shared link.
 
-## Accepting an Invitation
+## Email Invitations
 
-Most users join a workspace via an email invitation.
+If your team administrator has invited you, you will receive an email from Skyrme Chat.
 
-1. **Check your inbox**: Look for an email with the subject "You've been invited to join [Workspace Name]".
-2. **Click the Join Link**: The email contains a secure link that will take you to the registration or login page.
-3. **Sign In or Sign Up**:
-   - If you already have an account, simply log in.
-   - If you're new, follow the prompts to create your account.
-4. **Welcome!**: Once authenticated, you'll be automatically added to the workspace and redirected to the main dashboard.
+1. Open the invitation email.
+2. Click the **Join Workspace** button.
+3. If you don't have a Skyrme Chat account, you'll be prompted to create one.
+4. Once logged in, you'll be automatically added to the workspace.
 
-## Requesting Access
+## Invitation Links
 
-If you know the workspace exists but haven't been invited yet:
+Some workspaces use public or private invitation links.
 
-1. Contact a workspace administrator or a team member.
-2. Provide them with your email address.
-3. They can send you an invite following the steps in [Inviting Members](/user-guide/inviting-members).
+1. Click the link provided by your teammate.
+2. You'll see a preview of the workspace name and icon.
+3. Click **Join** to enter.
 
-## Switching Workspaces
+## Troubleshooting
 
-If you are a member of multiple workspaces:
-
-1. Click on the workspace icon in the top-left corner of the sidebar.
-2. A list of all your workspaces will appear.
-3. Click on the workspace you want to switch to.
+- **Expired Link**: Invitation links can expire. If yours doesn't work, ask an admin for a new one.
+- **Wrong Account**: Ensure you are logged into the Skyrme Chat account associated with the email address that was invited.
