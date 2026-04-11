@@ -5,8 +5,9 @@ import {
   DynamicHeader,
   InfoPanel,
 } from "@repo/ui";
-import { useWorkspaces, useWorkspaceChannels } from "@repo/api-client";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useWorkspaceChannels } from "@repo/api-client";
+import { useParams, useNavigate } from "react-router-dom";
+import { useWorkspacesWithOffline } from "../hooks/offline/use-workspaces-offline";
 
 export function ChatPage() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
@@ -16,7 +17,7 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { slug: workspaceSlug, channelSlug } = useParams();
 
-  const { data: workspaces } = useWorkspaces();
+  const { data: workspaces, isOffline } = useWorkspacesWithOffline();
   const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug);
 
   const { data: channels } = useWorkspaceChannels(workspace?.id);

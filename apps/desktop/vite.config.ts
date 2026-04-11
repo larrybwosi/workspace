@@ -10,7 +10,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@repo/ui": path.resolve(__dirname, "../../packages/ui/src"),
-      "@repo/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@repo/shared": path.resolve(__dirname, "../../packages/shared/index.ts"),
       "next/navigation": path.resolve(__dirname, "./src/hooks/use-router-shim.ts"),
     },
   },

@@ -2,6 +2,7 @@ import { WebProviders } from "@repo/ui";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { LoginPage } from "./pages/login";
 import { SignupPage } from "./pages/signup";
+import { QRCodeLoginPage } from "./pages/auth/qr-login";
 import { ChatPage } from "./pages/chat";
 import { DMPage } from "./pages/dm";
 import { FriendsPage } from "./pages/friends";
@@ -30,15 +31,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { DesktopTitleBar } from "./components/layout/desktop-title-bar";
+
 function App() {
   return (
     <WebProviders>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+      <div className="flex flex-col h-screen overflow-hidden">
+        <DesktopTitleBar />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/login/qr" element={<QRCodeLoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
 
-          <Route
+            <Route
             path="/"
             element={
               <ProtectedRoute>
@@ -94,8 +100,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </div>
     </WebProviders>
   );
 }

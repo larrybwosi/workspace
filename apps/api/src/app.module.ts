@@ -25,6 +25,7 @@ import { AssetsModule } from './assets/assets.module';
 import { MessagesModule } from './messages/messages.module';
 import { TasksModule } from './common/tasks/tasks.module';
 import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
+import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ScheduledNotificationsModule } from './scheduled-notifications/schedule
     WorkspacesModule,
     MessagesModule,
     TasksModule,
+    DeviceAuthModule,
     ScheduledNotificationsModule,
     AssetsModule,
     ThrottlerModule.forRootAsync({
