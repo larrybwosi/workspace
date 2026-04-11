@@ -17,7 +17,7 @@ import {
 } from '@repo/api-client';
 import { useAddReaction, useRemoveReaction } from '@repo/api-client';
 import { cn } from '../../lib/utils';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { type UploadedFile } from '@repo/shared';
@@ -37,7 +37,7 @@ interface ChannelViewProps {
 
 // --- Helper Components ---
 
-function MessageSkeleton() {
+const MessageSkeleton = memo(function MessageSkeleton() {
   return (
     <div className="flex items-start gap-3 py-0.5 px-4 w-full">
       <Skeleton className="h-10 w-10 rounded-full shrink-0 mt-0.5" />
@@ -51,9 +51,9 @@ function MessageSkeleton() {
       </div>
     </div>
   );
-}
+});
 
-function DateDivider({ date }: { date: Date }) {
+const DateDivider = memo(function DateDivider({ date }: { date: Date }) {
   const isToday = new Date().toDateString() === date.toDateString();
   const isYesterday = new Date(Date.now() - 86400000).toDateString() === date.toDateString();
 
@@ -72,9 +72,9 @@ function DateDivider({ date }: { date: Date }) {
       <div className="flex-1 h-px bg-border" />
     </div>
   );
-}
+});
 
-function UnreadDivider() {
+const UnreadDivider = memo(function UnreadDivider() {
   return (
     <div className="flex items-center my-1 mx-4">
       <div className="flex-1 h-px bg-red-500/60" />
@@ -84,7 +84,7 @@ function UnreadDivider() {
       <div className="flex-1 h-px bg-red-500/60" />
     </div>
   );
-}
+});
 
 // --- Main Component ---
 
@@ -195,6 +195,8 @@ export function ChannelView({
     return messagesData.pages.flatMap(page => page.messages);
   }, [messagesData]);
 
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
+
   const firstUnreadMessageId = useMemo(() => {
     const firstUnread = messages.find(m => !m.readByCurrentUser);
     return firstUnread?.id || null;
@@ -239,7 +241,18 @@ export function ChannelView({
   }, [messages.length]);
 
   // Reset marked messages when channel changes
-  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
+
+  // Stable references for callbacks to avoid re-renders of memoized MessageItem
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  const currentUserRef = useRef(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
   useEffect(() => {
     markedMessageIds.current.clear();
     setHasInitialScrolled(false);
@@ -430,38 +443,41 @@ export function ChannelView({
     }
   };
 
-  const handleReply = (messageId: string) => {
-    const replyMessage = messages.find(m => m.id === messageId);
+  const handleReply = useCallback((messageId: string) => {
+    const replyMessage = messagesRef.current.find(m => m.id === messageId);
     if (replyMessage) {
       const user = (replyMessage as any).user;
       setReplyingTo({ id: messageId, userName: user?.name || 'Unknown' });
     }
-  };
+  }, []);
 
-  const handleReaction = (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => {
-    const message = messages.find(m => m.id === messageId);
-    if (!message) return;
+  const handleReaction = useCallback(
+    (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => {
+      const message = messagesRef.current.find(m => m.id === messageId);
+      if (!message) return;
 
-    const hasReacted = message.reactions.find(r => r.emoji === emoji)?.users.includes(currentUser?.id || '');
+      const hasReacted = message.reactions.find(r => r.emoji === emoji)?.users.includes(currentUserRef.current?.id || '');
 
-    if (hasReacted) {
-      removeReactionMutation.mutate({
-        messageId,
-        emoji,
-        channelId: activeChannelId,
-        workspaceId,
-      });
-    } else {
-      addReactionMutation.mutate({
-        messageId,
-        emoji,
-        channelId: activeChannelId,
-        isCustom,
-        customEmojiId,
-        workspaceId,
-      });
-    }
-  };
+      if (hasReacted) {
+        removeReactionMutation.mutate({
+          messageId,
+          emoji,
+          channelId: activeChannelId,
+          workspaceId,
+        });
+      } else {
+        addReactionMutation.mutate({
+          messageId,
+          emoji,
+          channelId: activeChannelId,
+          isCustom,
+          customEmojiId,
+          workspaceId,
+        });
+      }
+    },
+    [activeChannelId, workspaceId, removeReactionMutation, addReactionMutation]
+  );
 
   return (
     <div className={cn('flex flex-col h-dvh w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
