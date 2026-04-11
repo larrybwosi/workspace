@@ -16,8 +16,10 @@ import { V2ContactController } from './contact.controller';
 import { ApiV2Guard } from '../auth/api-v2.guard';
 import { V2AuditService } from './v2-audit.service';
 import { V2WebhooksService } from './v2-webhooks.service';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
+  imports: [IntegrationsModule],
   controllers: [
     V2WorkspacesController,
     V2MessagesController,
