@@ -19,6 +19,14 @@ export const auth: any = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        defaultValue: 'user',
+      },
+    },
+  },
   plugins: [
     jwt(),
     organization(),
