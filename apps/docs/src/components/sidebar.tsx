@@ -33,20 +33,20 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
   );
 
   return (
-    <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
-      <div className="h-full py-6 pr-6 lg:py-8 overflow-y-auto scrollbar-hide">
-        <h4 className="mb-2 px-2 text-xs font-semibold uppercase tracking-widest text-foreground/70">
+    <aside className="w-full h-full">
+      <div className="py-6 lg:py-8 pr-4 overflow-y-auto h-full scrollbar-hide">
+        <h4 className="mb-4 px-3 text-xs font-bold uppercase tracking-widest text-foreground/40">
           {isUserGuide ? 'User Guide' : 'API Reference'}
         </h4>
-        <div className="flex flex-col gap-6 mt-4">
+        <div className="flex flex-col gap-8">
           {Object.entries(groupedLinks).map(([category, items]) => (
-            <div key={category} className="space-y-1">
+            <div key={category} className="space-y-3">
               {!isUserGuide && (
-                <h5 className="mb-2 px-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                <h5 className="px-3 text-[11px] font-bold text-foreground/70 uppercase tracking-widest">
                   {category}
                 </h5>
               )}
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col space-y-0.5">
                 {items.map(link => {
                   const isActive = location.pathname === link.href;
                   return (
@@ -54,13 +54,16 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
                       key={link.href}
                       to={link.href}
                       className={cn(
-                        'group flex w-full items-center rounded-md border border-transparent px-2 py-1.5 text-sm transition-all duration-200',
+                        'group flex w-full items-center rounded-md px-3 py-1.5 text-sm transition-all duration-200 relative',
                         isActive
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          ? 'text-primary font-semibold bg-primary/5'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 hover:translate-x-1'
                       )}
                     >
-                      {link.label}
+                      {isActive && (
+                        <div className="absolute left-0 w-1 h-4 bg-primary rounded-full -translate-x-0.5 transition-all duration-300" />
+                      )}
+                      <span className="relative z-10">{link.label}</span>
                     </Link>
                   );
                 })}
