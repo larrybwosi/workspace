@@ -440,6 +440,8 @@ model WorkspaceAuditLog {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
+  // ⚡ Optimization: Index for workspace-specific audit log ordering
+  @@index([workspaceId, createdAt])
   @@map("workspace_audit_logs")
 }
 
@@ -581,6 +583,9 @@ model Message {
   readBy      MessageRead[]
   actions     MessageAction[]
 
+  // ⚡ Optimization: Indexes for frequent queries and ordering
+  @@index([channelId, timestamp])
+  @@index([threadId])
   @@map("messages")
 }
 
