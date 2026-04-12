@@ -12,10 +12,9 @@ import {
   Query,
   BadRequestException,
   NotFoundException,
-  UseInterceptors,
-  UploadedFile,
+  Req,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -159,19 +158,27 @@ export class V2MessagesController {
   }
 
   @Post('channels/:channelId/icon')
-  @UseInterceptors(FileInterceptor('file'))
   async uploadChannelIcon(
     @V2Context() context: ApiV2Context,
     @Param('channelId') channelId: string,
-    @UploadedFile() file: any
+    @Req() req: FastifyRequest
   ) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
     }
 
-    if (!file) {
+    const data = await req.file();
+    if (!data) {
       throw new BadRequestException('No file uploaded');
     }
+
+    const buffer = await data.toBuffer();
+    const file = {
+      buffer,
+      originalname: data.filename,
+      mimetype: data.mimetype,
+      size: buffer.length,
+    };
 
     const channel = await prisma.channel.findFirst({
       where: { id: channelId, workspaceId: context.workspaceId },
@@ -339,10 +346,34 @@ export class V2MessagesController {
   }
 
   @Post('messages')
-  @UseInterceptors(FileInterceptor('file'))
-  async sendMessage(@V2Context() context: ApiV2Context, @Body() body: any, @UploadedFile() file?: any) {
+  async sendMessage(@V2Context() context: ApiV2Context, @Req() req: FastifyRequest) {
     if (!this.hasScope(context, 'messages:send')) {
       throw new ForbiddenException('Forbidden: Missing messages:send scope');
+    }
+
+    // With Fastify multipart, we might have both fields and files
+    const isMultipart = req.isMultipart();
+    let body = req.body as any;
+    let file: any = undefined;
+
+    if (isMultipart) {
+      const parts = req.parts();
+      const fields: Record<string, any> = {};
+      for await (const part of parts) {
+        if (part.type === 'file') {
+          const buffer = await part.toBuffer();
+          file = {
+            buffer,
+            originalname: part.filename,
+            mimetype: part.mimetype,
+            size: buffer.length,
+          };
+        } else {
+          // part.type === 'field'
+          fields[part.fieldname] = part.value;
+        }
+      }
+      body = fields;
     }
 
     const validatedData = sendMessageSchema.safeParse(body);
