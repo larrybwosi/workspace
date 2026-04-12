@@ -6,6 +6,7 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "db:generate": "dotenv -e .env -- prisma generate",
+    "db:push": "dotenv -e .env -- prisma db push",
     "prepare": "pnpm db:generate",
     "test": "echo 'No tests for database'"
   },

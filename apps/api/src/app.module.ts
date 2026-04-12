@@ -22,16 +22,17 @@ import { DmsModule } from './dms/dms.module';
 import { FriendsModule } from './friends/friends.module';
 import { CommonModule } from './common/common.module';
 import { AssetsModule } from './assets/assets.module';
-import { MessagesModule } from './messages/messages.module';
 import { TasksModule } from './common/tasks/tasks.module';
 import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
 import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
+import { AuthModule } from '@thallesp/nestjs-better-auth';
+import { auth } from './auth/better-auth';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validate: (config) => validateEnv(config),
+      validate: config => validateEnv(config),
     }),
     ScheduleModule.forRoot(),
     RedisModule,
@@ -42,12 +43,12 @@ import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
     IntegrationsModule,
     CallsModule,
     ChannelsModule,
+    AuthModule.forRoot({ auth }),
     AdminModule,
     DmsModule,
     FriendsModule,
     CommonModule,
     WorkspacesModule,
-    MessagesModule,
     TasksModule,
     DeviceAuthModule,
     ScheduledNotificationsModule,

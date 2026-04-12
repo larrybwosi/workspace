@@ -1,4 +1,4 @@
-import { useNavigate, useParams as useRRDParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams as useRRDParams, useLocation } from 'react-router';
 import { useMemo } from 'react';
 
 export function useRouter() {

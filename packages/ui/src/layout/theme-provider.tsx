@@ -19,10 +19,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     setMounted(true)
     const savedTheme = localStorage.getItem("theme") as Theme | null
+
     if (savedTheme) {
       setTheme(savedTheme)
       document.documentElement.classList.toggle("dark", savedTheme === "dark")
+    } else {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+      setTheme(systemTheme)
+      document.documentElement.classList.toggle("dark", systemTheme === "dark")
     }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem("theme")) {
+        const newTheme = e.matches ? "dark" : "light"
+        setTheme(newTheme)
+        document.documentElement.classList.toggle("dark", e.matches)
+      }
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
   }, [])
 
   const toggleTheme = React.useCallback(() => {

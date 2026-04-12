@@ -13,14 +13,14 @@ import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import * as Ably from 'ably';
 
-@Controller('v10/gateway')
+@Controller('bot/v10/gateway')
 export class V10GatewayController {
   constructor(private readonly configService: ConfigService) {}
 
   @Get('bot')
   @UseGuards(ApiV10Guard)
   async getBotGateway() {
-    const gatewayUrl = this.configService.get<string>('DISCORD_GATEWAY_URL') || 'ws://localhost:3001/api/v10/gateway';
+    const gatewayUrl = this.configService.get<string>('DISCORD_GATEWAY_URL') || 'ws://localhost:3001/api/bot/v10/gateway';
 
     return {
       url: gatewayUrl,

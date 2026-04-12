@@ -1,22 +1,22 @@
-import * as React from "react"
-import { Users, Settings, BarChart3, Shield, Activity, Sparkles, TrendingUp } from 'lucide-react'
-import { useNavigate } from "react-router-dom"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/tabs"
-import { ScrollArea } from "@repo/ui/components/scroll-area"
-import { Button } from "@repo/ui/components/button"
-import { TopBar } from "@repo/ui/layout/top-bar"
-import { AdminSidebar } from "@repo/ui/layout/admin-sidebar"
-import { AdminOverview } from "@repo/ui/features/admin/admin-overview"
-import { AdminMembers } from "@repo/ui/features/admin/admin-members"
-import { AdminAnalytics } from "@repo/ui/features/admin/admin-analytics"
-import { AdminSettings } from "@repo/ui/features/admin/admin-settings"
-import { AdminActivity } from "@repo/ui/features/admin/admin-activity"
-import { AdminSecurity } from "@repo/ui/features/admin/admin-security"
+import * as React from 'react';
+import { Users, Settings, BarChart3, Shield, Activity, Sparkles, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
+import { ScrollArea } from '@repo/ui/components/scroll-area';
+import { Button } from '@repo/ui/components/button';
+import { TopBar } from '@repo/ui/layout/top-bar';
+import { AdminSidebar } from '@repo/ui/layout/admin-sidebar';
+import { AdminOverview } from '@repo/ui/features/admin/admin-overview';
+import { AdminMembers } from '@repo/ui/features/admin/admin-members';
+import { AdminAnalytics } from '@repo/ui/features/admin/admin-analytics';
+import { AdminSettings } from '@repo/ui/features/admin/admin-settings';
+import { AdminActivity } from '@repo/ui/features/admin/admin-activity';
+import { AdminSecurity } from '@repo/ui/features/admin/admin-security';
 
 export function AdminOverviewPage() {
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = React.useState("overview")
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = React.useState('overview');
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
     <div className="flex h-screen bg-background">
@@ -106,5 +106,5 @@ export function AdminOverviewPage() {
         </ScrollArea>
       </div>
     </div>
-  )
+  );
 }

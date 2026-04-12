@@ -12,7 +12,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
-import type { Response } from 'express';
+import type { FastifyReply } from 'fastify';
 
 @Controller('workspaces/:slug/audit-logs')
 @UseGuards(AuthGuard)
@@ -106,7 +106,7 @@ export class AuditLogsController {
   async exportAuditLogs(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
-    @Res() res: Response,
+    @Res() res: FastifyReply,
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -169,8 +169,8 @@ export class AuditLogsController {
 
     const csv = csvHeader + csvRows;
 
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader(
+    res.header('Content-Type', 'text/csv');
+    res.header(
       'Content-Disposition',
       `attachment; filename="audit-logs-${workspace.id}-${Date.now()}.csv"`,
     );

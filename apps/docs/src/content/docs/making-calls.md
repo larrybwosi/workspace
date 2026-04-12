@@ -1,22 +1,24 @@
 # Making Calls
 
-Sometimes text isn't enough. Our platform provides high-quality voice and video calling.
+Skyrme Chat provides built-in high-quality voice and video calling.
 
-## Starting a Call
+## Voice & Video Calls
 
-You can start a call from any Channel or Direct Message.
+You can start a call from any Direct Message or Channel.
 
-1. **Open the Conversation**: Navigate to the channel or DM where you want to talk.
-2. **Click the Call Icon**: Look for the phone or camera icon in the top header.
-3. **Join the Room**: You'll be prompted to join the call. Your browser may ask for permission to use your microphone and camera.
+### Starting a Call
 
-## During the Call
+1. Open a conversation.
+2. Click the **Phone** icon for a voice call or the **Video** icon for a video call in the top right corner.
+3. Other participants will receive a notification to join.
 
-- **Mute/Unmute**: Click the microphone icon to toggle your audio.
-- **Camera On/Off**: Click the camera icon to toggle your video.
-- **Screen Sharing**: Use the "Share Screen" button to present your desktop or a specific window to other participants.
-- **Leave Call**: Click the red "Hang Up" button to exit the call.
+## Screen Sharing
 
-## Group Calls
+During a call, you can share your screen to present documents or collaborate on code.
 
-In channels, anyone can join an active call. You'll see a "Join Call" button at the top of the channel when a session is in progress.
+1. Click the **Share Screen** icon in the call controls.
+2. Select the window or screen you wish to share.
+
+## Huddles (Coming Soon)
+
+Quick, informal audio sessions for fast collaboration in channels.

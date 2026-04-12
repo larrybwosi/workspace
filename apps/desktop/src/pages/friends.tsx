@@ -1,14 +1,34 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   Sidebar,
   DynamicHeader,
   usePresence,
-  Tabs, TabsContent, TabsList, TabsTrigger,
-  Input, Button, Card, CardContent, Avatar, AvatarFallback, AvatarImage, Badge,
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
-  Label, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@repo/ui";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Input,
+  Button,
+  Card,
+  CardContent,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  Label,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui';
 import {
   useFriends,
   useFriendRequests,
@@ -19,28 +39,39 @@ import {
   useCreateInvitation,
   useResendInvitation,
   useUsers,
-} from "@repo/api-client";
+} from '@repo/api-client';
 import {
-  Search, UserPlus, Check, X, MoreVertical, MessageSquare,
-  UserCheck, Users, Menu, Mail, RefreshCw, Copy, CheckCircle2
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { toast } from "sonner";
+  Search,
+  UserPlus,
+  Check,
+  X,
+  MoreVertical,
+  MessageSquare,
+  UserCheck,
+  Users,
+  Menu,
+  Mail,
+  RefreshCw,
+  Copy,
+  CheckCircle2,
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 export function FriendsPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [addFriendOpen, setAddFriendOpen] = useState(false);
-  const [friendEmail, setFriendEmail] = useState("");
-  const [friendMessage, setFriendMessage] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [friendEmail, setFriendEmail] = useState('');
+  const [friendMessage, setFriendMessage] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const navigate = useNavigate();
 
   const { data: friends, isLoading: friendsLoading } = useFriends(search);
-  const { data: receivedRequests, isLoading: receivedLoading } = useFriendRequests("received", "pending");
-  const { data: sentRequests, isLoading: sentLoading } = useFriendRequests("sent", "pending");
+  const { data: receivedRequests, isLoading: receivedLoading } = useFriendRequests('received', 'pending');
+  const { data: sentRequests, isLoading: sentLoading } = useFriendRequests('sent', 'pending');
   const { data: allUsers } = useUsers();
   const { onlineUsers } = usePresence();
 
@@ -54,35 +85,35 @@ export function FriendsPage() {
 
   const handleAccept = async (requestId: string) => {
     try {
-      await respondMutation.mutateAsync({ requestId, action: "accept" });
-      toast.success("Friend request accepted");
+      await respondMutation.mutateAsync({ requestId, action: 'accept' });
+      toast.success('Friend request accepted');
     } catch (error) {
-      toast.error("Failed to accept request");
+      toast.error('Failed to accept request');
     }
   };
 
   const handleDecline = async (requestId: string) => {
     try {
-      await respondMutation.mutateAsync({ requestId, action: "decline" });
-      toast.success("Friend request declined");
+      await respondMutation.mutateAsync({ requestId, action: 'decline' });
+      toast.success('Friend request declined');
     } catch (error) {
-      toast.error("Failed to decline request");
+      toast.error('Failed to decline request');
     }
   };
 
   const handleRemove = async (friendId: string) => {
     try {
       await removeMutation.mutateAsync(friendId);
-      toast.success("Friend removed");
+      toast.success('Friend removed');
     } catch (error) {
-      toast.error("Failed to remove friend");
+      toast.error('Failed to remove friend');
     }
   };
 
   const handleSendRequest = async (email?: string) => {
     const targetEmail = email || friendEmail;
     if (!targetEmail) {
-      toast.error("Please enter an email");
+      toast.error('Please enter an email');
       return;
     }
 
@@ -91,16 +122,16 @@ export function FriendsPage() {
         receiverId: targetEmail,
         message: email ? "Hi! I'd like to connect." : friendMessage,
       });
-      toast.success("Friend request sent");
+      toast.success('Friend request sent');
       setAddFriendOpen(false);
-      setFriendEmail("");
-      setFriendMessage("");
+      setFriendEmail('');
+      setFriendMessage('');
     } catch (error: any) {
       if (error.response?.status === 404) {
         setInviteEmail(targetEmail);
         setInviteDialogOpen(true);
       } else {
-        toast.error(error.response?.data?.error || "Failed to send request");
+        toast.error(error.response?.data?.error || 'Failed to send request');
       }
     }
   };
@@ -109,11 +140,11 @@ export function FriendsPage() {
     if (!inviteEmail) return;
     try {
       await createInvitation.mutateAsync({ email: inviteEmail });
-      toast.success("Platform invitation sent");
+      toast.success('Platform invitation sent');
       setInviteDialogOpen(false);
-      setInviteEmail("");
+      setInviteEmail('');
     } catch (error) {
-      toast.error("Failed to send invitation");
+      toast.error('Failed to send invitation');
     }
   };
 
@@ -123,11 +154,14 @@ export function FriendsPage() {
     setTimeout(() => setCopiedToken(null), 2000);
   };
 
-  const suggestedFriends = allUsers?.filter(u =>
-    !friends?.some((f: any) => f.friendId === u.id) &&
-    !sentRequests?.some((r: any) => r.receiverId === u.id) &&
-    !receivedRequests?.some((r: any) => r.senderId === u.id)
-  ).slice(0, 5);
+  const suggestedFriends = allUsers
+    ?.filter(
+      u =>
+        !friends?.some((f: any) => f.friendId === u.id) &&
+        !sentRequests?.some((r: any) => r.receiverId === u.id) &&
+        !receivedRequests?.some((r: any) => r.senderId === u.id)
+    )
+    .slice(0, 5);
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
@@ -135,14 +169,16 @@ export function FriendsPage() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         activeChannel="friends"
-        onChannelSelect={(id) => id === "assistant" ? navigate("/assistant") : id.startsWith("dm-") ? navigate(`/dm/${id.replace("dm-", "")}`) : null}
+        onChannelSelect={id =>
+          id === 'assistant'
+            ? navigate('/assistant')
+            : id.startsWith('dm-')
+              ? navigate(`/dm/${id.replace('dm-', '')}`)
+              : null
+        }
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <DynamicHeader
-          activeView="Friends"
-          onMenuClick={() => setSidebarOpen(true)}
-          onSearchClick={() => {}}
-        />
+        <DynamicHeader activeView="Friends" onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
         <div className="flex-1 flex flex-col h-full bg-muted/10 overflow-auto">
           <div className="border-b bg-background p-6">
             <div className="flex items-center justify-between mb-6">
@@ -170,7 +206,7 @@ export function FriendsPage() {
                         type="email"
                         placeholder="name@example.com"
                         value={friendEmail}
-                        onChange={(e) => setFriendEmail(e.target.value)}
+                        onChange={e => setFriendEmail(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -179,7 +215,7 @@ export function FriendsPage() {
                         id="message"
                         placeholder="Hi! Let's connect..."
                         value={friendMessage}
-                        onChange={(e) => setFriendMessage(e.target.value)}
+                        onChange={e => setFriendMessage(e.target.value)}
                       />
                     </div>
                   </div>
@@ -188,7 +224,7 @@ export function FriendsPage() {
                       Cancel
                     </Button>
                     <Button onClick={() => handleSendRequest()} disabled={sendRequestMutation.isPending}>
-                      {sendRequestMutation.isPending ? "Sending..." : "Send Request"}
+                      {sendRequestMutation.isPending ? 'Sending...' : 'Send Request'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -199,8 +235,8 @@ export function FriendsPage() {
                   <DialogHeader>
                     <DialogTitle>User not found</DialogTitle>
                     <DialogDescription>
-                      We couldn't find a user with the email <strong>{inviteEmail}</strong>.
-                      Would you like to invite them to join?
+                      We couldn't find a user with the email <strong>{inviteEmail}</strong>. Would you like to invite
+                      them to join?
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -208,7 +244,7 @@ export function FriendsPage() {
                       Cancel
                     </Button>
                     <Button onClick={handleCreateInvitation} disabled={createInvitation.isPending}>
-                      {createInvitation.isPending ? "Sending..." : "Send Invitation"}
+                      {createInvitation.isPending ? 'Sending...' : 'Send Invitation'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -220,7 +256,7 @@ export function FriendsPage() {
               <Input
                 placeholder="Search friends by name or email..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
                 className="pl-10 h-11 bg-muted/30 border-none shadow-none focus-visible:ring-1"
               />
             </div>
@@ -231,24 +267,38 @@ export function FriendsPage() {
               <Tabs defaultValue="all" className="flex-1 flex flex-col">
                 <div className="px-6 border-b bg-background">
                   <TabsList className="bg-transparent h-12 p-0 gap-6">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">
-                      All Friends {friends?.length ? `(${friends.length})` : ""}
+                    <TabsTrigger
+                      value="all"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+                    >
+                      All Friends {friends?.length ? `(${friends.length})` : ''}
                     </TabsTrigger>
-                    <TabsTrigger value="pending" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">
-                      Pending {receivedRequests?.length ? `(${receivedRequests.length})` : ""}
+                    <TabsTrigger
+                      value="pending"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+                    >
+                      Pending {receivedRequests?.length ? `(${receivedRequests.length})` : ''}
                     </TabsTrigger>
-                    <TabsTrigger value="sent" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">
-                      Sent {sentRequests?.length ? `(${sentRequests.length})` : ""}
+                    <TabsTrigger
+                      value="sent"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+                    >
+                      Sent {sentRequests?.length ? `(${sentRequests.length})` : ''}
                     </TabsTrigger>
-                    <TabsTrigger value="invitations" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">
-                      Invites {invitations?.length ? `(${invitations.length})` : ""}
+                    <TabsTrigger
+                      value="invitations"
+                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+                    >
+                      Invites {invitations?.length ? `(${invitations.length})` : ''}
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
                 <TabsContent value="all" className="flex-1 overflow-auto p-6 space-y-3">
                   {friendsLoading ? (
-                    <div className="flex justify-center py-20"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
+                    <div className="flex justify-center py-20">
+                      <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
                   ) : !friends || friends.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                       <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center">
@@ -271,7 +321,10 @@ export function FriendsPage() {
                                   <AvatarFallback>{friend.friend.name[0]}</AvatarFallback>
                                 </Avatar>
                                 {onlineUsers.has(friend.friend.id) && (
-                                  <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 border-2 border-background rounded-full shadow-sm" title="Online" />
+                                  <div
+                                    className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 border-2 border-background rounded-full shadow-sm"
+                                    title="Online"
+                                  />
                                 )}
                               </div>
                               <div className="min-w-0">
@@ -282,7 +335,12 @@ export function FriendsPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button variant="outline" size="sm" className="h-9" onClick={() => navigate(`/dm/${friend.friend.id}`)}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9"
+                                onClick={() => navigate(`/dm/${friend.friend.id}`)}
+                              >
                                 <MessageSquare className="h-4 w-4 mr-2" />
                                 Message
                               </Button>
@@ -295,7 +353,10 @@ export function FriendsPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem>Set Nickname</DropdownMenuItem>
                                   <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive" onClick={() => handleRemove(friend.friendId)}>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleRemove(friend.friendId)}
+                                  >
                                     Remove Friend
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -310,7 +371,9 @@ export function FriendsPage() {
 
                 <TabsContent value="pending" className="flex-1 overflow-auto p-6 space-y-3">
                   {receivedLoading ? (
-                    <div className="flex justify-center py-20"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
+                    <div className="flex justify-center py-20">
+                      <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
                   ) : !receivedRequests || receivedRequests.length === 0 ? (
                     <div className="text-center py-20 text-muted-foreground">No pending friend requests</div>
                   ) : (
@@ -326,14 +389,25 @@ export function FriendsPage() {
                               <div>
                                 <div className="font-semibold">{request.sender.name}</div>
                                 <div className="text-sm text-muted-foreground">{request.sender.email}</div>
-                                {request.message && <div className="text-xs italic bg-muted/50 p-2 rounded mt-2">"{request.message}"</div>}
+                                {request.message && (
+                                  <div className="text-xs italic bg-muted/50 p-2 rounded mt-2">"{request.message}"</div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button size="sm" onClick={() => handleAccept(request.id)} disabled={respondMutation.isPending}>
+                              <Button
+                                size="sm"
+                                onClick={() => handleAccept(request.id)}
+                                disabled={respondMutation.isPending}
+                              >
                                 Accept
                               </Button>
-                              <Button size="sm" variant="ghost" onClick={() => handleDecline(request.id)} disabled={respondMutation.isPending}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDecline(request.id)}
+                                disabled={respondMutation.isPending}
+                              >
                                 Decline
                               </Button>
                             </div>
@@ -346,7 +420,9 @@ export function FriendsPage() {
 
                 <TabsContent value="invitations" className="flex-1 overflow-auto p-6 space-y-3">
                   {invitationsLoading ? (
-                    <div className="flex justify-center py-20"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
+                    <div className="flex justify-center py-20">
+                      <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
                   ) : !invitations || invitations.length === 0 ? (
                     <div className="text-center py-20 text-muted-foreground">No invitations sent</div>
                   ) : (
@@ -361,7 +437,7 @@ export function FriendsPage() {
                               <div>
                                 <div className="font-semibold">{invitation.email}</div>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant={invitation.status === "accepted" ? "default" : "secondary"}>
+                                  <Badge variant={invitation.status === 'accepted' ? 'default' : 'secondary'}>
                                     {invitation.status}
                                   </Badge>
                                   <span className="text-xs text-muted-foreground">
@@ -370,17 +446,30 @@ export function FriendsPage() {
                                 </div>
                               </div>
                             </div>
-                            {invitation.status === "pending" && (
+                            {invitation.status === 'pending' && (
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => copyInvitationLink(`${window.location.origin}/invite/${invitation.token}`, invitation.token)}
+                                  onClick={() =>
+                                    copyInvitationLink(
+                                      `${window.location.origin}/invite/${invitation.token}`,
+                                      invitation.token
+                                    )
+                                  }
                                 >
-                                  {copiedToken === invitation.token ? <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> : <Copy className="h-4 w-4 mr-2" />}
-                                  {copiedToken === invitation.token ? "Copied" : "Link"}
+                                  {copiedToken === invitation.token ? (
+                                    <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                                  ) : (
+                                    <Copy className="h-4 w-4 mr-2" />
+                                  )}
+                                  {copiedToken === invitation.token ? 'Copied' : 'Link'}
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => resendInvitation.mutate(invitation.token)}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => resendInvitation.mutate(invitation.token)}
+                                >
                                   <RefreshCw className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -394,7 +483,9 @@ export function FriendsPage() {
 
                 <TabsContent value="sent" className="flex-1 overflow-auto p-6 space-y-3">
                   {sentLoading ? (
-                    <div className="flex justify-center py-20"><div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
+                    <div className="flex justify-center py-20">
+                      <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
                   ) : !sentRequests || sentRequests.length === 0 ? (
                     <div className="text-center py-20 text-muted-foreground">No sent friend requests</div>
                   ) : (
@@ -410,13 +501,15 @@ export function FriendsPage() {
                               <div>
                                 <div className="font-semibold">{request.receiver.name}</div>
                                 <div className="text-sm text-muted-foreground">{request.receiver.email}</div>
-                                <Badge variant="secondary" className="mt-1">Pending</Badge>
+                                <Badge variant="secondary" className="mt-1">
+                                  Pending
+                                </Badge>
                               </div>
                             </div>
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => respondMutation.mutate({ requestId: request.id, action: "cancel" })}
+                              onClick={() => respondMutation.mutate({ requestId: request.id, action: 'cancel' })}
                               disabled={respondMutation.isPending}
                             >
                               Cancel Request
@@ -448,7 +541,12 @@ export function FriendsPage() {
                         <div className="text-[10px] text-muted-foreground truncate w-32">{user.email}</div>
                       </div>
                     </div>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleSendRequest(user.email)}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleSendRequest(user.email)}
+                    >
                       <UserPlus className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -462,7 +560,9 @@ export function FriendsPage() {
                 <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
                   <h4 className="text-sm font-bold mb-1">Invite your friends</h4>
                   <p className="text-xs text-muted-foreground mb-3">Expand your network by inviting your colleagues.</p>
-                  <Button size="sm" className="w-full" onClick={() => setAddFriendOpen(true)}>Send Invite</Button>
+                  <Button size="sm" className="w-full" onClick={() => setAddFriendOpen(true)}>
+                    Send Invite
+                  </Button>
                 </div>
               </div>
             </div>

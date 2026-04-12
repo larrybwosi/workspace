@@ -1,40 +1,63 @@
 # Webhooks
 
-Webhooks allow your application to receive real-time notifications when events happen in a workspace.
+Webhooks allow your application to receive real-time notifications about events happening in Skyrme Chat.
 
-## Setup
+## Lifecycle
 
-1. **Endpoint**: You must provide a publicly accessible URL that can receive `POST` requests.
-2. **Registration**: Currently, webhooks are registered via the workspace settings UI or the API (Beta).
+1. **Register**: Provide a URL and a list of events you want to subscribe to.
+2. **Receive**: Skyrme Chat sends an HTTP POST request to your URL when an event occurs.
+3. **Verify**: Use the webhook secret to verify that the request came from Skyrme Chat.
 
-## Event Format
+---
 
-All webhook payloads follow a consistent structure:
+## Managing Webhooks
 
+### List Webhooks
+**Endpoint:** `GET /v2/workspaces/:slug/webhooks`
+
+---
+
+### Create Webhook
+Register a new destination for events.
+
+**Endpoint:** `POST /v2/workspaces/:slug/webhooks`
+
+**Body:**
 ```json
 {
-  "event": "message.sent",
-  "workspaceId": "uuid",
-  "timestamp": "2023-10-27T10:00:00Z",
-  "data": {
-    "message": {
-      "id": "msg_...",
-      "content": "...",
-      "userId": "..."
-    }
-  }
+  "name": "My Integration",
+  "url": "https://your-app.com/api/webhooks",
+  "events": ["message.sent", "channel.created"],
+  "active": true
 }
 ```
 
-## Available Events
+**Response:**
+Returns the webhook configuration, including a `secret`. **Save this secret**, as it will not be shown again.
+
+---
+
+## Supported Events
 
 | Event | Description |
 | :--- | :--- |
-| `message.sent` | Triggered when a new message is posted. |
-| `channel.created` | Triggered when a new channel is created. |
-| `member.joined` | Triggered when a new member joins the workspace. |
+| `message.sent` | A new message was posted to a channel or DM. |
+| `channel.created` | A new channel was created in the workspace. |
+| `member.added` | A new member joined the workspace. |
 
-## Verification
+---
 
-Every webhook request includes a signature header to verify its authenticity.
-`X-Signature`: SHA256 HMAC of the payload using your webhook secret.
+## Security & Verification
+
+Skyrme Chat signs every webhook request with your secret. The signature is included in the `X-Skyrme-Signature` header.
+
+**Verification Example (Node.js):**
+```javascript
+const crypto = require('crypto');
+
+function verify(payload, secret, signature) {
+  const hmac = crypto.createHmac('sha256', secret);
+  const digest = hmac.update(payload).digest('hex');
+  return digest === signature;
+}
+```

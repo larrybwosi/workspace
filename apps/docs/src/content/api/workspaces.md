@@ -1,50 +1,79 @@
-# Workspaces
+# Workspaces & Members
 
-Workspaces are the top-level containers for all data in the platform.
+Workspaces are the top-level containers for all data in Skyrme Chat. Every resource (channels, messages, members) belongs to a workspace.
 
 ## Base URL
 
-All workspace endpoints are prefixed with the workspace slug:
+Most workspace-related endpoints are prefixed with the workspace slug:
 `/v2/workspaces/:slug`
 
 ---
 
-## Get Workspace Details
+## Workspace Members
 
-Returns information about the specified workspace.
+Manage the users who have access to your Skyrme Chat workspace.
 
-**Endpoint:** `GET /v2/workspaces/:slug`
+### List Members
+Returns a list of all members in the workspace, including their profile details and status.
 
-### Response
+**Endpoint:** `GET /v2/workspaces/:slug/members`
 
+**Response:**
 ```json
 {
-  "workspace": {
-    "id": "uuid",
-    "name": "Acme Corp",
-    "slug": "acme",
-    "icon": "https://...",
-    "plan": "pro"
-  }
+  "members": [
+    {
+      "id": "user_123",
+      "userId": "user_123",
+      "workspaceId": "ws_456",
+      "role": "member",
+      "user": {
+        "id": "user_123",
+        "name": "Jane Doe",
+        "email": "jane@example.com",
+        "avatar": "https://...",
+        "status": "online"
+      }
+    }
+  ],
+  "source": "database"
 }
 ```
 
 ---
 
-## List Members
+### Add Member
+Adds an existing Skyrme Chat user to the workspace.
 
-Returns a list of members in the workspace.
+**Endpoint:** `POST /v2/workspaces/:slug/members`
 
-**Endpoint:** `GET /v2/workspaces/:slug/members`
-
-### Scopes Required
-- `members:read` or `*`
+**Body:**
+```json
+{
+  "email": "newuser@example.com",
+  "role": "member"
+}
+```
 
 ---
 
-## Departments & Teams
+### Get Member Details
+Retrieve detailed information about a specific workspace member.
 
-Workspaces can be further organized into Departments and Teams.
+**Endpoint:** `GET /v2/workspaces/:slug/members/:userId`
+
+---
+
+### Remove Member
+Removes a user from the workspace. Note: The workspace owner cannot be removed.
+
+**Endpoint:** `DELETE /v2/workspaces/:slug/members/:userId`
+
+---
+
+## Organization (Coming Soon)
+
+Skyrme Chat workspaces can be further organized into **Departments** and **Teams** to reflect your company's structure.
 
 ### List Departments
 `GET /v2/workspaces/:slug/departments`

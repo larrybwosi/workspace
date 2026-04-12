@@ -2,7 +2,7 @@ import * as React from 'react';
 import { BarChart3, Users, Sparkles, Activity, Shield, Settings } from 'lucide-react';
 import { Button } from '../components/button';
 import { cn } from '../lib/utils';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
+          {navItems.map(item => {
             const isActive = location.pathname === item.href;
             return (
               <Button
@@ -70,7 +70,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 )}
                 onClick={() => handleNavigate(item.href)}
               >
-                <item.icon className={cn('h-5 w-5', isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground')} />
+                <item.icon
+                  className={cn('h-5 w-5', isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground')}
+                />
                 {item.label}
               </Button>
             );
@@ -78,7 +80,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         </nav>
 
         <div className="p-4 border-t border-sidebar-border">
-            <p className="text-xs text-muted-foreground text-center">Dealio v0.1.0 Admin</p>
+          <p className="text-xs text-muted-foreground text-center">Dealio v0.1.0 Admin</p>
         </div>
       </aside>
     </>
