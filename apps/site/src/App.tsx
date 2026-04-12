@@ -3,8 +3,6 @@ import Home from './pages/Home';
 import { Pricing } from './pages/Pricing';
 import { Contact } from './pages/Contact';
 import { DeveloperDashboard } from './pages/developer/Dashboard';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
 
 function App() {
   return (
