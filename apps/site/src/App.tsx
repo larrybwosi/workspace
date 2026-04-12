@@ -6,17 +6,13 @@ import { DeveloperDashboard } from './pages/developer/Dashboard';
 import { AppConfig } from './pages/developer/AppConfig';
 import { AppSettings } from './pages/developer/AppSettings';
 import { DeveloperLayout } from './components/DeveloperLayout';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
 
 function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900">
-      <Header />
       <main className="flex-grow">
         <Outlet />
       </main>
-      <Footer />
     </div>
   );
 }
