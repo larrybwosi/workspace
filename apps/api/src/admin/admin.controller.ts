@@ -1,9 +1,9 @@
 import { 
   Controller, Get, Post, Patch, Delete, Body, Query, Param, 
-  UseGuards, UploadedFile, UseInterceptors, BadRequestException 
+  UseGuards, Req, BadRequestException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
 import { AdminGuard } from '../auth/admin.guard';
 import { AuthGuard } from '../auth/auth.guard';
 import { AdminService } from './admin.service';
@@ -111,8 +111,18 @@ export class AdminController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: any) {
+  async uploadFile(@Req() req: FastifyRequest) {
+    const data = await req.file();
+    if (!data) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const buffer = await data.toBuffer();
+    const file = {
+      buffer,
+      originalname: data.filename,
+      mimetype: data.mimetype,
+      size: buffer.length,
+    };
     return this.adminService.uploadFile(file);
   }
 }

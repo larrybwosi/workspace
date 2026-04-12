@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Param, HttpStatus, HttpCode } from '@nestjs/common';
 import { V10InteractionsService } from './interactions.service';
 
-@Controller('v10/interactions')
+@Controller('bot/v10/interactions')
 export class V10InteractionsController {
   constructor(private readonly interactionsService: V10InteractionsService) {}
 

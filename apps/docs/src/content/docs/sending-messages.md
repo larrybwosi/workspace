@@ -1,27 +1,36 @@
 # Sending Messages
 
-Communication is at the heart of our platform. You can send messages in channels or directly to individuals.
+Communication is the heart of Skyrme Chat. Here's how to stay connected with your team.
 
-## Channel Messages
+> INFO: You can also use keyboard shortcuts to navigate even faster. Press `Ctrl + K` (or `Cmd + K`) to open the quick switcher.
 
-Channels are spaces for group discussions.
+## Channels
 
-1. **Select a Channel**: Click on a channel name in the sidebar (e.g., #general, #development).
-2. **Type your message**: Use the message input box at the bottom of the screen.
-3. **Format your text**: We support basic Markdown for bold, italics, and code blocks.
-4. **Press Enter**: Send your message to everyone in the channel.
+Channels are for group discussions. You can join channels related to your project, department, or interests.
+
+- **Public Channels**: Searchable and open for anyone in the workspace to join.
+- **Private Channels**: Visible only to invited members.
+
+### Composing a Message
+
+1. Select a channel from the sidebar.
+2. Type your message in the text area at the bottom.
+3. Press **Enter** to send.
+
+> SUCCESS: Your message is now visible to everyone in the channel!
 
 ## Direct Messages (DMs)
 
-For private, one-on-one conversations.
+For one-on-one conversations, use Direct Messages.
 
-1. **Find a User**: Click the "+" icon next to "Direct Messages" in the sidebar or search for a user.
-2. **Start Chatting**: Select the user to open a private thread.
-3. **Privacy**: DM conversations are only visible to the participants.
+1. Click the **+** icon next to "Direct Messages" in the sidebar.
+2. Search for the person you want to chat with.
+3. Start typing!
 
-## Advanced Messaging Features
+## Message Features
 
-- **Replies**: Hover over a message and click the reply icon to start a thread.
-- **Reactions**: Add emoji reactions to messages to show quick feedback.
-- **Attachments**: Drag and drop files or click the "upload" icon to share documents and images.
-- **Mentions**: Use `@username` to get someone's attention. They will receive a notification.
+- **Formatting**: Use Markdown to add **bold**, *italics*, or `code blocks`.
+- **Reactions**: Hover over a message and click the emoji icon to react.
+- **Threads**: Click "Reply to Thread" to keep related discussions organized and out of the main channel view.
+- **Attachments**: Drag and drop files or click the **+** icon to share images, documents, and more.
+- **Mentions**: Type `@` followed by a name to notify a specific teammate.

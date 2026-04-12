@@ -1,24 +1,24 @@
-"use client"
+'use client';
 
-import { useEffect, useState, createContext, useContext } from "react"
-import { getAblyClient } from "@repo/shared"
+import { getAblyClient } from '@repo/shared';
+import { useEffect, useState, createContext, useContext } from 'react';
 
-const PRESENCE_CHANNEL = "global-presence"
+const PRESENCE_CHANNEL = 'global-presence';
 
 interface PresenceContextType {
-  onlineUsers: Set<string>
+  onlineUsers: Set<string>;
 }
 
-const PresenceContext = createContext<PresenceContextType>({ onlineUsers: new Set() })
+const PresenceContext = createContext<PresenceContextType>({ onlineUsers: new Set() });
 
-export function PresenceProvider({ children, userId }: { children: React.ReactNode, userId?: string }) {
-  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
-  const ably = getAblyClient()
+export function PresenceProvider({ children, userId }: { children: React.ReactNode; userId?: string }) {
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const ably = getAblyClient();
 
   useEffect(() => {
-    if (!ably) return
+    if (!ably) return;
 
-    const channel = ably.channels.get(PRESENCE_CHANNEL)
+    const channel = ably.channels.get(PRESENCE_CHANNEL);
 
     const updatePresence = async () => {
       try {
@@ -26,12 +26,12 @@ export function PresenceProvider({ children, userId }: { children: React.ReactNo
         const userIds = presenceMessages.map((msg: any) => msg.clientId)
         setOnlineUsers(new Set(userIds))
       } catch (error) {
-        console.error("Error fetching presence:", error)
+        console.error('Error fetching presence:', error);
       }
-    }
+    };
 
     if (userId) {
-      channel.presence.enterClient(userId, { status: "online" })
+      channel.presence.enterClient(userId, { status: 'online' });
     }
 
     channel.presence.subscribe(["enter", "present"], (member: any) => {
@@ -46,21 +46,17 @@ export function PresenceProvider({ children, userId }: { children: React.ReactNo
       })
     })
 
-    updatePresence()
+    updatePresence();
 
     return () => {
-      channel.presence.unsubscribe()
+      channel.presence.unsubscribe();
       if (userId) {
-        channel.presence.leaveClient(userId)
+        channel.presence.leaveClient(userId);
       }
-    }
-  }, [ably, userId])
+    };
+  }, [ably, userId]);
 
-  return (
-    <PresenceContext.Provider value={{ onlineUsers }}>
-      {children}
-    </PresenceContext.Provider>
-  )
+  return <PresenceContext.Provider value={{ onlineUsers }}>{children}</PresenceContext.Provider>;
 }
 
-export const usePresence = () => useContext(PresenceContext)
+export const usePresence = () => useContext(PresenceContext);
