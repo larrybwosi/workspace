@@ -29,7 +29,7 @@ export class MessagesController {
     @Query('limit') limitNum = '50'
   ) {
     await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.getMessages(channelId, cursor, parseInt(limitNum));
+    return this.messagesService.getMessages(channelId, user.id, cursor, parseInt(limitNum));
   }
 
   @Post()
