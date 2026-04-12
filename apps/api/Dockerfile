@@ -49,6 +49,7 @@ RUN chown -R nestjs:nodejs /pnpm
 WORKDIR /app
 
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/dist ./dist
+COPY --from=installer --chown=nestjs:nodejs /app/packages/shared/dist ./packages/shared/dist
 COPY --from=installer --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/package.json ./package.json
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma ./prisma

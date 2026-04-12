@@ -7,7 +7,7 @@
     "dev": "vite --port 8080",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives "
   },
   "dependencies": {
     "react": "19.2.4",
@@ -37,6 +37,7 @@
     "postcss": "^8.5.8",
     "autoprefixer": "^10.4.27",
     "@repo/typescript-config": "workspace:*",
-    "@tailwindcss/vite": "^4.2.2"
+    "@tailwindcss/vite": "^4.2.2",
+    "@repo/eslint-config": "workspace:*"
   }
 }

@@ -13,7 +13,7 @@ describe('AblyController', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn().mockReturnValue('mock_key'),
+            get: vi.fn().mockReturnValue('mock_key'),
           },
         },
       ],
@@ -34,9 +34,9 @@ describe('AblyController', () => {
       const mockUser = { id: 'user_123' } as any;
 
       // Mock getAblyRest
-      const mockCreateTokenRequest = jest.fn().mockResolvedValue({ keyName: 'mock.key' });
-      const shared = require('@repo/shared/server');
-      jest.spyOn(shared, 'getAblyRest').mockReturnValue({
+      const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: 'mock.key' });
+      const shared = await import('@repo/shared/server');
+      vi.spyOn(shared, 'getAblyRest').mockReturnValue({
         auth: {
           createTokenRequest: mockCreateTokenRequest,
         },

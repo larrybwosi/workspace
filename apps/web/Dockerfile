@@ -31,7 +31,7 @@ COPY turbo.json turbo.json
 # Generate Prisma Client
 RUN npx turbo run db:generate
 
-RUN npx turbo build --filter=web...
+RUN npx turbo build --filter=web... -- --webpack
 
 FROM base AS runner
 WORKDIR /app

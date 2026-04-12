@@ -6,7 +6,7 @@ import {
   InfoPanel,
 } from "@repo/ui";
 import { useWorkspaceChannels } from "@repo/api-client";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useWorkspacesWithOffline } from "../hooks/offline/use-workspaces-offline";
 
 export function ChatPage() {

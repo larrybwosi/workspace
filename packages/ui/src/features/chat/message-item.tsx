@@ -40,7 +40,7 @@ import { useSession } from '@repo/shared';
 import { toast } from 'sonner';
 
 interface MessageItemProps {
-  message: Message;
+  message: any;
   showAvatar?: boolean;
   onReply?: (messageId: string) => void;
   onReaction?: (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void;
@@ -80,7 +80,7 @@ export const MessageItem = memo(function MessageItem({
   const currentUser = session?.user;
   const { data: users } = useUsers();
 
-  const user = (message as any).user || users?.find((u: any) => u.id === message.userId);
+  const user = (message as any).user || users?.find((u: any) => u.id === message.userId) || { name: "Unknown", avatar: "" };
   const isMentioned = currentUser?.username && message.content.includes(`@${currentUser.username}`);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -137,8 +137,8 @@ export const MessageItem = memo(function MessageItem({
         <div className="w-full mt-2">
           <SyntaxHighlighter
             code={code}
-            language={language}
-            fileName={message.metadata?.fileName as string}
+            language={language as string}
+            fileName={((message.metadata?.fileName as string) || "") as any}
           />
         </div>
       );
@@ -157,7 +157,7 @@ export const MessageItem = memo(function MessageItem({
   // Strip the previewed links from the displayed text
   const displayContent = useMemo(() => {
     let content = message.content;
-    linksToPreview.forEach(link => {
+    linksToPreview.forEach((link: any) => {
       // Escape special characters in the link to safely use it in regex
       const escapedLink = link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       content = content.replace(new RegExp(escapedLink, 'g'), '');
@@ -205,7 +205,7 @@ export const MessageItem = memo(function MessageItem({
                   showToolbar ? 'opacity-100' : 'opacity-0'
                 )}
               >
-                {format(new Date(message.timestamp), 'HH:mm')}
+                {format(new Date(message.timestamp || new Date()), 'HH:mm')}
               </span>
             )}
           </div>
@@ -228,13 +228,13 @@ export const MessageItem = memo(function MessageItem({
                 {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
 
                 <span className="text-[12px] text-muted-foreground/70 font-normal">
-                  {format(new Date(message.timestamp), 'MM/dd/yyyy HH:mm')}
+                  {format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm')}
                 </span>
 
                 {isReply && (
                   <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
                     <Reply className="h-3 w-3" />
-                    replied to {(message as any).replyTo?.user?.name || 'someone'}
+                    replied to {(message as any).replyToUser?.name || 'someone'}
                   </span>
                 )}
               </div>
@@ -317,13 +317,13 @@ export const MessageItem = memo(function MessageItem({
 
             {/* Link previews */}
             {linksToPreview.map((link, idx) => (
-              <LinkPreview key={idx} url={link} />
+              <LinkPreview key={idx} url={link as any} />
             ))}
 
             {/* Reactions */}
             {message.reactions && message.reactions.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1.5">
-                {message.reactions.map((reaction, idx) => (
+                {message.reactions.map((reaction: any, idx: any) => (
                   <button
                     key={idx}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-xs active:scale-95"

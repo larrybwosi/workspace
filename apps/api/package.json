@@ -9,8 +9,10 @@
     "start": "nest start",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "type-check": "tsc --noEmit",
-    "test": "jest --passWithNoTests",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test": "vitest run",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage"
   },
   "dependencies": {
     "@nest-lab/throttler-storage-redis": "^1.2.0",
@@ -55,6 +57,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^4.1.4",
     "eslint": "^9.18.0",
     "express": "^5.2.1",
     "jest": "^29.7.0",
@@ -69,6 +72,7 @@
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "tsx": "^4.21.0",
     "typescript": "^5.7.3",
+    "vitest": "^4.1.4",
     "webpack": "^5.106.1",
     "webpack-node-externals": "^3.0.0"
   }

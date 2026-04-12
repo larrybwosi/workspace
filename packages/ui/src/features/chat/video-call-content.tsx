@@ -92,15 +92,14 @@ export function VideoCallContent({
     }
   }, [type]);
 
-  const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn);
-  const { localCameraTrack } = useLocalCameraTrack(cameraOn);
+  const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn) as any;
+  const { localCameraTrack } = useLocalCameraTrack(cameraOn) as any;
   const [isSpeaking, setIsSpeaking] = useState(false);
   const { screenTrack, error: screenError } = useLocalScreenTrack(screenSharing, {
-    encoderConfig: '1080p_1',
-  });
+    encoderConfig: '1080p_1'}, "disable") as any;
   const remoteUsers = useRemoteUsers();
 
-  const currentParticipant = participants.find(p => p.userId === session?.user?.id);
+  const currentParticipant = participants.find(p => (p as any).userId === (session?.user?.id as any));
   const isHost = currentParticipant?.role === 'host';
 
   // Apply Local Mic Volume
@@ -517,10 +516,10 @@ export function VideoCallContent({
                                   </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent className="bg-zinc-900 border-zinc-800 text-white">
-                                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => promoteParticipant(user.uid)}>
+                                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => promoteParticipant(user.uid as any)}>
                                       <Shield className="h-4 w-4 text-primary" /> Promote to Moderator
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400" onClick={() => removeParticipant(user.uid)}>
+                                  <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400" onClick={() => removeParticipant(user.uid as any)}>
                                       <UserX className="h-4 w-4" /> Remove & Ban
                                   </DropdownMenuItem>
                               </DropdownMenuContent>

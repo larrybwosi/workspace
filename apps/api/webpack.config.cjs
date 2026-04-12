@@ -34,7 +34,7 @@ module.exports = function (options) {
       rules: [
         {
           test: /\.ts$/,
-          exclude: /node_modules/,
+          exclude: [/node_modules/, /\.spec\.ts$/],
           use: {
             loader: 'swc-loader',
             options: {

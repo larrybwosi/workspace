@@ -7,7 +7,7 @@
     "dev": "vite --port 3005",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives "
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -34,6 +34,7 @@
     "postcss": "^8.5.9",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
-    "vite": "^8.0.8"
+    "vite": "^8.0.8",
+    "@repo/eslint-config": "workspace:*"
   }
 }

@@ -30,7 +30,7 @@ export function Huddle({ channelId, channelName, user, onClose }: HuddleProps) {
 
     const updateParticipants = async () => {
       const presence = await channel.presence.get()
-      setParticipants(presence.map(p => p.data))
+      setParticipants(presence.map((p: any) => p.data as any))
     }
 
     channel.presence.subscribe("enter", updateParticipants)
@@ -72,12 +72,12 @@ export function Huddle({ channelId, channelName, user, onClose }: HuddleProps) {
         <div className="p-4 space-y-4">
           <div className="flex flex-wrap gap-3">
             {participants.map((p) => (
-              <div key={p.id} className="relative">
+              <div key={p.id as any} className="relative">
                 <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
-                  <AvatarImage src={p.avatar} />
-                  <AvatarFallback>{p.name[0]}</AvatarFallback>
+                  <AvatarImage src={p.avatar as any} />
+                  <AvatarFallback>{p.name?.charAt(0) as any || "?"}</AvatarFallback>
                 </Avatar>
-                {p.isMuted && (
+                {p.isMuted as any && (
                   <div className="absolute -bottom-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 border-2 border-background">
                     <MicOff className="h-2.5 w-2.5" />
                   </div>

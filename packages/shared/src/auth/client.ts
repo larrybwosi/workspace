@@ -10,7 +10,7 @@ const getEnv = (name: string) => {
     // @ts-ignore
     return (typeof import.meta !== 'undefined' && (import.meta as any).env?.[name]) || (window as any).process?.env?.[name];
   }
-  return process.env[name];
+  return (globalThis as any).process?.env[name];
 };
 
 const baseURL = isTauri

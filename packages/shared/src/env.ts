@@ -61,8 +61,8 @@ export function validateEnv(envInput?: Record<string, any>) {
   let sourceEnv: Record<string, any>;
   if (envInput) {
     sourceEnv = envInput;
-  } else if (typeof process !== 'undefined' && process.env && Object.keys(process.env).length > 0) {
-    sourceEnv = process.env;
+  } else if (typeof (globalThis as any).process !== 'undefined' && (globalThis as any).process?.env && Object.keys((globalThis as any).process?.env).length > 0) {
+    sourceEnv = (globalThis as any).process?.env;
   } else if (typeof (globalThis as any).import !== 'undefined' && (globalThis as any).import.meta && (globalThis as any).import.meta.env) {
     sourceEnv = (globalThis as any).import.meta.env;
   } else {
