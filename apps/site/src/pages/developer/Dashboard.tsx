@@ -28,7 +28,7 @@ export function DeveloperDashboard() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [selectedApp] = useState<Application | null>(null);
   const queryClient = useQueryClient();
 
   const copyToClipboard = (text: string, id: string) => {
