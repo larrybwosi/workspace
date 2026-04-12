@@ -316,9 +316,19 @@ export class MessagesService {
 
     const messages = await prisma.message.findMany({
       where: whereClause,
+      // ⚡ Optimization: Select only required fields from relations to reduce DB load and memory usage
       include: {
-        user: true,
-        channel: true,
+        user: {
+          select: {
+            name: true,
+            avatar: true,
+          },
+        },
+        channel: {
+          select: {
+            name: true,
+          },
+        },
       },
       orderBy: {
         timestamp: 'desc',
@@ -331,7 +341,7 @@ export class MessagesService {
         id: msg.id,
         content: msg.content,
         userName: msg.user.name,
-        userAvatar: msg.user.avatar,
+        userAvatar: (msg.user as any).avatar,
         timestamp: msg.timestamp,
         channelName: msg.channel.name,
         channelId: msg.channelId,
