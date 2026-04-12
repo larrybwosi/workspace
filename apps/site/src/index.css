@@ -1,32 +1,89 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0f172a;
-  --color-secondary: #64748b;
-  --color-accent: #3b82f6;
+  --color-primary: #3a4ec8;
+  --color-primary-dim: #2c41bc;
+  --color-primary-fixed: #8999ff;
+  --color-primary-fixed-dim: #778aff;
+  --color-on-primary: #f3f1ff;
+  --color-on-primary-container: #001371;
+  --color-on-primary-fixed: #000000;
+  --color-on-primary-fixed-variant: #001989;
+  --color-primary-container: #8999ff;
+  --color-inverse-primary: #7487ff;
+
+  --color-secondary: #5543cf;
+  --color-secondary-dim: #4935c3;
+  --color-secondary-fixed: #d2ccff;
+  --color-secondary-fixed-dim: #c3bcff;
+  --color-on-secondary: #f5f0ff;
+  --color-on-secondary-container: #412abb;
+  --color-on-secondary-fixed: #2c03a9;
+  --color-on-secondary-fixed-variant: #4a36c4;
+  --color-secondary-container: #d2ccff;
+
+  --color-tertiary: #564fac;
+  --color-tertiary-dim: #4a429f;
+  --color-tertiary-fixed: #ada7ff;
+  --color-tertiary-fixed-dim: #9f98fa;
+  --color-on-tertiary: #f5f0ff;
+  --color-on-tertiary-container: #2a1f7f;
+  --color-on-tertiary-fixed: #11005d;
+  --color-on-tertiary-fixed-variant: #332a88;
+  --color-tertiary-container: #ada7ff;
+
+  --color-error: #b41340;
+  --color-error-dim: #a70138;
+  --color-on-error: #ffefef;
+  --color-on-error-container: #510017;
+  --color-error-container: #f74b6d;
+
+  --color-background: #f9f5ff;
+  --color-on-background: #2d2a51;
+
+  --color-surface: #f9f5ff;
+  --color-surface-dim: #d4cfff;
+  --color-surface-bright: #f9f5ff;
+  --color-on-surface: #2d2a51;
+  --color-surface-variant: #ddd9ff;
+  --color-on-surface-variant: #5a5781;
+  --color-inverse-surface: #0c082f;
+  --color-inverse-on-surface: #9c98c6;
+  --color-surface-container: #eae5ff;
+  --color-surface-container-low: #f3eeff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #e3dfff;
+  --color-surface-container-highest: #ddd9ff;
+  --color-surface-tint: #3a4ec8;
+
+  --color-outline: #76729e;
+  --color-outline-variant: #aca8d7;
+
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+
+  --radius-default: 2px;
+  --radius-lg: 4px;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+  --radius-full: 9999px;
 }
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
+  }
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-#root {
-  width: 100%;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 2px; }
