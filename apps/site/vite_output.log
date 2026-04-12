@@ -1,0 +1,10 @@
+
+> site@0.1.0 dev /app/apps/site
+> vite --port 8080
+
+
+  VITE v6.4.2  ready in 387 ms
+
+  ➜  Local:   http://localhost:8080/
+  ➜  Network: use --host to expose
+11:29:27 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /@fs/app/packages/ui/src/styles/globals.css
