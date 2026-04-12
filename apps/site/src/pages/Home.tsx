@@ -655,8 +655,9 @@ const Footer = () => (
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
-      <Navbar />
+    // <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
+    //   <Navbar />
+    <div className="min-h-screen bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container font-body">
       <main>
         <Hero />
         <Stats />
@@ -667,7 +668,6 @@ export default function Home() {
         <SecuritySection />
         <CTA />
       </main>
-      <Footer />
     </div>
   );
 }

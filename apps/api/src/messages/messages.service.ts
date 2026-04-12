@@ -4,10 +4,6 @@ import {
   getAblyRest,
   AblyChannels,
   AblyEvents,
-  // extractUserMentions,
-  // extractUserIds,
-  // hasSpecialMention,
-  // extractChannelMentions,
   notifyMention,
   notifyChannel,
   isUserEligibleForAsset,
@@ -24,6 +20,33 @@ import {
 
 @Injectable()
 export class MessagesService {
+  // --- Core Validations ---
+  async verifyWorkspaceAccess(userId: string, slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    return workspace;
+  }
+
+  // --- Message Operations ---
   async getMessages(channelId: string, cursor?: string, limit = 50) {
     if (!channelId) {
       throw new BadRequestException('Channel ID required');
@@ -77,10 +100,10 @@ export class MessagesService {
       throw new BadRequestException('Channel ID required');
     }
 
-    const userMentions = extractUserMentions(content);
-    const channelMentions = extractChannelMentions(content);
-    const mentionsAll = hasSpecialMention(content, 'all');
-    const mentionsHere = hasSpecialMention(content, 'here');
+    const userMentions = extractUserMentions(content || '');
+    const channelMentions = extractChannelMentions(content || '');
+    const mentionsAll = hasSpecialMention(content || '', 'all');
+    const mentionsHere = hasSpecialMention(content || '', 'here');
 
     // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
     const mentionedUsers =
@@ -209,7 +232,8 @@ export class MessagesService {
 
     const ably = getAblyRest();
     if (ably) {
-      const channel = (ably as any).channels.get(AblyChannels.thread(message.channelId));
+      // Send updates to the main channel like in the controller
+      const channel = (ably as any).channels.get(AblyChannels.channel(message.channelId));
       await channel.publish(AblyEvents.MESSAGE_UPDATED, message);
     }
 
@@ -259,9 +283,9 @@ export class MessagesService {
 
     const ably = getAblyRest();
     if (ably) {
-      const channel = (ably as any).channels.get(AblyChannels.thread(channelId));
+      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_DELETED, {
-        messageId,
+        id: messageId,
         threadId: existingMessage.rootThread?.id,
       });
     }
@@ -349,6 +373,7 @@ export class MessagesService {
     };
   }
 
+  // --- Read Receipts ---
   async markMessageAsRead(userId: string, messageId: string) {
     await prisma.messageRead.upsert({
       where: {
@@ -363,6 +388,7 @@ export class MessagesService {
       create: {
         messageId,
         userId,
+        readAt: new Date(),
       },
     });
 
@@ -370,10 +396,6 @@ export class MessagesService {
   }
 
   async batchMarkAsRead(userId: string, messageIds: string[]) {
-    if (!Array.isArray(messageIds)) {
-      throw new BadRequestException('Invalid messageIds');
-    }
-
     const readPromises = messageIds.map(messageId =>
       prisma.messageRead.upsert({
         where: {
@@ -388,6 +410,7 @@ export class MessagesService {
         create: {
           messageId,
           userId,
+          readAt: new Date(),
         },
       })
     );
@@ -397,46 +420,61 @@ export class MessagesService {
     return { success: true };
   }
 
-  async createReply(userId: string, parentMessageId: string, content: string) {
-    if (!content) {
-      throw new BadRequestException('Content is required');
+  // --- Reactions ---
+  async addReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string) {
+    if (customEmojiId) {
+      const customEmoji = await prisma.customEmoji.findUnique({
+        where: { id: customEmojiId },
+      });
+
+      if (customEmoji && customEmoji.rules) {
+        const isEligible = await isUserEligibleForAsset(userId, customEmoji.rules);
+        if (!isEligible) {
+          throw new ForbiddenException('Not eligible to use this premium emoji');
+        }
+      }
+
+      await logAssetUsage({
+        assetId: customEmojiId,
+        assetType: 'emoji',
+        userId: userId,
+        workspaceId: customEmoji?.workspaceId || undefined,
+      });
     }
 
-    const parentMessage = await prisma.message.findUnique({
-      where: { id: parentMessageId },
+    const reaction = await prisma.reaction.upsert({
+      where: {
+        messageId_userId_emoji: {
+          messageId,
+          userId,
+          emoji,
+        },
+      },
+      update: {},
+      create: {
+        messageId,
+        userId,
+        emoji,
+        customEmojiId,
+      },
     });
 
-    if (!parentMessage) {
-      throw new NotFoundException('Parent message not found');
-    }
-
-    const newReply = await prisma.message.create({
-      data: {
-        content,
-        channelId: parentMessage.channelId,
-        threadId: parentMessage.threadId,
-        userId: userId,
-        replyToId: parentMessageId,
-        depth: parentMessage.depth + 1,
-      },
-      include: {
-        user: true,
-        reactions: true,
-      },
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
     });
 
     const ably = getAblyRest();
-    if (ably) {
-      const channelId = parentMessage.channelId || 'default';
-      const channel = (ably as any).channels.get(AblyChannels.thread(channelId));
-      await channel.publish(AblyEvents.MESSAGE_SENT, newReply);
+    if (ably && message) {
+      const channelId = message.channelId;
+      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
+      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, reaction, action: 'add' });
     }
 
-    return newReply;
+    return reaction;
   }
 
-  async toggleReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string) {
-    const existing = await prisma.reaction.findUnique({
+  async removeReaction(userId: string, messageId: string, emoji: string) {
+    const reaction = await prisma.reaction.findUnique({
       where: {
         messageId_userId_emoji: {
           messageId,
@@ -446,65 +484,41 @@ export class MessagesService {
       },
     });
 
-    if (existing) {
-      await prisma.reaction.delete({
-        where: { id: existing.id },
-      });
-    } else {
-      if (customEmojiId) {
-        const customEmoji = await prisma.customEmoji.findUnique({
-          where: { id: customEmojiId },
-        });
-
-        if (customEmoji && customEmoji.rules) {
-          const isEligible = await isUserEligibleForAsset(userId, customEmoji.rules);
-          if (!isEligible) {
-            throw new ForbiddenException('Not eligible to use this premium emoji');
-          }
-        }
-
-        await logAssetUsage({
-          assetId: customEmojiId,
-          assetType: 'emoji',
-          userId: userId,
-          workspaceId: customEmoji?.workspaceId || undefined,
-        });
-      }
-
-      await prisma.reaction.create({
-        data: {
-          messageId,
-          userId,
-          emoji,
-          customEmojiId,
-        },
-      });
+    if (!reaction) {
+      throw new NotFoundException('Reaction not found');
     }
+
+    await prisma.reaction.delete({
+      where: { id: reaction.id },
+    });
 
     const message = await prisma.message.findUnique({
       where: { id: messageId },
-      include: {
-        reactions: true,
-      },
     });
 
-    if (!message) {
-      throw new NotFoundException('Message not found');
-    }
-
     const ably = getAblyRest();
-    if (ably) {
-      const channelId = message.channelId || 'default';
-      const channel = (ably as any).channels.get(AblyChannels.thread(channelId));
-      await channel.publish(AblyEvents.MESSAGE_REACTION, {
-        messageId,
-        reactions: message.reactions,
-      });
+    if (ably && message) {
+      const channelId = message.channelId;
+      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
+      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
     }
 
-    return message;
+    return { success: true };
   }
 
+  async toggleReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string) {
+    const existing = await prisma.reaction.findUnique({
+      where: { messageId_userId_emoji: { messageId, userId, emoji } },
+    });
+
+    if (existing) {
+      return this.removeReaction(userId, messageId, emoji);
+    } else {
+      return this.addReaction(userId, messageId, emoji, customEmojiId);
+    }
+  }
+
+  // --- Actions ---
   async processActionResponse(userId: string, messageId: string, data: any) {
     const message = await prisma.message.findUnique({
       where: { id: messageId },

@@ -17,7 +17,7 @@ async function bootstrap() {
     bodyLimit: 30 * 1024 * 1024, // 30MB
   });
 
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, { bodyParser: false });
 
   // Better Auth handles its own body parsing for /api/auth
   // We bypass Fastify's default body parser for these routes to avoid consuming the request stream
@@ -67,17 +67,17 @@ async function bootstrap() {
 
   const allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || [];
 
-  app.enableCors({
-    credentials: true,
-    origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps or curl requests)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'), false);
-      }
-    },
-  });
+  // app.enableCors({
+  //   credentials: true,
+  //   origin: (origin, callback) => {
+  //     // allow requests with no origin (like mobile apps or curl requests)
+  //     if (!origin || allowedOrigins.includes(origin)) {
+  //       callback(null, true);
+  //     } else {
+  //       callback(new Error('Not allowed by CORS'), false);
+  //     }
+  //   },
+  // });
 
   const config = new DocumentBuilder()
     .setTitle('Dealio API')
