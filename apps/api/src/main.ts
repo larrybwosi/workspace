@@ -5,6 +5,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { json, urlencoded } from 'express';
 import { validateEnv } from '@repo/shared';
 
+// Polyfill for BigInt serialization
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 async function bootstrap() {
   const env = validateEnv();
   const app = await NestFactory.create(AppModule, {

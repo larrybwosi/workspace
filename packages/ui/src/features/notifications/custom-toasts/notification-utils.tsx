@@ -8,8 +8,9 @@ export const notificationSounds = {
 }
 
 export function playNotificationSound(type: keyof typeof notificationSounds) {
-  const audio = new Audio(notificationSounds[type])
-  audio.play().catch(e => console.error("Failed to play sound:", e))
+  if (typeof window === 'undefined') return;
+  const audio = new Audio(notificationSounds[type]);
+  audio.play().catch(e => console.error('Failed to play sound:', e));
 }
 
 export function showDiscordNotification(payload: {
