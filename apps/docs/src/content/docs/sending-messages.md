@@ -2,6 +2,8 @@
 
 Communication is the heart of Skyrme Chat. Here's how to stay connected with your team.
 
+> INFO: You can also use keyboard shortcuts to navigate even faster. Press `Ctrl + K` (or `Cmd + K`) to open the quick switcher.
+
 ## Channels
 
 Channels are for group discussions. You can join channels related to your project, department, or interests.
@@ -14,6 +16,8 @@ Channels are for group discussions. You can join channels related to your projec
 1. Select a channel from the sidebar.
 2. Type your message in the text area at the bottom.
 3. Press **Enter** to send.
+
+> SUCCESS: Your message is now visible to everyone in the channel!
 
 ## Direct Messages (DMs)
 
