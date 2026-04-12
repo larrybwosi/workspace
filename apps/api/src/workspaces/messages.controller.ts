@@ -13,7 +13,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
-import { MessagesService } from '@/messages/messages.service';
+import { MessagesService } from '@/workspaces/messages.service';
 
 @Controller('workspaces/:slug/channels/:channelId/messages')
 @UseGuards(AuthGuard)

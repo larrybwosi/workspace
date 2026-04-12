@@ -67,17 +67,17 @@ async function bootstrap() {
 
   const allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || [];
 
-  // app.enableCors({
-  //   credentials: true,
-  //   origin: (origin, callback) => {
-  //     // allow requests with no origin (like mobile apps or curl requests)
-  //     if (!origin || allowedOrigins.includes(origin)) {
-  //       callback(null, true);
-  //     } else {
-  //       callback(new Error('Not allowed by CORS'), false);
-  //     }
-  //   },
-  // });
+  app.enableCors({
+    credentials: true,
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'), false);
+      }
+    },
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Dealio API')
