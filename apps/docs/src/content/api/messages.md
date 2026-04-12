@@ -59,9 +59,34 @@ Send a message to a channel or a specific user.
   "content": "New deployment request",
   "messageType": "approval",
   "actions": [
-    { "actionId": "approve", "label": "Approve", "style": "primary" },
-    { "actionId": "deny", "label": "Deny", "style": "danger" }
+    { "actionId": "approve", "label": "Approve", "style": "primary", "value": "deploy_prod_123" },
+    { "actionId": "deny", "label": "Deny", "style": "danger", "value": "deploy_prod_123" }
   ]
+}
+```
+
+### Interactive Actions
+
+Interactive actions allow users to trigger webhooks in your application by clicking buttons on a message.
+
+1. **User clicks a button**: Skyrme Chat sends an `action.triggered` webhook to your app.
+2. **Payload**: The payload includes the `actionId`, `value`, `messageId`, and the user who clicked it.
+3. **Response**: Your server should respond with a `200 OK`. You can also optionally update the original message to reflect the new state.
+
+### Custom Metadata
+
+The `metadata` field allows you to store structured JSON data with your message. This is particularly useful for `custom` message types where you want to render a specific UI on the client.
+
+```json
+{
+  "channelId": "chan_123",
+  "content": "Stock Update: AAPL",
+  "messageType": "custom",
+  "metadata": {
+    "symbol": "AAPL",
+    "price": 150.25,
+    "change": "+1.2%"
+  }
 }
 ```
 

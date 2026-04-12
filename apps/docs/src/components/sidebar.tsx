@@ -15,11 +15,15 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
     : [
         { href: '/api-reference/getting-started', label: 'Getting Started', category: 'General' },
         { href: '/api-reference/authentication', label: 'Authentication', category: 'General' },
+        { href: '/api-reference/errors', label: 'Errors & Rate Limits', category: 'General' },
         { href: '/api-reference/workspaces', label: 'Workspaces & Members', category: 'Resources' },
         { href: '/api-reference/messages', label: 'Messages & Channels', category: 'Resources' },
+        { href: '/api-reference/real-time', label: 'Real-time Events', category: 'Resources' },
         { href: '/api-reference/webhooks', label: 'Webhooks', category: 'Resources' },
         { href: '/api-reference/recipe-bot', label: 'How to build a bot', category: 'Recipes' },
         { href: '/api-reference/recipe-sync-members', label: 'Syncing members', category: 'Recipes' },
+        { href: '/api-reference/recipe-slash-commands', label: 'Slash commands', category: 'Recipes' },
+        { href: '/api-reference/recipe-file-uploads', label: 'File uploads', category: 'Recipes' },
       ];
 
   const groupedLinks = links.reduce(
