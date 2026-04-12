@@ -610,8 +610,7 @@ const Footer = () => (
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container font-body">
-      <Navbar />
-      <main className="pt-24">
+      <main>
         <Hero />
         <MessagingFocus />
         <IssuesProjects />
@@ -620,7 +619,6 @@ export default function Home() {
         <Stats />
         <FinalCTA />
       </main>
-      <Footer />
     </div>
   );
 }

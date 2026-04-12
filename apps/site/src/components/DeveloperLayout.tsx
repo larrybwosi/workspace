@@ -1,20 +1,24 @@
-import { Link, Outlet, useLocation } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { cn } from '@repo/ui/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { authClient } from '@repo/shared/auth/client';
 
 export function DeveloperLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const navigation = [
     { name: 'Applications', href: '/developer', icon: 'apps' },
     { name: 'Documentation', href: '#', icon: 'description' },
-    { name: 'Teams', href: '#', icon: 'groups' },
-    { name: 'Settings', href: '#', icon: 'settings' },
+    { name: 'Teams', href: '/developer/teams', icon: 'groups' },
+    { name: 'Settings', href: '/developer/settings', icon: 'settings' },
   ];
 
-  const secondaryNavigation = [
-    { name: 'Support', href: '#', icon: 'help' },
-    { name: 'Log out', href: '#', icon: 'logout' },
-  ];
+  const handleLogout = async () => {
+    await authClient.signOut();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-surface selection:bg-primary/10">
@@ -55,18 +59,24 @@ export function DeveloperLayout() {
         </nav>
 
         <div className="px-4 mt-auto pt-8 border-t border-outline-variant/10">
-          {secondaryNavigation.map(item => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors duration-200"
-            >
-              <span className="material-symbols-outlined text-xl" data-icon={item.icon}>
-                {item.icon}
-              </span>
-              <span className="text-sm font-medium">{item.name}</span>
-            </Link>
-          ))}
+          <Link
+            to="#"
+            className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors duration-200"
+          >
+            <span className="material-symbols-outlined text-xl" data-icon="help">
+              help
+            </span>
+            <span className="text-sm font-medium">Support</span>
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors duration-200"
+          >
+            <span className="material-symbols-outlined text-xl" data-icon="logout">
+              logout
+            </span>
+            <span className="text-sm font-medium">Log out</span>
+          </button>
         </div>
       </aside>
 
@@ -97,14 +107,20 @@ export function DeveloperLayout() {
 
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-on-surface">Alex Rivera</p>
-              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Senior Dev</p>
+              <p className="text-xs font-bold text-on-surface">{user?.name}</p>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Developer</p>
             </div>
-            <img
-              alt="User Profile"
-              className="w-8 h-8 rounded-full border-2 border-primary-container"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBREHXUkG8KtXLiqQKaRaPXYBd8AC-RB4Uo3tBgE46W61RdVRGSqQlN6Ag0iny87Tin7PQSeMYgR5PJkM0VRb5XY5ImBuB3Eft0aVMnilrSJ2oSZTGJF8an5nUS_tb6TI2AixqwnBhUV9ceuNYDM03jDMthhgo50hY0TdtjiyUqxWA9M9XRFcaZQcXmLSwr5NKrtTAv9PdhlG_sHAhB1l5D5Q63unwa4D1C1gZToDgwoQkpAkqVekvNKDRiobgD-MXHwE6oVHSiKWnb"
-            />
+            {user?.image ? (
+              <img
+                alt="User Profile"
+                className="w-8 h-8 rounded-full border-2 border-primary-container object-cover"
+                src={user.image}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full border-2 border-primary-container bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
       </header>
