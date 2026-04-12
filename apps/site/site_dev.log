@@ -1,0 +1,11 @@
+
+> site@0.1.0 dev /app/apps/site
+> vite --port 8080
+
+Port 8080 is in use, trying another one...
+Port 8081 is in use, trying another one...
+
+  VITE v6.4.2  ready in 380 ms
+
+  ➜  Local:   http://localhost:8082/
+  ➜  Network: use --host to expo10:10:57:24 AM [vite] (client) hmr update /src/pages/developer/Dashboard.tsx, /src/index.css, /@fs/app/packages/ui/src/styles/globals.css
