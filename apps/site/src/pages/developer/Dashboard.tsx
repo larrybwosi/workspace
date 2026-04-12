@@ -7,13 +7,30 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { cn } from '@repo/ui/lib/utils';
 
+interface BotData {
+  id: string;
+  name: string;
+  botToken?: string;
+}
+
+interface Application {
+  id: string;
+  name: string;
+  description?: string;
+  clientId: string;
+  clientSecret: string;
+  bot?: BotData;
+}
+
 export function DeveloperDashboard() {
   const { session, isLoading: authLoading, isAuthenticated } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: apps, isLoading: appsLoading } = useQuery({
+  const { data: apps, isLoading: appsLoading } = useQuery<Application[]>({
     queryKey: ['applications'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications`, {
@@ -121,10 +138,57 @@ export function DeveloperDashboard() {
                     <img alt="team member" className="w-6 h-6 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB79l4V79Aaxj0iqxCsLspNLj1wCyFdwl-nfIL21i70G1VJK_baLKf2_OdgWMuBg6neVKjfGarOrCmLRGkqv4FHG0PjrYO75SUPB3CQpP2INPoPUCJD4NDTE6RyYU3VJA7zTTJc4iU6Gy43psaNGSpTP3UczuJFyQAcHiFtPXYF0Bb_jM0fGu2JxklbfUMxiHSIzVwR90I8XTkZbJKTjeHlPR067Ao5Ek3gvxZrUfZMKCJxw4oSZ8yD2pC5CwD3bMfC0W2FuCnaaJ0" />
                     <img alt="team member" className="w-6 h-6 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSK-V3ndh1qbyBbB3l4agZ3HMxuVY9zEFZIY4iEzaDxD7q_Tqt_Ieh7b8_FtrzD1Hx4aT7vQRTxcX9Nzr6a8QD2V9WWmJF6wyeJzxdjIwqB9b6cp89uYj2Nxudrgk7SVvak9Qeg8vTtdMUm3v69vzmN1KromYfwMc-YXrvEXWvpqAnsyHAPjdO9PO9iIH-wEpj7NA0SP-csr1YlIuNYNBoDiswGyp2cArUA3n6W4dExK8eFvKhf35CIs7-spgB4gTPLHVPT87VmTuX" />
                   </div>
-                  <span className="text-xs text-outline font-medium">Updated recently</span>
-                </div>
-              </Link>
-            ))}
+                </CardHeader>
+
+                {selectedApp?.id === app.id && (
+                  <CardContent className="pt-6 border-t bg-slate-50/50 rounded-b-xl">
+                    <div className="grid gap-8">
+                       <section>
+                         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Credentials</h3>
+                         <div className="space-y-4">
+                            <div className="grid sm:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-500 uppercase">Client ID</label>
+                                <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border group">
+                                  <code className="text-sm flex-grow truncate text-slate-600">{app.clientId}</code>
+                                  <button onClick={() => copyToClipboard(app.clientId, app.id + 'id')} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                    {copiedId === app.id + 'id' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-500 uppercase">Client Secret</label>
+                                <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border">
+                                  <code className="text-sm flex-grow truncate text-slate-600">••••••••••••••••••••••••••••••••</code>
+                                  <button onClick={() => copyToClipboard(app.clientSecret, app.id + 'secret')} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                     {copiedId === app.id + 'secret' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {app.bot && (
+                              <div className="space-y-1.5">
+                                 <label className="text-xs font-semibold text-slate-500 uppercase">Bot Token</label>
+                                 <div className="flex items-center gap-2 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
+                                   <Key className="h-4 w-4 text-blue-500" />
+                                   <code className="text-sm flex-grow truncate text-blue-700 font-medium">
+                                     {app.bot.botToken ? '••••••••••••••••••••••••••••••••' : 'No token generated'}
+                                   </code>
+                                   <div className="flex items-center gap-2">
+                                     <button onClick={() => copyToClipboard(app.bot?.botToken ?? '', app.id + 'token')} className="text-blue-400 hover:text-blue-600 transition-colors" title="Copy Token">
+                                        {copiedId === app.id + 'token' ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                     </button>
+                                     <button onClick={() => { if(confirm('Are you sure? This will invalidate the existing token.')) resetTokenMutation.mutate(app.id) }} className="text-blue-400 hover:text-blue-600 transition-colors" title="Reset Token">
+                                        <Plus className="h-4 w-4 rotate-45" />
+                                     </button>
+                                   </div>
+                                 </div>
+                                 <p className="text-[11px] text-slate-500 mt-1">Keep this token secret. Do not share it or commit it to version control.</p>
+                              </div>
+                            )}
+                         </div>
+                       </section>
 
             {/* Featured Float Area */}
             <div className="md:col-span-2 bg-gradient-to-br from-primary to-secondary rounded-xl p-1 w-full relative group">
@@ -187,8 +251,8 @@ export function DeveloperDashboard() {
                <Input value={description} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)} placeholder="What does this application do?" className="h-11 rounded-xl" />
              </div>
              <div className="flex gap-3 pt-6">
-               <Button variant="ghost" className="flex-1 h-11 rounded-xl" onClick={() => (document.getElementById('create-app-modal') as HTMLDialogElement).close()}>Cancel</Button>
-               <Button className="flex-1 h-11 rounded-xl" disabled={!name || createMutation.isPending} onClick={() => {
+               <Button variant="ghost" className="flex-1 h-11" onClick={() => (document.getElementById('create-app-modal') as HTMLDialogElement).close()}>Cancel</Button>
+               <Button className="flex-1 h-11" disabled={!name || createMutation.isPending} onClick={() => {
                  createMutation.mutate({ name, description });
                  (document.getElementById('create-app-modal') as HTMLDialogElement).close();
                }}>

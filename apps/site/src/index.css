@@ -1,60 +1,76 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3a4ec8;
   --color-primary-dim: #2c41bc;
-  --color-primary-fixed: #8999ff;
   --color-primary-fixed-dim: #778aff;
-  --color-on-primary: #f3f1ff;
-  --color-on-primary-container: #001371;
-  --color-on-primary-fixed: #000000;
-  --color-on-primary-fixed-variant: #001989;
-  --color-primary-container: #8999ff;
-  --color-inverse-primary: #7487ff;
-
-  --color-secondary: #5543cf;
-  --color-secondary-dim: #4935c3;
-  --color-secondary-fixed: #d2ccff;
-  --color-secondary-fixed-dim: #c3bcff;
-  --color-on-secondary: #f5f0ff;
-  --color-on-secondary-container: #412abb;
-  --color-on-secondary-fixed: #2c03a9;
-  --color-on-secondary-fixed-variant: #4a36c4;
-  --color-secondary-container: #d2ccff;
-
-  --color-tertiary: #564fac;
-  --color-tertiary-dim: #4a429f;
-  --color-tertiary-fixed: #ada7ff;
-  --color-tertiary-fixed-dim: #9f98fa;
-  --color-on-tertiary: #f5f0ff;
-  --color-on-tertiary-container: #2a1f7f;
-  --color-on-tertiary-fixed: #11005d;
-  --color-on-tertiary-fixed-variant: #332a88;
   --color-tertiary-container: #ada7ff;
-
+  --color-secondary-container: #d2ccff;
+  --color-on-background: #1a1835;
+  --color-tertiary-fixed: #ada7ff;
+  --color-on-primary: #f3f1ff;
+  --color-inverse-primary: #7487ff;
+  --color-tertiary: #564fac;
+  --color-secondary-fixed-dim: #c3bcff;
+  --color-secondary-fixed: #d2ccff;
   --color-error: #b41340;
-  --color-error-dim: #a70138;
-  --color-on-error: #ffefef;
-  --color-on-error-container: #510017;
-  --color-error-container: #f74b6d;
-
-  --color-background: #f9f5ff;
-  --color-on-background: #2d2a51;
-
-  --color-surface: #f9f5ff;
-  --color-surface-dim: #d4cfff;
-  --color-surface-bright: #f9f5ff;
-  --color-on-surface: #2d2a51;
-  --color-surface-variant: #ddd9ff;
-  --color-on-surface-variant: #5a5781;
-  --color-inverse-surface: #0c082f;
-  --color-inverse-on-surface: #9c98c6;
-  --color-surface-container: #eae5ff;
-  --color-surface-container-low: #f3eeff;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-high: #e3dfff;
-  --color-surface-container-highest: #ddd9ff;
+  --color-tertiary-dim: #4a429f;
+  --color-inverse-surface: #0c082f;
+  --color-outline: #76729e;
+  --color-on-secondary-container: #412abb;
+  --color-surface-variant: #ddd9ff;
+  --color-surface-bright: #f9f5ff;
   --color-surface-tint: #3a4ec8;
+  --color-on-tertiary-fixed-variant: #332a88;
+  --color-error-container: #f74b6d;
+  --color-on-tertiary-container: #2a1f7f;
+  --color-surface: #ffffff;
+  --color-surface-container: #f8f9fc;
+  --color-outline-variant: #aca8d7;
+  --color-inverse-on-surface: #9c98c6;
+  --color-on-secondary: #f5f0ff;
+  --color-tertiary-fixed-dim: #9f98fa;
+  --color-on-surface: #1a1835;
+  --color-error-dim: #a70138;
+  --color-surface-container-low: #f1f4f9;
+  --color-on-tertiary-fixed: #11005d;
+  --color-on-secondary-fixed-variant: #4a36c4;
+  --color-on-tertiary: #f5f0ff;
+  --color-background: #ffffff;
+  --color-surface-dim: #e2e8f0;
+  --color-surface-container-high: #edf2f7;
+  --color-on-error: #ffefef;
+  --color-surface-container-highest: #e2e8f0;
+  --color-on-surface-variant: #475569;
+  --color-primary-fixed: #8999ff;
+  --color-on-primary-container: #001371;
+  --color-on-error-container: #510017;
+  --color-on-primary-fixed-variant: #001989;
+  --color-secondary-dim: #4935c3;
+  --color-primary-container: #e0e7ff;
+  --color-on-primary-fixed: #000000;
+  --color-secondary: #334155;
+  --color-primary: #2563eb;
+  --color-on-secondary-fixed: #2c03a9;
+
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+
+  --radius-default: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+:root {
+  font-family: "Manrope", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: var(--color-on-surface);
+  background-color: var(--color-background);
 
   --color-outline: #76729e;
   --color-outline-variant: #aca8d7;
@@ -80,8 +96,23 @@
   }
 }
 
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+#root {
+  width: 100%;
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
