@@ -1,438 +1,607 @@
 import React from 'react';
-import { RefreshCcw, Zap, Lock, Code2, ShieldCheck, Globe2, Database, Cloud, CheckCircle2, Menu } from 'lucide-react';
+import {
+  MessageSquare,
+  Network,
+  Zap,
+  Search,
+  ClipboardList,
+  Layout,
+  CheckCircle2,
+  Users,
+  Bell,
+  GitCommit,
+  RefreshCw,
+  Terminal,
+  ArrowRight,
+  ShieldCheck,
+  Key,
+  Globe,
+  Mail,
+  Share2,
+} from 'lucide-react';
 
 const Navbar = () => (
-  <nav className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-    <div className="flex items-center gap-12">
-      <div className="font-bold text-2xl tracking-tight text-gray-900">Skryme</div>
-      <div className="hidden md:flex gap-8 text-sm font-medium text-gray-600">
-        <a href="#" className="hover:text-gray-900">
+  <nav className="fixed top-0 w-full z-50 bg-violet-50/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-[0_20px_50px_rgba(45,42,81,0.05)]">
+    <div className="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto">
+      <div className="text-xl font-bold tracking-tighter text-indigo-700 dark:text-indigo-300">Skryme Chat</div>
+      <div className="hidden md:flex gap-8 items-center font-headline font-medium text-sm tracking-tight">
+        <a
+          className="text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600 transition-colors duration-300"
+          href="#"
+        >
           Product
         </a>
-        <a href="#" className="hover:text-gray-900">
-          Features
+        <a
+          className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300"
+          href="#"
+        >
+          Workspaces
         </a>
-        <a href="#" className="hover:text-gray-900">
+        <a
+          className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300"
+          href="#"
+        >
+          Integrations
+        </a>
+        <a
+          className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300"
+          href="#"
+        >
           Pricing
         </a>
-        <a href="#" className="hover:text-gray-900">
-          Resources
-        </a>
+      </div>
+      <div className="flex items-center gap-4">
+        <button className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-headline font-bold text-sm scale-95 active:scale-90 transition-transform cursor-pointer">
+          Start Collaborating
+        </button>
       </div>
     </div>
-    <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-      <a href="#" className="text-gray-600 hover:text-gray-900">
-        Log in
-      </a>
-      <button className="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2.5 rounded-lg transition-colors">
-        Get Started
-      </button>
-    </div>
-    <button className="md:hidden text-gray-600">
-      <Menu size={24} />
-    </button>
   </nav>
 );
 
 const Hero = () => (
-  <section className="max-w-7xl mx-auto px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
-    <div>
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-semibold tracking-wide uppercase mb-6 border border-emerald-100">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-        New available for enterprise
-      </div>
-      <h1 className="text-5xl md:text-[64px] leading-[1.1] font-bold text-gray-900 mb-6 tracking-tight">
-        Collaborate <br /> without limits.
-      </h1>
-      <p className="text-lg text-gray-500 mb-8 max-w-md leading-relaxed">
-        The high-performance platform for teams that demand excellence. Synchronize global workflows with zero latency
-        and enterprise security.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4">
-        <button className="bg-[#10b981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-medium transition-colors text-center">
-          Start Building
-        </button>
-        <button className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-6 py-3 rounded-lg font-medium transition-colors text-center">
-          View Demo
-        </button>
-      </div>
-    </div>
-    <div className="relative">
-      <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100 to-transparent rounded-[2rem] transform translate-x-4 translate-y-4 -z-10"></div>
-      <img
-        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800"
-        alt="User looking at phone"
-        className="rounded-[2rem] w-full object-cover h-[500px] shadow-2xl"
-      />
-    </div>
-  </section>
-);
-
-const LogoCloud = () => (
-  <section className="bg-gray-50 border-y border-gray-100 py-12">
-    <div className="max-w-7xl mx-auto px-6">
-      <p className="text-center text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-8">
-        Powering the next generation of industry leaders
-      </p>
-      <div className="flex flex-wrap justify-center gap-12 md:gap-24 opacity-60 grayscale">
-        {['GITHUB', 'SLACK', 'STRIPE', 'NOTION', 'LINEAR', 'VERCEL'].map(logo => (
-          <span key={logo} className="text-lg font-bold text-gray-600 tracking-wider">
-            {logo}
-          </span>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-const FeatureSync = () => (
-  <section className="max-w-7xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-16 items-center">
-    <div>
-      <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6">
-        <RefreshCcw size={24} />
-      </div>
-      <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-        Real-time sync
-        <br />
-        redefined.
-      </h2>
-      <p className="text-gray-500 text-lg mb-10 leading-relaxed">
-        Experience millisecond-perfect synchronization across continents. Our proprietary engine handles complex
-        conflict resolution so you can focus on the work.
-      </p>
-
-      <div className="space-y-4">
-        <div className="flex items-start gap-4 p-5 rounded-2xl border border-gray-100 bg-white shadow-sm">
-          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 mt-1">
-            <Globe2 size={20} />
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-900">50ms Global Latency</h4>
-            <p className="text-sm text-gray-500 mt-1">
-              Distributed edge servers ensure your team feels like they're in the same room.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-4 p-5 rounded-2xl border border-gray-100 bg-white shadow-sm">
-          <div className="p-2 rounded-lg bg-blue-50 text-blue-500 mt-1">
-            <Database size={20} />
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-900">Infinite Multiplayer</h4>
-            <p className="text-sm text-gray-500 mt-1">
-              Whether it's 2 people or 200, the performance remains silky smooth.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Abstract UI Illustration */}
-    <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 h-full min-h-[400px] relative overflow-hidden flex flex-col shadow-inner">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-400"></div>
-          <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-          <div className="w-3 h-3 rounded-full bg-green-400"></div>
-        </div>
-        <div className="flex gap-[-8px]">
-          <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white z-20 flex items-center justify-center text-white text-xs font-bold">
-            AS
-          </div>
-          <div className="w-8 h-8 rounded-full bg-emerald-500 border-2 border-white z-10 -ml-2 flex items-center justify-center text-white text-xs font-bold">
-            BK
-          </div>
-          <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white z-0 -ml-2 flex items-center justify-center text-gray-500 text-xs font-bold">
-            +
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4 w-full flex-1 relative">
-        <div className="w-3/4 h-8 bg-white rounded-lg shadow-sm border border-gray-100"></div>
-        <div className="w-full h-4 bg-gray-200 rounded-full opacity-50"></div>
-        <div className="w-5/6 h-4 bg-gray-200 rounded-full opacity-50"></div>
-
-        {/* Fake Cursors */}
-        <div className="absolute top-12 left-1/2 flex flex-col items-center">
-          <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[14px] border-transparent border-b-emerald-500 transform rotate-[-25deg]"></div>
-          <div className="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full mt-1">Alice Chen</div>
-        </div>
-
-        <div className="absolute bottom-10 left-1/4 flex flex-col items-center">
-          <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[14px] border-transparent border-b-blue-500 transform rotate-[-25deg]"></div>
-          <div className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full mt-1">Marcus Reid</div>
-        </div>
-
-        {/* Fake Comment Bubble */}
-        <div className="absolute bottom-4 right-4 bg-white p-4 rounded-xl shadow-lg border border-gray-100 max-w-[200px]">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[8px] text-white">
-              AC
-            </div>
-            <span className="text-xs font-bold text-gray-900">Alice Chen</span>
-          </div>
-          <p className="text-[10px] text-gray-500">"Should we update the DB indexing here too?"</p>
-        </div>
-      </div>
-
-      <div className="mt-auto pt-8 flex justify-between items-center text-[10px] font-semibold text-gray-400 tracking-wider">
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span> CONNECTED: SINGAPORE
+  <section className="relative px-6 pt-24 pb-40 overflow-hidden">
+    <div className="max-w-7xl mx-auto text-center relative z-10">
+      <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 bg-surface-container-low border border-outline-variant/30 rounded-full">
+        <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+        <span className="text-[0.65rem] font-bold tracking-widest uppercase text-on-surface-variant">
+          Next-Gen Collaboration
         </span>
-        <span>VERSION 2.4.91</span>
+      </div>
+      <h1 className="text-5xl md:text-8xl font-extrabold tracking-tighter text-on-background mb-10 leading-[1.05] max-w-5xl mx-auto font-headline">
+        The Command Center for{' '}
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-indigo-600 to-primary-dim">
+          Modern Engineering Teams.
+        </span>
+      </h1>
+      <p className="max-w-4xl mx-auto text-xl md:text-2xl text-on-surface-variant mb-14 leading-relaxed font-light font-body">
+        One unified workspace for real-time messaging, organizational channels, and seamless project execution. Bridge
+        the gap between individual focus and global team alignment.
+      </p>
+      <div className="flex flex-col sm:flex-row justify-center gap-6">
+        <button className="px-10 py-5 bg-on-background text-white rounded-xl font-headline font-bold text-lg shadow-2xl transition-all hover:translate-y-[-2px] hover:shadow-primary/20 cursor-pointer">
+          Create Your Workspace
+        </button>
+        <button className="px-10 py-5 bg-surface-container-high text-on-surface rounded-xl font-headline font-bold text-lg border border-outline-variant/20 transition-all hover:bg-surface-variant/30 cursor-pointer">
+          See How It Works
+        </button>
       </div>
     </div>
-  </section>
-);
-
-const FeatureGrid = () => (
-  <section className="bg-gray-50 py-24 border-y border-gray-100">
-    <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-12">
-      <div>
-        <Zap className="text-gray-900 mb-6" size={24} />
-        <h3 className="text-xl font-bold text-gray-900 mb-3">Instant Feedback</h3>
-        <p className="text-gray-500 leading-relaxed">
-          Latency-free communication pipelines designed for the modern remote landscape. Never wait for an update again.
-        </p>
-      </div>
-      <div>
-        <Lock className="text-gray-900 mb-6" size={24} />
-        <h3 className="text-xl font-bold text-gray-900 mb-3">Fortified Security</h3>
-        <p className="text-gray-500 leading-relaxed">
-          Enterprise-grade encryption is built into the core. Your intellectual property is protected by the highest
-          standards.
-        </p>
-      </div>
-      <div>
-        <Code2 className="text-gray-900 mb-6" size={24} />
-        <h3 className="text-xl font-bold text-gray-900 mb-3">Extensible API</h3>
-        <p className="text-gray-500 leading-relaxed">
-          Deeply integrated into your existing CI/CD workflows with our developer-first API and robust documentation.
-        </p>
-      </div>
-    </div>
-  </section>
-);
-
-const SecuritySection = () => (
-  <section className="max-w-7xl mx-auto px-6 py-24 text-center">
-    <div className="inline-flex items-center text-xs font-bold tracking-widest text-emerald-600 uppercase mb-4">
-      Privacy Infrastructure
-    </div>
-    <h2 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight">Security by default.</h2>
-    <p className="text-gray-500 text-lg max-w-2xl mx-auto mb-16">
-      We've re-engineered the collaboration architecture to ensure data residency and privacy compliance are built-in
-      features, not afterthoughts.
-    </p>
-
-    <div className="grid md:grid-cols-2 text-left bg-white border border-gray-200 rounded-[2rem] overflow-hidden shadow-sm">
-      <div className="p-10 border-b md:border-b-0 md:border-r border-gray-200">
-        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6">
-          <ShieldCheck size={20} />
-        </div>
-        <h4 className="text-lg font-bold text-gray-900 mb-2">Zero-Trust Access</h4>
-        <p className="text-gray-500 text-sm leading-relaxed">
-          Comprehensive identity management with native SSO and SCIM provisioning for your entire organization.
-        </p>
-      </div>
-      <div className="p-10 border-b border-gray-200">
-        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6">
-          <Lock size={20} />
-        </div>
-        <h4 className="text-lg font-bold text-gray-900 mb-2">End-to-End Encryption</h4>
-        <p className="text-gray-500 text-sm leading-relaxed">
-          Data is encrypted at rest and in transit using AES-256 and TLS 1.3 standards as our baseline security.
-        </p>
-      </div>
-      <div className="p-10 border-b md:border-b-0 md:border-r border-gray-200">
-        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6">
-          <CheckCircle2 size={20} />
-        </div>
-        <h4 className="text-lg font-bold text-gray-900 mb-2">Global Compliance</h4>
-        <p className="text-gray-500 text-sm leading-relaxed">
-          Fully compliant with GDPR, SOC2 Type II, and HIPAA regulations. Regular external security audits.
-        </p>
-      </div>
-      <div className="p-10">
-        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6">
-          <Globe2 size={20} />
-        </div>
-        <h4 className="text-lg font-bold text-gray-900 mb-2">Data Residency</h4>
-        <p className="text-gray-500 text-sm leading-relaxed">
-          Choose where your data lives. We support regional data centers in the US, EU, and Asia Pacific.
-        </p>
-      </div>
-    </div>
-  </section>
-);
-
-const Integrations = () => {
-  const tools = [
-    // { name: 'GitHub', icon: <Github size={28} />, initials: 'GH' },
-    // { name: 'Slack', icon: <Slack size={28} />, initials: 'SL' },
-    { name: 'Jira', icon: <Database size={28} />, initials: 'JR' },
-    // { name: 'Figma', icon: <Figma size={28} />, initials: 'FG' },
-    { name: 'AWS', icon: <Cloud size={28} />, initials: 'AW' },
-    { name: 'Zendesk', icon: <Database size={28} />, initials: 'ZD' },
-  ];
-
-  return (
-    <section className="bg-[#111111] text-white py-24">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div className="max-w-lg">
-            <h2 className="text-4xl font-bold mb-4 tracking-tight">Built for the modern stack</h2>
-            <p className="text-gray-400">
-              Skryme connects with the tools you already use, creating a seamless flow from initial ideation to final
-              production.
-            </p>
+    {/* Product UI Mockup (Abstract Visual) */}
+    <div className="mt-24 max-w-7xl mx-auto px-6 relative">
+      <div className="relative w-full aspect-[21/9] rounded-[3rem] overflow-hidden bg-slate-950 border border-white/10 shadow-3xl">
+        <div className="absolute inset-0 flex">
+          {/* Left Sidebar Sidebar Mockup */}
+          <div className="w-64 bg-slate-900/50 border-r border-white/5 p-6 space-y-6 hidden md:block">
+            <div className="space-y-3">
+              <div className="h-3 w-16 bg-white/20 rounded"></div>
+              <div className="h-4 w-32 bg-primary/40 rounded"></div>
+              <div className="h-4 w-28 bg-white/10 rounded"></div>
+            </div>
+            <div className="space-y-3 pt-6">
+              <div className="h-2 w-12 bg-white/10 rounded"></div>
+              <div className="h-4 w-full bg-white/5 rounded"></div>
+              <div className="h-4 w-full bg-white/5 rounded"></div>
+              <div className="h-4 w-full bg-white/5 rounded"></div>
+            </div>
           </div>
-          <button className="px-6 py-3 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors font-medium whitespace-nowrap self-start md:self-auto">
-            Explore Marketplace
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          {tools.map(tool => (
-            <div
-              key={tool.name}
-              className="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 hover:border-gray-600 transition-colors cursor-pointer group"
-            >
-              <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                <span className="font-bold text-lg">{tool.initials}</span>
+          {/* Main Chat/Issue Mockup Area */}
+          <div className="flex-1 p-8 grid grid-cols-3 gap-6">
+            <div className="col-span-2 space-y-4">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-indigo-500/20"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 bg-white/20 rounded"></div>
+                  <div className="h-20 w-full bg-white/5 rounded-xl border border-white/5"></div>
+                </div>
               </div>
-              <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">
-                {tool.name}
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-green-500/20"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-24 bg-white/20 rounded"></div>
+                  <div className="h-12 w-3/4 bg-white/5 rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+            <div className="col-span-1 bg-white/5 rounded-2xl border border-white/10 p-6 space-y-4">
+              <div className="h-4 w-20 bg-primary-fixed/40 rounded"></div>
+              <div className="h-32 bg-white/5 rounded-lg"></div>
+              <div className="h-4 w-full bg-white/10 rounded"></div>
+              <div className="h-4 w-2/3 bg-white/10 rounded"></div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+        <div className="absolute bottom-12 left-12 text-left">
+          <p className="text-white/40 font-mono text-xs uppercase tracking-[0.4em] mb-2">Workspace Preview</p>
+          <p className="text-white font-headline text-2xl font-bold">Unified Collaboration Interface</p>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const MessagingFocus = () => (
+  <section className="py-32 bg-surface">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+        <div>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-on-background mb-8 leading-tight font-headline">
+            Messaging for <span className="text-primary">Individuals & Teams.</span>
+          </h2>
+          <p className="text-on-surface-variant text-xl leading-relaxed mb-10 font-body">
+            Say goodbye to fragmented conversations. Skryme organizes your real-time collaboration into structured
+            workflows that keep everyone in sync.
+          </p>
+          <div className="space-y-6">
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <MessageSquare size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg mb-1 font-headline">Channels & DMs</h4>
+                <p className="text-on-surface-variant font-body">
+                  Organize by project, department, or topic. Private 1:1 messaging for focused individual syncs.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Network size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg mb-1 font-headline">Organized Threads</h4>
+                <p className="text-on-surface-variant font-body">
+                  Keep discussions contextual. Resolve technical questions without cluttering the main channel.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Zap size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg mb-1 font-headline">Real-time Presence</h4>
+                <p className="text-on-surface-variant font-body">
+                  Know who's available, who's in "deep work" mode, and who's shipping code.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="relative">
+          <div className="bg-white rounded-3xl shadow-2xl border border-outline-variant/20 overflow-hidden">
+            <div className="bg-surface-container-low px-6 py-4 border-b border-outline-variant/10 flex justify-between items-center">
+              <span className="font-bold text-sm"># engineering-general</span>
+              <Search size={18} className="text-on-surface-variant" />
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                  JD
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold font-headline">
+                    Jane Doe <span className="font-normal text-xs text-on-surface-variant ml-2">10:42 AM</span>
+                  </p>
+                  <p className="text-on-surface-variant font-body">
+                    Has anyone checked the performance regression in the v2.4 protocol?
+                  </p>
+                  <div className="mt-4 p-4 bg-surface-container-high rounded-xl border border-outline-variant/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ClipboardList size={16} className="text-primary" />
+                      <span className="text-xs font-bold text-primary">ISSUE #482</span>
+                    </div>
+                    <p className="text-sm font-medium font-headline">Memory leak in websocket handler</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const IssuesProjects = () => (
+  <section className="py-32 bg-surface-container-low">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="flex flex-col lg:flex-row-reverse gap-20 items-center">
+        <div className="lg:w-1/2">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-on-background mb-8 leading-tight font-headline">
+            Issue Tracking & <span className="text-primary">Project Workspaces.</span>
+          </h2>
+          <p className="text-on-surface-variant text-xl leading-relaxed mb-10 font-body">
+            Stop switching tabs. Manage your entire product lifecycle within the same environment where you communicate.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <li className="p-6 bg-white rounded-2xl shadow-sm border border-outline-variant/10">
+              <Layout size={24} className="text-primary mb-4" />
+              <h4 className="font-bold mb-2 font-headline">Kanban Boards</h4>
+              <p className="text-sm text-on-surface-variant leading-relaxed font-body">
+                Visualize progress across your team's custom Workspaces.
+              </p>
+            </li>
+            <li className="p-6 bg-white rounded-2xl shadow-sm border border-outline-variant/10">
+              <CheckCircle2 size={24} className="text-primary mb-4" />
+              <h4 className="font-bold mb-2 font-headline">Native Issues</h4>
+              <p className="text-sm text-on-surface-variant leading-relaxed font-body">
+                Turn any message into a tracked issue with one click.
+              </p>
+            </li>
+            <li className="p-6 bg-white rounded-2xl shadow-sm border border-outline-variant/10">
+              <Users size={24} className="text-primary mb-4" />
+              <h4 className="font-bold mb-2 font-headline">Sprints & Cycles</h4>
+              <p className="text-sm text-on-surface-variant leading-relaxed font-body">
+                Define milestones and track velocity within your Channels.
+              </p>
+            </li>
+            <li className="p-6 bg-white rounded-2xl shadow-sm border border-outline-variant/10">
+              <Bell size={24} className="text-primary mb-4" />
+              <h4 className="font-bold mb-2 font-headline">Smart Reminders</h4>
+              <p className="text-sm text-on-surface-variant leading-relaxed font-body">
+                Never lose track of a critical bug or stakeholder request.
+              </p>
+            </li>
+          </ul>
+        </div>
+        <div className="lg:w-1/2 w-full">
+          <div className="bg-white rounded-[2.5rem] shadow-3xl border border-outline-variant/20 p-8">
+            {/* Simple Board Mockup */}
+            <div className="flex gap-4 mb-8">
+              <div className="px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+                Active Sprint
+              </div>
+              <div className="px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-xs font-bold uppercase tracking-wider">
+                Backlog
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="h-2 w-12 bg-on-background/10 rounded"></div>
+                <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/10 space-y-3">
+                  <div className="h-4 w-3/4 bg-on-background/20 rounded"></div>
+                  <div className="flex gap-2">
+                    <div className="h-4 w-4 rounded bg-red-400/30"></div>
+                    <div className="h-4 w-12 bg-on-background/5 rounded"></div>
+                  </div>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/10 space-y-3">
+                  <div className="h-4 w-1/2 bg-on-background/20 rounded"></div>
+                  <div className="flex gap-2">
+                    <div className="h-4 w-4 rounded bg-blue-400/30"></div>
+                    <div className="h-4 w-12 bg-on-background/5 rounded"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="h-2 w-12 bg-on-background/10 rounded"></div>
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-3">
+                  <div className="h-4 w-5/6 bg-primary/30 rounded"></div>
+                  <div className="flex gap-2">
+                    <div className="h-4 w-4 rounded bg-green-400/30"></div>
+                    <div className="h-4 w-12 bg-primary/10 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const Integrations = () => (
+  <section className="py-32">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="flex flex-col lg:flex-row gap-20 items-center">
+        <div className="lg:w-1/2">
+          <h2 className="text-4xl font-bold mb-8 tracking-tight font-headline">
+            Turn Conversations <br />
+            <span className="text-primary">into Commits and PRs.</span>
+          </h2>
+          <p className="text-on-surface-variant text-lg leading-relaxed mb-10 font-body">
+            Our deep-level GitHub integration means you can manage your code without leaving the chat. Link issues,
+            review PRs, and track deployments directly in your project channels.
+          </p>
+          <ul className="space-y-6 mb-10">
+            <li className="flex items-center gap-3 text-on-surface">
+              <GitCommit size={20} className="text-primary" />
+              <span className="font-medium font-body">Live PR notifications & quick-reviews</span>
+            </li>
+            <li className="flex items-center gap-3 text-on-surface">
+              <RefreshCw size={20} className="text-primary" />
+              <span className="font-medium font-body">Auto-sync issues with GitHub milestones</span>
+            </li>
+            <li className="flex items-center gap-3 text-on-surface">
+              <Terminal size={20} className="text-primary" />
+              <span className="font-medium font-body">Deploy triggers from Workspace commands</span>
+            </li>
+          </ul>
+          <a className="text-primary font-bold inline-flex items-center gap-2 group font-headline" href="#">
+            Explore our GitHub App
+            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+          </a>
+        </div>
+        <div className="lg:w-1/2 w-full">
+          <div className="bg-indigo-950 rounded-3xl overflow-hidden shadow-2xl border border-slate-800">
+            <div className="flex items-center gap-2 px-6 py-4 bg-indigo-900/30 border-b border-white/5">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-400/50"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-400/50"></div>
+                <div className="w-3 h-3 rounded-full bg-green-400/50"></div>
+              </div>
+              <span className="ml-4 text-[10px] font-mono text-indigo-300 uppercase tracking-widest">
+                github-bot output
               </span>
             </div>
-          ))}
+            <div className="p-10 font-mono text-sm">
+              <pre className="text-indigo-100">
+                <code>
+                  <span className="text-slate-400"># Pull Request Opened</span>
+                  <br />
+                  <span className="text-purple-400">skryme-bot</span> [github] -&gt;{' '}
+                  <span className="text-green-400">PR #841</span>
+                  <br />
+                  Title: <span className="text-white">"Optimize DB indexing for global search"</span>
+                  <br />
+                  Author: <span className="text-indigo-300">@alex_dev</span>
+                  <br />
+                  Status: <span className="text-yellow-400">Pending Review</span>
+                  <br />
+                  <br />
+                  <span className="text-slate-400"># Action taken via Skryme command</span>
+                  <br />
+                  <span className="text-purple-400">/github</span> approve #841 --comment{' '}
+                  <span className="text-green-400">"LGTM! Shipping it."</span>
+                  <br />
+                  <span className="text-slate-400">&gt; PR approved. Merging to main... Done.</span>
+                </code>
+              </pre>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
-const CTA = () => (
-  <section className="py-32 text-center px-6">
-    <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
-      Ready to ship
-      <br />
-      faster?
-    </h2>
-    <p className="text-gray-500 text-lg mb-10 max-w-md mx-auto">
-      Join 8,000+ high-performing teams building the future of collaboration on Skryme.
-    </p>
-    <div className="flex flex-col sm:flex-row justify-center gap-4">
-      <button className="bg-gray-900 hover:bg-black text-white px-8 py-3 rounded-lg font-medium transition-colors">
-        Get Started Free
-      </button>
-      <button className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-8 py-3 rounded-lg font-medium transition-colors">
-        Contact Sales
-      </button>
+const Foundation = () => (
+  <section className="py-32 bg-on-background text-white overflow-hidden relative">
+    <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/20 blur-[150px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
+    <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="text-center max-w-3xl mx-auto mb-20">
+        <h2 className="text-4xl md:text-6xl font-extrabold mb-8 tracking-tight font-headline">
+          The Foundation for <span className="text-primary-fixed">Secure Collaboration.</span>
+        </h2>
+        <p className="text-slate-400 text-xl leading-relaxed font-body">
+          Collaboration is only as strong as its security. Skryme Chat provides the enterprise-grade protocols required
+          by the world's most innovative engineering firms.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
+        <div className="space-y-6">
+          <ShieldCheck size={48} className="text-primary-fixed" />
+          <h4 className="text-2xl font-bold font-headline">Secure Workspaces</h4>
+          <p className="text-slate-400 leading-relaxed font-body">
+            SOC2 Type II and GDPR compliance built into every channel. Total data residency control for sovereign cloud
+            needs.
+          </p>
+        </div>
+        <div className="space-y-6">
+          <Key size={48} className="text-primary-fixed" />
+          <h4 className="text-2xl font-bold font-headline">Unified SSO</h4>
+          <p className="text-slate-400 leading-relaxed font-body">
+            Native Okta, Azure AD, and Google Workspace integration. Automated provisioning for your entire
+            organization.
+          </p>
+        </div>
+        <div className="space-y-6">
+          <Network size={48} className="text-primary-fixed" />
+          <h4 className="text-2xl font-bold font-headline">Reliable Real-time</h4>
+          <p className="text-slate-400 leading-relaxed font-body">
+            99.99% uptime SLA ensures your team is never disconnected from critical communication or project work.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const Stats = () => (
+  <section className="py-12 border-b border-outline-variant/10 bg-white">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center opacity-60">
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-on-background font-headline">99.99%</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-body">Uptime SLA</p>
+        </div>
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-on-background font-headline">SOC2</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-body">
+            Type II Certified
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-on-background font-headline">E2EE</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-body">
+            End-to-End Encryption
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-on-background font-headline">ISO</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-body">
+            27001 Security
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const FinalCTA = () => (
+  <section className="py-40 bg-white">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="bg-primary rounded-[4rem] p-16 lg:p-32 text-center relative overflow-hidden shadow-3xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-primary to-primary-dim"></div>
+        <div className="relative z-10">
+          <h2 className="text-4xl md:text-7xl font-extrabold text-white mb-10 tracking-tighter font-headline">
+            Ready to Scale Your Team?
+          </h2>
+          <p className="text-white/80 text-xl md:text-2xl max-w-3xl mx-auto mb-16 font-light font-body">
+            Join the world's most innovative engineering teams using Skryme Chat to communicate, collaborate, and
+            execute with precision.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-6">
+            <button className="px-12 py-6 bg-white text-primary rounded-2xl font-headline font-bold text-xl shadow-xl transition-transform hover:scale-105 cursor-pointer">
+              Start Your Workspace Free
+            </button>
+            <button className="px-12 py-6 bg-transparent border-2 border-white/30 text-white rounded-2xl font-headline font-bold text-xl hover:bg-white/10 transition-colors cursor-pointer">
+              Talk to Enterprise Sales
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 );
 
 const Footer = () => (
-  <footer className="bg-gray-50 border-t border-gray-100 pt-16 pb-8">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
-        <div className="col-span-2 md:col-span-2">
-          <div className="font-bold text-xl tracking-tight text-gray-900 mb-4">Skryme</div>
-          <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
-            Reimagining how the world works together. Built for performance, security, and the human element in digital
-            workspace.
-          </p>
-        </div>
-        <div>
-          <h5 className="font-bold text-xs uppercase tracking-wider text-gray-900 mb-4">Product</h5>
-          <ul className="space-y-3 text-sm text-gray-500">
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Changelog
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Enterprise
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Security
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h5 className="font-bold text-xs uppercase tracking-wider text-gray-900 mb-4">Support</h5>
-          <ul className="space-y-3 text-sm text-gray-500">
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Help Center
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Contact Us
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Documentation
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h5 className="font-bold text-xs uppercase tracking-wider text-gray-900 mb-4">Legal</h5>
-          <ul className="space-y-3 text-sm text-gray-500">
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Privacy Policy
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Terms of Service
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Cookie Settings
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h5 className="font-bold text-xs uppercase tracking-wider text-gray-900 mb-4">Social</h5>
-          <ul className="space-y-3 text-sm text-gray-500">
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                Twitter
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                LinkedIn
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-gray-900">
-                GitHub
-              </a>
-            </li>
-          </ul>
+  <footer className="w-full rounded-t-[2.5rem] mt-24 bg-violet-50 dark:bg-slate-950">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 px-8 py-16 max-w-7xl mx-auto font-body text-sm leading-relaxed">
+      <div className="col-span-2">
+        <div className="text-lg font-bold text-indigo-700 dark:text-indigo-300 mb-6">Skryme Chat</div>
+        <p className="text-slate-500 dark:text-slate-500 max-w-xs mb-8">
+          © 2024 Skryme Chat. The ultimate collaboration layer for high-velocity engineering organizations.
+        </p>
+        <div className="flex gap-4">
+          <Globe size={20} className="text-indigo-600 cursor-pointer hover:text-indigo-500" />
+          <Mail size={20} className="text-indigo-600 cursor-pointer hover:text-indigo-500" />
+          <Share2 size={20} className="text-indigo-600 cursor-pointer hover:text-indigo-500" />
         </div>
       </div>
-
-      <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-200 text-xs text-gray-400">
-        <p>© 2024 Skryme Inc. All rights reserved.</p>
-        <div className="flex items-center gap-2 mt-4 md:mt-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-          Systems Operational
-        </div>
+      <div>
+        <h4 className="font-bold text-indigo-700 dark:text-indigo-300 mb-6 uppercase tracking-widest text-[0.65rem] font-headline">
+          Workspace
+        </h4>
+        <ul className="space-y-4">
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Messaging
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Channels
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Issues
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Integrations
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-bold text-indigo-700 dark:text-indigo-300 mb-6 uppercase tracking-widest text-[0.65rem] font-headline">
+          Company
+        </h4>
+        <ul className="space-y-4">
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              About
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Blog
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Security
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-bold text-indigo-700 dark:text-indigo-300 mb-6 uppercase tracking-widest text-[0.65rem] font-headline">
+          Support
+        </h4>
+        <ul className="space-y-4">
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Help Center
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Privacy
+            </a>
+          </li>
+          <li>
+            <a
+              className="text-slate-500 dark:text-slate-500 hover:text-indigo-500 underline decoration-2 underline-offset-4 transition-opacity"
+              href="#"
+            >
+              Terms
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
   </footer>
@@ -440,15 +609,17 @@ const Footer = () => (
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container font-body">
       <Navbar />
-      <Hero />
-      <LogoCloud />
-      <FeatureSync />
-      <FeatureGrid />
-      <SecuritySection />
-      <Integrations />
-      <CTA />
+      <main className="pt-24">
+        <Hero />
+        <MessagingFocus />
+        <IssuesProjects />
+        <Integrations />
+        <Foundation />
+        <Stats />
+        <FinalCTA />
+      </main>
       <Footer />
     </div>
   );
