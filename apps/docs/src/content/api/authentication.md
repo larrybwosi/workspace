@@ -30,6 +30,41 @@ curl -X POST https://api.skyrme.chat/v2/oauth/token \
   }'
 ```
 
+#### Node.js (TypeScript)
+
+```typescript
+import axios from 'axios';
+
+async function getAccessToken() {
+  const response = await axios.post('https://api.skyrme.chat/v2/oauth/token', {
+    grant_type: 'client_credentials',
+    client_id: 'your_client_id',
+    client_secret: 'your_client_secret',
+    scope: 'messages:send channels:read'
+  });
+
+  return response.data.access_token;
+}
+```
+
+#### Python
+
+```python
+import requests
+
+def get_access_token():
+    url = "https://api.skyrme.chat/v2/oauth/token"
+    payload = {
+        "grant_type": "client_credentials",
+        "client_id": "your_client_id",
+        "client_secret": "your_client_secret",
+        "scope": "messages:send channels:read"
+    }
+
+    response = requests.post(url, json=payload)
+    return response.json().get("access_token")
+```
+
 ### Example Response
 
 ```json

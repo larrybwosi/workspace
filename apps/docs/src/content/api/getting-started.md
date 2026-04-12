@@ -16,7 +16,9 @@ The Skyrme Chat API is a RESTful API that uses JSON for requests and responses. 
 ## Quick Start
 
 1. **Create an App**: Go to Workspace Settings > Developer Portal and create a new Bot Application.
-2. **Get Credentials**: Copy your `Client ID` and `Client Secret`.
+   - Give your application a name and description.
+   - Choose whether it's a **Workspace App** (only for your workspace) or a **Public App** (can be installed by other workspaces).
+2. **Get Credentials**: Copy your `Client ID` and `Client Secret` from the app details page.
 3. **Authenticate**: Exchange your credentials for an access token.
    ```bash
    curl -X POST https://api.skyrme.chat/v2/oauth/token \
