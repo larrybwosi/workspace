@@ -82,8 +82,8 @@ const nextConfig = {
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/scheduled-notifications/:path*`,
       },
       {
-        source: '/api/v10/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v10/:path*`,
+        source: '/api/bot/v10/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/bot/v10/:path*`,
       },
       {
         source: '/api/v2/:path*',

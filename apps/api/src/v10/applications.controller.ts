@@ -3,7 +3,7 @@ import { ApiV10Guard } from '../auth/api-v10.guard';
 import { CurrentBot } from '../auth/current-bot.decorator';
 import { V10ApplicationsService } from './applications.service';
 
-@Controller('v10/applications')
+@Controller('bot/v10/applications')
 @UseGuards(ApiV10Guard)
 export class V10ApplicationsController {
   constructor(private readonly applicationsService: V10ApplicationsService) {}
