@@ -2,26 +2,61 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { json, urlencoded } from 'express';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { validateEnv } from '@repo/shared';
+import multipart from '@fastify/multipart';
 
 async function bootstrap() {
   const env = validateEnv();
-  const app = await NestFactory.create(AppModule, {
-    bodyParser: false,
+  const adapter = new FastifyAdapter({
+    bodyLimit: 30 * 1024 * 1024, // 30MB
   });
-  app.use((req, res, next) => {
-    if (req.url.startsWith('/api/auth')) {
-      return next();
+
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
+
+  // Better Auth handles its own body parsing for /api/auth
+  // We bypass Fastify's default body parser for these routes to avoid consuming the request stream
+  const fastifyInstance = app.getHttpAdapter().getInstance();
+  fastifyInstance.addContentTypeParser('application/json', (request, payload, done) => {
+    if (request.url.startsWith('/api/auth')) {
+      done(null, undefined);
+    } else {
+      // Use the default JSON parser for other routes
+      const chunks: any[] = [];
+      payload.on('data', chunk => chunks.push(chunk));
+      payload.on('end', () => {
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          done(null, body);
+        } catch (err: any) {
+          done(err, undefined);
+        }
+      });
     }
-    json({ limit: '30mb' })(req, res, next);
   });
-  app.use((req, res, next) => {
-    if (req.url.startsWith('/api/auth')) {
-      return next();
+
+  fastifyInstance.addContentTypeParser('application/x-www-form-urlencoded', (request, payload, done) => {
+    if (request.url.startsWith('/api/auth')) {
+      done(null, undefined);
+    } else {
+      // Use the default parser or simply pass through for now
+      // Fastify has built-in support, but manual implementation is needed here to match the bypass logic
+      const chunks: any[] = [];
+      payload.on('data', chunk => chunks.push(chunk));
+      payload.on('end', () => {
+        try {
+          const body = Object.fromEntries(new URLSearchParams(Buffer.concat(chunks).toString()));
+          done(null, body);
+        } catch (err: any) {
+          done(err, undefined);
+        }
+      });
     }
-    urlencoded({ limit: '30mb', extended: true })(req, res, next);
   });
+
+  // We need to register multipart support
+  await app.register(multipart);
+
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
@@ -34,7 +69,7 @@ async function bootstrap() {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error('Not allowed by CORS'), false);
       }
     },
   });
