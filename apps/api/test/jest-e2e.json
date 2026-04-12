@@ -5,5 +5,13 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@repo/shared/(.*)$": "<rootDir>/../../../packages/shared/src/$1",
+    "^@repo/shared$": "<rootDir>/../../../packages/shared/index.ts",
+    "^@repo/types/(.*)$": "<rootDir>/../../../packages/types/src/$1",
+    "^@repo/types$": "<rootDir>/../../../packages/types/index.ts",
+    "^@repo/database/(.*)$": "<rootDir>/../../../packages/database/src/$1",
+    "^@repo/database$": "<rootDir>/../../../packages/database/index.ts"
   }
 }
