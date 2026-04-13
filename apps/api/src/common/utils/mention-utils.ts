@@ -33,11 +33,23 @@ export function hasSpecialMention(content: string, type: 'all' | 'here'): boolea
 }
 
 export function extractUserIds(mentions: string[], users: any[]): string[] {
-  // Convert usernames to user IDs
-  return mentions
-    .map((mention) => {
-      const user = users.find((u) => u.name.toLowerCase() === mention.toLowerCase());
-      return user?.id;
-    })
-    .filter(Boolean) as string[];
+  // ⚡ Optimization: O(N+M) lookup using Map instead of O(N*M)
+  // This avoids repeated nested loops which would scale poorly as message size/user list grows.
+  const userMap = new Map<string, string>();
+  for (const user of users) {
+    if (user.name && user.id) {
+      userMap.set(user.name.toLowerCase(), user.id);
+    }
+  }
+
+  // Use a Set to de-duplicate resulting user IDs (prevent multiple notifications)
+  const userIds = new Set<string>();
+  for (const mention of mentions) {
+    const userId = userMap.get(mention.toLowerCase());
+    if (userId) {
+      userIds.add(userId);
+    }
+  }
+
+  return Array.from(userIds);
 }

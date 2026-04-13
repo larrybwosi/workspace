@@ -2,7 +2,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiV10Guard } from '../auth/api-v10.guard';
 import { CurrentBot } from '../auth/current-bot.decorator';
 
-@Controller('v10/users/@me')
+@Controller('bot/v10/users/@me')
 @UseGuards(ApiV10Guard)
 export class V10UsersController {
   @Get()

@@ -67,7 +67,7 @@ interface ResourceMetadata {
 }
 
 interface CommentRequestProps {
-  message: Message;
+  message: any;
   currentUser: { id: string; name: string; avatar?: string };
   resourceMetadata?: ResourceMetadata;
   initialComments?: Comment[];

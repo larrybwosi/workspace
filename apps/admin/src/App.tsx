@@ -1,5 +1,5 @@
 import { AdminProviders } from '@repo/ui';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router';
 import { AdminOverviewPage } from './pages/overview';
 import { AdminAssetsPage } from './pages/assets';
 import { LoginPage } from './pages/login';

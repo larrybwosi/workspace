@@ -3,34 +3,51 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router';
 import {
-  Info, Key, Copy as ContentCopy, Check, Bot as Smarttoy, Globe as Public,
-  Trash2 as Delete, Plus as Add, Lightbulb, AlertTriangle as Warning,
-  Eye, EyeOff
+  useApplication,
+  useUpdateApplication,
+  useDeleteApplication,
+  useResetBotToken,
+} from '@repo/api-client';
+import {
+  Info,
+  Key,
+  Copy as ContentCopy,
+  Check,
+  Bot as Smarttoy,
+  Globe as Public,
+  Trash2 as Delete,
+  Plus as Add,
+  Lightbulb,
+  AlertTriangle as Warning,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function AppSettings() {
   const { id } = useParams();
-  const { session, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
 
-  const { data: app, isLoading } = useQuery({
-    queryKey: ['application', id],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications/${id}`, {
-         headers: {
-           'Authorization': `Bearer ${session?.session.token}`
-         }
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
-    },
-    enabled: isAuthenticated && !!id,
-  });
+  const { data: app, isLoading } = useApplication(id);
+  const updateMutation = useUpdateApplication();
+  const deleteMutation = useDeleteApplication();
+  const resetTokenMutation = useResetBotToken();
+
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (app) {
+      setName(app.name);
+      setDescription(app.description || '');
+    }
+  }, [app]);
 
   const copyToClipboard = (text: string, field: string) => {
     if (!text) return;
@@ -39,12 +56,43 @@ export function AppSettings() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleSave = async () => {
+    if (!id) return;
+    try {
+      await updateMutation.mutateAsync({ id, name, description });
+      toast.success('Settings updated successfully');
+    } catch (error) {
+      toast.error('Failed to update settings');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !confirm('Are you sure you want to delete this application? This action cannot be undone.')) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Application deleted');
+      navigate('/developer');
+    } catch (error) {
+      toast.error('Failed to delete application');
+    }
+  };
+
+  const handleResetToken = async () => {
+    if (!id || !confirm('Are you sure? This will invalidate the existing token.')) return;
+    try {
+      await resetTokenMutation.mutateAsync(id);
+      toast.success('Bot token reset successfully');
+    } catch (error) {
+      toast.error('Failed to reset bot token');
+    }
+  };
+
   if (isLoading) return <div className="p-12 text-center">Loading...</div>;
 
   return (
     <>
       <Helmet>
-        <title>SupportBot Settings | Skryme Developer Portal</title>
+        <title>Application Settings | Skryme Developer Portal</title>
       </Helmet>
 
       <div className="pb-16 px-10 max-w-7xl mx-auto">
@@ -52,18 +100,31 @@ export function AppSettings() {
         <div className="flex items-end justify-between mb-12">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="bg-primary-container text-on-primary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+              <span className="bg-primary-container text-on-primary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                Active
+              </span>
               <nav className="flex text-xs text-on-surface-variant gap-2 font-medium">
-                <Link to="/developer" className="hover:text-primary transition-colors">Applications</Link>
+                <Link to="/developer" className="hover:text-primary transition-colors">
+                  Applications
+                </Link>
                 <span>/</span>
-                <span className="text-primary font-semibold">{app?.name || 'SupportBot'}</span>
+                <span className="text-primary font-semibold">{app?.name || 'Loading...'}</span>
               </nav>
             </div>
-            <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">{app?.name || 'SupportBot'} <span className="text-secondary">Settings</span></h2>
-            <p className="text-on-surface-variant mt-2 max-w-2xl text-lg leading-relaxed">Configure your bot's identity, security tokens, and OAuth2 integration parameters for production deployment.</p>
+            <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
+              {app?.name || 'Application'} <span className="text-secondary">Settings</span>
+            </h2>
+            <p className="text-on-surface-variant mt-2 max-w-2xl text-lg leading-relaxed">
+              Configure your bot's identity, security tokens, and OAuth2 integration parameters for production
+              deployment.
+            </p>
           </div>
-          <Button className="bg-primary text-on-primary px-8 py-6 rounded-full font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95">
-            Save Changes
+          <Button
+            className="bg-primary text-on-primary px-8 py-6 rounded-full font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95"
+            onClick={handleSave}
+            disabled={updateMutation.isPending || (name === app?.name && description === app?.description)}
+          >
+            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
 
@@ -79,21 +140,42 @@ export function AppSettings() {
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="col-span-2 md:col-span-1">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Bot Name</label>
-                  <Input className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface font-medium" defaultValue={app?.name} />
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Bot Name
+                  </label>
+                  <Input
+                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface font-medium"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
                 <div className="col-span-2 md:col-span-1">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Application ID</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Application ID
+                  </label>
                   <div className="flex gap-2">
-                    <Input className="flex-1 bg-surface-container-low/50 border-none rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm cursor-not-allowed" readOnly defaultValue={app?.clientId} />
-                    <button onClick={() => copyToClipboard(app?.clientId, 'clientId')} className="p-3 bg-surface-container-high text-primary rounded-xl hover:bg-primary hover:text-white transition-colors">
+                    <Input
+                      className="flex-1 bg-surface-container-low/50 border-none rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm cursor-not-allowed"
+                      readOnly
+                      defaultValue={app?.clientId}
+                    />
+                    <button
+                      onClick={() => copyToClipboard(app?.clientId || '', 'clientId')}
+                      className="p-3 bg-surface-container-high text-primary rounded-xl hover:bg-primary hover:text-white transition-colors"
+                    >
                       {copiedId === 'clientId' ? <Check className="w-4 h-4" /> : <ContentCopy className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Description</label>
-                  <Textarea className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto min-h-[100px] focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface font-medium" defaultValue={app?.description} />
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Description
+                  </label>
+                  <Textarea
+                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto min-h-[100px] focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface font-medium"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
                 </div>
               </div>
             </section>
@@ -107,16 +189,20 @@ export function AppSettings() {
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Bot Token</label>
-                    <span className="text-[10px] bg-error-container/10 text-error-dim px-2 py-0.5 rounded font-bold">Keep this secret!</span>
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                      Bot Token
+                    </label>
+                    <span className="text-[10px] bg-error-container/10 text-error-dim px-2 py-0.5 rounded font-bold">
+                      Keep this secret!
+                    </span>
                   </div>
                   <div className="flex gap-3">
                     <div className="relative flex-1">
                       <Input
-                        type={showToken ? "text" : "password"}
+                        type={showToken ? 'text' : 'password'}
                         className="w-full bg-surface-container-low/50 border-none rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm pr-12"
                         readOnly
-                        defaultValue="MTIzNDU2Nzg5MDEyMzQ1Njc4OTAuR29vZC5Cb3QuVGVzdC5Ub2tlbg=="
+                        value={app?.bot?.botToken || 'No token generated'}
                       />
                       <button
                         onClick={() => setShowToken(!showToken)}
@@ -125,8 +211,21 @@ export function AppSettings() {
                         {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    <Button variant="outline" className="px-4 py-6 bg-surface-container-high border-none text-primary rounded-xl font-bold text-xs hover:bg-primary-container transition-colors h-auto">Reset</Button>
-                    <Button onClick={() => copyToClipboard("MTIzNDU2Nzg5MDEyMzQ1Njc4OTAuR29vZC5Cb3QuVGVzdC5Ub2tlbg==", 'token')} className="px-4 py-6 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2 h-auto">
+                    <Button
+                      variant="outline"
+                      className="px-4 py-6 bg-surface-container-high border-none text-primary rounded-xl font-bold text-xs hover:bg-primary-container transition-colors h-auto"
+                      onClick={handleResetToken}
+                      disabled={resetTokenMutation.isPending}
+                    >
+                      {resetTokenMutation.isPending ? 'Resetting...' : 'Reset'}
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        copyToClipboard(app?.bot?.botToken || '', 'token')
+                      }
+                      className="px-4 py-6 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2 h-auto"
+                      disabled={!app?.bot?.botToken}
+                    >
                       {copiedId === 'token' ? <Check className="w-4 h-4" /> : <ContentCopy className="w-4 h-4" />}
                       Copy
                     </Button>
@@ -140,7 +239,9 @@ export function AppSettings() {
                     </div>
                     <div>
                       <p className="text-sm font-bold">Public Bot</p>
-                      <p className="text-xs text-on-surface-variant">Allows anyone to invite this bot to their workspace.</p>
+                      <p className="text-xs text-on-surface-variant">
+                        Allows anyone to invite this bot to their workspace.
+                      </p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -159,10 +260,15 @@ export function AppSettings() {
               </div>
               <div className="space-y-8">
                 <div>
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Redirect URLs</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Redirect URLs
+                  </label>
                   <div className="space-y-3">
                     <div className="flex gap-2">
-                      <Input className="flex-1 bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto text-sm" defaultValue="https://support.skryme.com/auth/callback" />
+                      <Input
+                        className="flex-1 bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto text-sm"
+                        defaultValue="https://support.skryme.com/auth/callback"
+                      />
                       <button className="p-3 text-error-dim hover:bg-error-container/10 rounded-xl transition-colors">
                         <Delete className="w-5 h-5" />
                       </button>
@@ -175,16 +281,23 @@ export function AppSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">Scopes Selection</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">
+                    Scopes Selection
+                  </label>
                   <div className="grid grid-cols-3 gap-3">
-                    {['bot', 'identify', 'email', 'messages.read', 'guilds', 'rpc'].map((scope) => (
-                      <div key={scope} className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-transparent hover:border-primary/20 transition-all cursor-pointer group">
+                    {['bot', 'identify', 'email', 'messages.read', 'guilds', 'rpc'].map(scope => (
+                      <div
+                        key={scope}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-transparent hover:border-primary/20 transition-all cursor-pointer group"
+                      >
                         <input
                           type="checkbox"
                           defaultChecked={['bot', 'identify', 'messages.read'].includes(scope)}
                           className="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4"
                         />
-                        <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface">{scope}</span>
+                        <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface">
+                          {scope}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -200,14 +313,20 @@ export function AppSettings() {
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-secondary opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-secondary p-1 mb-4">
-                  <img
-                    alt="Bot Avatar"
-                    className="w-full h-full rounded-full object-cover border-4 border-on-surface"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJZWZQxJ8odt4y4dHB9jtfFMx3fcnJIl2nQmEdjuHMNLUHdNErXE3BfUpBGW3JDy1SJeQa0Wr6z_w0iD-H1KDvk4kecsdfjnL0JDKcMH3GXaThsqP3oz5ufmSp87LUTM0PuWp-WYWTOTx6deLwG-EFZsFBaEUxkVQViJS43I2zrkhnh89DSKUkFgOzLHRa609Jm1cnhCTWgKpQgg6sts2hWQHLGIT9JlIoRmQffc6dpf_t4C0ei6FsvPevHTwvlr1XNZ6WlOQMc9WS"
-                  />
+                  {app?.bot?.avatar ? (
+                    <img
+                      alt="Bot Avatar"
+                      className="w-full h-full rounded-full object-cover border-4 border-on-surface"
+                      src={app.bot.avatar}
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center border-4 border-on-surface">
+                      <span className="material-symbols-outlined text-4xl text-on-primary-container">smart_toy</span>
+                    </div>
+                  )}
                 </div>
-                <h4 className="text-xl font-bold">{app?.name || 'SupportBot'}</h4>
-                <p className="text-xs text-outline-variant mt-1 uppercase tracking-widest">v2.4.0-stable</p>
+                <h4 className="text-xl font-bold">{app?.name || 'Application'}</h4>
+                <p className="text-xs text-outline-variant mt-1 uppercase tracking-widest">ACTIVE</p>
                 <div className="w-full mt-8 grid grid-cols-2 gap-4">
                   <div className="bg-white/5 rounded-xl p-3 text-center">
                     <p className="text-[10px] text-outline-variant uppercase mb-1">Guilds</p>
@@ -234,7 +353,7 @@ export function AppSettings() {
                   'Redirect URLs must be HTTPS unless you are testing on localhost.',
                 ].map((tip, i) => (
                   <li key={i} className="text-sm flex gap-3 text-on-surface-variant">
-                    <span className="text-primary mt-1 font-bold">0{i+1}</span>
+                    <span className="text-primary mt-1 font-bold">0{i + 1}</span>
                     {tip}
                   </li>
                 ))}
@@ -247,9 +366,16 @@ export function AppSettings() {
                 <Warning className="w-4 h-4" />
                 Danger Zone
               </h5>
-              <p className="text-xs text-on-surface-variant mb-4">Deleting this application is permanent and cannot be undone. All active tokens will be revoked.</p>
-              <Button variant="outline" className="w-full py-6 bg-white text-error border-error-container/30 rounded-xl font-bold text-xs hover:bg-error hover:text-white transition-all h-auto shadow-sm">
-                Delete Application
+              <p className="text-xs text-on-surface-variant mb-4">
+                Deleting this application is permanent and cannot be undone. All active tokens will be revoked.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full py-6 bg-white text-error border-error-container/30 rounded-xl font-bold text-xs hover:bg-error hover:text-white transition-all h-auto shadow-sm"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete Application'}
               </Button>
             </div>
           </div>
@@ -259,7 +385,9 @@ export function AppSettings() {
       {/* Floating Help Button */}
       <button className="fixed bottom-8 right-8 w-14 h-14 bg-secondary text-on-secondary rounded-full flex items-center justify-center shadow-2xl shadow-secondary/40 hover:scale-110 transition-transform active:scale-95 group z-50">
         <span className="material-symbols-outlined text-2xl">chat_bubble</span>
-        <span className="absolute right-16 bg-on-surface text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Ask SupportBot</span>
+        <span className="absolute right-16 bg-on-surface text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+          Ask SupportBot
+        </span>
       </button>
     </>
   );

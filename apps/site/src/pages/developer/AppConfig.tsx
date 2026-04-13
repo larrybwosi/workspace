@@ -3,40 +3,89 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router';
 import {
-  Info, Bolt, Monitor as InstallDesktop, Key, Calculator as Calculate,
-  ShieldCheck as VerifiedUser, AlertTriangle as Warning, Copy as ContentCopy, Check, MessageSquare,
-  Users as UsersIcon, Plus, Trash2
+  useApplication,
+  useUpdateApplication,
+  useDeleteApplication,
+  useResetBotToken,
+} from '@repo/api-client';
+import {
+  Info,
+  Bolt,
+  Monitor as InstallDesktop,
+  Key,
+  Calculator as Calculate,
+  ShieldCheck as VerifiedUser,
+  AlertTriangle as Warning,
+  Copy as ContentCopy,
+  Check,
+  MessageSquare,
+  Users as UsersIcon,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
+import { toast } from 'sonner';
 
 export function AppConfig() {
   const { id } = useParams();
-  const { session, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: app, isLoading } = useQuery({
-    queryKey: ['application', id],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications/${id}`, {
-         headers: {
-           'Authorization': `Bearer ${session?.session.token}`
-         }
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
-    },
-    enabled: isAuthenticated && !!id,
-  });
+  const { data: app, isLoading } = useApplication(id);
+  const updateMutation = useUpdateApplication();
+  const deleteMutation = useDeleteApplication();
+  const resetTokenMutation = useResetBotToken();
+
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (app) {
+      setName(app.name);
+      setDescription(app.description || '');
+    }
+  }, [app]);
 
   const copyToClipboard = (text: string, field: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedId(field);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSave = async () => {
+    if (!id) return;
+    try {
+      await updateMutation.mutateAsync({ id, name, description });
+      toast.success('Application updated successfully');
+    } catch (error) {
+      toast.error('Failed to update application');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !confirm('Are you sure you want to delete this application? This action cannot be undone.')) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Application deleted');
+      navigate('/developer');
+    } catch (error) {
+      toast.error('Failed to delete application');
+    }
+  };
+
+  const handleResetToken = async () => {
+    if (!id || !confirm('Are you sure? This will invalidate the existing token.')) return;
+    try {
+      await resetTokenMutation.mutateAsync(id);
+      toast.success('Bot token reset successfully');
+    } catch (error) {
+      toast.error('Failed to reset bot token');
+    }
   };
 
   if (isLoading) return <div className="p-12 text-center">Loading...</div>;
@@ -52,22 +101,42 @@ export function AppConfig() {
         <div className="flex items-end justify-between mb-10 border-b border-outline-variant/10 pb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+              <span className="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                Active
+              </span>
               <nav className="flex text-xs text-on-surface-variant gap-2 font-medium">
-                <Link to="/developer" className="hover:text-primary transition-colors">Applications</Link>
+                <Link to="/developer" className="hover:text-primary transition-colors">
+                  Applications
+                </Link>
                 <span>/</span>
                 <span className="text-primary">{app?.name || 'Loading...'}</span>
               </nav>
             </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">Bot <span className="text-primary">Configuration</span></h2>
-            <p className="text-on-surface-variant mt-1 max-w-2xl text-base">Production deployment environment for {app?.name || 'your application'}</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">
+              Bot <span className="text-primary">Configuration</span>
+            </h2>
+            <p className="text-on-surface-variant mt-1 max-w-2xl text-base">
+              Production deployment environment for {app?.name || 'your application'}
+            </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="px-6 py-2.5 rounded-xl font-bold text-sm bg-surface">
+            <Button
+              variant="outline"
+              className="px-6 py-2.5 rounded-xl font-bold text-sm bg-surface"
+              onClick={() => {
+                setName(app?.name || '');
+                setDescription(app?.description || '');
+              }}
+              disabled={updateMutation.isPending}
+            >
               Discard
             </Button>
-            <Button className="px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20">
-              Save Changes
+            <Button
+              className="px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20"
+              onClick={handleSave}
+              disabled={updateMutation.isPending || (name === app?.name && description === app?.description)}
+            >
+              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </div>
@@ -83,21 +152,46 @@ export function AppConfig() {
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="col-span-2 md:col-span-1">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Bot Name</label>
-                  <Input className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto" defaultValue={app?.name} />
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Bot Name
+                  </label>
+                  <Input
+                    className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
                 <div className="col-span-2 md:col-span-1">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Application ID</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Application ID
+                  </label>
                   <div className="flex gap-2">
-                    <Input className="flex-1 bg-surface-container-low/50 border-outline-variant/10 rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm" readOnly defaultValue={app?.clientId} />
-                    <button onClick={() => copyToClipboard(app?.clientId, 'clientId')} className="p-3 bg-surface-container-low border border-outline-variant/20 text-on-surface-variant rounded-xl hover:text-primary transition-colors">
-                      {copiedId === 'clientId' ? <Check className="w-4 h-4 text-emerald-500" /> : <ContentCopy className="w-4 h-4" />}
+                    <Input
+                      className="flex-1 bg-surface-container-low/50 border-outline-variant/10 rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm"
+                      readOnly
+                      defaultValue={app?.clientId}
+                    />
+                    <button
+                      onClick={() => copyToClipboard(app?.clientId || '', 'clientId')}
+                      className="p-3 bg-surface-container-low border border-outline-variant/20 text-on-surface-variant rounded-xl hover:text-primary transition-colors"
+                    >
+                      {copiedId === 'clientId' ? (
+                        <Check className="w-4 h-4 text-emerald-500" />
+                      ) : (
+                        <ContentCopy className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Description</label>
-                  <Textarea className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto min-h-[100px]" defaultValue={app?.description} />
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Description
+                  </label>
+                  <Textarea
+                    className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto min-h-[100px]"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
                 </div>
               </div>
             </section>
@@ -109,14 +203,27 @@ export function AppConfig() {
                   <Bolt className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-bold">Bot Capabilities (Intents)</h3>
                 </div>
-                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">Privileged</span>
+                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">
+                  Privileged
+                </span>
               </div>
               <div className="space-y-4">
                 {[
-                  { title: 'Message Content Intent', desc: 'Required to receive message content in most messages.', icon: MessageSquare },
-                  { title: 'Server Members Intent', desc: 'Required to receive events when members join or leave.', icon: UsersIcon },
+                  {
+                    title: 'Message Content Intent',
+                    desc: 'Required to receive message content in most messages.',
+                    icon: MessageSquare,
+                  },
+                  {
+                    title: 'Server Members Intent',
+                    desc: 'Required to receive events when members join or leave.',
+                    icon: UsersIcon,
+                  },
                 ].map((intent, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant/10">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant/10"
+                  >
                     <div className="flex gap-4">
                       <intent.icon className="w-5 h-5 text-primary" />
                       <div>
@@ -144,12 +251,19 @@ export function AppConfig() {
                   { title: 'Guild Install', desc: 'Bot can be installed to servers by administrators.', checked: true },
                   { title: 'User Install', desc: 'Bot can be added to individual user profiles.', checked: false },
                 ].map((ctx, i) => (
-                  <div key={i} className={cn(
-                    "p-4 bg-surface-container-low border rounded-xl transition-colors",
-                    ctx.checked ? "border-primary/20" : "border-outline-variant/10"
-                  )}>
+                  <div
+                    key={i}
+                    className={cn(
+                      'p-4 bg-surface-container-low border rounded-xl transition-colors',
+                      ctx.checked ? 'border-primary/20' : 'border-outline-variant/10'
+                    )}
+                  >
                     <div className="flex items-center gap-2 mb-2">
-                      <input type="checkbox" defaultChecked={ctx.checked} className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4" />
+                      <input
+                        type="checkbox"
+                        defaultChecked={ctx.checked}
+                        className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4"
+                      />
                       <span className="text-sm font-bold">{ctx.title}</span>
                     </div>
                     <p className="text-xs text-on-surface-variant pl-6">{ctx.desc}</p>
@@ -166,10 +280,15 @@ export function AppConfig() {
               </div>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Redirect URLs</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+                    Redirect URLs
+                  </label>
                   <div className="space-y-3">
                     <div className="flex gap-2">
-                      <Input className="flex-1 bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 text-sm h-auto" defaultValue="https://support.skryme.com/auth/callback" />
+                      <Input
+                        className="flex-1 bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 text-sm h-auto"
+                        defaultValue="https://support.skryme.com/auth/callback"
+                      />
                       <button className="p-3 text-error-dim hover:bg-error-container/10 rounded-xl transition-colors">
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -198,10 +317,17 @@ export function AppConfig() {
                   { name: 'Manage Channels', checked: false },
                   { name: 'Read Messages', checked: true },
                   { name: 'Send Messages', checked: true },
-                ].map((perm) => (
-                  <div key={perm.name} className="flex items-center justify-between text-xs p-2 hover:bg-surface rounded transition-colors group">
+                ].map(perm => (
+                  <div
+                    key={perm.name}
+                    className="flex items-center justify-between text-xs p-2 hover:bg-surface rounded transition-colors group"
+                  >
                     <span className="text-on-surface-variant group-hover:text-on-surface font-medium">{perm.name}</span>
-                    <input type="checkbox" defaultChecked={perm.checked} className="rounded border-outline-variant text-primary w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      defaultChecked={perm.checked}
+                      className="rounded border-outline-variant text-primary w-4 h-4"
+                    />
                   </div>
                 ))}
               </div>
@@ -218,15 +344,23 @@ export function AppConfig() {
             <div className="bg-on-surface rounded-xl p-8 text-white">
               <div className="flex flex-col items-center">
                 <div className="relative mb-6">
-                  <img
-                    alt="Bot Avatar"
-                    className="w-20 h-20 rounded-xl object-cover border-2 border-primary/40 shadow-xl"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJZWZQxJ8odt4y4dHB9jtfFMx3fcnJIl2nQmEdjuHMNLUHdNErXE3BfUpBGW3JDy1SJeQa0Wr6z_w0iD-H1KDvk4kecsdfjnL0JDKcMH3GXaThsqP3oz5ufmSp87LUTM0PuWp-WYWTOTx6deLwG-EFZsFBaEUxkVQViJS43I2zrkhnh89DSKUkFgOzLHRa609Jm1cnhCTWgKpQgg6sts2hWQHLGIT9JlIoRmQffc6dpf_t4C0ei6FsvPevHTwvlr1XNZ6WlOQMc9WS"
-                  />
+                  {app?.bot?.avatar ? (
+                    <img
+                      alt="Bot Avatar"
+                      className="w-20 h-20 rounded-xl object-cover border-2 border-primary/40 shadow-xl"
+                      src={app.bot.avatar}
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl bg-primary-container flex items-center justify-center border-2 border-primary/40 shadow-xl">
+                       <span className="material-symbols-outlined text-4xl text-on-primary-container">smart_toy</span>
+                    </div>
+                  )}
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-on-surface rounded-full"></div>
                 </div>
                 <h4 className="text-xl font-bold">{app?.name || 'SupportBot'}</h4>
-                <p className="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-bold">v2.4.0-STABLE</p>
+                <p className="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-bold">
+                  ACTIVE
+                </p>
                 <div className="w-full mt-8 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-[10px] text-outline-variant uppercase mb-1">Guilds</p>
@@ -252,7 +386,7 @@ export function AppConfig() {
                   'Use Environment Variables for local development secrets.',
                 ].map((step, i) => (
                   <li key={i} className="text-xs flex gap-3 text-on-surface-variant leading-relaxed">
-                    <span className="text-primary font-bold">0{i+1}</span>
+                    <span className="text-primary font-bold">0{i + 1}</span>
                     {step}
                   </li>
                 ))}
@@ -265,11 +399,20 @@ export function AppConfig() {
                 <Warning className="w-4 h-4" />
                 Danger Zone
               </h5>
-              <Button variant="outline" className="w-full py-6 bg-white text-error border-error-container/30 rounded-xl font-bold text-xs hover:bg-error hover:text-white transition-all shadow-sm">
-                Revoke Bot Token
+              <Button
+                variant="outline"
+                className="w-full py-6 bg-white text-error border-error-container/30 rounded-xl font-bold text-xs hover:bg-error hover:text-white transition-all shadow-sm"
+                onClick={handleResetToken}
+                disabled={resetTokenMutation.isPending}
+              >
+                {resetTokenMutation.isPending ? 'Resetting...' : 'Revoke Bot Token'}
               </Button>
-              <button className="w-full mt-3 py-3 text-error/60 text-[10px] font-bold hover:text-error transition-colors uppercase tracking-widest">
-                Delete Application
+              <button
+                className="w-full mt-3 py-3 text-error/60 text-[10px] font-bold hover:text-error transition-colors uppercase tracking-widest disabled:opacity-50"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete Application'}
               </button>
             </div>
           </div>

@@ -1,20 +1,25 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { cn } from '@repo/ui/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { authClient } from '@repo/shared/auth/client';
+import { Toaster } from 'sonner';
 
 export function DeveloperLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const navigation = [
     { name: 'Applications', href: '/developer', icon: 'apps' },
     { name: 'Documentation', href: '#', icon: 'description' },
-    { name: 'Teams', href: '#', icon: 'groups' },
-    { name: 'Settings', href: '#', icon: 'settings' },
+    { name: 'Teams', href: '/developer/teams', icon: 'groups' },
+    { name: 'Settings', href: '/developer/settings', icon: 'settings' },
   ];
 
-  const secondaryNavigation = [
-    { name: 'Support', href: '#', icon: 'help' },
-    { name: 'Log out', href: '#', icon: 'logout' },
-  ];
+  const handleLogout = async () => {
+    await authClient.signOut();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-surface selection:bg-primary/10">
@@ -23,25 +28,31 @@ export function DeveloperLayout() {
         <div className="px-8 mb-12">
           <Link to="/" className="block">
             <h1 className="text-2xl font-bold tracking-tight text-on-surface dark:text-white">Skryme</h1>
-            <p className="text-[10px] text-primary font-bold tracking-[0.2em] uppercase mt-1 opacity-70">Developer Portal</p>
+            <p className="text-[10px] text-primary font-bold tracking-[0.2em] uppercase mt-1 opacity-70">
+              Developer Portal
+            </p>
           </Link>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href || (item.href !== '/developer' && location.pathname.startsWith(item.href));
+          {navigation.map(item => {
+            const isActive =
+              location.pathname === item.href ||
+              (item.href !== '/developer' && location.pathname.startsWith(item.href));
             return (
               <Link
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-r-full transition-all duration-300 group",
+                  'flex items-center gap-3 px-4 py-3 rounded-r-full transition-all duration-300 group',
                   isActive
-                    ? "text-primary font-bold bg-surface-container-lowest shadow-sm translate-x-1"
-                    : "text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest/50"
+                    ? 'text-primary font-bold bg-surface-container-lowest shadow-sm translate-x-1'
+                    : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest/50'
                 )}
               >
-                <span className="material-symbols-outlined text-xl" data-icon={item.icon}>{item.icon}</span>
+                <span className="material-symbols-outlined text-xl" data-icon={item.icon}>
+                  {item.icon}
+                </span>
                 <span className="text-sm font-medium">{item.name}</span>
               </Link>
             );
@@ -49,16 +60,24 @@ export function DeveloperLayout() {
         </nav>
 
         <div className="px-4 mt-auto pt-8 border-t border-outline-variant/10">
-          {secondaryNavigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors duration-200"
-            >
-              <span className="material-symbols-outlined text-xl" data-icon={item.icon}>{item.icon}</span>
-              <span className="text-sm font-medium">{item.name}</span>
-            </Link>
-          ))}
+          <Link
+            to="#"
+            className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors duration-200"
+          >
+            <span className="material-symbols-outlined text-xl" data-icon="help">
+              help
+            </span>
+            <span className="text-sm font-medium">Support</span>
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors duration-200"
+          >
+            <span className="material-symbols-outlined text-xl" data-icon="logout">
+              logout
+            </span>
+            <span className="text-sm font-medium">Log out</span>
+          </button>
         </div>
       </aside>
 
@@ -66,7 +85,9 @@ export function DeveloperLayout() {
       <header className="fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-8 z-40 bg-surface/80 dark:bg-[#1a182b]/80 backdrop-blur-xl border-b border-outline-variant/10">
         <div className="flex items-center gap-6">
           <div className="relative group">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">
+              search
+            </span>
             <input
               className="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-primary/40 transition-all w-64 placeholder:text-outline/60"
               placeholder="Search resources..."
@@ -83,18 +104,24 @@ export function DeveloperLayout() {
             <span className="material-symbols-outlined">help</span>
           </button>
 
-          <div className="h-8 w-[1px] bg-outline-variant/30 mx-2"></div>
+          <div className="h-8 w-px bg-outline-variant/30 mx-2"></div>
 
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-on-surface">Alex Rivera</p>
-              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Senior Dev</p>
+              <p className="text-xs font-bold text-on-surface">{user?.name}</p>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">Developer</p>
             </div>
-            <img
-              alt="User Profile"
-              className="w-8 h-8 rounded-full border-2 border-primary-container"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBREHXUkG8KtXLiqQKaRaPXYBd8AC-RB4Uo3tBgE46W61RdVRGSqQlN6Ag0iny87Tin7PQSeMYgR5PJkM0VRb5XY5ImBuB3Eft0aVMnilrSJ2oSZTGJF8an5nUS_tb6TI2AixqwnBhUV9ceuNYDM03jDMthhgo50hY0TdtjiyUqxWA9M9XRFcaZQcXmLSwr5NKrtTAv9PdhlG_sHAhB1l5D5Q63unwa4D1C1gZToDgwoQkpAkqVekvNKDRiobgD-MXHwE6oVHSiKWnb"
-            />
+            {user?.image ? (
+              <img
+                alt="User Profile"
+                className="w-8 h-8 rounded-full border-2 border-primary-container object-cover"
+                src={user.image}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full border-2 border-primary-container bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -103,6 +130,7 @@ export function DeveloperLayout() {
       <main className="ml-64 pt-24 min-h-screen">
         <Outlet />
       </main>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

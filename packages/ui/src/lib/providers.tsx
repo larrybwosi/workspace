@@ -103,7 +103,7 @@ export function AdminProviders({ children }: ProvidersProps) {
   return (
     <BaseProviders>
       {children}
-      {session && <NotificationListener />}
+      {/*{session && <NotificationListener />}*/}
     </BaseProviders>
   );
 }
