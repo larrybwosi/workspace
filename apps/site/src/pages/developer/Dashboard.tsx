@@ -3,33 +3,28 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { cn } from '@repo/ui/lib/utils';
-import { Copy, Check, Key, Plus } from 'lucide-react';
-
-interface BotData {
-  id: string;
-  name: string;
-  botToken?: string;
-}
-
-interface Application {
-  id: string;
-  name: string;
-  description?: string;
-  clientId: string;
-  clientSecret: string;
-  bot?: BotData;
-}
+import { Copy, Check } from 'lucide-react';
+import { useApplications, useCreateApplication, Application } from '@repo/api-client';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@repo/ui/components/dialog';
 
 export function DeveloperDashboard() {
-  const { session, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedApp] = useState<Application | null>(null);
-  const queryClient = useQueryClient();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const { data: apps, isLoading: appsLoading } = useApplications();
+  const createMutation = useCreateApplication();
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -38,54 +33,13 @@ export function DeveloperDashboard() {
     });
   };
 
-  const { data: apps, isLoading: appsLoading } = useQuery<Application[]>({
-    queryKey: ['applications'],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications`, {
-        headers: {
-          Authorization: `Bearer ${session?.session.token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
-    },
-    enabled: isAuthenticated,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (newApp: { name: string; description: string }) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.session.token}`,
-        },
-        body: JSON.stringify(newApp),
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      setName('');
-      setDescription('');
-    },
-  });
-
-  const resetTokenMutation = useMutation({
-    mutationFn: async (appId: string) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications/${appId}/bot/reset-token`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session?.session.token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to reset token');
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-    },
-  });
+  const handleCreateApp = async () => {
+    if (!name) return;
+    await createMutation.mutateAsync({ name, description });
+    setName('');
+    setDescription('');
+    setIsCreateModalOpen(false);
+  };
 
   if (authLoading) return <div className="p-12 text-center">Loading...</div>;
 
@@ -123,7 +77,7 @@ export function DeveloperDashboard() {
             </p>
           </div>
           <Button
-            onClick={() => (document.getElementById('create-app-modal') as HTMLDialogElement)?.showModal?.()}
+            onClick={() => setIsCreateModalOpen(true)}
             className="bg-primary text-on-primary px-6 py-6 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
           >
             <span className="material-symbols-outlined">add_circle</span>
@@ -152,7 +106,7 @@ export function DeveloperDashboard() {
                   <div className="flex justify-between items-start mb-6">
                     <div
                       className={cn(
-                        'w-14 h-14 rounded-2xl flex items-center justify-center',
+                        'w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden',
                         index % 3 === 0
                           ? 'bg-primary-container text-on-primary-container'
                           : index % 3 === 1
@@ -160,9 +114,13 @@ export function DeveloperDashboard() {
                             : 'bg-tertiary-container text-on-tertiary-container'
                       )}
                     >
-                      <span className="material-symbols-outlined text-3xl">
-                        {index % 3 === 0 ? 'smart_toy' : index % 3 === 1 ? 'rocket_launch' : 'diversity_3'}
-                      </span>
+                      {app.bot?.avatar ? (
+                        <img src={app.bot.avatar} alt={app.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-3xl">
+                          {index % 3 === 0 ? 'smart_toy' : index % 3 === 1 ? 'rocket_launch' : 'diversity_3'}
+                        </span>
+                      )}
                     </div>
                     <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -174,106 +132,14 @@ export function DeveloperDashboard() {
                     {app.description || 'AI-powered automation and integration for your Workspace environment.'}
                   </p>
                   <div className="flex items-center gap-4 pt-4 border-t border-surface-container-low">
-                    <div className="flex -space-x-2">
-                      <img
-                        alt="team member"
-                        className="w-6 h-6 rounded-full border-2 border-white"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB79l4V79Aaxj0iqxCsLspNLj1wCyFdwl-nfIL21i70G1VJK_baLKf2_OdgWMuBg6neVKjfGarOrCmLRGkqv4FHG0PjrYO75SUPB3CQpP2INPoPUCJD4NDTE6RyYU3VJA7zTTJc4iU6Gy43psaNGSpTP3UczuJFyQAcHiFtPXYF0Bb_jM0fGu2JxklbfUMxiHSIzVwR90I8XTkZbJKTjeHlPR067Ao5Ek3gvxZrUfZMKCJxw4oSZ8yD2pC5CwD3bMfC0W2FuCnaaJ0"
-                      />
-                      <img
-                        alt="team member"
-                        className="w-6 h-6 rounded-full border-2 border-white"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSK-V3ndh1qbyBbB3l4agZ3HMxuVY9zEFZIY4iEzaDxD7q_Tqt_Ieh7b8_FtrzD1Hx4aT7vQRTxcX9Nzr6a8QD2V9WWmJF6wyeJzxdjIwqB9b6cp89uYj2Nxudrgk7SVvak9Qeg8vTtdMUm3v69vzmN1KromYfwMc-YXrvEXWvpqAnsyHAPjdO9PO9iIH-wEpj7NA0SP-csr1YlIuNYNBoDiswGyp2cArUA3n6W4dExK8eFvKhf35CIs7-spgB4gTPLHVPT87VmTuX"
-                      />
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center">
+                        <span className="material-symbols-outlined text-xs text-on-surface-variant">person</span>
+                      </div>
+                      <span className="text-xs font-medium text-on-surface-variant">Owner: You</span>
                     </div>
                   </div>
                 </Link>
-
-                {selectedApp?.id === app.id && (
-                  <div className="pt-6 border-t bg-slate-50/50 rounded-b-xl px-8 pb-8">
-                    <div className="grid gap-8">
-                      <section>
-                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Credentials</h3>
-                        <div className="space-y-4">
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-slate-500 uppercase">Client ID</label>
-                              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border group">
-                                <code className="text-sm flex-grow truncate text-slate-600">{app.clientId}</code>
-                                <button
-                                  onClick={() => copyToClipboard(app.clientId, app.id + 'id')}
-                                  className="text-slate-400 hover:text-slate-600 transition-colors"
-                                >
-                                  {copiedId === app.id + 'id' ? (
-                                    <Check className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-slate-500 uppercase">Client Secret</label>
-                              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border">
-                                <code className="text-sm flex-grow truncate text-slate-600">
-                                  ••••••••••••••••••••••••••••••••
-                                </code>
-                                <button
-                                  onClick={() => copyToClipboard(app.clientSecret, app.id + 'secret')}
-                                  className="text-slate-400 hover:text-slate-600 transition-colors"
-                                >
-                                  {copiedId === app.id + 'secret' ? (
-                                    <Check className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {app.bot && (
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-slate-500 uppercase">Bot Token</label>
-                              <div className="flex items-center gap-2 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
-                                <Key className="h-4 w-4 text-blue-500" />
-                                <code className="text-sm flex-grow truncate text-blue-700 font-medium">
-                                  {app.bot.botToken ? '••••••••••••••••••••••••••••••••' : 'No token generated'}
-                                </code>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => copyToClipboard(app.bot?.botToken ?? '', app.id + 'token')}
-                                    className="text-blue-400 hover:text-blue-600 transition-colors"
-                                    title="Copy Token"
-                                  >
-                                    {copiedId === app.id + 'token' ? (
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    ) : (
-                                      <Copy className="h-4 w-4" />
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm('Are you sure? This will invalidate the existing token.'))
-                                        resetTokenMutation.mutate(app.id);
-                                    }}
-                                    className="text-blue-400 hover:text-blue-600 transition-colors"
-                                    title="Reset Token"
-                                  >
-                                    <Plus className="h-4 w-4 rotate-45" />
-                                  </button>
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-slate-500 mt-1">
-                                Keep this token secret. Do not share it or commit it to version control.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </section>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
 
@@ -302,7 +168,7 @@ export function DeveloperDashboard() {
                     <img
                       alt="Analytics Dashboard"
                       className="w-full h-full object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8ZMWiHvF2ZIcWV31s3kgjUuNFnGai_DKrkys-lnoBFQ5IqWH6BZN-uqNpCh2IYpNRFNzbPKYpvWqGb3J_xXEdOBvcz04XTtMnmNNc7gSM6MRsZni2FI3ODmbC1FCNuB5ZjFjy6gwjkz6_43IwHPdp95CS1W7KFE0gZC9iwZR0wENgQkIb0aFXYCK0cxh8JerKtgFLWux8uK3mzLb9u5p9rpYAeL-ApwUKAc6GaRvEHDbnxtCYOsgpHLdYj9f4Le5hJuI55cInemqm"
+                      src="https://images.unsplash.com/photo-1551288049-bbda48658a7d?auto=format&fit=crop&q=80&w=800"
                     />
                     <div className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40 max-w-[180px]">
                       <div className="flex items-center gap-3 mb-2">
@@ -321,7 +187,7 @@ export function DeveloperDashboard() {
 
             {/* Quick Action Card */}
             <button
-              onClick={() => (document.getElementById('create-app-modal') as HTMLDialogElement)?.showModal?.()}
+              onClick={() => setIsCreateModalOpen(true)}
               className="bg-surface-container-high/50 rounded-xl p-8 flex flex-col justify-center items-center text-center border-2 border-dashed border-outline-variant/30 hover:border-primary/40 hover:bg-surface-container-high transition-all group"
             >
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
@@ -335,19 +201,20 @@ export function DeveloperDashboard() {
         )}
       </div>
 
-      <dialog
-        id="create-app-modal"
-        className="p-0 rounded-2xl border-0 shadow-2xl backdrop:bg-slate-900/60 transition-all"
-      >
-        <div className="w-full max-w-md p-8 bg-white">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2 font-headline">Create New Application</h2>
-          <p className="text-slate-500 mb-6 text-sm">Give your application a name and description to get started.</p>
-          <div className="space-y-5">
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Application</DialogTitle>
+            <DialogDescription>
+              Give your application a name and description to get started.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Application Name</label>
               <Input
                 value={name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. My Custom Bot"
                 className="h-11 rounded-xl"
               />
@@ -356,33 +223,28 @@ export function DeveloperDashboard() {
               <label className="text-sm font-semibold text-slate-700">Description (Optional)</label>
               <Input
                 value={description}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="What does this application do?"
                 className="h-11 rounded-xl"
               />
             </div>
-            <div className="flex gap-3 pt-6">
-              <Button
-                variant="ghost"
-                className="flex-1 h-11"
-                onClick={() => (document.getElementById('create-app-modal') as HTMLDialogElement).close()}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 h-11"
-                disabled={!name || createMutation.isPending}
-                onClick={() => {
-                  createMutation.mutate({ name, description });
-                  (document.getElementById('create-app-modal') as HTMLDialogElement).close();
-                }}
-              >
-                {createMutation.isPending ? 'Creating...' : 'Create Application'}
-              </Button>
-            </div>
           </div>
-        </div>
-      </dialog>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setIsCreateModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!name || createMutation.isPending}
+              onClick={handleCreateApp}
+            >
+              {createMutation.isPending ? 'Creating...' : 'Create Application'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

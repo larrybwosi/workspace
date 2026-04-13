@@ -3,9 +3,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState } from 'react';
-import { useParams, Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router';
+import {
+  useApplication,
+  useUpdateApplication,
+  useDeleteApplication,
+  useResetBotToken,
+} from '@repo/api-client';
 import {
   Info,
   Key,
@@ -20,26 +25,29 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function AppSettings() {
   const { id } = useParams();
-  const { session, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
 
-  const { data: app, isLoading } = useQuery({
-    queryKey: ['application', id],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications/${id}`, {
-        headers: {
-          Authorization: `Bearer ${session?.session.token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
-    },
-    enabled: isAuthenticated && !!id,
-  });
+  const { data: app, isLoading } = useApplication(id);
+  const updateMutation = useUpdateApplication();
+  const deleteMutation = useDeleteApplication();
+  const resetTokenMutation = useResetBotToken();
+
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (app) {
+      setName(app.name);
+      setDescription(app.description || '');
+    }
+  }, [app]);
 
   const copyToClipboard = (text: string, field: string) => {
     if (!text) return;
@@ -48,12 +56,43 @@ export function AppSettings() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleSave = async () => {
+    if (!id) return;
+    try {
+      await updateMutation.mutateAsync({ id, name, description });
+      toast.success('Settings updated successfully');
+    } catch (error) {
+      toast.error('Failed to update settings');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !confirm('Are you sure you want to delete this application? This action cannot be undone.')) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Application deleted');
+      navigate('/developer');
+    } catch (error) {
+      toast.error('Failed to delete application');
+    }
+  };
+
+  const handleResetToken = async () => {
+    if (!id || !confirm('Are you sure? This will invalidate the existing token.')) return;
+    try {
+      await resetTokenMutation.mutateAsync(id);
+      toast.success('Bot token reset successfully');
+    } catch (error) {
+      toast.error('Failed to reset bot token');
+    }
+  };
+
   if (isLoading) return <div className="p-12 text-center">Loading...</div>;
 
   return (
     <>
       <Helmet>
-        <title>SupportBot Settings | Skryme Developer Portal</title>
+        <title>Application Settings | Skryme Developer Portal</title>
       </Helmet>
 
       <div className="pb-16 px-10 max-w-7xl mx-auto">
@@ -69,19 +108,23 @@ export function AppSettings() {
                   Applications
                 </Link>
                 <span>/</span>
-                <span className="text-primary font-semibold">{app?.name || 'SupportBot'}</span>
+                <span className="text-primary font-semibold">{app?.name || 'Loading...'}</span>
               </nav>
             </div>
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
-              {app?.name || 'SupportBot'} <span className="text-secondary">Settings</span>
+              {app?.name || 'Application'} <span className="text-secondary">Settings</span>
             </h2>
             <p className="text-on-surface-variant mt-2 max-w-2xl text-lg leading-relaxed">
               Configure your bot's identity, security tokens, and OAuth2 integration parameters for production
               deployment.
             </p>
           </div>
-          <Button className="bg-primary text-on-primary px-8 py-6 rounded-full font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95">
-            Save Changes
+          <Button
+            className="bg-primary text-on-primary px-8 py-6 rounded-full font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95"
+            onClick={handleSave}
+            disabled={updateMutation.isPending || (name === app?.name && description === app?.description)}
+          >
+            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
 
@@ -102,7 +145,8 @@ export function AppSettings() {
                   </label>
                   <Input
                     className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface font-medium"
-                    defaultValue={app?.name}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1">
@@ -116,7 +160,7 @@ export function AppSettings() {
                       defaultValue={app?.clientId}
                     />
                     <button
-                      onClick={() => copyToClipboard(app?.clientId, 'clientId')}
+                      onClick={() => copyToClipboard(app?.clientId || '', 'clientId')}
                       className="p-3 bg-surface-container-high text-primary rounded-xl hover:bg-primary hover:text-white transition-colors"
                     >
                       {copiedId === 'clientId' ? <Check className="w-4 h-4" /> : <ContentCopy className="w-4 h-4" />}
@@ -129,7 +173,8 @@ export function AppSettings() {
                   </label>
                   <Textarea
                     className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 h-auto min-h-[100px] focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface font-medium"
-                    defaultValue={app?.description}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
               </div>
@@ -157,7 +202,7 @@ export function AppSettings() {
                         type={showToken ? 'text' : 'password'}
                         className="w-full bg-surface-container-low/50 border-none rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm pr-12"
                         readOnly
-                        defaultValue="MTIzNDU2Nzg5MDEyMzQ1Njc4OTAuR29vZC5Cb3QuVGVzdC5Ub2tlbg=="
+                        value={app?.bot?.botToken || 'No token generated'}
                       />
                       <button
                         onClick={() => setShowToken(!showToken)}
@@ -169,14 +214,17 @@ export function AppSettings() {
                     <Button
                       variant="outline"
                       className="px-4 py-6 bg-surface-container-high border-none text-primary rounded-xl font-bold text-xs hover:bg-primary-container transition-colors h-auto"
+                      onClick={handleResetToken}
+                      disabled={resetTokenMutation.isPending}
                     >
-                      Reset
+                      {resetTokenMutation.isPending ? 'Resetting...' : 'Reset'}
                     </Button>
                     <Button
                       onClick={() =>
-                        copyToClipboard('MTIzNDU2Nzg5MDEyMzQ1Njc4OTAuR29vZC5Cb3QuVGVzdC5Ub2tlbg==', 'token')
+                        copyToClipboard(app?.bot?.botToken || '', 'token')
                       }
                       className="px-4 py-6 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2 h-auto"
+                      disabled={!app?.bot?.botToken}
                     >
                       {copiedId === 'token' ? <Check className="w-4 h-4" /> : <ContentCopy className="w-4 h-4" />}
                       Copy
@@ -265,14 +313,20 @@ export function AppSettings() {
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-secondary opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-secondary p-1 mb-4">
-                  <img
-                    alt="Bot Avatar"
-                    className="w-full h-full rounded-full object-cover border-4 border-on-surface"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJZWZQxJ8odt4y4dHB9jtfFMx3fcnJIl2nQmEdjuHMNLUHdNErXE3BfUpBGW3JDy1SJeQa0Wr6z_w0iD-H1KDvk4kecsdfjnL0JDKcMH3GXaThsqP3oz5ufmSp87LUTM0PuWp-WYWTOTx6deLwG-EFZsFBaEUxkVQViJS43I2zrkhnh89DSKUkFgOzLHRa609Jm1cnhCTWgKpQgg6sts2hWQHLGIT9JlIoRmQffc6dpf_t4C0ei6FsvPevHTwvlr1XNZ6WlOQMc9WS"
-                  />
+                  {app?.bot?.avatar ? (
+                    <img
+                      alt="Bot Avatar"
+                      className="w-full h-full rounded-full object-cover border-4 border-on-surface"
+                      src={app.bot.avatar}
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center border-4 border-on-surface">
+                      <span className="material-symbols-outlined text-4xl text-on-primary-container">smart_toy</span>
+                    </div>
+                  )}
                 </div>
-                <h4 className="text-xl font-bold">{app?.name || 'SupportBot'}</h4>
-                <p className="text-xs text-outline-variant mt-1 uppercase tracking-widest">v2.4.0-stable</p>
+                <h4 className="text-xl font-bold">{app?.name || 'Application'}</h4>
+                <p className="text-xs text-outline-variant mt-1 uppercase tracking-widest">ACTIVE</p>
                 <div className="w-full mt-8 grid grid-cols-2 gap-4">
                   <div className="bg-white/5 rounded-xl p-3 text-center">
                     <p className="text-[10px] text-outline-variant uppercase mb-1">Guilds</p>
@@ -318,8 +372,10 @@ export function AppSettings() {
               <Button
                 variant="outline"
                 className="w-full py-6 bg-white text-error border-error-container/30 rounded-xl font-bold text-xs hover:bg-error hover:text-white transition-all h-auto shadow-sm"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
               >
-                Delete Application
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete Application'}
               </Button>
             </div>
           </div>
