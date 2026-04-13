@@ -23,6 +23,7 @@ import { cn } from '../lib/utils';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useSession } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
+import { WorkspaceRail } from './workspace-rail';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
 import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@repo/api-client';
@@ -205,19 +206,27 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
         role="navigation"
         aria-label="Workspace navigation"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar border-r border-sidebar-border',
+          'fixed inset-y-0 left-0 z-50 flex h-full bg-sidebar border-r border-sidebar-border',
           'transition-transform duration-200 ease-in-out',
           'lg:static lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Workspace switcher */}
-        <div className="shrink-0 border-b border-sidebar-border p-2">
-          <WorkspaceSwitcher currentWorkspaceId={currentWorkspaceId} onWorkspaceChange={onWorkspaceChange} />
-        </div>
+        <WorkspaceRail />
 
-        {/* Scrollable nav */}
-        <ScrollArea className="flex-1 py-4">
+        <div className="flex w-64 flex-col h-full">
+          {/* Workspace title area */}
+          <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
+            <h1 className="text-lg font-bold truncate">
+              {slug?.toString().replace(/-/g, ' ') || 'Workspace'}
+            </h1>
+            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-muted-foreground">
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Scrollable nav */}
+          <ScrollArea className="flex-1 py-4">
           <div className="space-y-5 px-2">
             {navSections.map(section => (
               <div key={section.label}>
@@ -304,39 +313,6 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
           </div>
         </ScrollArea>
 
-        {/* User footer */}
-        <div className="shrink-0 border-t border-sidebar-border">
-          <button
-            type="button"
-            className={cn(
-              'flex w-full items-center gap-3 px-3 py-3',
-              'text-left transition-colors hover:bg-sidebar-accent',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            )}
-            onClick={() => setProfileOpen(true)}
-            aria-label="Open profile settings"
-          >
-            <div className="relative shrink-0">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                  {currentUser?.name?.slice(0, 2).toUpperCase() ?? 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <StatusDot status={currentUser?.status} />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
-                {currentUser?.name ?? 'User'}
-              </p>
-              <p className="text-xs text-muted-foreground capitalize leading-tight mt-0.5">
-                {currentUser?.status ?? 'offline'}
-              </p>
-            </div>
-
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
-          </button>
         </div>
       </aside>
 

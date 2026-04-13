@@ -189,6 +189,15 @@
     padding-right: env(safe-area-inset-right);
   }
 
+  .bg-dotted {
+  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .bg-dotted {
+    background-image: radial-gradient(circle, oklch(0.3 0 0) 1px, transparent 1px);
+  }
+
   /* Make sure inputs don't zoom on iOS */
   @media screen and (max-width: 768px) {
     input,
