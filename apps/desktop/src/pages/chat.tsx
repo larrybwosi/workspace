@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { ChannelView, WorkspaceSidebar, DynamicHeader } from '@repo/ui';
 import { InfoPanel } from '../components/shared/info-panel';
+=======
+import { ChannelView, WorkspaceSidebar, InfoPanel } from '@repo/ui';
+>>>>>>> d47ddb7dc75492f7f46a96537b42536dac933522
 =======
 import { ChannelView, WorkspaceSidebar, InfoPanel } from '@repo/ui';
 >>>>>>> d47ddb7dc75492f7f46a96537b42536dac933522
