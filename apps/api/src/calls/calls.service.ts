@@ -156,6 +156,14 @@ export class CallsService {
           workspaceId,
         });
       }
+
+      if (workspaceId) {
+        await publishToAbly(AblyChannels.workspace(workspaceId), 'call-started', {
+          callId: call.id,
+          type,
+          initiatorId: user.id,
+        });
+      }
     }
 
     const uid = Math.floor(Math.random() * 1000000);
@@ -230,6 +238,14 @@ export class CallsService {
         });
       }
 
+      const workspaceId = (call.metadata as any)?.workspaceId;
+      if (workspaceId) {
+        await publishToAbly(AblyChannels.workspace(workspaceId), 'call-joined', {
+          callId,
+          userId: user.id,
+        });
+      }
+
       for (const participant of call.participants) {
         if (participant.userId !== user.id && !participant.leftAt) {
           await publishToAbly(AblyChannels.user(participant.userId), 'call-joined', {
@@ -258,6 +274,14 @@ export class CallsService {
         },
       });
 
+      const workspaceId = (call.metadata as any)?.workspaceId;
+      if (workspaceId) {
+        await publishToAbly(AblyChannels.workspace(workspaceId), 'call-left', {
+          callId,
+          userId: user.id,
+        });
+      }
+
       if (activeParticipants === 0) {
         const duration = Math.floor((Date.now() - call.startedAt.getTime()) / 1000);
 
@@ -269,6 +293,12 @@ export class CallsService {
             duration,
           },
         });
+
+        if (workspaceId) {
+          await publishToAbly(AblyChannels.workspace(workspaceId), 'call-ended', {
+            callId,
+          });
+        }
       }
     } else if (action === 'updateState') {
       await prisma.callParticipant.update({
@@ -507,6 +537,13 @@ export class CallsService {
         status: 'scheduled',
         scheduledFor: new Date(scheduledFor),
       },
+    });
+
+    await publishToAbly(AblyChannels.workspace(workspaceId), 'call-scheduled', {
+      callId: call.id,
+      title,
+      type,
+      scheduledFor: call.scheduledFor,
     });
 
     const member = await prisma.workspaceMember.findUnique({
