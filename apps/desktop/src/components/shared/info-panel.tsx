@@ -28,15 +28,23 @@ import { cn } from '@repo/ui/lib/utils';
 import { MessageSearchPanel } from '@repo/ui/features/chat/message-search-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@repo/ui/components/dropdown-menu';
 
-import { useWorkspace, useWorkspaceMembers } from '@repo/api-client';
-import { useChannel } from '@repo/api-client';
+import {
+  useWorkspace,
+  useWorkspaceMembers,
+  useChannel,
+  useActiveCalls,
+  useScheduledCalls,
+  useJoinCall,
+  useStartCall,
+  useGenerateInviteLink,
+} from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
 import { format } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -67,45 +75,13 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const [activeTab, setActiveTab] = useState('info');
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
-  const [activeCalls, setActiveCalls] = useState<any[]>([]);
-  const [scheduledCalls, setScheduledCalls] = useState<any[]>([]);
+  const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspace?.id);
+  const { data: scheduledCalls = [] } = useScheduledCalls(workspace?.id);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (!workspace?.id || !isOpen) return;
-
-    const fetchActiveCalls = async () => {
-      try {
-        const response = await fetch(`/api/workspaces/${workspace.id}/calls/active`);
-        if (response.ok) {
-          const data = await response.json();
-          setActiveCalls(data.calls || []);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    const fetchScheduledCalls = async () => {
-      try {
-        const response = await fetch(`/api/calls/scheduled?workspaceId=${workspace.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setScheduledCalls(data || []);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchActiveCalls();
-    fetchScheduledCalls();
-    const interval = setInterval(() => {
-      fetchActiveCalls();
-      fetchScheduledCalls();
-    }, 15000); // Poll every 15s
-    return () => clearInterval(interval);
-  }, [workspace?.id, isOpen]);
+  const joinCallMutation = useJoinCall();
+  const startCallMutation = useStartCall();
+  const generateInviteLinkMutation = useGenerateInviteLink();
 
   const handleJoinCall = async (call: any) => {
     if (currentActiveCall) {
@@ -114,18 +90,11 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     }
 
     try {
-      const response = await fetch('/api/calls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: call.type,
-          callId: call.id,
-          workspaceId: workspace?.id,
-        }),
+      const data = await joinCallMutation.mutateAsync({
+        type: call.type,
+        callId: call.id,
+        workspaceId: workspace?.id,
       });
-
-      if (!response.ok) throw new Error('Failed to join call');
-      const data = await response.json();
       setCall(data);
     } catch (error) {
       console.error(error);
@@ -137,20 +106,14 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     if (!workspace?.id) return;
 
     try {
-      const response = await fetch('/api/calls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: callType,
-          workspaceId: workspace.id,
-          channelId: type === 'channel' ? id || channelSlug : undefined,
-          recipientId: dmUser?.id,
-          notifyAll,
-        }),
+      const data = await startCallMutation.mutateAsync({
+        type: callType,
+        workspaceId: workspace.id,
+        channelId: type === 'channel' ? id || channelSlug : undefined,
+        recipientId: dmUser?.id,
+        notifyAll,
       });
 
-      if (!response.ok) throw new Error('Failed to start call');
-      const data = await response.json();
       setCall(data);
       toast.success(`Starting ${callType} call...`);
     } catch (error) {
@@ -160,19 +123,11 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   };
 
   const [inviteLink, setInviteLink] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerateInviteLink = async () => {
     if (!workspace?.id) return;
-    setIsGenerating(true);
     try {
-      const response = await fetch(`/api/workspaces/${workspace.id}/invite-links`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      if (!response.ok) throw new Error('Failed to generate invite link');
-      const data = await response.json();
+      const data = await generateInviteLinkMutation.mutateAsync(workspace.id);
       const fullLink = `${window.location.origin}/invite/${data.code}`;
       setInviteLink(fullLink);
       navigator.clipboard.writeText(fullLink);
@@ -180,8 +135,6 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     } catch (error) {
       console.error(error);
       toast.error('Failed to generate invite link');
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -617,10 +570,10 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                           variant="outline"
                           className="w-full justify-start h-8 text-xs"
                           onClick={handleGenerateInviteLink}
-                          disabled={isGenerating}
+                          disabled={generateInviteLinkMutation.isPending}
                         >
                           <UserPlus className="h-3.5 w-3.5 mr-2" />
-                          {isGenerating ? 'Generating...' : 'Generate Invite Link'}
+                          {generateInviteLinkMutation.isPending ? 'Generating...' : 'Generate Invite Link'}
                         </Button>
                       )}
                     </div>
