@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChannelView, WorkspaceSidebar, DynamicHeader, InfoPanel } from '@repo/ui';
 import { useWorkspaceChannels } from '@repo/api-client';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useLocation } from 'react-router';
 import { useWorkspacesWithOffline } from '../hooks/offline/use-workspaces-offline';
 
 export function ChatPage() {

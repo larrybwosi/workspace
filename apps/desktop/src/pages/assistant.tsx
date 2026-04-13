@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Sidebar, DynamicHeader } from '@repo/ui';
-import { AssistantChannel } from '@repo/ui/features/assistant/assistant-channel';
+import { AssistantChannel } from '@repo/ui/src/features/assistant/assistant-channel';
 
 export function AssistantPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
