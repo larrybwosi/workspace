@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { View, Text } from 'react-native';
 
 export default function TabsLayout() {
   return (

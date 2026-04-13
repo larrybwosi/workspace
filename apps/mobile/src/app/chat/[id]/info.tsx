@@ -4,7 +4,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function ThreadInfoPanel() {
-  const { id } = useLocalSearchParams();
   const router = useRouter();
 
   return (
