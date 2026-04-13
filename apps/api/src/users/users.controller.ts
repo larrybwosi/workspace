@@ -8,7 +8,7 @@ import type { User } from '@repo/database';
 @UseGuards(AuthGuard)
 export class UsersController {
   @Get('me')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   async getMe(@CurrentUser() user: User): Promise<any> {
     return prisma.user.findUnique({
       where: { id: user.id },

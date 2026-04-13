@@ -23,7 +23,7 @@ export function getAblyServer() {
   return ablyClientInstance;
 }
 
-export function getAblyRest() {
+export function getAblyRest(): any {
   const key = env.ABLY_API_KEY;
   if (!key) {
     console.warn('ABLY_API_KEY is not defined, returning null');

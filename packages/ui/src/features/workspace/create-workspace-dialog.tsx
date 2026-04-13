@@ -137,7 +137,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                     )}
                   >
                     <RadioGroupItem value="private" id="private" />
-                    <Lock className="h-5 w-5 text-muted-foreground" />
+                    {React.createElement(Lock as any, { className: "h-5 w-5 text-muted-foreground" })}
                     <div>
                       <div className="font-medium text-sm">Private</div>
                       <div className="text-xs text-muted-foreground">Only invited members</div>

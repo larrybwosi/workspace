@@ -4,7 +4,7 @@ import { MessageRenderer } from "../message-renderer";
 import type { Message, MessageMetadata } from "../../../lib/types";
 
 interface StandardMessageProps {
-  message: Message;
+  message: any;
   metadata?: MessageMetadata;
 }
 

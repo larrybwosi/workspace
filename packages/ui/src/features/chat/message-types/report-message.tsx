@@ -61,7 +61,7 @@ interface ReportSection {
 }
 
 interface ReportMessageProps {
-  message: Message;
+  message: any;
   metadata: MessageMetadata;
   className?: string;
 }

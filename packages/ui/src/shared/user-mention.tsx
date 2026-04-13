@@ -25,7 +25,7 @@ interface UserMentionProps {
 
 export function UserMention({ username, isSpecial }: UserMentionProps) {
   const { data: users, isLoading } = useUsers();
-  const user = users?.find((u) => u.username?.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase());
+  const user = users?.find((u: any) => u.username?.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase());
   const [isOpen, setIsOpen] = useState(false);
 
   if (isSpecial) {

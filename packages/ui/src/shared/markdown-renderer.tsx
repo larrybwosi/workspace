@@ -138,8 +138,8 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             );
           },
           // Custom text renderer to handle mentions, channel tags, and emojis
-          text({ value }) {
-            return <>{renderText(value)}</>;
+          text({ children }: any) {
+            return <>{renderText(String(children))}</>;
           },
           // Ensure tables and other GFM elements are styled correctly
           table({ children }) {

@@ -36,7 +36,7 @@ export class MessageRendererFactory {
     this.renderers.set(type, component);
   }
 
-  static render(message: Message, metadata: MessageMetadata = {}) {
+  static render(message: any, metadata: MessageMetadata = {}) {
     const type = message.messageType || "standard";
     const Renderer = this.renderers.get(type);
 
@@ -59,7 +59,7 @@ MessageRendererFactory.register("code", CodeMessage);
 MessageRendererFactory.register("custom" as MessageType, CustomMessage);
 MessageRendererFactory.register("report", ReportMessage);
 
-export function renderCustomMessage(message: Message) {
+export function renderCustomMessage(message: any) {
   if (!message.messageType || message.messageType === "standard") {
     return null;
   }

@@ -87,7 +87,7 @@ export interface Channel {
   slug?: string
   icon: string
   unreadCount?: number
-  type: string
+  type: string; isPrivate?: boolean
   description?: string
   children?: Channel[]
   workspaceId?: string

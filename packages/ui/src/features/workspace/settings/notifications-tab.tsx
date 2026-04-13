@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from "../../../components/radio-group"
 export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
   const [preference, setPreference] = useState<string>("all")
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving] = useState(false); const [settings, setSettings] = useState({ emailFrequency: "realtime", weeklyDigest: true, securityAlerts: true })
 
   useEffect(() => {
     const fetchSettings = async () => {

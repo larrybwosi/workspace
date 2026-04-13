@@ -13,7 +13,7 @@ import { cn } from "../../../lib/utils"
 import { toast } from "sonner"
 
 interface ApprovalMessageProps {
-  message: Message
+  message: any
   metadata: MessageMetadata
 }
 

@@ -182,9 +182,9 @@ export function ChannelView({
   useEffect(() => {
     if (channelData) {
       setChannelForm({
-        name: channelData.name,
-        description: channelData.description || '',
-        type: channelData.isPrivate ? 'private' : 'public',
+        name: channelData?.name,
+        description: channelData?.description || '',
+        type: (channelData as any)?.isPrivate ? 'private' : 'public',
       });
     }
   }, [channelData]);

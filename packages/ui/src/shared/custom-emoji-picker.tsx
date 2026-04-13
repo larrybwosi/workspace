@@ -124,7 +124,7 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                       />
                       {!emoji.isEligible && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-                          <Lock className="h-3 w-3 text-white" />
+                          {React.createElement(Lock as any, { className: "h-3 w-3 text-white" })}
                         </div>
                       )}
                       {emoji.animated && (
@@ -185,7 +185,7 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                         />
                         {!emoji.isEligible && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-                            <Lock className="h-3 w-3 text-white" />
+                            {React.createElement(Lock as any, { className: "h-3 w-3 text-white" })}
                           </div>
                         )}
                         {emoji.animated && (

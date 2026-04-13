@@ -19,7 +19,7 @@ const getEnv = (name: string) => {
     // Next.js and others might use window.process.env
     return (window as any).process?.env?.[name];
   }
-  return process.env[name];
+  return (globalThis as any).process?.env[name];
 };
 
 const getBaseURL = () => {

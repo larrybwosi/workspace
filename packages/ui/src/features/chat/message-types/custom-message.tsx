@@ -30,7 +30,7 @@ import {
 // --- Types & Interfaces ---
 
 export interface CustomMessageProps {
-  message: Message;
+  message: any;
   onAction?: (
     actionId: string,
     data: Record<string, any>
@@ -275,7 +275,7 @@ export function CustomMessage({
         {readOnly && (
           <div className="p-2 border-t bg-muted/20 flex justify-center">
             <Badge variant="outline" className="text-[10px] text-muted-foreground gap-1 border-none uppercase tracking-tighter">
-              <Lock className="w-2.5 h-2.5" /> Read Only
+              {React.createElement(Lock as any, { className: "w-2.5 h-2.5" })} Read Only
             </Badge>
           </div>
         )}

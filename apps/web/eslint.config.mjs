@@ -1,8 +1,8 @@
 import { baseConfig } from "@repo/eslint-config/base";
 
 export default [
-  ...baseConfig,
   {
-    ignores: [".next/**", "node_modules/**", "dist/**"],
+    ignores: ["dist/**", "build/**", "node_modules/**", ".next/**", ".turbo/**"],
   },
+  ...baseConfig,
 ];

@@ -24,8 +24,8 @@ export function CallContainer() {
 
     const userChannel = ably.channels.get(AblyChannels.user(session.user.id));
 
-    userChannel.subscribe('incoming-call', message => {
-      setIncoming(message.data);
+    userChannel.subscribe('incoming-call', (message: any) => {
+      setIncoming(message.data as any);
     });
 
     return () => {
@@ -94,9 +94,9 @@ export function CallContainer() {
           <div className="flex flex-col items-center justify-center p-6 space-y-6">
             <div className="relative">
               <Avatar className="h-24 w-24 ring-4 ring-primary/20 animate-pulse">
-                <AvatarImage src={incomingCallData?.initiator.image} />
+                <AvatarImage src={incomingCallData?.initiator?.image} />
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {incomingCallData?.initiator.name.slice(0, 2).toUpperCase()}
+                  {incomingCallData?.initiator?.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-2 -right-2 bg-primary rounded-full p-2">
@@ -109,7 +109,7 @@ export function CallContainer() {
             </div>
 
             <div className="text-center">
-              <h3 className="text-xl font-bold">{incomingCallData?.initiator.name}</h3>
+              <h3 className="text-xl font-bold">{incomingCallData?.initiator?.name}</h3>
               <p className="text-muted-foreground italic">Incoming {incomingCallData?.type} call...</p>
             </div>
 

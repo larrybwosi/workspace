@@ -5,7 +5,7 @@ import { Search, UserPlus, MessageSquare, Loader2, Users, Link as LinkIcon, Copy
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/dialog"
 import { Button } from "../../components/button"
 import { Input } from "../../components/input"
-import { Avatar, AvatarFallback } from "../../components/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
 import { Badge } from "../../components/badge"
 import { ScrollArea } from "../../components/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"

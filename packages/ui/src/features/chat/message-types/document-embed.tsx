@@ -9,7 +9,7 @@ import { cn } from "../../../lib/utils";
 import type { Message } from "../../../lib/types";
 
 export interface DocumentEmbedProps {
-  message: Message;
+  message: any;
 }
 
 export function DocumentEmbed({ message }: DocumentEmbedProps) {

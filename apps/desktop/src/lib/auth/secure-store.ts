@@ -1,7 +1,7 @@
 import { load } from "@tauri-apps/plugin-store";
 
 export async function getSecureStore() {
-  return await load("auth.json", { autoSave: true });
+  return await load("auth.json", { autoSave: true, defaults: {} });
 }
 
 export async function saveAuthToken(token: string) {

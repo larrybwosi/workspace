@@ -53,7 +53,7 @@ const updateMemberSchema = z.object({
 @UseGuards(AuthGuard)
 export class WorkspacesController {
   @Get()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   async getWorkspaces(@CurrentUser() user: User): Promise<any> {
     return prisma.workspace.findMany({
       where: {
@@ -95,7 +95,7 @@ export class WorkspacesController {
   }
 
   @Post()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   async createWorkspace(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<any> {
     const validatedData = createWorkspaceSchema.safeParse(body);
     if (!validatedData.success) {

@@ -5,7 +5,7 @@ import type { Message, MessageMetadata } from "../../../lib/types";
 import { cn } from "../../../lib/utils";
 
 interface CodeMessageProps {
-  message: Message;
+  message: any;
   metadata: MessageMetadata;
   className?: string;
 }

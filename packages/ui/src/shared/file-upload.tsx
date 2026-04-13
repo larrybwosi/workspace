@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { Upload, X, File, Loader2 } from 'lucide-react';
 import { Button } from '../components/button';
 import { Progress } from '../components/progress';
@@ -29,7 +30,7 @@ export function FileUpload({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {

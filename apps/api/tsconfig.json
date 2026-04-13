@@ -22,17 +22,39 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node", "jest"],
+    "types": [
+      "node"
+    ],
     "esModuleInterop": true,
     "paths": {
-      "@/*": ["src/*"],
-      "@repo/shared": ["../../packages/shared/index.ts"],
-      "@repo/shared/*": ["../../packages/shared/src/*"],
-      "@repo/types": ["../../packages/types/src/index.ts"],
-      "@repo/types/*": ["../../packages/types/src/*"],
-      "@repo/database": ["../../packages/database/index.ts"],
-      "@repo/database/*": ["../../packages/database/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@repo/shared": [
+        "../../packages/shared/index.ts"
+      ],
+      "@repo/shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@repo/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@repo/types/*": [
+        "../../packages/types/src/*"
+      ],
+      "@repo/database": [
+        "../../packages/database/index.ts"
+      ],
+      "@repo/database/*": [
+        "../../packages/database/*"
+      ]
     }
   },
-  "exclude": ["node_modules", "dist", "eslint.config.mjs"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "eslint.config.mjs",
+    "**/*.spec.ts",
+    "test"
+  ]
 }
