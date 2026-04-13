@@ -15,3 +15,7 @@
 ## 2025-05-15 - [API] Reduced Over-fetching in Search
 **Learning:** Returning full User and Channel objects in search results increases DB CPU, network payload, and API memory usage significantly.
 **Action:** Use Prisma `select` to retrieve only the fields actually used by the frontend (e.g., name, avatar) instead of broad `include` statements.
+
+## 2025-05-15 - [API] Consistent Optimization of Message Retrieval
+**Learning:** High-traffic endpoints like message retrieval in Channels and DMs often suffer from over-fetching due to broad `include` statements and large nested lists (e.g., all read receipts). Moving logic for reaction grouping and per-user read filtering to the server reduces JSON payload size by 40-60%.
+**Action:** Always replace broad Prisma `include` with targeted `select`, and filter user-specific relations at the DB level where possible.

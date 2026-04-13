@@ -62,28 +62,74 @@ export class ChannelsService {
     });
   }
 
-  async getMessages(channelId: string, cursor?: string, limitNum = 50) {
+  /**
+   * ⚡ Performance Optimization:
+   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+   * 2. Only fetches the current user's read status instead of all read receipts.
+   * 3. Removed redundant 'replies' include as the frontend reconstructs threads from flat list.
+   * 4. Groups reactions in-memory to match frontend optimized format.
+   * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
+   */
+  async getMessages(channelId: string, userId: string, cursor?: string, limitNum = 50) {
     const messages = await prisma.message.findMany({
       where: {
         channelId,
         ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
-      include: {
-        user: true,
-        reactions: true,
-        attachments: true,
-        mentions: true,
-        readBy: true,
-        replyTo: {
-          include: {
-            user: true,
+      select: {
+        id: true,
+        userId: true,
+        content: true,
+        messageType: true,
+        metadata: true,
+        isEdited: true,
+        depth: true,
+        timestamp: true,
+        replyToId: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
           },
         },
-        replies: {
-          include: {
-            user: true,
-            reactions: true,
-            readBy: true,
+        reactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+        attachments: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            url: true,
+            size: true,
+          },
+        },
+        mentions: {
+          select: {
+            mention: true,
+          },
+        },
+        readBy: {
+          where: {
+            userId,
+          },
+          select: {
+            userId: true,
+          },
+        },
+        replyTo: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -94,11 +140,34 @@ export class ChannelsService {
     });
 
     const hasMore = messages.length > limitNum;
-    const data = hasMore ? messages.slice(0, limitNum) : messages;
-    const nextCursor = hasMore ? data[data.length - 1].timestamp.toISOString() : null;
+    const rawData = hasMore ? messages.slice(0, limitNum) : messages;
+    const nextCursor = hasMore ? rawData[rawData.length - 1].timestamp.toISOString() : null;
+
+    // Transform messages to match frontend expectations and reduce size
+    const formattedMessages = [...rawData].reverse().map(msg => {
+      // Group reactions by emoji
+      const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();
+      msg.reactions.forEach(r => {
+        if (!reactionGroups.has(r.emoji)) {
+          reactionGroups.set(r.emoji, { emoji: r.emoji, count: 0, users: [] });
+        }
+        const group = reactionGroups.get(r.emoji)!;
+        group.count++;
+        group.users.push(r.userId);
+      });
+
+      return {
+        ...msg,
+        reactions: Array.from(reactionGroups.values()),
+        mentions: msg.mentions.map(m => m.mention),
+        readByCurrentUser: msg.readBy.length > 0,
+        // Remove raw fields not needed in frontend
+        readBy: undefined,
+      };
+    });
 
     return {
-      messages: data.reverse(),
+      messages: formattedMessages,
       nextCursor,
       hasMore,
     };

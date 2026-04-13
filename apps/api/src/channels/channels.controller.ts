@@ -33,10 +33,11 @@ export class ChannelsController {
   @Get(':channelId/messages')
   async getMessages(
     @Param('channelId') channelId: string,
+    @CurrentUser() user: User,
     @Query('cursor') cursor?: string,
     @Query('limit') limitNum = '50'
   ) {
-    return this.channelsService.getMessages(channelId, cursor, parseInt(limitNum));
+    return this.channelsService.getMessages(channelId, user.id, cursor, parseInt(limitNum));
   }
 
   @Post(':channelId/messages')
