@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallStore } from '@repo/shared';
-import { VideoCallContent } from '@/components/features/chat/video-call-content';
 import { useState, useEffect } from 'react';
 import { getAblyClient, AblyChannels } from '@repo/shared';
 import { useSession } from '@repo/shared';
@@ -9,6 +8,11 @@ import { Dialog, DialogContent } from '@repo/ui/components/dialog';
 import { Button } from '@repo/ui/components/button';
 import { Phone, PhoneOff, Video, X } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/avatar';
+import dynamic from 'next/dynamic';
+
+const VideoCallContent = dynamic(() => import('../chat/video-call-content').then(mod => mod.VideoCallContent), {
+  ssr: false,
+});
 
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
