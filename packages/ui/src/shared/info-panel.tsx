@@ -338,6 +338,22 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             >
               Files
             </Button>
+            <Button
+              variant={activeTab === 'pins' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => setActiveTab('pins')}
+            >
+              Pins
+            </Button>
+            <Button
+              variant={activeTab === 'links' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => setActiveTab('links')}
+            >
+              Links
+            </Button>
           </div>
           <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -674,16 +690,20 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                 {type === 'channel' && (
                   <div>
                     <h3 className="text-sm font-semibold mb-3">Thread activity</h3>
-                    <div className="flex items-center gap-1 h-8">
-                      {Array.from({ length: 30 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={cn(
-                            'flex-1 rounded-sm',
-                            i % 5 === 0 ? 'bg-green-500' : i % 3 === 0 ? 'bg-green-400' : 'bg-muted'
-                          )}
-                        />
-                      ))}
+                    <div className="flex items-end gap-1 h-12">
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const height = [40, 60, 30, 80, 20, 90, 50, 70, 40, 60, 80, 30, 50, 70, 90, 40, 60, 30, 80, 20, 90, 50, 70, 40][i];
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              'flex-1 rounded-sm transition-all duration-500',
+                              height > 70 ? 'bg-green-500' : height > 40 ? 'bg-green-500/60' : 'bg-muted'
+                            )}
+                            style={{ height: `${height}%` }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -785,10 +805,63 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             {activeTab === 'files' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Shared Files</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Shared Files</h3>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground italic">No files found in this channel.</p>
+                <div className="space-y-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border/50 transition-all">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">Design-system-v3.pdf</p>
+                        <p className="text-[10px] text-muted-foreground">2.4 MB • 2 days ago</p>
+                      </div>
+                    </div>
+                  ))}
+                  <p className="text-xs text-center text-muted-foreground py-4">No more files to show</p>
+                </div>
+              </div>
+            )}
+
+            {/* Pins tab */}
+            {activeTab === 'pins' && (
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Pinned Messages</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar className="h-5 w-5">
+                        <AvatarFallback className="text-[8px]">JD</AvatarFallback>
+                      </Avatar>
+                      <span className="text-[10px] font-bold">John Doe</span>
+                      <span className="text-[10px] text-muted-foreground ml-auto">Jun 12</span>
+                    </div>
+                    <p className="text-xs line-clamp-3">Welcome to the new workspace! Please check the onboarding guide in the files tab.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Links tab */}
+            {activeTab === 'links' && (
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Shared Links</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl border border-border/50 hover:bg-muted/30 transition-all cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <LinkIcon className="h-3 w-3 text-primary" />
+                      <span className="text-xs font-bold truncate">figma.com</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">Design system v3 - Final Draft</p>
+                  </div>
                 </div>
               </div>
             )}
