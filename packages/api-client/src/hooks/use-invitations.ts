@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import axios from "axios"
+import { apiClient } from "../client"
 
 interface InvitationData {
   email: string
@@ -19,7 +19,7 @@ export function useCreateInvitation() {
 
   return useMutation({
     mutationFn: async (data: InvitationData) => {
-      const response = await axios.post("/api/invitations", data)
+      const response = await apiClient.post("/invitations", data)
       return response.data
     },
     onSuccess: () => {
@@ -33,7 +33,7 @@ export function useInvitation(token: string | null) {
     queryKey: ["invitation", token],
     queryFn: async () => {
       if (!token) return null
-      const response = await axios.get(`/api/invitations/${token}`)
+      const response = await apiClient.get(`/invitations/${token}`)
       return response.data
     },
     enabled: !!token,
@@ -43,7 +43,7 @@ export function useInvitation(token: string | null) {
 export function useAcceptInvitation(token: string) {
   return useMutation({
     mutationFn: async () => {
-      const response = await axios.post(`/api/invitations/${token}/accept`, {})
+      const response = await apiClient.post(`/invitations/${token}/accept`, {})
       return response.data
     },
   })
@@ -54,7 +54,7 @@ export function useInvitations(workspaceId?: string) {
     queryKey: ["invitations", workspaceId],
     queryFn: async () => {
       const params = workspaceId ? `?workspaceId=${workspaceId}` : ""
-      const response = await axios.get(`/api/invitations${params}`)
+      const response = await apiClient.get(`/invitations${params}`)
       return response.data.invitations
     },
   })
@@ -65,7 +65,7 @@ export function useResendInvitation() {
 
   return useMutation({
     mutationFn: async (token: string) => {
-      const response = await axios.post(`/api/invitations/${token}/resend`)
+      const response = await apiClient.post(`/invitations/${token}/resend`)
       return response.data
     },
     onSuccess: () => {
