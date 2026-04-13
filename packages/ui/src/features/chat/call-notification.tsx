@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Phone, Video, X } from 'lucide-react'
 import { Button } from "../../components/button"
-import { Avatar, AvatarFallback } from "../../components/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
 import { Card } from "../../components/card"
 import { motion, AnimatePresence } from "framer-motion"
 

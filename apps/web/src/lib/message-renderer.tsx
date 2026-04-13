@@ -10,12 +10,12 @@ import { StandardMessage } from "@repo/ui/features/chat/message-types/standard-m
 
 // Revised Regex:
 // 1. ^\s*``` : Starts with optional whitespace and backticks
-// 2. ([a-zA-Z0-9+#\-\.]+)? : Optional Capture Group 1 (Language). Allows chars, numbers, +, # (c#), - (obj-c), . (vb.net)
+// 2. ([a-zA-Z0-9+#\-.]+)? : Optional Capture Group 1 (Language). Allows chars, numbers, +, # (c#), - (obj-c), . (vb.net)
 // 3. \s+ : Required whitespace/newline after the language tag
 // 4. ([\s\S]+?) : Capture Group 2 (The Code). Lazy match of any character including newlines.
 // 5. ```\s*$ : Ends with backticks and optional whitespace
 export const CODE_BLOCK_REGEX =
-  /^\s*```([a-zA-Z0-9+#\-\.]+)?\s+([\s\S]+?)```\s*$/;
+  /^\s*```([a-zA-Z0-9+#\-.]+)?\s+([\s\S]+?)```\s*$/;
 
 /**
  * Parses a markdown code block to extract the language and the raw code.

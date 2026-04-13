@@ -65,8 +65,34 @@ module.exports = function (options) {
       ],
     },
     module: {
-      ...options.module,
-      rules, // Use the merged rules array from above
+      rules: [
+        {
+          test: /\.ts$/,
+          exclude: [/node_modules/, /\.spec\.ts$/],
+          use: {
+            loader: 'swc-loader',
+            options: {
+              jsc: {
+                parser: {
+                  syntax: 'typescript',
+                  decorators: true,
+                  dynamicImport: true,
+                },
+                transform: {
+                  legacyDecorator: true,
+                  decoratorMetadata: true,
+                },
+                target: 'esnext',
+                externalHelpers: true,
+                keepClassNames: true,
+              },
+              module: {
+                type: 'es6',
+              },
+            },
+          },
+        },
+      ],
     },
   };
 };

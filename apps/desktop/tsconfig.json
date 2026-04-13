@@ -3,7 +3,11 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -17,12 +21,30 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"],
-      "@repo/ui": ["../../packages/ui/src"],
-      "@repo/shared": ["../../packages/shared/index.ts"],
-      "@repo/shared/*": ["../../packages/shared/src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@repo/ui": [
+        "../../packages/ui/src/index.ts"
+      ],
+      "@repo/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@repo/shared": [
+        "../../packages/shared/index.ts"
+      ],
+      "@repo/shared/*": [
+        "../../packages/shared/src/*"
+      ]
+    },
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }
