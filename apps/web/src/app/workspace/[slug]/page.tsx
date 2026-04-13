@@ -4,25 +4,60 @@ import { useParams } from 'next/navigation';
 import { useWorkspaces, useCreateWorkspaceChannel } from '@repo/api-client';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus } from 'lucide-react';
+import { Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
 import { InfoPanel } from '@/components/shared/info-panel';
-
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Define a proper interface for your Workspace data
+interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  members?: any[];
+  _count?: {
+    channels: number;
+  };
+}
+
 export default function WorkspacePage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params?.slug as string;
+
   const { data: workspaces, isLoading } = useWorkspaces();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
 
-  const workspace = workspaces?.find((w: any) => w.slug === slug);
+  // Memoize the workspace lookup for performance
+  const workspace = useMemo(() => workspaces?.find((w: Workspace) => w.slug === slug), [workspaces, slug]);
+
+  // Recommendation: Pass the workspace ID inside the mutate function
+  // rather than at the hook level if your API client allows.
   const createChannelMutation = useCreateWorkspaceChannel(workspace?.id || '');
+
+  const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
+    if (!workspace?.id) return;
+
+    createChannelMutation.mutate(
+      {
+        name: channelData.name,
+        description: channelData.description,
+        type: channelData.isPrivate ? 'private' : 'public',
+      },
+      {
+        onSuccess: () => {
+          setCreateChannelOpen(false);
+        },
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -60,37 +95,21 @@ export default function WorkspacePage() {
 
   if (!workspace) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Workspace not found</h1>
-          <p className="text-muted-foreground">The workspace you are looking for does not exist.</p>
-          <Button asChild className="mt-4">
-            <Link href="/">Go Back Home</Link>
-          </Button>
-        </div>
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <h1 className="text-2xl font-bold">Workspace not found</h1>
+        <p className="text-muted-foreground">The workspace you are looking for does not exist.</p>
+        <Button asChild>
+          <Link href="/">Go Back Home</Link>
+        </Button>
       </div>
     );
   }
 
-  const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
-    createChannelMutation.mutate(
-      {
-        name: channelData.name,
-        description: channelData.description,
-        type: channelData.isPrivate ? 'private' : 'public',
-      },
-      {
-        onSuccess: () => {
-          setCreateChannelOpen(false);
-        },
-      }
-    );
-  };
-
   return (
     <div className="h-screen flex overflow-hidden bg-background">
       <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace.id} />
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DynamicHeader
           activeView="Workspace Dashboard"
           onMenuClick={() => setSidebarOpen(true)}
@@ -98,9 +117,10 @@ export default function WorkspacePage() {
           onInfoClick={() => setInfoPanelOpen(prev => !prev)}
         />
 
-        <div className="flex flex-1 overflow-hidden relative">
+        <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 p-8 max-w-5xl mx-auto w-full space-y-8 overflow-y-auto">
-            <div className="flex items-center justify-between">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl shadow-sm shrink-0 text-white font-bold">
                   {workspace.icon || workspace.name.charAt(0).toUpperCase()}
@@ -124,104 +144,62 @@ export default function WorkspacePage() {
               </div>
             </div>
 
+            {/* Stats Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="rounded-lg shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Members</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{workspace.members?.length || 0}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Total workspace members</p>
-                  <Button variant="ghost" className="w-full mt-4 justify-between" asChild>
-                    <Link href={`/workspace/${slug}/members`}>
-                      View Members
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Members"
+                value={workspace.members?.length || 0}
+                description="Total workspace members"
+                icon={<Users className="h-4 w-4 text-muted-foreground" />}
+                actionLabel="View Members"
+                actionHref={`/workspace/${slug}/members`}
+              />
 
-              <Card className="rounded-lg shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Channels</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{workspace._count?.channels || 0}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Active communication channels</p>
-                  <Button
-                    variant="ghost"
-                    className="w-full mt-4 justify-between"
-                    onClick={() => setCreateChannelOpen(true)}
-                  >
-                    Create Channel
-                    <Plus className="h-4 w-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Channels"
+                value={workspace._count?.channels || 0}
+                description="Active communication channels"
+                icon={<MessageSquare className="h-4 w-4 text-muted-foreground" />}
+                actionLabel="Create Channel"
+                onActionClick={() => setCreateChannelOpen(true)}
+              />
 
-              <Card className="rounded-lg shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Settings</CardTitle>
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Configure</div>
-                  <p className="text-xs text-muted-foreground mt-1">Workspace preferences</p>
-                  <Button variant="ghost" className="w-full mt-4 justify-between" asChild>
-                    <Link href={`/workspace/${slug}/settings`}>
-                      Open Settings
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Settings"
+                value="Configure"
+                description="Workspace preferences"
+                icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+                actionLabel="Open Settings"
+                actionHref={`/workspace/${slug}/settings`}
+              />
             </div>
 
-            <Card className="bg-muted/30 rounded-lg">
+            {/* Onboarding Section */}
+            <Card className="bg-muted/30 border-none shadow-none">
               <CardHeader>
                 <CardTitle>Getting Started</CardTitle>
                 <CardDescription>Everything you need to set up your workspace</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
-                <div className="flex items-start gap-4 p-4 bg-background rounded-lg border">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">
-                    1
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Invite your team</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Add colleagues to start collaborating on projects together.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-background rounded-lg border">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">
-                    2
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Create channels</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Organize discussions by topic, project, or department.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-background rounded-lg border">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">
-                    3
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Explore integrations</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Connect your favorite tools to streamline your workflow.
-                    </p>
-                  </div>
-                </div>
+                <OnboardingStep
+                  step={1}
+                  title="Invite your team"
+                  description="Add colleagues to start collaborating on projects together."
+                />
+                <OnboardingStep
+                  step={2}
+                  title="Create channels"
+                  description="Organize discussions by topic, project, or department."
+                />
+                <OnboardingStep
+                  step={3}
+                  title="Explore integrations"
+                  description="Connect your favorite tools to streamline your workflow."
+                />
               </CardContent>
             </Card>
           </div>
-          {/* Info Panel: Rendered side-by-side */}
+
           <InfoPanel
             isOpen={infoPanelOpen}
             onClose={() => setInfoPanelOpen(false)}
@@ -236,6 +214,53 @@ export default function WorkspacePage() {
         onOpenChange={setCreateChannelOpen}
         onCreateChannel={handleCreateChannel}
       />
+    </div>
+  );
+}
+
+// Sub-components for cleaner code
+function StatCard({ title, value, description, icon, actionLabel, actionHref, onActionClick }: any) {
+  const content = (
+    <Card className="rounded-lg shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+        <Button
+          variant="ghost"
+          className="w-full mt-4 justify-between px-2"
+          onClick={onActionClick}
+          asChild={!!actionHref}
+        >
+          {actionHref ? (
+            <Link href={actionHref}>
+              {actionLabel} <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          ) : (
+            <>
+              {actionLabel} <Plus className="h-4 w-4 ml-2" />
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+  return content;
+}
+
+function OnboardingStep({ step, title, description }: { step: number; title: string; description: string }) {
+  return (
+    <div className="flex items-start gap-4 p-4 bg-background rounded-lg border border-border/50">
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold">
+        {step}
+      </div>
+      <div>
+        <h3 className="font-semibold">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
     </div>
   );
 }
