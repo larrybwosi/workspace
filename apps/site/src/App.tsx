@@ -6,14 +6,14 @@ import Login from './pages/Login';
 import { DeveloperDashboard } from './pages/developer/Dashboard';
 import { AppConfig } from './pages/developer/AppConfig';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Header } from './components/Header';
+import Header from './components/Header';
 import { Footer } from './components/Footer';
 
 function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900">
       <Header />
-      <main className="flex-grow">
+      <main className="grow">
         <Outlet />
       </main>
       <Footer />
@@ -30,7 +30,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
 
         <Route
-          path="/developer"
+          path="/developers"
           element={
             <ProtectedRoute>
               <Outlet />

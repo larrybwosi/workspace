@@ -1,16 +1,19 @@
-"use client";
-import type React from "react";
-import { WebProviders } from "@repo/ui";
-import { usePushNotifications } from "@/hooks/use-push-notifications";
-import dynamic from "next/dynamic";
-import { useSession } from "@repo/shared";
+'use client';
+import type React from 'react';
+import { WebProviders } from '@repo/ui';
+// import { usePushNotifications } from "@/hooks/use-push-notifications";
+import dynamic from 'next/dynamic';
+import { useSession } from '@repo/shared';
 
-const CallContainer = dynamic(() => import("../components/features/calls/call-container").then(mod => mod.CallContainer), {
-  ssr: false,
-});
+const CallContainer = dynamic(
+  () => import('../components/features/calls/call-container').then(mod => mod.CallContainer),
+  {
+    ssr: false,
+  }
+);
 
 const AgoraClientProvider = dynamic(
-  () => import("../components/features/calls/agora-provider").then(mod => mod.AgoraClientProvider),
+  () => import('../components/features/calls/agora-provider').then(mod => mod.AgoraClientProvider),
   { ssr: false }
 );
 
@@ -19,7 +22,7 @@ interface ProvidersProps {
 }
 
 function PushNotificationProvider({ children }: { children: React.ReactNode }) {
-  usePushNotifications();
+  // usePushNotifications();
   return <>{children}</>;
 }
 

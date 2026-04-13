@@ -4,22 +4,32 @@ import { X, Minus, Square, Copy } from "lucide-react";
 
 export function DesktopTitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
-  const appWindow = getCurrentWindow();
+  const [isTauri, setIsTauri] = useState(false);
 
   useEffect(() => {
-    const updateMaximized = async () => {
-      setIsMaximized(await appWindow.isMaximized());
-    };
+    // Check if we are running in Tauri
+    setIsTauri(!!window.__TAURI_INTERNALS__);
 
-    updateMaximized();
-    const unlisten = appWindow.onResized(() => {
+    if (window.__TAURI_INTERNALS__) {
+      const appWindow = getCurrentWindow();
+      const updateMaximized = async () => {
+        setIsMaximized(await appWindow.isMaximized());
+      };
+
       updateMaximized();
-    });
+      const unlisten = appWindow.onResized(() => {
+        updateMaximized();
+      });
 
-    return () => {
-      unlisten.then(u => u());
-    };
-  }, [appWindow]);
+      return () => {
+        unlisten.then(u => u());
+      };
+    }
+  }, []);
+
+  if (!isTauri) return null;
+
+  const appWindow = getCurrentWindow();
 
   return (
     <div

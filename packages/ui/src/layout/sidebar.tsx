@@ -17,6 +17,7 @@ import { useDMConversations, dmKeys } from '@repo/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
+import { WorkspaceRail } from './workspace-rail';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { StartDMDialog } from '../features/chat/start-dm-dialog';
 import { User } from '../lib/types';
@@ -272,19 +273,22 @@ export function Sidebar({
         role="navigation"
         aria-label="Main navigation"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar border-r border-sidebar-border',
+          'fixed inset-y-0 left-0 z-50 flex h-full bg-sidebar border-r border-sidebar-border',
           'transition-transform duration-200 ease-in-out',
           'lg:static lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Workspace switcher */}
-        <div className="shrink-0 border-b border-sidebar-border p-2">
-          <WorkspaceSwitcher currentWorkspaceId={currentWorkspaceId} onWorkspaceChange={onWorkspaceChange} />
-        </div>
+        <WorkspaceRail />
 
-        {/* Scrollable nav */}
-        <ScrollArea className="flex-1 py-4">
+        <div className="flex w-64 flex-col h-full">
+          {/* Header area */}
+          <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
+            <h1 className="text-lg font-bold truncate">Social</h1>
+          </div>
+
+          {/* Scrollable nav */}
+          <ScrollArea className="flex-1 py-4">
           <div className="space-y-5 px-2">
             {/* Quick access */}
             <div>
@@ -415,9 +419,6 @@ export function Sidebar({
           </div>
         </ScrollArea>
 
-        {/* User footer */}
-        <div className="shrink-0 border-t border-sidebar-border">
-          <UserFooter user={currentUser} onClick={() => setProfileOpen(true)} />
         </div>
       </aside>
 
