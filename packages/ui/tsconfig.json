@@ -3,12 +3,28 @@
   "compilerOptions": {
     "rootDir": "src",
     "paths": {
-      "@repo/ui/components/*": ["./src/components/*"],
-      "@repo/ui/lib/*": ["./src/lib/*"],
-      "@repo/ui/hooks/*": ["./src/hooks/*"],
-      "@repo/ui/*": ["./src/*"]
-    }
+      "@repo/ui/components/*": [
+        "./src/components/*"
+      ],
+      "@repo/ui/lib/*": [
+        "./src/lib/*"
+      ],
+      "@repo/ui/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@repo/ui/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "node"
+    ]
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

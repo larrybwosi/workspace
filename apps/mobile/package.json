@@ -11,12 +11,16 @@
   },
   "dependencies": {
     "@better-auth/expo": "^1.6.0",
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/manrope": "^0.4.2",
+    "@expo/vector-icons": "^14.0.4",
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
     "better-auth": "^1.6.0",
     "expo": "~52.0.7",
     "expo-constants": "~17.0.3",
+    "expo-font": "^13.0.4",
     "expo-linking": "~7.0.3",
     "expo-router": "~4.0.15",
     "expo-secure-store": "~14.0.0",
@@ -25,24 +29,22 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.5",
-    "react-native-reanimated": "~3.16.1",
+    "react-native-reanimated": "~3.16.7",
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
-    "react-native-web": "~0.19.13"
+    "react-native-web": "~0.19.13",
+    "react-native-worklets-core": "~1.6.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.19.15",
-    "@types/react": "18.3.1",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.1",
     "babel-preset-expo": "~12.0.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"
   },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "18.3.1"
-    }
-  }
+  "pnpm": {}
 }

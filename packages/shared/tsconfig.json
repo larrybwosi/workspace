@@ -7,7 +7,10 @@
     "moduleResolution": "NodeNext",
     "noEmit": false,
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src"

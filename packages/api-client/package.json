@@ -2,11 +2,18 @@
   "name": "@repo/api-client",
   "version": "0.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
@@ -15,10 +22,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "axios": "^1.7.9",
-    "@tanstack/react-query": "^5.66.0",
+    "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "@repo/shared": "workspace:*"
+    "@tanstack/react-query": "^5.66.0",
+    "axios": "^1.7.9"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
@@ -26,8 +33,9 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "^19.0.8",
     "@types/node": "^22.10.7",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   }
