@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ChannelView, WorkspaceSidebar, DynamicHeader, InfoPanel } from '@repo/ui';
+import { ChannelView, WorkspaceSidebar, DynamicHeader } from '@repo/ui';
+import { InfoPanel } from '../components/shared/info-panel';
 import { useWorkspaceChannels } from '@repo/api-client';
 import { useParams, useNavigate } from 'react-router';
 import { useWorkspacesWithOffline } from '../hooks/offline/use-workspaces-offline';

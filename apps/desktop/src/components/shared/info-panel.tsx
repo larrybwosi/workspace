@@ -19,22 +19,21 @@ import {
   UserPlus,
   Search,
 } from 'lucide-react';
-import { Button } from '../components/button';
-import { ScrollArea } from '../components/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
-import { Badge } from '../components/badge';
-import { Separator } from '../components/separator';
-import { mockThread, mockUsers } from '../lib/mock-data';
-import { cn } from '../lib/utils';
-import { MessageSearchPanel } from '../features/chat/message-search-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/dropdown-menu';
+import { Button } from '@repo/ui/components/button';
+import { ScrollArea } from '@repo/ui/components/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar';
+import { Badge } from '@repo/ui/components/badge';
+import { Separator } from '@repo/ui/components/separator';
+import { cn } from '@repo/ui/lib/utils';
+import { MessageSearchPanel } from '@repo/ui/features/chat/message-search-panel';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@repo/ui/components/dropdown-menu';
 
 import { useWorkspace, useWorkspaceMembers } from '@repo/api-client';
 import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
-import { User, Channel, WorkspaceMember } from '../lib/types';
+import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
@@ -346,7 +345,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
         {activeTab === 'search' ? (
           <MessageSearchPanel
-            channelId={mockThread.channelId}
+            channelId={channelId}
             onMessageClick={(messageId, channelId) => {
               window.location.href = `/channels/${channelId}?messageId=${messageId}`;
             }}
