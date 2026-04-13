@@ -288,158 +288,140 @@ export function MessageComposer({
   };
 
   return (
-    <div className="bg-background rounded-lg border border-border">
+    <div className="relative group/composer">
       {channelId && currentUser && <TypingIndicator channelId={channelId} currentUserId={currentUser.id} />}
 
       <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
 
-      {replyingTo && (
-        <div className="px-3 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            Replying to <span className="font-medium text-foreground">{replyingTo.userName}</span>
-          </span>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onCancelReply}>
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
-
-      <div className="p-2">
-        {/* Formatting Toolbar */}
-        <div className="flex items-center gap-1 mb-2 pb-2 border-b border-border">
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => wrapSelection('**')}>
-                  <Bold className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Bold</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => wrapSelection('_')}>
-                  <Italic className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Italic</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => wrapSelection('`')}>
-                  <Code className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Inline code</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="relative flex-1 rounded-lg bg-background focus-within:ring-1 focus-within:ring-ring transition-all min-h-[40px]">
-          {renderDecoratedMessage()}
-          <TextareaAutosize
-            ref={textareaRef}
-            value={message}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            placeholder={dynamicPlaceholder}
-            className="w-full bg-transparent border-none focus:ring-0 resize-none px-3 py-2 text-sm min-h-[40px] relative z-10"
-            maxRows={15}
-          />
-        </div>
-
-        {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}
-
-        {mentionType && (
-          <MentionSelector
-            items={mentionItems}
-            onSelect={handleMentionSelect}
-            searchTerm={mentionSearch}
-            position={mentionPosition}
-            type={mentionType}
-          />
-        )}
-
-        {/* Attachment Preview Area */}
-        {attachments.length > 0 && (
-          <div className="mt-2 mb-2 flex flex-wrap gap-2 px-2">
-            {attachments.map(file => (
-              <div
-                key={file.id}
-                className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs animate-in fade-in zoom-in-95 duration-200"
-              >
-                <File className="h-3 w-3 text-primary" />
-                <span className="max-w-[150px] truncate">{file.name}</span>
-                <span className="text-muted-foreground">({Math.round(parseInt(file.size || '0') / 1024)}KB)</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 ml-1 hover:bg-background/50"
-                  onClick={() => removeAttachment(file.id)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
+      <div className="bg-card border border-border/50 rounded-2xl shadow-sm focus-within:shadow-md focus-within:border-primary/30 transition-all duration-300">
+        {replyingTo && (
+          <div className="px-4 py-2 border-b border-border/50 bg-muted/20 flex items-center justify-between rounded-t-2xl">
+            <span className="text-xs text-muted-foreground flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+              Replying to <span className="font-bold text-foreground">@{replyingTo.userName}</span>
+            </span>
+            <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted" onClick={onCancelReply}>
+              <X className="h-3 w-3" />
+            </Button>
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-2 px-1">
-          <div className="flex items-center gap-0.5">
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
+        <div className="p-1">
+          <div className="relative flex-1 bg-transparent min-h-[44px]">
+            {renderDecoratedMessage()}
+            <TextareaAutosize
+              ref={textareaRef}
+              value={message}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              placeholder={dynamicPlaceholder}
+              className="w-full bg-transparent border-none focus:ring-0 resize-none px-4 py-3 text-sm min-h-[44px] relative z-10 placeholder:text-muted-foreground/50"
+              maxRows={15}
+            />
+          </div>
+
+          {mentionType && <div className="fixed inset-0 z-40" onClick={() => setMentionType(null)} />}
+
+          {mentionType && (
+            <MentionSelector
+              items={mentionItems}
+              onSelect={handleMentionSelect}
+              searchTerm={mentionSearch}
+              position={mentionPosition}
+              type={mentionType}
+            />
+          )}
+
+          {/* Attachment Preview Area */}
+          {attachments.length > 0 && (
+            <div className="mt-2 mb-2 flex flex-wrap gap-2 px-3 pb-2">
+              {attachments.map(file => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border border-border/50 rounded-xl text-xs animate-in fade-in zoom-in-95 duration-200"
+                >
+                  <File className="h-3.5 w-3.5 text-primary" />
+                  <span className="max-w-[150px] truncate font-medium">{file.name}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground"
+                    className="h-5 w-5 ml-1 hover:bg-background rounded-full"
+                    onClick={() => removeAttachment(file.id)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between p-2 pt-1 border-t border-border/30">
+            <div className="flex items-center gap-1">
+              <TooltipProvider delayDuration={300}>
+                <div className="flex items-center bg-muted/30 rounded-xl px-1">
+                  <EmojiPicker onEmojiSelect={insertEmoji}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                  </EmojiPicker>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg"
                     onClick={triggerMention}
                   >
                     <AtSign className="h-4 w-4" />
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent>Mention</TooltipContent>
-              </Tooltip>
-
-              <EmojiPicker onEmojiSelect={insertEmoji}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                      <Smile className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Emoji</TooltipContent>
-                </Tooltip>
-              </EmojiPicker>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
                   >
                     {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent>Attach files</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+                </div>
 
-          <Button
-            size="sm"
-            onClick={handleSend}
-            disabled={(!message.trim() && attachments.length === 0) || isUploading}
-            className="h-8 px-3"
-          >
-            {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-            Send
-          </Button>
+                <div className="w-px h-4 bg-border/50 mx-1" />
+
+                <div className="flex items-center gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('**')}>
+                    <Bold className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('_')}>
+                    <Italic className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('`')}>
+                    <Code className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </TooltipProvider>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setMessage('');
+                  setAttachments([]);
+                }}
+                className="h-8 text-xs font-bold text-muted-foreground hover:text-foreground"
+              >
+                Discard
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSend}
+                disabled={(!message.trim() && attachments.length === 0) || isUploading}
+                className="h-9 px-4 rounded-xl font-bold bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95"
+              >
+                {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                Send
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
