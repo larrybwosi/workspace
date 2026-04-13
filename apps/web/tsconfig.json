@@ -1,10 +1,6 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "types": [
-      "node",
-      "jest"
-    ],
     "lib": [
       "dom",
       "dom.iterable",
@@ -54,7 +50,10 @@
       "@repo/shared/*": [
         "../../packages/shared/src/*"
       ]
-    }
+    },
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "next-env.d.ts",

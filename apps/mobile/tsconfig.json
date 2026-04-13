@@ -1,9 +1,6 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "types": [
-      "node"
-    ],
     "strict": true,
     "paths": {
       "@/*": [
@@ -21,7 +18,10 @@
       "@repo/api-client": [
         "../../packages/api-client/src/index.ts"
       ]
-    }
+    },
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "**/*.ts",

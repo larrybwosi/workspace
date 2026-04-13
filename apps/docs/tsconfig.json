@@ -19,9 +19,6 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": [
-      "node"
-    ],
     "paths": {
       "@/*": [
         "./src/*"
@@ -35,7 +32,10 @@
       "@repo/shared/*": [
         "../../packages/shared/src/*"
       ]
-    }
+    },
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src"
