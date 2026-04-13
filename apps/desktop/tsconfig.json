@@ -37,7 +37,8 @@
         "../../packages/shared/src/*"
       ]
     },
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
   },
   "include": [
     "src"
