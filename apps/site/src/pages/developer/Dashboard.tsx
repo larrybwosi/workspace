@@ -63,9 +63,9 @@ export function DeveloperDashboard() {
         <title>My Applications | Skryme Developer Portal</title>
       </Helmet>
 
-      <div className="px-12 pb-12">
+      <div className="container mx-auto px-4 py-12">
         {/* Header Section */}
-        <section className="mb-12 flex justify-between items-end">
+        <section className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <span className="text-xs font-bold text-secondary tracking-widest uppercase mb-2 block">DASHBOARD</span>
             <h2 className="text-4xl font-extrabold text-on-surface -tracking-tight">
@@ -76,13 +76,25 @@ export function DeveloperDashboard() {
               plane.
             </p>
           </div>
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-primary text-on-primary px-6 py-6 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
-          >
-            <span className="material-symbols-outlined">add_circle</span>
-            New Application
-          </Button>
+          <div className="flex flex-wrap gap-4">
+            <Button
+              asChild
+              variant="outline"
+              className="px-6 py-6 rounded-full font-bold flex items-center gap-2 border-2"
+            >
+              <a href={import.meta.env.VITE_DOCS_URL} target="_blank" rel="noopener noreferrer">
+                <span className="material-symbols-outlined">description</span>
+                Documentation
+              </a>
+            </Button>
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-primary text-on-primary px-6 py-6 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+            >
+              <span className="material-symbols-outlined">add_circle</span>
+              New Application
+            </Button>
+          </div>
         </section>
 
         {appsLoading ? (
