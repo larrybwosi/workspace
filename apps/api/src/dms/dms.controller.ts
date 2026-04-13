@@ -36,10 +36,11 @@ export class DmsController {
   @Get(':conversationId/messages')
   async getMessages(
     @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
     @Query('cursor') cursor?: string,
     @Query('limit') limitNum = '50',
   ) {
-    return this.dmsService.getMessages(conversationId, cursor, parseInt(limitNum));
+    return this.dmsService.getMessages(conversationId, user.id, cursor, parseInt(limitNum));
   }
 
   @Post(':conversationId/messages')
