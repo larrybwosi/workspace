@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Inter } from 'next/font/google';
-// import './globals.css';
+import { Geist, Inter } from 'next/font/google';
 import '@repo/ui/styles/globals.css';
 import { Providers } from '@/lib/providers';
 import { MobileNav } from '@/components/layout/mobile-nav';
 
 const geist = Inter({ subsets: ['latin'] });
-// const geistMono = Inter_({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'Dealio - Messaging and Team Chat Application',
