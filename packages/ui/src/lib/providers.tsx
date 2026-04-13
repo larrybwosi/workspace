@@ -1,21 +1,12 @@
 'use client';
 import type React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '../layout/theme-provider';
 import { NotificationListener } from '../features/notifications/notification-listener';
 import { PresenceProvider } from './contexts/presence-context';
 import { useSession } from '@repo/shared';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-      gcTime: 1000 * 60 * 60 * 12, // 12 hours
-    },
-  },
-});
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -24,7 +15,36 @@ interface ProvidersProps {
 /**
  * Base providers used by all apps (Web, Admin, etc.)
  */
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        refetchOnWindowFocus: false,
+        gcTime: 1000 * 60 * 60 * 12, // 12 hours
+      },
+    },
+  });
+}
+
+let browserQueryClient: QueryClient | undefined = undefined;
+
+function getQueryClient() {
+  if (typeof window === 'undefined') {
+    // Server: always make a new query client
+    return makeQueryClient();
+  } else {
+    // Browser: make a new query client if we don't already have one
+    // This is very important so we don't re-make a new client if React
+    // suspends during hydration, or there's a duplication of this component
+    if (!browserQueryClient) browserQueryClient = makeQueryClient();
+    return browserQueryClient;
+  }
+}
+
 export function BaseProviders({ children }: ProvidersProps) {
+  const [queryClient] = useState(() => getQueryClient());
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -61,19 +81,36 @@ export function BaseProviders({ children }: ProvidersProps) {
   );
 }
 
+function WebProvidersInner({ children }: ProvidersProps) {
+  const { data: session } = useSession() as { data: any };
+
+  return (
+    <PresenceProvider userId={session?.user?.id}>
+      {children}
+      {session && <NotificationListener />}
+    </PresenceProvider>
+  );
+}
+
 /**
  * Providers specific to the Web app
  */
 export function WebProviders({ children }: ProvidersProps) {
+  return (
+    <BaseProviders>
+      <WebProvidersInner>{children}</WebProvidersInner>
+    </BaseProviders>
+  );
+}
+
+function AdminProvidersInner({ children }: ProvidersProps) {
   const { data: session } = useSession() as { data: any };
 
   return (
-    <BaseProviders>
-      <PresenceProvider userId={session?.user?.id}>
-        {children}
-        {session && <NotificationListener />}
-      </PresenceProvider>
-    </BaseProviders>
+    <>
+      {children}
+      {/*{session && <NotificationListener />}*/}
+    </>
   );
 }
 
@@ -81,12 +118,9 @@ export function WebProviders({ children }: ProvidersProps) {
  * Providers specific to the Admin app
  */
 export function AdminProviders({ children }: ProvidersProps) {
-  const { data: session } = useSession() as { data: any };
-
   return (
     <BaseProviders>
-      {children}
-      {/*{session && <NotificationListener />}*/}
+      <AdminProvidersInner>{children}</AdminProvidersInner>
     </BaseProviders>
   );
 }
