@@ -1,16 +1,16 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "types": [
-      "node"
-    ],
     "rootDir": "src",
     "outDir": "./dist",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": false,
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src"
