@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react';
-<<<<<<< HEAD
-<<<<<<< HEAD
 import { ChannelView, WorkspaceSidebar, DynamicHeader } from '@repo/ui';
-import { InfoPanel } from '../components/shared/info-panel';
-=======
-import { ChannelView, WorkspaceSidebar, InfoPanel } from '@repo/ui';
->>>>>>> d47ddb7dc75492f7f46a96537b42536dac933522
-=======
-import { ChannelView, WorkspaceSidebar, InfoPanel } from '@repo/ui';
->>>>>>> d47ddb7dc75492f7f46a96537b42536dac933522
 import { useWorkspaceChannels } from '@repo/api-client';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import { useWorkspacesWithOffline } from '../hooks/offline/use-workspaces-offline';
+import { InfoPanel } from '@/components/shared/info-panel';
 
 export function ChatPage() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
@@ -43,23 +35,20 @@ export function ChatPage() {
       */}
       <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace?.id} />
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
+        <DynamicHeader
+          activeView={channelId}
+          onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {}}
+          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
+        />
+
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
             {channelId ? (
-              <ChannelView
-                channelId={channelId}
-                workspaceId={workspace?.id}
-                onToggleInfo={() => setInfoPanelOpen(!infoPanelOpen)}
-              />
+              <ChannelView channelId={channelId} workspaceId={workspace?.id} />
             ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground bg-dotted">
-                <div className="text-center p-8 bg-card border border-border/50 rounded-2xl shadow-xl max-w-sm">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span className="text-3xl">🚀</span>
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">Welcome to your Workspace</h3>
-                  <p className="text-sm text-muted-foreground">Select a channel from the sidebar to start collaborating with your team.</p>
-                </div>
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                Select a channel to start chatting
               </div>
             )}
           </main>
