@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import axios from "axios"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || ""
+import { apiClient } from "../client"
 
 export function useUserSearch(query: string, friendsOnly = false) {
   return useQuery({
@@ -11,7 +9,7 @@ export function useUserSearch(query: string, friendsOnly = false) {
         return { users: [] }
       }
 
-      const { data } = await axios.get(`${API_URL}/api/users/search`, {
+      const { data } = await apiClient.get("/users/search", {
         params: {
           query: query.trim(),
           friendsOnly,
