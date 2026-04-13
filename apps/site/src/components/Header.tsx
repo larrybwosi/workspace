@@ -1,56 +1,68 @@
 import { Link } from 'react-router';
-import { Button } from '@repo/ui/components/button';
-import { Layout } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
-export function Header() {
+const NAV_LINKS = [
+  { label: 'Product', to: '/' },
+  { label: 'Workspaces', to: '/workspaces' },
+  { label: 'Integrations', to: '/integrations' },
+  { label: 'Pricing', to: '/pricing' },
+  { label: 'Developers', to: '/developers' },
+];
+
+const Header = () => {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/6">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <Layout className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold tracking-tight">Workspace</span>
+    <nav className="sticky top-0 z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex justify-between items-center w-full px-10 py-0 h-14 max-w-screen-xl mx-auto">
+        <div className="flex items-center gap-10">
+          <Link to="/" className="text-[15px] font-medium tracking-tight text-slate-900 dark:text-white">
+            Skryme
           </Link>
-          <nav className="ml-8 hidden md:flex gap-6">
-            <Link to="/" className="text-sm font-medium transition-colors hover:text-blue-600">
-              Product
-            </Link>
-            <Link to="/pricing" className="text-sm font-medium transition-colors hover:text-blue-600">
-              Pricing
-            </Link>
-            <Link to="/developer" className="text-sm font-medium transition-colors hover:text-blue-600">
-              Developers
-            </Link>
-            <Link to="/contact" className="text-sm font-medium transition-colors hover:text-blue-600">
-              Contact
-            </Link>
-          </nav>
+          <div className="hidden md:flex gap-7">
+            {NAV_LINKS.map(({ label, to }) => (
+              <Link
+                key={label}
+                to={to}
+                className="text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-on-surface-variant hidden sm:block">
-                Hi, {user?.name}
-              </span>
-              <Button asChild>
-                <Link to="/developer">Dashboard</Link>
-              </Button>
-            </div>
+            <>
+              <span className="text-[13px] text-slate-500 dark:text-slate-400 hidden sm:block">Hi, {user?.name}</span>
+              <Link
+                to="/dashboard"
+                className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-medium rounded cursor-pointer hover:opacity-85 transition-opacity"
+              >
+                Dashboard
+              </Link>
+            </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
-                <Link to="/login">Log in</Link>
-              </Button>
-              <Button asChild>
-                <a href={`${import.meta.env.VITE_WEB_URL}/signup`}>Get Started</a>
-              </Button>
+              <Link
+                to="/login"
+                className="text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-medium rounded cursor-pointer hover:opacity-85 transition-opacity"
+              >
+                Get started
+              </Link>
             </>
           )}
         </div>
       </div>
-    </header>
+    </nav>
   );
-}
+};
+
+export default Header;
