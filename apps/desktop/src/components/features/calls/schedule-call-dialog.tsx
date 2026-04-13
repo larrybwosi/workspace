@@ -8,15 +8,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Button } from "../../components/button"
-import { Label } from "../../components/label"
-import { Input } from "../../components/input"
-import { Textarea } from "../../components/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
+} from "@repo/ui/components/dialog"
+import { Button } from "@repo/ui/components/button"
+import { Label } from "@repo/ui/components/label"
+import { Input } from "@repo/ui/components/input"
+import { Textarea } from "@repo/ui/components/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/components/select"
 import { Video, Phone, Calendar, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
+import { useScheduleCall } from "@repo/api-client"
 
 interface ScheduleCallDialogProps {
   open: boolean
@@ -39,7 +39,7 @@ export function ScheduleCallDialog({
     scheduledFor: "",
   })
 
-  const queryClient = useQueryClient()
+  const scheduleCallMutation = useScheduleCall()
 
   const handleSchedule = async () => {
     if (!formData.title || !formData.scheduledFor) {
@@ -49,20 +49,13 @@ export function ScheduleCallDialog({
 
     setLoading(true)
     try {
-      const response = await fetch("/api/calls/scheduled", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          workspaceId,
-          channelId,
-        }),
+      await scheduleCallMutation.mutateAsync({
+        ...formData,
+        workspaceId,
+        channelId,
       })
 
-      if (!response.ok) throw new Error("Failed to schedule call")
-
       toast.success("Call scheduled successfully")
-      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", workspaceId] })
       onOpenChange(false)
       setFormData({
         title: "",

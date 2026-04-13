@@ -25,6 +25,9 @@ import {
   Users as UsersIcon,
   Plus,
   Trash2,
+  Eye,
+  EyeOff,
+  Globe as Public,
 } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 import { toast } from 'sonner';
@@ -34,6 +37,7 @@ export function AppConfig() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showToken, setShowToken] = useState(false);
 
   const { data: app, isLoading } = useApplication(id);
   const updateMutation = useUpdateApplication();
@@ -96,23 +100,24 @@ export function AppConfig() {
         <title>Bot Configuration | Skryme Developer Portal</title>
       </Helmet>
 
-      <div className="pb-16 px-10 max-w-7xl mx-auto">
+      <div className="container mx-auto px-4 py-12">
         {/* Header Section */}
-        <div className="flex items-end justify-between mb-10 border-b border-outline-variant/10 pb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 border-b border-outline-variant/10 pb-8 gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <span className="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                 Active
               </span>
-              <nav className="flex text-xs text-on-surface-variant gap-2 font-medium">
-                <Link to="/developer" className="hover:text-primary transition-colors">
+              <nav className="flex text-sm text-on-surface-variant gap-2 font-medium items-center">
+                <Link to="/developer" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">apps</span>
                   Applications
                 </Link>
-                <span>/</span>
-                <span className="text-primary">{app?.name || 'Loading...'}</span>
+                <span className="material-symbols-outlined text-xs">chevron_right</span>
+                <span className="text-primary font-bold">{app?.name || 'Loading...'}</span>
               </nav>
             </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">
+            <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
               Bot <span className="text-primary">Configuration</span>
             </h2>
             <p className="text-on-surface-variant mt-1 max-w-2xl text-base">
@@ -181,6 +186,43 @@ export function AppConfig() {
                         <ContentCopy className="w-4 h-4" />
                       )}
                     </button>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                    Bot Token
+                  </label>
+                  <div className="flex gap-3">
+                    <div className="relative flex-1">
+                      <Input
+                        type={showToken ? 'text' : 'password'}
+                        className="w-full bg-surface-container-low/50 border-outline-variant/10 rounded-xl px-4 py-3 h-auto text-on-surface-variant font-mono text-sm pr-12"
+                        readOnly
+                        value={app?.bot?.botToken || 'No token generated'}
+                      />
+                      <button
+                        onClick={() => setShowToken(!showToken)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors"
+                      >
+                        {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="px-4 py-2 h-auto bg-surface-container-low border border-outline-variant/20 text-primary rounded-xl font-bold text-xs hover:bg-primary-container transition-colors"
+                      onClick={handleResetToken}
+                      disabled={resetTokenMutation.isPending}
+                    >
+                      {resetTokenMutation.isPending ? 'Resetting...' : 'Reset Token'}
+                    </Button>
+                    <Button
+                      onClick={() => copyToClipboard(app?.bot?.botToken || '', 'token')}
+                      className="px-4 py-2 h-auto bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2"
+                      disabled={!app?.bot?.botToken}
+                    >
+                      {copiedId === 'token' ? <Check className="w-4 h-4" /> : <ContentCopy className="w-4 h-4" />}
+                      Copy
+                    </Button>
                   </div>
                 </div>
                 <div className="col-span-2">
@@ -298,6 +340,47 @@ export function AppConfig() {
                       Add another URL
                     </button>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">
+                    Scopes Selection
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {['bot', 'identify', 'email', 'messages.read', 'guilds', 'rpc'].map(scope => (
+                      <div
+                        key={scope}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-outline-variant/10 hover:border-primary/20 transition-all cursor-pointer group"
+                      >
+                        <input
+                          type="checkbox"
+                          defaultChecked={['bot', 'identify', 'messages.read'].includes(scope)}
+                          className="rounded border-outline-variant text-primary focus:ring-primary/20 w-4 h-4"
+                        />
+                        <span className="text-xs font-medium text-on-surface-variant group-hover:text-on-surface">
+                          {scope}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-outline-variant/10 mt-4">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                      <Public className="w-5 h-5 text-secondary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">Public Bot</p>
+                      <p className="text-xs text-on-surface-variant">
+                        Allows anyone to invite this bot to their workspace.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
                 </div>
               </div>
             </section>

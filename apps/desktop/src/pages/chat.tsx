@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ChannelView, WorkspaceSidebar, InfoPanel } from '@repo/ui';
+import { ChannelView, WorkspaceSidebar, DynamicHeader } from '@repo/ui';
 import { useWorkspaceChannels } from '@repo/api-client';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import { useWorkspacesWithOffline } from '../hooks/offline/use-workspaces-offline';
+import { InfoPanel } from '@/components/shared/info-panel';
 
 export function ChatPage() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);

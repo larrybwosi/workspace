@@ -5,10 +5,11 @@ import { VideoCallContent } from '../chat/video-call-content';
 import { useState, useEffect } from 'react';
 import { getAblyClient, AblyChannels } from '@repo/shared';
 import { useSession } from '@repo/shared';
-import { Dialog, DialogContent } from '../../components/dialog';
-import { Button } from '../../components/button';
+import { useJoinCall } from '@repo/api-client';
+import { Dialog, DialogContent } from '@repo/ui/components/dialog';
+import { Button } from '@repo/ui/components/button';
 import { Phone, PhoneOff, Video, X } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/avatar';
 
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
@@ -46,36 +47,17 @@ export function CallContainer() {
     endCall();
   };
 
+  const joinCallMutation = useJoinCall();
+
   const handleAcceptCall = async () => {
     if (!incomingCallData) return;
 
     try {
-      const response = await fetch('/api/calls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: incomingCallData.type,
-          callId: incomingCallData.callId,
-          workspaceId: incomingCallData.workspaceId,
-        }),
+      const data = await joinCallMutation.mutateAsync({
+        type: incomingCallData.type,
+        callId: incomingCallData.callId,
+        workspaceId: incomingCallData.workspaceId,
       });
-
-      if (!response.ok) throw new Error('Failed to join call');
-      const data = await response.json();
-
-      if (!data.token) {
-        const tokenResponse = await fetch('/api/agora/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            channelName: data.channelName,
-            uid: data.uid,
-          }),
-        });
-        if (!tokenResponse.ok) throw new Error('Failed to fetch Agora token');
-        const tokenData = await tokenResponse.json();
-        data.token = tokenData.token;
-      }
 
       setCall({
         ...data,

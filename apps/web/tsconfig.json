@@ -41,8 +41,26 @@
       "@/components/ui/*": [
         "../../packages/ui/src/components/*"
       ],
-      "@/components/*": [
-        "../../packages/ui/src/*"
+      "@/components/layout/*": [
+        "../../packages/ui/src/layout/*"
+      ],
+      "@/components/features/calls/*": [
+        "./src/components/features/calls/*"
+      ],
+      "@/components/features/chat/video-call-content": [
+        "./src/components/features/chat/video-call-content"
+      ],
+      "@/components/features/chat/video-call": [
+        "./src/components/features/chat/video-call"
+      ],
+      "@/components/features/*": [
+        "../../packages/ui/src/features/*"
+      ],
+      "@/components/shared/info-panel": [
+        "./src/components/shared/info-panel"
+      ],
+      "@/components/shared/*": [
+        "../../packages/ui/src/shared/*"
       ],
       "@repo/shared": [
         "../../packages/shared/index.ts"

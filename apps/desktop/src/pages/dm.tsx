@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ChannelView, Sidebar, DynamicHeader, InfoPanel } from '@repo/ui';
+import { ChannelView, Sidebar, DynamicHeader } from '@repo/ui';
+import { InfoPanel } from '../components/shared/info-panel';
 import { useUser } from '@repo/api-client';
 import { Loader2, Info } from 'lucide-react';
 import { Button } from '@repo/ui';

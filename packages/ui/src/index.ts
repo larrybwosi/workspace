@@ -57,7 +57,6 @@ export * from './shared/custom-emoji-picker';
 export * from './shared/emoji-picker';
 export * from './shared/file-upload';
 export * from './shared/icon-picker';
-export * from './shared/info-panel';
 export * from './shared/markdown-renderer';
 export * from './shared/mention-selector';
 export * from './shared/rich-text-editor';
@@ -66,7 +65,6 @@ export * from './shared/user-mention-selector';
 export * from './shared/user-mention';
 
 export * from './features/notifications/notification-listener';
-export * from './features/calls/call-container';
 export * from './features/chat/channel-view';
 export * from './features/assistant/assistant-channel';
 
