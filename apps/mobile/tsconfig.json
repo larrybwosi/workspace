@@ -3,12 +3,28 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@repo/shared": ["../../packages/shared/index.ts"],
-      "@repo/shared/*": ["../../packages/shared/src/*"],
-      "@repo/types": ["../../packages/types/src/index.ts"],
-      "@repo/api-client": ["../../packages/api-client/src/index.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@repo/shared": [
+        "../../packages/shared/index.ts"
+      ],
+      "@repo/shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@repo/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@repo/api-client": [
+        "../../packages/api-client/src/index.ts"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
 }
