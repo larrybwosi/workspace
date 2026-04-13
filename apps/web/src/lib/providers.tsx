@@ -23,18 +23,24 @@ function PushNotificationProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export function Providers({ children }: ProvidersProps) {
+function ProvidersInner({ children }: ProvidersProps) {
   const { data: session } = useSession() as { data: any };
   return (
+    <PushNotificationProvider>
+      {children}
+      {session && (
+        <AgoraClientProvider>
+          <CallContainer />
+        </AgoraClientProvider>
+      )}
+    </PushNotificationProvider>
+  );
+}
+
+export function Providers({ children }: ProvidersProps) {
+  return (
     <WebProviders>
-      <PushNotificationProvider>
-        {children}
-        {session && (
-          <AgoraClientProvider>
-            <CallContainer />
-          </AgoraClientProvider>
-        )}
-      </PushNotificationProvider>
+      <ProvidersInner>{children}</ProvidersInner>
     </WebProviders>
   );
 }
