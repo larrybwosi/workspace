@@ -163,7 +163,7 @@ export const mockFavorites: Channel[] = [
 ]
 
 export const mockMessages: Message[] = [
-  
+
 ]
 
 export const mockThread: Thread = {

@@ -3,19 +3,9 @@ import type React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '../layout/theme-provider';
-import dynamic from 'next/dynamic';
 import { NotificationListener } from '../features/notifications/notification-listener';
 import { PresenceProvider } from './contexts/presence-context';
 import { useSession } from '@repo/shared';
-
-const CallContainer = dynamic(() => import('../features/calls/call-container').then(mod => mod.CallContainer), {
-  ssr: false,
-});
-
-const AgoraClientProvider = dynamic(
-  () => import('../features/calls/agora-provider').then(mod => mod.AgoraClientProvider),
-  { ssr: false }
-);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,14 +71,7 @@ export function WebProviders({ children }: ProvidersProps) {
     <BaseProviders>
       <PresenceProvider userId={session?.user?.id}>
         {children}
-        {session && (
-          <>
-            <NotificationListener />
-            <AgoraClientProvider>
-              <CallContainer />
-            </AgoraClientProvider>
-          </>
-        )}
+        {session && <NotificationListener />}
       </PresenceProvider>
     </BaseProviders>
   );

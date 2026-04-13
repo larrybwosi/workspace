@@ -10,6 +10,8 @@ import { AssistantPage } from './pages/assistant';
 import { useSession } from './lib/auth/auth-client';
 import { Loader2 } from 'lucide-react';
 import { useTauri } from './hooks/use-tauri';
+import { AgoraClientProvider } from './components/features/calls/agora-provider';
+import { CallContainer } from './components/features/calls/call-container';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useTauri();
@@ -33,12 +35,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 import { DesktopTitleBar } from './components/layout/desktop-title-bar';
 
-function App() {
+function AppContent() {
+  const { data: session } = useSession();
   return (
-    <WebProviders>
-      <div className="flex flex-col h-screen overflow-hidden">
-        <DesktopTitleBar />
-        <Router>
+    <div className="flex flex-col h-screen overflow-hidden">
+      <DesktopTitleBar />
+      {session && (
+        <AgoraClientProvider>
+          <CallContainer />
+        </AgoraClientProvider>
+      )}
+      <Router>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/login/qr" element={<QRCodeLoginPage />} />
@@ -101,8 +108,15 @@ function App() {
               }
             />
           </Routes>
-        </Router>
-      </div>
+      </Router>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <WebProviders>
+      <AppContent />
     </WebProviders>
   );
 }
