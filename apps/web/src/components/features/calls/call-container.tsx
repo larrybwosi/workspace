@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallStore } from '@repo/shared';
-import { VideoCallContent } from '@repo/ui/features/chat/video-call-content';
+import { VideoCallContent } from '@/components/features/chat/video-call-content';
 import { useState, useEffect } from 'react';
 import { getAblyClient, AblyChannels } from '@repo/shared';
 import { useSession } from '@repo/shared';
