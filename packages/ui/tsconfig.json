@@ -2,14 +2,29 @@
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "paths": {
-      "@repo/ui/components/*": ["./src/components/*"],
-      "@repo/ui/lib/*": ["./src/lib/*"],
-      "@repo/ui/hooks/*": ["./src/hooks/*"],
-      "@repo/ui/*": ["./src/*"]
+      "@repo/ui/components/*": [
+        "./src/components/*"
+      ],
+      "@repo/ui/lib/*": [
+        "./src/lib/*"
+      ],
+      "@repo/ui/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@repo/ui/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

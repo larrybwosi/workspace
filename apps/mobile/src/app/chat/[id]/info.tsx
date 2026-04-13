@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 export default function ThreadInfoPanel() {
   const router = useRouter();
