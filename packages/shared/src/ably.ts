@@ -49,9 +49,19 @@ export function getAblyClient() {
   } else {
     // Client-side
     if (!ablyClientInstance) {
+      const getBaseURL = () => {
+        if (typeof process !== 'undefined' && process.env) {
+          if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+          if ((process.env as any).EXPO_PUBLIC_API_URL) return (process.env as any).EXPO_PUBLIC_API_URL;
+        }
+        return '';
+      };
+
+      const baseURL = getBaseURL();
+
       // @ts-ignore
       ablyClientInstance = new Ably.Realtime({
-        authUrl: "/api/ably/token",
+        authUrl: `${baseURL}/api/ably/token`,
         authMethod: "POST",
       })
     }

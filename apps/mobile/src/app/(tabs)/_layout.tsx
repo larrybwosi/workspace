@@ -25,38 +25,38 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="feed"
+        name="workspaces"
         options={{
-          title: 'Feed',
+          title: 'Workspaces',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="grid-view" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="projects"
+        name="channels"
         options={{
-          title: 'Projects',
+          title: 'Channels',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="folder-open" size={size} color={color} />
+            <MaterialIcons name="chat-bubble-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="tasks"
+        name="dms"
         options={{
-          title: 'Tasks',
+          title: 'DMs',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="assignment-turned-in" size={size} color={color} />
+            <MaterialIcons name="alternate-email" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="activity"
+        name="profile"
         options={{
-          title: 'Activity',
+          title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="notifications" size={size} color={color} />
+            <MaterialIcons name="person-outline" size={size} color={color} />
           ),
         }}
       />

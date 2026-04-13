@@ -66,6 +66,7 @@ export * from './shared/user-mention';
 
 export * from './features/notifications/notification-listener';
 export * from './features/chat/channel-view';
+export * from './features/assistant/assistant-channel';
 
 export * from './layout/theme-toggle';
 export * from './layout/welcome-state';
@@ -75,6 +76,7 @@ export { Sidebar } from './layout/sidebar'
 export * from './layout/top-bar';
 export * from './layout/search-view';
 export * from './layout/workspace-sidebar';
+export * from './layout/workspace-rail';
 export * from './layout/mobile-nav';
 
 export * from './lib/contexts/presence-context';

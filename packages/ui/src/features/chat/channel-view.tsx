@@ -24,7 +24,7 @@ import { type UploadedFile } from '@repo/shared';
 import { toast } from 'sonner';
 import { useChannel } from '@repo/api-client';
 import { useSession } from '@repo/shared';
-import { Settings } from 'lucide-react';
+import { Settings, Hash, Phone, Video, Sidebar as SidebarIcon } from 'lucide-react';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 
 interface ChannelViewProps {
@@ -33,6 +33,7 @@ interface ChannelViewProps {
   threadId?: string;
   contextId?: string;
   isWidget?: boolean;
+  onToggleInfo?: () => void;
 }
 
 // --- Helper Components ---
@@ -94,6 +95,7 @@ export function ChannelView({
   threadId: initialThreadId,
   contextId,
   isWidget,
+  onToggleInfo,
 }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
@@ -480,32 +482,52 @@ export function ChannelView({
   );
 
   return (
-    <div className={cn('flex flex-col h-dvh w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
+    <div className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
       {/* Header */}
       {!isWidget && (
-        <div className="flex items-center gap-2.5 px-4 py-2.5 border-b shrink-0 bg-background/95 backdrop-blur z-10 sticky top-0">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-          <div className="flex items-baseline gap-1.5 min-w-0">
-            <h2 className="font-semibold text-sm leading-none truncate">
-              # {channelData?.name || activeChannelId || 'general'}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Hash className="h-5 w-5" />
+              <span className="text-sm">/</span>
+              <span className="text-sm font-medium">v3.0</span>
+              <span className="text-sm">/</span>
+            </div>
+            <h2 className="font-bold text-lg truncate">
+              {channelData?.name || activeChannelId || 'general'}
             </h2>
-            <span className="text-xs text-muted-foreground truncate hidden sm:block">{messages.length} messages</span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
+              <Video className="h-4 w-4" />
+            </Button>
+            <div className="w-px h-4 bg-border/50 mx-1" />
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
               onClick={() => setEditDialogOpen(true)}
             >
               <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
+              onClick={onToggleInfo}
+            >
+              <SidebarIcon className="h-4 w-4" />
             </Button>
           </div>
         </div>
       )}
 
       {/* Main Scroll Area */}
-      <div className="flex-1 min-h-0 w-full relative">
+      <div className="flex-1 min-h-0 w-full relative bg-dotted">
         <ScrollArea ref={scrollAreaRef} className="h-full w-full">
           {/* Top padding, then messages push to bottom */}
           <div className="flex flex-col justify-end min-h-full pt-4 pb-2">
@@ -633,7 +655,7 @@ export function ChannelView({
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 px-4 py-3 border-t bg-background">
+      <div className="shrink-0 px-6 py-6 bg-background">
         <MessageComposer
           onSend={handleSendMessage}
           placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${activeChannelId || 'thread'}`}
