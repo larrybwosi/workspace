@@ -38,7 +38,7 @@ export default function Login() {
           onSuccess: () => {
             navigate(callbackUrl, { replace: true });
           },
-          onError: ctx => {
+          onError: (ctx: any) => {
             console.log(ctx.error);
             setError(ctx.error.message || 'Failed to login');
           },

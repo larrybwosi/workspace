@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { cn } from '@repo/ui/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { authClient } from '@repo/shared/auth/client';
+import { Toaster } from 'sonner';
 
 export function DeveloperLayout() {
   const location = useLocation();
@@ -129,6 +130,7 @@ export function DeveloperLayout() {
       <main className="ml-64 pt-24 min-h-screen">
         <Outlet />
       </main>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

@@ -3,9 +3,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useState } from 'react';
-import { useParams, Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router';
+import {
+  useApplication,
+  useUpdateApplication,
+  useDeleteApplication,
+  useResetBotToken,
+} from '@repo/api-client';
 import {
   Info,
   Bolt,
@@ -22,31 +27,65 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
+import { toast } from 'sonner';
 
 export function AppConfig() {
   const { id } = useParams();
-  const { session, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: app, isLoading } = useQuery({
-    queryKey: ['application', id],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v2/applications/${id}`, {
-        headers: {
-          Authorization: `Bearer ${session?.session.token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
-    },
-    enabled: isAuthenticated && !!id,
-  });
+  const { data: app, isLoading } = useApplication(id);
+  const updateMutation = useUpdateApplication();
+  const deleteMutation = useDeleteApplication();
+  const resetTokenMutation = useResetBotToken();
+
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (app) {
+      setName(app.name);
+      setDescription(app.description || '');
+    }
+  }, [app]);
 
   const copyToClipboard = (text: string, field: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedId(field);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSave = async () => {
+    if (!id) return;
+    try {
+      await updateMutation.mutateAsync({ id, name, description });
+      toast.success('Application updated successfully');
+    } catch (error) {
+      toast.error('Failed to update application');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !confirm('Are you sure you want to delete this application? This action cannot be undone.')) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Application deleted');
+      navigate('/developer');
+    } catch (error) {
+      toast.error('Failed to delete application');
+    }
+  };
+
+  const handleResetToken = async () => {
+    if (!id || !confirm('Are you sure? This will invalidate the existing token.')) return;
+    try {
+      await resetTokenMutation.mutateAsync(id);
+      toast.success('Bot token reset successfully');
+    } catch (error) {
+      toast.error('Failed to reset bot token');
+    }
   };
 
   if (isLoading) return <div className="p-12 text-center">Loading...</div>;
@@ -81,11 +120,23 @@ export function AppConfig() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="px-6 py-2.5 rounded-xl font-bold text-sm bg-surface">
+            <Button
+              variant="outline"
+              className="px-6 py-2.5 rounded-xl font-bold text-sm bg-surface"
+              onClick={() => {
+                setName(app?.name || '');
+                setDescription(app?.description || '');
+              }}
+              disabled={updateMutation.isPending}
+            >
               Discard
             </Button>
-            <Button className="px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20">
-              Save Changes
+            <Button
+              className="px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20"
+              onClick={handleSave}
+              disabled={updateMutation.isPending || (name === app?.name && description === app?.description)}
+            >
+              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </div>
@@ -106,7 +157,8 @@ export function AppConfig() {
                   </label>
                   <Input
                     className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto"
-                    defaultValue={app?.name}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1">
@@ -120,7 +172,7 @@ export function AppConfig() {
                       defaultValue={app?.clientId}
                     />
                     <button
-                      onClick={() => copyToClipboard(app?.clientId, 'clientId')}
+                      onClick={() => copyToClipboard(app?.clientId || '', 'clientId')}
                       className="p-3 bg-surface-container-low border border-outline-variant/20 text-on-surface-variant rounded-xl hover:text-primary transition-colors"
                     >
                       {copiedId === 'clientId' ? (
@@ -137,7 +189,8 @@ export function AppConfig() {
                   </label>
                   <Textarea
                     className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto min-h-[100px]"
-                    defaultValue={app?.description}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
               </div>
@@ -291,16 +344,22 @@ export function AppConfig() {
             <div className="bg-on-surface rounded-xl p-8 text-white">
               <div className="flex flex-col items-center">
                 <div className="relative mb-6">
-                  <img
-                    alt="Bot Avatar"
-                    className="w-20 h-20 rounded-xl object-cover border-2 border-primary/40 shadow-xl"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJZWZQxJ8odt4y4dHB9jtfFMx3fcnJIl2nQmEdjuHMNLUHdNErXE3BfUpBGW3JDy1SJeQa0Wr6z_w0iD-H1KDvk4kecsdfjnL0JDKcMH3GXaThsqP3oz5ufmSp87LUTM0PuWp-WYWTOTx6deLwG-EFZsFBaEUxkVQViJS43I2zrkhnh89DSKUkFgOzLHRa609Jm1cnhCTWgKpQgg6sts2hWQHLGIT9JlIoRmQffc6dpf_t4C0ei6FsvPevHTwvlr1XNZ6WlOQMc9WS"
-                  />
+                  {app?.bot?.avatar ? (
+                    <img
+                      alt="Bot Avatar"
+                      className="w-20 h-20 rounded-xl object-cover border-2 border-primary/40 shadow-xl"
+                      src={app.bot.avatar}
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl bg-primary-container flex items-center justify-center border-2 border-primary/40 shadow-xl">
+                       <span className="material-symbols-outlined text-4xl text-on-primary-container">smart_toy</span>
+                    </div>
+                  )}
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-on-surface rounded-full"></div>
                 </div>
                 <h4 className="text-xl font-bold">{app?.name || 'SupportBot'}</h4>
                 <p className="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-bold">
-                  v2.4.0-STABLE
+                  ACTIVE
                 </p>
                 <div className="w-full mt-8 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
                   <div className="text-center">
@@ -343,11 +402,17 @@ export function AppConfig() {
               <Button
                 variant="outline"
                 className="w-full py-6 bg-white text-error border-error-container/30 rounded-xl font-bold text-xs hover:bg-error hover:text-white transition-all shadow-sm"
+                onClick={handleResetToken}
+                disabled={resetTokenMutation.isPending}
               >
-                Revoke Bot Token
+                {resetTokenMutation.isPending ? 'Resetting...' : 'Revoke Bot Token'}
               </Button>
-              <button className="w-full mt-3 py-3 text-error/60 text-[10px] font-bold hover:text-error transition-colors uppercase tracking-widest">
-                Delete Application
+              <button
+                className="w-full mt-3 py-3 text-error/60 text-[10px] font-bold hover:text-error transition-colors uppercase tracking-widest disabled:opacity-50"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete Application'}
               </button>
             </div>
           </div>
