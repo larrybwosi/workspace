@@ -12,6 +12,7 @@ import {
   Hash,
   Lock,
   ChevronDown,
+  Search,
 } from 'lucide-react';
 import { Button } from '../components/button';
 import { ScrollArea } from '../components/scroll-area';
@@ -49,7 +50,6 @@ interface NavSection {
 interface WorkspaceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  currentWorkspaceId?: string;
   onWorkspaceChange?: (workspaceId: string) => void;
 }
 
@@ -131,7 +131,7 @@ function StatusDot({ status }: { status?: string }) {
 // Main Component
 // ---------------------------------------------------------------------------
 
-export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorkspaceChange }: WorkspaceSidebarProps) {
+export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: WorkspaceSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { slug } = useParams();
@@ -139,9 +139,8 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
 
-  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(currentWorkspaceId ?? '');
-  const createChannelMutation = useCreateWorkspaceChannel(currentWorkspaceId ?? '');
-
+  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(slug ?? '');
+  const createChannelMutation = useCreateWorkspaceChannel(slug ?? '');
   const session = useSession();
   const sessionUser = session.data?.user;
   const { onlineUsers } = usePresence();
@@ -217,9 +216,7 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
         <div className="flex w-64 flex-col h-full">
           {/* Workspace title area */}
           <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
-            <h1 className="text-lg font-bold truncate">
-              {slug?.toString().replace(/-/g, ' ') || 'Workspace'}
-            </h1>
+            <h1 className="text-lg font-bold truncate">{slug?.toString().replace(/-/g, ' ') || 'Workspace'}</h1>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-muted-foreground">
               <Search className="h-4 w-4" />
             </Button>
@@ -227,92 +224,91 @@ export function WorkspaceSidebar({ isOpen, onClose, currentWorkspaceId, onWorksp
 
           {/* Scrollable nav */}
           <ScrollArea className="flex-1 py-4">
-          <div className="space-y-5 px-2">
-            {navSections.map(section => (
-              <div key={section.label}>
-                <SectionLabel>{section.label}</SectionLabel>
+            <div className="space-y-5 px-2">
+              {navSections.map(section => (
+                <div key={section.label}>
+                  <SectionLabel>{section.label}</SectionLabel>
+                  <div className="space-y-0.5">
+                    {section.items.map(item => (
+                      <NavButton
+                        key={item.href}
+                        item={item}
+                        isActive={pathname === item.href}
+                        onClick={() => (item.onClick ? item.onClick() : handleNavigate(item.href))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <Separator className="bg-sidebar-border" />
+
+              {/* Channels */}
+              <div>
+                <div className="flex items-center justify-between px-3 mb-1">
+                  <SectionLabel>Channels</SectionLabel>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
+                          onClick={() => setCreateChannelOpen(true)}
+                          aria-label="Create channel"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">New channel</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
                 <div className="space-y-0.5">
-                  {section.items.map(item => (
-                    <NavButton
-                      key={item.href}
-                      item={item}
-                      isActive={pathname === item.href}
-                      onClick={() => (item.onClick ? item.onClick() : handleNavigate(item.href))}
-                    />
-                  ))}
+                  {channelsLoading ? (
+                    <ChannelSkeleton />
+                  ) : channels?.length > 0 ? (
+                    channels.map((channel: any) => {
+                      const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
+                      const isActive = pathname === href;
+                      const Icon = channel.type === 'private' ? Lock : Hash;
+
+                      return (
+                        <Button
+                          key={channel.id}
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                          )}
+                          onClick={() => handleNavigate(href)}
+                        >
+                          <Icon
+                            className={cn(
+                              'h-3.5 w-3.5 shrink-0',
+                              isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
+                            )}
+                          />
+                          <span className="flex-1 truncate text-left">{channel.name}</span>
+                          {channel.unreadCount > 0 && (
+                            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                              {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
+                            </span>
+                          )}
+                        </Button>
+                      );
+                    })
+                  ) : (
+                    <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No channels yet</p>
+                  )}
                 </div>
               </div>
-            ))}
-
-            <Separator className="bg-sidebar-border" />
-
-            {/* Channels */}
-            <div>
-              <div className="flex items-center justify-between px-3 mb-1">
-                <SectionLabel>Channels</SectionLabel>
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
-                        onClick={() => setCreateChannelOpen(true)}
-                        aria-label="Create channel"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">New channel</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-
-              <div className="space-y-0.5">
-                {channelsLoading ? (
-                  <ChannelSkeleton />
-                ) : channels?.length > 0 ? (
-                  channels.map((channel: any) => {
-                    const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
-                    const isActive = pathname === href;
-                    const Icon = channel.type === 'private' ? Lock : Hash;
-
-                    return (
-                      <Button
-                        key={channel.id}
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
-                          isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                        )}
-                        onClick={() => handleNavigate(href)}
-                      >
-                        <Icon
-                          className={cn(
-                            'h-3.5 w-3.5 shrink-0',
-                            isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
-                          )}
-                        />
-                        <span className="flex-1 truncate text-left">{channel.name}</span>
-                        {channel.unreadCount > 0 && (
-                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                            {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
-                          </span>
-                        )}
-                      </Button>
-                    );
-                  })
-                ) : (
-                  <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No channels yet</p>
-                )}
-              </div>
             </div>
-          </div>
-        </ScrollArea>
-
+          </ScrollArea>
         </div>
       </aside>
 
