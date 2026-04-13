@@ -11,6 +11,15 @@ export function useWorkspaces() {
   })
 }
 
+export function useGenerateInviteLink() {
+  return useMutation({
+    mutationFn: async (workspaceId: string) => {
+      const { data } = await apiClient.post(`/workspaces/${workspaceId}/invite-links`, {})
+      return data
+    },
+  })
+}
+
 export function useWorkspace(workspaceId: string) {
   return useQuery({
     queryKey: ["workspaces", workspaceId],
