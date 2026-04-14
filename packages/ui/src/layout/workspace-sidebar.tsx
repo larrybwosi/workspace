@@ -21,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../com
 import { Separator } from '../components/separator';
 import { Skeleton } from '../components/skeleton';
 import { cn } from '../lib/utils';
-import { useRouter, useParams, usePathname } from 'next/navigation';
+import { useRouter, useParams, usePathname } from '../hooks/use-universal-router';
 import { useSession } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
@@ -50,6 +50,7 @@ interface NavSection {
 interface WorkspaceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  currentWorkspaceId?: string;
   onWorkspaceChange?: (workspaceId: string) => void;
 }
 

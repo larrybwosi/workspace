@@ -34,6 +34,7 @@ import {
 import { Button } from '../../components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Badge } from '../../components/badge';
+// @ts-ignore
 import { CallChat } from '../calls/call-chat';
 import { useSession } from '@repo/shared';
 import { cn } from '../../lib/utils';

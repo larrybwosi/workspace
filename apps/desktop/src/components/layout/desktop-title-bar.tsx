@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { X, Minus, Square, Copy } from "lucide-react";
 
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: any;
+  }
+}
+
 export function DesktopTitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isTauri, setIsTauri] = useState(false);

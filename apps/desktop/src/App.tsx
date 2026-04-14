@@ -10,11 +10,13 @@ import { AssistantPage } from './pages/assistant';
 import { useSession } from './lib/auth/auth-client';
 import { Loader2 } from 'lucide-react';
 import { useTauri } from './hooks/use-tauri';
+import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { AgoraClientProvider } from './components/features/calls/agora-provider';
 import { CallContainer } from './components/features/calls/call-container';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useTauri();
+  useKeyboardShortcuts();
   const { data: session, isPending } = useSession();
   const location = useLocation();
 
