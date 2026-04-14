@@ -111,7 +111,7 @@ export function VideoCallContent({
 
   // Apply Master Volume to Remote Tracks
   useEffect(() => {
-    remoteUsers.forEach(user => {
+    remoteUsers.forEach((user: any) => {
       if (user.audioTrack) {
         user.audioTrack.setVolume(masterVolume);
       }
@@ -447,7 +447,7 @@ export function VideoCallContent({
                 )}
                 {typeof focusedVideoId === 'number' && (
                   <RemoteUser
-                    user={remoteUsers.find(u => u.uid === focusedVideoId)!}
+                    user={remoteUsers.find((u: any) => u.uid === focusedVideoId)!}
                     className="w-full h-full object-contain"
                     playAudio={true}
                     playVideo={true}
@@ -492,8 +492,8 @@ export function VideoCallContent({
                   </div>
                 )}
                 {remoteUsers
-                  .filter(u => u.uid !== focusedVideoId)
-                  .map(user => (
+                  .filter((u: any) => u.uid !== focusedVideoId)
+                  .map((user: any) => (
                     <div
                       key={user.uid}
                       className="relative bg-zinc-900 rounded-lg overflow-hidden aspect-video shrink-0 video-container group cursor-pointer border border-white/5"
@@ -559,7 +559,7 @@ export function VideoCallContent({
                 </div>
               </div>
 
-              {remoteUsers.map(user => (
+              {remoteUsers.map((user: any) => (
                 <div
                   key={user.uid}
                   className="relative bg-zinc-900 rounded-xl overflow-hidden aspect-video group video-container border border-white/5"

@@ -38,7 +38,7 @@ import {
   useStartCall,
   useGenerateInviteLink,
 } from '@repo/api-client';
-import { useParams } from 'next/navigation';
+import { useParams } from '../../hooks/use-router-shim';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';
@@ -466,7 +466,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                             Active Calls ({activeCalls.length})
                           </h3>
                           <div className="space-y-2">
-                            {activeCalls.map(call => (
+                            {activeCalls.map((call: any) => (
                               <div
                                 key={call.id}
                                 className="p-3 bg-muted/40 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
@@ -523,7 +523,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                             Upcoming Calls ({scheduledCalls.length})
                           </h3>
                           <div className="space-y-2">
-                            {scheduledCalls.map(call => (
+                            {scheduledCalls.map((call: any) => (
                               <div key={call.id} className="p-3 bg-muted/20 rounded-lg border border-border/50">
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs font-bold truncate pr-2">{call.title}</span>
