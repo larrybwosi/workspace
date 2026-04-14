@@ -84,3 +84,4 @@ export * from './lib/providers';
 export * from './lib/utils';
 export * from './lib/types';
 export * from './lib/haptics';
+export * from './features/assistant/assistant-channel';
