@@ -20,11 +20,11 @@ import { useCreateChannel } from "@repo/api-client"
 interface CreateChannelDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceSlug: string
   onSuccess?: () => void
 }
 
-export function CreateChannelDialog({ open, onOpenChange, workspaceId: workspaceSlug, onSuccess }: CreateChannelDialogProps) {
+export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onSuccess }: CreateChannelDialogProps) {
   const [form, setForm] = React.useState({ name: "", description: "", type: "public" as "public" | "private" })
   const { toast } = useToast()
   const createChannel = useCreateChannel(workspaceSlug)

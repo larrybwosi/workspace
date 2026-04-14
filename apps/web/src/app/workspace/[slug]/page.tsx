@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
+import { CreateChannelDialog } from '@/components/features/workspace/create-channel-dialog';
 import { InfoPanel } from '@/components/shared/info-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -212,7 +212,7 @@ export default function WorkspacePage() {
       <CreateChannelDialog
         open={createChannelOpen}
         onOpenChange={setCreateChannelOpen}
-        onCreateChannel={handleCreateChannel}
+        workspaceSlug={slug}
       />
     </div>
   );

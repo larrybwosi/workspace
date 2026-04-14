@@ -58,7 +58,7 @@ interface VideoCallContentProps {
   onEnd: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
-  workspaceId?: string;
+  workspaceSlug?: string;
 }
 
 export function VideoCallContent({
@@ -71,7 +71,7 @@ export function VideoCallContent({
   onEnd,
   isFullscreen,
   onToggleFullscreen,
-  workspaceId,
+  workspaceSlug,
 }: VideoCallContentProps) {
   const [micOn, setMicOn] = useState(true);
   const [micVolume, setMicVolume] = useState(100);
@@ -130,7 +130,7 @@ export function VideoCallContent({
     };
   }, [localCameraTrack, localMicrophoneTrack, screenTrack]);
 
-  const { data: membersData } = useWorkspaceMembers(workspaceId || '');
+  const { data: membersData } = useWorkspaceMembers(workspaceSlug || '');
   const workspaceMembers = membersData?.members || [];
 
   useJoin(
@@ -719,7 +719,7 @@ export function VideoCallContent({
             <MessageSquare className="h-5 w-5" />
           </Button>
 
-          {workspaceId && (
+          {workspaceSlug && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
