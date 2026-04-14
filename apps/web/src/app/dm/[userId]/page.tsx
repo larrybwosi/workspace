@@ -31,7 +31,7 @@ export default function DMPage() {
       const dmUserId = newChannelId.replace("dm-", "")
       router.push(`/dm/${dmUserId}`)
     } else {
-      router.push(`/channels/${newChannelId}`)
+      router.push(`/workspace/default/channels/${newChannelId}`)
     }
   }
 
@@ -49,7 +49,7 @@ export default function DMPage() {
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">User not found</h2>
           <p className="text-muted-foreground mb-4">The user you're trying to message doesn't exist.</p>
-          <Button onClick={() => router.push("/channels/general")}>Go to General Channel</Button>
+          <Button onClick={() => router.push("/workspace/default/channels/general")}>Go to General Channel</Button>
         </div>
       </div>
     )
