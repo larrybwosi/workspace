@@ -46,7 +46,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     // Find channel tags
     while ((match = channelRegex.exec(text)) !== null) {
       const channelSlug = match[1];
-      const channel = channels?.find(c => c.slug === channelSlug || c.name.toLowerCase() === channelSlug.toLowerCase());
+      const channel = channels?.find((c: any) => c.slug === channelSlug || c.name.toLowerCase() === channelSlug.toLowerCase());
 
       tokens.push({
         index: match.index,

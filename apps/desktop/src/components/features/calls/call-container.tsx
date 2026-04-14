@@ -53,15 +53,16 @@ export function CallContainer() {
     if (!incomingCallData) return;
 
     try {
+      const workspaceSlug = incomingCallData.workspaceSlug || incomingCallData.workspaceId || '';
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceSlug: incomingCallData.workspaceId,
+        workspaceSlug: workspaceSlug,
       });
 
       setCall({
         ...data,
-        workspaceSlug: data.workspaceSlug || incomingCallData.workspaceId,
+        workspaceSlug: data.workspaceSlug || workspaceSlug,
       });
     } catch (error) {
       console.error(error);
