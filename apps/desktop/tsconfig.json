@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "types": ["node"],
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": [
@@ -20,6 +21,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["node"],
     "paths": {
       "@/*": [
         "./src/*"
@@ -35,6 +37,12 @@
       ],
       "@repo/shared/*": [
         "../../packages/shared/src/*"
+      ],
+      "next/navigation": [
+        "./src/hooks/use-router-shim.ts"
+      ],
+      "next/dynamic": [
+        "./src/hooks/use-dynamic-shim.tsx"
       ]
     },
     "ignoreDeprecations": "6.0"

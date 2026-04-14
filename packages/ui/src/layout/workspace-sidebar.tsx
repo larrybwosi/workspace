@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import {
-  Plus,
+  Plus, Search, Lock, ChevronDown,
   LayoutDashboard,
   MessageSquare,
   Users,
@@ -10,9 +10,6 @@ import {
   Sparkles,
   Plug2,
   Hash,
-  Lock,
-  ChevronDown,
-  Search,
 } from 'lucide-react';
 import { Button } from '../components/button';
 import { ScrollArea } from '../components/scroll-area';
@@ -21,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../com
 import { Separator } from '../components/separator';
 import { Skeleton } from '../components/skeleton';
 import { cn } from '../lib/utils';
-import { useRouter, useParams, usePathname } from 'next/navigation';
+import { useRouter, useParams, usePathname } from '../hooks/use-universal-router';
 import { useSession } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
@@ -51,6 +48,7 @@ interface NavSection {
 interface WorkspaceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  currentWorkspaceId?: string;
   onWorkspaceChange?: (workspaceId: string) => void;
 }
 
