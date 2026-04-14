@@ -1,5 +1,5 @@
 "use client"
-import { Menu, Search, MoreVertical, ChevronLeft, Headphones } from "lucide-react"
+import { Menu, Search, MoreVertical, ChevronLeft, Headphones, Phone, Video, Settings, Sidebar as SidebarIcon } from "lucide-react"
 import { Button } from "../components/button"
 import { Input } from "../components/input"
 import { mockChannels } from "../lib/mock-data"
@@ -16,9 +16,21 @@ interface DynamicHeaderProps {
   onSearchClick: () => void;
   onBackClick?: () => void;
   onInfoClick?: () => void;
+  onVoiceCallClick?: () => void;
+  onVideoCallClick?: () => void;
+  onSettingsClick?: () => void;
 }
 
-export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
+export function DynamicHeader({
+  activeView,
+  onMenuClick,
+  onSearchClick,
+  onBackClick,
+  onInfoClick,
+  onVoiceCallClick,
+  onVideoCallClick,
+  onSettingsClick,
+}: DynamicHeaderProps) {
   const { data: currentUser } = useCurrentUser()
   const { slug } = useParams();
   const { data: workspace } = useWorkspace(slug as string);
@@ -84,12 +96,41 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
       </div>
       <div className="flex items-center gap-2">
         {channel && currentUser && (
-          <Huddle
-            channelId={channel.id}
-            channelName={channel.name}
-            user={currentUser}
-            onClose={() => {}}
-          />
+          <div className="flex items-center gap-1 mr-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={onVoiceCallClick}
+            >
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={onVideoCallClick}
+            >
+              <Video className="h-4 w-4" />
+            </Button>
+            <div className="w-px h-4 bg-border/50 mx-1" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={onSettingsClick}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={onInfoClick}
+            >
+              <SidebarIcon className="h-4 w-4" />
+            </Button>
+          </div>
         )}
         <div className="relative hidden md:block">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -99,7 +140,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
           <Search className="h-4 w-4" />
         </Button>
         <ThemeToggle />
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onInfoClick}>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreVertical className="h-4 w-4" />
         </Button>
       </div>

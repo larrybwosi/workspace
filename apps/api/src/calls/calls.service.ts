@@ -6,7 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import pkg from 'agora-token';
+const { RtcTokenBuilder, RtcRole } = pkg;
 import {
   agoraServerConfig as agoraConfig,
   publishToAbly,
@@ -192,7 +193,7 @@ export class CallsService {
       privilegeExpiredTs
     );
 
-    return {
+    const result = {
       callId: call.id,
       token,
       appId: agoraConfig.appId,
@@ -201,6 +202,12 @@ export class CallsService {
       type: call.type,
       workspaceId: workspaceId || (call.metadata as any)?.workspaceId,
     };
+
+    if (incomingCallId) {
+      await this.updateCall(user, call.id, { action: 'join', uid });
+    }
+
+    return result;
   }
 
   async updateCall(user: User, callId: string, body: any) {

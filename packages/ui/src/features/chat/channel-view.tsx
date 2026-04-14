@@ -34,6 +34,9 @@ interface ChannelViewProps {
   contextId?: string;
   isWidget?: boolean;
   onToggleInfo?: () => void;
+  onVoiceCall?: () => void;
+  onVideoCall?: () => void;
+  onOpenSettings?: number; // Trigger by changing number
 }
 
 // --- Helper Components ---
@@ -96,6 +99,9 @@ export function ChannelView({
   contextId,
   isWidget,
   onToggleInfo,
+  onVoiceCall,
+  onVideoCall,
+  onOpenSettings,
 }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
@@ -191,6 +197,12 @@ export function ChannelView({
       });
     }
   }, [channelData]);
+
+  useEffect(() => {
+    if (onOpenSettings !== undefined && onOpenSettings > 0) {
+      setEditDialogOpen(true);
+    }
+  }, [onOpenSettings]);
 
   // 1. Flatten Data
   const messages = useMemo(() => {
@@ -484,48 +496,6 @@ export function ChannelView({
 
   return (
     <div className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
-      {/* Header */}
-      {!isWidget && (
-        <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Hash className="h-5 w-5" />
-              <span className="text-sm">/</span>
-              <span className="text-sm font-medium">v3.0</span>
-              <span className="text-sm">/</span>
-            </div>
-            <h2 className="font-bold text-lg truncate">
-              {channelData?.name || activeChannelId || 'general'}
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
-              <Video className="h-4 w-4" />
-            </Button>
-            <div className="w-px h-4 bg-border/50 mx-1" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
-              onClick={() => setEditDialogOpen(true)}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
-              onClick={onToggleInfo}
-            >
-              <SidebarIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Main Scroll Area */}
       <div className="flex-1 min-h-0 w-full relative bg-dotted">
