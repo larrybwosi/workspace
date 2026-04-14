@@ -23,7 +23,7 @@ export function PresenceProvider({ children, userId }: { children: React.ReactNo
     const updatePresence = async () => {
       try {
         const presenceMessages = await channel.presence.get()
-        const userIds = presenceMessages.map((msg) => msg.clientId)
+        const userIds = presenceMessages.map((msg: any) => msg.clientId)
         setOnlineUsers(new Set(userIds))
       } catch (error) {
         console.error("Error fetching presence:", error)
@@ -34,11 +34,11 @@ export function PresenceProvider({ children, userId }: { children: React.ReactNo
       channel.presence.enterClient(userId, { status: "online" })
     }
 
-    channel.presence.subscribe(["enter", "present"], (member) => {
+    channel.presence.subscribe(["enter", "present"], (member: any) => {
       setOnlineUsers((prev) => new Set([...prev, member.clientId]))
     })
 
-    channel.presence.subscribe("leave", (member) => {
+    channel.presence.subscribe("leave", (member: any) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev)
         next.delete(member.clientId)

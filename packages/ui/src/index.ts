@@ -66,7 +66,6 @@ export * from './shared/user-mention';
 
 export * from './features/notifications/notification-listener';
 export * from './features/chat/channel-view';
-export * from './features/assistant/assistant-channel';
 
 export * from './layout/theme-toggle';
 export * from './layout/welcome-state';
@@ -85,3 +84,5 @@ export * from './lib/utils';
 export * from './lib/types';
 export * from './lib/haptics';
 export * from './features/assistant/assistant-channel';
+export * from './features/calls/call-chat';
+export * from './features/calls/schedule-call-dialog';

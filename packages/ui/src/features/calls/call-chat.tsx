@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Send } from "lucide-react"
-import { Button } from "@repo/ui/components/button"
-import { Input } from "@repo/ui/components/input"
-import { ScrollArea } from "@repo/ui/components/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar"
+import { Button } from "../../components/button"
+import { Input } from "../../components/input"
+import { ScrollArea } from "../../components/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
 import { getAblyClient } from "@repo/shared"
 import { useSession } from "@repo/shared"
 
@@ -112,7 +112,7 @@ export function CallChat({ callId }: CallChatProps) {
 
       <div className="p-4 border-t border-zinc-800">
         <form
-          onSubmit={(e) => {
+          onSubmit={(e: any) => {
             e.preventDefault()
             handleSendMessage()
           }}
@@ -120,7 +120,7 @@ export function CallChat({ callId }: CallChatProps) {
         >
           <Input
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e: any) => setInputValue(e.target.value)}
             placeholder="Send a message..."
             className="bg-zinc-800 border-none text-white text-sm focus-visible:ring-1 focus-visible:ring-primary"
           />
