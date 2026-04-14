@@ -45,7 +45,8 @@
         "./src/hooks/use-dynamic-shim.tsx"
       ]
     },
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
   },
   "include": [
     "src"
