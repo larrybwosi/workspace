@@ -40,9 +40,10 @@ export class CallsController {
   @Get('scheduled')
   async getScheduledCalls(
     @CurrentUser() user: User,
+    @Query('workspaceSlug') workspaceSlug: string,
     @Query('workspaceId') workspaceId: string,
   ) {
-    return this.callsService.getScheduledCalls(user, workspaceId);
+    return this.callsService.getScheduledCalls(user, workspaceId || workspaceSlug);
   }
 
   @Post('scheduled')

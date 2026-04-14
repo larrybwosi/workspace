@@ -101,8 +101,12 @@ export function useJoinCall() {
       type: string
       callId: string
       workspaceSlug: string
+      workspaceId?: string
     }) => {
-      const { data } = await apiClient.post("/calls", params)
+      const { data } = await apiClient.post("/calls", {
+        ...params,
+        callId: params.callId,
+      })
 
       if (!data.token) {
         const { data: tokenData } = await apiClient.post("/agora/token", {
