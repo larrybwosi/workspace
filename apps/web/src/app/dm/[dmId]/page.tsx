@@ -8,19 +8,18 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { ChannelView } from "@/components/features/chat/channel-view"
 import { InfoPanel } from "@/components/shared/info-panel"
-import { useUser } from "@repo/api-client"
+import { useDM } from "@repo/api-client"
 
 export default function DMPage() {
   const params = useParams()
   const router = useRouter()
-  const userId = params.userId as string
+  const dmId = params.dmId as string
 
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
 
-  // Find the user for this DM
-  const { data: dmUser, isLoading } = useUser(userId)
-  const channelId = `dm-${userId}`
+  // Find the conversation for this DM
+  const { data: dmConversation, isLoading } = useDM(dmId)
 
   const handleChannelSelect = (newChannelId: string) => {
     if (newChannelId === "assistant") {
@@ -28,8 +27,8 @@ export default function DMPage() {
     } else if (newChannelId.startsWith("project-")) {
       router.push(`/projects/${newChannelId}`)
     } else if (newChannelId.startsWith("dm-")) {
-      const dmUserId = newChannelId.replace("dm-", "")
-      router.push(`/dm/${dmUserId}`)
+      const targetDmId = newChannelId.replace("dm-", "")
+      router.push(`/dm/${targetDmId}`)
     } else {
       router.push(`/channels/${newChannelId}`)
     }
@@ -43,13 +42,13 @@ export default function DMPage() {
     )
   }
 
-  if (!dmUser) {
+  if (!dmConversation) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">User not found</h2>
-          <p className="text-muted-foreground mb-4">The user you're trying to message doesn't exist.</p>
-          <Button onClick={() => router.push("/channels/general")}>Go to General Channel</Button>
+          <h2 className="text-2xl font-semibold mb-2">Conversation not found</h2>
+          <p className="text-muted-foreground mb-4">The direct message conversation you're looking for doesn't exist.</p>
+          <Button onClick={() => router.push("/")}>Go to Home</Button>
         </div>
       </div>
     )
@@ -60,15 +59,16 @@ export default function DMPage() {
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        activeChannel={channelId}
+        activeChannel={dmId}
         onChannelSelect={handleChannelSelect}
       />
 
       <main className="flex-1 flex flex-col min-w-0">
-        <DynamicHeader activeView={channelId} onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
+        <DynamicHeader activeView={dmId} onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
 
         <ChannelView
-          channelId={channelId}
+          channelId={dmId}
+          type="dm"
         />
 
         <Button
@@ -81,7 +81,12 @@ export default function DMPage() {
         </Button>
       </main>
 
-      <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} dmUser={dmUser} />
+      <InfoPanel
+        isOpen={infoPanelOpen}
+        onClose={() => setInfoPanelOpen(false)}
+        id={dmId}
+        type="dm"
+      />
     </div>
   )
 }

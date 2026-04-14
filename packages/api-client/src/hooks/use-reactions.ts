@@ -7,19 +7,25 @@ export function useAddReaction() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ messageId, emoji, channelId, isCustom, customEmojiId, workspaceSlug }: {
+    mutationFn: async ({ messageId, emoji, channelId, isCustom, customEmojiId, workspaceSlug, isDM }: {
       messageId: string;
       emoji: string;
       channelId: string;
       isCustom?: boolean;
       customEmojiId?: string;
       workspaceSlug?: string;
+      isDM?: boolean;
     }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions`
-        : `/channels/${channelId}/messages/${messageId}/reactions`;
+      let url = "";
+      if (isDM) {
+        url = `/dms/${channelId}/messages/${messageId}/reactions`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions`
+          : `/channels/${channelId}/messages/${messageId}/reactions`;
+      }
       const { data } = await apiClient.post(url, { emoji, isCustom, customEmojiId })
-      return { data, channelId, workspaceSlug }
+      return { data, channelId, workspaceSlug, isDM }
     },
     onMutate: async ({ messageId, emoji, channelId }) => {
       // Optimistic update
@@ -71,20 +77,27 @@ export function useRemoveReaction() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ messageId, emoji, channelId, workspaceSlug }: {
+    mutationFn: async ({ messageId, emoji, channelId, workspaceSlug, isDM }: {
       messageId: string;
       emoji: string;
       channelId: string;
       workspaceSlug?: string;
+      isDM?: boolean;
     }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`
-        : `/channels/${channelId}/messages/${messageId}/reactions/${emoji}`;
+      let url = "";
+      if (isDM) {
+        url = `/dms/${channelId}/messages/${messageId}/reactions/${emoji}`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`
+          : `/channels/${channelId}/messages/${messageId}/reactions/${emoji}`;
+      }
       await apiClient.delete(url)
-      return { messageId, emoji, channelId, workspaceSlug }
+      return { messageId, emoji, channelId, workspaceSlug, isDM }
     },
-    onSuccess: ({ channelId, workspaceSlug }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceSlug) })
+    onSuccess: ({ channelId, workspaceSlug, isDM }) => {
+      const queryKey = isDM ? ['dms', 'list', channelId] : messageKeys.list(channelId, workspaceSlug);
+      queryClient.invalidateQueries({ queryKey });
     },
   })
 }

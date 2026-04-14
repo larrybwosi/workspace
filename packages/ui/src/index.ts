@@ -66,6 +66,7 @@ export * from './shared/user-mention';
 
 export * from './features/notifications/notification-listener';
 export * from './features/chat/channel-view';
+export * from './features/chat/direct-message-list';
 
 export * from './layout/theme-toggle';
 export * from './layout/welcome-state';

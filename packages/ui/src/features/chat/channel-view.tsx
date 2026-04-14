@@ -14,6 +14,7 @@ import {
   useReplyToMessage,
   useMarkMessagesAsRead,
   messageKeys,
+  useDM,
 } from '@repo/api-client';
 import { useAddReaction, useRemoveReaction } from '@repo/api-client';
 import { cn } from '../../lib/utils';
@@ -24,7 +25,7 @@ import { type UploadedFile } from '@repo/shared';
 import { toast } from 'sonner';
 import { useChannel } from '@repo/api-client';
 import { useSession } from '@repo/shared';
-import { Settings, Hash, Phone, Video, Sidebar as SidebarIcon } from 'lucide-react';
+import { Settings, Hash, Phone, Video, Sidebar as SidebarIcon, User as UserIcon } from 'lucide-react';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 
 interface ChannelViewProps {
@@ -34,6 +35,7 @@ interface ChannelViewProps {
   contextId?: string;
   isWidget?: boolean;
   onToggleInfo?: () => void;
+  type?: 'channel' | 'dm';
 }
 
 // --- Helper Components ---
@@ -96,12 +98,14 @@ export function ChannelView({
   contextId,
   isWidget,
   onToggleInfo,
+  type = 'channel',
 }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
   const queryClient = useQueryClient();
 
   const activeChannelId = channelId;
+  const isDM = type === 'dm';
 
   const {
     data: messagesData,
@@ -109,17 +113,18 @@ export function ChannelView({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(activeChannelId, workspaceSlug, initialThreadId, contextId, isWidget);
+  } = useMessages(activeChannelId, workspaceSlug, initialThreadId, contextId, isWidget, isDM);
 
-  const { data: channelData } = useChannel(activeChannelId, workspaceSlug);
+  const { data: channelData } = useChannel(activeChannelId, isDM ? undefined : workspaceSlug);
+  const { data: dmData } = useDM(isDM ? activeChannelId : '');
 
 
   // API Mutations
-  const sendMessageMutation = useSendMessage(workspaceSlug, isWidget);
-  const replyToMessageMutation = useReplyToMessage(workspaceSlug);
+  const sendMessageMutation = useSendMessage(workspaceSlug, isWidget, isDM);
+  const replyToMessageMutation = useReplyToMessage(workspaceSlug, isDM);
   const addReactionMutation = useAddReaction();
   const removeReactionMutation = useRemoveReaction();
-  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceSlug);
+  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceSlug, isDM);
 
   // Keep track of channels we've already shown the "New Messages" line for in this session
   // to satisfy the requirement: "disappear after the user leaves the channel and comes back"
@@ -151,9 +156,11 @@ export function ChannelView({
     const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
 
     const handleMessage = (message: any) => {
-      const queryKey = workspaceSlug
-        ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages']
-        : messageKeys.list(activeChannelId);
+      const queryKey = isDM
+        ? ['dms', 'list', activeChannelId]
+        : (workspaceSlug
+            ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages']
+            : messageKeys.list(activeChannelId));
 
       queryClient.invalidateQueries({ queryKey });
     };
@@ -467,6 +474,7 @@ export function ChannelView({
           emoji,
           channelId: activeChannelId,
           workspaceSlug,
+          isDM,
         });
       } else {
         addReactionMutation.mutate({
@@ -476,10 +484,11 @@ export function ChannelView({
           isCustom,
           customEmojiId,
           workspaceSlug,
+          isDM,
         });
       }
     },
-    [activeChannelId, workspaceSlug, removeReactionMutation, addReactionMutation]
+    [activeChannelId, workspaceSlug, removeReactionMutation, addReactionMutation, isDM]
   );
 
   return (
@@ -489,14 +498,21 @@ export function ChannelView({
         <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
           <div className="flex items-center gap-4 min-w-0">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Hash className="h-5 w-5" />
+              {isDM ? <UserIcon className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
               <span className="text-sm">/</span>
               <span className="text-sm font-medium">v3.0</span>
               <span className="text-sm">/</span>
             </div>
-            <h2 className="font-bold text-lg truncate">
-              {channelData?.name || activeChannelId || 'general'}
-            </h2>
+            <div className="flex flex-col">
+              <h2 className="font-bold text-lg leading-tight truncate">
+                {isDM ? (dmData?.user?.name || 'Direct Message') : (channelData?.name || activeChannelId || 'general')}
+              </h2>
+              {isDM && dmData?.user?.status && (
+                <span className="text-xs text-muted-foreground capitalize">
+                  {dmData.user.status}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -506,15 +522,19 @@ export function ChannelView({
             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
               <Video className="h-4 w-4" />
             </Button>
-            <div className="w-px h-4 bg-border/50 mx-1" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
-              onClick={() => setEditDialogOpen(true)}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
+            {!isDM && (
+              <>
+                <div className="w-px h-4 bg-border/50 mx-1" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
+                  onClick={() => setEditDialogOpen(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -628,6 +648,7 @@ export function ChannelView({
                               isHighlighted={isHighlighted}
                               channelId={channelId}
                               workspaceId={workspaceSlug}
+                              isDM={isDM}
                             />
                           </div>
                         </div>
@@ -642,6 +663,7 @@ export function ChannelView({
                           isHighlighted={isHighlighted}
                           channelId={channelId}
                           workspaceId={workspaceSlug}
+                          isDM={isDM}
                         />
                       )}
                     </div>

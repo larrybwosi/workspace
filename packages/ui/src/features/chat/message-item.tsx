@@ -50,6 +50,7 @@ interface MessageItemProps {
   workspaceId?: string;
   isHighlighted?: boolean;
   highlightRef?: React.RefObject<HTMLDivElement>;
+  isDM?: boolean;
 }
 
 
@@ -73,9 +74,10 @@ export const MessageItem = memo(function MessageItem({
   workspaceId = undefined,
   isHighlighted = false,
   highlightRef,
+  isDM = false,
 }: MessageItemProps) {
-  const updateMessageMutation = useUpdateMessage();
-  const deleteMessageMutation = useDeleteMessage();
+  const updateMessageMutation = useUpdateMessage(undefined, isDM);
+  const deleteMessageMutation = useDeleteMessage(undefined, isDM);
   const { data: session } = useSession();
   const currentUser = session?.user;
   const { data: users } = useUsers();
