@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from "../../components/radio-group"
 import { useCreateWorkspace } from "@repo/api-client"
 import { toast } from "sonner"
 import { cn } from "../../lib/utils"
-import { useRouter } from "next/navigation"
+import { useRouter } from "../../hooks/use-universal-router"
 
 interface CreateWorkspaceDialogProps {
   open: boolean

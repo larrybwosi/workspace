@@ -3,19 +3,21 @@
 import * as React from 'react';
 import { Plus, Home, Search, Settings, HelpCircle, LogOut, Moon, Sun } from 'lucide-react';
 import { useWorkspaces } from '@repo/api-client';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from '../hooks/use-universal-router';
 import { cn } from '../lib/utils';
 import { Button } from '../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
 import { useSession } from '@repo/shared';
 import { useTheme } from 'next-themes';
+import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 
 interface WorkspaceRailProps {
   onPlusClick?: () => void;
 }
 
 export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const { data: workspaces } = useWorkspaces();
   const { slug } = useParams();
   const router = useRouter();
@@ -87,7 +89,10 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 rounded-2xl border-2 border-dashed border-sidebar-border hover:border-sidebar-foreground/50 hover:rounded-xl transition-all active:scale-95"
-                onClick={onPlusClick}
+                onClick={() => {
+                  if (onPlusClick) onPlusClick();
+                  else setCreateDialogOpen(true);
+                }}
               >
                 <Plus className="h-5 w-5 text-muted-foreground" />
               </Button>
@@ -95,6 +100,8 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
             <TooltipContent side="right">Add Workspace</TooltipContent>
           </Tooltip>
         </div>
+
+        <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
 
         {/* Bottom Actions */}
         <div className="flex flex-col items-center gap-3 mt-4">
