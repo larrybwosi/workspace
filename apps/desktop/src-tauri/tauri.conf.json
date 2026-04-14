@@ -1,7 +1,7 @@
 {
-  "productName": "Workspace",
+  "productName": "Skryme",
   "version": "0.1.0",
-  "identifier": "com.workspace.desktop",
+  "identifier": "com.skryme.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "Workspace",
+        "title": "Skryme",
         "width": 1200,
         "height": 800,
         "decorations": false
@@ -31,7 +31,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "Workspace",
+    "publisher": "Skryme",
     "updater": {
       "active": true,
       "endpoints": [
@@ -47,7 +47,7 @@
     "notification": {},
     "deep-link": {
       "schemes": [
-        "workspace"
+        "skryme"
       ]
     },
     "sql": {
