@@ -65,11 +65,18 @@ export default function DMPage() {
       />
 
       <main className="flex-1 flex flex-col min-w-0">
-        <DynamicHeader activeView={channelId} onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
-
-        <ChannelView
-          channelId={channelId}
+        <DynamicHeader
+          activeView={channelId}
+          onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {}}
+          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
         />
+
+        <div className="flex flex-1 overflow-hidden relative">
+          <ChannelView channelId={channelId} />
+
+          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} dmUser={dmUser} />
+        </div>
 
         <Button
           variant="ghost"
@@ -80,8 +87,6 @@ export default function DMPage() {
           <Info className="h-5 w-5" />
         </Button>
       </main>
-
-      <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} dmUser={dmUser} />
     </div>
   )
 }

@@ -145,8 +145,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
         <aside
           className={cn(
-            'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
-            isOpen ? 'translate-x-0' : 'translate-x-full'
+            'fixed lg:relative right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200',
+            isOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'
           )}
         >
           <div className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0">
@@ -251,8 +251,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       {/* Info Panel */}
       <aside
         className={cn(
-          'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          'fixed lg:relative right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200',
+          isOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'
         )}
       >
         {/* Header */}
