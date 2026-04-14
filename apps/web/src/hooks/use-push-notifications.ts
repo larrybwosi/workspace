@@ -26,7 +26,7 @@ export function usePushNotifications() {
           updateUserDeviceToken.mutate({
             token: fcmToken,
             platform: 'web',
-            deviceName: navigator.userAgent
+            ["deviceName" as any]: navigator.userAgent
           });
         }
       } catch (error) {

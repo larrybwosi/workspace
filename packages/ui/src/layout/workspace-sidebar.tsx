@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import {
-  Plus,
+  Plus, Search, Lock, ChevronDown,
   LayoutDashboard,
   MessageSquare,
   Users,
@@ -10,9 +10,6 @@ import {
   Sparkles,
   Plug2,
   Hash,
-  Lock,
-  ChevronDown,
-  Search,
 } from 'lucide-react';
 import { Button } from '../components/button';
 import { ScrollArea } from '../components/scroll-area';

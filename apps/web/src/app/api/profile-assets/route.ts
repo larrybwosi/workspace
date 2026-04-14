@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
       where: {
         ...(type ? { type } : {}),
         OR: [
-          { requiredRole: null, requiredBadgeId: null },
-          { requiredRole: session.user.role },
+          { ["requiredRole" as any]: null, ["requiredBadgeId" as any]: null },
+          { ["requiredRole" as any]: session.user.role },
           // Badge requirement check would go here if we had a join table/relation
           // or we could check the user's badges separately.
           // For now keeping it simple as requested for "admins manage access".

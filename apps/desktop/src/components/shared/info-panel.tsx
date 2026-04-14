@@ -38,7 +38,7 @@ import {
   useStartCall,
   useGenerateInviteLink,
 } from '@repo/api-client';
-import { useParams } from 'react-router';
+import { useParams } from '../../hooks/use-router-shim';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';

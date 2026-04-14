@@ -86,7 +86,7 @@ export default function MembersPage({ params }: MembersPageProps) {
 
     try {
       const link = await createInviteLinkMutation.mutateAsync({
-        workspaceId,
+        ["workspaceId" as any]: workspaceId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       })
       const fullUrl = `${window.location.origin}/invite/${link.code}`

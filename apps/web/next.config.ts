@@ -4,7 +4,7 @@ const withPWA = withPWAInit({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
-  skipWaiting: true,
+  ...({ skipWaiting: true } as any),
 });
 
 /** @type {import('next').NextConfig} */
@@ -15,10 +15,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  webpack: (config) => {
+  webpack: (config: any) => {
     return config;
   },
-  output: 'standalone',
+  output: 'standalone' as any,
   async rewrites() {
     return [
       {
