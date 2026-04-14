@@ -315,8 +315,13 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
         {activeTab === 'search' ? (
           <MessageSearchPanel
             channelId={channelId}
-            onMessageClick={(messageId, channelId) => {
-              window.location.href = `/channels/${channelId}?messageId=${messageId}`;
+            onMessageClick={(messageId, id, resultWorkspaceSlug) => {
+              if (id.startsWith('dm-')) {
+                const userId = id.replace('dm-', '');
+                router.push(`/dm/${userId}?messageId=${messageId}`);
+              } else {
+                router.push(`/workspace/${resultWorkspaceSlug || workspaceSlug || 'default'}/channels/${id}?messageId=${messageId}`);
+              }
             }}
           />
         ) : (
