@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { Check, Copy, FileCode, WrapText } from "lucide-react";
-import { Prism as SyntaxHighlighterPrism } from "react-syntax-highlighter";
-import { oneDark, prism } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { createHighlighter, type Highlighter } from "shiki";
 import { Button } from "../components/button";
 import { cn } from "../lib/utils";
 import { useTheme } from "../layout/theme-provider";
@@ -14,6 +13,43 @@ interface SyntaxHighlighterProps {
   fileName?: string;
   className?: string;
   showLineNumbers?: boolean;
+  highlightLines?: number[];
+}
+
+// Singleton highlighter instance to avoid re-creation
+let highlighterPromise: Promise<Highlighter> | null = null;
+
+function getHighlighter() {
+  if (!highlighterPromise) {
+    highlighterPromise = createHighlighter({
+      themes: ["github-dark", "github-light"],
+      langs: [
+        "typescript",
+        "javascript",
+        "tsx",
+        "jsx",
+        "bash",
+        "shell",
+        "json",
+        "html",
+        "css",
+        "scss",
+        "python",
+        "go",
+        "rust",
+        "java",
+        "cpp",
+        "csharp",
+        "ruby",
+        "php",
+        "sql",
+        "yaml",
+        "markdown",
+        "text",
+      ],
+    });
+  }
+  return highlighterPromise;
 }
 
 export function SyntaxHighlighter({
@@ -22,9 +58,11 @@ export function SyntaxHighlighter({
   fileName,
   className,
   showLineNumbers = true,
+  highlightLines = [],
 }: SyntaxHighlighterProps) {
   const [copied, setCopied] = React.useState(false);
   const [isWrapped, setIsWrapped] = React.useState(false);
+  const [html, setHtml] = React.useState<string>("");
   const { theme } = useTheme();
 
   const copyToClipboard = async () => {
@@ -33,8 +71,53 @@ export function SyntaxHighlighter({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Normalize language for Prism (e.g., 'vue' -> 'javascript' fallback if needed)
   const normalizedLang = language?.toLowerCase() || "text";
+  const currentTheme = theme === "dark" ? "github-dark" : "github-light";
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function highlight() {
+      const highlighter = await getHighlighter();
+
+      // Ensure the language is loaded
+      if (!highlighter.getLoadedLanguages().includes(normalizedLang as any) && normalizedLang !== 'text') {
+        try {
+          await highlighter.loadLanguage(normalizedLang as any);
+        } catch (e) {
+          console.warn(`Failed to load language: ${normalizedLang}`, e);
+        }
+      }
+
+      if (isMounted) {
+        const generatedHtml = highlighter.codeToHtml(code, {
+          lang: highlighter.getLoadedLanguages().includes(normalizedLang as any) ? normalizedLang : "text",
+          theme: currentTheme,
+          transformers: [
+            {
+              preprocess(code) {
+                return code;
+              },
+              line(node, line) {
+                if (highlightLines.includes(line)) {
+                  this.addClassToHast(node, "highlighted-line");
+                }
+                if (showLineNumbers) {
+                  node.properties["data-line"] = line;
+                }
+              },
+            },
+          ],
+        });
+        setHtml(generatedHtml);
+      }
+    }
+
+    highlight();
+    return () => {
+      isMounted = false;
+    };
+  }, [code, normalizedLang, currentTheme, showLineNumbers, highlightLines]);
 
   return (
     <div
@@ -53,7 +136,6 @@ export function SyntaxHighlighter({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Wrap Toggle */}
           <Button
             variant="ghost"
             size="icon"
@@ -67,7 +149,6 @@ export function SyntaxHighlighter({
             <WrapText className="h-3.5 w-3.5" />
           </Button>
 
-          {/* Copy Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -85,35 +166,53 @@ export function SyntaxHighlighter({
       </div>
 
       {/* Code Area */}
-      <div className="relative">
-        <SyntaxHighlighterPrism
-          language={normalizedLang}
-          style={theme === 'dark' ? oneDark : prism}
-          showLineNumbers={showLineNumbers}
-          wrapLines={isWrapped}
-          wrapLongLines={isWrapped}
-          customStyle={{
-            margin: 0,
-            padding: "1.5rem 1rem",
-            fontSize: "0.875rem", // text-sm
-            lineHeight: "1.5rem",
-            backgroundColor: "transparent", // Use container bg
-          }}
-          codeTagProps={{
-            style: {
-              fontFamily: "var(--font-mono), monospace",
-            },
-          }}
-          lineNumberStyle={{
-            minWidth: "2.5em",
-            paddingRight: "1em",
-            color: "#6e7681",
-            textAlign: "right",
-          }}
-        >
-          {code}
-        </SyntaxHighlighterPrism>
-      </div>
+      <div
+        className={cn(
+          "relative overflow-x-auto p-4 text-sm leading-6 shiki-container",
+          isWrapped ? "whitespace-pre-wrap break-all" : "whitespace-pre"
+        )}
+        style={{
+          fontFamily: "var(--font-mono), monospace",
+        }}
+        dangerouslySetInnerHTML={{ __html: html || `<pre><code>${code}</code></pre>` }}
+      />
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .shiki-container pre {
+          margin: 0;
+          background-color: transparent !important;
+        }
+        .shiki-container code {
+          counter-reset: step;
+          counter-increment: step 0;
+          display: block;
+          min-width: max-content;
+        }
+        .shiki-container .line {
+          display: block;
+          min-height: 1.5rem;
+        }
+        ${showLineNumbers ? `
+        .shiki-container .line::before {
+          content: counter(step);
+          counter-increment: step;
+          width: 2rem;
+          margin-right: 1.5rem;
+          display: inline-block;
+          text-align: right;
+          color: #6e7681;
+          user-select: none;
+        }
+        ` : ''}
+        .shiki-container .highlighted-line {
+          background-color: rgba(187, 187, 187, 0.1);
+          margin: 0 -1rem;
+          padding: 0 1rem;
+        }
+        .dark .shiki-container .highlighted-line {
+          background-color: rgba(255, 255, 255, 0.05);
+        }
+      ` }} />
     </div>
   );
 }

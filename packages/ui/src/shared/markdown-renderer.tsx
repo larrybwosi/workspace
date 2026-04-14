@@ -4,6 +4,7 @@ import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SyntaxHighlighter } from "./syntax-highlighter";
+import { detectLanguage } from "../lib/language-detection";
 import { useParams, useRouter } from "next/navigation";
 import { useCustomEmojis } from "@repo/api-client";
 import { UserMention } from "./user-mention";
@@ -122,10 +123,11 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             const codeContent = String(children).replace(/\n$/, "");
 
             if (!inline) {
+              const language = match ? match[1] : detectLanguage(codeContent);
               return (
                 <SyntaxHighlighter
                   code={codeContent}
-                  language={match ? match[1] : "text"}
+                  language={language}
                   {...props}
                 />
               );
