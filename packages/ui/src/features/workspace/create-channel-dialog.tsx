@@ -66,7 +66,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceId: workspace
               placeholder="e.g., general, announcements"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              disabled={isLoading}
+              disabled={createChannel.isPending}
             />
           </div>
           <div className="space-y-2">
@@ -74,7 +74,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceId: workspace
             <Select
               value={form.type}
               onValueChange={(v: "public" | "private") => setForm({ ...form, type: v })}
-              disabled={isLoading}
+              disabled={createChannel.isPending}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -101,7 +101,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceId: workspace
               placeholder="What is this channel about?"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              disabled={isLoading}
+              disabled={createChannel.isPending}
             />
           </div>
         </div>
