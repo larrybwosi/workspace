@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 
-const VideoCallContent = dynamic(
-  () => import('./video-call-content').then(mod => ({ default: mod.VideoCallContent })),
-  { ssr: false }
+const VideoCallContent = lazy(
+  () => import('./video-call-content').then(mod => ({ default: mod.VideoCallContent }))
 );
 
 interface VideoCallProps {
@@ -18,30 +16,10 @@ interface VideoCallProps {
   onEnd: () => void;
 }
 
-export function VideoCall({ callId, channelName, type, token, uid, appId, onEnd }: VideoCallProps) {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-        <div className="text-white">Loading call...</div>
-      </div>
-    );
-  }
-
+export function VideoCall(props: VideoCallProps) {
   return (
-    <VideoCallContent
-      callId={callId}
-      channelName={channelName}
-      type={type}
-      onEnd={onEnd}
-      token={token}
-      uid={uid}
-      appId={appId}
-    />
+    <Suspense fallback={<div>Loading...</div>}>
+      <VideoCallContent {...props} />
+    </Suspense>
   );
 }

@@ -16,15 +16,15 @@ export function usePresence() {
 
     const updatePresence = async () => {
       const presenceMessages = await channel.presence.get()
-      const userIds = presenceMessages.map((msg) => msg.clientId)
+      const userIds = presenceMessages.map((msg: any) => msg.clientId)
       setOnlineUsers(new Set(userIds))
     }
 
-    channel.presence.subscribe("enter", (member) => {
+    channel.presence.subscribe("enter", (member: any) => {
       setOnlineUsers((prev) => new Set([...prev, member.clientId]))
     })
 
-    channel.presence.subscribe("leave", (member) => {
+    channel.presence.subscribe("leave", (member: any) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev)
         next.delete(member.clientId)
