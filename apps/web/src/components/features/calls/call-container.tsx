@@ -56,12 +56,12 @@ export function CallContainer() {
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceSlug: (incomingCallData as any).workspaceId,
+        workspaceSlug: incomingCallData.workspaceSlug || incomingCallData.workspaceId || '',
       });
 
       setCall({
         ...data,
-        workspaceSlug: (data as any).workspaceSlug || (incomingCallData as any).workspaceId,
+        workspaceSlug: data.workspaceSlug || incomingCallData.workspaceSlug || incomingCallData.workspaceId,
       });
     } catch (error) {
       console.error(error);

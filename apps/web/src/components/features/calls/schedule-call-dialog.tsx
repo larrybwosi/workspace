@@ -21,14 +21,14 @@ import { useScheduleCall } from "@repo/api-client"
 interface ScheduleCallDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  workspaceSlug: string
+  workspaceId: string
   channelId?: string
 }
 
 export function ScheduleCallDialog({
   open,
   onOpenChange,
-  workspaceSlug,
+  workspaceId: workspaceSlug,
   channelId,
 }: ScheduleCallDialogProps) {
   const [loading, setLoading] = useState(false)

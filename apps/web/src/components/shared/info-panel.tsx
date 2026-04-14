@@ -825,7 +825,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
         <ScheduleCallDialog
           open={isScheduleDialogOpen}
           onOpenChange={setIsScheduleDialogOpen}
-          workspaceSlug={workspaceSlug}
+          workspaceId={workspaceSlug}
           channelId={type === 'channel' ? id || channelSlug : undefined}
         />
       )}
