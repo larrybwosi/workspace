@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
 import { ScrollArea } from "../../components/scroll-area"
 import { toast } from "sonner"
+import { useWorkspaceDepartments, useCreateDepartment, apiClient } from "@repo/api-client"
 import {
   Building2,
   Users,
@@ -63,55 +64,27 @@ interface Department {
 }
 
 interface WorkspaceDepartmentsPanelProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
-export function WorkspaceDepartmentsPanel({ workspaceId }: WorkspaceDepartmentsPanelProps) {
+export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: WorkspaceDepartmentsPanelProps) {
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedDepartment, setSelectedDepartment] = React.useState<Department | null>(null)
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [expandedDepts, setExpandedDepts] = React.useState<Set<string>>(new Set())
 
-  const { data: departmentsData, isLoading } = useQuery({
-    queryKey: ["workspace-departments", workspaceId],
-    queryFn: async () => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/departments`)
-      if (!res.ok) throw new Error("Failed to fetch departments")
-      return res.json()
-    },
-  })
+  const { data: departmentsData, isLoading } = useWorkspaceDepartments(workspaceSlug)
 
-  const createDepartment = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/departments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error("Failed to create department")
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
-      setIsCreateOpen(false)
-      toast.success("Department created successfully")
-    },
-    onError: () => {
-      toast.error("Failed to create department")
-    },
-  })
+  const createDepartment = useCreateDepartment(workspaceSlug)
 
   const deleteDepartment = useMutation({
     mutationFn: async (departmentId: string) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/departments/${departmentId}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete department")
-      return res.json()
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/departments/${departmentId}`)
+      return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceSlug] })
       setSelectedDepartment(null)
       toast.success("Department deleted")
     },

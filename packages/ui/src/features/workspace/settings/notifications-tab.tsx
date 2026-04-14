@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "../../../components/separator"
 import { toast } from "sonner"
 import { RadioGroup, RadioGroupItem } from "../../../components/radio-group"
+import { apiClient } from "@repo/api-client"
 
-export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
+export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: string }) {
   const [preference, setPreference] = useState<string>("all")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false); const [settings, setSettings] = useState({ emailFrequency: "realtime", weeklyDigest: true, securityAlerts: true })
@@ -19,11 +20,10 @@ export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch(`/api/notifications/settings/workspace?workspaceId=${workspaceId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setPreference(data.notificationPreference || "all")
-        }
+        const { data } = await apiClient.get(`/notifications/settings/workspace`, {
+          params: { workspaceSlug }
+        })
+        setPreference(data.notificationPreference || "all")
       } catch (error) {
         console.error("Failed to fetch notification settings:", error)
       } finally {
@@ -31,21 +31,13 @@ export function NotificationsTab({ workspaceId }: { workspaceId: string }) {
       }
     }
     fetchSettings()
-  }, [workspaceId])
+  }, [workspaceSlug])
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch("/api/notifications/settings/workspace", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, preference }),
-      })
-      if (res.ok) {
-        toast.success("Notification preferences saved")
-      } else {
-        throw new Error("Failed to save")
-      }
+      await apiClient.patch("/notifications/settings/workspace", { workspaceSlug, preference })
+      toast.success("Notification preferences saved")
     } catch (error) {
       toast.error("Failed to save notification preferences")
     } finally {

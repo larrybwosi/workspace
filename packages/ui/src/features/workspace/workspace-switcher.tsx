@@ -28,19 +28,19 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
   const { data: workspaces, isLoading } = useWorkspaces()
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
 
-  const currentWorkspace = workspaces?.find((w: any) => w.id === currentWorkspaceId)
+  const currentWorkspace = workspaces?.find((w: any) => w.id === currentWorkspaceId || w.slug === currentWorkspaceId)
 
   // Define fallback values for the "Personal" view
   const displayName = currentWorkspace?.name || "Personal"
   const displayIcon = currentWorkspace?.icon
   const displayInitials = displayName.charAt(0).toUpperCase()
 
-  const handleWorkspaceChange = (workspaceId: string) => {
-    const workspace = workspaces?.find((w: any) => w.id === workspaceId)
+  const handleWorkspaceChange = (workspaceSlug: string) => {
+    const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug)
     if (workspace) {
       router.push(`/workspace/${workspace.slug}`)
     }
-    onWorkspaceChange?.(workspaceId)
+    onWorkspaceChange?.(workspaceSlug)
   }
 
   return (
@@ -116,8 +116,8 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
               {workspaces?.map((workspace: any) => (
                 <DropdownMenuItem
                   key={workspace.id}
-                  onClick={() => handleWorkspaceChange(workspace.id)}
-                  className={cn("cursor-pointer py-2", currentWorkspaceId === workspace.id && "bg-muted")}
+                  onClick={() => handleWorkspaceChange(workspace.slug)}
+                  className={cn("cursor-pointer py-2", (currentWorkspaceId === workspace.id || currentWorkspaceId === workspace.slug) && "bg-muted")}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     {workspace.icon ? (
@@ -157,7 +157,7 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
           {currentWorkspace && (
             <>
               <DropdownMenuItem
-                onClick={() => router.push(`/workspace/${currentWorkspaceId}/settings`)}
+                onClick={() => router.push(`/workspace/${currentWorkspace.slug}/settings`)}
                 className="cursor-pointer"
               >
                 <Settings className="h-4 w-4 mr-2" />

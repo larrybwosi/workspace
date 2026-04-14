@@ -16,7 +16,7 @@ export function ChatPage() {
   const { data: workspaces, isOffline } = useWorkspacesWithOffline();
   const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug);
 
-  const { data: channels } = useWorkspaceChannels(workspace?.id);
+  const { data: channels } = useWorkspaceChannels(workspaceSlug || '');
   const channel = channels?.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
   const channelId = channel?.id || channelSlug;
 
@@ -33,14 +33,14 @@ export function ChatPage() {
           Warning: WorkspaceSidebar and other UI components use 'next/navigation'
           which might not work correctly in a react-router environment without shims.
       */}
-      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace?.id} />
+      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
             {channelId ? (
               <ChannelView
                 channelId={channelId}
-                workspaceId={workspace?.id}
+                workspaceId={workspaceSlug}
                 onToggleInfo={() => setInfoPanelOpen(!infoPanelOpen)}
               />
             ) : (

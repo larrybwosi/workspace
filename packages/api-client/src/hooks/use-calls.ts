@@ -41,7 +41,7 @@ export function useActiveCalls(workspaceSlug: string, workspaceId?: string) {
   })
 }
 
-export function useScheduledCalls(workspaceId: string) {
+export function useScheduledCalls(workspaceSlug: string, workspaceId?: string) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function useScheduledCalls(workspaceId: string) {
     const channel = ably.channels.get(AblyChannels.workspace(workspaceId))
 
     const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", workspaceSlug] })
     }
 
     channel.subscribe("call-scheduled", handleUpdate)
@@ -61,17 +61,17 @@ export function useScheduledCalls(workspaceId: string) {
     return () => {
       channel.unsubscribe("call-scheduled", handleUpdate)
     }
-  }, [workspaceId, queryClient])
+  }, [workspaceId, workspaceSlug, queryClient])
 
   return useQuery({
-    queryKey: ["scheduled-calls", workspaceId],
+    queryKey: ["scheduled-calls", workspaceSlug],
     queryFn: async () => {
       const { data } = await apiClient.get(`/calls/scheduled`, {
-        params: { workspaceId }
+        params: { workspaceSlug }
       })
       return data || []
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
@@ -80,7 +80,7 @@ export function useStartCall() {
   return useMutation({
     mutationFn: async (params: {
       type: "voice" | "video"
-      workspaceId: string
+      workspaceSlug: string
       channelId?: string
       recipientId?: string
       notifyAll?: boolean
@@ -89,7 +89,7 @@ export function useStartCall() {
       return data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["active-calls"] })
+      queryClient.invalidateQueries({ queryKey: ["active-calls", variables.workspaceSlug] })
     }
   })
 }
@@ -100,7 +100,7 @@ export function useJoinCall() {
     mutationFn: async (params: {
       type: string
       callId: string
-      workspaceId: string
+      workspaceSlug: string
     }) => {
       const { data } = await apiClient.post("/calls", params)
 
@@ -114,8 +114,8 @@ export function useJoinCall() {
 
       return data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["active-calls"] })
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["active-calls", variables.workspaceSlug] })
     }
   })
 }
@@ -128,14 +128,14 @@ export function useScheduleCall() {
       description?: string
       type: string
       scheduledFor: string
-      workspaceId: string
+      workspaceSlug: string
       channelId?: string
     }) => {
       const { data } = await apiClient.post("/calls/scheduled", params)
       return data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", variables.workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", variables.workspaceSlug] })
     }
   })
 }

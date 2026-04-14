@@ -34,26 +34,26 @@ import {
 } from "@repo/api-client"
 
 interface MembersTabProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
-export function MembersTab({ workspaceId }: MembersTabProps) {
+export function MembersTab({ workspaceId: workspaceSlug }: MembersTabProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState("member")
 
-  const { data, isLoading } = useWorkspaceMembers(workspaceId)
+  const { data, isLoading } = useWorkspaceMembers(workspaceSlug)
   const inviteMutation = useInviteToWorkspace()
-  const updateMemberMutation = useUpdateWorkspaceMember(workspaceId)
-  const removeMemberMutation = useRemoveWorkspaceMember(workspaceId)
+  const updateMemberMutation = useUpdateWorkspaceMember(workspaceSlug)
+  const removeMemberMutation = useRemoveWorkspaceMember(workspaceSlug)
 
   const members = data?.members || []
 
   const handleInvite = async () => {
     try {
       await inviteMutation.mutateAsync({
-        workspaceId,
+        workspaceSlug,
         email: inviteEmail,
         role: inviteRole,
       })

@@ -9,25 +9,19 @@ import { Label } from "../../../components/label"
 import { Switch } from "../../../components/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
 import { useQuery } from "@tanstack/react-query"
+import { useWorkspaceChannels } from "@repo/api-client"
 
 interface ChannelConfigurationsProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
-export function ChannelConfigurations({ workspaceId }: ChannelConfigurationsProps) {
+export function ChannelConfigurations({ workspaceId: workspaceSlug }: ChannelConfigurationsProps) {
   const [selectedProtocol, setSelectedProtocol] = useState("https")
   const [tlsVersion, setTlsVersion] = useState("1.3")
   const [encryptionEnabled, setEncryptionEnabled] = useState(true)
 
   // Fetch channels
-  const { data: channels, isLoading } = useQuery({
-    queryKey: ["workspace-channels", workspaceId],
-    queryFn: async () => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/channels`)
-      if (!res.ok) throw new Error("Failed to fetch channels")
-      return res.json()
-    },
-  })
+  const { data: channels, isLoading } = useWorkspaceChannels(workspaceSlug)
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading channels...</div>

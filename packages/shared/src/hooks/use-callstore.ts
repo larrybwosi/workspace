@@ -8,7 +8,7 @@ interface CallState {
     token: string;
     uid: number;
     appId: string;
-    workspaceId?: string;
+    workspaceSlug?: string;
   } | null;
   isIncoming: boolean;
   incomingCallData: {
@@ -19,7 +19,7 @@ interface CallState {
       name: string;
       image: string;
     };
-    workspaceId: string;
+    workspaceId: string; // The backend might still send workspaceId here, but we'll treat it as slug if needed
   } | null;
   setCall: (call: CallState['activeCall']) => void;
   setIncoming: (data: CallState['incomingCallData']) => void;

@@ -21,15 +21,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Calendar } from "../../components/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/popover"
 import { useToast } from "../../hooks/use-toast"
+import { useCreateWorkspaceProject } from "@repo/api-client"
 
 interface CreateProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
   onSuccess?: () => void
 }
 
-export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess }: CreateProjectDialogProps) {
+export function CreateProjectDialog({ open, onOpenChange, workspaceId: workspaceSlug, onSuccess }: CreateProjectDialogProps) {
   const [form, setForm] = React.useState({ 
     name: "", 
     description: "", 
@@ -37,8 +38,8 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
     startDate: undefined as Date | undefined,
     endDate: undefined as Date | undefined,
   })
-  const [isLoading, setIsLoading] = React.useState(false)
   const { toast } = useToast()
+  const createProject = useCreateWorkspaceProject(workspaceSlug)
 
   const handleCreate = async () => {
     if (!form.name.trim()) {
@@ -46,25 +47,23 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
       return
     }
 
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/projects`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-
-      if (!response.ok) throw new Error("Failed to create project")
-
-      toast({ title: "Success", description: "Project created successfully" })
-      setForm({ name: "", description: "", status: "planning", startDate: undefined, endDate: undefined })
-      onOpenChange(false)
-      onSuccess?.()
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to create project", variant: "destructive" })
-    } finally {
-      setIsLoading(false)
-    }
+    createProject.mutate({
+      name: form.name,
+      description: form.description,
+      status: form.status,
+      startDate: form.startDate?.toISOString() || new Date().toISOString(),
+      endDate: form.endDate?.toISOString() || new Date().toISOString(),
+    }, {
+      onSuccess: () => {
+        toast({ title: "Success", description: "Project created successfully" })
+        setForm({ name: "", description: "", status: "planning", startDate: undefined, endDate: undefined })
+        onOpenChange(false)
+        onSuccess?.()
+      },
+      onError: () => {
+        toast({ title: "Error", description: "Failed to create project", variant: "destructive" })
+      }
+    })
   }
 
   return (
@@ -163,10 +162,10 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId, onSuccess
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={createProject.isPending}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!form.name || isLoading}>
+          <Button onClick={handleCreate} disabled={!form.name || createProject.isPending}>
             Create Project
           </Button>
         </DialogFooter>

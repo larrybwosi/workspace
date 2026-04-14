@@ -67,16 +67,16 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const channelId = id || channelSlug;
 
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
-  const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspace?.id);
-  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspace?.id);
+  const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
+  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
   const [activeTab, setActiveTab] = useState('info');
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
-  const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspace?.id);
-  const { data: scheduledCalls = [] } = useScheduledCalls(workspace?.id);
+  const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspaceSlug);
+  const { data: scheduledCalls = [] } = useScheduledCalls(workspaceSlug);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
 
   const joinCallMutation = useJoinCall();
@@ -93,7 +93,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       const data = await joinCallMutation.mutateAsync({
         type: call.type,
         callId: call.id,
-        workspaceId: workspace?.id,
+        workspaceSlug,
       });
       setCall(data);
     } catch (error) {
@@ -103,12 +103,12 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   };
 
   const handleStartCall = async (callType: 'voice' | 'video', notifyAll?: boolean) => {
-    if (!workspace?.id) return;
+    if (!workspaceSlug) return;
 
     try {
       const data = await startCallMutation.mutateAsync({
         type: callType,
-        workspaceId: workspace.id,
+        workspaceSlug,
         channelId: type === 'channel' ? id || channelSlug : undefined,
         recipientId: dmUser?.id,
         notifyAll,
@@ -821,11 +821,11 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
         )}
       </aside>
 
-      {workspace?.id && (
+      {workspaceSlug && (
         <ScheduleCallDialog
           open={isScheduleDialogOpen}
           onOpenChange={setIsScheduleDialogOpen}
-          workspaceId={workspace.id}
+          workspaceSlug={workspaceSlug}
           channelId={type === 'channel' ? id || channelSlug : undefined}
         />
       )}

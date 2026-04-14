@@ -8,6 +8,7 @@ import { Huddle } from "../features/chat/huddle"
 import { useCurrentUser } from "@repo/api-client"
 import { useWorkspace, useWorkspaceChannels } from "@repo/api-client";
 import { useParams } from "next/navigation";
+import { Skeleton } from "../components/skeleton";
 
 interface DynamicHeaderProps {
   activeView: string;
@@ -21,9 +22,13 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
   const { data: currentUser } = useCurrentUser()
   const { slug } = useParams();
   const { data: workspace } = useWorkspace(slug as string);
-  const { data: channels } = useWorkspaceChannels(workspace?.id);
+  const { data: channels, isLoading } = useWorkspaceChannels(slug as string);
 
   const getBreadcrumb = () => {
+    if (isLoading) {
+      return <Skeleton className="h-4 w-24" />
+    }
+
     if (activeView.startsWith("dm-")) {
       return (
         <>

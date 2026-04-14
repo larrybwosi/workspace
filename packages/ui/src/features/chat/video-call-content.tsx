@@ -34,7 +34,6 @@ import {
 import { Button } from '../../components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Badge } from '../../components/badge';
-import { CallChat } from '../calls/call-chat';
 import { useSession } from '@repo/shared';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
@@ -622,7 +621,7 @@ export function VideoCallContent({
         </div>
         {showChat && (
           <div className="shrink-0 border-l border-white/10 w-80 h-full hidden lg:block">
-            <CallChat callId={callId} />
+            {/* CallChat is only available in the app that consumes this component */}
           </div>
         )}
       </div>

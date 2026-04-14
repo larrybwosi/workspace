@@ -45,7 +45,7 @@ import {
 } from "lucide-react"
 
 interface WorkspaceIntegrationsPanelProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
 const SERVICE_ICONS: Record<string, React.ReactNode> = {
@@ -63,17 +63,17 @@ const SERVICE_ICONS: Record<string, React.ReactNode> = {
   custom: <Globe className="h-5 w-5" />,
 }
 
-export function WorkspaceIntegrationsPanel({ workspaceId }: WorkspaceIntegrationsPanelProps) {
+export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: WorkspaceIntegrationsPanelProps) {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [selectedService, setSelectedService] = useState("")
   const [configForm, setConfigForm] = useState<Record<string, any>>({})
   const [testingId, setTestingId] = useState<string | null>(null)
 
-  const { data, isLoading } = useWorkspaceIntegrations(workspaceId)
-  const createIntegration = useCreateWorkspaceIntegration(workspaceId)
-  const updateIntegration = useUpdateWorkspaceIntegration(workspaceId)
-  const deleteIntegration = useDeleteWorkspaceIntegration(workspaceId)
-  const testIntegration = useTestWorkspaceIntegration(workspaceId)
+  const { data, isLoading } = useWorkspaceIntegrations(workspaceSlug)
+  const createIntegration = useCreateWorkspaceIntegration(workspaceSlug)
+  const updateIntegration = useUpdateWorkspaceIntegration(workspaceSlug)
+  const deleteIntegration = useDeleteWorkspaceIntegration(workspaceSlug)
+  const testIntegration = useTestWorkspaceIntegration(workspaceSlug)
 
   const integrations = data?.integrations || []
   const availableServices = data?.availableServices || []
@@ -401,13 +401,13 @@ export function WorkspaceIntegrationsPanel({ workspaceId }: WorkspaceIntegration
         <CardContent className="space-y-4">
           <div className="rounded-lg bg-muted p-4">
             <div className="flex items-center justify-between">
-              <code className="text-sm">POST /api/workspaces/{workspaceId}/integrations/incoming</code>
+              <code className="text-sm">POST /api/workspaces/{workspaceSlug}/integrations/incoming</code>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `${window.location.origin}/api/workspaces/${workspaceId}/integrations/incoming`,
+                    `${window.location.origin}/api/workspaces/${workspaceSlug}/integrations/incoming`,
                   )
                   toast.success("URL copied to clipboard")
                 }}

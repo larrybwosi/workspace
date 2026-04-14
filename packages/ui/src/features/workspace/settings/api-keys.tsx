@@ -13,9 +13,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "../../../hooks/use-toast"
 import { format } from "date-fns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
+import { useWorkspaceApiTokens, useCreateWorkspaceApiToken, apiClient } from "@repo/api-client"
 
 interface ApiKeysManagementProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
 const AVAILABLE_PERMISSIONS = [
@@ -30,7 +31,7 @@ const AVAILABLE_PERMISSIONS = [
   { id: "write:projects", label: "Write Projects", category: "Projects" },
 ]
 
-export function ApiKeysManagement({ workspaceId }: ApiKeysManagementProps) {
+export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagementProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [viewTokenDialog, setViewTokenDialog] = useState<any>(null)
   const [copiedToken, setCopiedToken] = useState(false)
@@ -45,69 +46,29 @@ export function ApiKeysManagement({ workspaceId }: ApiKeysManagementProps) {
   })
 
   // Fetch API keys
-  const { data, isLoading } = useQuery({
-    queryKey: ["workspace-api-tokens", workspaceId],
-    queryFn: async () => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/api-tokens`)
-      if (!res.ok) throw new Error("Failed to fetch API keys")
-      return res.json()
-    },
-  })
+  const { data, isLoading } = useWorkspaceApiTokens(workspaceSlug)
 
   const tokens = data?.tokens || []
 
   // Create API key mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/api-tokens`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error("Failed to create API key")
-      return res.json()
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceId] })
-      setCreateDialogOpen(false)
-      setViewTokenDialog(data)
-      setFormData({
-        name: "",
-        permissions: [],
-        rateLimit: "1000",
-        expiresIn: "never",
-      })
-      toast({
-        title: "API key created",
-        description: "Your API key has been created successfully. Make sure to copy it now.",
-      })
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to create API key",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
+  const createMutation = useCreateWorkspaceApiToken(workspaceSlug)
 
-  // Delete API key mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (tokenId: string) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/api-tokens/${tokenId}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete API key")
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceId] })
-      toast({
-        title: "API key deleted",
-        description: "The API key has been revoked and can no longer be used.",
-      })
-    },
-  })
+  // Use the original onSuccess logic by wrapping it if needed, or just use the hook's onSuccess
+  // The hook already invalidates queries.
+  const originalOnSuccess = (data: any) => {
+    setCreateDialogOpen(false)
+    setViewTokenDialog(data)
+    setFormData({
+      name: "",
+      permissions: [],
+      rateLimit: "1000",
+      expiresIn: "never",
+    })
+    toast({
+      title: "API key created",
+      description: "Your API key has been created successfully. Make sure to copy it now.",
+    })
+  }
 
   const handleCreateToken = () => {
     const expiresAt =
@@ -122,8 +83,33 @@ export function ApiKeysManagement({ workspaceId }: ApiKeysManagementProps) {
       },
       rateLimit: Number.parseInt(formData.rateLimit),
       expiresAt,
+    }, {
+      onSuccess: originalOnSuccess,
+      onError: (error: any) => {
+        toast({
+          title: "Failed to create API key",
+          description: error.message,
+          variant: "destructive",
+        })
+      }
     })
   }
+
+  // Delete API key mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (tokenId: string) => {
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/api-tokens/${tokenId}`)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceSlug] })
+      toast({
+        title: "API key deleted",
+        description: "The API key has been revoked and can no longer be used.",
+      })
+    },
+  })
+
 
   const copyToken = (token: string) => {
     navigator.clipboard.writeText(token)
