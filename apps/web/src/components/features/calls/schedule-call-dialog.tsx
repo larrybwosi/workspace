@@ -28,7 +28,7 @@ interface ScheduleCallDialogProps {
 export function ScheduleCallDialog({
   open,
   onOpenChange,
-  workspaceId,
+  workspaceId: workspaceSlug,
   channelId,
 }: ScheduleCallDialogProps) {
   const [loading, setLoading] = useState(false)
@@ -51,7 +51,7 @@ export function ScheduleCallDialog({
     try {
       await scheduleCallMutation.mutateAsync({
         ...formData,
-        workspaceId,
+        workspaceSlug,
         channelId,
       })
 
