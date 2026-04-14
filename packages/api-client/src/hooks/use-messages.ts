@@ -17,16 +17,19 @@ export function useMessages(
   workspaceSlug?: string,
   threadId?: string,
   contextId?: string,
-  isV2?: boolean
+  isV2?: boolean,
+  isDM?: boolean
 ) {
   return useInfiniteQuery({
-    queryKey: messageKeys.list(channelId, workspaceSlug, threadId || contextId),
+    queryKey: isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug, threadId || contextId),
     queryFn: async ({ pageParam }: { pageParam: any }) => {
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? "/v2" : "";
 
       let url = "";
-      if (isV2 && workspaceSlug) {
+      if (isDM) {
+        url = `/dms/${channelId}/messages`;
+      } else if (isV2 && workspaceSlug) {
         // Use V2 workspace-scoped path
         url = `${prefix}/workspaces/${workspaceSlug}/messages`;
       } else {
@@ -47,7 +50,7 @@ export function useMessages(
 }
 
 // Send message
-export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
+export function useSendMessage(workspaceSlug?: string, isV2?: boolean, isDM?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -62,7 +65,9 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       const prefix = isV2 ? "/v2" : "";
 
       let url = "";
-      if (isV2 && workspaceSlug) {
+      if (isDM) {
+        url = `/dms/${channelId}/messages`;
+      } else if (isV2 && workspaceSlug) {
         url = `${prefix}/workspaces/${workspaceSlug}/messages`;
       } else {
         url = workspaceSlug
@@ -73,49 +78,67 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId, workspaceSlug, variables.threadId) });
+      const queryKey = isDM
+        ? dmKeys.list(variables.channelId)
+        : messageKeys.list(variables.channelId, workspaceSlug, variables.threadId);
+      queryClient.invalidateQueries({ queryKey });
+      if (isDM) {
+        queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
+      }
     },
   });
 }
 
 // Update message
-export function useUpdateMessage(workspaceSlug?: string) {
+export function useUpdateMessage(workspaceSlug?: string, isDM?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, channelId, ...updates }: Partial<Message> & { id: string; channelId: string }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
-        : `/channels/${channelId}/messages/${id}`;
+      let url = "";
+      if (isDM) {
+        url = `/dms/${channelId}/messages/${id}`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
+          : `/channels/${channelId}/messages/${id}`;
+      }
       const { data } = await apiClient.patch<Message>(url, updates);
       return { data, channelId };
     },
     onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceSlug) });
+      const queryKey = isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
 
 // Delete message
-export function useDeleteMessage(workspaceSlug?: string) {
+export function useDeleteMessage(workspaceSlug?: string, isDM?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, channelId }: { id: string; channelId: string }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
-        : `/channels/${channelId}/messages/${id}`;
+      let url = "";
+      if (isDM) {
+        url = `/dms/${channelId}/messages/${id}`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
+          : `/channels/${channelId}/messages/${id}`;
+      }
       await apiClient.delete(url);
       return { id, channelId };
     },
     onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceSlug) });
+      const queryKey = isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
 
 // Reply to message
-export function useReplyToMessage(workspaceSlug?: string) {
+export function useReplyToMessage(workspaceSlug?: string, isDM?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -124,14 +147,20 @@ export function useReplyToMessage(workspaceSlug?: string) {
       channelId,
       ...reply
     }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & { messageId: string; channelId: string }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/replies`
-        : `/channels/${channelId}/messages/${messageId}/reply`;
-      const { data } = await apiClient.post<Message>(url, reply);
+      let url = "";
+      if (isDM) {
+        url = `/dms/${channelId}/messages`; // DM API currently doesn't have a separate /replies endpoint, it uses main POST
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/replies`
+          : `/channels/${channelId}/messages/${messageId}/reply`;
+      }
+      const { data } = await apiClient.post<Message>(url, { ...reply, replyToId: messageId });
       return { data, channelId };
     },
     onSuccess: ({ channelId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceSlug) });
+      const queryKey = isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug);
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
@@ -142,7 +171,7 @@ const readBuffer: { [channelId: string]: Set<string> } = {};
 const readTimeout: { [channelId: string]: any } = {};
 const readResolvers: { [channelId: string]: { resolve: (value: any) => void; reject: (reason: any) => void }[] } = {};
 
-export function useMarkMessagesAsRead(workspaceSlug?: string) {
+export function useMarkMessagesAsRead(workspaceSlug?: string, isDM?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -166,9 +195,14 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
           readResolvers[channelId] = [];
 
           try {
-            const url = workspaceSlug
-              ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/read`
-              : `/channels/${channelId}/messages/read`;
+            let url = "";
+            if (isDM) {
+              url = `/dms/${channelId}/messages/read`;
+            } else {
+              url = workspaceSlug
+                ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/read`
+                : `/channels/${channelId}/messages/read`;
+            }
             const { data } = await apiClient.post(url, { messageIds: idsToMark });
             const result = { data, channelId, messageIds: idsToMark };
             resolvers.forEach(res => res.resolve(result));
@@ -181,9 +215,11 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
     onSuccess: (data: any) => {
       // Optimistically update query data to mark messages as read in the UI
       const { channelId, messageIds } = data;
-      const queryKey = workspaceSlug
-        ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
-        : messageKeys.list(channelId);
+      const queryKey = isDM
+        ? dmKeys.list(channelId)
+        : (workspaceSlug
+            ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
+            : messageKeys.list(channelId));
 
       queryClient.setQueriesData({ queryKey }, (oldData: any) => {
         if (!oldData?.pages) return oldData;
@@ -216,6 +252,18 @@ export function useDMConversations() {
       const { data } = await apiClient.get('/dms');
       return data;
     },
+  });
+}
+
+// Fetch single DM conversation
+export function useDM(dmId: string) {
+  return useQuery({
+    queryKey: dmKeys.list(dmId),
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/dms/${dmId}`);
+      return data;
+    },
+    enabled: !!dmId,
   });
 }
 

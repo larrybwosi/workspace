@@ -37,6 +37,7 @@ import {
   useJoinCall,
   useStartCall,
   useGenerateInviteLink,
+  useDM,
 } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
@@ -60,17 +61,20 @@ interface InfoPanelProps {
   id?: string;
 }
 
-export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: InfoPanelProps) {
+export function InfoPanel({ isOpen, onClose, dmUser: propDmUser, type = 'channel', id }: InfoPanelProps) {
   const params = useParams();
   const workspaceSlug = params.slug as string;
   const channelSlug = params.channelSlug as string;
   const channelId = id || channelSlug;
 
-  const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
-  const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
-  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
+  const isDM = type === 'dm' || channelId?.startsWith('dm-') || !!propDmUser;
 
-  const isDM = channelId?.startsWith('dm-') || !!dmUser;
+  const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(isDM ? '' : workspaceSlug);
+  const { data: channel, isLoading: isChannelLoading } = useChannel(isDM ? '' : channelId, isDM ? undefined : workspaceSlug);
+  const { data: dmData } = useDM(isDM ? channelId : '');
+  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(isDM ? '' : workspaceSlug);
+
+  const dmUser = propDmUser || (isDM ? dmData?.user : null);
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
   const [activeTab, setActiveTab] = useState('info');
 
