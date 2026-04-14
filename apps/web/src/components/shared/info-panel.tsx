@@ -67,8 +67,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const channelId = id || channelSlug;
 
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
-  const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspace?.id);
-  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspace?.id);
+  const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
+  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
@@ -76,7 +76,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
   const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspace?.id);
-  const { data: scheduledCalls = [] } = useScheduledCalls(workspace?.id);
+  const { data: scheduledCalls = [] } = useScheduledCalls(workspaceSlug, workspace?.id);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
 
   const joinCallMutation = useJoinCall();
@@ -93,7 +93,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       const data = await joinCallMutation.mutateAsync({
         type: call.type,
         callId: call.id,
-        workspaceId: workspace?.id,
+        workspaceSlug,
       });
       setCall(data);
     } catch (error) {
@@ -103,12 +103,12 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   };
 
   const handleStartCall = async (callType: 'voice' | 'video', notifyAll?: boolean) => {
-    if (!workspace?.id) return;
+    if (!workspaceSlug) return;
 
     try {
       const data = await startCallMutation.mutateAsync({
         type: callType,
-        workspaceId: workspace.id,
+        workspaceSlug,
         channelId: type === 'channel' ? id || channelSlug : undefined,
         recipientId: dmUser?.id,
         notifyAll,
@@ -125,9 +125,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const [inviteLink, setInviteLink] = useState<string>('');
 
   const handleGenerateInviteLink = async () => {
-    if (!workspace?.id) return;
+    if (!workspaceSlug) return;
     try {
-      const data = await generateInviteLinkMutation.mutateAsync(workspace.id);
+      const data = await generateInviteLinkMutation.mutateAsync(workspaceSlug);
       const fullLink = `${window.location.origin}/invite/${data.code}`;
       setInviteLink(fullLink);
       navigator.clipboard.writeText(fullLink);
@@ -821,11 +821,11 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
         )}
       </aside>
 
-      {workspace?.id && (
+      {workspaceSlug && (
         <ScheduleCallDialog
           open={isScheduleDialogOpen}
           onOpenChange={setIsScheduleDialogOpen}
-          workspaceId={workspace.id}
+          workspaceId={workspaceSlug}
           channelId={type === 'channel' ? id || channelSlug : undefined}
         />
       )}

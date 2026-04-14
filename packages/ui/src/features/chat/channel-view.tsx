@@ -91,7 +91,7 @@ const UnreadDivider = memo(function UnreadDivider() {
 
 export function ChannelView({
   channelId,
-  workspaceId,
+  workspaceId: workspaceSlug,
   threadId: initialThreadId,
   contextId,
   isWidget,
@@ -109,50 +109,17 @@ export function ChannelView({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(activeChannelId, workspaceId, initialThreadId, contextId, isWidget);
+  } = useMessages(activeChannelId, workspaceSlug, initialThreadId, contextId, isWidget);
 
-  const { data: channelData } = useChannel(activeChannelId, workspaceId);
+  const { data: channelData } = useChannel(activeChannelId, workspaceSlug);
 
-  // Real-time subscriptions
-  useEffect(() => {
-    if (!activeChannelId) return;
-
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
-
-    const handleMessage = (message: any) => {
-      const queryKey = workspaceId
-        ? ['workspaces', workspaceId, 'channels', activeChannelId, 'messages']
-        : messageKeys.list(activeChannelId);
-
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
-
-    const userChannel = ably.channels.get(AblyChannels.user(currentUser?.id || ''));
-    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleMessage);
-
-    return () => {
-      channel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
-      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleMessage);
-    };
-  }, [activeChannelId, workspaceId, queryClient]);
 
   // API Mutations
-  const sendMessageMutation = useSendMessage(workspaceId, isWidget);
-  const replyToMessageMutation = useReplyToMessage(workspaceId);
+  const sendMessageMutation = useSendMessage(workspaceSlug, isWidget);
+  const replyToMessageMutation = useReplyToMessage(workspaceSlug);
   const addReactionMutation = useAddReaction();
   const removeReactionMutation = useRemoveReaction();
-  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceId);
+  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceSlug);
 
   // Keep track of channels we've already shown the "New Messages" line for in this session
   // to satisfy the requirement: "disappear after the user leaves the channel and comes back"
@@ -173,6 +140,40 @@ export function ChannelView({
 
   const { data: session } = useSession();
   const currentUser = session?.user;
+
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!activeChannelId) return;
+
+    const ably = getAblyClient();
+    if (!ably) return;
+
+    const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
+
+    const handleMessage = (message: any) => {
+      const queryKey = workspaceSlug
+        ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages']
+        : messageKeys.list(activeChannelId);
+
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
+    channel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
+    channel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+    channel.subscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
+
+    const userChannel = ably.channels.get(AblyChannels.user(currentUser?.id || ''));
+    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleMessage);
+
+    return () => {
+      channel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
+      channel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
+      channel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+      channel.unsubscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
+      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleMessage);
+    };
+  }, [activeChannelId, workspaceSlug, queryClient, currentUser?.id]);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [channelForm, setChannelForm] = useState({
@@ -465,7 +466,7 @@ export function ChannelView({
           messageId,
           emoji,
           channelId: activeChannelId,
-          workspaceId,
+          workspaceSlug,
         });
       } else {
         addReactionMutation.mutate({
@@ -474,11 +475,11 @@ export function ChannelView({
           channelId: activeChannelId,
           isCustom,
           customEmojiId,
-          workspaceId,
+          workspaceSlug,
         });
       }
     },
-    [activeChannelId, workspaceId, removeReactionMutation, addReactionMutation]
+    [activeChannelId, workspaceSlug, removeReactionMutation, addReactionMutation]
   );
 
   return (
@@ -626,7 +627,7 @@ export function ChannelView({
                               isReply={true}
                               isHighlighted={isHighlighted}
                               channelId={channelId}
-                              workspaceId={workspaceId}
+                              workspaceId={workspaceSlug}
                             />
                           </div>
                         </div>
@@ -640,7 +641,7 @@ export function ChannelView({
                           isReply={false}
                           isHighlighted={isHighlighted}
                           channelId={channelId}
-                          workspaceId={workspaceId}
+                          workspaceId={workspaceSlug}
                         />
                       )}
                     </div>

@@ -22,6 +22,7 @@ import { MemberSelector } from "../workspace/member-selector"
 interface CreateChannelDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  workspaceSlug: string
   onCreateChannel: (channel: {
     name: string
     type: string
@@ -32,7 +33,7 @@ interface CreateChannelDialogProps {
   }) => void
 }
 
-export function CreateChannelDialog({ open, onOpenChange, onCreateChannel }: CreateChannelDialogProps) {
+export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreateChannel }: CreateChannelDialogProps) {
   const [name, setName] = React.useState("")
   const [type, setType] = React.useState("channel")
   const [description, setDescription] = React.useState("")
@@ -164,7 +165,11 @@ export function CreateChannelDialog({ open, onOpenChange, onCreateChannel }: Cre
               <p className="text-sm text-muted-foreground">
                 Select team members to add to this {type}. You can add more members later.
               </p>
-              <MemberSelector selectedMembers={selectedMembers} onChange={setSelectedMembers} />
+              <MemberSelector
+                workspaceSlug={workspaceSlug}
+                selectedMembers={selectedMembers}
+                onChange={setSelectedMembers}
+              />
             </div>
           </TabsContent>
         </Tabs>

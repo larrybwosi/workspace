@@ -4,7 +4,7 @@ import { ChannelView } from '@/components/features/chat/channel-view';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { InfoPanel } from '@/components/shared/info-panel';
-import { useWorkspaces } from '@repo/api-client';
+import { useWorkspace } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -14,16 +14,16 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { slug } = useParams();
-  const { data: workspaces } = useWorkspaces();
-  const workspace = workspaces?.find((w: any) => w.slug === slug);
-  const { data: channels } = useWorkspaceChannels(workspace?.slug);
+  const workspaceSlug = slug as string;
+
+  const { data: channels } = useWorkspaceChannels(workspaceSlug);
 
   const channel = channels?.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
   const channelId = channel?.id || channelSlug;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace?.id} />
+      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspaceSlug} />
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
         <DynamicHeader
           activeView={channelId}
@@ -34,7 +34,7 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
 
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
-            <ChannelView channelId={channelId} workspaceId={workspace?.id} />
+            <ChannelView channelId={channelId} workspaceId={workspaceSlug} />
           </main>
 
           {/* 4. Info Panel: Rendered side-by-side */}

@@ -25,11 +25,9 @@ export default function WorkspaceSettingsPageClient({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const { slug } = useParams()
-  const { data: workspaces, isLoading } = useWorkspaces()
+  const workspaceSlug = slug as string;
 
-  const currentWorkspace = workspace || workspaces?.find((w: any) => w.slug === slug)
-
-  if (!currentWorkspace && !isLoading) {
+  if (!workspaceSlug) {
     return <div className="p-6">Workspace not found or access denied.</div>
   }
 
@@ -38,7 +36,7 @@ export default function WorkspaceSettingsPageClient({
       <WorkspaceSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        currentWorkspaceId={currentWorkspace?.id}
+        currentWorkspaceId={workspaceSlug}
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <DynamicHeader
@@ -75,35 +73,35 @@ export default function WorkspaceSettingsPageClient({
               </TabsList>
 
               <TabsContent value="general" className="space-y-6">
-                <GeneralTab workspace={currentWorkspace} />
+                <GeneralTab workspaceSlug={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="members" className="space-y-6">
-                <MembersTab workspaceId={currentWorkspace?.id} />
+                <MembersTab workspaceId={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="invites" className="space-y-6">
-                <WorkspaceInviteLinks workspaceId={currentWorkspace?.id} />
+                <WorkspaceInviteLinks workspaceId={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="security" className="space-y-6">
-                <SecurityTab workspaceId={currentWorkspace?.id} />
+                <SecurityTab workspaceId={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="integrations" className="space-y-6">
-                <IntegrationsTab workspaceId={currentWorkspace?.id} />
+                <IntegrationsTab workspaceId={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="webhooks" className="space-y-6">
-                <WorkspaceWebhooksManagement workspaceSlug={currentWorkspace?.id} />
+                <WorkspaceWebhooksManagement workspaceSlug={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="notifications" className="space-y-6">
-                <NotificationsTab workspaceId={currentWorkspace?.id} />
+                <NotificationsTab workspaceId={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="audit" className="space-y-6">
-                <AuditLogsTab workspaceId={currentWorkspace?.id} />
+                <AuditLogsTab workspaceId={workspaceSlug} />
               </TabsContent>
             </Tabs>
           </div>
@@ -112,7 +110,7 @@ export default function WorkspaceSettingsPageClient({
             isOpen={infoPanelOpen}
             onClose={() => setInfoPanelOpen(false)}
             type="workspace"
-            id={currentWorkspace?.id}
+            id={workspaceSlug}
         />
         </div>
       </main>

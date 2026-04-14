@@ -7,19 +7,19 @@ export function useAddReaction() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ messageId, emoji, channelId, isCustom, customEmojiId, workspaceId }: {
+    mutationFn: async ({ messageId, emoji, channelId, isCustom, customEmojiId, workspaceSlug }: {
       messageId: string;
       emoji: string;
       channelId: string;
       isCustom?: boolean;
       customEmojiId?: string;
-      workspaceId?: string;
+      workspaceSlug?: string;
     }) => {
-      const url = workspaceId
-        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/${messageId}/reactions`
+      const url = workspaceSlug
+        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions`
         : `/channels/${channelId}/messages/${messageId}/reactions`;
       const { data } = await apiClient.post(url, { emoji, isCustom, customEmojiId })
-      return { data, channelId, workspaceId }
+      return { data, channelId, workspaceSlug }
     },
     onMutate: async ({ messageId, emoji, channelId }) => {
       // Optimistic update
@@ -60,8 +60,8 @@ export function useAddReaction() {
         queryClient.setQueryData(messageKeys.list(variables.channelId), context.previousMessages)
       }
     },
-    onSuccess: ({ channelId, workspaceId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) })
+    onSuccess: ({ channelId, workspaceSlug }) => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceSlug) })
     },
   })
 }
@@ -71,20 +71,20 @@ export function useRemoveReaction() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ messageId, emoji, channelId, workspaceId }: {
+    mutationFn: async ({ messageId, emoji, channelId, workspaceSlug }: {
       messageId: string;
       emoji: string;
       channelId: string;
-      workspaceId?: string;
+      workspaceSlug?: string;
     }) => {
-      const url = workspaceId
-        ? `/workspaces/${workspaceId}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`
+      const url = workspaceSlug
+        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`
         : `/channels/${channelId}/messages/${messageId}/reactions/${emoji}`;
       await apiClient.delete(url)
-      return { messageId, emoji, channelId, workspaceId }
+      return { messageId, emoji, channelId, workspaceSlug }
     },
-    onSuccess: ({ channelId, workspaceId }) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceId) })
+    onSuccess: ({ channelId, workspaceSlug }) => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.list(channelId, workspaceSlug) })
     },
   })
 }

@@ -1,30 +1,48 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Trash2, Power, PowerOff, SettingsIcon, ExternalLink, Copy, Check } from "lucide-react"
+import { Plus, Trash2, Power, PowerOff, SettingsIcon, ExternalLink, Copy, Check, Play, Globe, Zap, MessageSquare, GitBranch, Activity, Layout, Pentagon, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
 import { Button } from "../../../components/button"
 import { Badge } from "../../../components/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../../../components/dialog"
 import { Input } from "../../../components/input"
 import { Label } from "../../../components/label"
 import { Textarea } from "../../../components/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/tabs"
+import { ScrollArea } from "../../../components/scroll-area"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "../../../hooks/use-toast"
 import { Switch } from "../../../components/switch"
-import { useWorkspaceChannels } from "@repo/api-client"
+import { useWorkspaceChannels, useWorkspaceIntegrations, useCreateWorkspaceIntegration, useUpdateWorkspaceIntegration, useDeleteWorkspaceIntegration, useTestWorkspaceIntegration, apiClient } from "@repo/api-client"
+import { toast } from "sonner"
 
 interface ExternalIntegrationsProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
-export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps) {
+const SERVICE_ICONS: Record<string, React.ReactNode> = {
+  slack: <MessageSquare className="h-5 w-5" />,
+  github: <GitBranch className="h-5 w-5" />,
+  gitlab: <GitBranch className="h-5 w-5" />,
+  jira: <Layout className="h-5 w-5" />,
+  linear: <Activity className="h-5 w-5" />,
+  notion: <Globe className="h-5 w-5" />,
+  figma: <Pentagon className="h-5 w-5" />,
+  discord: <MessageSquare className="h-5 w-5" />,
+  teams: <MessageSquare className="h-5 w-5" />,
+  zapier: <Zap className="h-5 w-5" />,
+  make: <Zap className="h-5 w-5" />,
+  custom: <Globe className="h-5 w-5" />,
+}
+
+export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalIntegrationsProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null)
   const [copiedSecret, setCopiedSecret] = useState(false)
-  const { toast } = useToast()
+  const [testingId, setTestingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const [formData, setFormData] = useState({
@@ -40,106 +58,24 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
   })
 
   // Fetch integrations
-  const { data, isLoading } = useQuery({
-    queryKey: ["workspace-integrations", workspaceId],
-    queryFn: async () => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/integrations`)
-      if (!res.ok) throw new Error("Failed to fetch integrations")
-      return res.json()
-    },
-  })
+  const { data, isLoading } = useWorkspaceIntegrations(workspaceSlug)
 
   const integrations = data?.integrations || []
   const availableServices = data?.availableServices || []
 
-  const { data: channels } = useWorkspaceChannels(workspaceId)
+  const { data: channels } = useWorkspaceChannels(workspaceSlug)
 
   // Create integration mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/integrations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error("Failed to create integration")
-      return res.json()
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceId] })
-      setCreateDialogOpen(false)
-      setFormData({
-        service: "",
-        name: "",
-        description: "",
-        webhookUrl: "",
-        hulyUrl: "",
-        channelId: "",
-        projectId: "",
-        apiKey: "",
-        events: [],
-      })
-      toast({
-        title: "Integration created",
-        description: data.message || "Integration has been created successfully.",
-      })
-      // Show the secret to the user
-      setSelectedIntegration({ ...data, newSecret: data.secret })
-      setConfigDialogOpen(true)
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to create integration",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
+  const createMutation = useCreateWorkspaceIntegration(workspaceSlug)
+
+  // Update integration mutation
+  const updateMutation = useUpdateWorkspaceIntegration(workspaceSlug)
 
   // Delete integration mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (integrationId: string) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/integrations/${integrationId}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete integration")
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceId] })
-      toast({
-        title: "Integration deleted",
-        description: "Integration has been removed successfully.",
-      })
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to delete integration",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
+  const deleteMutation = useDeleteWorkspaceIntegration(workspaceSlug)
 
-  // Toggle integration status mutation
-  const toggleMutation = useMutation({
-    mutationFn: async ({ integrationId, active }: { integrationId: string; active: boolean }) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/integrations/${integrationId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active }),
-      })
-      if (!res.ok) throw new Error("Failed to toggle integration")
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceId] })
-      toast({
-        title: "Integration updated",
-        description: "Integration status has been updated.",
-      })
-    },
-  })
+  // Test integration mutation
+  const testIntegration = useTestWorkspaceIntegration(workspaceSlug)
 
   const handleCreateIntegration = () => {
     createMutation.mutate({
@@ -154,20 +90,77 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
         apiKey: formData.apiKey,
         events: formData.events,
       },
+    }, {
+      onSuccess: (data) => {
+        setCreateDialogOpen(false)
+        setFormData({
+          service: "",
+          name: "",
+          description: "",
+          webhookUrl: "",
+          hulyUrl: "",
+          channelId: "",
+          projectId: "",
+          apiKey: "",
+          events: [],
+        })
+        toast.success("Integration created successfully")
+        // Show the secret to the user
+        setSelectedIntegration({ ...data, newSecret: data.secret })
+        setConfigDialogOpen(true)
+      },
+      onError: (error: any) => {
+        toast.error("Failed to create integration")
+      }
     })
+  }
+
+  const handleDeleteIntegration = async (integrationId: string) => {
+    deleteMutation.mutate(integrationId, {
+      onSuccess: () => {
+        toast.success("Integration deleted successfully")
+      },
+      onError: (error: any) => {
+        toast.error("Failed to delete integration")
+      }
+    })
+  }
+
+  const handleToggleIntegration = async (integrationId: string, active: boolean) => {
+    updateMutation.mutate({
+      integrationId,
+      data: { active }
+    }, {
+      onSuccess: () => {
+        toast.success(active ? "Integration enabled" : "Integration disabled")
+      }
+    })
+  }
+
+  const handleTestIntegration = async (integrationId: string) => {
+    setTestingId(integrationId)
+    try {
+      const result = await testIntegration.mutateAsync(integrationId)
+      if (result.success) {
+        toast.success("Integration test passed")
+      } else {
+        toast.error("Integration test failed")
+      }
+    } catch (error) {
+      toast.error("Test failed")
+    } finally {
+      setTestingId(null)
+    }
   }
 
   const copySecret = (secret: string) => {
     navigator.clipboard.writeText(secret)
     setCopiedSecret(true)
     setTimeout(() => setCopiedSecret(false), 2000)
-    toast({
-      title: "Copied to clipboard",
-      description: "Integration secret has been copied.",
-    })
+    toast.success("Secret copied to clipboard")
   }
 
-  const selectedService = availableServices.find((s: any) => s.id === formData.service)
+  const selectedServiceMeta = availableServices.find((s: any) => s.id === formData.service)
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading integrations...</div>
@@ -197,12 +190,12 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
                     className="flex items-center justify-center size-10 rounded-lg text-white font-semibold"
                     style={{ backgroundColor: integration.metadata?.color || "#6366F1" }}
                   >
-                    {integration.metadata?.icon?.slice(0, 2) || "🔌"}
+                    {SERVICE_ICONS[integration.service] || <Globe className="h-5 w-5" />}
                   </div>
                   <div>
-                    <CardTitle className="text-base">{integration.metadata?.name || integration.service}</CardTitle>
+                    <CardTitle className="text-base">{(integration.config as any)?.name || integration.service}</CardTitle>
                     <CardDescription className="text-xs">
-                      {(integration.config as any)?.name || integration.service}
+                      {integration.metadata?.name || integration.service}
                     </CardDescription>
                   </div>
                 </div>
@@ -231,18 +224,26 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => toggleMutation.mutate({ integrationId: integration.id, active: !integration.active })}
-                  disabled={toggleMutation.isPending}
+                  onClick={() => handleToggleIntegration(integration.id, !integration.active)}
+                  disabled={updateMutation.isPending}
                 >
                   {integration.active ? <PowerOff className="h-3 w-3" /> : <Power className="h-3 w-3" />}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => deleteMutation.mutate(integration.id)}
+                  onClick={() => handleDeleteIntegration(integration.id)}
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleTestIntegration(integration.id)}
+                  disabled={testingId === integration.id}
+                >
+                  {testingId === integration.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                 </Button>
               </div>
             </CardContent>
@@ -275,145 +276,138 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
             <DialogTitle>Add Integration</DialogTitle>
             <DialogDescription>Connect an external service to your workspace</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Service</Label>
-              <Select value={formData.service} onValueChange={(value) => setFormData({ ...formData, service: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a service" />
-                </SelectTrigger>
-                <SelectContent>
+
+          <Tabs defaultValue="select" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="select">Select Service</TabsTrigger>
+              <TabsTrigger value="configure" disabled={!formData.service}>
+                Configure
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="select" className="mt-4">
+              <ScrollArea className="h-[400px]">
+                <div className="grid grid-cols-2 gap-3">
                   {availableServices.map((service: any) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{service.icon}</span>
-                        <span>{service.name}</span>
-                      </div>
-                    </SelectItem>
+                    <Card
+                      key={service.id}
+                      className={`cursor-pointer transition-all hover:border-primary ${
+                        formData.service === service.id ? "border-primary bg-primary/5" : ""
+                      }`}
+                      onClick={() => setFormData({ ...formData, service: service.id })}
+                    >
+                      <CardContent className="flex items-center gap-3 p-4">
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-lg"
+                          style={{ backgroundColor: `${service.color}20` }}
+                        >
+                          {SERVICE_ICONS[service.id] || <Globe className="h-5 w-5" />}
+                        </div>
+                        <div>
+                          <p className="font-medium">{service.name}</p>
+                        </div>
+                        {formData.service === service.id && <Check className="ml-auto h-5 w-5 text-primary" />}
+                      </CardContent>
+                    </Card>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
 
-            <div className="space-y-2">
-              <Label>Integration Name</Label>
-              <Input
-                placeholder="e.g., Production Slack"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
+            <TabsContent value="configure" className="mt-4 space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Integration Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g., Production Slack"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>Description (Optional)</Label>
-              <Textarea
-                placeholder="Describe what this integration is used for"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe what this integration is used for"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
 
-            {selectedService && (
-              <>
-                {selectedService.id === "huly" && (
+                {selectedServiceMeta && (
                   <>
+                    {["slack", "discord", "teams", "custom"].includes(formData.service) && (
+                      <div className="space-y-2">
+                        <Label htmlFor="webhookUrl">Webhook URL *</Label>
+                        <Input
+                          id="webhookUrl"
+                          placeholder="https://hooks.slack.com/services/..."
+                          value={formData.webhookUrl}
+                          onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
+                        />
+                      </div>
+                    )}
+
+                    {formData.service === "huly" && (
+                      <>
+                        <div className="space-y-2">
+                          <Label>Huly URL (Self-hosted)</Label>
+                          <Input
+                            type="url"
+                            placeholder="https://huly.your-domain.com"
+                            value={formData.hulyUrl}
+                            onChange={(e) => setFormData({ ...formData, hulyUrl: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Target Channel (for Notifications)</Label>
+                          <Select
+                            value={formData.channelId}
+                            onValueChange={(value) => setFormData({ ...formData, channelId: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a channel" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {channels?.map((channel: any) => (
+                                <SelectItem key={channel.id} value={channel.id}>
+                                  # {channel.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    )}
+
                     <div className="space-y-2">
-                      <Label>Huly URL (Self-hosted)</Label>
+                      <Label>API Key / Access Token (Optional)</Label>
                       <Input
-                        type="url"
-                        placeholder="https://huly.your-domain.com"
-                        value={formData.hulyUrl}
-                        onChange={(e) => setFormData({ ...formData, hulyUrl: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Target Channel (for Notifications)</Label>
-                      <Select
-                        value={formData.channelId}
-                        onValueChange={(value) => setFormData({ ...formData, channelId: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a channel" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {channels?.map((channel: any) => (
-                            <SelectItem key={channel.id} value={channel.id}>
-                              # {channel.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Default Project ID (Optional)</Label>
-                      <Input
-                        placeholder="e.g., default-project-id"
-                        value={formData.projectId}
-                        onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+                        type="password"
+                        placeholder="Enter your API key or token"
+                        value={formData.apiKey}
+                        onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
                       />
                     </div>
                   </>
                 )}
 
-                {selectedService.id !== "custom" && selectedService.id !== "huly" && (
-                  <div className="space-y-2">
-                    <Label>Webhook URL (Optional)</Label>
-                    <Input
-                      type="url"
-                      placeholder={`https://${selectedService.id}.example.com/webhook`}
-                      value={formData.webhookUrl}
-                      onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label>{selectedService.id === "huly" ? "Huly API Token" : "API Key / Access Token (Optional)"}</Label>
-                  <Input
-                    type="password"
-                    placeholder={selectedService.id === "huly" ? "Enter your Huly API token" : "Enter your API key or token"}
-                    value={formData.apiKey}
-                    onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                  />
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateIntegration}
+                    disabled={!formData.service || !formData.name || createMutation.isPending}
+                  >
+                    {createMutation.isPending ? "Creating..." : "Create Integration"}
+                  </Button>
                 </div>
-
-                {selectedService.events && selectedService.events.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Events to Send</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {selectedService.events.map((event: string) => (
-                        <div key={event} className="flex items-center space-x-2">
-                          <Switch
-                            checked={formData.events.includes(event)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFormData({ ...formData, events: [...formData.events, event] })
-                              } else {
-                                setFormData({ ...formData, events: formData.events.filter((e) => e !== event) })
-                              }
-                            }}
-                          />
-                          <Label className="text-sm font-normal">{event}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateIntegration}
-                disabled={!formData.service || !formData.name || createMutation.isPending}
-              >
-                {createMutation.isPending ? "Creating..." : "Create Integration"}
-              </Button>
-            </div>
-          </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
@@ -453,38 +447,13 @@ export function ExternalIntegrations({ workspaceId }: ExternalIntegrationsProps)
                 <Label>Service</Label>
                 <p className="text-sm">{selectedIntegration.metadata?.name || selectedIntegration.service}</p>
               </div>
-              {selectedIntegration?.service === 'huly' && !selectedIntegration?.newSecret && (
-                <div className="space-y-2">
-                  <Label>Webhook URL</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/integrations/huly/webhook/${selectedIntegration.id}`}
-                      readOnly
-                      className="font-mono text-xs"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/api/integrations/huly/webhook/${selectedIntegration.id}`)
-                        toast({ title: "Copied", description: "Webhook URL copied to clipboard" })
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Paste this URL into your Huly project webhook settings.
-                  </p>
-                </div>
-              )}
               <div className="space-y-2">
                 <Label>Status</Label>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={selectedIntegration.active}
                     onCheckedChange={(checked) =>
-                      toggleMutation.mutate({ integrationId: selectedIntegration.id, active: checked })
+                      handleToggleIntegration(selectedIntegration.id, checked)
                     }
                   />
                   <span className="text-sm">{selectedIntegration.active ? "Active" : "Inactive"}</span>

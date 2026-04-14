@@ -12,9 +12,10 @@ import { Checkbox } from "../../../components/checkbox"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "../../../hooks/use-toast"
 import { Switch } from "../../../components/switch"
+import { apiClient } from "@repo/api-client"
 
 interface WebhooksManagementProps {
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
 }
 
 const WEBHOOK_EVENTS = [
@@ -33,7 +34,7 @@ const WEBHOOK_EVENTS = [
   { id: "task.completed", label: "Task Completed", category: "Tasks" },
 ]
 
-export function WebhooksManagement({ workspaceId }: WebhooksManagementProps) {
+export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManagementProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [viewSecretDialog, setViewSecretDialog] = useState<any>(null)
   const [copiedSecret, setCopiedSecret] = useState(false)
@@ -48,11 +49,10 @@ export function WebhooksManagement({ workspaceId }: WebhooksManagementProps) {
 
   // Fetch webhooks
   const { data, isLoading } = useQuery({
-    queryKey: ["workspace-webhooks", workspaceId],
+    queryKey: ["workspace-webhooks", workspaceSlug],
     queryFn: async () => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/webhooks`)
-      if (!res.ok) throw new Error("Failed to fetch webhooks")
-      return res.json()
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/webhooks`)
+      return data
     },
   })
 
@@ -61,16 +61,11 @@ export function WebhooksManagement({ workspaceId }: WebhooksManagementProps) {
   // Create webhook mutation
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/webhooks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error("Failed to create webhook")
-      return res.json()
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks`, data)
+      return response
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
       setCreateDialogOpen(false)
       setViewSecretDialog(data)
       setFormData({
@@ -88,14 +83,11 @@ export function WebhooksManagement({ workspaceId }: WebhooksManagementProps) {
   // Delete webhook mutation
   const deleteMutation = useMutation({
     mutationFn: async (webhookId: string) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/webhooks/${webhookId}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete webhook")
-      return res.json()
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`)
+      return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
       toast({
         title: "Webhook deleted",
         description: "The webhook has been deleted successfully.",
@@ -106,16 +98,11 @@ export function WebhooksManagement({ workspaceId }: WebhooksManagementProps) {
   // Toggle webhook mutation
   const toggleMutation = useMutation({
     mutationFn: async ({ webhookId, active }: { webhookId: string; active: boolean }) => {
-      const res = await fetch(`/api/workspaces/${workspaceId}/webhooks/${webhookId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active }),
-      })
-      if (!res.ok) throw new Error("Failed to toggle webhook")
-      return res.json()
+      const { data } = await apiClient.patch(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`, { active })
+      return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
     },
   })
 

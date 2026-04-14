@@ -15,18 +15,19 @@ import { Textarea } from "../../components/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
 import { Hash, Lock } from "lucide-react"
 import { useToast } from "../../hooks/use-toast"
+import { useCreateChannel } from "@repo/api-client"
 
 interface CreateChannelDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  workspaceId: string
+  workspaceId: string // This is now treated as workspaceSlug
   onSuccess?: () => void
 }
 
-export function CreateChannelDialog({ open, onOpenChange, workspaceId, onSuccess }: CreateChannelDialogProps) {
+export function CreateChannelDialog({ open, onOpenChange, workspaceId: workspaceSlug, onSuccess }: CreateChannelDialogProps) {
   const [form, setForm] = React.useState({ name: "", description: "", type: "public" as "public" | "private" })
-  const [isLoading, setIsLoading] = React.useState(false)
   const { toast } = useToast()
+  const createChannel = useCreateChannel(workspaceSlug)
 
   const handleCreate = async () => {
     if (!form.name.trim()) {
@@ -34,25 +35,21 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceId, onSuccess
       return
     }
 
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/channels`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-
-      if (!response.ok) throw new Error("Failed to create channel")
-
-      toast({ title: "Success", description: "Channel created successfully" })
-      setForm({ name: "", description: "", type: "public" })
-      onOpenChange(false)
-      onSuccess?.()
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to create channel", variant: "destructive" })
-    } finally {
-      setIsLoading(false)
-    }
+    createChannel.mutate({
+      name: form.name,
+      description: form.description,
+      type: form.type,
+    }, {
+      onSuccess: () => {
+        toast({ title: "Success", description: "Channel created successfully" })
+        setForm({ name: "", description: "", type: "public" })
+        onOpenChange(false)
+        onSuccess?.()
+      },
+      onError: () => {
+        toast({ title: "Error", description: "Failed to create channel", variant: "destructive" })
+      }
+    })
   }
 
   return (
@@ -109,10 +106,10 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceId, onSuccess
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={createChannel.isPending}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!form.name || isLoading}>
+          <Button onClick={handleCreate} disabled={!form.name || createChannel.isPending}>
             Create Channel
           </Button>
         </DialogFooter>

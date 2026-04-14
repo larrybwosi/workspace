@@ -8,6 +8,7 @@ import { Button } from "../../../components/button"
 import { Badge } from "../../../components/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
+import { useWorkspaceAuditLogs } from "@repo/api-client"
 
 // Mock data
 const mockAuditLogs = [
@@ -68,10 +69,12 @@ const mockAuditLogs = [
   },
 ]
 
-export function AuditLogsTab({ workspaceId }: { workspaceId: string }) {
+export function AuditLogsTab({ workspaceId: workspaceSlug }: { workspaceId: string }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [actionFilter, setActionFilter] = useState("all")
   const [dateRange, setDateRange] = useState("30")
+
+  const { data: auditLogs, isLoading } = useWorkspaceAuditLogs(workspaceSlug)
 
   const getActionBadgeColor = (action: string) => {
     if (action.includes("delete")) return "destructive"
@@ -153,22 +156,22 @@ export function AuditLogsTab({ workspaceId }: { workspaceId: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockAuditLogs.map((log) => (
+              {(auditLogs?.logs || []).map((log: any) => (
                 <TableRow key={log.id}>
-                  <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
+                  <TableCell className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant={getActionBadgeColor(log.action)}>{log.action.replace(/\./g, " ")}</Badge>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{log.actor}</div>
-                      <div className="text-xs text-muted-foreground">{log.actorEmail}</div>
+                      <div className="font-medium">{log.user?.name || "System"}</div>
+                      <div className="text-xs text-muted-foreground">{log.user?.email}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{log.target}</TableCell>
-                  <TableCell className="font-mono text-xs">{log.ip}</TableCell>
+                  <TableCell>{log.resourceId || log.resource}</TableCell>
+                  <TableCell className="font-mono text-xs">{log.ipAddress || "N/A"}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeColor(log.status)}>{log.status}</Badge>
+                    <Badge variant={getStatusBadgeColor("success")}>success</Badge>
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -177,6 +180,13 @@ export function AuditLogsTab({ workspaceId }: { workspaceId: string }) {
                   </TableCell>
                 </TableRow>
               ))}
+              {(!auditLogs?.logs || auditLogs.logs.length === 0) && !isLoading && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No audit logs found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
