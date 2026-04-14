@@ -19,7 +19,18 @@ import {
 @Injectable()
 export class CallsService {
   async startCall(user: User, body: any) {
-    const { type, channelId, workspaceId, recipientId, callId: incomingCallId, notifyAll } = body;
+    let { workspaceId } = body;
+    const { type, channelId, recipientId, callId: incomingCallId, notifyAll, workspaceSlug } = body;
+
+    if (!workspaceId && workspaceSlug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: workspaceSlug },
+        select: { id: true },
+      });
+      if (workspace) {
+        workspaceId = workspace.id;
+      }
+    }
 
     if (!type || !workspaceId) {
       throw new BadRequestException('Type and workspaceId are required');
@@ -106,7 +117,7 @@ export class CallsService {
             name: user.name,
             image: user.image,
           },
-          workspaceId,
+          workspaceId: workspaceSlug || workspaceId,
         });
       } else if (notifyAll) {
         const members = await prisma.workspaceMember.findMany({
@@ -124,7 +135,7 @@ export class CallsService {
                 name: user.name,
                 image: user.image,
               },
-              workspaceId,
+              workspaceId: workspaceSlug || workspaceId,
             });
           }
         }
@@ -144,7 +155,7 @@ export class CallsService {
                 name: user.name,
                 image: user.image,
               },
-              workspaceId,
+              workspaceId: workspaceSlug || workspaceId,
             });
           }
         }
@@ -489,9 +500,23 @@ export class CallsService {
     });
   }
 
-  async getScheduledCalls(user: User, workspaceId: string) {
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace ID required');
+  async getScheduledCalls(user: User, workspaceIdOrSlug: string) {
+    if (!workspaceIdOrSlug) {
+      throw new BadRequestException('Workspace ID or Slug required');
+    }
+
+    let workspaceId = workspaceIdOrSlug;
+
+    // Check if it's a slug by trying to find it
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
+      },
+      select: { id: true },
+    });
+
+    if (workspace) {
+      workspaceId = workspace.id;
     }
 
     return prisma.call.findMany({
@@ -512,7 +537,18 @@ export class CallsService {
   }
 
   async scheduleCall(user: User, body: any) {
-    const { title, description, type, scheduledFor, workspaceId, channelId } = body;
+    let { workspaceId } = body;
+    const { title, description, type, scheduledFor, channelId, workspaceSlug } = body;
+
+    if (!workspaceId && workspaceSlug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: workspaceSlug },
+        select: { id: true },
+      });
+      if (workspace) {
+        workspaceId = workspace.id;
+      }
+    }
 
     if (!title || !type || !scheduledFor || !workspaceId) {
       throw new BadRequestException('Missing required fields');
