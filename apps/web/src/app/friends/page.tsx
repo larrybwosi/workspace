@@ -38,7 +38,7 @@ import { usePresence } from "@/lib/contexts/presence-context"
 export default function FriendsPage() {
   const [search, setSearch] = useState("")
   const [addFriendOpen, setAddFriendOpen] = useState(false)
-  const [friendEmail, setFriendEmail] = useState("")
+  const [friendIdentifier, setFriendIdentifier] = useState("")
   const [friendMessage, setFriendMessage] = useState("")
   const [inviteEmail, setInviteEmail] = useState("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -86,26 +86,26 @@ export default function FriendsPage() {
     }
   }
 
-  const handleSendRequest = async (email?: string) => {
-    const targetEmail = email || friendEmail
-    if (!targetEmail) {
-      toast({ title: "Please enter an email", variant: "destructive" })
+  const handleSendRequest = async (identifier?: string) => {
+    const targetIdentifier = identifier || friendIdentifier
+    if (!targetIdentifier) {
+      toast({ title: "Please enter an email or username", variant: "destructive" })
       return
     }
 
     try {
       await sendRequestMutation.mutateAsync({
-        receiverId: targetEmail,
-        message: email ? "Hi! I'd like to connect." : friendMessage,
+        receiverId: targetIdentifier,
+        message: identifier ? "Hi! I'd like to connect." : friendMessage,
       })
       toast({ title: "Friend request sent" })
       setAddFriendOpen(false)
-      setFriendEmail("")
+      setFriendIdentifier("")
       setFriendMessage("")
     } catch (error: any) {
       // If user not found, suggest sending a platform invitation
-      if (error.response?.status === 404) {
-        setInviteEmail(targetEmail)
+      if (error.response?.status === 404 && targetIdentifier.includes('@')) {
+        setInviteEmail(targetIdentifier)
         setInviteDialogOpen(true)
       } else {
         toast({ title: error.response?.data?.error || "Failed to send request", variant: "destructive" })
@@ -169,17 +169,16 @@ export default function FriendsPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Send Friend Request</DialogTitle>
-                <DialogDescription>Enter the user's email to send a friend request</DialogDescription>
+                <DialogDescription>Enter the user's email or username to send a friend request</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="identifier">Email or Username</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={friendEmail}
-                    onChange={(e) => setFriendEmail(e.target.value)}
+                    id="identifier"
+                    placeholder="name@example.com or username"
+                    value={friendIdentifier}
+                    onChange={(e) => setFriendIdentifier(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -227,7 +226,7 @@ export default function FriendsPage() {
         <div className="relative max-w-2xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search friends by name or email..."
+            placeholder="Search friends by name, email or username..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-11 bg-muted/30 border-none shadow-none focus-visible:ring-1"
