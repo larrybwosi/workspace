@@ -1,27 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "../client"
 
-export function useCustomEmojis(workspaceId: string) {
+export function useCustomEmojis(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["custom-emojis", workspaceId],
+    queryKey: ["custom-emojis", workspaceSlug],
     queryFn: async () => {
-      if (!workspaceId) return []
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/emojis`)
+      if (!workspaceSlug) return []
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/emojis`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateCustomEmoji(workspaceId: string) {
+export function useCreateCustomEmoji(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: { name: string; shortcode: string; imageUrl: string }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/emojis`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/emojis`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["custom-emojis", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["custom-emojis", workspaceSlug] })
     },
   })
 }

@@ -41,19 +41,19 @@ export function WorkspaceResourceManagement({ workspaceSlug }: WorkspaceResource
               <div className="rounded-lg border p-4">
                 <h3 className="mb-2 font-medium">Create Channel</h3>
                 <code className="block rounded bg-muted p-2 font-mono text-xs">
-                  POST /api/workspaces/{`{workspaceId}`}/webhook/channels
+                  POST /api/workspaces/{`{workspaceSlug}`}/webhook/channels
                 </code>
               </div>
               <div className="rounded-lg border p-4">
                 <h3 className="mb-2 font-medium">Update Channel</h3>
                 <code className="block rounded bg-muted p-2 font-mono text-xs">
-                  PATCH /api/workspaces/{`{workspaceId}`}/webhook/channels/{`{channelId}`}
+                  PATCH /api/workspaces/{`{workspaceSlug}`}/webhook/channels/{`{channelId}`}
                 </code>
               </div>
               <div className="rounded-lg border p-4">
                 <h3 className="mb-2 font-medium">Delete Channel</h3>
                 <code className="block rounded bg-muted p-2 font-mono text-xs">
-                  DELETE /api/workspaces/{`{workspaceId}`}/webhook/channels/{`{channelId}`}
+                  DELETE /api/workspaces/{`{workspaceSlug}`}/webhook/channels/{`{channelId}`}
                 </code>
               </div>
             </div>

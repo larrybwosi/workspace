@@ -58,17 +58,12 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [generatedLink, setGeneratedLink] = React.useState("")
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
 
-  // Fetch workspace
-  const { data: workspaces } = useWorkspaces()
-  const workspace = workspaces?.find((w: any) => w.slug === slug)
-  const workspaceId = workspace?.id
-
   // Fetch members
-  const { data: membersData, isLoading } = useWorkspaceMembers(workspaceId || "")
-  const { data: inviteLinks } = useWorkspaceInviteLinks(workspaceId || "")
-  const createInviteLinkMutation = useCreateWorkspaceInviteLink(workspaceId || "")
-  const updateMutation = useUpdateWorkspaceMember(workspaceId || "")
-  const removeMutation = useRemoveWorkspaceMember(workspaceId || "")
+  const { data: membersData, isLoading } = useWorkspaceMembers(slug)
+  const { data: inviteLinks } = useWorkspaceInviteLinks(slug)
+  const createInviteLinkMutation = useCreateWorkspaceInviteLink(slug)
+  const updateMutation = useUpdateWorkspaceMember(slug)
+  const removeMutation = useRemoveWorkspaceMember(slug)
 
   const members = Array.isArray(membersData) ? membersData : []
 
@@ -82,8 +77,6 @@ export default function MembersPage({ params }: MembersPageProps) {
   })
 
   const handleGenerateLink = async () => {
-    if (!workspaceId) return
-
     try {
       const link = await createInviteLinkMutation.mutateAsync({
         ["workspaceId" as any]: workspaceId,
@@ -162,7 +155,7 @@ export default function MembersPage({ params }: MembersPageProps) {
       <WorkspaceSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        currentWorkspaceId={workspaceId}
+        currentWorkspaceId={slug}
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <DynamicHeader
@@ -345,7 +338,7 @@ export default function MembersPage({ params }: MembersPageProps) {
             isOpen={infoPanelOpen}
             onClose={() => setInfoPanelOpen(false)}
             type="workspace"
-            id={workspaceId}
+            id={slug}
         />
         </div>
       </main>

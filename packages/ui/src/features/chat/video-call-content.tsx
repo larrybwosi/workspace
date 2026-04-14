@@ -623,7 +623,7 @@ export function VideoCallContent({
         </div>
         {showChat && (
           <div className="shrink-0 border-l border-white/10 w-80 h-full hidden lg:block">
-            <CallChat callId={callId} />
+            {/* CallChat is only available in the app that consumes this component */}
           </div>
         )}
       </div>

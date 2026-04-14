@@ -13,21 +13,21 @@ export function useWorkspaces() {
 
 export function useGenerateInviteLink() {
   return useMutation({
-    mutationFn: async (workspaceId: string) => {
-      const { data } = await apiClient.post(`/workspaces/${workspaceId}/invite-links`, {})
+    mutationFn: async (workspaceSlug: string) => {
+      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/invite-links`, {})
       return data
     },
   })
 }
 
-export function useWorkspace(workspaceId: string) {
+export function useWorkspace(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspaces", workspaceId],
+    queryKey: ["workspaces", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
@@ -44,15 +44,15 @@ export function useCreateWorkspace() {
   })
 }
 
-export function useUpdateWorkspace(workspaceId: string) {
+export function useUpdateWorkspace(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: { name?: string; icon?: string; description?: string }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}`, data)
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaces", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspaces", workspaceSlug] })
       queryClient.invalidateQueries({ queryKey: ["workspaces"] })
     },
   })
@@ -63,26 +63,26 @@ export function useInviteToWorkspace() {
 
   return useMutation({
     mutationFn: async ({
-      workspaceId,
+      workspaceSlug,
       userId,
       email,
       role,
-    }: { workspaceId: string; userId?: string; email?: string; role?: string }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/invitations`, { userId, email, role })
+    }: { workspaceSlug: string; userId?: string; email?: string; role?: string }) => {
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/invitations`, { userId, email, role })
       return response
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["workspaces", variables.workspaceId] })
-      queryClient.invalidateQueries({ queryKey: ["workspace-invitations", variables.workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspaces", variables.workspaceSlug] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-invitations", variables.workspaceSlug] })
     },
   })
 }
 
-export function useWorkspaceInvitations(workspaceId: string) {
+export function useWorkspaceInvitations(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-invitations", workspaceId],
+    queryKey: ["workspace-invitations", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/invitations`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/invitations`)
       return data.invitations
     },
   })
@@ -92,8 +92,8 @@ export function useAcceptWorkspaceInvitation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ workspaceId, invitationId }: { workspaceId: string; invitationId: string }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}/invitations/${invitationId}`, { action: "accept" })
+    mutationFn: async ({ workspaceSlug, invitationId }: { workspaceSlug: string; invitationId: string }) => {
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/invitations/${invitationId}`, { action: "accept" })
       return response
     },
     onSuccess: () => {
@@ -107,8 +107,8 @@ export function useDeclineWorkspaceInvitation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ workspaceId, invitationId }: { workspaceId: string; invitationId: string }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}/invitations/${invitationId}`, { action: "decline" })
+    mutationFn: async ({ workspaceSlug, invitationId }: { workspaceSlug: string; invitationId: string }) => {
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/invitations/${invitationId}`, { action: "decline" })
       return response
     },
     onSuccess: () => {
@@ -121,71 +121,71 @@ export function useCancelWorkspaceInvitation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ workspaceId, invitationId }: { workspaceId: string; invitationId: string }) => {
-      const { data: response } = await apiClient.delete(`/workspaces/${workspaceId}/invitations/${invitationId}`)
+    mutationFn: async ({ workspaceSlug, invitationId }: { workspaceSlug: string; invitationId: string }) => {
+      const { data: response } = await apiClient.delete(`/workspaces/${workspaceSlug}/invitations/${invitationId}`)
       return response
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-invitations", variables.workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-invitations", variables.workspaceSlug] })
     },
   })
 }
 
-export function useWorkspaceAnalytics(workspaceId: string, range = "30d") {
+export function useWorkspaceAnalytics(workspaceSlug: string, range = "30d") {
   return useQuery({
-    queryKey: ["workspace-analytics", workspaceId, range],
+    queryKey: ["workspace-analytics", workspaceSlug, range],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/analytics`, { params: { range } })
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/analytics`, { params: { range } })
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useWorkspaceMembers(workspaceId: string) {
+export function useWorkspaceMembers(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-members", workspaceId],
+    queryKey: ["workspace-members", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/members`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/members`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useUpdateWorkspaceMember(workspaceId: string) {
+export function useUpdateWorkspaceMember(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
-      const { data } = await apiClient.patch(`/workspaces/${workspaceId}/members/${memberId}`, { role })
+      const { data } = await apiClient.patch(`/workspaces/${workspaceSlug}/members/${memberId}`, { role })
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-members", workspaceId] })
-      queryClient.invalidateQueries({ queryKey: ["workspaces", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-members", workspaceSlug] })
+      queryClient.invalidateQueries({ queryKey: ["workspaces", workspaceSlug] })
     },
   })
 }
 
-export function useRemoveWorkspaceMember(workspaceId: string) {
+export function useRemoveWorkspaceMember(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (memberId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceId}/members/${memberId}`)
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/members/${memberId}`)
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-members", workspaceId] })
-      queryClient.invalidateQueries({ queryKey: ["workspaces", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-members", workspaceSlug] })
+      queryClient.invalidateQueries({ queryKey: ["workspaces", workspaceSlug] })
     },
   })
 }
 
-export function useDeleteWorkspace(workspaceId: string) {
+export function useDeleteWorkspace(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceId}`)
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}`)
       return data
     },
     onSuccess: () => {
@@ -194,29 +194,29 @@ export function useDeleteWorkspace(workspaceId: string) {
   })
 }
 
-export function useWorkspaceAuditLogs(workspaceId: string, page = 1, limit = 50) {
+export function useWorkspaceAuditLogs(workspaceSlug: string, page = 1, limit = 50) {
   return useQuery({
-    queryKey: ["workspace-audit-logs", workspaceId, page, limit],
+    queryKey: ["workspace-audit-logs", workspaceSlug, page, limit],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/audit-logs`, { params: { page, limit } })
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/audit-logs`, { params: { page, limit } })
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useWorkspaceIntegrations(workspaceId: string) {
+export function useWorkspaceIntegrations(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-integrations", workspaceId],
+    queryKey: ["workspace-integrations", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/integrations`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/integrations`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateWorkspaceIntegration(workspaceId: string) {
+export function useCreateWorkspaceIntegration(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: {
@@ -225,16 +225,16 @@ export function useCreateWorkspaceIntegration(workspaceId: string) {
       config: Record<string, any>
       description?: string
     }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/integrations`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/integrations`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceSlug] })
     },
   })
 }
 
-export function useUpdateWorkspaceIntegration(workspaceId: string) {
+export function useUpdateWorkspaceIntegration(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({
@@ -244,49 +244,49 @@ export function useUpdateWorkspaceIntegration(workspaceId: string) {
       integrationId: string
       data: { config?: Record<string, any>; active?: boolean }
     }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}/integrations/${integrationId}`, data)
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/integrations/${integrationId}`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceSlug] })
     },
   })
 }
 
-export function useDeleteWorkspaceIntegration(workspaceId: string) {
+export function useDeleteWorkspaceIntegration(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (integrationId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceId}/integrations/${integrationId}`)
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/integrations/${integrationId}`)
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceSlug] })
     },
   })
 }
 
-export function useTestWorkspaceIntegration(workspaceId: string) {
+export function useTestWorkspaceIntegration(workspaceSlug: string) {
   return useMutation({
     mutationFn: async (integrationId: string) => {
-      const { data } = await apiClient.post(`/workspaces/${workspaceId}/integrations/${integrationId}/test`)
+      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/integrations/${integrationId}/test`)
       return data
     },
   })
 }
 
-export function useWorkspaceDepartments(workspaceId: string) {
+export function useWorkspaceDepartments(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-departments", workspaceId],
+    queryKey: ["workspace-departments", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/departments`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/departments`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateDepartment(workspaceId: string) {
+export function useCreateDepartment(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: {
@@ -299,16 +299,16 @@ export function useCreateDepartment(workspaceId: string) {
       managerId?: string
       createChannel?: boolean
     }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/departments`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/departments`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceSlug] })
     },
   })
 }
 
-export function useUpdateDepartment(workspaceId: string) {
+export function useUpdateDepartment(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({
@@ -318,40 +318,40 @@ export function useUpdateDepartment(workspaceId: string) {
       departmentId: string
       data: { name?: string; description?: string; icon?: string; color?: string; managerId?: string }
     }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}/departments/${departmentId}`, data)
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/departments/${departmentId}`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceSlug] })
     },
   })
 }
 
-export function useDeleteDepartment(workspaceId: string) {
+export function useDeleteDepartment(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (departmentId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceId}/departments/${departmentId}`)
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/departments/${departmentId}`)
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceSlug] })
     },
   })
 }
 
-export function useWorkspaceTeams(workspaceId: string, departmentId?: string) {
+export function useWorkspaceTeams(workspaceSlug: string, departmentId?: string) {
   return useQuery({
-    queryKey: ["workspace-teams", workspaceId, departmentId],
+    queryKey: ["workspace-teams", workspaceSlug, departmentId],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/teams`, { params: { departmentId } })
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/teams`, { params: { departmentId } })
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateTeam(workspaceId: string) {
+export function useCreateTeam(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: {
@@ -365,27 +365,27 @@ export function useCreateTeam(workspaceId: string) {
       memberIds?: string[]
       createChannel?: boolean
     }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/teams`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/teams`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-teams", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-teams", workspaceSlug] })
     },
   })
 }
 
-export function useWorkspaceApiTokens(workspaceId: string) {
+export function useWorkspaceApiTokens(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-api-tokens", workspaceId],
+    queryKey: ["workspace-api-tokens", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/api-tokens`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/api-tokens`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateWorkspaceApiToken(workspaceId: string) {
+export function useCreateWorkspaceApiToken(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: {
@@ -398,27 +398,27 @@ export function useCreateWorkspaceApiToken(workspaceId: string) {
       rateLimit?: number
       expiresAt?: string
     }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/api-tokens`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/api-tokens`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceSlug] })
     },
   })
 }
 
-export function useWorkspaceChannels(workspaceId: string) {
+export function useWorkspaceChannels(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-channels", workspaceId],
+    queryKey: ["workspace-channels", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/channels`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/channels`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateWorkspaceChannel(workspaceId: string) {
+export function useCreateWorkspaceChannel(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: {
@@ -428,16 +428,16 @@ export function useCreateWorkspaceChannel(workspaceId: string) {
       departmentId?: string
       icon?: string
     }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/channels`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/channels`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceSlug] })
     },
   })
 }
 
-export function useUpdateWorkspaceChannel(workspaceId: string) {
+export function useUpdateWorkspaceChannel(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({
@@ -447,40 +447,40 @@ export function useUpdateWorkspaceChannel(workspaceId: string) {
       channelId: string
       data: { name?: string; description?: string; type?: "public" | "private"; icon?: string }
     }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}/channels/${channelId}`, data)
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/channels/${channelId}`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceSlug] })
     },
   })
 }
 
-export function useDeleteWorkspaceChannel(workspaceId: string) {
+export function useDeleteWorkspaceChannel(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (channelId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceId}/channels/${channelId}`)
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/channels/${channelId}`)
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-channels", workspaceSlug] })
     },
   })
 }
 
-export function useWorkspaceProjects(workspaceId: string) {
+export function useWorkspaceProjects(workspaceSlug: string) {
   return useQuery({
-    queryKey: ["workspace-projects", workspaceId],
+    queryKey: ["workspace-projects", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/projects`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/projects`)
       return data
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceSlug,
   })
 }
 
-export function useCreateWorkspaceProject(workspaceId: string) {
+export function useCreateWorkspaceProject(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: {
@@ -494,16 +494,16 @@ export function useCreateWorkspaceProject(workspaceId: string) {
       departmentId?: string
       memberIds?: string[]
     }) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceId}/projects`, data)
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/projects`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceSlug] })
     },
   })
 }
 
-export function useUpdateWorkspaceProject(workspaceId: string) {
+export function useUpdateWorkspaceProject(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({
@@ -513,24 +513,24 @@ export function useUpdateWorkspaceProject(workspaceId: string) {
       projectId: string
       data: { name?: string; description?: string; icon?: string; status?: string; priority?: string; endDate?: string }
     }) => {
-      const { data: response } = await apiClient.patch(`/workspaces/${workspaceId}/projects/${projectId}`, data)
+      const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/projects/${projectId}`, data)
       return response
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceSlug] })
     },
   })
 }
 
-export function useDeleteWorkspaceProject(workspaceId: string) {
+export function useDeleteWorkspaceProject(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (projectId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceId}/projects/${projectId}`)
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/projects/${projectId}`)
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-projects", workspaceSlug] })
     },
   })
 }

@@ -16,10 +16,10 @@ interface WorkspaceInviteLinksProps {
   workspaceId: string
 }
 
-export function WorkspaceInviteLinks({ workspaceId }: WorkspaceInviteLinksProps) {
-  const { data: inviteLinks, isLoading } = useWorkspaceInviteLinks(workspaceId)
-  const createLinkMutation = useCreateWorkspaceInviteLink(workspaceId)
-  const deleteLinkMutation = useDeleteWorkspaceInviteLink(workspaceId)
+export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceInviteLinksProps) {
+  const { data: inviteLinks, isLoading } = useWorkspaceInviteLinks(workspaceSlug)
+  const createLinkMutation = useCreateWorkspaceInviteLink(workspaceSlug)
+  const deleteLinkMutation = useDeleteWorkspaceInviteLink(workspaceSlug)
   const { toast } = useToast()
 
   const [maxUses, setMaxUses] = useState("0")

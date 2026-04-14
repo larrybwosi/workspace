@@ -56,12 +56,12 @@ export function CallContainer() {
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceId: incomingCallData.workspaceId,
+        workspaceSlug: incomingCallData.workspaceId,
       });
 
       setCall({
         ...data,
-        workspaceId: data.workspaceId || incomingCallData.workspaceId,
+        workspaceSlug: data.workspaceSlug || incomingCallData.workspaceId,
       });
     } catch (error) {
       console.error(error);
@@ -120,7 +120,7 @@ export function CallContainer() {
               onEnd={handleEndCall}
               isFullscreen={false}
               onToggleFullscreen={() => setIsFullscreen(true)}
-              workspaceId={activeCall.workspaceId}
+              workspaceId={activeCall.workspaceSlug}
             />
           </DialogContent>
         </Dialog>
@@ -132,7 +132,7 @@ export function CallContainer() {
           onEnd={handleEndCall}
           isFullscreen={true}
           onToggleFullscreen={() => setIsFullscreen(false)}
-          workspaceId={activeCall.workspaceId}
+          workspaceId={activeCall.workspaceSlug}
         />
       )}
     </>

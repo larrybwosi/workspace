@@ -24,6 +24,7 @@ import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
+import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@repo/api-client';
 import { User } from '../lib/types';
 import { usePresence } from '../lib/contexts/presence-context';
@@ -133,12 +134,14 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
   const router = useRouter();
   const pathname = usePathname();
   const { slug } = useParams();
+  const workspaceSlug = slug as string;
 
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false);
 
-  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(slug ?? '');
-  const createChannelMutation = useCreateWorkspaceChannel(slug ?? '');
+  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(workspaceSlug ?? '');
+  const createChannelMutation = useCreateWorkspaceChannel(workspaceSlug ?? '');
   const session = useSession();
   const sessionUser = session.data?.user;
   const { onlineUsers } = usePresence();
@@ -209,7 +212,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <WorkspaceRail />
+        <WorkspaceRail onPlusClick={() => setCreateWorkspaceOpen(true)} />
 
         <div className="flex w-64 flex-col h-full">
           {/* Workspace title area */}
@@ -316,7 +319,13 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
       <CreateChannelDialog
         open={createChannelOpen}
         onOpenChange={setCreateChannelOpen}
+        workspaceSlug={workspaceSlug}
         onCreateChannel={handleCreateChannel}
+      />
+
+      <CreateWorkspaceDialog
+        open={createWorkspaceOpen}
+        onOpenChange={setCreateWorkspaceOpen}
       />
     </>
   );

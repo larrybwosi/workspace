@@ -9,14 +9,15 @@ import { Textarea } from "../../../components/textarea"
 import { Button } from "../../../components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
 import { toast } from "sonner"
-import { useUpdateWorkspace } from "@repo/api-client"
+import { useWorkspace, useUpdateWorkspace } from "@repo/api-client"
 
 interface GeneralTabProps {
-  workspace: any
+  workspaceSlug: string
 }
 
-export function GeneralTab({ workspace }: GeneralTabProps) {
-  const updateWorkspace = useUpdateWorkspace(workspace.id)
+export function GeneralTab({ workspaceSlug }: GeneralTabProps) {
+  const { data: workspace } = useWorkspace(workspaceSlug)
+  const updateWorkspace = useUpdateWorkspace(workspaceSlug)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [icon, setIcon] = useState("")

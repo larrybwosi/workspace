@@ -14,13 +14,13 @@ import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@repo/api-client"
 
-export function SecurityTab({ workspaceId }: { workspaceId: string }) {
+export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: string }) {
   const queryClient = useQueryClient()
 
   const { data: securitySettings, isLoading } = useQuery({
-    queryKey: ["workspace-security", workspaceId],
+    queryKey: ["workspace-security", workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceId}/security`)
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/security`)
       return data
     },
   })
@@ -45,11 +45,11 @@ export function SecurityTab({ workspaceId }: { workspaceId: string }) {
 
   const updateSettings = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiClient.patch(`/workspaces/${workspaceId}/security`, data)
+      const response = await apiClient.patch(`/workspaces/${workspaceSlug}/security`, data)
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-security", workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ["workspace-security", workspaceSlug] })
       toast.success("Security settings saved")
     },
     onError: () => {

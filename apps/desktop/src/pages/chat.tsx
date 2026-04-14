@@ -16,7 +16,7 @@ export function ChatPage() {
   const { data: workspaces, isOffline } = useWorkspacesWithOffline();
   const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug);
 
-  const { data: channels } = useWorkspaceChannels(workspace?.id);
+  const { data: channels } = useWorkspaceChannels(workspaceSlug || '');
   const channel = channels?.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
   const channelId = channel?.id || channelSlug;
 
@@ -49,7 +49,7 @@ export function ChatPage() {
             {channelId ? (
               <ChannelView
                 channelId={channelId}
-                workspaceId={workspace?.id}
+                workspaceId={workspaceSlug}
                 onToggleInfo={() => setInfoPanelOpen(!infoPanelOpen)}
               />
             ) : (
