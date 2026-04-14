@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Check, ChevronsUpDown, Plus, Settings, Users, Building2, User } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "../../hooks/use-universal-router"
 import { Button } from "../../components/button"
 import {
   DropdownMenu,

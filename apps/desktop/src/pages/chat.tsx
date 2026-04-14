@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChannelView, WorkspaceSidebar, DynamicHeader } from '@repo/ui';
+import { ChannelView, WorkspaceSidebar, Sidebar, DynamicHeader } from '@repo/ui';
 import { useWorkspaceChannels } from '@repo/api-client';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import { useWorkspacesWithOffline } from '../hooks/offline/use-workspaces-offline';
@@ -29,11 +29,20 @@ export function ChatPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/*
-          Warning: WorkspaceSidebar and other UI components use 'next/navigation'
-          which might not work correctly in a react-router environment without shims.
-      */}
-      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace?.id} />
+      {workspace ? (
+        <WorkspaceSidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          currentWorkspaceId={workspace?.id}
+        />
+      ) : (
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          activeChannel=""
+          onChannelSelect={() => {}}
+        />
+      )}
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
