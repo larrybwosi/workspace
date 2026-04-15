@@ -53,7 +53,7 @@ export function CallContainer() {
     if (!incomingCallData) return;
 
     try {
-      const workspaceSlug = incomingCallData.workspaceSlug || incomingCallData.workspaceId || '';
+      const workspaceSlug = (incomingCallData.workspaceSlug || incomingCallData.workspaceId || '') as string;
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,

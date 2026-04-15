@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { validateEnv } from '@repo/shared';
+import { validateEnv } from '@repo/shared/server';
 import multipart from '@fastify/multipart';
 
 // Polyfill for BigInt serialization
