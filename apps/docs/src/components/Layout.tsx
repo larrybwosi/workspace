@@ -10,7 +10,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-background/80 backdrop-blur-md">
-        <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center justify-between">
+        <div className="container flex h-14 items-center justify-between">
           <div className="flex items-center gap-8">
             <Link className="flex items-center space-x-2" to="/">
               <MessageSquare className="h-6 w-6 text-primary" />
@@ -63,7 +63,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </header>
       <main className="flex-1">{children}</main>
       <footer className="border-t border-border/5 bg-muted/5 py-8 md:py-12">
-        <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
             <div className="col-span-1 md:col-span-1 space-y-4">
               <div className="flex items-center space-x-2">

@@ -56,7 +56,7 @@ export function CallContainer() {
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceSlug: incomingCallData.workspaceId,
+        workspaceSlug: incomingCallData.workspaceId as string,
       });
 
       setCall({
