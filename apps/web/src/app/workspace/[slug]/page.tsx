@@ -1,10 +1,10 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useWorkspaces, useCreateWorkspaceChannel } from '@repo/api-client';
+import { useWorkspace, useCreateWorkspaceChannel } from '@repo/api-client';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,9 @@ interface Workspace {
   slug: string;
   description?: string;
   icon?: string;
-  members?: any[];
   _count?: {
     channels: number;
+    members: number;
   };
 }
 
@@ -30,13 +30,13 @@ export default function WorkspacePage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  const { data: workspaces, isLoading } = useWorkspaces();
+  // ⚡ Performance Optimization:
+  // Use the targeted useWorkspace(slug) hook instead of fetching all workspaces
+  // and filtering in-memory. This leverages backend optimizations (select/count).
+  const { data: workspace, isLoading } = useWorkspace(slug);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
-
-  // Memoize the workspace lookup for performance
-  const workspace = useMemo(() => workspaces?.find((w: Workspace) => w.slug === slug), [workspaces, slug]);
 
   // Recommendation: Pass the workspace ID inside the mutate function
   // rather than at the hook level if your API client allows.
@@ -148,7 +148,7 @@ export default function WorkspacePage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <StatCard
                 title="Members"
-                value={workspace.members?.length || 0}
+                value={workspace._count?.members || 0}
                 description="Total workspace members"
                 icon={<Users className="h-4 w-4 text-muted-foreground" />}
                 actionLabel="View Members"
