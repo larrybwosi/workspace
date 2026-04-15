@@ -99,7 +99,7 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
   const githubUrl = `https://github.com/skyrme-chat/skyrme-chat/edit/main/apps/docs/src/content/${type === 'user-guide' ? 'docs' : 'api'}/${activeSlug}.md`;
 
   return (
-    <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1">
+    <div className="container flex-1">
       <div className="flex flex-col md:flex-row gap-6 lg:gap-12 py-10">
         <div className="hidden md:block w-[220px] lg:w-[260px] shrink-0 sticky top-24 self-start h-[calc(100vh-8rem)]">
           <Sidebar type={type} />
