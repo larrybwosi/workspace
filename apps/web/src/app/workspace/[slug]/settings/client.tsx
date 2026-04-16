@@ -63,7 +63,6 @@ export default function WorkspaceSettingsPageClient({
             <Tabs defaultValue="general" className="space-y-6">
               <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="members">Members</TabsTrigger>
                 <TabsTrigger value="invites">Invite Links</TabsTrigger>
                 <TabsTrigger value="security">Security</TabsTrigger>
                 <TabsTrigger value="integrations">Integrations</TabsTrigger>
@@ -74,10 +73,6 @@ export default function WorkspaceSettingsPageClient({
 
               <TabsContent value="general" className="space-y-6">
                 <GeneralTab workspaceSlug={workspaceSlug} />
-              </TabsContent>
-
-              <TabsContent value="members" className="space-y-6">
-                <MembersTab workspaceId={workspaceSlug} />
               </TabsContent>
 
               <TabsContent value="invites" className="space-y-6">
