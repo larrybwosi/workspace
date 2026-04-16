@@ -23,10 +23,15 @@ interface CallChatProps {
 }
 
 export function CallChat({ callId }: CallChatProps) {
+  const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const { data: session } = useSession()
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const channelName = `call-chat:${callId}`
 
@@ -53,6 +58,8 @@ export function CallChat({ callId }: CallChatProps) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages])
+
+if (!mounted) return null;
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !session?.user) return
