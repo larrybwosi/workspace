@@ -25,15 +25,11 @@ export function useMessages(
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? "/v2" : "";
 
-      let url = "";
-      if (isV2 && workspaceSlug) {
-        // Use V2 workspace-scoped path
-        url = `${prefix}/workspaces/${workspaceSlug}/messages`;
-      } else {
-        url = workspaceSlug
+      const url = isV2 && workspaceSlug
+        ? `${prefix}/workspaces/${workspaceSlug}/messages`
+        : workspaceSlug
           ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages`
           : `/channels/${channelId}/messages`;
-      }
 
       const { data } = await apiClient.get<{ messages: Message[]; nextCursor: string | null }>(url, {
         params: { cursor: pageParam, limit: 50, threadId, contextId, channelId },
@@ -61,14 +57,12 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
     }) => {
       const prefix = isV2 ? "/v2" : "";
 
-      let url = "";
-      if (isV2 && workspaceSlug) {
-        url = `${prefix}/workspaces/${workspaceSlug}/messages`;
-      } else {
-        url = workspaceSlug
+      const url = isV2 && workspaceSlug
+        ? `${prefix}/workspaces/${workspaceSlug}/messages`
+        : workspaceSlug
           ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages`
           : `/channels/${channelId}/messages`;
-      }
+
       const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
