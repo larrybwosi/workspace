@@ -56,7 +56,7 @@ export function CallContainer() {
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceSlug: incomingCallData.workspaceId as string,
+        workspaceSlug: workspaceSlug,
       });
 
       setCall({
@@ -78,7 +78,7 @@ export function CallContainer() {
               <Avatar className="h-24 w-24 ring-4 ring-primary/20 animate-pulse">
                 <AvatarImage src={incomingCallData?.initiator?.image} />
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {incomingCallData?.initiator?.name.slice(0, 2).toUpperCase()}
+                  {incomingCallData?.initiator?.name?.slice(0, 2).toUpperCase() || '??'}
                 </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-2 -right-2 bg-primary rounded-full p-2">
