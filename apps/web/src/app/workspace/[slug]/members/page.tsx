@@ -36,7 +36,7 @@ import {
   useUpdateWorkspaceMember,
   useRemoveWorkspaceMember,
   useWorkspaceInviteLinks,
-  useCreateWorkspaceInviteLink,
+  useCreateWorkspaceInviteLink, useCurrentUser,
 } from "@repo/api-client"
 import { useToast } from "@/hooks/use-toast"
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"

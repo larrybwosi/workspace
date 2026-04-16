@@ -32,7 +32,7 @@ export default function HomePage() {
       return (
         <ChannelView
           channelId={activeChannel}
-          type={activeChannel.includes('-') ? 'channel' : 'dm'}
+          type={(activeChannel.includes('-') ? 'channel' : 'dm') as any}
         />
       )
     }
@@ -84,7 +84,7 @@ export default function HomePage() {
           isOpen={infoPanelOpen}
           onClose={() => setInfoPanelOpen(false)}
           id={activeChannel}
-          type={activeChannel.includes('-') ? 'channel' : 'dm'}
+          type={(activeChannel.includes('-') ? 'channel' : 'dm') as any}
         />
       )}
     </div>

@@ -26,8 +26,9 @@ interface MessageSearchResult {
 }
 
 interface MessageSearchPanelProps {
+  workspaceSlug?: string;
   channelId?: string
-  onMessageClick?: (messageId: string, channelId: string) => void
+  onMessageClick?: (messageId: string, channelId: string, workspaceSlug?: string) => void
 }
 
 export function MessageSearchPanel({ channelId, onMessageClick }: MessageSearchPanelProps) {
@@ -136,7 +137,7 @@ export function MessageSearchPanel({ channelId, onMessageClick }: MessageSearchP
             {results.map((result) => (
               <button
                 key={result.id}
-                onClick={() => onMessageClick?.(result.id, result.channelId)}
+                onClick={() => onMessageClick?.(result.id, result.channelId, (result as any).workspaceSlug)}
                 className="w-full text-left p-3 rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-start gap-2 mb-1">
