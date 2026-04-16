@@ -39,7 +39,7 @@ import {
   useGenerateInviteLink,
   useDM,
 } from '@repo/api-client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';
@@ -57,12 +57,13 @@ interface InfoPanelProps {
     role: string;
     status: string;
   };
-  type?: 'channel' | 'workspace';
+  type?: 'channel' | 'workspace' | 'dm';
   id?: string;
 }
 
 export function InfoPanel({ isOpen, onClose, dmUser: propDmUser, type = 'channel', id }: InfoPanelProps) {
   const params = useParams();
+  const router = useRouter();
   const workspaceSlug = params.slug as string;
   const channelSlug = params.channelSlug as string;
   const channelId = id || channelSlug;
@@ -319,7 +320,7 @@ export function InfoPanel({ isOpen, onClose, dmUser: propDmUser, type = 'channel
         {activeTab === 'search' ? (
           <MessageSearchPanel
             channelId={channelId}
-            onMessageClick={(messageId, id, resultWorkspaceSlug) => {
+            onMessageClick={(messageId: string, id: string, resultWorkspaceSlug?: string) => {
               if (id.startsWith('dm-')) {
                 const userId = id.replace('dm-', '');
                 router.push(`/dm/${userId}?messageId=${messageId}`);

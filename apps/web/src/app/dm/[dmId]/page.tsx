@@ -74,9 +74,9 @@ export default function DMPage() {
         />
 
         <div className="flex flex-1 overflow-hidden relative">
-          <ChannelView channelId={dmId} type="dm" />
+          <ChannelView channelId={dmId} type={"dm" as any} />
 
-          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={dmId} type="dm" />
+          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={dmId} type={"dm" as any} />
         </div>
 
         <Button
