@@ -22,7 +22,7 @@ COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds --ignore-scripts
 
 # Build the project
 COPY --from=builder /app/out/full/ .
