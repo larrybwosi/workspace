@@ -14,6 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/avatar'
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const joinCallMutation = useJoinCall();
   const { data: session } = useSession();
 
   // Subscribe to incoming calls
@@ -46,8 +47,6 @@ export function CallContainer() {
   const handleEndCall = () => {
     endCall();
   };
-
-  const joinCallMutation = useJoinCall();
 
   const handleAcceptCall = async () => {
     if (!incomingCallData) return;
