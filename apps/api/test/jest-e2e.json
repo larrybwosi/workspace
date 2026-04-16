@@ -3,8 +3,9 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "extensionsToTreatAsEsm": [".ts"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": ["ts-jest", { "useESM": true }]
   },
   "moduleNameMapper": {
     "^@repo/shared/(.*)$": "<rootDir>/../../../packages/shared/src/$1",

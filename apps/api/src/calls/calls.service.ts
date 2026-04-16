@@ -6,7 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import pkg from 'agora-token';
+const { RtcTokenBuilder, RtcRole } = pkg;
 import {
   agoraServerConfig as agoraConfig,
   publishToAbly,
@@ -19,7 +20,18 @@ import {
 @Injectable()
 export class CallsService {
   async startCall(user: User, body: any) {
-    const { type, channelId, workspaceId, recipientId, callId: incomingCallId, notifyAll } = body;
+    let { workspaceId } = body;
+    const { type, channelId, recipientId, callId: incomingCallId, notifyAll, workspaceSlug } = body;
+
+    if (!workspaceId && workspaceSlug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: workspaceSlug },
+        select: { id: true },
+      });
+      if (workspace) {
+        workspaceId = workspace.id;
+      }
+    }
 
     if (!type || !workspaceId) {
       throw new BadRequestException('Type and workspaceId are required');
@@ -106,7 +118,7 @@ export class CallsService {
             name: user.name,
             image: user.image,
           },
-          workspaceId,
+          workspaceId: workspaceSlug || workspaceId,
         });
       } else if (notifyAll) {
         const members = await prisma.workspaceMember.findMany({
@@ -124,7 +136,7 @@ export class CallsService {
                 name: user.name,
                 image: user.image,
               },
-              workspaceId,
+              workspaceId: workspaceSlug || workspaceId,
             });
           }
         }
@@ -144,7 +156,7 @@ export class CallsService {
                 name: user.name,
                 image: user.image,
               },
-              workspaceId,
+              workspaceId: workspaceSlug || workspaceId,
             });
           }
         }
@@ -181,7 +193,7 @@ export class CallsService {
       privilegeExpiredTs
     );
 
-    return {
+    const result = {
       callId: call.id,
       token,
       appId: agoraConfig.appId,
@@ -190,6 +202,12 @@ export class CallsService {
       type: call.type,
       workspaceId: workspaceId || (call.metadata as any)?.workspaceId,
     };
+
+    if (incomingCallId) {
+      await this.updateCall(user, call.id, { action: 'join', uid });
+    }
+
+    return result;
   }
 
   async updateCall(user: User, callId: string, body: any) {
@@ -489,9 +507,23 @@ export class CallsService {
     });
   }
 
-  async getScheduledCalls(user: User, workspaceId: string) {
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace ID required');
+  async getScheduledCalls(user: User, workspaceIdOrSlug: string) {
+    if (!workspaceIdOrSlug) {
+      throw new BadRequestException('Workspace ID or Slug required');
+    }
+
+    let workspaceId = workspaceIdOrSlug;
+
+    // Check if it's a slug by trying to find it
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
+      },
+      select: { id: true },
+    });
+
+    if (workspace) {
+      workspaceId = workspace.id;
     }
 
     return prisma.call.findMany({
@@ -512,7 +544,18 @@ export class CallsService {
   }
 
   async scheduleCall(user: User, body: any) {
-    const { title, description, type, scheduledFor, workspaceId, channelId } = body;
+    let { workspaceId } = body;
+    const { title, description, type, scheduledFor, channelId, workspaceSlug } = body;
+
+    if (!workspaceId && workspaceSlug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: workspaceSlug },
+        select: { id: true },
+      });
+      if (workspace) {
+        workspaceId = workspace.id;
+      }
+    }
 
     if (!title || !type || !scheduledFor || !workspaceId) {
       throw new BadRequestException('Missing required fields');

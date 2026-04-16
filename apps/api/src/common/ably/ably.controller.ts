@@ -27,6 +27,7 @@ export class AblyController {
         'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
         'dm:*': ['subscribe', 'publish', 'history', 'presence'],
         'presence:*': ['subscribe', 'publish', 'history', 'presence'],
+        'global-presence': ['subscribe', 'publish', 'history', 'presence'],
       },
       ttl: 3600 * 1000, // 1 hour in milliseconds
       timestamp: Date.now(),

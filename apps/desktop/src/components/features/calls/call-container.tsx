@@ -14,6 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/avatar'
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const joinCallMutation = useJoinCall();
   const { data: session } = useSession();
 
   // Subscribe to incoming calls
@@ -47,21 +48,20 @@ export function CallContainer() {
     endCall();
   };
 
-  const joinCallMutation = useJoinCall();
-
   const handleAcceptCall = async () => {
     if (!incomingCallData) return;
 
     try {
+      const workspaceSlug = (incomingCallData.workspaceSlug || incomingCallData.workspaceId || '') as string;
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceSlug: incomingCallData.workspaceId,
+        workspaceSlug: workspaceSlug,
       });
 
       setCall({
         ...data,
-        workspaceSlug: data.workspaceSlug || incomingCallData.workspaceId,
+        workspaceSlug: data.workspaceSlug || workspaceSlug,
       });
     } catch (error) {
       console.error(error);
@@ -78,7 +78,7 @@ export function CallContainer() {
               <Avatar className="h-24 w-24 ring-4 ring-primary/20 animate-pulse">
                 <AvatarImage src={incomingCallData?.initiator?.image} />
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {incomingCallData?.initiator?.name.slice(0, 2).toUpperCase()}
+                  {incomingCallData?.initiator?.name?.slice(0, 2).toUpperCase() || '??'}
                 </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-2 -right-2 bg-primary rounded-full p-2">

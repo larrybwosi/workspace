@@ -14,6 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/avatar'
 export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const joinCallMutation = useJoinCall();
   const { data: session } = useSession();
 
   // Subscribe to incoming calls
@@ -47,8 +48,6 @@ export function CallContainer() {
     endCall();
   };
 
-  const joinCallMutation = useJoinCall();
-
   const handleAcceptCall = async () => {
     if (!incomingCallData) return;
 
@@ -56,12 +55,12 @@ export function CallContainer() {
       const data = await joinCallMutation.mutateAsync({
         type: incomingCallData.type,
         callId: incomingCallData.callId,
-        workspaceId: incomingCallData.workspaceId,
+        workspaceSlug: incomingCallData.workspaceSlug || incomingCallData.workspaceId || '',
       });
 
       setCall({
         ...data,
-        workspaceId: data.workspaceId || incomingCallData.workspaceId,
+        workspaceSlug: data.workspaceSlug || incomingCallData.workspaceSlug || incomingCallData.workspaceId,
       });
     } catch (error) {
       console.error(error);
@@ -120,7 +119,7 @@ export function CallContainer() {
               onEnd={handleEndCall}
               isFullscreen={false}
               onToggleFullscreen={() => setIsFullscreen(true)}
-              workspaceId={activeCall.workspaceId}
+              workspaceSlug={activeCall.workspaceSlug}
             />
           </DialogContent>
         </Dialog>
@@ -132,7 +131,7 @@ export function CallContainer() {
           onEnd={handleEndCall}
           isFullscreen={true}
           onToggleFullscreen={() => setIsFullscreen(false)}
-          workspaceId={activeCall.workspaceId}
+          workspaceSlug={activeCall.workspaceSlug}
         />
       )}
     </>

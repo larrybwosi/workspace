@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Skyrme",
-    "slug": "skyrme-mobile",
-    "version": "1.0.0",
+    "name": "Skryme",
+    "slug": "skryme-mobile",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

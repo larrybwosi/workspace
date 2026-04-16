@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import pkg from 'agora-token';
+const { RtcTokenBuilder, RtcRole } = pkg;
 import { agoraConfig } from '@/lib/integrations/agora-config';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
