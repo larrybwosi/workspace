@@ -38,6 +38,7 @@ export const serverEnvSchema = baseEnvSchema.extend({
   MINIO_SECRET_KEY: z.string().optional(),
   MINIO_BUCKET: z.string().default('uploads'),
   AGORA_APP_CERTIFICATE: z.string().optional(),
+  AGORA_APP_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   DODO_PAYMENTS_WEBHOOK_SECRET: z.string().optional(),
