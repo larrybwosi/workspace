@@ -11,6 +11,7 @@ export type MentionType = "user" | "channel" | "special"
 export interface MentionItem {
   id: string
   name: string
+  displayName?: string
   type: MentionType
   image?: string
   description?: string
@@ -97,7 +98,7 @@ export function MentionSelector({ items, onSelect, searchTerm, position, type }:
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{item.name}</p>
+                    <p className="text-sm font-medium truncate">{item.displayName || item.name}</p>
                     {item.type === "special" && (
                       <span className="text-[10px] font-bold text-amber-700 uppercase bg-amber-50 px-1 rounded">Notify All</span>
                     )}

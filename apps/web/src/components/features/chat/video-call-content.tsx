@@ -58,7 +58,7 @@ interface VideoCallContentProps {
   onEnd: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
-  workspaceId?: string;
+  workspaceSlug?: string;
 }
 
 export function VideoCallContent({
@@ -71,9 +71,14 @@ export function VideoCallContent({
   onEnd,
   isFullscreen,
   onToggleFullscreen,
-  workspaceId,
+  workspaceSlug,
 }: VideoCallContentProps) {
+  const [mounted, setMounted] = useState(false);
   const [micOn, setMicOn] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [micVolume, setMicVolume] = useState(100);
   const [masterVolume, setMasterVolume] = useState(100);
   const [cameraOn, setCameraOn] = useState(type === 'video');
@@ -130,7 +135,7 @@ export function VideoCallContent({
     };
   }, [localCameraTrack, localMicrophoneTrack, screenTrack]);
 
-  const { data: membersData } = useWorkspaceMembers(workspaceId || '');
+  const { data: membersData } = useWorkspaceMembers(workspaceSlug || '');
   const workspaceMembers = membersData?.members || [];
 
   useJoin(
@@ -157,14 +162,21 @@ export function VideoCallContent({
   }, [localMicrophoneTrack]);
 
   useEffect(() => {
-    if (screenError) {
+    if (screenError && screenSharing) {
       setScreenSharing(false);
       setFocusedVideoId(null);
-      if (screenError.message !== 'Permission denied') {
+      // 'Permission denied' is when user cancels the browser dialog
+      // 'AbortError' can happen when stopping
+      const isExpectedError =
+        screenError.message?.includes('Permission denied') ||
+        screenError.message?.includes('AbortError') ||
+        screenError.code === 'PERMISSION_DENIED';
+
+      if (!isExpectedError) {
         toast.error('Failed to share screen: ' + screenError.message);
       }
     }
-  }, [screenError]);
+  }, [screenError, screenSharing]);
 
   const broadcastScreenShare = useCallback(async () => {
     await fetch(`/api/calls/${callId}`, {
@@ -182,6 +194,10 @@ export function VideoCallContent({
       const handleTrackEnded = () => {
         setScreenSharing(false);
         setFocusedVideoId(null);
+        if (screenTrack) {
+          screenTrack.stop();
+          screenTrack.close();
+        }
       };
       screenTrack.on('track-ended', handleTrackEnded);
       return () => {
@@ -386,6 +402,8 @@ export function VideoCallContent({
       toast.error('Picture-in-Picture failed');
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div
@@ -719,7 +737,7 @@ export function VideoCallContent({
             <MessageSquare className="h-5 w-5" />
           </Button>
 
-          {workspaceId && (
+          {workspaceSlug && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

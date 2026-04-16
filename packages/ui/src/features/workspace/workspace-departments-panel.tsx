@@ -210,11 +210,11 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                     e.preventDefault()
                     const formData = new FormData(e.currentTarget)
                     createDepartment.mutate({
-                      name: formData.get("name"),
-                      slug: formData.get("slug"),
-                      description: formData.get("description"),
-                      color: formData.get("color"),
-                      parentId: formData.get("parentId") || undefined,
+                      name: formData.get("name") as string,
+                      slug: formData.get("slug") as string,
+                      description: formData.get("description") as string,
+                      color: formData.get("color") as string,
+                      parentId: (formData.get("parentId") as string) || undefined,
                     })
                   }}
                   className="space-y-4"

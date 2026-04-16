@@ -62,9 +62,10 @@ export function MessageComposer({
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
     if (mentionType === 'user') {
-      const workspaceMembers = (membersData.members || []).map((m: any) => ({
+      const workspaceMembers = (membersData?.members || []).map((m: any) => ({
         id: m.user.id,
-        name: m.user.name,
+        name: m.user.username || m.user.name,
+        displayName: m.user.name,
         type: 'user' as const,
         image: m.user.image || m.user.avatar,
         description: m.role || m.user.role,
@@ -234,7 +235,9 @@ export function MessageComposer({
 
   const handleMentionSelect = (item: MentionItem) => {
     const prefix = mentionType === 'user' ? '@' : '#';
-    insertTextAtCursor(`${prefix}${item.name} `, `${prefix}${mentionSearch}`);
+    // Use username for mentions if available, otherwise name
+    const mentionValue = item.name;
+    insertTextAtCursor(`${prefix}${mentionValue} `, `${prefix}${mentionSearch}`);
     setMentionType(null);
   };
 
