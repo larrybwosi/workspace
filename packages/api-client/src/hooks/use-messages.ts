@@ -12,6 +12,14 @@ export const messageKeys = {
   details: () => [...messageKeys.all, 'detail'] as const,
   detail: (id: string) => [...messageKeys.details(), id] as const,
 };
+
+export const dmKeys = {
+  all: ['dms'] as const,
+  lists: () => [...dmKeys.all, 'list'] as const,
+  list: (dmId: string) => [...dmKeys.lists(), dmId] as const,
+  conversations: () => [...dmKeys.all, 'conversations'] as const,
+};
+
 // Fetch messages with infinite scroll
 export function useMessages(
   channelId: string,
@@ -237,13 +245,6 @@ export function useMarkMessagesAsRead(workspaceSlug?: string, isDM?: boolean) {
     },
   });
 }
-
-export const dmKeys = {
-  all: ['dms'] as const,
-  lists: () => [...dmKeys.all, 'list'] as const,
-  list: (dmId: string) => [...dmKeys.lists(), dmId] as const,
-  conversations: () => [...dmKeys.all, 'conversations'] as const,
-};
 
 // Fetch all DM conversations
 export function useDMConversations() {
