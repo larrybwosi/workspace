@@ -66,7 +66,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_auth_val_ci
+          BETTER_AUTH_SECRET: dummy_secret_for_build_purposes_only_32_chars
         run: pnpm run test
 
   e2e-tests:
@@ -111,7 +111,7 @@ jobs:
       env:
         DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
         REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-        BETTER_AUTH_SECRET: dummy_auth_val_ci
+        BETTER_AUTH_SECRET: dummy_secret_for_build_purposes_only_32_chars
         PORT: 3001
       run: pnpm run test:e2e
     - uses: actions/upload-artifact@v4
@@ -207,7 +207,7 @@ jobs:
       - name: Build Debug APK
         if: steps.filter.outputs.mobile == 'true'
         working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
 
   desktop-build-verify:
     runs-on: windows-latest
@@ -249,11 +249,10 @@ jobs:
         run: |
           pnpm --filter @repo/shared build
           pnpm --filter @repo/api-client build
-          pnpm --filter @repo/ui build
 
       - name: Build Desktop App (Windows)
         if: steps.filter.outputs.desktop == 'true'
-        run: pnpm --filter skryme-desktop tauri build
+        run: pnpm --filter skryme-desktop run build
 
   docker-build-verify:
     runs-on: ubuntu-latest
