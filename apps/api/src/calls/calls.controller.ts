@@ -14,6 +14,11 @@ export class CallsController {
     return this.callsService.startCall(user, body);
   }
 
+  @Get(':callId')
+  async getCall(@Param('callId') callId: string) {
+    return this.callsService.getCall(callId);
+  }
+
   @Patch(':callId')
   async updateCall(
     @CurrentUser() user: User,
