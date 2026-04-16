@@ -9,11 +9,6 @@ interface InvitationData {
   permissions?: Record<string, boolean>
 }
 
-interface AcceptInvitationData {
-  name: string
-  password: string
-}
-
 export function useCreateInvitation() {
   const queryClient = useQueryClient()
 

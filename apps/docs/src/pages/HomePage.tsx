@@ -17,9 +17,9 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="container py-24 sm:py-32">
-          <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent">
+        <div className="container py-24 sm:py-32 relative">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-7xl bg-linear-to-b from-foreground to-foreground/60 bg-clip-text text-transparent pb-4">
               Build the future of communication
             </h1>
             <p className="mt-6 text-lg leading-8 text-muted-foreground">
@@ -41,7 +41,7 @@ export default function HomePage() {
       </div>
 
       {/* Feature Grid */}
-      <div className="container pb-24 sm:pb-32">
+      <div className="container pb-24 sm:pb-32 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Link
             to="/user-guide"
