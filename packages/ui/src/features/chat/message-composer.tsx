@@ -1,6 +1,6 @@
 'use client';
 
-import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2 } from 'lucide-react';
+import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2, List, Quote, Heading1, Heading2, Table } from 'lucide-react';
 import { Button } from '../../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/tooltip';
 import { uploadFile, type UploadedFile } from '@repo/shared';
@@ -233,6 +233,19 @@ export function MessageComposer({
     textareaRef.current?.focus();
   };
 
+  const insertMarkdown = (prefix: string) => {
+    insertTextAtCursor(`\n${prefix} `);
+  };
+
+  const insertTable = () => {
+    const table = `
+| Header 1 | Header 2 |
+| -------- | -------- |
+| Cell 1   | Cell 2   |
+`;
+    insertTextAtCursor(table);
+  };
+
   const handleMentionSelect = (item: MentionItem) => {
     const prefix = mentionType === 'user' ? '@' : '#';
     // Use username for mentions if available, otherwise name
@@ -395,8 +408,24 @@ export function MessageComposer({
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('_')}>
                     <Italic className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('`')}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('```\n', '\n```')}>
                     <Code className="h-3.5 w-3.5" />
+                  </Button>
+                  <div className="w-px h-4 bg-border/50 mx-1" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('#')}>
+                    <Heading1 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('##')}>
+                    <Heading2 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('-')}>
+                    <List className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('>')}>
+                    <Quote className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertTable()}>
+                    <Table className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </TooltipProvider>

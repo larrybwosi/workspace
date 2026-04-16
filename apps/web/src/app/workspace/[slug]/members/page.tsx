@@ -60,12 +60,15 @@ export default function MembersPage({ params }: MembersPageProps) {
 
   // Fetch members
   const { data: membersData, isLoading } = useWorkspaceMembers(slug)
+  const { data: currentUser } = useCurrentUser()
   const { data: inviteLinks } = useWorkspaceInviteLinks(slug)
   const createInviteLinkMutation = useCreateWorkspaceInviteLink(slug)
   const updateMutation = useUpdateWorkspaceMember(slug)
   const removeMutation = useRemoveWorkspaceMember(slug)
 
   const members = Array.isArray(membersData) ? membersData : []
+  const currentUserMember = members.find((m: any) => m.userId === currentUser?.id)
+  const isOwnerOrAdmin = currentUserMember?.role === "owner" || currentUserMember?.role === "admin"
 
   // Filter members
   const filteredMembers = members.filter((member: any) => {
@@ -301,30 +304,36 @@ export default function MembersPage({ params }: MembersPageProps) {
                         </span>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
-                          <Shield className="h-4 w-4 mr-2" />
-                          Make Admin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
-                          <User className="h-4 w-4 mr-2" />
-                          Make Member
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleRemove(member.id)} className="text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {isOwnerOrAdmin && member.userId !== currentUser?.id && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {/* Only owners can change roles to/from admin or manage other admins */}
+                          {(currentUserMember?.role === "owner" || (currentUserMember?.role === "admin" && member.role === "member")) && (
+                            <>
+                              <DropdownMenuItem onClick={() => handleUpdateRole(member.id, member.role === "admin" ? "member" : "admin")}>
+                                <Shield className="h-4 w-4 mr-2" />
+                                {member.role === "admin" ? "Remove Admin" : "Make Admin"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+                          {/* Admins can remove members, Owners can remove anyone but themselves (already checked) */}
+                          {(currentUserMember?.role === "owner" || (currentUserMember?.role === "admin" && member.role === "member")) && (
+                            <DropdownMenuItem onClick={() => handleRemove(member.id)} className="text-destructive">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Remove
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </CardContent>
               </Card>
