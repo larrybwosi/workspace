@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { validateEnv } from '@repo/shared';
+import { validateEnv } from '@repo/shared/server';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
