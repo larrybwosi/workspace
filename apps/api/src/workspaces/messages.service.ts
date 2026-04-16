@@ -412,8 +412,14 @@ export class MessagesService {
 
     const messages = await prisma.message.findMany({
       where: whereClause,
-      // ⚡ Optimization: Select only required fields from relations to reduce DB load and memory usage
-      include: {
+      // ⚡ Optimization: Select only required fields to reduce DB load and memory usage.
+      // Avoids over-fetching content-heavy fields like metadata and large attachments.
+      // This is safe because the service maps results to a custom search result object.
+      select: {
+        id: true,
+        content: true,
+        timestamp: true,
+        channelId: true,
         user: {
           select: {
             name: true,
