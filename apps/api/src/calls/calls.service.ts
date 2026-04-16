@@ -210,6 +210,35 @@ export class CallsService {
     return result;
   }
 
+  async getCall(callId: string) {
+    const call = await prisma.call.findUnique({
+      where: { id: callId },
+      include: {
+        initiator: true,
+        participants: {
+          where: { leftAt: null },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { joinedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Call not found');
+    }
+
+    return call;
+  }
+
   async updateCall(user: User, callId: string, body: any) {
     const { action, ...data } = body;
 
@@ -264,6 +293,11 @@ export class CallsService {
         });
       }
 
+      await publishToAbly(AblyChannels.call(callId), 'call-joined', {
+        callId,
+        userId: user.id,
+      });
+
       for (const participant of call.participants) {
         if (participant.userId !== user.id && !participant.leftAt) {
           await publishToAbly(AblyChannels.user(participant.userId), 'call-joined', {
@@ -300,6 +334,11 @@ export class CallsService {
         });
       }
 
+      await publishToAbly(AblyChannels.call(callId), 'call-left', {
+        callId,
+        userId: user.id,
+      });
+
       if (activeParticipants === 0) {
         const duration = Math.floor((Date.now() - call.startedAt.getTime()) / 1000);
 
@@ -317,6 +356,9 @@ export class CallsService {
             callId,
           });
         }
+        await publishToAbly(AblyChannels.call(callId), 'call-ended', {
+          callId,
+        });
       }
     } else if (action === 'updateState') {
       await prisma.callParticipant.update({
@@ -376,6 +418,10 @@ export class CallsService {
           leftAt: new Date(),
           isBanned: true,
         },
+      });
+
+      await publishToAbly(AblyChannels.call(callId), 'call-ended', {
+        callId,
       });
 
       for (const participant of call.participants) {

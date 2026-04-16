@@ -497,16 +497,31 @@ export function InfoPanel({ isOpen, onClose, dmUser: propDmUser, type = 'channel
                                     {call.participants?.length || 0} in call
                                   </Badge>
                                 </div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Avatar className="h-5 w-5">
-                                    <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
-                                    <AvatarFallback className="text-[8px]">
-                                      {call.initiator?.name?.slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-xs font-medium truncate">
-                                    Started by {call.initiator?.name}
-                                  </span>
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-5 w-5">
+                                      <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
+                                      <AvatarFallback className="text-[8px]">
+                                        {call.initiator?.name?.slice(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs font-medium truncate max-w-[120px]">
+                                      {call.initiator?.name}
+                                    </span>
+                                  </div>
+
+                                  {call.participants?.length > 0 && (
+                                    <div className="flex -space-x-1.5 overflow-hidden">
+                                      {call.participants.slice(0, 3).map((p: any) => (
+                                        <Avatar key={p.user.id} className="h-4 w-4 border border-background">
+                                          <AvatarImage src={p.user.avatar || p.user.image} />
+                                          <AvatarFallback className="text-[5px]">
+                                            {p.user.name.slice(0, 2).toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                                 <Button
                                   size="sm"
