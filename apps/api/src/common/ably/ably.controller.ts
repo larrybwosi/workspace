@@ -18,12 +18,13 @@ export class AblyController {
     const tokenRequest = await client.auth.createTokenRequest({
       clientId: user.id,
       capability: {
-        [`user:${user.id}:*`]: ['subscribe', 'publish', 'history', 'presence'],
-        [`notifications:${user.id}:*`]: ['subscribe', 'publish', 'history', 'presence'],
+        [`user:${user.id}*`]: ['subscribe', 'publish', 'history', 'presence'],
+        [`notifications:${user.id}*`]: ['subscribe', 'publish', 'history', 'presence'],
         'channel:*': ['subscribe', 'publish', 'history', 'presence'],
         'session:*': ['subscribe', 'publish', 'history', 'presence'],
         'workspace:*': ['subscribe', 'publish', 'history', 'presence'],
         'thread:*': ['subscribe', 'publish', 'history', 'presence'],
+        'call:*': ['subscribe', 'publish', 'history', 'presence'],
         'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
         'dm:*': ['subscribe', 'publish', 'history', 'presence'],
         'presence:*': ['subscribe', 'publish', 'history', 'presence'],
