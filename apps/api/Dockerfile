@@ -28,6 +28,7 @@ RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds --ignore-scrip
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 
+ENV BETTER_AUTH_SECRET=dummy_secret_for_build_purposes_only_32_chars
 # Generate Prisma Client
 RUN npx turbo run db:generate
 

@@ -32,7 +32,7 @@ ENV BETTER_AUTH_SECRET=dummy_secret_for_build_purposes_only_32_chars
 # Generate Prisma Client
 RUN npx turbo run db:generate
 
-RUN npx turbo build --filter=web... -- --webpack
+RUN npx turbo build --filter=web...
 
 FROM base AS runner
 WORKDIR /app
