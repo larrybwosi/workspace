@@ -252,8 +252,11 @@ export function Sidebar({
 
   const notifCount: number = notificationsData?.total ?? notificationsData?.notifications?.length ?? 0;
 
-  const handleNavigate = (href: string) => {
-    router.push(href);
+  const handleNavigate = (id: string, href: string) => {
+    onChannelSelect(id);
+    if (pathname !== href) {
+      router.push(href);
+    }
     onClose();
   };
 
@@ -297,13 +300,13 @@ export function Sidebar({
                 <NavButton
                   icon={Sparkles}
                   label="Assistant"
-                  isActive={pathname === '/assistant'}
+                  isActive={pathname === '/assistant' || activeChannel === 'assistant'}
                   badge={
                     <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500/15 text-blue-500 border-0 font-semibold">
                       NEW
                     </Badge>
                   }
-                  onClick={() => handleNavigate('/assistant')}
+                  onClick={() => handleNavigate('assistant', '/assistant')}
                 />
                 <NavButton
                   icon={Inbox}
@@ -316,25 +319,25 @@ export function Sidebar({
                       </span>
                     ) : undefined
                   }
-                  onClick={() => handleNavigate('/notifications')}
+                  onClick={() => handleNavigate('notifications', '/notifications')}
                 />
                 <NavButton
                   icon={Users}
                   label="Friends"
                   isActive={pathname === '/friends' || activeChannel === 'friends'}
-                  onClick={() => handleNavigate('/friends')}
+                  onClick={() => handleNavigate('friends', '/friends')}
                 />
                 <NavButton
                   icon={FileText}
                   label="Drafts"
-                  isActive={pathname === '/drafts'}
-                  onClick={() => handleNavigate('/drafts')}
+                  isActive={pathname === '/drafts' || activeChannel === 'drafts'}
+                  onClick={() => handleNavigate('drafts', '/drafts')}
                 />
                 <NavButton
                   icon={Bookmark}
                   label="Saved items"
-                  isActive={pathname === '/saved'}
-                  onClick={() => handleNavigate('/saved')}
+                  isActive={pathname === '/saved' || activeChannel === 'saved'}
+                  onClick={() => handleNavigate('saved', '/saved')}
                 />
               </div>
             </div>
@@ -362,10 +365,10 @@ export function Sidebar({
                     </p>
                   ) : (
                     dmConversations.map((dm: any) => {
-                      const other = dm.members.find((m: any) => m.id !== dm.creatorId) ?? dm.members[0];
+                      const other = dm.members.find((m: any) => m.id !== sessionUser?.id) ?? dm.members[0];
                       const status = onlineUsers.has(other.id) ? 'online' : 'offline';
-                      const dmId = `dm-${other.id}`;
-                      const href = `/dm/${other.id}`;
+                      const dmId = dm.id;
+                      const href = `/dm/${dm.id}`;
                       const isActive = activeChannel === dmId || pathname === href;
                       const unread: number = dm._count?.messages ?? 0;
 
@@ -380,7 +383,7 @@ export function Sidebar({
                               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                               : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                           )}
-                          onClick={() => handleNavigate(href)}
+                          onClick={() => handleNavigate(dmId, href)}
                         >
                           <div className="relative shrink-0">
                             <Avatar className="h-6 w-6">

@@ -9,21 +9,15 @@ import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { InfoPanel } from "@/components/shared/info-panel"
 import { WelcomeState } from "@/components/layout/welcome-state"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const [activeChannel, setActiveChannel] = useState('')
   const [searchMode, setSearchMode] = useState(false)
   const [membersMode, setMembersMode] = useState(false)
-
-  const getDMUser = () => {
-    if (activeChannel?.startsWith("dm-")) {
-      const userId = activeChannel?.replace("dm-", "")
-      return mockUsers.find((u) => u.id === userId)
-    }
-    return null
-  }
 
   const renderMainContent = () => {
     if (searchMode) {
@@ -34,17 +28,16 @@ export default function HomePage() {
       return <MembersPanel />
     }
 
-    if (activeChannel?.startsWith("dm-")) {
+    if (activeChannel) {
       return (
-        <ChannelView channelId={activeChannel} />
+        <ChannelView
+          channelId={activeChannel}
+          type={activeChannel.includes('-') ? 'channel' : 'dm'}
+        />
       )
     }
 
-    if (!activeChannel) {
-      return <WelcomeState />
-    }
-
-    return <ChannelView channelId={activeChannel} />
+    return <WelcomeState />
   }
 
   const shouldShowInfoPanel = !!activeChannel && activeChannel !== "assistant"
@@ -55,7 +48,17 @@ export default function HomePage() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         activeChannel={activeChannel}
-        onChannelSelect={setActiveChannel}
+        onChannelSelect={(id) => {
+          // Check if it's a UUID (typical for DM IDs) vs a slug or special ID
+          const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+          if (!isUUID || id === 'assistant' || id === 'notifications' || id === 'friends') {
+            setActiveChannel(id)
+          } else {
+             // It's a DM ID (UUID)
+             router.push(`/dm/${id}`)
+          }
+        }}
         onMembersClick={() => {
           setMembersMode(true)
           setSearchMode(false)
@@ -80,7 +83,8 @@ export default function HomePage() {
         <InfoPanel
           isOpen={infoPanelOpen}
           onClose={() => setInfoPanelOpen(false)}
-          dmUser={getDMUser() as any}
+          id={activeChannel}
+          type={activeChannel.includes('-') ? 'channel' : 'dm'}
         />
       )}
     </div>
