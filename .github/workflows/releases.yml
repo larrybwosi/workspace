@@ -26,8 +26,12 @@ jobs:
           filters: |
             mobile:
               - 'apps/mobile/**'
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
             desktop:
               - 'apps/desktop/**'
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
 
       - id: mobile_v
         run: echo "version=$(node -p "require('./apps/mobile/package.json').version")" >> $GITHUB_OUTPUT
@@ -93,15 +97,15 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+        run: pnpm install --dangerously-allow-all-builds
 
       - name: Generate Prisma Client
         run: pnpm --filter @repo/database run db:generate
 
       - name: Build Shared Packages
         run: |
-          pnpm --filter @repo/shared build || true
-          pnpm --filter @repo/api-client build || true
+          pnpm --filter @repo/shared build
+          pnpm --filter @repo/api-client build
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -211,9 +215,9 @@ jobs:
 
       - name: Build Shared Packages
         run: |
-          pnpm --filter @repo/shared build || true
-          pnpm --filter @repo/api-client build || true
-          pnpm --filter @repo/ui build || true
+          pnpm --filter @repo/shared build
+          pnpm --filter @repo/api-client build
+          pnpm --filter @repo/ui build
 
       - name: Extract Changelog
         id: changelog
