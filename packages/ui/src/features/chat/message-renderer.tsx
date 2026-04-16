@@ -3,6 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SyntaxHighlighter } from "../../shared/syntax-highlighter";
+import { detectLanguage } from "../../lib/language-detection";
 import { cn } from "../../lib/utils";
 
 interface MessageRendererProps {
@@ -43,8 +44,8 @@ export function MessageRenderer({
           ),
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
-            const language = match ? match[1] : metadata.language || "text";
             const codeContent = String(children).replace(/\n$/, "");
+            const language = match ? match[1] : (metadata.language || detectLanguage(codeContent));
 
             if (!inline) {
               return (
