@@ -670,4 +670,109 @@ export class IntegrationsService {
       },
     });
   }
+
+  async getGithubAuthUrl(userId: string, workspaceSlug: string) {
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/workspace/${workspaceSlug}/settings?tab=integrations&provider=github`;
+    const scope = 'repo,read:user,workflow';
+
+    return {
+      url: `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${workspaceSlug}`,
+    };
+  }
+
+  async handleGithubCallback(userId: string, workspaceSlug: string, code: string) {
+    const workspace = await prisma.workspace.findUnique({ where: { slug: workspaceSlug } });
+    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+    const response = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.error) throw new BadRequestException(data.error_description || 'GitHub OAuth failed');
+
+    const accessToken = data.access_token;
+
+    // Get user info
+    const userRes = await fetch('https://github.com/user', {
+      headers: { Authorization: `token ${accessToken}` },
+    });
+    const githubUser = await userRes.json();
+
+    const existingIntegration = await prisma.workspaceIntegration.findFirst({
+      where: { workspaceId: workspace.id, service: 'github' }
+    });
+
+    const integration = existingIntegration
+      ? await prisma.workspaceIntegration.update({
+          where: { id: existingIntegration.id },
+          data: {
+            active: true,
+            config: {
+              accessToken,
+              githubId: githubUser.id,
+              githubLogin: githubUser.login,
+            } as any,
+          },
+        })
+      : await prisma.workspaceIntegration.create({
+          data: {
+            workspaceId: workspace.id,
+            service: 'github',
+            active: true,
+            config: {
+              accessToken,
+              githubId: githubUser.id,
+              githubLogin: githubUser.login,
+            } as any,
+          },
+        });
+
+    return integration;
+  }
+
+  async handleGithubWebhook(workspaceSlug: string, body: any, signature?: string) {
+    const workspace = await prisma.workspace.findUnique({ where: { slug: workspaceSlug } });
+    if (!workspace) return { success: false };
+
+    const channel = await prisma.channel.findFirst({
+      where: { workspaceId: workspace.id, name: 'general' },
+    });
+
+    if (!channel) return { success: false };
+
+    let message = '';
+    const event = body.action || 'push';
+
+    if (body.pull_request) {
+      message = `PR ${body.action}: **${body.pull_request.title}** by ${body.sender.login} [${body.pull_request.html_url}]`;
+    } else if (body.commits) {
+      message = `Push to **${body.repository.full_name}**: ${body.commits.length} commits by ${body.sender.login}`;
+    } else if (body.issue) {
+      message = `Issue ${body.action}: **${body.issue.title}** [${body.issue.html_url}]`;
+    }
+
+    if (message) {
+      await this.systemMessagesService.createSystemMessage(message, {
+        channelId: channel.id,
+        metadata: { source: 'github', event, data: body },
+        broadcast: true,
+      });
+    }
+
+    return { success: true };
+  }
 }

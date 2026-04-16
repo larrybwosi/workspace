@@ -17,6 +17,8 @@ import { useToast } from "../../../hooks/use-toast"
 import { Switch } from "../../../components/switch"
 import { useWorkspaceChannels, useWorkspaceIntegrations, useCreateWorkspaceIntegration, useUpdateWorkspaceIntegration, useDeleteWorkspaceIntegration, useTestWorkspaceIntegration, apiClient } from "@repo/api-client"
 import { toast } from "sonner"
+import { useSearchParams, useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 interface ExternalIntegrationsProps {
   workspaceId: string // This is now treated as workspaceSlug
@@ -44,6 +46,34 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
   const [copiedSecret, setCopiedSecret] = useState(false)
   const [testingId, setTestingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const code = searchParams.get("code")
+    const provider = searchParams.get("provider")
+
+    if (code && provider === "github") {
+      const finalizeGithub = async () => {
+        try {
+          toast.loading("Finalizing GitHub connection...")
+          await apiClient.get(`/workspaces/${workspaceSlug}/integrations/github/callback`, {
+            params: { code }
+          })
+          toast.dismiss()
+          toast.success("GitHub connected successfully!")
+          queryClient.invalidateQueries({ queryKey: ["workspace-integrations", workspaceSlug] })
+          // Clean up URL
+          const newUrl = window.location.pathname + (window.location.search.replace(/[?&]code=[^&]*(&|$)/, '$1').replace(/[?&]provider=github(&|$)/, '$1') || '')
+          router.replace(newUrl)
+        } catch (error) {
+          toast.dismiss()
+          toast.error("Failed to finalize GitHub connection")
+        }
+      }
+      finalizeGithub()
+    }
+  }, [searchParams, workspaceSlug, queryClient, router])
 
   const [formData, setFormData] = useState({
     service: "",
@@ -150,6 +180,17 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
       toast.error("Test failed")
     } finally {
       setTestingId(null)
+    }
+  }
+
+  const handleGithubConnect = async () => {
+    try {
+      const res = await apiClient.get(`/workspaces/${workspaceSlug}/integrations/github/auth`)
+      if (res.data?.url) {
+        window.location.href = res.data.url
+      }
+    } catch (error) {
+      toast.error("Failed to start GitHub OAuth")
     }
   }
 
@@ -315,7 +356,22 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
             </TabsContent>
 
             <TabsContent value="configure" className="mt-4 space-y-4">
-              <div className="space-y-4">
+              {formData.service === "github" ? (
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                  <div className="p-4 bg-muted rounded-full">
+                    <GitBranch className="h-12 w-12 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <h4 className="text-lg font-medium">Connect to GitHub</h4>
+                    <p className="text-sm text-muted-foreground">Authorize our application to access your repositories</p>
+                  </div>
+                  <Button onClick={handleGithubConnect}>
+                    <GitBranch className="h-4 w-4 mr-2" />
+                    Connect GitHub Account
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Integration Name *</Label>
                   <Input
@@ -406,6 +462,7 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                   </Button>
                 </div>
               </div>
+              )}
             </TabsContent>
           </Tabs>
         </DialogContent>

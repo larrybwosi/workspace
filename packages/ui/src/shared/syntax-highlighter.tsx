@@ -37,6 +37,7 @@ function getHighlighter() {
         "python",
         "go",
         "rust",
+        "ruby",
         "java",
         "cpp",
         "csharp",
