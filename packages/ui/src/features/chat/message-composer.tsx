@@ -7,7 +7,7 @@ import { uploadFile, type UploadedFile } from '@repo/shared';
 import { MentionSelector, MentionItem } from '../../shared/mention-selector';
 import { EmojiPicker } from '../../shared/emoji-picker';
 import React, { ChangeEvent, useEffect, useRef, useState, useMemo } from 'react';
-import { useChannel } from '@repo/api-client';
+import { useChannel, useDM } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useTypingNotifier, TypingIndicator } from './typing-indicator';
 import { useCurrentUser } from '@repo/api-client';
@@ -22,6 +22,7 @@ interface MessageComposerProps {
   replyingTo?: { id: string; userName: string } | null;
   onCancelReply?: () => void;
   channelId?: string;
+  isDM?: boolean;
 }
 
 export function MessageComposer({
@@ -30,6 +31,7 @@ export function MessageComposer({
   replyingTo,
   onCancelReply,
   channelId,
+  isDM,
 }: MessageComposerProps) {
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
@@ -48,6 +50,7 @@ export function MessageComposer({
   const { data: channels } = useWorkspaceChannels(workspace?.id);
   const { data: membersData } = useWorkspaceMembers(workspace?.id);
   const { data: channel } = useChannel(channelId || '', workspace?.id);
+  const { data: dmData } = useDM(isDM && channelId ? channelId : '');
 
   const { data: currentUser } = useCurrentUser();
 
@@ -55,9 +58,10 @@ export function MessageComposer({
 
   const dynamicPlaceholder = useMemo(() => {
     if (replyingTo) return `Replying to @${replyingTo.userName}`;
+    if (isDM && dmData?.user) return `Message @${dmData.user.name}`;
     if (channel) return `Message #${channel.name}`;
     return placeholder;
-  }, [channel, replyingTo, placeholder]);
+  }, [channel, replyingTo, placeholder, isDM, dmData]);
 
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
@@ -72,12 +76,10 @@ export function MessageComposer({
       }));
 
       let filteredMembers = workspaceMembers;
-      const isDM = channelId?.startsWith('dm-');
-
       if (isDM) {
-        // In DMs, only suggest the other user (and self)
-        const dmUserId = channelId?.replace('dm-', '');
-        filteredMembers = workspaceMembers.filter((m: any) => m.id === dmUserId || m.id === currentUser?.id);
+        // In DMs, only suggest participants
+        const participantIds = new Set(dmData?.members?.map((m: any) => m.id) || []);
+        filteredMembers = workspaceMembers.filter((m: any) => participantIds.has(m.id));
       } else if ((channel as any)?.type === 'private') {
         const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
         filteredMembers = workspaceMembers.filter((m: any) => channelMemberIds.has(m.id));

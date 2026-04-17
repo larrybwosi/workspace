@@ -213,21 +213,27 @@ export function ChannelView({
   // 1. Flatten Data
   const messages = useMemo(() => {
     if (!messagesData?.pages) return [];
-    return messagesData.pages.flatMap(page => page.messages);
+    // Flatten and ensure they are sorted by timestamp for logic stability
+    return messagesData.pages
+      .flatMap(page => page.messages)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [messagesData]);
 
   const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
   const firstUnreadMessageId = useMemo(() => {
-    const firstUnread = messages.find(m => !m.readByCurrentUser);
+    // We only care about messages not sent by the current user
+    const firstUnread = messages.find(m => !m.readByCurrentUser && m.userId !== currentUser?.id);
     return firstUnread?.id || null;
-  }, [messages]);
+  }, [messages, currentUser?.id]);
 
   // Set initial unread ID only once when messages load
   useEffect(() => {
-    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled) {
+    if (!isLoading && messages.length > 0 && !hasInitialScrolled) {
       if (!viewedChannels.has(activeChannelId)) {
-        setInitialUnreadId(firstUnreadMessageId);
+        if (firstUnreadMessageId) {
+          setInitialUnreadId(firstUnreadMessageId);
+        }
         viewedChannels.add(activeChannelId);
       }
     }
@@ -235,7 +241,6 @@ export function ChannelView({
     isLoading,
     messages.length,
     firstUnreadMessageId,
-    initialUnreadId,
     hasInitialScrolled,
     activeChannelId,
     viewedChannels,
@@ -335,8 +340,6 @@ export function ChannelView({
         if (entry.isIntersecting) {
           const messageId = entry.target.getAttribute('data-message-id');
           if (messageId && !markedMessageIds.current.has(messageId)) {
-            // We use the latest messages from ref or closure
-            // In this case, we'll use a small trick: look up from the DOM or state
             visibleUnreadIds.push(messageId);
             markedMessageIds.current.add(messageId);
           }
@@ -344,8 +347,6 @@ export function ChannelView({
       });
 
       if (visibleUnreadIds.length > 0) {
-        // Filter out IDs that are already read or are by current user
-        // We'll do this check inside the mutation or here if we have latest messages
         markMessagesAsReadMutation.mutate({
           messageIds: visibleUnreadIds,
           channelId: activeChannelId,
@@ -355,7 +356,7 @@ export function ChannelView({
 
     observerRef.current = new IntersectionObserver(handleIntersect, {
       root: scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]'),
-      threshold: 0.5,
+      threshold: 0.1, // Trigger earlier
     });
 
     return () => {
@@ -368,7 +369,6 @@ export function ChannelView({
   useEffect(() => {
     if (!observerRef.current || messages.length === 0) return;
 
-    // Observe all message elements
     const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
     if (!viewport) return;
 
@@ -382,7 +382,7 @@ export function ChannelView({
         }
       }
     });
-  }, [messages, currentUser?.id]);
+  }, [messages, currentUser?.id, hasInitialScrolled]);
 
   // 4. Organize Messages
   const renderList = useMemo(() => {
@@ -654,6 +654,7 @@ export function ChannelView({
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
           channelId={activeChannelId}
+          isDM={isDM}
         />
       </div>
 
