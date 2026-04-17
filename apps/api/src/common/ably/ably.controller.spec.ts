@@ -48,8 +48,10 @@ describe("AblyController", () => {
         expect.objectContaining({
           clientId: "user_123",
           capability: expect.objectContaining({
-            "user:user_123*": ["subscribe", "publish", "history", "presence"],
-            "notifications:user_123*": ["subscribe", "publish", "history", "presence"],
+            "user:user_123": ["subscribe", "publish", "history", "presence"],
+            "user:user_123:*": ["subscribe", "publish", "history", "presence"],
+            "notifications:user_123": ["subscribe", "publish", "history", "presence"],
+            "notifications:user_123:*": ["subscribe", "publish", "history", "presence"],
             "channel:*": ["subscribe", "publish", "history", "presence"],
           }),
         })

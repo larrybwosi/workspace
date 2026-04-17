@@ -17,6 +17,9 @@ export const dmKeys = {
   all: ['dms'] as const,
   lists: () => [...dmKeys.all, 'list'] as const,
   list: (dmId: string) => [...dmKeys.lists(), dmId] as const,
+  details: () => [...dmKeys.all, 'detail'] as const,
+  detail: (dmId: string) => [...dmKeys.details(), dmId] as const,
+  messages: (dmId: string) => [...dmKeys.list(dmId), 'messages'] as const,
   conversations: () => [...dmKeys.all, 'conversations'] as const,
 };
 
@@ -30,7 +33,7 @@ export function useMessages(
   isDM?: boolean
 ) {
   return useInfiniteQuery({
-    queryKey: isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug, threadId || contextId),
+    queryKey: isDM ? dmKeys.messages(channelId) : messageKeys.list(channelId, workspaceSlug, threadId || contextId),
     queryFn: async ({ pageParam }: { pageParam: any }) => {
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? '/v2' : '';
@@ -88,7 +91,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean, isDM?: bo
     },
     onSuccess: (_, variables) => {
       const queryKey = isDM
-        ? dmKeys.list(variables.channelId)
+        ? dmKeys.messages(variables.channelId)
         : messageKeys.list(variables.channelId, workspaceSlug, variables.threadId);
       queryClient.invalidateQueries({ queryKey });
       if (isDM) {
@@ -116,7 +119,7 @@ export function useUpdateMessage(workspaceSlug?: string, isDM?: boolean) {
       return { data, channelId };
     },
     onSuccess: ({ channelId }) => {
-      const queryKey = isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug);
+      const queryKey = isDM ? dmKeys.messages(channelId) : messageKeys.list(channelId, workspaceSlug);
       queryClient.invalidateQueries({ queryKey });
     },
   });
@@ -140,7 +143,7 @@ export function useDeleteMessage(workspaceSlug?: string, isDM?: boolean) {
       return { id, channelId };
     },
     onSuccess: ({ channelId }) => {
-      const queryKey = isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug);
+      const queryKey = isDM ? dmKeys.messages(channelId) : messageKeys.list(channelId, workspaceSlug);
       queryClient.invalidateQueries({ queryKey });
     },
   });
@@ -168,7 +171,7 @@ export function useReplyToMessage(workspaceSlug?: string, isDM?: boolean) {
       return { data, channelId };
     },
     onSuccess: ({ channelId }) => {
-      const queryKey = isDM ? dmKeys.list(channelId) : messageKeys.list(channelId, workspaceSlug);
+      const queryKey = isDM ? dmKeys.messages(channelId) : messageKeys.list(channelId, workspaceSlug);
       queryClient.invalidateQueries({ queryKey });
     },
   });
@@ -225,10 +228,8 @@ export function useMarkMessagesAsRead(workspaceSlug?: string, isDM?: boolean) {
       // Optimistically update query data to mark messages as read in the UI
       const { channelId, messageIds } = data;
       const queryKey = isDM
-        ? dmKeys.list(channelId)
-        : workspaceSlug
-          ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
-          : messageKeys.list(channelId);
+        ? dmKeys.messages(channelId)
+        : messageKeys.list(channelId, workspaceSlug);
 
       queryClient.setQueriesData({ queryKey }, (oldData: any) => {
         if (!oldData?.pages) return oldData;
@@ -260,7 +261,7 @@ export function useDMConversations() {
 // Fetch single DM conversation
 export function useDM(dmId: string) {
   return useQuery({
-    queryKey: dmKeys.list(dmId),
+    queryKey: dmKeys.detail(dmId),
     queryFn: async () => {
       const { data } = await apiClient.get(`/dms/${dmId}`);
       return data;
@@ -287,7 +288,7 @@ export function useCreateDM() {
 // Fetch DM messages with pagination
 export function useDMMessages(dmId: string) {
   return useInfiniteQuery({
-    queryKey: dmKeys.list(dmId),
+    queryKey: dmKeys.messages(dmId),
     queryFn: async ({ pageParam }) => {
       const { data } = await apiClient.get(`/dms/${dmId}/messages`, {
         params: { cursor: pageParam, limit: 50 },
@@ -324,7 +325,7 @@ export function useSendDMMessage() {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: dmKeys.list(variables.dmId) });
+      queryClient.invalidateQueries({ queryKey: dmKeys.messages(variables.dmId) });
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     },
   });
