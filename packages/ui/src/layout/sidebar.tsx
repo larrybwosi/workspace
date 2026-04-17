@@ -233,10 +233,18 @@ export function Sidebar({
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     };
 
+    const handleMessageRead = (message: any) => {
+      if (message.data.dmId) {
+        queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
+      }
+    };
+
     userChannel.subscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
+    userChannel.subscribe(AblyEvents.MESSAGE_READ, handleMessageRead);
 
     return () => {
       userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
+      userChannel.unsubscribe(AblyEvents.MESSAGE_READ, handleMessageRead);
     };
   }, [sessionUser?.id, queryClient]);
 

@@ -495,6 +495,23 @@ export class MessagesService {
 
     await Promise.all(readPromises);
 
+    // Get the channelId of one of the messages to notify the client
+    const firstMessage = await prisma.message.findUnique({
+      where: { id: messageIds[0] },
+      select: { channelId: true },
+    });
+
+    if (firstMessage) {
+      const ably = getAblyRest();
+      if (ably) {
+        const channel = (ably as any).channels.get(AblyChannels.user(userId));
+        await channel.publish(AblyEvents.MESSAGE_READ, {
+          channelId: firstMessage.channelId,
+          messageIds,
+        });
+      }
+    }
+
     return { success: true };
   }
 
