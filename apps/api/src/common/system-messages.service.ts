@@ -27,7 +27,7 @@ export class SystemMessagesService {
     if (options.broadcast !== false) {
       const ably = getAblyRest();
       if (ably) {
-        const channel = ably.channels.get(AblyChannels.thread(options.channelId));
+        const channel = ably.channels.get(AblyChannels.channel(options.channelId));
         await channel.publish(AblyEvents.MESSAGE_SENT, message);
       }
     }
