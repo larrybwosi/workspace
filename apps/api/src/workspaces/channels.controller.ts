@@ -76,13 +76,48 @@ export class ChannelsController {
       },
       include: {
         _count: { select: { messages: true } },
+        messages: {
+          where: {
+            readBy: {
+              none: {
+                userId: user.id,
+              },
+            },
+          },
+          select: {
+            id: true,
+            mentions: {
+              select: {
+                mention: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         name: 'asc',
       },
     });
 
-    return channels;
+    return channels.map(channel => {
+      const unreadCount = channel.messages.length;
+      const mentionCount = channel.messages.filter(m =>
+        m.mentions.some(
+          mention =>
+            mention.mention === `@${user.name}` ||
+            mention.mention === `@${user.username}` ||
+            mention.mention === '@all' ||
+            mention.mention === '@here'
+        )
+      ).length;
+
+      const { messages, ...rest } = channel;
+      return {
+        ...rest,
+        unreadCount,
+        mentionCount,
+      };
+    });
   }
 
   @Post()
