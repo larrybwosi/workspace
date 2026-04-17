@@ -9,14 +9,30 @@ import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { ChannelView } from '@/components/features/chat/channel-view';
 import { InfoPanel } from '@/components/shared/info-panel';
 import { useDM } from '@repo/api-client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useInfoPanelStore } from '@repo/shared';
 
 export default function DMPage() {
   const params = useParams();
   const router = useRouter();
   const dmId = params.dmId as string;
 
+  const isMobile = useIsMobile();
+  const { isManuallyClosed, setManuallyClosed } = useInfoPanelStore();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false);
+  const [infoPanelTab, setInfoPanelTab] = React.useState('info');
+
+  React.useEffect(() => {
+    // Default open on desktop, closed on mobile
+    if (isMobile !== undefined) {
+      if (isMobile) {
+        setInfoPanelOpen(false);
+      } else {
+        setInfoPanelOpen(!isManuallyClosed);
+      }
+    }
+  }, [isMobile]);
 
   // Find the conversation for this DM
   const { data: dmConversation, isLoading } = useDM(dmId);
@@ -69,14 +85,36 @@ export default function DMPage() {
         <DynamicHeader
           activeView={dmId}
           onMenuClick={() => setSidebarOpen(true)}
-          onSearchClick={() => {}}
-          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
+          onSearchClick={() => {
+            setInfoPanelOpen(true);
+            setInfoPanelTab('search');
+          }}
+          onInfoClick={() => {
+            const newState = !infoPanelOpen;
+            setInfoPanelOpen(newState);
+            if (!newState) {
+              setManuallyClosed(true);
+            } else {
+              setManuallyClosed(false);
+              setInfoPanelTab('info');
+            }
+          }}
         />
 
         <div className="flex flex-1 overflow-hidden relative">
           <ChannelView channelId={dmId} type="dm" />
 
-          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={dmId} type="dm" />
+          <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => {
+              setInfoPanelOpen(false);
+              setManuallyClosed(true);
+            }}
+            id={dmId}
+            type="dm"
+            activeTab={infoPanelTab}
+            onTabChange={setInfoPanelTab}
+          />
         </div>
 
         <Button
