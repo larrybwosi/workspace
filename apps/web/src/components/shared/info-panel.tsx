@@ -45,7 +45,7 @@ import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -59,9 +59,19 @@ interface InfoPanelProps {
   };
   type?: 'channel' | 'workspace' | 'dm';
   id?: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export function InfoPanel({ isOpen, onClose, dmUser: propDmUser, type = 'channel', id }: InfoPanelProps) {
+export function InfoPanel({
+  isOpen,
+  onClose,
+  dmUser: propDmUser,
+  type = 'channel',
+  id,
+  activeTab: controlledActiveTab,
+  onTabChange
+}: InfoPanelProps) {
   const params = useParams();
   const router = useRouter();
   const workspaceSlug = params.slug as string;
@@ -77,7 +87,16 @@ export function InfoPanel({ isOpen, onClose, dmUser: propDmUser, type = 'channel
 
   const dmUser = propDmUser || (isDM ? dmData?.user : null);
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
-  const [activeTab, setActiveTab] = useState('info');
+  const [internalActiveTab, setInternalActiveTab] = useState('info');
+  const activeTab = controlledActiveTab || internalActiveTab;
+
+  const setActiveTab = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    } else {
+      setInternalActiveTab(tab);
+    }
+  };
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
   const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspace?.id);

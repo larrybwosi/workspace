@@ -11,7 +11,6 @@ import { AuditLogsTab } from "@/components/features/workspace/settings/audit-log
 import { IntegrationsTab } from "@/components/features/workspace/settings/integrations-tab"
 import { WorkspaceInviteLinks } from "@/components/features/workspace/workspace-invite-links"
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"
-import { InfoPanel } from "@/components/shared/info-panel"
 import { DynamicHeader } from "@/components/layout/dynamic-header"
 import { useState } from "react"
 import { useWorkspaces } from "@repo/api-client"
@@ -23,7 +22,6 @@ export default function WorkspaceSettingsPageClient({
   workspace: any
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const { slug } = useParams()
   const workspaceSlug = slug as string;
 
@@ -43,7 +41,6 @@ export default function WorkspaceSettingsPageClient({
           activeView="Settings"
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {}}
-          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
         <div className="flex flex-1 overflow-hidden relative">
         <div className="flex-1 overflow-auto">
@@ -101,12 +98,6 @@ export default function WorkspaceSettingsPageClient({
             </Tabs>
           </div>
         </div>
-        <InfoPanel
-            isOpen={infoPanelOpen}
-            onClose={() => setInfoPanelOpen(false)}
-            type="workspace"
-            id={workspaceSlug}
-        />
         </div>
       </main>
     </div>

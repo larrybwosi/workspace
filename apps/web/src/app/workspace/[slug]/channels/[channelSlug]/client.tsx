@@ -6,14 +6,31 @@ import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { InfoPanel } from '@/components/shared/info-panel';
 import { useWorkspace, useStartCall } from '@repo/api-client';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
-import { useCallStore } from '@repo/shared';
+import { useState, useEffect } from 'react';
+import { useCallStore, useInfoPanelStore } from '@repo/shared';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 
 import { useWorkspaceChannels } from '@repo/api-client';
 
 export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlug: string }) {
+  const isMobile = useIsMobile();
+  const { isManuallyClosed, setManuallyClosed } = useInfoPanelStore();
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+  const [infoPanelTab, setInfoPanelTab] = useState('info');
+
+  useEffect(() => {
+    // Default open on desktop, closed on mobile
+    // But respect manual close for the session
+    if (isMobile !== undefined) {
+      if (isMobile) {
+        setInfoPanelOpen(false);
+      } else {
+        setInfoPanelOpen(!isManuallyClosed);
+      }
+    }
+  }, [isMobile]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsTrigger, setSettingsTrigger] = useState(0);
   const { slug } = useParams();
@@ -47,8 +64,20 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
         <DynamicHeader
           activeView={channelId}
           onMenuClick={() => setSidebarOpen(true)}
-          onSearchClick={() => {}}
-          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
+          onSearchClick={() => {
+            setInfoPanelOpen(true);
+            setInfoPanelTab('search');
+          }}
+          onInfoClick={() => {
+            const newState = !infoPanelOpen;
+            setInfoPanelOpen(newState);
+            if (!newState) {
+              setManuallyClosed(true);
+            } else {
+              setManuallyClosed(false);
+              setInfoPanelTab('info');
+            }
+          }}
           onVoiceCallClick={() => handleStartCall('voice')}
           onVideoCallClick={() => handleStartCall('video')}
           onSettingsClick={() => setSettingsTrigger(prev => prev + 1)}
@@ -65,7 +94,17 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
           </main>
 
           {/* 4. Info Panel: Rendered side-by-side */}
-          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={channelId} type="channel" />
+          <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => {
+              setInfoPanelOpen(false);
+              setManuallyClosed(true);
+            }}
+            id={channelId}
+            type="channel"
+            activeTab={infoPanelTab}
+            onTabChange={setInfoPanelTab}
+          />
         </div>
       </div>
     </div>
