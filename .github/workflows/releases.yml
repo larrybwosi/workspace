@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'apps/mobile/**'
+      - 'apps/desktop/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'turbo.json'
+      - '.github/workflows/releases.yml'
 
 permissions:
   contents: write
@@ -28,10 +35,12 @@ jobs:
               - 'apps/mobile/**'
               - 'packages/**'
               - 'pnpm-lock.yaml'
+              - 'turbo.json'
             desktop:
               - 'apps/desktop/**'
               - 'packages/**'
               - 'pnpm-lock.yaml'
+              - 'turbo.json'
 
       - id: mobile_v
         run: echo "version=$(node -p "require('./apps/mobile/package.json').version")" >> $GITHUB_OUTPUT
