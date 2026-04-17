@@ -470,6 +470,24 @@ export class DmsService {
     );
 
     await Promise.all(readPromises);
+
+    // Get the dmId to notify the client
+    const firstMessage = await prisma.dMMessage.findUnique({
+      where: { id: messageIds[0] },
+      select: { dmId: true },
+    });
+
+    if (firstMessage) {
+      const ably = getAblyRest();
+      if (ably) {
+        const channel = (ably as any).channels.get(AblyChannels.user(userId));
+        await channel.publish(AblyEvents.MESSAGE_READ, {
+          dmId: firstMessage.dmId,
+          messageIds,
+        });
+      }
+    }
+
     return { success: true };
   }
 
