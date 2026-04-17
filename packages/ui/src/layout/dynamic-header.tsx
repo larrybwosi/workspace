@@ -77,9 +77,12 @@ export function DynamicHeader({
     return <span className="font-semibold">Dealio</span>
   }
 
+  const isDM = activeView?.startsWith("dm-") || activeView?.includes("-") && !channels?.find((c: any) => c.id === activeView || c.slug === activeView);
   const channel = activeView && !activeView.startsWith("dm-")
     ? channels?.find((c: any) => c.id === activeView || c.slug === activeView)
-    : null
+    : null;
+
+  const showActions = (channel || isDM) && currentUser;
 
   return (
     <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-background">
@@ -95,41 +98,49 @@ export function DynamicHeader({
         <div className="flex items-center gap-2 text-sm">{getBreadcrumb()}</div>
       </div>
       <div className="flex items-center gap-2">
-        {channel && currentUser && (
+        {showActions && (
           <div className="flex items-center gap-1 mr-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={onVoiceCallClick}
-            >
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={onVideoCallClick}
-            >
-              <Video className="h-4 w-4" />
-            </Button>
-            <div className="w-px h-4 bg-border/50 mx-1" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={onSettingsClick}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={onInfoClick}
-            >
-              <SidebarIcon className="h-4 w-4" />
-            </Button>
+            {onVoiceCallClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={onVoiceCallClick}
+              >
+                <Phone className="h-4 w-4" />
+              </Button>
+            )}
+            {onVideoCallClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={onVideoCallClick}
+              >
+                <Video className="h-4 w-4" />
+              </Button>
+            )}
+            {(onVoiceCallClick || onVideoCallClick) && <div className="w-px h-4 bg-border/50 mx-1" />}
+            {onSettingsClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={onSettingsClick}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
+            {onInfoClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={onInfoClick}
+              >
+                <SidebarIcon className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         )}
         <div className="relative hidden md:block">
