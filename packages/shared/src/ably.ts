@@ -30,6 +30,7 @@ export const AblyEvents = {
   CHANNEL_UPDATED: 'channel:updated',
   CHANNEL_DELETED: 'channel:deleted',
   SOUNDBOARD_PLAYED: 'soundboard:played',
+  MESSAGE_READ: 'message:read',
 };
 
 export const EVENTS = AblyEvents;
