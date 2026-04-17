@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { InfoPanel } from "@/components/shared/info-panel"
 import {
   Dialog,
   DialogContent,
@@ -56,7 +55,6 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [inviteRole, setInviteRole] = React.useState("member")
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [generatedLink, setGeneratedLink] = React.useState("")
-  const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
 
   // Fetch members
   const { data: membersData, isLoading } = useWorkspaceMembers(slug)
@@ -164,7 +162,6 @@ export default function MembersPage({ params }: MembersPageProps) {
           activeView="Members"
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {}}
-          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
         <div className="flex flex-1 overflow-hidden relative">
         <div className="flex-1 overflow-auto">
@@ -342,12 +339,6 @@ export default function MembersPage({ params }: MembersPageProps) {
         </div>
       </div>
         </div>
-        <InfoPanel
-            isOpen={infoPanelOpen}
-            onClose={() => setInfoPanelOpen(false)}
-            type="workspace"
-            id={slug}
-        />
         </div>
       </main>
     </div>
