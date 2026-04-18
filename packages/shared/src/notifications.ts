@@ -36,21 +36,43 @@ export async function createNotification(payload: NotificationPayload) {
     },
   });
 
-  // Send real-time notification via Ably
+  // Send external notifications (real-time and push)
+  await deliverNotifications([{
+    id: notification.id,
+    userId: notification.userId,
+    createdAt: notification.createdAt,
+    payload
+  }]);
+
+  return notification;
+}
+
+/**
+ * ⚡ Performance Optimization:
+ * Shared delivery logic for both single and batch notifications.
+ * Parallelizes Ably and Push notification delivery for multiple notifications.
+ */
+async function deliverNotifications(notifications: Array<{
+  id: string;
+  userId: string;
+  createdAt: Date;
+  payload: NotificationPayload;
+}>) {
   const ably = getAblyRest();
-  if (ably) {
-    const channel = (ably as any).channels.get(AblyChannels.notifications(payload.userId));
 
-    await channel.publish(AblyEvents.NOTIFICATION, {
-      id: notification.id,
-      ...payload,
-      createdAt: notification.createdAt,
-    });
-  }
+  const deliveryPromises = notifications.map(async ({ id, userId, createdAt, payload }) => {
+    // 1. Send real-time notification via Ably
+    const ablyPromise = ably
+      ? (ably as any).channels.get(AblyChannels.notifications(userId)).publish(AblyEvents.NOTIFICATION, {
+          id,
+          ...payload,
+          createdAt,
+        })
+      : Promise.resolve();
 
-  try {
-    await sendPushNotification({
-      userId: payload.userId,
+    // 2. Send push notification
+    const pushPromise = sendPushNotification({
+      userId,
       title: payload.title,
       body: payload.message,
       data: {
@@ -58,15 +80,21 @@ export async function createNotification(payload: NotificationPayload) {
         entityType: payload.entityType || '',
         entityId: payload.entityId || '',
       },
-      linkUrl: payload.linkUrl,
-      notificationId: notification.id,
+      linkUrl: payload.linkUrl || undefined,
+      notificationId: id,
+    }).catch(err => {
+      console.error(`Push notification failed for user ${userId}:`, err);
     });
-  } catch (error) {
-    console.error(' Push notification error:', error);
-    // Don't fail the whole operation if push notifications fail
-  }
 
-  return notification;
+    return Promise.all([ablyPromise, pushPromise]);
+  });
+
+  // Execute all deliveries in parallel and await them to ensure reliability
+  try {
+    await Promise.all(deliveryPromises);
+  } catch (err) {
+    console.error('Batch notification delivery failed partially:', err);
+  }
 }
 
 export async function createSystemMessage(channelId: string, content: string, metadata?: Record<string, any>) {
@@ -158,10 +186,16 @@ export async function notifyChannel(
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
     include: {
-      members: true,
+      members: {
+        select: {
+          userId: true,
+          notificationPreference: true,
+        },
+      },
       workspace: {
-        include: {
-          members: true,
+        select: {
+          id: true,
+          slug: true,
         },
       },
     },
@@ -173,30 +207,66 @@ export async function notifyChannel(
   const channelSlug = channel.slug || channelId;
   const channelMembers = channel.members;
 
-  for (const cm of channelMembers) {
-    const userId = cm.userId;
+  // ⚡ Optimization: Fetch all workspace-level preferences in one go to avoid O(N*M) lookups
+  const membersNeedsWorkspacePref = channelMembers
+    .filter(cm => !cm.notificationPreference)
+    .map(cm => cm.userId);
 
-    // Check preferences
-    let preference = cm.notificationPreference;
-    if (!preference && channel.workspaceId) {
-      const wm = channel.workspace?.members.find(m => m.userId === userId);
-      preference = wm?.notificationPreference || 'all';
-    }
-
-    if (preference === 'nothing') continue;
-
-    await createNotification({
-      userId,
-      type: 'channel_alert',
-      title: isHere ? `@here in #${channel.name}` : `@all in #${channel.name}`,
-      message: `${sentBy}: ${messageContent.slice(0, 50)}...`,
-      entityType: 'channel',
-      entityId: channelId,
-      linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
-      metadata: {
-        messageId,
-        sentBy,
+  const workspacePrefsMap = new Map<string, string>();
+  if (channel.workspaceId && membersNeedsWorkspacePref.length > 0) {
+    const workspaceMembers = await prisma.workspaceMember.findMany({
+      where: {
+        workspaceId: channel.workspaceId,
+        userId: { in: membersNeedsWorkspacePref },
+      },
+      select: {
+        userId: true,
+        notificationPreference: true,
       },
     });
+    for (const wm of workspaceMembers) {
+      workspacePrefsMap.set(wm.userId, wm.notificationPreference);
+    }
   }
+
+  const notificationData = channelMembers
+    .map(cm => {
+      const userId = cm.userId;
+      const preference = cm.notificationPreference || workspacePrefsMap.get(userId) || 'all';
+
+      if (preference === 'nothing') return null;
+
+      return {
+        userId,
+        type: 'channel_alert' as const,
+        title: isHere ? `@here in #${channel.name}` : `@all in #${channel.name}`,
+        message: `${sentBy}: ${messageContent.slice(0, 50)}...`,
+        entityType: 'channel' as const,
+        entityId: channelId,
+        linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
+        metadata: {
+          messageId,
+          sentBy,
+        },
+      };
+    })
+    .filter((n): n is NonNullable<typeof n> => n !== null);
+
+  if (notificationData.length === 0) return;
+
+  // ⚡ Optimization: Batch insert notifications to avoid sequential database round-trips
+  const notifications = await prisma.notification.createManyAndReturn({
+    data: notificationData,
+  });
+
+  // ⚡ Optimization: Deliver external notifications in parallel
+  // Map returned notifications to their original payloads using userId to ensure correct association
+  const payloadMap = new Map(notificationData.map(p => [p.userId, p]));
+
+  await deliverNotifications(notifications.map((n) => ({
+    id: n.id,
+    userId: n.userId,
+    createdAt: n.createdAt,
+    payload: payloadMap.get(n.userId)!
+  })));
 }
