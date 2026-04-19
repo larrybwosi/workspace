@@ -22,7 +22,7 @@ import {
   messageKeys
 } from '@repo/api-client';
 import { useSession } from '../../../lib/auth';
-import { formatTime, getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { formatTime, realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function ChatScreen() {
@@ -44,13 +44,11 @@ export default function ChatScreen() {
   const { data: dms } = useDMConversations();
   const queryClient = useQueryClient();
 
-  // Ably real-time integration
+  // Real-time integration
   useEffect(() => {
-    const ably = getAblyClient();
-    if (!ably || !id) return;
+    if (!id) return;
 
     const channelName = isDM ? AblyChannels.dm(id) : AblyChannels.channel(id);
-    const ablyChannel = ably.channels.get(channelName);
 
     const handleMessage = () => {
         // Invalidate messages query to fetch new messages
@@ -59,14 +57,14 @@ export default function ChatScreen() {
         });
     };
 
-    ablyChannel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
 
     return () => {
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+        realtime.unsubscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+        realtime.unsubscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+        realtime.unsubscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
     };
   }, [id, isDM, queryClient, workspaceId]);
 
