@@ -74,7 +74,4 @@ export async function publishToAbly(channelName: string, eventName: string, data
   }
 }
 
-export async function sendRealtimeMessage(channelName: string, eventName: string, data: any) {
-  return publishToAbly(channelName, eventName, data);
-}
 export { AblyChannels, AblyEvents, EVENTS };

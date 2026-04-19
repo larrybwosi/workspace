@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, createContext, useContext } from "react"
-import { getAblyClient } from "@repo/shared"
+import { realtime } from "@repo/shared"
 
 const PRESENCE_CHANNEL = "global-presence"
 
@@ -13,48 +13,39 @@ const PresenceContext = createContext<PresenceContextType>({ onlineUsers: new Se
 
 export function PresenceProvider({ children, userId }: { children: React.ReactNode, userId?: string }) {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
-  const ably = getAblyClient()
 
   useEffect(() => {
-    if (!ably) return
+    const handleEnter = (member: any) => {
+      setOnlineUsers((prev) => new Set([...prev, member.userId || member.clientId]))
+    }
 
-    const channel = ably.channels.get(PRESENCE_CHANNEL)
-
-    const updatePresence = async () => {
-      try {
-        const presenceMessages = await channel.presence.get()
-        const userIds = presenceMessages.map((msg: any) => msg.clientId)
-        setOnlineUsers(new Set(userIds))
-      } catch (error) {
-        console.error("Error fetching presence:", error)
-      }
+    const handleLeave = (member: any) => {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev)
+        next.delete(member.userId || member.clientId)
+        return next
+      })
     }
 
     if (userId) {
-      channel.presence.enterClient(userId, { status: "online" })
+      realtime.enterPresence(PRESENCE_CHANNEL, userId, { status: "online" })
     }
 
-    channel.presence.subscribe(["enter", "present"], (member: any) => {
-      setOnlineUsers((prev) => new Set([...prev, member.clientId]))
-    })
-
-    channel.presence.subscribe("leave", (member: any) => {
-      setOnlineUsers((prev) => {
-        const next = new Set(prev)
-        next.delete(member.clientId)
-        return next
-      })
-    })
-
-    updatePresence()
+    realtime.subscribe(PRESENCE_CHANNEL, "presence:enter", handleEnter)
+    realtime.subscribe(PRESENCE_CHANNEL, "presence:leave", handleLeave)
+    realtime.subscribe(PRESENCE_CHANNEL, "enter", handleEnter)
+    realtime.subscribe(PRESENCE_CHANNEL, "leave", handleLeave)
 
     return () => {
-      channel.presence.unsubscribe()
+      realtime.unsubscribe(PRESENCE_CHANNEL, "presence:enter", handleEnter)
+      realtime.unsubscribe(PRESENCE_CHANNEL, "presence:leave", handleLeave)
+      realtime.unsubscribe(PRESENCE_CHANNEL, "enter", handleEnter)
+      realtime.unsubscribe(PRESENCE_CHANNEL, "leave", handleLeave)
       if (userId) {
-        channel.presence.leaveClient(userId)
+        realtime.leavePresence(PRESENCE_CHANNEL, userId)
       }
     }
-  }, [ably, userId])
+  }, [userId])
 
   return (
     <PresenceContext.Provider value={{ onlineUsers }}>
