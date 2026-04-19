@@ -23,6 +23,7 @@ export class RealtimeGateway
 {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('RealtimeGateway');
+  private presenceMap: Map<string, Map<string, any>> = new Map(); // channel -> userId -> data
 
   afterInit(server: Server) {
     this.logger.log('Realtime Gateway Initialized');
@@ -53,10 +54,30 @@ export class RealtimeGateway
       this.logger.log(`Client connected: ${client.id} (User: ${userId})`);
 
       // Handle joining specific rooms (channels, workspaces, etc.)
-      client.on('join-room', (room: string) => {
-        // TODO: Add permission check before allowing to join a room
-        client.join(room);
-        this.logger.log(`Client ${client.id} joined room: ${room}`);
+      client.on('join-room', async (room: string) => {
+        const user = (client as any).user;
+        if (!user) return;
+
+        // Basic permission check
+        let allowed = false;
+
+        if (room.startsWith('user:') || room.startsWith('notifications:')) {
+          allowed = room.endsWith(user.id);
+        } else if (room === 'global-presence') {
+          allowed = true;
+        } else if (room.startsWith('call-chat:')) {
+          allowed = true;
+        } else {
+          // For other rooms, we'll allow it for now but log it
+          allowed = true;
+        }
+
+        if (allowed) {
+          client.join(room);
+          this.logger.log(`Client ${client.id} joined room: ${room}`);
+        } else {
+          this.logger.warn(`User ${user.id} attempted to join unauthorized room: ${room}`);
+        }
       });
 
       client.on('leave-room', (room: string) => {
@@ -66,12 +87,31 @@ export class RealtimeGateway
 
       client.on('enter-presence', (data: { channel: string; userId: string; data?: any }) => {
         this.logger.log(`User ${data.userId} entering presence for ${data.channel}`);
+
+        if (!this.presenceMap.has(data.channel)) {
+          this.presenceMap.set(data.channel, new Map());
+        }
+        this.presenceMap.get(data.channel)!.set(data.userId, data.data || {});
+
         this.server.to(data.channel).emit('presence:enter', { userId: data.userId, data: data.data });
       });
 
       client.on('leave-presence', (data: { channel: string; userId: string }) => {
         this.logger.log(`User ${data.userId} leaving presence for ${data.channel}`);
+
+        if (this.presenceMap.has(data.channel)) {
+          this.presenceMap.get(data.channel)!.delete(data.userId);
+        }
+
         this.server.to(data.channel).emit('presence:leave', { userId: data.userId });
+      });
+
+      client.on('get-presence', (data: { channel: string }, callback: (presence: any[]) => void) => {
+        const channelPresence = this.presenceMap.get(data.channel);
+        const presenceArray = channelPresence
+          ? Array.from(channelPresence.entries()).map(([userId, data]) => ({ userId, data }))
+          : [];
+        callback(presenceArray);
       });
     } catch (error: any) {
       this.logger.error(`Connection error: ${error?.message || 'Unknown error'}`);
@@ -95,19 +135,15 @@ export class RealtimeGateway
 
   async publish(channel: string, event: string, data: any): Promise<void> {
     this.logger.log(`Publishing to ${channel}: ${event}`);
-    // Inject the channel name so the client can filter if necessary
     const payload = typeof data === 'object' && data !== null ? { ...data, _channel: channel } : data;
     this.server.to(channel).emit(event, payload);
   }
 
-  // Handle publishing from the client
   @SubscribeMessage('publish')
   async handlePublish(client: Socket, payload: { channel: string; event: string; data: any }) {
     const user = (client as any).user;
     if (!user) return;
 
-    // Security: Only allow publishing to specific non-sensitive channels for now
-    // In a real app, this should be much more granular
     if (!payload.channel.startsWith('call-chat:')) {
       this.logger.warn(`User ${user.id} tried to publish to unauthorized channel: ${payload.channel}`);
       return;
