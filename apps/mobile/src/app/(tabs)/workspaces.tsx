@@ -16,7 +16,15 @@ export default function Workspaces() {
 
   return (
     <View className="flex-1 bg-background p-4 pt-12">
-      <Text className="text-2xl font-bold mb-6 text-on-surface">Workspaces</Text>
+      <View className="flex-row items-center justify-between mb-6">
+        <Text className="text-2xl font-bold text-on-surface">Workspaces</Text>
+        <TouchableOpacity
+          className="p-2 bg-primary/10 rounded-full"
+          onPress={() => router.push('/discover')}
+        >
+          <MaterialIcons name="explore" size={24} color="#2a3439" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={workspaces}
         keyExtractor={(item) => item.id}
@@ -38,6 +46,18 @@ export default function Workspaces() {
             </View>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center py-20">
+            <MaterialIcons name="work-outline" size={64} color="#5f5e5e" />
+            <Text className="text-xl font-bold mt-4 text-center">No workspaces yet</Text>
+            <TouchableOpacity
+              className="mt-6 bg-primary px-6 py-3 rounded-lg"
+              onPress={() => router.push('/discover')}
+            >
+              <Text className="text-white font-bold">Discover Workspaces</Text>
+            </TouchableOpacity>
+          </View>
+        }
       />
     </View>
   );

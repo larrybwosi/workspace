@@ -293,6 +293,9 @@ export class ChannelsService {
     if (ably) {
       const channel = ably.channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_SENT, message);
+
+      // Also publish to dm channel if it's a DM (though this service is for workspace channels)
+      // We'll keep it consistent with the channelId passed.
     }
 
     return message;

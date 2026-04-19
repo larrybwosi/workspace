@@ -11,6 +11,29 @@ export function useWorkspaces() {
   })
 }
 
+export function useDiscoverWorkspaces() {
+  return useQuery({
+    queryKey: ["workspaces", "discover"],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/workspaces/discover")
+      return data
+    },
+  })
+}
+
+export function useJoinWorkspace() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (workspaceSlug: string) => {
+      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/join`)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaces"] })
+    },
+  })
+}
+
 export function useGenerateInviteLink() {
   return useMutation({
     mutationFn: async (workspaceSlug: string) => {
