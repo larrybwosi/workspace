@@ -27,12 +27,14 @@
     "dotenv": "^17.4.1",
     "firebase-admin": "^13.7.0",
     "react": "19.2.5",
+    "socket.io-client": "^4.8.3",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/node": "^22.19.17",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "@types/socket.io-client": "^3.0.0"
   }
 }

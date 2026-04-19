@@ -46,7 +46,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@repo/ui/components/dropdown-menu';
-import { getAblyClient, AblyChannels } from '@repo/shared';
+import { realtime, AblyChannels } from '@repo/shared';
 
 interface VideoCallContentProps {
   callId: string;
@@ -244,22 +244,19 @@ export function VideoCallContent({
     [callId, localCameraTrack, localMicrophoneTrack, screenTrack, onEnd]
   );
 
-  // Ably Realtime Listeners
+  // Realtime Listeners
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const userChannel = ably.channels.get(AblyChannels.user(session.user.id));
+    const channelName = AblyChannels.user(session.user.id);
 
     const handleCallEnded = () => {
       toast.info('The call has been ended by a moderator');
       onEnd();
     };
 
-    const handleParticipantRemoved = (message: any) => {
-      if (message.data.userId === session.user.id) {
+    const handleParticipantRemoved = (data: any) => {
+      if (data.userId === session.user.id) {
         toast.error('You have been removed from the call');
         onEnd();
       } else {
@@ -267,25 +264,25 @@ export function VideoCallContent({
       }
     };
 
-    const handleScreenShareStarted = (message: any) => {
-      if (message.data.agoraUid) {
-        setFocusedVideoId(message.data.agoraUid);
+    const handleScreenShareStarted = (data: any) => {
+      if (data.agoraUid) {
+        setFocusedVideoId(data.agoraUid);
         toast.info('Someone started sharing their screen');
       }
     };
 
-    userChannel.subscribe('call-ended', handleCallEnded);
-    userChannel.subscribe('participant-removed', handleParticipantRemoved);
-    userChannel.subscribe('screen-share-started', handleScreenShareStarted);
-    userChannel.subscribe('call-joined', fetchParticipants);
-    userChannel.subscribe('participant-promoted', fetchParticipants);
+    realtime.subscribe(channelName, 'call-ended', handleCallEnded);
+    realtime.subscribe(channelName, 'participant-removed', handleParticipantRemoved);
+    realtime.subscribe(channelName, 'screen-share-started', handleScreenShareStarted);
+    realtime.subscribe(channelName, 'call-joined', fetchParticipants);
+    realtime.subscribe(channelName, 'participant-promoted', fetchParticipants);
 
     return () => {
-      userChannel.unsubscribe('call-ended', handleCallEnded);
-      userChannel.unsubscribe('participant-removed', handleParticipantRemoved);
-      userChannel.unsubscribe('screen-share-started', handleScreenShareStarted);
-      userChannel.unsubscribe('call-joined', fetchParticipants);
-      userChannel.unsubscribe('participant-promoted', fetchParticipants);
+      realtime.unsubscribe(channelName, 'call-ended', handleCallEnded);
+      realtime.unsubscribe(channelName, 'participant-removed', handleParticipantRemoved);
+      realtime.unsubscribe(channelName, 'screen-share-started', handleScreenShareStarted);
+      realtime.unsubscribe(channelName, 'call-joined', fetchParticipants);
+      realtime.unsubscribe(channelName, 'participant-promoted', fetchParticipants);
     };
   }, [session?.user?.id, onEnd, fetchParticipants]);
 

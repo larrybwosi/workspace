@@ -3,7 +3,7 @@
 import { useCallStore } from '@repo/shared';
 import { VideoCallContent } from '@/components/features/chat/video-call-content';
 import { useState, useEffect } from 'react';
-import { getAblyClient, AblyChannels } from '@repo/shared';
+import { realtime, AblyChannels } from '@repo/shared';
 import { useSession } from '@repo/shared';
 import { useJoinCall } from '@repo/api-client';
 import { Dialog, DialogContent } from '@repo/ui/components/dialog';
@@ -21,17 +21,16 @@ export function CallContainer() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const ably = getAblyClient();
-    if (!ably) return;
+    const channelName = AblyChannels.user(session.user.id);
 
-    const userChannel = ably.channels.get(AblyChannels.user(session.user.id));
+    const handleIncomingCall = (data: any) => {
+      setIncoming(data as any);
+    };
 
-    userChannel.subscribe('incoming-call', (message: any) => {
-      setIncoming(message.data as any);
-    });
+    realtime.subscribe(channelName, 'incoming-call', handleIncomingCall);
 
     return () => {
-      userChannel.unsubscribe('incoming-call');
+      realtime.unsubscribe(channelName, 'incoming-call', handleIncomingCall);
     };
   }, [session?.user?.id, setIncoming]);
 

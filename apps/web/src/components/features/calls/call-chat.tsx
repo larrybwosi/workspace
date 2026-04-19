@@ -6,7 +6,7 @@ import { Button } from "@repo/ui/components/button"
 import { Input } from "@repo/ui/components/input"
 import { ScrollArea } from "@repo/ui/components/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar"
-import { getAblyClient } from "@repo/shared"
+import { realtime } from "@repo/shared"
 import { useSession } from "@repo/shared"
 
 interface Message {
@@ -36,20 +36,14 @@ export function CallChat({ callId }: CallChatProps) {
   const channelName = `call-chat:${callId}`
 
   useEffect(() => {
-    const ably = getAblyClient()
-    if (!ably) return
-
-    const channel = ably.channels.get(channelName)
-
-    const handleMessage = (message: any) => {
-      setMessages((prev) => [...prev, message.data])
+    const handleMessage = (data: any) => {
+      setMessages((prev) => [...prev, data])
     }
 
-    channel.subscribe("message", handleMessage)
+    realtime.subscribe(channelName, "message", handleMessage)
 
     return () => {
-      channel.unsubscribe("message", handleMessage)
-      ably.channels.release(channelName)
+      realtime.unsubscribe(channelName, "message", handleMessage)
     }
   }, [callId, channelName])
 
@@ -64,11 +58,6 @@ if (!mounted) return null;
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !session?.user) return
 
-    const ably = getAblyClient()
-    if (!ably) return
-
-    const channel = ably.channels.get(channelName)
-
     const messageData: Message = {
       id: Math.random().toString(36).substring(7),
       userId: session.user.id,
@@ -78,7 +67,7 @@ if (!mounted) return null;
       timestamp: Date.now(),
     }
 
-    await channel.publish("message", messageData)
+    await realtime.publish(channelName, "message", messageData)
     setInputValue("")
   }
 
