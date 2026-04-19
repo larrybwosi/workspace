@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 import { apiClient } from "../client"
 
-export function useUploadFile() {
+export function useStorageUpload() {
   return useMutation({
     mutationFn: async (file: { uri: string; name: string; type: string }) => {
       const formData = new FormData()
