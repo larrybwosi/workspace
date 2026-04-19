@@ -21,7 +21,7 @@ import {
   useDMConversations,
   useWorkspaceMembers,
   useWorkspaceChannels,
-  useUploadFile,
+  useStorageUpload,
   messageKeys
 } from '@repo/api-client';
 import { useSession } from '../../../lib/auth';
@@ -54,7 +54,7 @@ export default function ChatScreen() {
   const { data: workspaceMembers } = useWorkspaceMembers(activeWorkspace?.slug);
 
   const { data: dms } = useDMConversations();
-  const { mutateAsync: uploadFile } = useUploadFile();
+  const { mutateAsync: uploadFile } = useStorageUpload();
   const queryClient = useQueryClient();
 
   // Ably real-time integration
