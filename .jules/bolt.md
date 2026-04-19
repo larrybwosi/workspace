@@ -22,3 +22,6 @@
 ## 2025-05-15 - [API] Batching Notifications for Large Channels
 **Learning:** Sequential database writes and sequential external API calls (Ably/Push) in a loop for channel-wide alerts (@all/@here) create a major performance bottleneck (O(N) database round-trips and O(N) sequential network latency).
 **Action:** Use `prisma.notification.createManyAndReturn` (Prisma 5.14+) for batch DB insertion and `Promise.all` for parallelizing external deliveries. Centralize delivery logic to avoid code duplication.
+## 2026-04-19 - [Shared/Notifications] Batch Notification Delivery
+**Learning:** Sequential database writes and sequential external API calls (Ably/Push) for channel-wide alerts create a major performance bottleneck (O(N)).
+**Action:** Use 'prisma.notification.createManyAndReturn' for batch DB insertion and 'Promise.all' for parallelizing external deliveries in a shared helper. Use a 'Map' to reliably link payloads to returned notifications as Prisma doesn't guarantee order.
