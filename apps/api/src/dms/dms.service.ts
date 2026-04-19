@@ -397,7 +397,7 @@ export class DmsService {
 
     const ably = getAblyRest();
     if (ably) {
-      const channel = ably.channels.get(AblyChannels.channel(dmId));
+      const channel = ably.channels.get(AblyChannels.dm(dmId));
       await channel.publish(AblyEvents.MESSAGE_SENT, formattedMessage);
     }
 
@@ -428,7 +428,7 @@ export class DmsService {
 
     const ably = getAblyRest();
     if (ably) {
-      const channel = ably.channels.get(AblyChannels.channel(dmId));
+      const channel = ably.channels.get(AblyChannels.dm(dmId));
       await channel.publish(AblyEvents.MESSAGE_UPDATED, formattedMessage);
     }
 
@@ -442,7 +442,7 @@ export class DmsService {
 
     const ably = getAblyRest();
     if (ably) {
-      const channel = ably.channels.get(AblyChannels.channel(dmId));
+      const channel = ably.channels.get(AblyChannels.dm(dmId));
       await channel.publish(AblyEvents.MESSAGE_DELETED, { id: messageId });
     }
 
@@ -510,7 +510,7 @@ export class DmsService {
 
     const ably = getAblyRest();
     if (ably) {
-      const channel = ably.channels.get(AblyChannels.channel(dmId));
+      const channel = ably.channels.get(AblyChannels.dm(dmId));
       await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, reaction, action: 'add' });
     }
 
@@ -535,7 +535,7 @@ export class DmsService {
 
       const ably = getAblyRest();
       if (ably) {
-        const channel = ably.channels.get(AblyChannels.channel(dmId));
+        const channel = ably.channels.get(AblyChannels.dm(dmId));
         await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
       }
     }

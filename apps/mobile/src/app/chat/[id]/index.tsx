@@ -19,17 +19,24 @@ import {
   useChannels,
   useWorkspaces,
   useDMConversations,
+  useWorkspaceMembers,
+  useWorkspaceChannels,
+  useUploadFile,
   messageKeys
 } from '@repo/api-client';
 import { useSession } from '../../../lib/auth';
-import { formatTime, getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { formatTime, getAblyClient, AblyChannels, AblyEvents, extractUserMentions } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ChatScreen() {
-  const { id, workspaceId, isDM } = useLocalSearchParams<{ id: string; workspaceId?: string; isDM?: string }>();
+  const { id, workspaceId, isDM: isDMParam } = useLocalSearchParams<{ id: string; workspaceId?: string; isDM?: string }>();
+  const isDM = isDMParam === 'true';
   const router = useRouter();
   const { data: session } = (useSession as any)();
   const [messageText, setMessageText] = useState('');
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     data: messagesData,
@@ -39,9 +46,15 @@ export default function ChatScreen() {
   } = useMessages(id as string, workspaceId);
 
   const { mutate: sendMessage } = useSendMessage(workspaceId);
-  const { data: channels } = useChannels();
   const { data: workspaces } = useWorkspaces();
+  const activeWorkspace = workspaces?.find((w: any) => w.id === workspaceId);
+
+  const { data: channels } = useChannels();
+  const { data: workspaceChannels } = useWorkspaceChannels(activeWorkspace?.slug);
+  const { data: workspaceMembers } = useWorkspaceMembers(activeWorkspace?.slug);
+
   const { data: dms } = useDMConversations();
+  const { mutateAsync: uploadFile } = useUploadFile();
   const queryClient = useQueryClient();
 
   // Ably real-time integration
@@ -76,15 +89,57 @@ export default function ChatScreen() {
 
   const messages = messagesData?.pages.flatMap((page: any) => page.messages) || [];
 
-  const handleSend = () => {
-    if (!messageText.trim()) return;
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      setAttachments([...attachments, {
+        uri: asset.uri,
+        name: asset.fileName || `image_${Date.now()}.jpg`,
+        type: asset.mimeType || 'image/jpeg',
+      }]);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!messageText.trim() && attachments.length === 0) return;
+
+    let uploadedAttachments = [];
+    if (attachments.length > 0) {
+      setIsUploading(true);
+      try {
+        for (const attachment of attachments) {
+          const result = await uploadFile(attachment);
+          uploadedAttachments.push({
+            name: result.name,
+            type: result.type,
+            url: result.url,
+            size: result.size,
+          });
+        }
+      } catch (error) {
+        console.error('Upload failed', error);
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
+    const mentions = extractUserMentions(messageText);
 
     sendMessage({
       channelId: id as string,
       content: messageText,
-      mentions: [],
+      mentions: mentions,
+      attachments: uploadedAttachments,
     });
     setMessageText('');
+    setAttachments([]);
   };
 
   const renderMessage = ({ item: message }: { item: any }) => {
@@ -94,8 +149,8 @@ export default function ChatScreen() {
       <View className={`flex-row items-end gap-3 mb-6 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}>
         {!isMe && (
           <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-            {message.user?.image ? (
-              <Image source={{ uri: message.user.image }} className="w-full h-full" />
+            {message.user?.image || message.user?.avatar ? (
+              <Image source={{ uri: message.user.image || message.user.avatar }} className="w-full h-full" />
             ) : (
               <View className="w-full h-full items-center justify-center bg-primary/10">
                 <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
@@ -105,6 +160,18 @@ export default function ChatScreen() {
         )}
         <View className={`gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
           <View className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}>
+            {message.attachments?.map((att: any, index: number) => (
+              <View key={index} className="mb-2">
+                {att.type.startsWith('image/') ? (
+                  <Image source={{ uri: att.url }} className="w-48 h-32 rounded-lg" />
+                ) : (
+                  <View className="flex-row items-center bg-surface-container p-2 rounded-lg">
+                    <MaterialIcons name="insert-drive-file" size={20} color="#5f5e5e" />
+                    <Text className="ml-2 text-xs" numberOfLines={1}>{att.name}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
             <Text className={`font-body text-sm leading-relaxed ${isMe ? 'text-on-primary' : 'text-on-surface'}`}>
               {message.content}
             </Text>
@@ -119,10 +186,11 @@ export default function ChatScreen() {
 
   const getTitle = () => {
     if (isDM) {
-        const otherUser = dm?.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
+        const otherUser = dm?.user || dm?.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
         return otherUser?.name || 'Direct Message';
     }
-    return channel?.name || 'Chat';
+    const currentChannel = workspaceChannels?.find((c: any) => c.id === id) || channels?.find((c: any) => c.id === id);
+    return currentChannel?.name || 'Chat';
   };
 
   return (
@@ -166,10 +234,28 @@ export default function ChatScreen() {
       />
 
       {/* Chat Input Area */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}>
+        {attachments.length > 0 && (
+          <View className="px-4 py-2 bg-surface-container-low flex-row gap-2">
+            {attachments.map((att, index) => (
+              <View key={index} className="relative">
+                <Image source={{ uri: att.uri }} className="w-16 h-16 rounded-lg" />
+                <TouchableOpacity
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 items-center justify-center"
+                  onPress={() => setAttachments(attachments.filter((_, i) => i !== index))}
+                >
+                  <MaterialIcons name="close" size={14} color="white" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
         <View className="px-4 py-3 bg-white border-t border-surface-container-high">
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity className="w-10 h-10 items-center justify-center bg-surface-container-low rounded-lg">
+            <TouchableOpacity
+              className="w-10 h-10 items-center justify-center bg-surface-container-low rounded-lg"
+              onPress={pickImage}
+            >
               <MaterialIcons name="add-circle" size={24} color="#5f5f61" />
             </TouchableOpacity>
             <View className="flex-1 bg-surface-container-low px-4 py-2 rounded-lg flex-row items-center gap-3">
@@ -186,11 +272,15 @@ export default function ChatScreen() {
               </TouchableOpacity>
             </View>
             <TouchableOpacity
-                className={`w-10 h-10 items-center justify-center rounded-lg shadow-sm ${messageText.trim() ? 'bg-primary' : 'bg-surface-container-high'}`}
+                className={`w-10 h-10 items-center justify-center rounded-lg shadow-sm ${(messageText.trim() || attachments.length > 0) && !isUploading ? 'bg-primary' : 'bg-surface-container-high'}`}
                 onPress={handleSend}
-                disabled={!messageText.trim()}
+                disabled={(!messageText.trim() && attachments.length === 0) || isUploading}
             >
-              <MaterialIcons name="send" size={20} color={messageText.trim() ? '#f7f7ff' : '#5f5f61'} />
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#f7f7ff" />
+              ) : (
+                <MaterialIcons name="send" size={20} color={(messageText.trim() || attachments.length > 0) ? '#f7f7ff' : '#5f5f61'} />
+              )}
             </TouchableOpacity>
           </View>
         </View>

@@ -34,6 +34,7 @@
     "expo": "~55.0.15",
     "expo-constants": "~55.0.14",
     "expo-font": "^55.0.6",
+    "expo-image-picker": "^55.0.18",
     "expo-linking": "~55.0.13",
     "expo-modules-core": "^55.0.22",
     "expo-network": "^55.0.13",
