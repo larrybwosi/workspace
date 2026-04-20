@@ -5,6 +5,7 @@ import {
   AblyChannels,
   AblyEvents,
   notifyMention,
+  notifyMentions,
   notifyChannel,
   isUserEligibleForAsset,
   logAssetUsage,
@@ -258,11 +259,10 @@ export class MessagesService {
 
     const sender = message.user;
 
-    // Notify specific users
-    for (const mentionedUserId of mentionedUserIds) {
-      if (mentionedUserId !== userId) {
-        await notifyMention(message.id, mentionedUserId, sender?.name || 'Someone', channelId, content);
-      }
+    // ⚡ Optimization: Notify mentioned users in batch
+    const recipientIds = mentionedUserIds.filter(id => id !== userId);
+    if (recipientIds.length > 0) {
+      await notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content);
     }
 
     // Notify @all / @here
