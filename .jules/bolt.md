@@ -25,3 +25,7 @@
 ## 2026-04-19 - [Shared/Notifications] Batch Notification Delivery
 **Learning:** Sequential database writes and sequential external API calls (Ably/Push) for channel-wide alerts create a major performance bottleneck (O(N)).
 **Action:** Use 'prisma.notification.createManyAndReturn' for batch DB insertion and 'Promise.all' for parallelizing external deliveries in a shared helper. Use a 'Map' to reliably link payloads to returned notifications as Prisma doesn't guarantee order.
+
+## 2026-05-20 - [Performance] Batched Mention Notifications
+**Learning:** Mentioning multiple users in a single message triggered sequential N+1 database queries and sequential external API calls, significantly delaying message delivery as the number of mentions increased.
+**Action:** Batched mention notifications using `prisma.notification.createManyAndReturn` and parallelized delivery. Centralized this logic in a shared `notifyMentions` function to ensure consistent performance across all message-sending services.

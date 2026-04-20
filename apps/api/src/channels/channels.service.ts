@@ -265,17 +265,16 @@ export class ChannelsService {
 
     const sender = message.user;
 
-    // Notify specific users
-    for (const mentionedUserId of mentionedUserIds) {
-      if (mentionedUserId !== userId) {
-        await this.notificationsService.notifyMention(
-          message.id,
-          mentionedUserId,
-          sender?.name || 'Someone',
-          channelId,
-          content
-        );
-      }
+    // ⚡ Optimization: Notify mentioned users in batch
+    const recipientIds = mentionedUserIds.filter(id => id !== userId);
+    if (recipientIds.length > 0) {
+      await this.notificationsService.notifyMentions(
+        message.id,
+        recipientIds,
+        sender?.name || 'Someone',
+        channelId,
+        content
+      );
     }
 
     // Notify @all / @here
