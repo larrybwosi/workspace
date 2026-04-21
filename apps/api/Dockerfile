@@ -63,6 +63,7 @@ USER nestjs
 EXPOSE 3000
 
 ENV PORT=3000
+ENV NODE_ENV=production
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]
