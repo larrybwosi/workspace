@@ -50,9 +50,9 @@ RUN pnpm add -g prisma@7.6.0
 # Set up pnpm and prisma engines (as seen in original Dockerfile)
 RUN chown -R nextjs:nodejs /pnpm
 
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./public
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/packages/database/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
 
@@ -65,7 +65,5 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
-# Note: server.js in standalone mode is at apps/web/server.js usually,
-# but turbo prune + standalone might put it at the root of standalone output.
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "apps/web/server.js"]
