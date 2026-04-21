@@ -65,7 +65,5 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
-# Note: server.js in standalone mode is at apps/web/server.js usually,
-# but turbo prune + standalone might put it at the root of standalone output.
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "apps/web/server.js"]

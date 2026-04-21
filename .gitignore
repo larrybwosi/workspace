@@ -45,6 +45,11 @@ next-env.d.ts
 
 /src/prisma
 
+# testing artifacts
+test-results/
+playwright-report/
+blob-report/
+
 # PWA service worker artifacts
 apps/web/public/sw.js
 apps/web/public/sw.js.map

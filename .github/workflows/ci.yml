@@ -245,7 +245,12 @@ jobs:
 
       - name: Build Debug APK
         working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          RN_PATH=$(node -e "console.log(require.resolve('react-native/package.json').replace('/package.json', ''))")
+          WORKLETS_PATH=$(node -e "console.log(require.resolve('react-native-worklets/package.json').replace('/package.json', ''))")
+          ./gradlew assembleDebug --no-daemon \
+            -PREACT_NATIVE_NODE_MODULES_DIR=$RN_PATH \
+            -PREACT_NATIVE_WORKLETS_NODE_MODULES_DIR=$WORKLETS_PATH
 
   desktop-build-verify:
     needs: [changes]
@@ -281,18 +286,26 @@ jobs:
 
   docker-build-verify:
     needs: [changes]
-    if: (matrix.app == 'api' && (needs.changes.outputs.api == 'true' || needs.changes.outputs.global == 'true')) || (matrix.app == 'web' && (needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true'))
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
         app: [api, web]
+        include:
+          - app: api
+            should_run: ${{ needs.changes.outputs.api == 'true' || needs.changes.outputs.global == 'true' }}
+          - app: web
+            should_run: ${{ needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true' }}
     steps:
       - uses: actions/checkout@v4
+        if: matrix.should_run
 
       - name: Set up Docker Buildx
+        if: matrix.should_run
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
+        if: matrix.should_run
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -308,37 +321,44 @@ jobs:
       github.ref == 'refs/heads/main' &&
       needs.changes.result == 'success' &&
       (needs.version.result == 'success' || needs.version.result == 'skipped') &&
-      (needs.mobile-build-verify.result == 'success' || needs.mobile-build-verify.result == 'skipped') &&
-      (needs.desktop-build-verify.result == 'success' || needs.desktop-build-verify.result == 'skipped') &&
       (needs.docker-build-verify.result == 'success' || needs.docker-build-verify.result == 'skipped') &&
-      ((matrix.app == 'api' && (needs.changes.outputs.api == 'true' || needs.changes.outputs.global == 'true')) ||
-       (matrix.app == 'web' && (needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true')))
+      (needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true')
     runs-on: ubuntu-latest
-    needs: [changes, version, mobile-build-verify, desktop-build-verify, docker-build-verify]
+    needs: [changes, version, docker-build-verify]
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
         app: [api, web]
+        include:
+          - app: api
+            should_run: ${{ needs.changes.outputs.api == 'true' || needs.changes.outputs.global == 'true' }}
+          - app: web
+            should_run: ${{ needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true' }}
     steps:
       - uses: actions/checkout@v4
+        if: matrix.should_run
 
       - name: Set up Docker Buildx
+        if: matrix.should_run
         uses: docker/setup-buildx-action@v3
 
       - name: Get version
+        if: matrix.should_run
         id: get_version
         run: |
           VERSION=$(node -p "require('./apps/${{ matrix.app }}/package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Lowercase repo name
+        if: matrix.should_run
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=ghcr.io/$REPO_LOWER/${{ matrix.app }}" >> $GITHUB_ENV
 
       - name: Log in to GHCR
+        if: matrix.should_run
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -346,6 +366,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        if: matrix.should_run
         uses: docker/build-push-action@v6
         with:
           context: .
