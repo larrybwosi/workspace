@@ -246,9 +246,11 @@ jobs:
       - name: Build Debug APK
         working-directory: apps/mobile/android
         run: |
+          RN_PATH=$(node -e "console.log(require.resolve('react-native/package.json').replace('/package.json', ''))")
+          WORKLETS_PATH=$(node -e "console.log(require.resolve('react-native-worklets/package.json').replace('/package.json', ''))")
           ./gradlew assembleDebug --no-daemon \
-            -PREACT_NATIVE_NODE_MODULES_DIR=$GITHUB_WORKSPACE/node_modules \
-            -PREACT_NATIVE_WORKLETS_NODE_MODULES_DIR=$GITHUB_WORKSPACE/node_modules
+            -PREACT_NATIVE_NODE_MODULES_DIR=$RN_PATH \
+            -PREACT_NATIVE_WORKLETS_NODE_MODULES_DIR=$WORKLETS_PATH
 
   desktop-build-verify:
     needs: [changes]
