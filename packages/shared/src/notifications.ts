@@ -134,6 +134,25 @@ export async function notifyMention(
   channelId: string,
   messageContent: string
 ) {
+  return notifyMentions(messageId, [mentionedUserId], mentionedBy, channelId, messageContent);
+}
+
+/**
+ * ⚡ Performance Optimization:
+ * 1. Replaces sequential database writes with batch 'createManyAndReturn'.
+ * 2. Optimized preference lookups using a Map (O(N+M)) and targeted queries.
+ * 3. Delivers external notifications (Ably/Push) in parallel.
+ * Expected impact: Reduces database round-trips by O(N) and network latency by O(N).
+ */
+export async function notifyMentions(
+  messageId: string,
+  mentionedUserIds: string[],
+  mentionedBy: string,
+  channelId: string,
+  messageContent: string
+) {
+  if (mentionedUserIds.length === 0) return;
+
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
     select: {
@@ -147,8 +166,9 @@ export async function notifyMention(
         },
       },
       members: {
-        where: { userId: mentionedUserId },
+        where: { userId: { in: mentionedUserIds } },
         select: {
+          userId: true,
           notificationPreference: true,
         },
       },
@@ -157,42 +177,73 @@ export async function notifyMention(
 
   if (!channel) return;
 
-  // Check preferences
-  const workspaceId = channel.workspaceId;
-  const channelMember = channel.members[0];
+  const workspaceSlug = channel.workspace?.slug || 'default';
+  const channelSlug = channel.slug || channelId;
+  const channelMembersMap = new Map(channel.members.map(m => [m.userId, m.notificationPreference]));
 
-  let preference = channelMember?.notificationPreference;
+  // ⚡ Optimization: Fetch all workspace-level preferences in one go
+  const membersNeedsWorkspacePref = mentionedUserIds.filter(userId => {
+    const pref = channelMembersMap.get(userId);
+    return pref === undefined || pref === null;
+  });
 
-  if (!preference && workspaceId) {
-    const workspaceMember = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId: mentionedUserId } },
+  const workspacePrefsMap = new Map<string, string>();
+  if (channel.workspaceId && membersNeedsWorkspacePref.length > 0) {
+    const workspaceMembers = await prisma.workspaceMember.findMany({
+      where: {
+        workspaceId: channel.workspaceId,
+        userId: { in: membersNeedsWorkspacePref },
+      },
       select: {
+        userId: true,
         notificationPreference: true,
       },
     });
-    preference = workspaceMember?.notificationPreference || 'all';
+    for (const wm of workspaceMembers) {
+      workspacePrefsMap.set(wm.userId, wm.notificationPreference);
+    }
   }
 
-  if (preference === 'nothing') return;
+  const notificationData = mentionedUserIds
+    .map(userId => {
+      const preference = channelMembersMap.get(userId) || workspacePrefsMap.get(userId) || 'all';
 
-  const workspaceSlug = channel?.workspace?.slug || 'default';
-  const channelSlug = channel?.slug || channelId;
+      if (preference === 'nothing') return null;
 
-  await createNotification({
-    userId: mentionedUserId,
-    type: 'mention',
-    title: 'You were mentioned',
-    message: `${mentionedBy} mentioned you in #${channel?.name || 'a channel'}`,
-    entityType: 'channel',
-    entityId: channelId,
-    linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
-    metadata: {
-      messageContent: messageContent.slice(0, 100),
-      mentionedBy,
-      channelName: channel?.name,
-      messageId,
-    },
+      return {
+        userId,
+        type: 'mention' as const,
+        title: 'You were mentioned',
+        message: `${mentionedBy} mentioned you in #${channel.name || 'a channel'}`,
+        entityType: 'channel' as const,
+        entityId: channelId,
+        linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
+        metadata: {
+          messageContent: messageContent.slice(0, 100),
+          mentionedBy,
+          channelName: channel.name,
+          messageId,
+        },
+      };
+    })
+    .filter((n): n is NonNullable<typeof n> => n !== null);
+
+  if (notificationData.length === 0) return;
+
+  // ⚡ Optimization: Batch insert notifications
+  const notifications = await prisma.notification.createManyAndReturn({
+    data: notificationData,
   });
+
+  // ⚡ Optimization: Deliver external notifications in parallel
+  const payloadMap = new Map(notificationData.map(p => [p.userId, p]));
+
+  await deliverNotifications(notifications.map(n => ({
+    id: n.id,
+    userId: n.userId,
+    createdAt: n.createdAt,
+    payload: payloadMap.get(n.userId)!
+  })));
 }
 
 /**
