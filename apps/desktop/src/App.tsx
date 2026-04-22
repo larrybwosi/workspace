@@ -86,7 +86,7 @@ function AppContent() {
               }
             />
             <Route
-              path="/dm/:userId"
+              path="/dm/:dmId"
               element={
                 <ProtectedRoute>
                   <DMPage />
