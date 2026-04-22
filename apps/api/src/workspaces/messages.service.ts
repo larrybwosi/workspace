@@ -474,26 +474,20 @@ export class MessagesService {
   }
 
   async batchMarkAsRead(userId: string, messageIds: string[]) {
-    const readPromises = messageIds.map(messageId =>
-      prisma.messageRead.upsert({
-        where: {
-          messageId_userId: {
-            messageId,
-            userId,
-          },
-        },
-        update: {
-          readAt: new Date(),
-        },
-        create: {
-          messageId,
-          userId,
-          readAt: new Date(),
-        },
-      })
-    );
+    if (!messageIds.length) return { success: true };
 
-    await Promise.all(readPromises);
+    // ⚡ Performance Optimization:
+    // Replaces sequential upsert calls with a single batch 'createMany' operation.
+    // This reduces O(N) database round-trips to O(1).
+    // We use skipDuplicates to avoid errors for already read messages.
+    await prisma.messageRead.createMany({
+      data: messageIds.map(messageId => ({
+        messageId,
+        userId,
+        readAt: new Date(),
+      })),
+      skipDuplicates: true,
+    });
 
     // Get the channelId of one of the messages to notify the client
     const firstMessage = await prisma.message.findUnique({
