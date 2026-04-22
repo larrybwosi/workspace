@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { CallsService } from "./calls.service";
 import { NotFoundException, BadRequestException } from "@nestjs/common";
 
-// Mock agora-token (CJS default export style as changed in PR)
+// Mock agora-token (CJS default export style)
 vi.mock("agora-token", () => ({
   default: {
     RtcTokenBuilder: {
@@ -35,6 +35,8 @@ vi.mock("@repo/database", () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
       findMany: vi.fn(),
+      upsert: vi.fn(),
+      count: vi.fn(),
     },
     workspaceMember: {
       findUnique: vi.fn(),
@@ -42,6 +44,15 @@ vi.mock("@repo/database", () => ({
     },
     channel: {
       findUnique: vi.fn(),
+    },
+    channelMember: {
+      findMany: vi.fn(),
+    },
+    notification: {
+      create: vi.fn(),
+    },
+    directMessage: {
+      findFirst: vi.fn(),
     },
   },
 }));
@@ -56,10 +67,15 @@ vi.mock("@repo/shared/server", () => ({
   AblyChannels: {
     user: vi.fn((id: string) => `user:${id}`),
     call: vi.fn((id: string) => `call:${id}`),
+    workspace: vi.fn((id: string) => `workspace:${id}`),
+    channel: vi.fn((id: string) => `channel:${id}`),
+    notifications: vi.fn((id: string) => `notifications:${id}`),
   },
   AblyEvents: {
     CALL_STARTED: "call-started",
     CALL_ENDED: "call-ended",
+    NOTIFICATION: "NOTIFICATION",
+    SOUNDBOARD_PLAYED: "soundboard-played",
   },
   isUserEligibleForAsset: vi.fn().mockResolvedValue(true),
   logAssetUsage: vi.fn().mockResolvedValue(undefined),
@@ -85,7 +101,7 @@ describe("CallsService", () => {
     expect(service).toBeDefined();
   });
 
-  describe("getCall (PR change: new method)", () => {
+  describe("getCall - new method", () => {
     it("should return a call with participants when found", async () => {
       const mockCall = {
         id: "call-1",
@@ -119,6 +135,10 @@ describe("CallsService", () => {
       await expect(service.getCall("nonexistent-call")).rejects.toThrow(
         NotFoundException
       );
+    });
+
+    it("should throw NotFoundException with message 'Call not found'", async () => {
+      mockPrisma.call.findUnique.mockResolvedValue(null);
 
       await expect(service.getCall("nonexistent-call")).rejects.toThrow(
         "Call not found"
@@ -148,17 +168,48 @@ describe("CallsService", () => {
 
       const callArg = mockPrisma.call.findUnique.mock.calls[0][0];
       expect(callArg.include).toHaveProperty("initiator");
+      expect(callArg.include.initiator).toBe(true);
+    });
+
+    it("should order participants by joinedAt desc", async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({
+        id: "call-1",
+        participants: [],
+      });
+
+      await service.getCall("call-1");
+
+      const callArg = mockPrisma.call.findUnique.mock.calls[0][0];
+      expect(callArg.include.participants.orderBy).toEqual({ joinedAt: "desc" });
+    });
+
+    it("should include user fields for participants: id, name, image, avatar", async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({
+        id: "call-1",
+        participants: [],
+      });
+
+      await service.getCall("call-1");
+
+      const callArg = mockPrisma.call.findUnique.mock.calls[0][0];
+      const userSelect = callArg.include.participants.include.user.select;
+      expect(userSelect).toHaveProperty("id", true);
+      expect(userSelect).toHaveProperty("name", true);
+      expect(userSelect).toHaveProperty("image", true);
+      expect(userSelect).toHaveProperty("avatar", true);
     });
   });
 
-  describe("getScheduledCalls - workspaceIdOrSlug support (PR change)", () => {
+  describe("getScheduledCalls - workspaceIdOrSlug support", () => {
     const mockUser = { id: "user-1" } as any;
 
-    it("should throw BadRequestException when workspaceIdOrSlug is empty", async () => {
+    it("should throw BadRequestException when workspaceIdOrSlug is empty string", async () => {
       await expect(
         service.getScheduledCalls(mockUser, "")
       ).rejects.toThrow(BadRequestException);
+    });
 
+    it("should throw BadRequestException with 'Workspace ID or Slug required'", async () => {
       await expect(
         service.getScheduledCalls(mockUser, "")
       ).rejects.toThrow("Workspace ID or Slug required");
@@ -170,7 +221,7 @@ describe("CallsService", () => {
       ).rejects.toThrow("Workspace ID or Slug required");
     });
 
-    it("should resolve workspace by slug (PR change: now accepts slug)", async () => {
+    it("should resolve workspace by slug using OR [id, slug] query", async () => {
       mockPrisma.workspace.findFirst.mockResolvedValue({ id: "ws-resolved-id" });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
@@ -218,7 +269,7 @@ describe("CallsService", () => {
       );
     });
 
-    it("should filter calls by status: scheduled and future dates", async () => {
+    it("should filter calls by status: 'scheduled' and future scheduledFor dates", async () => {
       mockPrisma.workspace.findFirst.mockResolvedValue({ id: "ws-1" });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
@@ -241,46 +292,30 @@ describe("CallsService", () => {
 
       expect(result).toEqual(mockCalls);
     });
+
+    it("should include initiator in the query", async () => {
+      mockPrisma.workspace.findFirst.mockResolvedValue({ id: "ws-1" });
+      mockPrisma.call.findMany.mockResolvedValue([]);
+
+      await service.getScheduledCalls(mockUser, "ws-1");
+
+      const callArg = mockPrisma.call.findMany.mock.calls[0][0];
+      expect(callArg.include).toHaveProperty("initiator", true);
+    });
+
+    it("should order results by scheduledFor asc", async () => {
+      mockPrisma.workspace.findFirst.mockResolvedValue({ id: "ws-1" });
+      mockPrisma.call.findMany.mockResolvedValue([]);
+
+      await service.getScheduledCalls(mockUser, "ws-1");
+
+      const callArg = mockPrisma.call.findMany.mock.calls[0][0];
+      expect(callArg.orderBy).toEqual({ scheduledFor: "asc" });
+    });
   });
 
-  describe("startCall - workspaceSlug resolution (PR change)", () => {
+  describe("startCall - workspaceSlug resolution", () => {
     const mockUser = { id: "user-1", name: "Alice", image: null } as any;
-
-    it("should resolve workspaceId from workspaceSlug when workspaceId is not provided", async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: "resolved-ws-id" });
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: "resolved-ws-id" });
-      // Mock subsequent required calls
-      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ id: "member-1" });
-      mockPrisma.call.create.mockResolvedValue({
-        id: "new-call",
-        channelName: "channel-test",
-        type: "video",
-        status: "active",
-        metadata: {},
-        startedAt: new Date(),
-        participants: [],
-      });
-      mockPrisma.callParticipant.create.mockResolvedValue({ id: "p-1" });
-      mockPrisma.callParticipant.findFirst.mockResolvedValue(null);
-
-      // Call with workspaceSlug but no workspaceId
-      const body = {
-        type: "video",
-        workspaceSlug: "my-workspace-slug",
-        channelId: "ch-1",
-      };
-
-      // Should call workspace.findUnique with slug
-      await service.startCall(mockUser, body).catch(() => {
-        // May fail due to complex setup, but we verify the slug lookup was called
-      });
-
-      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { slug: "my-workspace-slug" },
-        })
-      );
-    });
 
     it("should throw BadRequestException when type is missing", async () => {
       const body = { workspaceId: "ws-1" };
@@ -295,6 +330,133 @@ describe("CallsService", () => {
 
       await expect(service.startCall(mockUser, body)).rejects.toThrow(
         "Type and workspaceId are required"
+      );
+    });
+
+    it("should resolve workspaceId from workspaceSlug when workspaceId is not provided", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: "resolved-ws-id" });
+
+      const body = {
+        type: "video",
+        workspaceSlug: "my-workspace-slug",
+        channelId: "ch-1",
+      };
+
+      // The service will fail after workspace lookup due to other mocks,
+      // but we verify the slug lookup was called
+      mockPrisma.call.findFirst.mockResolvedValue(null);
+      mockPrisma.call.create.mockResolvedValue({
+        id: "new-call",
+        channelName: "channel-ch-1",
+        type: "video",
+        status: "active",
+        metadata: {},
+        startedAt: new Date(),
+        participants: [],
+        initiatorId: "user-1",
+      });
+      mockPrisma.callParticipant.upsert.mockResolvedValue({ id: "p-1" });
+
+      await service.startCall(mockUser, body).catch(() => {});
+
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "my-workspace-slug" },
+        })
+      );
+    });
+
+    it("should not resolve from slug when workspaceId is already provided", async () => {
+      const body = {
+        type: "video",
+        workspaceId: "existing-ws-id",
+        workspaceSlug: "some-slug",
+        channelId: "ch-1",
+      };
+
+      mockPrisma.call.findFirst.mockResolvedValue(null);
+      mockPrisma.call.create.mockResolvedValue({
+        id: "new-call",
+        channelName: "channel-ch-1",
+        type: "video",
+        status: "active",
+        metadata: {},
+        startedAt: new Date(),
+        participants: [],
+        initiatorId: "user-1",
+      });
+      mockPrisma.callParticipant.upsert.mockResolvedValue({ id: "p-1" });
+
+      await service.startCall(mockUser, body).catch(() => {});
+
+      // workspace.findUnique should NOT be called for slug resolution when workspaceId is present
+      expect(mockPrisma.workspace.findUnique).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "some-slug" },
+        })
+      );
+    });
+  });
+
+  describe("scheduleCall - workspaceSlug resolution", () => {
+    const mockUser = { id: "user-1", name: "Alice" } as any;
+
+    it("should throw BadRequestException when required fields are missing", async () => {
+      const body = { workspaceId: "ws-1" };
+
+      await expect(service.scheduleCall(mockUser, body)).rejects.toThrow(
+        "Missing required fields"
+      );
+    });
+
+    it("should resolve workspaceId from workspaceSlug", async () => {
+      mockPrisma.workspace.findUnique
+        .mockResolvedValueOnce({ id: "resolved-ws-id" }) // slug resolution
+        .mockResolvedValueOnce({ id: "resolved-ws-id", name: "My Workspace", slug: "my-workspace" }); // admin check
+
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+      mockPrisma.call.create.mockResolvedValue({
+        id: "sched-call-1",
+        workspaceId: "resolved-ws-id",
+        scheduledFor: new Date(),
+      });
+
+      const body = {
+        title: "Team Meeting",
+        type: "video",
+        scheduledFor: new Date(Date.now() + 3600000).toISOString(),
+        workspaceSlug: "my-workspace",
+      };
+
+      await service.scheduleCall(mockUser, body).catch(() => {});
+
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "my-workspace" },
+        })
+      );
+    });
+
+    it("should not attempt slug resolution when workspaceId is already present", async () => {
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+      mockPrisma.call.create.mockResolvedValue({
+        id: "sched-call-1",
+        workspaceId: "direct-ws-id",
+        scheduledFor: new Date(),
+      });
+
+      const body = {
+        title: "Team Meeting",
+        type: "video",
+        scheduledFor: new Date(Date.now() + 3600000).toISOString(),
+        workspaceId: "direct-ws-id",
+        workspaceSlug: "should-not-be-used",
+      };
+
+      await service.scheduleCall(mockUser, body).catch(() => {});
+
+      expect(mockPrisma.workspace.findUnique).not.toHaveBeenCalledWith(
+        expect.objectContaining({ where: { slug: "should-not-be-used" } })
       );
     });
   });
