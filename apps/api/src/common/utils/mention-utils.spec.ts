@@ -15,10 +15,14 @@ describe("extractUserMentions", () => {
     expect(extractUserMentions("Hey @john_doe!")).toEqual(["john_doe"]);
   });
 
-  it("should extract usernames with dots (PR change: new [\\.] support)", () => {
+  it("should extract usernames with dots (PR change: new [.] support)", () => {
     expect(extractUserMentions("Hello @john.doe how are you?")).toEqual([
       "john.doe",
     ]);
+  });
+
+  it("should extract multiple dot-separated username segments", () => {
+    expect(extractUserMentions("Hi @first.last.suffix")).toEqual(["first.last.suffix"]);
   });
 
   it("should extract multiple mentions", () => {
@@ -54,10 +58,25 @@ describe("extractUserMentions", () => {
     expect(result).toEqual(["user.name"]);
   });
 
-  it("should deduplicate if same username mentioned twice", () => {
-    // extractUserMentions returns all occurrences (dedup is in extractUserIds)
+  it("should return all occurrences including duplicates", () => {
     const result = extractUserMentions("@alice hey @alice again");
     expect(result).toEqual(["alice", "alice"]);
+  });
+
+  it("should extract username after @here in same message", () => {
+    const result = extractUserMentions("@here also ping @alice");
+    expect(result).toEqual(["alice"]);
+    expect(result).not.toContain("here");
+  });
+
+  it("should extract username after @all in same message", () => {
+    const result = extractUserMentions("Attention @all, especially @bob.jones");
+    expect(result).toEqual(["bob.jones"]);
+    expect(result).not.toContain("all");
+  });
+
+  it("should handle username starting with underscore", () => {
+    expect(extractUserMentions("Hello @_username!")).toEqual(["_username"]);
   });
 });
 
@@ -70,6 +89,13 @@ describe("extractChannelMentions", () => {
 
   it("should return empty array when no channel mentions", () => {
     expect(extractChannelMentions("No channels here")).toEqual([]);
+  });
+
+  it("should extract multiple channel mentions", () => {
+    expect(extractChannelMentions("See #general and #random")).toEqual([
+      "general",
+      "random",
+    ]);
   });
 });
 
@@ -86,9 +112,16 @@ describe("hasSpecialMention", () => {
     expect(hasSpecialMention("Hey @john check this", "all")).toBe(false);
   });
 
-  it("should not match partial words like @allocation", () => {
-    // The regex uses \b word boundary so @allocation should NOT match @all
+  it("should not match partial words like @allocation (word boundary check)", () => {
     expect(hasSpecialMention("Check @allocation now", "all")).toBe(false);
+  });
+
+  it("should not match @heretic when checking for @here", () => {
+    expect(hasSpecialMention("Check @heretic for issues", "here")).toBe(false);
+  });
+
+  it("should return false for empty string", () => {
+    expect(hasSpecialMention("", "all")).toBe(false);
   });
 });
 
@@ -154,16 +187,29 @@ describe("extractUserIds", () => {
     expect(ids).toContain("user-2");
   });
 
-  it("should prefer username over name when both match different users", () => {
-    // Ensure username takes precedence in the map
+  it("should prefer username match over name match when username equals mention", () => {
+    // user-b has username 'shared' so mention 'shared' resolves to user-b
     const usersWithConflict = [
       { id: "user-a", name: "shared", username: "alice_unique" },
       { id: "user-b", name: "other", username: "shared" },
     ];
     const ids = extractUserIds(["shared"], usersWithConflict);
-    // 'shared' matches user-b's username and user-a's name
-    // Both are inserted but username lookup is prioritized because username is set first
-    // The map will have "shared" → user-b's id since it overwrites user-a's name entry
     expect(ids).toContain("user-b");
+  });
+
+  it("should handle users with no name and no username gracefully", () => {
+    const usersNoFields = [{ id: "user-x" }];
+    const ids = extractUserIds(["anything"], usersNoFields as any[]);
+    expect(ids).toEqual([]);
+  });
+
+  it("should match by username even with mixed case", () => {
+    const ids = extractUserIds(["BOB.JONES"], users);
+    expect(ids).toContain("user-2");
+  });
+
+  it("should return empty array when users list is empty", () => {
+    const ids = extractUserIds(["alice"], []);
+    expect(ids).toEqual([]);
   });
 });
