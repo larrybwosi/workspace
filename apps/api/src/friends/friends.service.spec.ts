@@ -78,12 +78,11 @@ describe("FriendsService", () => {
       );
     });
 
-    it("should NOT include username in the search filter when no search provided", async () => {
+    it("should NOT include OR filter when no search provided", async () => {
       mockPrisma.friend.findMany.mockResolvedValue([]);
 
       await service.getFriends("user-1");
 
-      // When no search, there should be no OR filter
       const callArg = mockPrisma.friend.findMany.mock.calls[0][0];
       expect(callArg.where).not.toHaveProperty("OR");
     });
@@ -95,6 +94,7 @@ describe("FriendsService", () => {
 
       const callArg = mockPrisma.friend.findMany.mock.calls[0][0];
       const orFilter = callArg.where.OR;
+
       const filterKeys = orFilter.map((f: any) =>
         f.friend ? Object.keys(f.friend)[0] : Object.keys(f)[0]
       );
@@ -103,10 +103,41 @@ describe("FriendsService", () => {
       expect(filterKeys).toContain("username");
       expect(filterKeys).toContain("nickname");
     });
+
+    it("should search username case-insensitively", async () => {
+      mockPrisma.friend.findMany.mockResolvedValue([]);
+
+      await service.getFriends("user-1", "Alice");
+
+      const callArg = mockPrisma.friend.findMany.mock.calls[0][0];
+      const usernameFilter = callArg.where.OR.find(
+        (f: any) => f.friend?.username
+      );
+      expect(usernameFilter.friend.username.mode).toBe("insensitive");
+    });
+
+    it("should always filter by userId regardless of search", async () => {
+      mockPrisma.friend.findMany.mockResolvedValue([]);
+
+      await service.getFriends("user-42", "search-term");
+
+      const callArg = mockPrisma.friend.findMany.mock.calls[0][0];
+      expect(callArg.where.userId).toBe("user-42");
+    });
+
+    it("should return the friends list", async () => {
+      const mockFriends = [
+        { id: "f-1", friendId: "user-2", friend: { id: "user-2", name: "Bob" } },
+      ];
+      mockPrisma.friend.findMany.mockResolvedValue(mockFriends);
+
+      const result = await service.getFriends("user-1");
+      expect(result).toEqual(mockFriends);
+    });
   });
 
   describe("sendFriendRequest - accepts email OR username (PR change)", () => {
-    it("should find receiver by email", async () => {
+    it("should use findFirst with OR [email, username] to find receiver", async () => {
       const receiver = { id: "user-2", name: "Bob" };
       mockPrisma.user.findFirst.mockResolvedValue(receiver);
       mockPrisma.friend.findFirst.mockResolvedValue(null);
@@ -162,12 +193,20 @@ describe("FriendsService", () => {
       );
     });
 
-    it("should throw NotFoundException when receiver not found by email or username", async () => {
+    it("should throw NotFoundException when receiver not found", async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
 
       await expect(
         service.sendFriendRequest("user-1", "Alice", "nonexistent@example.com")
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw NotFoundException with 'User not found' message", async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.sendFriendRequest("user-1", "Alice", "nonexistent@example.com")
+      ).rejects.toThrow("User not found");
     });
 
     it("should throw BadRequestException when sender tries to send request to themselves", async () => {
@@ -241,6 +280,42 @@ describe("FriendsService", () => {
             type: "friend_request",
           }),
         })
+      );
+    });
+
+    it("should not use findUnique for user lookup (must use findFirst)", async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+
+      await service.sendFriendRequest("user-1", "Alice", "test").catch(() => {});
+
+      // findUnique should not be called for user lookup
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.user.findFirst).toHaveBeenCalled();
+    });
+
+    it("should send Ably notification to receiver on success", async () => {
+      const { publishToAbly } = await import("@repo/shared/server");
+      const receiver = { id: "user-2", name: "Bob" };
+      const createdRequest = {
+        id: "req-1",
+        senderId: "user-1",
+        receiverId: "user-2",
+        sender: { id: "user-1", name: "Alice" },
+        receiver,
+      };
+
+      mockPrisma.user.findFirst.mockResolvedValue(receiver);
+      mockPrisma.friend.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.create.mockResolvedValue(createdRequest);
+      mockPrisma.notification.create.mockResolvedValue({ id: "notif-1" });
+
+      await service.sendFriendRequest("user-1", "Alice", "bob@example.com");
+
+      expect(publishToAbly).toHaveBeenCalledWith(
+        "user:user-2",
+        "NOTIFICATION",
+        expect.objectContaining({ type: "friend_request" })
       );
     });
   });

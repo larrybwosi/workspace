@@ -19,7 +19,6 @@ const mockGetAblyRest = vi.fn();
 vi.mock("@repo/shared/server", () => ({
   getAblyRest: mockGetAblyRest,
   AblyChannels: {
-    // PR change: was AblyChannels.thread, now AblyChannels.channel
     channel: vi.fn((id: string) => `channel:${id}`),
     thread: vi.fn((id: string) => `thread:${id}`),
   },
@@ -89,14 +88,12 @@ describe("SystemMessagesService", () => {
         user: null,
       };
       mockPrisma.message.create.mockResolvedValue(createdMessage);
-
       mockGetAblyRest.mockReturnValue({
         channels: {
           get: mockChannelGet,
         },
       });
 
-      // Import shared to verify channel() is called (not thread())
       const shared = await import("@repo/shared/server");
       const channelSpy = vi.spyOn(shared.AblyChannels, "channel");
       const threadSpy = vi.spyOn(shared.AblyChannels, "thread");
@@ -130,6 +127,25 @@ describe("SystemMessagesService", () => {
       });
 
       expect(mockPublish).toHaveBeenCalledWith("message.sent", createdMessage);
+    });
+
+    it("should use the correct channel id string: 'channel:ch-1'", async () => {
+      const createdMessage = {
+        id: "msg-1",
+        channelId: "ch-1",
+        userId: "system",
+        content: "test",
+        messageType: "system",
+        user: null,
+      };
+      mockPrisma.message.create.mockResolvedValue(createdMessage);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: mockChannelGet },
+      });
+
+      await service.createSystemMessage("test", { channelId: "ch-1" });
+
+      expect(mockChannelGet).toHaveBeenCalledWith("channel:ch-1");
     });
 
     it("should NOT broadcast when broadcast is explicitly false", async () => {
@@ -174,6 +190,22 @@ describe("SystemMessagesService", () => {
       expect(mockPublish).not.toHaveBeenCalled();
     });
 
+    it("should NOT call Ably channels.get when client is unavailable", async () => {
+      mockPrisma.message.create.mockResolvedValue({
+        id: "msg-1",
+        channelId: "ch-5",
+        userId: "system",
+        content: "test",
+        messageType: "system",
+        user: null,
+      });
+      mockGetAblyRest.mockReturnValue(null);
+
+      await service.createSystemMessage("test", { channelId: "ch-5" });
+
+      expect(mockChannelGet).not.toHaveBeenCalled();
+    });
+
     it("should store metadata when provided", async () => {
       const metadata = { source: "github", event: "push" };
       mockPrisma.message.create.mockResolvedValue({
@@ -197,6 +229,46 @@ describe("SystemMessagesService", () => {
           data: expect.objectContaining({
             metadata,
           }),
+        })
+      );
+    });
+
+    it("should return the created message", async () => {
+      const createdMessage = {
+        id: "msg-42",
+        channelId: "ch-7",
+        userId: "system",
+        content: "hello",
+        messageType: "system",
+        metadata: null,
+        user: null,
+      };
+      mockPrisma.message.create.mockResolvedValue(createdMessage);
+      mockGetAblyRest.mockReturnValue(null);
+
+      const result = await service.createSystemMessage("hello", {
+        channelId: "ch-7",
+      });
+
+      expect(result).toBe(createdMessage);
+    });
+
+    it("should include user in the database query", async () => {
+      mockPrisma.message.create.mockResolvedValue({
+        id: "msg-1",
+        channelId: "ch-1",
+        userId: "system",
+        content: "test",
+        messageType: "system",
+        user: null,
+      });
+      mockGetAblyRest.mockReturnValue(null);
+
+      await service.createSystemMessage("test", { channelId: "ch-1" });
+
+      expect(mockPrisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { user: true },
         })
       );
     });
