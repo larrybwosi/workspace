@@ -10,10 +10,15 @@ export function AssistantPage() {
     if (id === 'assistant') return;
     if (id === 'friends') {
       navigate('/friends');
-    } else if (id.startsWith('dm-')) {
-      navigate(`/dm/${id.replace('dm-', '')}`);
+    } else if (id === 'notifications') {
+      navigate('/notifications');
     } else {
-      navigate(`/workspace/default/channels/${id}`);
+      // For DMs (UUID) or other channels
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+        navigate(`/dm/${id}`);
+      } else {
+        navigate(`/workspace/default/channels/${id}`);
+      }
     }
   };
 

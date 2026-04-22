@@ -1,0 +1,10 @@
+
+> skryme-desktop@0.1.0 dev /app/apps/desktop
+> vite
+
+
+  VITE v8.0.7  ready in 591 ms
+
+  ➜  Local:   http://localhost:1420/
+  ➜  Network: http://192.168.0.2:1420/
+2:19:25 PM [vite] (client) [optimizer] bundling dependencies...

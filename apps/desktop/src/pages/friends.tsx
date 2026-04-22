@@ -169,13 +169,15 @@ export function FriendsPage() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         activeChannel="friends"
-        onChannelSelect={id =>
-          id === 'assistant'
-            ? navigate('/assistant')
-            : id.startsWith('dm-')
-              ? navigate(`/dm/${id.replace('dm-', '')}`)
-              : null
-        }
+        onChannelSelect={id => {
+          if (id === 'assistant') {
+            navigate('/assistant');
+          } else if (id === 'notifications') {
+            navigate('/notifications');
+          } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+            navigate(`/dm/${id}`);
+          }
+        }}
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DynamicHeader activeView="Friends" onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />

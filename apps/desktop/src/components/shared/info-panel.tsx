@@ -58,9 +58,19 @@ interface InfoPanelProps {
   };
   type?: 'channel' | 'workspace';
   id?: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: InfoPanelProps) {
+export function InfoPanel({
+  isOpen,
+  onClose,
+  dmUser,
+  type = 'channel',
+  id,
+  activeTab: externalActiveTab,
+  onTabChange,
+}: InfoPanelProps) {
   const params = useParams();
   const workspaceSlug = params.slug as string;
   const channelSlug = params.channelSlug as string;
@@ -72,7 +82,10 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
-  const [activeTab, setActiveTab] = useState('info');
+  const [internalActiveTab, setInternalActiveTab] = useState('info');
+
+  const activeTab = externalActiveTab || internalActiveTab;
+  const setActiveTab = onTabChange || setInternalActiveTab;
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
   const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspaceSlug);
