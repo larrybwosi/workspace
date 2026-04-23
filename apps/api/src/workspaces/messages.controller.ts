@@ -79,7 +79,7 @@ export class MessagesController {
       throw new BadRequestException('Invalid messageIds');
     }
 
-    return this.messagesService.batchMarkAsRead(user.id, body.messageIds);
+    return this.messagesService.batchMarkAsRead(user.id, body.messageIds, channelId);
   }
 
   @Post(':messageId/reactions')

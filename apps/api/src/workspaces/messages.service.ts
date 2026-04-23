@@ -476,7 +476,7 @@ export class MessagesService {
     return { success: true };
   }
 
-  async batchMarkAsRead(userId: string, messageIds: string[]) {
+  async batchMarkAsRead(userId: string, messageIds: string[], channelId?: string) {
     if (!messageIds.length) return { success: true };
 
     // ⚡ Performance Optimization:
@@ -492,18 +492,22 @@ export class MessagesService {
       skipDuplicates: true,
     });
 
-    // Get the channelId of one of the messages to notify the client
-    const firstMessage = await prisma.message.findUnique({
-      where: { id: messageIds[0] },
-      select: { channelId: true },
-    });
+    // ⚡ Optimization: channelId is passed from the controller, avoiding a redundant database lookup.
+    let targetChannelId = channelId;
+    if (!targetChannelId) {
+      const firstMessage = await prisma.message.findUnique({
+        where: { id: messageIds[0] },
+        select: { channelId: true },
+      });
+      targetChannelId = firstMessage?.channelId;
+    }
 
-    if (firstMessage) {
+    if (targetChannelId) {
       const ably = getAblyRest();
       if (ably) {
         const channel = (ably as any).channels.get(AblyChannels.user(userId));
         await channel.publish(AblyEvents.MESSAGE_READ, {
-          channelId: firstMessage.channelId,
+          channelId: targetChannelId,
           messageIds,
         });
       }
@@ -534,6 +538,12 @@ export class MessagesService {
       });
     }
 
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates reaction creation and channel lookup into a single database round-trip.
+     * Uses 'include' to retrieve the message's channelId during the upsert.
+     * Expected impact: Reduces database queries from 2 down to 1.
+     */
     const reaction = await prisma.reaction.upsert({
       where: {
         messageId_userId_emoji: {
@@ -549,15 +559,18 @@ export class MessagesService {
         emoji,
         customEmojiId,
       },
-    });
-
-    const message = await prisma.message.findUnique({
-      where: { id: messageId },
+      include: {
+        message: {
+          select: {
+            channelId: true,
+          },
+        },
+      },
     });
 
     const ably = getAblyRest();
-    if (ably && message) {
-      const channelId = message.channelId;
+    if (ably) {
+      const channelId = (reaction as any).message.channelId;
       const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, reaction, action: 'add' });
     }
@@ -566,33 +579,42 @@ export class MessagesService {
   }
 
   async removeReaction(userId: string, messageId: string, emoji: string) {
-    const reaction = await prisma.reaction.findUnique({
-      where: {
-        messageId_userId_emoji: {
-          messageId,
-          userId,
-          emoji,
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces sequential lookup, delete, and secondary lookup with a single atomic 'delete'.
+     * Uses the compound unique index and 'include' to fetch channelId in one operation.
+     * Expected impact: Reduces database queries from 3 down to 1.
+     */
+    try {
+      const reaction = await prisma.reaction.delete({
+        where: {
+          messageId_userId_emoji: {
+            messageId,
+            userId,
+            emoji,
+          },
         },
-      },
-    });
+        include: {
+          message: {
+            select: {
+              channelId: true,
+            },
+          },
+        },
+      });
 
-    if (!reaction) {
-      throw new NotFoundException('Reaction not found');
-    }
-
-    await prisma.reaction.delete({
-      where: { id: reaction.id },
-    });
-
-    const message = await prisma.message.findUnique({
-      where: { id: messageId },
-    });
-
-    const ably = getAblyRest();
-    if (ably && message) {
-      const channelId = message.channelId;
-      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
+      const ably = getAblyRest();
+      if (ably) {
+        const channelId = (reaction as any).message.channelId;
+        const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
+        await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
+      }
+    } catch (error) {
+      // Prisma error code for 'Record to delete does not exist'
+      if ((error as any).code === 'P2025') {
+        throw new NotFoundException('Reaction not found');
+      }
+      throw error;
     }
 
     return { success: true };
