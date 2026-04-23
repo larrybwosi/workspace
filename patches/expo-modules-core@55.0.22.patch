@@ -1,0 +1,23 @@
+diff --git a/expo-module-gradle-plugin/build.gradle.kts b/expo-module-gradle-plugin/build.gradle.kts
+index ce67cc869c9f279e672732cdacb7d0a2d09afd46..e5f7f32aa155166ac6aae96155fae099c4718881 100644
+--- a/expo-module-gradle-plugin/build.gradle.kts
++++ b/expo-module-gradle-plugin/build.gradle.kts
+@@ -42,8 +42,8 @@ dependencies {
+ }
+
+ java {
+-  sourceCompatibility = JavaVersion.VERSION_11
+-  targetCompatibility = JavaVersion.VERSION_11
++  sourceCompatibility = JavaVersion.VERSION_21
++  targetCompatibility = JavaVersion.VERSION_21
+
+   sourceSets {
+     val path = if (isExpoAutolinkingSettingsPluginAvailable) {
+@@ -57,7 +57,7 @@ java {
+
+ tasks.withType<KotlinCompile> {
+   compilerOptions {
+-    jvmTarget.set(JvmTarget.JVM_11)
++    jvmTarget.set(JvmTarget.JVM_21)
+   }
+ }
