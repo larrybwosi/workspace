@@ -158,8 +158,8 @@ export class WorkspacesController {
   /**
    * ⚡ Performance Optimization:
    * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Optimized membership check using a direct findUnique on WorkspaceMember.
-   * 3. Replaces full 'members' list with a simple count.
+   * 2. Replaces full 'members' list with a simple count.
+   * 3. Combines workspace lookup and membership verification into a single database query.
    * Expected impact: Significantly reduces response time and memory overhead for large workspaces.
    */
   @Get(':slug')
@@ -192,6 +192,14 @@ export class WorkspacesController {
             type: true,
           },
         },
+        members: {
+          where: {
+            userId: user.id,
+          },
+          select: {
+            userId: true,
+          },
+        },
         _count: {
           select: {
             members: true,
@@ -205,20 +213,14 @@ export class WorkspacesController {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('You are not a member of this workspace');
     }
 
-    return workspace;
+    return {
+      ...workspace,
+      members: undefined, // Remove the filtered members array from response
+    };
   }
 
   @Patch(':slug')

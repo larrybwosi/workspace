@@ -23,24 +23,27 @@ import {
 export class MessagesService {
   // --- Core Validations ---
   async verifyWorkspaceAccess(userId: string, slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Combines workspace lookup and membership verification into a single database query
+     * using relation filtering. Reduces database round-trips from 2 to 1 for every
+     * workspace-scoped message operation.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId },
+          select: { userId: true },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
