@@ -58,15 +58,14 @@ describe("AblyController", () => {
       );
     });
 
-    it("should include new call:* capability (PR change)", async () => {
+    // ── PR change: call:* capability added ────────────────────────────────────
+    it("should include call:* capability", async () => {
       const mockUser = { id: "user_456" } as any;
 
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
       const shared = await import("@repo/shared/server");
       vi.spyOn(shared, "getAblyRest").mockReturnValue({
-        auth: {
-          createTokenRequest: mockCreateTokenRequest,
-        },
+        auth: { createTokenRequest: mockCreateTokenRequest },
       } as any);
 
       await controller.getToken(mockUser);
@@ -80,15 +79,14 @@ describe("AblyController", () => {
       ]);
     });
 
-    it("should include new global-presence capability (PR change)", async () => {
+    // ── PR change: global-presence capability added ────────────────────────────
+    it("should include global-presence capability", async () => {
       const mockUser = { id: "user_789" } as any;
 
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
       const shared = await import("@repo/shared/server");
       vi.spyOn(shared, "getAblyRest").mockReturnValue({
-        auth: {
-          createTokenRequest: mockCreateTokenRequest,
-        },
+        auth: { createTokenRequest: mockCreateTokenRequest },
       } as any);
 
       await controller.getToken(mockUser);
@@ -102,7 +100,8 @@ describe("AblyController", () => {
       ]);
     });
 
-    it("should include user:${id} capability (PR change: without wildcard)", async () => {
+    // ── PR change: user:${id} without wildcard added ──────────────────────────
+    it("should include user:${id} capability (without wildcard)", async () => {
       const mockUser = { id: "user_direct" } as any;
 
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
@@ -122,7 +121,8 @@ describe("AblyController", () => {
       ]);
     });
 
-    it("should include notifications:${id} capability (PR change: without wildcard)", async () => {
+    // ── PR change: notifications:${id} without wildcard added ─────────────────
+    it("should include notifications:${id} capability (without wildcard)", async () => {
       const mockUser = { id: "user_notif" } as any;
 
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
@@ -148,9 +148,7 @@ describe("AblyController", () => {
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
       const shared = await import("@repo/shared/server");
       vi.spyOn(shared, "getAblyRest").mockReturnValue({
-        auth: {
-          createTokenRequest: mockCreateTokenRequest,
-        },
+        auth: { createTokenRequest: mockCreateTokenRequest },
       } as any);
 
       await controller.getToken(mockUser);
@@ -170,15 +168,13 @@ describe("AblyController", () => {
       );
     });
 
-    it("should set clientId to the user's id", async () => {
+    it("should set clientId to the user id", async () => {
       const mockUser = { id: "specific_user_id" } as any;
 
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
       const shared = await import("@repo/shared/server");
       vi.spyOn(shared, "getAblyRest").mockReturnValue({
-        auth: {
-          createTokenRequest: mockCreateTokenRequest,
-        },
+        auth: { createTokenRequest: mockCreateTokenRequest },
       } as any);
 
       await controller.getToken(mockUser);
@@ -187,7 +183,7 @@ describe("AblyController", () => {
       expect(callArg.clientId).toBe("specific_user_id");
     });
 
-    it("should include timestamp in the token request", async () => {
+    it("should include a timestamp in the token request", async () => {
       const mockUser = { id: "user_ts" } as any;
 
       const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
@@ -205,7 +201,7 @@ describe("AblyController", () => {
       expect(callArg.timestamp).toBeLessThanOrEqual(after);
     });
 
-    it("should return the token request result", async () => {
+    it("should return the token request result from Ably", async () => {
       const mockUser = { id: "user_return" } as any;
       const mockTokenResult = { keyName: "mock.key", token: "abc123" };
 
@@ -216,7 +212,41 @@ describe("AblyController", () => {
       } as any);
 
       const result = await controller.getToken(mockUser);
+
       expect(result).toEqual(mockTokenResult);
+    });
+
+    it("should include both user:${id} and user:${id}:* capabilities", async () => {
+      const mockUser = { id: "dual_user" } as any;
+
+      const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
+      const shared = await import("@repo/shared/server");
+      vi.spyOn(shared, "getAblyRest").mockReturnValue({
+        auth: { createTokenRequest: mockCreateTokenRequest },
+      } as any);
+
+      await controller.getToken(mockUser);
+
+      const callArg = mockCreateTokenRequest.mock.calls[0][0];
+      // Both specific and wildcard forms must be present
+      expect(callArg.capability["user:dual_user"]).toBeDefined();
+      expect(callArg.capability["user:dual_user:*"]).toBeDefined();
+    });
+
+    it("should include both notifications:${id} and notifications:${id}:* capabilities", async () => {
+      const mockUser = { id: "notif_user" } as any;
+
+      const mockCreateTokenRequest = vi.fn().mockResolvedValue({ keyName: "mock.key" });
+      const shared = await import("@repo/shared/server");
+      vi.spyOn(shared, "getAblyRest").mockReturnValue({
+        auth: { createTokenRequest: mockCreateTokenRequest },
+      } as any);
+
+      await controller.getToken(mockUser);
+
+      const callArg = mockCreateTokenRequest.mock.calls[0][0];
+      expect(callArg.capability["notifications:notif_user"]).toBeDefined();
+      expect(callArg.capability["notifications:notif_user:*"]).toBeDefined();
     });
   });
 });
