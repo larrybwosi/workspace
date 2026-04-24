@@ -29,3 +29,6 @@
 ## 2026-05-20 - [Performance] Batched Mention Notifications
 **Learning:** Mentioning multiple users in a single message triggered sequential N+1 database queries and sequential external API calls, significantly delaying message delivery as the number of mentions increased.
 **Action:** Batched mention notifications using `prisma.notification.createManyAndReturn` and parallelized delivery. Centralized this logic in a shared `notifyMentions` function to ensure consistent performance across all message-sending services.
+## 2026-04-24 - [Database] Consolidated Workspace Authorization and Retrieval
+**Learning:** Performing separate database round-trips for resource authorization (e.g., checking workspace membership) before retrieving actual data (e.g., teams or departments) adds significant network latency (O(3) round-trips).
+**Action:** Use Prisma filtered relations (e.g., `include: { members: { where: { userId } } }`) to consolidate authorization and data retrieval into a single O(1) query.
