@@ -36,49 +36,46 @@ const createTeamSchema = z.object({
 @Controller('workspaces/:slug/teams')
 @UseGuards(AuthGuard)
 export class TeamsController {
+  /**
+   * ⚡ Performance Optimization:
+   * Consolidates workspace check, membership verification, and teams retrieval
+   * into a single database query using filtered relations.
+   * Expected impact: Reduces database round-trips from 3 down to 1.
+   */
   @Get()
   async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+          select: { id: true },
+        },
+        teams: {
+          where: departmentId ? { departmentId } : {},
+          include: {
+            department: { select: { id: true, name: true, icon: true, color: true } },
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatar: true, status: true } },
+              },
+            },
+            _count: { select: { members: true } },
+          },
+          orderBy: { name: 'asc' },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const where: any = { workspaceId: workspace.id };
-    if (departmentId) {
-      where.departmentId = departmentId;
-    }
-
-    const teams = await prisma.workspaceTeam.findMany({
-      where,
-      include: {
-        department: { select: { id: true, name: true, icon: true, color: true } },
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatar: true, status: true } },
-          },
-        },
-        _count: { select: { members: true } },
-      },
-      orderBy: { name: 'asc' },
-    });
-
-    return { teams };
+    return { teams: workspace.teams };
   }
 
   @Post()
