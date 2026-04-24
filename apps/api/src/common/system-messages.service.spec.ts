@@ -48,7 +48,7 @@ describe("SystemMessagesService", () => {
   });
 
   describe("createSystemMessage", () => {
-    it("should create a system message in the database", async () => {
+    it("should create a system message in the database with correct fields", async () => {
       const createdMessage = {
         id: "msg-1",
         channelId: "ch-1",
@@ -78,7 +78,8 @@ describe("SystemMessagesService", () => {
       expect(result).toEqual(createdMessage);
     });
 
-    it("should broadcast to AblyChannels.channel (PR fix: was .thread)", async () => {
+    // ── PR FIX: AblyChannels.channel() NOT .thread() ──────────────────────────
+    it("should broadcast using AblyChannels.channel (not AblyChannels.thread)", async () => {
       const createdMessage = {
         id: "msg-1",
         channelId: "ch-1",
@@ -89,9 +90,7 @@ describe("SystemMessagesService", () => {
       };
       mockPrisma.message.create.mockResolvedValue(createdMessage);
       mockGetAblyRest.mockReturnValue({
-        channels: {
-          get: mockChannelGet,
-        },
+        channels: { get: mockChannelGet },
       });
 
       const shared = await import("@repo/shared/server");
@@ -103,33 +102,12 @@ describe("SystemMessagesService", () => {
         broadcast: true,
       });
 
-      // PR fix: should call AblyChannels.channel, NOT AblyChannels.thread
+      // Must call .channel(), not .thread()
       expect(channelSpy).toHaveBeenCalledWith("ch-1");
       expect(threadSpy).not.toHaveBeenCalled();
     });
 
-    it("should publish MESSAGE_SENT event when broadcast is not false", async () => {
-      const createdMessage = {
-        id: "msg-1",
-        channelId: "ch-1",
-        userId: "system",
-        content: "test message",
-        messageType: "system",
-        user: null,
-      };
-      mockPrisma.message.create.mockResolvedValue(createdMessage);
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: mockChannelGet },
-      });
-
-      await service.createSystemMessage("test message", {
-        channelId: "ch-1",
-      });
-
-      expect(mockPublish).toHaveBeenCalledWith("message.sent", createdMessage);
-    });
-
-    it("should use the correct channel id string: 'channel:ch-1'", async () => {
+    it("should use the channel string 'channel:ch-1' for Ably channel lookup", async () => {
       const createdMessage = {
         id: "msg-1",
         channelId: "ch-1",
@@ -139,13 +117,28 @@ describe("SystemMessagesService", () => {
         user: null,
       };
       mockPrisma.message.create.mockResolvedValue(createdMessage);
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: mockChannelGet },
-      });
+      mockGetAblyRest.mockReturnValue({ channels: { get: mockChannelGet } });
 
       await service.createSystemMessage("test", { channelId: "ch-1" });
 
       expect(mockChannelGet).toHaveBeenCalledWith("channel:ch-1");
+    });
+
+    it("should publish MESSAGE_SENT event when broadcast is not explicitly false", async () => {
+      const createdMessage = {
+        id: "msg-1",
+        channelId: "ch-1",
+        userId: "system",
+        content: "test",
+        messageType: "system",
+        user: null,
+      };
+      mockPrisma.message.create.mockResolvedValue(createdMessage);
+      mockGetAblyRest.mockReturnValue({ channels: { get: mockChannelGet } });
+
+      await service.createSystemMessage("test", { channelId: "ch-1" });
+
+      expect(mockPublish).toHaveBeenCalledWith("message.sent", createdMessage);
     });
 
     it("should NOT broadcast when broadcast is explicitly false", async () => {
@@ -158,9 +151,7 @@ describe("SystemMessagesService", () => {
         user: null,
       };
       mockPrisma.message.create.mockResolvedValue(createdMessage);
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: mockChannelGet },
-      });
+      mockGetAblyRest.mockReturnValue({ channels: { get: mockChannelGet } });
 
       await service.createSystemMessage("no broadcast", {
         channelId: "ch-1",
@@ -170,7 +161,7 @@ describe("SystemMessagesService", () => {
       expect(mockPublish).not.toHaveBeenCalled();
     });
 
-    it("should NOT call Ably when client is unavailable (null)", async () => {
+    it("should NOT call Ably when Ably client is null", async () => {
       const createdMessage = {
         id: "msg-1",
         channelId: "ch-1",
@@ -188,21 +179,6 @@ describe("SystemMessagesService", () => {
       });
 
       expect(mockPublish).not.toHaveBeenCalled();
-    });
-
-    it("should NOT call Ably channels.get when client is unavailable", async () => {
-      mockPrisma.message.create.mockResolvedValue({
-        id: "msg-1",
-        channelId: "ch-5",
-        userId: "system",
-        content: "test",
-        messageType: "system",
-        user: null,
-      });
-      mockGetAblyRest.mockReturnValue(null);
-
-      await service.createSystemMessage("test", { channelId: "ch-5" });
-
       expect(mockChannelGet).not.toHaveBeenCalled();
     });
 
@@ -226,31 +202,9 @@ describe("SystemMessagesService", () => {
 
       expect(mockPrisma.message.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            metadata,
-          }),
+          data: expect.objectContaining({ metadata }),
         })
       );
-    });
-
-    it("should return the created message", async () => {
-      const createdMessage = {
-        id: "msg-42",
-        channelId: "ch-7",
-        userId: "system",
-        content: "hello",
-        messageType: "system",
-        metadata: null,
-        user: null,
-      };
-      mockPrisma.message.create.mockResolvedValue(createdMessage);
-      mockGetAblyRest.mockReturnValue(null);
-
-      const result = await service.createSystemMessage("hello", {
-        channelId: "ch-7",
-      });
-
-      expect(result).toBe(createdMessage);
     });
 
     it("should include user in the database query", async () => {
@@ -267,10 +221,64 @@ describe("SystemMessagesService", () => {
       await service.createSystemMessage("test", { channelId: "ch-1" });
 
       expect(mockPrisma.message.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          include: { user: true },
-        })
+        expect.objectContaining({ include: { user: true } })
       );
+    });
+
+    it("should return the created message", async () => {
+      const createdMessage = {
+        id: "msg-42",
+        channelId: "ch-7",
+        userId: "system",
+        content: "hello",
+        messageType: "system",
+        metadata: null,
+        user: null,
+      };
+      mockPrisma.message.create.mockResolvedValue(createdMessage);
+      mockGetAblyRest.mockReturnValue(null);
+
+      const result = await service.createSystemMessage("hello", { channelId: "ch-7" });
+
+      expect(result).toBe(createdMessage);
+    });
+
+    it("should broadcast to the correct channel id for different channel ids", async () => {
+      const createdMessage = {
+        id: "msg-99",
+        channelId: "ch-99",
+        userId: "system",
+        content: "test",
+        messageType: "system",
+        user: null,
+      };
+      mockPrisma.message.create.mockResolvedValue(createdMessage);
+      mockGetAblyRest.mockReturnValue({ channels: { get: mockChannelGet } });
+
+      await service.createSystemMessage("test", { channelId: "ch-99" });
+
+      expect(mockChannelGet).toHaveBeenCalledWith("channel:ch-99");
+    });
+
+    // Regression: was previously using thread() which was wrong
+    it("should never call AblyChannels.thread when broadcasting", async () => {
+      const createdMessage = {
+        id: "msg-1",
+        channelId: "ch-1",
+        userId: "system",
+        content: "regression test",
+        messageType: "system",
+        user: null,
+      };
+      mockPrisma.message.create.mockResolvedValue(createdMessage);
+      mockGetAblyRest.mockReturnValue({ channels: { get: mockChannelGet } });
+
+      const shared = await import("@repo/shared/server");
+      const threadSpy = vi.spyOn(shared.AblyChannels, "thread");
+
+      await service.createSystemMessage("regression test", { channelId: "ch-1" });
+
+      expect(threadSpy).not.toHaveBeenCalled();
     });
   });
 });
