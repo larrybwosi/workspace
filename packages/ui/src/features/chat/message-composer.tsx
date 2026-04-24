@@ -1,13 +1,13 @@
 'use client';
 
-import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2, List, Quote, Heading1, Heading2, Table } from 'lucide-react';
+import { AtSign, Smile, Paperclip, Send, Bold, Italic, Code, X, File, Loader2 } from 'lucide-react';
 import { Button } from '../../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/tooltip';
 import { uploadFile, type UploadedFile } from '@repo/shared';
 import { MentionSelector, MentionItem } from '../../shared/mention-selector';
 import { EmojiPicker } from '../../shared/emoji-picker';
 import React, { ChangeEvent, useEffect, useRef, useState, useMemo } from 'react';
-import { useChannel, useDM } from '@repo/api-client';
+import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useTypingNotifier, TypingIndicator } from './typing-indicator';
 import { useCurrentUser } from '@repo/api-client';
@@ -22,7 +22,6 @@ interface MessageComposerProps {
   replyingTo?: { id: string; userName: string } | null;
   onCancelReply?: () => void;
   channelId?: string;
-  isDM?: boolean;
 }
 
 export function MessageComposer({
@@ -31,7 +30,6 @@ export function MessageComposer({
   replyingTo,
   onCancelReply,
   channelId,
-  isDM,
 }: MessageComposerProps) {
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
@@ -50,7 +48,6 @@ export function MessageComposer({
   const { data: channels } = useWorkspaceChannels(workspace?.id);
   const { data: membersData } = useWorkspaceMembers(workspace?.id);
   const { data: channel } = useChannel(channelId || '', workspace?.id);
-  const { data: dmData } = useDM(isDM && channelId ? channelId : '');
 
   const { data: currentUser } = useCurrentUser();
 
@@ -58,28 +55,28 @@ export function MessageComposer({
 
   const dynamicPlaceholder = useMemo(() => {
     if (replyingTo) return `Replying to @${replyingTo.userName}`;
-    if (isDM && dmData?.user) return `Message @${dmData.user.name}`;
     if (channel) return `Message #${channel.name}`;
     return placeholder;
-  }, [channel, replyingTo, placeholder, isDM, dmData]);
+  }, [channel, replyingTo, placeholder]);
 
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
     if (mentionType === 'user') {
-      const workspaceMembers = (membersData?.members || []).map((m: any) => ({
+      const workspaceMembers = (membersData.members || []).map((m: any) => ({
         id: m.user.id,
-        name: m.user.username || m.user.name,
-        displayName: m.user.name,
+        name: m.user.name,
         type: 'user' as const,
         image: m.user.image || m.user.avatar,
         description: m.role || m.user.role,
       }));
 
       let filteredMembers = workspaceMembers;
+      const isDM = channelId?.startsWith('dm-');
+
       if (isDM) {
-        // In DMs, only suggest participants
-        const participantIds = new Set(dmData?.members?.map((m: any) => m.id) || []);
-        filteredMembers = workspaceMembers.filter((m: any) => participantIds.has(m.id));
+        // In DMs, only suggest the other user (and self)
+        const dmUserId = channelId?.replace('dm-', '');
+        filteredMembers = workspaceMembers.filter((m: any) => m.id === dmUserId || m.id === currentUser?.id);
       } else if ((channel as any)?.type === 'private') {
         const channelMemberIds = new Set((channel as any).members?.map((m: any) => m.userId));
         filteredMembers = workspaceMembers.filter((m: any) => channelMemberIds.has(m.id));
@@ -235,24 +232,9 @@ export function MessageComposer({
     textareaRef.current?.focus();
   };
 
-  const insertMarkdown = (prefix: string) => {
-    insertTextAtCursor(`\n${prefix} `);
-  };
-
-  const insertTable = () => {
-    const table = `
-| Header 1 | Header 2 |
-| -------- | -------- |
-| Cell 1   | Cell 2   |
-`;
-    insertTextAtCursor(table);
-  };
-
   const handleMentionSelect = (item: MentionItem) => {
     const prefix = mentionType === 'user' ? '@' : '#';
-    // Use username for mentions if available, otherwise name
-    const mentionValue = item.name;
-    insertTextAtCursor(`${prefix}${mentionValue} `, `${prefix}${mentionSearch}`);
+    insertTextAtCursor(`${prefix}${item.name} `, `${prefix}${mentionSearch}`);
     setMentionType(null);
   };
 
@@ -410,24 +392,8 @@ export function MessageComposer({
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('_')}>
                     <Italic className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('```\n', '\n```')}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('`')}>
                     <Code className="h-3.5 w-3.5" />
-                  </Button>
-                  <div className="w-px h-4 bg-border/50 mx-1" />
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('#')}>
-                    <Heading1 className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('##')}>
-                    <Heading2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('-')}>
-                    <List className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertMarkdown('>')}>
-                    <Quote className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => insertTable()}>
-                    <Table className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </TooltipProvider>

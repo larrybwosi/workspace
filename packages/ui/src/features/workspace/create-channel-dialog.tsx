@@ -20,11 +20,11 @@ import { useCreateChannel } from "@repo/api-client"
 interface CreateChannelDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  workspaceSlug: string
+  workspaceId: string // This is now treated as workspaceSlug
   onSuccess?: () => void
 }
 
-export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onSuccess }: CreateChannelDialogProps) {
+export function CreateChannelDialog({ open, onOpenChange, workspaceId: workspaceSlug, onSuccess }: CreateChannelDialogProps) {
   const [form, setForm] = React.useState({ name: "", description: "", type: "public" as "public" | "private" })
   const { toast } = useToast()
   const createChannel = useCreateChannel(workspaceSlug)
@@ -66,7 +66,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onSucce
               placeholder="e.g., general, announcements"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              disabled={createChannel.isPending}
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -74,7 +74,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onSucce
             <Select
               value={form.type}
               onValueChange={(v: "public" | "private") => setForm({ ...form, type: v })}
-              disabled={createChannel.isPending}
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -101,7 +101,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onSucce
               placeholder="What is this channel about?"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              disabled={createChannel.isPending}
+              disabled={isLoading}
             />
           </div>
         </div>

@@ -1,14 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import {
-  getAblyRest,
-  AblyChannels,
-  AblyEvents,
-  sendPushNotification,
-  notifyMention as sharedNotifyMention,
-  notifyMentions as sharedNotifyMentions,
-  notifyChannel as sharedNotifyChannel,
-} from '@repo/shared/server';
+import { getAblyRest, AblyChannels, AblyEvents, sendPushNotification } from '@repo/shared/server';
 
 export interface NotificationPayload {
   userId: string;
@@ -51,43 +43,21 @@ export class NotificationsService {
       },
     });
 
-    // Send external notifications (real-time and push)
-    await this.deliverNotifications([{
-      id: notification.id,
-      userId: notification.userId,
-      createdAt: notification.createdAt,
-      payload
-    }]);
-
-    return notification;
-  }
-
-  /**
-   * ⚡ Performance Optimization:
-   * Shared delivery logic for both single and batch notifications.
-   * Parallelizes Ably and Push notification delivery for multiple notifications.
-   */
-  private async deliverNotifications(notifications: Array<{
-    id: string;
-    userId: string;
-    createdAt: Date;
-    payload: NotificationPayload;
-  }>) {
+    // Send real-time notification via Ably
     const ably = getAblyRest();
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.notifications(payload.userId));
 
-    const deliveryPromises = notifications.map(async ({ id, userId, createdAt, payload }) => {
-      // 1. Send real-time notification via Ably
-      const ablyPromise = ably
-        ? ably.channels.get(AblyChannels.notifications(userId)).publish(AblyEvents.NOTIFICATION, {
-            id,
-            ...payload,
-            createdAt,
-          })
-        : Promise.resolve();
+      await channel.publish(AblyEvents.NOTIFICATION, {
+        id: notification.id,
+        ...payload,
+        createdAt: notification.createdAt,
+      });
+    }
 
-      // 2. Send push notification
-      const pushPromise = sendPushNotification({
-        userId,
+    try {
+      await sendPushNotification({
+        userId: payload.userId,
         title: payload.title,
         body: payload.message,
         data: {
@@ -95,27 +65,17 @@ export class NotificationsService {
           entityType: payload.entityType || '',
           entityId: payload.entityId || '',
         },
-        linkUrl: payload.linkUrl || undefined,
-        notificationId: id,
-      }).catch(err => {
-        console.error(`Push notification failed for user ${userId}:`, err);
+        linkUrl: payload.linkUrl,
+        notificationId: notification.id,
       });
-
-      return Promise.all([ablyPromise, pushPromise]);
-    });
-
-    // Execute all deliveries in parallel and await them to ensure reliability
-    try {
-      await Promise.all(deliveryPromises);
-    } catch (err) {
-      console.error('Batch notification delivery failed partially:', err);
+    } catch (error) {
+      console.error(' Push notification error:', error);
+      // Don't fail the whole operation if push notifications fail
     }
+
+    return notification;
   }
 
-  /**
-   * ⚡ Performance Optimization:
-   * Delegated to shared implementation for consistent optimization across the platform.
-   */
   async notifyMention(
     messageId: string,
     mentionedUserId: string,
@@ -123,27 +83,53 @@ export class NotificationsService {
     channelId: string,
     messageContent: string
   ) {
-    return sharedNotifyMention(messageId, mentionedUserId, mentionedBy, channelId, messageContent);
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      include: {
+        workspace: true,
+        members: {
+          where: { userId: mentionedUserId },
+        },
+      },
+    });
+
+    if (!channel) return;
+
+    // Check preferences
+    const workspaceId = channel.workspaceId;
+    const channelMember = channel.members[0];
+
+    let preference = channelMember?.notificationPreference;
+
+    if (!preference && workspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId: mentionedUserId } },
+      });
+      preference = workspaceMember?.notificationPreference || 'all';
+    }
+
+    if (preference === 'nothing') return;
+
+    const workspaceSlug = channel?.workspace?.slug || 'default';
+    const channelSlug = channel?.slug || channelId;
+
+    await this.createNotification({
+      userId: mentionedUserId,
+      type: 'mention',
+      title: 'You were mentioned',
+      message: `${mentionedBy} mentioned you in #${channel?.name || 'a channel'}`,
+      entityType: 'channel',
+      entityId: channelId,
+      linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
+      metadata: {
+        messageContent: messageContent.slice(0, 100),
+        mentionedBy,
+        channelName: channel?.name,
+        messageId,
+      },
+    });
   }
 
-  /**
-   * ⚡ Performance Optimization:
-   * Batched implementation to avoid N+1 database queries and sequential external deliveries.
-   */
-  async notifyMentions(
-    messageId: string,
-    mentionedUserIds: string[],
-    mentionedBy: string,
-    channelId: string,
-    messageContent: string
-  ) {
-    return sharedNotifyMentions(messageId, mentionedUserIds, mentionedBy, channelId, messageContent);
-  }
-
-  /**
-   * ⚡ Performance Optimization:
-   * Delegated to shared implementation for consistent optimization across the platform.
-   */
   async notifyChannel(
     channelId: string,
     sentBy: string,
@@ -151,7 +137,50 @@ export class NotificationsService {
     messageContent: string,
     isHere: boolean = false
   ) {
-    return sharedNotifyChannel(channelId, sentBy, messageId, messageContent, isHere);
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      include: {
+        members: true,
+        workspace: {
+          include: {
+            members: true,
+          },
+        },
+      },
+    });
+
+    if (!channel) return;
+
+    const workspaceSlug = channel.workspace?.slug || 'default';
+    const channelSlug = channel.slug || channelId;
+    const channelMembers = channel.members;
+
+    for (const cm of channelMembers) {
+      const userId = cm.userId;
+
+      // Check preferences
+      let preference = cm.notificationPreference;
+      if (!preference && channel.workspaceId) {
+        const wm = channel.workspace?.members.find(m => m.userId === userId);
+        preference = wm?.notificationPreference || 'all';
+      }
+
+      if (preference === 'nothing') continue;
+
+      await this.createNotification({
+        userId,
+        type: 'channel_alert',
+        title: isHere ? `@here in #${channel.name}` : `@all in #${channel.name}`,
+        message: `${sentBy}: ${messageContent.slice(0, 50)}...`,
+        entityType: 'channel',
+        entityId: channelId,
+        linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
+        metadata: {
+          messageId,
+          sentBy,
+        },
+      });
+    }
   }
 
   async markAllRead(userId: string) {

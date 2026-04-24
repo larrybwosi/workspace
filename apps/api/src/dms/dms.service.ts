@@ -188,10 +188,9 @@ export class DmsService {
         select: {
           id: true,
           participant1Id: true,
-          participant2Id: true,
+          participant2Id: targetUserId,
           lastMessageAt: true,
           createdAt: true,
-          updatedAt: true,
           participant1: {
             select: {
               id: true,

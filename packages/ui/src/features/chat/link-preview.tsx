@@ -8,7 +8,6 @@ interface LinkPreviewData {
   description?: string | null;
   image?: string | null;
   siteName?: string | null;
-  icon?: string | null;
   url: string;
 }
 
@@ -24,7 +23,7 @@ export function LinkPreview({ url }: { url: string }) {
         const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
-        if (data.title || data.description || data.image || data.icon) {
+        if (data.title || data.description || data.image) {
           setPreview(data);
         }
       } catch (err) {
@@ -97,21 +96,11 @@ export function LinkPreview({ url }: { url: string }) {
       </div>
 
       <div className="p-4 flex-1 min-w-0 flex flex-col justify-center">
-        <div className="flex items-center gap-2 mb-1.5">
-          {preview.icon && (
-            <img
-              src={preview.icon}
-              alt=""
-              className="w-4 h-4 rounded-sm object-contain"
-              onError={e => (e.currentTarget.style.display = 'none')}
-            />
-          )}
-          {preview.siteName && (
-            <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider truncate">
-              {preview.siteName}
-            </span>
-          )}
-        </div>
+        {preview.siteName && (
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 block truncate">
+            {preview.siteName}
+          </span>
+        )}
 
         <a
           href={url}
@@ -123,7 +112,7 @@ export function LinkPreview({ url }: { url: string }) {
         </a>
 
         {preview.description && (
-          <p className="text-sm text-zinc-600 dark:text-zinc-300 line-clamp-3 leading-relaxed mt-1">
+          <p className="text-sm text-zinc-600 dark:text-zinc-300 line-clamp-2 leading-relaxed mt-1">
             {preview.description}
           </p>
         )}

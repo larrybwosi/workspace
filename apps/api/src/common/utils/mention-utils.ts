@@ -1,7 +1,6 @@
 export function extractUserMentions(content: string): string[] {
   // Extract @username mentions from content, excluding special mentions like @all and @here
-  // Supports alphanumeric, underscores, and dots (common in usernames)
-  const mentionRegex = /@([\w.]+)/g;
+  const mentionRegex = /@(\w+)/g;
   const mentions: string[] = [];
   let match;
 
@@ -38,14 +37,8 @@ export function extractUserIds(mentions: string[], users: any[]): string[] {
   // This avoids repeated nested loops which would scale poorly as message size/user list grows.
   const userMap = new Map<string, string>();
   for (const user of users) {
-    if (user.id) {
-      if (user.username) {
-        userMap.set(user.username.toLowerCase(), user.id);
-      }
-      if (user.name) {
-        // Also allow mentioning by name if username is not present or as fallback
-        userMap.set(user.name.toLowerCase(), user.id);
-      }
+    if (user.name && user.id) {
+      userMap.set(user.name.toLowerCase(), user.id);
     }
   }
 

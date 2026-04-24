@@ -95,9 +95,9 @@ export interface Channel {
   createdAt?: string | Date
   threads?: (Thread & { _count?: { messages: number } })[]
   _count?: {
-    messages?: number
-    members?: number
-    threads?: number
+    messages: number
+    members: number
+    threads: number
   }
 }
 
