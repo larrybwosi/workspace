@@ -1,0 +1,6 @@
+
+> api@0.0.1 build /app/apps/api
+> nest build
+
+ Info  "typeCheck" will not have any effect when "builder" is not "swc".
+webpack 5.105.4 compiled [1m[32msuccessfully[39m[22m in 21861 ms

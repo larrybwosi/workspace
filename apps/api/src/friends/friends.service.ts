@@ -12,7 +12,6 @@ export class FriendsService {
           OR: [
             { friend: { name: { contains: search, mode: "insensitive" } } },
             { friend: { email: { contains: search, mode: "insensitive" } } },
-            { friend: { username: { contains: search, mode: "insensitive" } } },
             { nickname: { contains: search, mode: "insensitive" } },
           ],
         }),
@@ -81,14 +80,9 @@ export class FriendsService {
     });
   }
 
-  async sendFriendRequest(senderId: string, senderName: string, receiverIdentifier: string, message?: string) {
-    const receiver = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: receiverIdentifier },
-          { username: receiverIdentifier },
-        ],
-      },
+  async sendFriendRequest(senderId: string, senderName: string, receiverEmail: string, message?: string) {
+    const receiver = await prisma.user.findUnique({
+      where: { email: receiverEmail },
     });
 
     if (!receiver) {

@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     alias: {
+      '@': path.resolve(__dirname, './src'),
       '@repo/shared/server': path.resolve(__dirname, '../../packages/shared/src/server.ts'),
       '@repo/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
       '@repo/types': path.resolve(__dirname, '../../packages/types/src/index.ts'),

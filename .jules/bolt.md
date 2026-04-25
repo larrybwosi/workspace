@@ -19,13 +19,3 @@
 ## 2025-05-15 - [API] Consistent Optimization of Message Retrieval
 **Learning:** High-traffic endpoints like message retrieval in Channels and DMs often suffer from over-fetching due to broad `include` statements and large nested lists (e.g., all read receipts). Moving logic for reaction grouping and per-user read filtering to the server reduces JSON payload size by 40-60%.
 **Action:** Always replace broad Prisma `include` with targeted `select`, and filter user-specific relations at the DB level where possible.
-## 2025-05-15 - [API] Batching Notifications for Large Channels
-**Learning:** Sequential database writes and sequential external API calls (Ably/Push) in a loop for channel-wide alerts (@all/@here) create a major performance bottleneck (O(N) database round-trips and O(N) sequential network latency).
-**Action:** Use `prisma.notification.createManyAndReturn` (Prisma 5.14+) for batch DB insertion and `Promise.all` for parallelizing external deliveries. Centralize delivery logic to avoid code duplication.
-## 2026-04-19 - [Shared/Notifications] Batch Notification Delivery
-**Learning:** Sequential database writes and sequential external API calls (Ably/Push) for channel-wide alerts create a major performance bottleneck (O(N)).
-**Action:** Use 'prisma.notification.createManyAndReturn' for batch DB insertion and 'Promise.all' for parallelizing external deliveries in a shared helper. Use a 'Map' to reliably link payloads to returned notifications as Prisma doesn't guarantee order.
-
-## 2026-05-20 - [Performance] Batched Mention Notifications
-**Learning:** Mentioning multiple users in a single message triggered sequential N+1 database queries and sequential external API calls, significantly delaying message delivery as the number of mentions increased.
-**Action:** Batched mention notifications using `prisma.notification.createManyAndReturn` and parallelized delivery. Centralized this logic in a shared `notifyMentions` function to ensure consistent performance across all message-sending services.

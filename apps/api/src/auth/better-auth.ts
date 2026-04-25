@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@repo/database';
 import { admin, jwt, organization } from 'better-auth/plugins';
-import { validateEnv } from '@repo/shared/server';
+import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
 

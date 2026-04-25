@@ -75,42 +75,6 @@ export function useScheduledCalls(workspaceSlug: string, workspaceId?: string) {
   })
 }
 
-export function useCall(callId: string) {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!callId) return;
-
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const channel = ably.channels.get(AblyChannels.call(callId));
-
-    const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ['call', callId] });
-    };
-
-    channel.subscribe('call-joined', handleUpdate);
-    channel.subscribe('call-left', handleUpdate);
-    channel.subscribe('call-ended', handleUpdate);
-
-    return () => {
-      channel.unsubscribe('call-joined', handleUpdate);
-      channel.unsubscribe('call-left', handleUpdate);
-      channel.unsubscribe('call-ended', handleUpdate);
-    };
-  }, [callId, queryClient]);
-
-  return useQuery({
-    queryKey: ['call', callId],
-    queryFn: async () => {
-      const { data } = await apiClient.get(`/calls/${callId}`);
-      return data;
-    },
-    enabled: !!callId,
-  });
-}
-
 export function useStartCall() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -137,12 +101,8 @@ export function useJoinCall() {
       type: string
       callId: string
       workspaceSlug: string
-      workspaceId?: string
     }) => {
-      const { data } = await apiClient.post("/calls", {
-        ...params,
-        callId: params.callId,
-      })
+      const { data } = await apiClient.post("/calls", params)
 
       if (!data.token) {
         const { data: tokenData } = await apiClient.post("/agora/token", {

@@ -14,11 +14,6 @@ export class CallsController {
     return this.callsService.startCall(user, body);
   }
 
-  @Get(':callId')
-  async getCall(@Param('callId') callId: string) {
-    return this.callsService.getCall(callId);
-  }
-
   @Patch(':callId')
   async updateCall(
     @CurrentUser() user: User,
@@ -45,10 +40,9 @@ export class CallsController {
   @Get('scheduled')
   async getScheduledCalls(
     @CurrentUser() user: User,
-    @Query('workspaceSlug') workspaceSlug: string,
     @Query('workspaceId') workspaceId: string,
   ) {
-    return this.callsService.getScheduledCalls(user, workspaceId || workspaceSlug);
+    return this.callsService.getScheduledCalls(user, workspaceId);
   }
 
   @Post('scheduled')

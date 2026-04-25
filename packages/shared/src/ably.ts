@@ -19,6 +19,7 @@ export const AblyEvents = {
   MESSAGE_DELETED: 'message:deleted',
   MESSAGE_REACTION: 'message:reaction',
   MESSAGE_REPLY: 'message:reply',
+  MESSAGE_READ: 'message:read',
   NOTIFICATION: 'notification',
   TYPING_START: 'typing:start',
   TYPING_STOP: 'typing:stop',
@@ -30,7 +31,6 @@ export const AblyEvents = {
   CHANNEL_UPDATED: 'channel:updated',
   CHANNEL_DELETED: 'channel:deleted',
   SOUNDBOARD_PLAYED: 'soundboard:played',
-  MESSAGE_READ: 'message:read',
 };
 
 export const EVENTS = AblyEvents;

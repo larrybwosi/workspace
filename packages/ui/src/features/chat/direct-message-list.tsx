@@ -47,7 +47,7 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                 "w-full justify-start h-auto py-2 px-3",
                 activeUserId === otherUser.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent",
               )}
-              onClick={() => onUserSelect(dm.id)}
+              onClick={() => onUserSelect(otherUser.id)}
             >
               <div className="flex items-center gap-3 w-full">
                 <div className="relative">

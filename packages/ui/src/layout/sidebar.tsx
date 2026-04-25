@@ -233,18 +233,10 @@ export function Sidebar({
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     };
 
-    const handleMessageRead = (message: any) => {
-      if (message.data.dmId) {
-        queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
-      }
-    };
-
     userChannel.subscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
-    userChannel.subscribe(AblyEvents.MESSAGE_READ, handleMessageRead);
 
     return () => {
       userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
-      userChannel.unsubscribe(AblyEvents.MESSAGE_READ, handleMessageRead);
     };
   }, [sessionUser?.id, queryClient]);
 
@@ -260,11 +252,8 @@ export function Sidebar({
 
   const notifCount: number = notificationsData?.total ?? notificationsData?.notifications?.length ?? 0;
 
-  const handleNavigate = (id: string, href: string) => {
-    onChannelSelect(id);
-    if (pathname !== href) {
-      router.push(href);
-    }
+  const handleNavigate = (href: string) => {
+    router.push(href);
     onClose();
   };
 
@@ -308,13 +297,13 @@ export function Sidebar({
                 <NavButton
                   icon={Sparkles}
                   label="Assistant"
-                  isActive={pathname === '/assistant' || activeChannel === 'assistant'}
+                  isActive={pathname === '/assistant'}
                   badge={
                     <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500/15 text-blue-500 border-0 font-semibold">
                       NEW
                     </Badge>
                   }
-                  onClick={() => handleNavigate('assistant', '/assistant')}
+                  onClick={() => handleNavigate('/assistant')}
                 />
                 <NavButton
                   icon={Inbox}
@@ -327,25 +316,25 @@ export function Sidebar({
                       </span>
                     ) : undefined
                   }
-                  onClick={() => handleNavigate('notifications', '/notifications')}
+                  onClick={() => handleNavigate('/notifications')}
                 />
                 <NavButton
                   icon={Users}
                   label="Friends"
                   isActive={pathname === '/friends' || activeChannel === 'friends'}
-                  onClick={() => handleNavigate('friends', '/friends')}
+                  onClick={() => handleNavigate('/friends')}
                 />
                 <NavButton
                   icon={FileText}
                   label="Drafts"
-                  isActive={pathname === '/drafts' || activeChannel === 'drafts'}
-                  onClick={() => handleNavigate('drafts', '/drafts')}
+                  isActive={pathname === '/drafts'}
+                  onClick={() => handleNavigate('/drafts')}
                 />
                 <NavButton
                   icon={Bookmark}
                   label="Saved items"
-                  isActive={pathname === '/saved' || activeChannel === 'saved'}
-                  onClick={() => handleNavigate('saved', '/saved')}
+                  isActive={pathname === '/saved'}
+                  onClick={() => handleNavigate('/saved')}
                 />
               </div>
             </div>
@@ -373,10 +362,10 @@ export function Sidebar({
                     </p>
                   ) : (
                     dmConversations.map((dm: any) => {
-                      const other = dm.members.find((m: any) => m.id !== sessionUser?.id) ?? dm.members[0];
+                      const other = dm.members.find((m: any) => m.id !== dm.creatorId) ?? dm.members[0];
                       const status = onlineUsers.has(other.id) ? 'online' : 'offline';
-                      const dmId = dm.id;
-                      const href = `/dm/${dm.id}`;
+                      const dmId = `dm-${other.id}`;
+                      const href = `/dm/${other.id}`;
                       const isActive = activeChannel === dmId || pathname === href;
                       const unread: number = dm._count?.messages ?? 0;
 
@@ -391,7 +380,7 @@ export function Sidebar({
                               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                               : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                           )}
-                          onClick={() => handleNavigate(dmId, href)}
+                          onClick={() => handleNavigate(href)}
                         >
                           <div className="relative shrink-0">
                             <Avatar className="h-6 w-6">
