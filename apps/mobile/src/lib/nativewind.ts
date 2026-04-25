@@ -1,4 +1,4 @@
-import MapView from 'react-native-maps';
+import { MapView } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cssInterop } from 'nativewind';
 

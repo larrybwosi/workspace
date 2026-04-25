@@ -51,7 +51,7 @@ export function ScheduleCallDialog({
     try {
       await scheduleCallMutation.mutateAsync({
         ...formData,
-        workspaceSlug: workspaceId,
+        workspaceId,
         channelId,
       })
 

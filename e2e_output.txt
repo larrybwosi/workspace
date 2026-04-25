@@ -1,0 +1,80 @@
+
+> api@0.0.1 test:e2e /app/apps/api
+> jest --config ./test/jest-e2e.json
+
+FAIL test/migration.e2e-spec.ts
+  ● Test suite failed to run
+
+    [96mtest/migration.e2e-spec.ts[0m:[93m7[0m:[93m1[0m - [91merror[0m[90m TS2593: [0mCannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m7[0m describe('Admin, DMs, Friends, Calls (e2e)', () => {
+    [7m [0m [91m~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m14[0m:[93m3[0m - [91merror[0m[90m TS2304: [0mCannot find name 'beforeAll'.
+
+    [7m14[0m   beforeAll(async () => {
+    [7m  [0m [91m  ~~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m48[0m:[93m3[0m - [91merror[0m[90m TS2304: [0mCannot find name 'afterAll'.
+
+    [7m48[0m   afterAll(async () => {
+    [7m  [0m [91m  ~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m52[0m:[93m3[0m - [91merror[0m[90m TS2593: [0mCannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m52[0m   describe('AdminModule', () => {
+    [7m  [0m [91m  ~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m53[0m:[93m5[0m - [91merror[0m[90m TS2593: [0mCannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m53[0m     it('GET /admin/profile-assets (Authorized)', () => {
+    [7m  [0m [91m    ~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m60[0m:[93m3[0m - [91merror[0m[90m TS2593: [0mCannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m60[0m   describe('DmsModule', () => {
+    [7m  [0m [91m  ~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m61[0m:[93m5[0m - [91merror[0m[90m TS2593: [0mCannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m61[0m     it('GET /dms', () => {
+    [7m  [0m [91m    ~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m68[0m:[93m3[0m - [91merror[0m[90m TS2593: [0mCannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m68[0m   describe('FriendsModule', () => {
+    [7m  [0m [91m  ~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m69[0m:[93m5[0m - [91merror[0m[90m TS2593: [0mCannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m69[0m     it('GET /friends', () => {
+    [7m  [0m [91m    ~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m75[0m:[93m5[0m - [91merror[0m[90m TS2593: [0mCannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m75[0m     it('GET /friends/requests', () => {
+    [7m  [0m [91m    ~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m82[0m:[93m3[0m - [91merror[0m[90m TS2593: [0mCannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m82[0m   describe('CallsModule', () => {
+    [7m  [0m [91m  ~~~~~~~~[0m
+    [96mtest/migration.e2e-spec.ts[0m:[93m83[0m:[93m5[0m - [91merror[0m[90m TS2593: [0mCannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m83[0m     it('GET /calls/scheduled (Missing workspaceId)', () => {
+    [7m  [0m [91m    ~~[0m
+
+FAIL test/app.e2e-spec.ts
+  ● Test suite failed to run
+
+    [96mtest/app.e2e-spec.ts[0m:[93m8[0m:[93m1[0m - [91merror[0m[90m TS2593: [0mCannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m8[0m describe('AppController (e2e)', () => {
+    [7m [0m [91m~~~~~~~~[0m
+    [96mtest/app.e2e-spec.ts[0m:[93m11[0m:[93m3[0m - [91merror[0m[90m TS2304: [0mCannot find name 'beforeEach'.
+
+    [7m11[0m   beforeEach(async () => {
+    [7m  [0m [91m  ~~~~~~~~~~[0m
+    [96mtest/app.e2e-spec.ts[0m:[93m21[0m:[93m3[0m - [91merror[0m[90m TS2593: [0mCannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+
+    [7m21[0m   it('/health (GET)', () => {
+    [7m  [0m [91m  ~~[0m
+
+Test Suites: 2 failed, 2 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        20.643 s
+Ran all test suites.
+/app/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.1 test:e2e: `jest --config ./test/jest-e2e.json`
+Exit status 1

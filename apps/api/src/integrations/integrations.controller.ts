@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
@@ -140,21 +140,6 @@ export class WorkspaceIntegrationsController {
   @Post(':integrationId/test')
   async testWorkspaceIntegration(@CurrentUser() user: User, @Param('slug') slug: string, @Param('integrationId') integrationId: string) {
     return this.integrationsService.testWorkspaceIntegration(user.id, slug, integrationId);
-  }
-
-  @Get('github/auth')
-  async getGithubAuthUrl(@CurrentUser() user: User, @Param('slug') slug: string) {
-    return this.integrationsService.getGithubAuthUrl(user.id, slug);
-  }
-
-  @Get('github/callback')
-  async githubCallback(@CurrentUser() user: User, @Param('slug') slug: string, @Query('code') code: string) {
-    return this.integrationsService.handleGithubCallback(user.id, slug, code);
-  }
-
-  @Post('github/webhook')
-  async githubWebhook(@Param('slug') slug: string, @Body() body: any, @Query('signature') signature: string) {
-    return this.integrationsService.handleGithubWebhook(slug, body, signature);
   }
 
   @Get('webhooks')

@@ -37,15 +37,14 @@ import {
   useJoinCall,
   useStartCall,
   useGenerateInviteLink,
-  useDM,
 } from '@repo/api-client';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
 import { toast } from 'sonner';
 import { User, Channel, WorkspaceMember } from '@repo/ui/lib/types';
 import { ScheduleCallDialog } from '../features/calls/schedule-call-dialog';
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -57,46 +56,23 @@ interface InfoPanelProps {
     role: string;
     status: string;
   };
-  type?: 'channel' | 'workspace' | 'dm';
+  type?: 'channel' | 'workspace';
   id?: string;
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
 }
 
-export function InfoPanel({
-  isOpen,
-  onClose,
-  dmUser: propDmUser,
-  type = 'channel',
-  id,
-  activeTab: controlledActiveTab,
-  onTabChange
-}: InfoPanelProps) {
+export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: InfoPanelProps) {
   const params = useParams();
-  const router = useRouter();
   const workspaceSlug = params.slug as string;
   const channelSlug = params.channelSlug as string;
   const channelId = id || channelSlug;
 
-  const isDM = type === 'dm' || channelId?.startsWith('dm-') || !!propDmUser;
+  const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
+  const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
+  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
 
-  const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(isDM ? '' : workspaceSlug);
-  const { data: channel, isLoading: isChannelLoading } = useChannel(isDM ? '' : channelId, isDM ? undefined : workspaceSlug);
-  const { data: dmData } = useDM(isDM ? channelId : '');
-  const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(isDM ? '' : workspaceSlug);
-
-  const dmUser = propDmUser || (isDM ? dmData?.user : null);
+  const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
-  const [internalActiveTab, setInternalActiveTab] = useState('info');
-  const activeTab = controlledActiveTab || internalActiveTab;
-
-  const setActiveTab = (tab: string) => {
-    if (onTabChange) {
-      onTabChange(tab);
-    } else {
-      setInternalActiveTab(tab);
-    }
-  };
+  const [activeTab, setActiveTab] = useState('info');
 
   const { setCall, activeCall: currentActiveCall } = useCallStore();
   const { data: activeCalls = [] } = useActiveCalls(workspaceSlug, workspace?.id);
@@ -169,8 +145,8 @@ export function InfoPanel({
 
         <aside
           className={cn(
-            'fixed lg:relative right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200',
-            isOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'
+            'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
+            isOpen ? 'translate-x-0' : 'translate-x-full'
           )}
         >
           <div className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0">
@@ -275,8 +251,8 @@ export function InfoPanel({
       {/* Info Panel */}
       <aside
         className={cn(
-          'fixed lg:relative right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200',
-          isOpen ? 'translate-x-0' : 'translate-x-full lg:hidden'
+          'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         {/* Header */}
@@ -339,13 +315,8 @@ export function InfoPanel({
         {activeTab === 'search' ? (
           <MessageSearchPanel
             channelId={channelId}
-            onMessageClick={(messageId: string, id: string, resultWorkspaceSlug?: string) => {
-              if (id.startsWith('dm-')) {
-                const userId = id.replace('dm-', '');
-                router.push(`/dm/${userId}?messageId=${messageId}`);
-              } else {
-                router.push(`/workspace/${resultWorkspaceSlug || workspaceSlug || 'default'}/channels/${id}?messageId=${messageId}`);
-              }
+            onMessageClick={(messageId, channelId) => {
+              window.location.href = `/channels/${channelId}?messageId=${messageId}`;
             }}
           />
         ) : (
@@ -517,31 +488,16 @@ export function InfoPanel({
                                     {call.participants?.length || 0} in call
                                   </Badge>
                                 </div>
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="flex items-center gap-2">
-                                    <Avatar className="h-5 w-5">
-                                      <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
-                                      <AvatarFallback className="text-[8px]">
-                                        {call.initiator?.name?.slice(0, 2).toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-xs font-medium truncate max-w-[120px]">
-                                      {call.initiator?.name}
-                                    </span>
-                                  </div>
-
-                                  {call.participants?.length > 0 && (
-                                    <div className="flex -space-x-1.5 overflow-hidden">
-                                      {call.participants.slice(0, 3).map((p: any) => (
-                                        <Avatar key={p.user.id} className="h-4 w-4 border border-background">
-                                          <AvatarImage src={p.user.avatar || p.user.image} />
-                                          <AvatarFallback className="text-[5px]">
-                                            {p.user.name.slice(0, 2).toUpperCase()}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                      ))}
-                                    </div>
-                                  )}
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Avatar className="h-5 w-5">
+                                    <AvatarImage src={call.initiator?.avatar || call.initiator?.image} />
+                                    <AvatarFallback className="text-[8px]">
+                                      {call.initiator?.name?.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs font-medium truncate">
+                                    Started by {call.initiator?.name}
+                                  </span>
                                 </div>
                                 <Button
                                   size="sm"

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master, dev ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main, master, dev ]
+    branches: [ main, master ]
 
 env:
   PG_U: runner_u
@@ -14,58 +14,11 @@ env:
   RD_PORT: 6379
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      mobile: ${{ steps.filter.outputs.mobile }}
-      desktop: ${{ steps.filter.outputs.desktop }}
-      api: ${{ steps.filter.outputs.api }}
-      web: ${{ steps.filter.outputs.web }}
-      global: ${{ steps.filter.outputs.global }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            mobile:
-              - 'apps/mobile/**'
-              - 'packages/**'
-              - 'pnpm-lock.yaml'
-              - 'turbo.json'
-            desktop:
-              - 'apps/desktop/**'
-              - 'packages/**'
-              - 'pnpm-lock.yaml'
-              - 'turbo.json'
-            api:
-              - 'apps/api/**'
-              - 'packages/**'
-              - 'pnpm-lock.yaml'
-              - 'turbo.json'
-            web:
-              - 'apps/web/**'
-              - 'packages/**'
-              - 'pnpm-lock.yaml'
-              - 'turbo.json'
-            global:
-              - 'pnpm-lock.yaml'
-              - 'turbo.json'
-              - 'package.json'
-              - '.github/workflows/**'
-
   lint-and-typecheck:
-    needs: changes
-    if: needs.changes.outputs.mobile == 'true' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '21'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -75,8 +28,6 @@ jobs:
       - run: pnpm run tsc
 
   unit-tests:
-    needs: changes
-    if: needs.changes.outputs.mobile == 'true' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -104,11 +55,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '21'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -120,12 +66,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_secret_for_build_purposes_only_32_chars
+          BETTER_AUTH_SECRET: dummy_auth_val_ci
         run: pnpm run test
 
   e2e-tests:
-    needs: changes
-    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true'
     timeout-minutes: 60
     runs-on: ubuntu-latest
     services:
@@ -154,11 +98,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: pnpm/action-setup@v4
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '21'
     - uses: actions/setup-node@v4
       with:
         node-version: 22
@@ -172,7 +111,7 @@ jobs:
       env:
         DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
         REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-        BETTER_AUTH_SECRET: dummy_secret_for_build_purposes_only_32_chars
+        BETTER_AUTH_SECRET: dummy_auth_val_ci
         PORT: 3001
       run: pnpm run test:e2e
     - uses: actions/upload-artifact@v4
@@ -183,16 +122,9 @@ jobs:
         retention-days: 30
 
   version:
-    if: |
-      always() &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.changes.result == 'success' &&
-      (needs.lint-and-typecheck.result == 'success' || needs.lint-and-typecheck.result == 'skipped') &&
-      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
-      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [changes, lint-and-typecheck, unit-tests, e2e-tests]
+    needs: [lint-and-typecheck, unit-tests, e2e-tests]
     permissions:
       contents: write
       pull-requests: write
@@ -217,169 +149,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  mobile-build-verify:
-    needs: [changes]
-    if: needs.changes.outputs.mobile == 'true' || needs.changes.outputs.global == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '21'
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install --dangerously-allow-all-builds
-
-      - name: Generate Prisma Client
-        run: pnpm --filter @repo/database run db:generate
-
-      - name: Build Shared Packages
-        run: |
-          pnpm --filter @repo/shared build
-          pnpm --filter @repo/api-client build
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Prebuild Android
-        working-directory: apps/mobile
-        env:
-          EXPO_PUBLIC_API_URL: https://api.skryme.com
-        run: npx expo prebuild --platform android
-
-      - name: Build Debug APK
-        working-directory: apps/mobile/android
-        run: |
-          RN_PATH=$(node -e "console.log(require.resolve('react-native/package.json').replace('/package.json', ''))")
-          WORKLETS_PATH=$(node -e "console.log(require.resolve('react-native-worklets/package.json').replace('/package.json', ''))")
-          ./gradlew assembleDebug --no-daemon \
-            -PREACT_NATIVE_NODE_MODULES_DIR=$RN_PATH \
-            -PREACT_NATIVE_WORKLETS_NODE_MODULES_DIR=$WORKLETS_PATH
-
-  desktop-build-verify:
-    needs: [changes]
-    if: needs.changes.outputs.desktop == 'true' || needs.changes.outputs.global == 'true'
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '21'
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-
-      - name: Generate Prisma Client
-        run: pnpm --filter @repo/database run db:generate
-
-      - name: Build Shared Packages
-        run: |
-          pnpm --filter @repo/shared build
-          pnpm --filter @repo/api-client build
-
-      - name: Build Desktop App (Windows)
-        run: pnpm --filter skryme-desktop run build
-
-  docker-build-verify:
-    needs: [changes]
-    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [api, web]
-        include:
-          - app: api
-            should_run: ${{ needs.changes.outputs.api == 'true' || needs.changes.outputs.global == 'true' }}
-          - app: web
-            should_run: ${{ needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-        if: matrix.should_run
-
-      - name: Set up Docker Buildx
-        if: matrix.should_run
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        if: matrix.should_run
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/${{ matrix.app }}/Dockerfile
-          push: false
-          cache-from: type=gha,scope=${{ matrix.app }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
-
   docker-publish:
-    if: |
-      always() &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.changes.result == 'success' &&
-      (needs.version.result == 'success' || needs.version.result == 'skipped') &&
-      (needs.docker-build-verify.result == 'success' || needs.docker-build-verify.result == 'skipped') &&
-      (needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [changes, version, docker-build-verify]
+    needs: [version]
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
-        app: [api, web]
-        include:
-          - app: api
-            should_run: ${{ needs.changes.outputs.api == 'true' || needs.changes.outputs.global == 'true' }}
-          - app: web
-            should_run: ${{ needs.changes.outputs.web == 'true' || needs.changes.outputs.global == 'true' }}
+        apps: [api, web]
     steps:
       - uses: actions/checkout@v4
-        if: matrix.should_run
 
       - name: Set up Docker Buildx
-        if: matrix.should_run
         uses: docker/setup-buildx-action@v3
 
       - name: Get version
-        if: matrix.should_run
         id: get_version
         run: |
-          VERSION=$(node -p "require('./apps/${{ matrix.app }}/package.json').version")
+          VERSION=$(node -p "require('./apps/${{ matrix.apps }}/package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Lowercase repo name
-        if: matrix.should_run
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=ghcr.io/$REPO_LOWER/${{ matrix.app }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=ghcr.io/$REPO_LOWER/${{ matrix.apps }}" >> $GITHUB_ENV
 
       - name: Log in to GHCR
-        if: matrix.should_run
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -387,14 +184,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        if: matrix.should_run
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/${{ matrix.app }}/Dockerfile
+          file: apps/${{ matrix.apps }}/Dockerfile
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
-          cache-from: type=gha,scope=${{ matrix.app }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

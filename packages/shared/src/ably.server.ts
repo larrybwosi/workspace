@@ -14,6 +14,7 @@ export function getAblyServer() {
     return null;
   }
   if (!ablyClientInstance) {
+    // @ts-ignore
     ablyClientInstance = new Ably.Realtime({
       key,
       clientId: 'server',
@@ -28,6 +29,7 @@ export function getAblyRest(): any {
     console.warn('ABLY_API_KEY is not defined, returning null');
     return null;
   }
+  // @ts-ignore
   return new Ably.Rest({
     key,
   });

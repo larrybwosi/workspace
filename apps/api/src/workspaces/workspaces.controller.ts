@@ -52,13 +52,8 @@ const updateMemberSchema = z.object({
 @Controller('workspaces')
 @UseGuards(AuthGuard)
 export class WorkspacesController {
-  /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Replaces full 'members' list with a simple count to avoid massive JSON payloads.
-   * Expected impact: Reduces JSON payload size by ~80-90% for users in multiple workspaces.
-   */
   @Get()
+
   async getWorkspaces(@CurrentUser() user: User): Promise<any> {
     return prisma.workspace.findMany({
       where: {
@@ -68,15 +63,7 @@ export class WorkspacesController {
           },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        icon: true,
-        description: true,
-        ownerId: true,
-        plan: true,
-        createdAt: true,
+      include: {
         owner: {
           select: {
             id: true,
@@ -85,9 +72,20 @@ export class WorkspacesController {
             avatar: true,
           },
         },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
-            members: true,
             channels: true,
           },
         },
@@ -155,33 +153,30 @@ export class WorkspacesController {
     });
   }
 
-  /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Replaces full 'members' list with a simple count.
-   * 3. Combines workspace lookup and membership verification into a single database query.
-   * Expected impact: Significantly reduces response time and memory overhead for large workspaces.
-   */
   @Get(':slug')
   async getWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        icon: true,
-        description: true,
-        ownerId: true,
-        plan: true,
-        settings: true,
-        createdAt: true,
+      include: {
         owner: {
           select: {
             id: true,
             name: true,
             email: true,
             avatar: true,
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                status: true,
+              },
+            },
           },
         },
         channels: {
@@ -192,17 +187,8 @@ export class WorkspacesController {
             type: true,
           },
         },
-        members: {
-          where: {
-            userId: user.id,
-          },
-          select: {
-            userId: true,
-          },
-        },
         _count: {
           select: {
-            members: true,
             channels: true,
           },
         },
@@ -213,14 +199,12 @@ export class WorkspacesController {
       throw new NotFoundException('Workspace not found');
     }
 
-    if (workspace.members.length === 0) {
+    const isMember = workspace.members.some(m => m.userId === user.id);
+    if (!isMember) {
       throw new ForbiddenException('You are not a member of this workspace');
     }
 
-    return {
-      ...workspace,
-      members: undefined, // Remove the filtered members array from response
-    };
+    return workspace;
   }
 
   @Patch(':slug')

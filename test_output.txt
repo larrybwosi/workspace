@@ -1,0 +1,1288 @@
+
+> api@0.0.1 test /app/apps/api
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.4 [39m[90m/app/apps/api[39m
+
+ [31m❯[39m src/friends/friends.service.spec.ts [2m([22m[2m17 tests[22m[2m | [22m[31m11 failed[39m[2m)[22m[32m 109[2mms[22m[39m
+     [32m✓[39m should be defined[32m 22[2mms[22m[39m
+[31m       [31m×[31m should include username in the search filter when search is provided[39m[32m 21[2mms[22m[39m
+       [32m✓[39m should NOT include OR filter when no search provided[32m 3[2mms[22m[39m
+[31m       [31m×[31m should include name, email, username, and nickname in OR filter[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should search username case-insensitively[39m[32m 3[2mms[22m[39m
+       [32m✓[39m should always filter by userId regardless of search[32m 2[2mms[22m[39m
+       [32m✓[39m should return the friends list[32m 2[2mms[22m[39m
+[31m       [31m×[31m should use findFirst with OR [email, username] to find receiver[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should find receiver by username (PR change: username lookup support)[39m[32m 4[2mms[22m[39m
+       [32m✓[39m should throw NotFoundException when receiver not found[32m 10[2mms[22m[39m
+       [32m✓[39m should throw NotFoundException with 'User not found' message[32m 2[2mms[22m[39m
+[31m       [31m×[31m should throw BadRequestException when sender tries to send request to themselves[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should throw BadRequestException when already friends[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should throw BadRequestException when pending request already exists[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should successfully create friend request and notification[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should not use findUnique for user lookup (must use findFirst)[39m[32m 8[2mms[22m[39m
+[31m       [31m×[31m should send Ably notification to receiver on success[39m[32m 2[2mms[22m[39m
+ [31m❯[39m src/integrations/integrations.service.spec.ts [2m([22m[2m16 tests[22m[2m | [22m[31m16 failed[39m[2m)[22m[32m 68[2mms[22m[39m
+[31m       [31m×[31m should return a GitHub authorization URL[39m[32m 25[2mms[22m[39m
+[31m       [31m×[31m should include the client_id in the URL[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should include required scopes in the URL[39m[32m 6[2mms[22m[39m
+[31m       [31m×[31m should include the workspace slug as state parameter[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should include encoded redirect URI containing workspace slug[39m[32m 7[2mms[22m[39m
+[31m       [31m×[31m should throw NotFoundException when workspace is not found[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should throw BadRequestException on GitHub OAuth error[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should create a new integration when none exists[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should update an existing integration when one already exists[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should return { success: false } when workspace is not found[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return { success: false } when no 'general' channel exists[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should create system message for pull_request event[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should create system message for push event with commits[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should create system message for issue event[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should NOT call createSystemMessage when event type is unrecognized[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should include commit count in push message[39m[32m 2[2mms[22m[39m
+ [31m❯[39m src/calls/calls.service.spec.ts [2m([22m[2m25 tests[22m[2m | [22m[31m13 failed[39m[2m)[22m[32m 102[2mms[22m[39m
+     [32m✓[39m should be defined[32m 16[2mms[22m[39m
+[31m       [31m×[31m should return a call with participants when found[39m[32m 9[2mms[22m[39m
+[31m       [31m×[31m should throw NotFoundException when call is not found[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should throw NotFoundException with message 'Call not found'[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should include participants filtered by leftAt: null[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should include initiator in the query[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should order participants by joinedAt desc[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should include user fields for participants: id, name, image, avatar[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should throw BadRequestException when workspaceIdOrSlug is empty string[32m 12[2mms[22m[39m
+[31m       [31m×[31m should throw BadRequestException with 'Workspace ID or Slug required'[39m[32m 8[2mms[22m[39m
+[31m       [31m×[31m should throw BadRequestException when workspaceIdOrSlug is undefined[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should resolve workspace by slug using OR [id, slug] query[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m should use the resolved workspace ID when querying calls[39m[32m 6[2mms[22m[39m
+       [32m✓[39m should use the original value as workspaceId if workspace lookup returns null[32m 2[2mms[22m[39m
+       [32m✓[39m should filter calls by status: 'scheduled' and future scheduledFor dates[32m 2[2mms[22m[39m
+       [32m✓[39m should return scheduled calls[32m 1[2mms[22m[39m
+       [32m✓[39m should include initiator in the query[32m 2[2mms[22m[39m
+       [32m✓[39m should order results by scheduledFor asc[32m 1[2mms[22m[39m
+       [32m✓[39m should throw BadRequestException when type is missing[32m 2[2mms[22m[39m
+       [32m✓[39m should throw BadRequestException when both workspaceId and workspaceSlug are missing[32m 2[2mms[22m[39m
+[31m       [31m×[31m should resolve workspaceId from workspaceSlug when workspaceId is not provided[39m[32m 3[2mms[22m[39m
+       [32m✓[39m should not resolve from slug when workspaceId is already provided[32m 3[2mms[22m[39m
+       [32m✓[39m should throw BadRequestException when required fields are missing[32m 2[2mms[22m[39m
+[31m       [31m×[31m should resolve workspaceId from workspaceSlug[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should not attempt slug resolution when workspaceId is already present[32m 2[2mms[22m[39m
+ [31m❯[39m src/common/utils/mention-utils.spec.ts [2m([22m[2m38 tests[22m[2m | [22m[31m12 failed[39m[2m)[22m[32m 43[2mms[22m[39m
+     [32m✓[39m should extract simple alphanumeric usernames[32m 3[2mms[22m[39m
+     [32m✓[39m should extract usernames with underscores[32m 3[2mms[22m[39m
+[31m     [31m×[31m should extract usernames with dots (PR change: new [.] support)[39m[32m 11[2mms[22m[39m
+[31m     [31m×[31m should extract multiple dot-separated username segments[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m should extract multiple mentions[39m[32m 2[2mms[22m[39m
+     [32m✓[39m should exclude @all special mention[32m 0[2mms[22m[39m
+     [32m✓[39m should exclude @here special mention[32m 0[2mms[22m[39m
+     [32m✓[39m should return empty array when no mentions found[32m 0[2mms[22m[39m
+     [32m✓[39m should return empty array for empty string[32m 1[2mms[22m[39m
+[31m     [31m×[31m should handle mixed special and regular mentions[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m should extract mentions embedded in sentences[39m[32m 1[2mms[22m[39m
+     [32m✓[39m should return all occurrences including duplicates[32m 0[2mms[22m[39m
+     [32m✓[39m should extract username after @here in same message[32m 1[2mms[22m[39m
+[31m     [31m×[31m should extract username after @all in same message[39m[32m 1[2mms[22m[39m
+     [32m✓[39m should handle username starting with underscore[32m 0[2mms[22m[39m
+     [32m✓[39m should extract channel mentions[32m 0[2mms[22m[39m
+     [32m✓[39m should return empty array when no channel mentions[32m 0[2mms[22m[39m
+     [32m✓[39m should extract multiple channel mentions[32m 0[2mms[22m[39m
+     [32m✓[39m should return true when @all is present[32m 0[2mms[22m[39m
+     [32m✓[39m should return true when @here is present[32m 0[2mms[22m[39m
+     [32m✓[39m should return false when @all is not present[32m 0[2mms[22m[39m
+     [32m✓[39m should not match partial words like @allocation (word boundary check)[32m 0[2mms[22m[39m
+     [32m✓[39m should not match @heretic when checking for @here[32m 0[2mms[22m[39m
+     [32m✓[39m should return false for empty string[32m 0[2mms[22m[39m
+[31m     [31m×[31m should resolve user IDs by username (PR change: username priority)[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m should resolve user IDs by username with dots[39m[32m 1[2mms[22m[39m
+     [32m✓[39m should resolve user IDs by name as fallback when no username[32m 0[2mms[22m[39m
+     [32m✓[39m should resolve user IDs by name as fallback (case insensitive)[32m 0[2mms[22m[39m
+     [32m✓[39m should deduplicate user IDs (PR change: Set usage)[32m 1[2mms[22m[39m
+     [32m✓[39m should return empty array when no mentions match any user[32m 0[2mms[22m[39m
+     [32m✓[39m should return empty array for empty mentions array[32m 0[2mms[22m[39m
+[31m     [31m×[31m should handle mention lookup case-insensitively[39m[32m 1[2mms[22m[39m
+     [32m✓[39m should not return ID for user without id field[32m 0[2mms[22m[39m
+[31m     [31m×[31m should handle multiple distinct users[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m should prefer username match over name match when username equals mention[39m[32m 1[2mms[22m[39m
+     [32m✓[39m should handle users with no name and no username gracefully[32m 0[2mms[22m[39m
+[31m     [31m×[31m should match by username even with mixed case[39m[32m 1[2mms[22m[39m
+     [32m✓[39m should return empty array when users list is empty[32m 2[2mms[22m[39m
+ [31m❯[39m src/common/system-messages.service.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+[90mstdout[2m | src/common/ably/ably.controller.spec.ts
+[22m[39m◇ injected env (0) from ../../.env // tip: ⌘ enable debugging { debug: true }
+
+ [31m❯[39m src/dms/dms.service.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/notifications/notifications.service.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/workspaces/messages.service.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m src/workspaces/channels.controller.spec.ts [2m([22m[2m18 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 44[2mms[22m[39m
+       [32m✓[39m should count unread messages as the number of unread message objects[32m 3[2mms[22m[39m
+       [32m✓[39m should return unreadCount of 0 when no unread messages[32m 0[2mms[22m[39m
+       [32m✓[39m should strip messages array from returned channel object[32m 1[2mms[22m[39m
+       [32m✓[39m should preserve all other channel fields in the result[32m 1[2mms[22m[39m
+       [32m✓[39m should count message as mention when @username matches user.username[32m 0[2mms[22m[39m
+       [32m✓[39m should count message as mention when @name matches user.name[32m 0[2mms[22m[39m
+       [32m✓[39m should count message as mention when @all is present[32m 0[2mms[22m[39m
+       [32m✓[39m should count message as mention when @here is present[32m 0[2mms[22m[39m
+       [32m✓[39m should NOT count message as mention when @other user is mentioned[32m 1[2mms[22m[39m
+       [32m✓[39m should return mentionCount 0 when no messages have mentions[32m 0[2mms[22m[39m
+       [32m✓[39m should count only messages where the current user is mentioned (not all mentions)[32m 0[2mms[22m[39m
+       [32m✓[39m should count a single message only once even if it has multiple matching mentions[32m 0[2mms[22m[39m
+       [32m✓[39m should handle multiple channels independently[32m 0[2mms[22m[39m
+       [32m✓[39m should handle user without username field[32m 0[2mms[22m[39m
+     [32m✓[39m should be defined[32m 14[2mms[22m[39m
+     [32m✓[39m should throw NotFoundException when workspace not found in getWorkspaceChannels[32m 5[2mms[22m[39m
+     [32m✓[39m should throw ForbiddenException when user is not a workspace member[32m 3[2mms[22m[39m
+[31m     [31m×[31m should return channels with unreadCount and mentionCount when successful[39m[32m 10[2mms[22m[39m
+ [31m❯[39m src/common/ably/ably.controller.spec.ts [2m([22m[2m11 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 69[2mms[22m[39m
+     [32m✓[39m should be defined[32m 17[2mms[22m[39m
+[31m       [31m×[31m should generate a token request with granular capabilities[39m[32m 20[2mms[22m[39m
+[31m       [31m×[31m should include new call:* capability (PR change)[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should include new global-presence capability (PR change)[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should include user:${id} capability (PR change: without wildcard)[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should include notifications:${id} capability (PR change: without wildcard)[39m[32m 3[2mms[22m[39m
+       [32m✓[39m should set TTL to 1 hour (3600000 ms)[32m 2[2mms[22m[39m
+       [32m✓[39m should throw an error when Ably client is not initialized[32m 3[2mms[22m[39m
+       [32m✓[39m should set clientId to the user's id[32m 3[2mms[22m[39m
+       [32m✓[39m should include timestamp in the token request[32m 3[2mms[22m[39m
+       [32m✓[39m should return the token request result[32m 2[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/common/system-messages.service.spec.ts[2m [ src/common/system-messages.service.spec.ts ][22m
+[31m[1mError[22m: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock[39m
+[36m [2m❯[22m src/common/system-messages.service.ts:[2m3:1[22m[39m
+    [90m  1|[39m [35mimport[39m { [33mInjectable[39m } [35mfrom[39m [32m'@nestjs/common'[39m[33m;[39m
+    [90m  2|[39m [35mimport[39m { prisma } [35mfrom[39m [32m'@repo/database'[39m[33m;[39m
+    [90m  3|[39m import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/se…
+    [90m   |[39m [31m^[39m
+    [90m  4|[39m
+    [90m  5|[39m [35minterface[39m [33mSystemMessageOptions[39m {
+
+[31m[1mCaused by: ReferenceError[22m: Cannot access 'mockGetAblyRest' before initialization[39m
+[36m [2m❯[22m src/common/system-messages.service.spec.ts:[2m20:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/dms/dms.service.spec.ts[2m [ src/dms/dms.service.spec.ts ][22m
+[31m[1mError[22m: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock[39m
+[36m [2m❯[22m src/dms/dms.service.ts:[2m3:1[22m[39m
+    [90m  1|[39m [35mimport[39m { [33mInjectable[39m } [35mfrom[39m [32m'@nestjs/common'[39m[33m;[39m
+    [90m  2|[39m [35mimport[39m { prisma } [35mfrom[39m [32m'@repo/database'[39m[33m;[39m
+    [90m  3|[39m import { getAblyRest, AblyChannels, AblyEvents, publishToAbly } from '…
+    [90m   |[39m [31m^[39m
+    [90m  4|[39m
+    [90m  5|[39m [33m@[39m[33mInjectable[39m()
+
+[31m[1mCaused by: ReferenceError[22m: Cannot access 'mockGetAblyRest' before initialization[39m
+[36m [2m❯[22m src/dms/dms.service.spec.ts:[2m40:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/notifications/notifications.service.spec.ts[2m [ src/notifications/notifications.service.spec.ts ][22m
+[31m[1mError[22m: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock[39m
+[36m [2m❯[22m src/notifications/notifications.service.ts:[2m3:1[22m[39m
+    [90m  1|[39m [35mimport[39m { [33mInjectable[39m } [35mfrom[39m [32m'@nestjs/common'[39m[33m;[39m
+    [90m  2|[39m [35mimport[39m { prisma } [35mfrom[39m [32m'@repo/database'[39m[33m;[39m
+    [90m  3|[39m import { getAblyRest, AblyChannels, AblyEvents, sendPushNotification }…
+    [90m   |[39m [31m^[39m
+    [90m  4|[39m
+    [90m  5|[39m [35mexport[39m [35minterface[39m [33mNotificationPayload[39m {
+
+[31m[1mCaused by: ReferenceError[22m: Cannot access 'mockGetAblyRest' before initialization[39m
+[36m [2m❯[22m src/notifications/notifications.service.spec.ts:[2m34:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/workspaces/messages.service.spec.ts[2m [ src/workspaces/messages.service.spec.ts ][22m
+[31m[1mError[22m: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock[39m
+[36m [2m❯[22m src/workspaces/messages.service.ts:[2m3:1[22m[39m
+    [90m  1|[39m import { Injectable, BadRequestException, NotFoundException, Forbidden…
+    [90m  2|[39m [35mimport[39m { prisma } [35mfrom[39m [32m'@repo/database'[39m[33m;[39m
+    [90m  3|[39m [35mimport[39m {
+    [90m   |[39m [31m^[39m
+    [90m  4|[39m   getAblyRest[33m,[39m
+    [90m  5|[39m   [33mAblyChannels[39m[33m,[39m
+
+[31m[1mCaused by: ReferenceError[22m: Cannot access 'mockGetAblyRest' before initialization[39m
+[36m [2m❯[22m src/workspaces/messages.service.spec.ts:[2m65:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/62]⎯[22m[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 58 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould return a call with participants when found
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m122:36[22m[39m
+    [90m120|[39m       mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39m[34mmockResolvedValue[39m(mockCall)[33m;[39m
+    [90m121|[39m
+    [90m122|[39m       [35mconst[39m result [33m=[39m [35mawait[39m service[33m.[39m[34mgetCall[39m([32m"call-1"[39m)[33m;[39m
+    [90m   |[39m                                    [31m^[39m
+    [90m123|[39m
+    [90m124|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m(mockCall)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould throw NotFoundException when call is not found
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m135:28[22m[39m
+    [90m133|[39m       mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39m[34mmockResolvedValue[39m([35mnull[39m)[33m;[39m
+    [90m134|[39m
+    [90m135|[39m       await expect(service.getCall("nonexistent-call")).rejects.toThro…
+    [90m   |[39m                            [31m^[39m
+    [90m136|[39m         [33mNotFoundException[39m
+    [90m137|[39m       )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould throw NotFoundException with message 'Call not found'
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m143:28[22m[39m
+    [90m141|[39m       mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39m[34mmockResolvedValue[39m([35mnull[39m)[33m;[39m
+    [90m142|[39m
+    [90m143|[39m       await expect(service.getCall("nonexistent-call")).rejects.toThro…
+    [90m   |[39m                            [31m^[39m
+    [90m144|[39m         [32m"Call not found"[39m
+    [90m145|[39m       )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould include participants filtered by leftAt: null
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m154:21[22m[39m
+    [90m152|[39m       })[33m;[39m
+    [90m153|[39m
+    [90m154|[39m       [35mawait[39m service[33m.[39m[34mgetCall[39m([32m"call-1"[39m)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m155|[39m
+    [90m156|[39m       [35mconst[39m callArg [33m=[39m mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould include initiator in the query
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m167:21[22m[39m
+    [90m165|[39m       })[33m;[39m
+    [90m166|[39m
+    [90m167|[39m       [35mawait[39m service[33m.[39m[34mgetCall[39m([32m"call-1"[39m)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m168|[39m
+    [90m169|[39m       [35mconst[39m callArg [33m=[39m mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould order participants by joinedAt desc
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m180:21[22m[39m
+    [90m178|[39m       })[33m;[39m
+    [90m179|[39m
+    [90m180|[39m       [35mawait[39m service[33m.[39m[34mgetCall[39m([32m"call-1"[39m)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m181|[39m
+    [90m182|[39m       [35mconst[39m callArg [33m=[39m mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetCall - new method[2m > [22mshould include user fields for participants: id, name, image, avatar
+[31m[1mTypeError[22m: service.getCall is not a function[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m192:21[22m[39m
+    [90m190|[39m       })[33m;[39m
+    [90m191|[39m
+    [90m192|[39m       [35mawait[39m service[33m.[39m[34mgetCall[39m([32m"call-1"[39m)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m193|[39m
+    [90m194|[39m       [35mconst[39m callArg [33m=[39m mockPrisma[33m.[39mcall[33m.[39mfindUnique[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetScheduledCalls - workspaceIdOrSlug support[2m > [22mshould throw BadRequestException with 'Workspace ID or Slug required'
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Workspace ID or Slug required' but got 'Workspace ID required'[39m
+
+Expected: [32m"Workspace ID [7mor Slug [27mrequired"[39m
+Received: [31m"Workspace ID required"[39m
+
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m215:8[22m[39m
+    [90m213|[39m       [35mawait[39m [34mexpect[39m(
+    [90m214|[39m         service[33m.[39m[34mgetScheduledCalls[39m(mockUser[33m,[39m [32m""[39m)
+    [90m215|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"Workspace ID or Slug required"[39m)[33m;[39m
+    [90m   |[39m        [31m^[39m
+    [90m216|[39m     })[33m;[39m
+    [90m217|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetScheduledCalls - workspaceIdOrSlug support[2m > [22mshould throw BadRequestException when workspaceIdOrSlug is undefined
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Workspace ID or Slug required' but got 'Workspace ID required'[39m
+
+Expected: [32m"Workspace ID [7mor Slug [27mrequired"[39m
+Received: [31m"Workspace ID required"[39m
+
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m221:8[22m[39m
+    [90m219|[39m       [35mawait[39m [34mexpect[39m(
+    [90m220|[39m         service[33m.[39m[34mgetScheduledCalls[39m(mockUser[33m,[39m undefined [35mas[39m any)
+    [90m221|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"Workspace ID or Slug required"[39m)[33m;[39m
+    [90m   |[39m        [31m^[39m
+    [90m222|[39m     })[33m;[39m
+    [90m223|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetScheduledCalls - workspaceIdOrSlug support[2m > [22mshould resolve workspace by slug using OR [id, slug] query
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m230:46[22m[39m
+    [90m228|[39m       [35mawait[39m service[33m.[39m[34mgetScheduledCalls[39m(mockUser[33m,[39m [32m"my-workspace-slug"[39m)[33m;[39m
+    [90m229|[39m
+    [90m230|[39m       [34mexpect[39m(mockPrisma[33m.[39mworkspace[33m.[39mfindFirst)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                                              [31m^[39m
+    [90m231|[39m         expect[33m.[39m[34mobjectContaining[39m({
+    [90m232|[39m           where[33m:[39m {
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mgetScheduledCalls - workspaceIdOrSlug support[2m > [22mshould use the resolved workspace ID when querying calls
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   ObjectContaining {[90m
+[32m-     "where": ObjectContaining {[90m
+[32m-       "workspaceId": "resolved-ws-id",[90m
+[31m+   {[90m
+[31m+     "include": {[90m
+[31m+       "initiator": true,[90m
+[31m+     },[90m
+[31m+     "orderBy": {[90m
+[31m+       "scheduledFor": "asc",[90m
+[31m+     },[90m
+[31m+     "where": {[90m
+[31m+       "scheduledFor": {[90m
+[31m+         "gte": 2026-04-25T04:49:39.962Z,[90m
+[31m+       },[90m
+[31m+       "status": "scheduled",[90m
+[31m+       "workspaceId": "my-workspace-slug",[90m
+[2m      },[22m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m248:40[22m[39m
+    [90m246|[39m       [35mawait[39m service[33m.[39m[34mgetScheduledCalls[39m(mockUser[33m,[39m [32m"my-workspace-slug"[39m)[33m;[39m
+    [90m247|[39m
+    [90m248|[39m       [34mexpect[39m(mockPrisma[33m.[39mcall[33m.[39mfindMany)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                                        [31m^[39m
+    [90m249|[39m         expect[33m.[39m[34mobjectContaining[39m({
+    [90m250|[39m           where[33m:[39m expect[33m.[39m[34mobjectContaining[39m({
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mstartCall - workspaceSlug resolution[2m > [22mshould resolve workspaceId from workspaceSlug when workspaceId is not provided
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m362:47[22m[39m
+    [90m360|[39m       [35mawait[39m service[33m.[39m[34mstartCall[39m(mockUser[33m,[39m body)[33m.[39m[35mcatch[39m(() [33m=>[39m {})[33m;[39m
+    [90m361|[39m
+    [90m362|[39m       [34mexpect[39m(mockPrisma[33m.[39mworkspace[33m.[39mfindUnique)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                                               [31m^[39m
+    [90m363|[39m         expect[33m.[39m[34mobjectContaining[39m({
+    [90m364|[39m           where[33m:[39m { slug[33m:[39m [32m"my-workspace-slug"[39m }[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/calls/calls.service.spec.ts[2m > [22mCallsService[2m > [22mscheduleCall - workspaceSlug resolution[2m > [22mshould resolve workspaceId from workspaceSlug
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m src/calls/calls.service.spec.ts:[2m433:47[22m[39m
+    [90m431|[39m       [35mawait[39m service[33m.[39m[34mscheduleCall[39m(mockUser[33m,[39m body)[33m.[39m[35mcatch[39m(() [33m=>[39m {})[33m;[39m
+    [90m432|[39m
+    [90m433|[39m       [34mexpect[39m(mockPrisma[33m.[39mworkspace[33m.[39mfindUnique)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                                               [31m^[39m
+    [90m434|[39m         expect[33m.[39m[34mobjectContaining[39m({
+    [90m435|[39m           where[33m:[39m { slug[33m:[39m [32m"my-workspace"[39m }[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22mgetFriends - username search (PR change)[2m > [22mshould include username in the search filter when search is provided
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   ObjectContaining {[90m
+[32m-     "where": ObjectContaining {[90m
+[32m-       "OR": ArrayContaining [[90m
+[31m+   {[90m
+[31m+     "include": {[90m
+[31m+       "friend": {[90m
+[31m+         "select": {[90m
+[31m+           "avatar": true,[90m
+[31m+           "email": true,[90m
+[31m+           "id": true,[90m
+[31m+           "image": true,[90m
+[31m+           "name": true,[90m
+[31m+           "role": true,[90m
+[31m+           "status": true,[90m
+[31m+         },[90m
+[31m+       },[90m
+[31m+     },[90m
+[31m+     "orderBy": {[90m
+[31m+       "createdAt": "desc",[90m
+[31m+     },[90m
+[31m+     "where": {[90m
+[31m+       "OR": [[90m
+[31m+         {[90m
+[31m+           "friend": {[90m
+[31m+             "name": {[90m
+[31m+               "contains": "alice",[90m
+[31m+               "mode": "insensitive",[90m
+[31m+             },[90m
+[31m+           },[90m
+[31m+         },[90m
+[2m          {[22m
+[2m            "friend": {[22m
+[32m-             "username": {[90m
+[31m+             "email": {[90m
+[2m                "contains": "alice",[22m
+[2m                "mode": "insensitive",[22m
+[2m              },[22m
+[2m            },[22m
+[2m          },[22m
+[31m+         {[90m
+[31m+           "nickname": {[90m
+[31m+             "contains": "alice",[90m
+[31m+             "mode": "insensitive",[90m
+[31m+           },[90m
+[31m+         },[90m
+[2m        ],[22m
+[31m+       "userId": "user-1",[90m
+[2m      },[22m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m70:42[22m[39m
+    [90m 68|[39m       [35mawait[39m service[33m.[39m[34mgetFriends[39m([32m"user-1"[39m[33m,[39m [32m"alice"[39m)[33m;[39m
+    [90m 69|[39m
+    [90m 70|[39m       [34mexpect[39m(mockPrisma[33m.[39mfriend[33m.[39mfindMany)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                                          [31m^[39m
+    [90m 71|[39m         expect[33m.[39m[34mobjectContaining[39m({
+    [90m 72|[39m           where[33m:[39m expect[33m.[39m[34mobjectContaining[39m({
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22mgetFriends - username search (PR change)[2m > [22mshould include name, email, username, and nickname in OR filter
+[31m[1mAssertionError[22m: expected [ 'name', 'email', 'nickname' ] to include 'username'[39m
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m103:26[22m[39m
+    [90m101|[39m       [34mexpect[39m(filterKeys)[33m.[39m[34mtoContain[39m([32m"name"[39m)[33m;[39m
+    [90m102|[39m       [34mexpect[39m(filterKeys)[33m.[39m[34mtoContain[39m([32m"email"[39m)[33m;[39m
+    [90m103|[39m       [34mexpect[39m(filterKeys)[33m.[39m[34mtoContain[39m([32m"username"[39m)[33m;[39m
+    [90m   |[39m                          [31m^[39m
+    [90m104|[39m       [34mexpect[39m(filterKeys)[33m.[39m[34mtoContain[39m([32m"nickname"[39m)[33m;[39m
+    [90m105|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22mgetFriends - username search (PR change)[2m > [22mshould search username case-insensitively
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'friend')[39m
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m116:29[22m[39m
+    [90m114|[39m         (f[33m:[39m any) [33m=>[39m f[33m.[39mfriend[33m?.[39musername
+    [90m115|[39m       )[33m;[39m
+    [90m116|[39m       [34mexpect[39m(usernameFilter[33m.[39mfriend[33m.[39musername[33m.[39mmode)[33m.[39m[34mtoBe[39m([32m"insensitive"[39m)[33m;[39m
+    [90m   |[39m                             [31m^[39m
+    [90m117|[39m     })[33m;[39m
+    [90m118|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould use findFirst with OR [email, username] to find receiver
+[31m[1mNotFoundException[22m: User not found[39m
+[36m [2m❯[22m FriendsService.sendFriendRequest src/friends/friends.service.ts:[2m89:13[22m[39m
+    [90m 87|[39m
+    [90m 88|[39m     [35mif[39m ([33m![39mreceiver) {
+    [90m 89|[39m       [35mthrow[39m [35mnew[39m [33mNotFoundException[39m([32m'User not found'[39m)[33m;[39m
+    [90m   |[39m             [31m^[39m
+    [90m 90|[39m     }
+    [90m 91|[39m
+[90m [2m❯[22m src/friends/friends.service.spec.ts:[2m154:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould find receiver by username (PR change: username lookup support)
+[31m[1mNotFoundException[22m: User not found[39m
+[36m [2m❯[22m FriendsService.sendFriendRequest src/friends/friends.service.ts:[2m89:13[22m[39m
+    [90m 87|[39m
+    [90m 88|[39m     [35mif[39m ([33m![39mreceiver) {
+    [90m 89|[39m       [35mthrow[39m [35mnew[39m [33mNotFoundException[39m([32m'User not found'[39m)[33m;[39m
+    [90m   |[39m             [31m^[39m
+    [90m 90|[39m     }
+    [90m 91|[39m
+[90m [2m❯[22m src/friends/friends.service.spec.ts:[2m182:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould throw BadRequestException when sender tries to send request to themselves
+[31m[1mAssertionError[22m: expected error to be instance of BadRequestException[39m
+
+[32m- Expected:[39m
+[Function BadRequestException]
+
+[31m+ Received:[39m
+NotFoundException {
+  "message": "User not found",
+  "response": {
+    "error": "Not Found",
+    "message": "User not found",
+    "statusCode": 404,
+  },
+  "status": 404,
+  "options": {},
+  "name": "NotFoundException",
+}
+
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m217:8[22m[39m
+    [90m215|[39m       [35mawait[39m [34mexpect[39m(
+    [90m216|[39m         service.sendFriendRequest("user-1", "Alice", "self@example.com…
+    [90m217|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([33mBadRequestException[39m)[33m;[39m
+    [90m   |[39m        [31m^[39m
+    [90m218|[39m
+    [90m219|[39m       [35mawait[39m [34mexpect[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould throw BadRequestException when already friends
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Already friends with this user' but got 'User not found'[39m
+
+Expected: [32m"Already friends with this user"[39m
+Received: [31m"User not found"[39m
+
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m230:8[22m[39m
+    [90m228|[39m       [35mawait[39m [34mexpect[39m(
+    [90m229|[39m         service[33m.[39m[34msendFriendRequest[39m([32m"user-1"[39m[33m,[39m [32m"Alice"[39m[33m,[39m [32m"bob@example.com"[39m)
+    [90m230|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"Already friends with this user"[39m)[33m;[39m
+    [90m   |[39m        [31m^[39m
+    [90m231|[39m     })[33m;[39m
+    [90m232|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould throw BadRequestException when pending request already exists
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Friend request already pending' but got 'User not found'[39m
+
+Expected: [32m"Friend request already pending"[39m
+Received: [31m"User not found"[39m
+
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m240:8[22m[39m
+    [90m238|[39m       [35mawait[39m [34mexpect[39m(
+    [90m239|[39m         service[33m.[39m[34msendFriendRequest[39m([32m"user-1"[39m[33m,[39m [32m"Alice"[39m[33m,[39m [32m"bob@example.com"[39m)
+    [90m240|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"Friend request already pending"[39m)[33m;[39m
+    [90m   |[39m        [31m^[39m
+    [90m241|[39m     })[33m;[39m
+    [90m242|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould successfully create friend request and notification
+[31m[1mNotFoundException[22m: User not found[39m
+[36m [2m❯[22m FriendsService.sendFriendRequest src/friends/friends.service.ts:[2m89:13[22m[39m
+    [90m 87|[39m
+    [90m 88|[39m     [35mif[39m ([33m![39mreceiver) {
+    [90m 89|[39m       [35mthrow[39m [35mnew[39m [33mNotFoundException[39m([32m'User not found'[39m)[33m;[39m
+    [90m   |[39m             [31m^[39m
+    [90m 90|[39m     }
+    [90m 91|[39m
+[90m [2m❯[22m src/friends/friends.service.spec.ts:[2m259:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould not use findUnique for user lookup (must use findFirst)
+[31m[1mAssertionError[22m: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "where": Object {
+          "email": "test",
+        },
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/friends/friends.service.spec.ts:[2m292:46[22m[39m
+    [90m290|[39m
+    [90m291|[39m       [90m// findUnique should not be called for user lookup[39m
+    [90m292|[39m       [34mexpect[39m(mockPrisma[33m.[39muser[33m.[39mfindUnique)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                                              [31m^[39m
+    [90m293|[39m       [34mexpect[39m(mockPrisma[33m.[39muser[33m.[39mfindFirst)[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m294|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/friends/friends.service.spec.ts[2m > [22mFriendsService[2m > [22msendFriendRequest - accepts email OR username (PR change)[2m > [22mshould send Ably notification to receiver on success
+[31m[1mNotFoundException[22m: User not found[39m
+[36m [2m❯[22m FriendsService.sendFriendRequest src/friends/friends.service.ts:[2m89:13[22m[39m
+    [90m 87|[39m
+    [90m 88|[39m     [35mif[39m ([33m![39mreceiver) {
+    [90m 89|[39m       [35mthrow[39m [35mnew[39m [33mNotFoundException[39m([32m'User not found'[39m)[33m;[39m
+    [90m   |[39m             [31m^[39m
+    [90m 90|[39m     }
+    [90m 91|[39m
+[90m [2m❯[22m src/friends/friends.service.spec.ts:[2m313:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mgetGithubAuthUrl (PR change)[2m > [22mshould return a GitHub authorization URL
+[31m[1mTypeError[22m: service.getGithubAuthUrl is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m84:36[22m[39m
+    [90m 82|[39m       process[33m.[39menv[33m.[39m[33mNEXT_PUBLIC_APP_URL[39m [33m=[39m [32m"https://app.example.com"[39m[33m;[39m
+    [90m 83|[39m
+    [90m 84|[39m       const result = await service.getGithubAuthUrl("user-1", "my-work…
+    [90m   |[39m                                    [31m^[39m
+    [90m 85|[39m
+    [90m 86|[39m       [34mexpect[39m(result)[33m.[39m[34mtoHaveProperty[39m([32m"url"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mgetGithubAuthUrl (PR change)[2m > [22mshould include the client_id in the URL
+[31m[1mTypeError[22m: service.getGithubAuthUrl is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m94:36[22m[39m
+    [90m 92|[39m       process[33m.[39menv[33m.[39m[33mNEXT_PUBLIC_APP_URL[39m [33m=[39m [32m"https://app.example.com"[39m[33m;[39m
+    [90m 93|[39m
+    [90m 94|[39m       const result = await service.getGithubAuthUrl("user-1", "my-work…
+    [90m   |[39m                                    [31m^[39m
+    [90m 95|[39m
+    [90m 96|[39m       [34mexpect[39m(result[33m.[39murl)[33m.[39m[34mtoContain[39m([32m"client_id=my_github_client_id"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mgetGithubAuthUrl (PR change)[2m > [22mshould include required scopes in the URL
+[31m[1mTypeError[22m: service.getGithubAuthUrl is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m103:36[22m[39m
+    [90m101|[39m       process[33m.[39menv[33m.[39m[33mNEXT_PUBLIC_APP_URL[39m [33m=[39m [32m"https://app.example.com"[39m[33m;[39m
+    [90m102|[39m
+    [90m103|[39m       const result = await service.getGithubAuthUrl("user-1", "my-work…
+    [90m   |[39m                                    [31m^[39m
+    [90m104|[39m
+    [90m105|[39m       expect(result.url).toContain("scope=repo%2Cread%3Auser%2Cworkflo…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mgetGithubAuthUrl (PR change)[2m > [22mshould include the workspace slug as state parameter
+[31m[1mTypeError[22m: service.getGithubAuthUrl is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m112:36[22m[39m
+    [90m110|[39m       process[33m.[39menv[33m.[39m[33mNEXT_PUBLIC_APP_URL[39m [33m=[39m [32m"https://app.example.com"[39m[33m;[39m
+    [90m111|[39m
+    [90m112|[39m       const result = await service.getGithubAuthUrl("user-1", "test-wo…
+    [90m   |[39m                                    [31m^[39m
+    [90m113|[39m
+    [90m114|[39m       [34mexpect[39m(result[33m.[39murl)[33m.[39m[34mtoContain[39m([32m"state=test-workspace"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mgetGithubAuthUrl (PR change)[2m > [22mshould include encoded redirect URI containing workspace slug
+[31m[1mTypeError[22m: service.getGithubAuthUrl is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m121:36[22m[39m
+    [90m119|[39m       process[33m.[39menv[33m.[39m[33mNEXT_PUBLIC_APP_URL[39m [33m=[39m [32m"https://app.example.com"[39m[33m;[39m
+    [90m120|[39m
+    [90m121|[39m       const result = await service.getGithubAuthUrl("user-1", "test-wo…
+    [90m   |[39m                                    [31m^[39m
+    [90m122|[39m
+    [90m123|[39m       [34mexpect[39m(result[33m.[39murl)[33m.[39m[34mtoContain[39m([32m"redirect_uri="[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubCallback (PR change)[2m > [22mshould throw NotFoundException when workspace is not found
+[31m[1mTypeError[22m: service.handleGithubCallback is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m138:17[22m[39m
+    [90m136|[39m
+    [90m137|[39m       [35mawait[39m [34mexpect[39m(
+    [90m138|[39m         service.handleGithubCallback("user-1", "nonexistent-workspace"…
+    [90m   |[39m                 [31m^[39m
+    [90m139|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([33mNotFoundException[39m)[33m;[39m
+    [90m140|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubCallback (PR change)[2m > [22mshould throw BadRequestException on GitHub OAuth error
+[31m[1mTypeError[22m: service.handleGithubCallback is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m152:17[22m[39m
+    [90m150|[39m
+    [90m151|[39m       [35mawait[39m [34mexpect[39m(
+    [90m152|[39m         service.handleGithubCallback("user-1", "my-workspace", "bad_co…
+    [90m   |[39m                 [31m^[39m
+    [90m153|[39m       )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"The code passed is incorrect"[39m)[33m;[39m
+    [90m154|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubCallback (PR change)[2m > [22mshould create a new integration when none exists
+[31m[1mTypeError[22m: service.handleGithubCallback is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m178:36[22m[39m
+    [90m176|[39m       global[33m.[39mfetch [33m=[39m mockFetch [35mas[39m any[33m;[39m
+    [90m177|[39m
+    [90m178|[39m       const result = await service.handleGithubCallback("user-1", "my-…
+    [90m   |[39m                                    [31m^[39m
+    [90m179|[39m
+    [90m180|[39m       expect(mockPrisma.workspaceIntegration.create).toHaveBeenCalledW…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubCallback (PR change)[2m > [22mshould update an existing integration when one already exists
+[31m[1mTypeError[22m: service.handleGithubCallback is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m218:36[22m[39m
+    [90m216|[39m       global[33m.[39mfetch [33m=[39m mockFetch [35mas[39m any[33m;[39m
+    [90m217|[39m
+    [90m218|[39m       const result = await service.handleGithubCallback("user-1", "my-…
+    [90m   |[39m                                    [31m^[39m
+    [90m219|[39m
+    [90m220|[39m       expect(mockPrisma.workspaceIntegration.update).toHaveBeenCalledW…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould return { success: false } when workspace is not found
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m237:36[22m[39m
+    [90m235|[39m       mockPrisma[33m.[39mworkspace[33m.[39mfindUnique[33m.[39m[34mmockResolvedValue[39m([35mnull[39m)[33m;[39m
+    [90m236|[39m
+    [90m237|[39m       const result = await service.handleGithubWebhook("nonexistent-wo…
+    [90m   |[39m                                    [31m^[39m
+    [90m238|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({ success[33m:[39m [35mfalse[39m })[33m;[39m
+    [90m239|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould return { success: false } when no 'general' channel exists
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m245:36[22m[39m
+    [90m243|[39m       mockPrisma[33m.[39mchannel[33m.[39mfindFirst[33m.[39m[34mmockResolvedValue[39m([35mnull[39m)[33m;[39m
+    [90m244|[39m
+    [90m245|[39m       const result = await service.handleGithubWebhook("my-workspace",…
+    [90m   |[39m                                    [31m^[39m
+    [90m246|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({ success[33m:[39m [35mfalse[39m })[33m;[39m
+    [90m247|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould create system message for pull_request event
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m262:36[22m[39m
+    [90m260|[39m       }[33m;[39m
+    [90m261|[39m
+    [90m262|[39m       const result = await service.handleGithubWebhook("my-workspace",…
+    [90m   |[39m                                    [31m^[39m
+    [90m263|[39m
+    [90m264|[39m       expect(mockSystemMessagesService.createSystemMessage).toHaveBeen…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould create system message for push event with commits
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m285:36[22m[39m
+    [90m283|[39m       }[33m;[39m
+    [90m284|[39m
+    [90m285|[39m       const result = await service.handleGithubWebhook("my-workspace",…
+    [90m   |[39m                                    [31m^[39m
+    [90m286|[39m
+    [90m287|[39m       expect(mockSystemMessagesService.createSystemMessage).toHaveBeen…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould create system message for issue event
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m309:36[22m[39m
+    [90m307|[39m       }[33m;[39m
+    [90m308|[39m
+    [90m309|[39m       const result = await service.handleGithubWebhook("my-workspace",…
+    [90m   |[39m                                    [31m^[39m
+    [90m310|[39m
+    [90m311|[39m       expect(mockSystemMessagesService.createSystemMessage).toHaveBeen…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould NOT call createSystemMessage when event type is unrecognized
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m327:36[22m[39m
+    [90m325|[39m       const unknownBody = { action: "something", other_field: "value" …
+    [90m326|[39m
+    [90m327|[39m       const result = await service.handleGithubWebhook("my-workspace",…
+    [90m   |[39m                                    [31m^[39m
+    [90m328|[39m
+    [90m329|[39m       expect(mockSystemMessagesService.createSystemMessage).not.toHave…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/integrations/integrations.service.spec.ts[2m > [22mIntegrationsService - GitHub integration (PR change)[2m > [22mhandleGithubWebhook (PR change)[2m > [22mshould include commit count in push message
+[31m[1mTypeError[22m: service.handleGithubWebhook is not a function[39m
+[36m [2m❯[22m src/integrations/integrations.service.spec.ts:[2m343:21[22m[39m
+    [90m341|[39m       }[33m;[39m
+    [90m342|[39m
+    [90m343|[39m       [35mawait[39m service[33m.[39m[34mhandleGithubWebhook[39m([32m"my-workspace"[39m[33m,[39m pushBody)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m344|[39m
+    [90m345|[39m       expect(mockSystemMessagesService.createSystemMessage).toHaveBeen…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/workspaces/channels.controller.spec.ts[2m > [22mChannelsController - NestJS module[2m > [22mshould return channels with unreadCount and mentionCount when successful
+[31m[1mAssertionError[22m: expected undefined to be 1 // Object.is equality[39m
+
+[32m- Expected:[39m
+1
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m src/workspaces/channels.controller.spec.ts:[2m385:35[22m[39m
+    [90m383|[39m
+    [90m384|[39m     [34mexpect[39m(result)[33m.[39m[34mtoHaveLength[39m([34m1[39m)[33m;[39m
+    [90m385|[39m     [34mexpect[39m(result[[34m0[39m][33m.[39munreadCount)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+    [90m   |[39m                                   [31m^[39m
+    [90m386|[39m     [34mexpect[39m(result[[34m0[39m][33m.[39mmentionCount)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+    [90m387|[39m     [34mexpect[39m(result[[34m0[39m])[33m.[39mnot[33m.[39m[34mtoHaveProperty[39m([32m"messages"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/ably/ably.controller.spec.ts[2m > [22mAblyController[2m > [22mgetToken[2m > [22mshould generate a token request with granular capabilities
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m[33m@@ -1,15 +1,21 @@[90m
+[2m  [[22m
+[32m-   ObjectContaining {[90m
+[32m-     "capability": ObjectContaining {[90m
+[31m+   {[90m
+[31m+     "capability": {[90m
+[31m+       "call-chat:*": [[90m
+[31m+         "subscribe",[90m
+[31m+         "publish",[90m
+[31m+         "history",[90m
+[31m+         "presence",[90m
+[31m+       ],[90m
+[2m        "channel:*": [[22m
+[2m          "subscribe",[22m
+[2m          "publish",[22m
+[2m          "history",[22m
+[2m          "presence",[22m
+[2m        ],[22m
+[32m-       "notifications:user_123": [[90m
+[31m+       "dm:*": [[90m
+[2m          "subscribe",[22m
+[2m          "publish",[22m
+[2m          "history",[22m
+[2m          "presence",[22m
+[2m        ],[22m
+[33m@@ -17,21 +23,41 @@[90m
+[2m          "subscribe",[22m
+[2m          "publish",[22m
+[2m          "history",[22m
+[2m          "presence",[22m
+[2m        ],[22m
+[32m-       "user:user_123": [[90m
+[31m+       "presence:*": [[90m
+[31m+         "subscribe",[90m
+[31m+         "publish",[90m
+[31m+         "history",[90m
+[31m+         "presence",[90m
+[31m+       ],[90m
+[31m+       "session:*": [[90m
+[31m+         "subscribe",[90m
+[31m+         "publish",[90m
+[31m+         "history",[90m
+[31m+         "presence",[90m
+[31m+       ],[90m
+[31m+       "thread:*": [[90m
+[2m          "subscribe",[22m
+[2m          "publish",[22m
+[2m          "history",[22m
+[2m          "presence",[22m
+[2m        ],[22m
+[2m        "user:user_123:*": [[22m
+[31m+         "subscribe",[90m
+[31m+         "publish",[90m
+[31m+         "history",[90m
+[31m+         "presence",[90m
+[31m+       ],[90m
+[31m+       "workspace:*": [[90m
+[2m          "subscribe",[22m
+[2m          "publish",[22m
+[2m          "history",[22m
+[2m          "presence",[22m
+[2m        ],[22m
+[2m      },[22m
+[2m      "clientId": "user_123",[22m
+[31m+     "timestamp": 1777092584117,[90m
+[31m+     "ttl": 3600000,[90m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/common/ably/ably.controller.spec.ts:[2m47:38[22m[39m
+    [90m 45|[39m       [35mawait[39m controller[33m.[39m[34mgetToken[39m(mockUser)[33m;[39m
+    [90m 46|[39m
+    [90m 47|[39m       [34mexpect[39m(mockCreateTokenRequest)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   |[39m                                      [31m^[39m
+    [90m 48|[39m         expect[33m.[39m[34mobjectContaining[39m({
+    [90m 49|[39m           clientId[33m:[39m [32m"user_123"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/ably/ably.controller.spec.ts[2m > [22mAblyController[2m > [22mgetToken[2m > [22mshould include new call:* capability (PR change)
+[31m[1mAssertionError[22m: expected undefined to deeply equal [ 'subscribe', 'publish', …(2) ][39m
+
+[32m- Expected:[39m
+[
+  "subscribe",
+  "publish",
+  "history",
+  "presence",
+]
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m src/common/ably/ably.controller.spec.ts:[2m75:44[22m[39m
+    [90m 73|[39m
+    [90m 74|[39m       [35mconst[39m callArg [33m=[39m mockCreateTokenRequest[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+    [90m 75|[39m       [34mexpect[39m(callArg[33m.[39mcapability[[32m"call:*"[39m])[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                                            [31m^[39m
+    [90m 76|[39m         [32m"subscribe"[39m[33m,[39m
+    [90m 77|[39m         [32m"publish"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/ably/ably.controller.spec.ts[2m > [22mAblyController[2m > [22mgetToken[2m > [22mshould include new global-presence capability (PR change)
+[31m[1mAssertionError[22m: expected undefined to deeply equal [ 'subscribe', 'publish', …(2) ][39m
+
+[32m- Expected:[39m
+[
+  "subscribe",
+  "publish",
+  "history",
+  "presence",
+]
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m src/common/ably/ably.controller.spec.ts:[2m97:53[22m[39m
+    [90m 95|[39m
+    [90m 96|[39m       [35mconst[39m callArg [33m=[39m mockCreateTokenRequest[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+    [90m 97|[39m       [34mexpect[39m(callArg[33m.[39mcapability[[32m"global-presence"[39m])[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                                                     [31m^[39m
+    [90m 98|[39m         [32m"subscribe"[39m[33m,[39m
+    [90m 99|[39m         [32m"publish"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/ably/ably.controller.spec.ts[2m > [22mAblyController[2m > [22mgetToken[2m > [22mshould include user:${id} capability (PR change: without wildcard)
+[31m[1mAssertionError[22m: expected undefined to deeply equal [ 'subscribe', 'publish', …(2) ][39m
+
+[32m- Expected:[39m
+[
+  "subscribe",
+  "publish",
+  "history",
+  "presence",
+]
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m src/common/ably/ably.controller.spec.ts:[2m117:54[22m[39m
+    [90m115|[39m
+    [90m116|[39m       [35mconst[39m callArg [33m=[39m mockCreateTokenRequest[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+    [90m117|[39m       [34mexpect[39m(callArg[33m.[39mcapability[[32m"user:user_direct"[39m])[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                                                      [31m^[39m
+    [90m118|[39m         [32m"subscribe"[39m[33m,[39m
+    [90m119|[39m         [32m"publish"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/ably/ably.controller.spec.ts[2m > [22mAblyController[2m > [22mgetToken[2m > [22mshould include notifications:${id} capability (PR change: without wildcard)
+[31m[1mAssertionError[22m: expected undefined to deeply equal [ 'subscribe', 'publish', …(2) ][39m
+
+[32m- Expected:[39m
+[
+  "subscribe",
+  "publish",
+  "history",
+  "presence",
+]
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m src/common/ably/ably.controller.spec.ts:[2m137:62[22m[39m
+    [90m135|[39m
+    [90m136|[39m       [35mconst[39m callArg [33m=[39m mockCreateTokenRequest[33m.[39mmock[33m.[39mcalls[[34m0[39m][[34m0[39m][33m;[39m
+    [90m137|[39m       [34mexpect[39m(callArg[33m.[39mcapability[[32m"notifications:user_notif"[39m])[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                                                              [31m^[39m
+    [90m138|[39m         [32m"subscribe"[39m[33m,[39m
+    [90m139|[39m         [32m"publish"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserMentions[2m > [22mshould extract usernames with dots (PR change: new [.] support)
+[31m[1mAssertionError[22m: expected [ 'john' ] to deeply equal [ 'john.doe' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "john.doe",[39m
+[31m+   "john",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m19:65[22m[39m
+    [90m 17|[39m
+    [90m 18|[39m   it("should extract usernames with dots (PR change: new [.] support)"…
+    [90m 19|[39m     expect(extractUserMentions("Hello @john.doe how are you?")).toEqua…
+    [90m   |[39m                                                                 [31m^[39m
+    [90m 20|[39m       [32m"john.doe"[39m[33m,[39m
+    [90m 21|[39m     ])[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserMentions[2m > [22mshould extract multiple dot-separated username segments
+[31m[1mAssertionError[22m: expected [ 'first' ] to deeply equal [ 'first.last.suffix' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "first.last.suffix",[39m
+[31m+   "first",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m25:58[22m[39m
+    [90m 23|[39m
+    [90m 24|[39m   [34mit[39m([32m"should extract multiple dot-separated username segments"[39m[33m,[39m () [33m=>[39m {
+    [90m 25|[39m     expect(extractUserMentions("Hi @first.last.suffix")).toEqual(["fir…
+    [90m   |[39m                                                          [31m^[39m
+    [90m 26|[39m   })[33m;[39m
+    [90m 27|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserMentions[2m > [22mshould extract multiple mentions
+[31m[1mAssertionError[22m: expected [ 'alice', 'bob' ] to deeply equal [ 'alice', 'bob.smith' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    "alice",[22m
+[32m-   "bob.smith",[39m
+[31m+   "bob",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m31:7[22m[39m
+    [90m 29|[39m     [34mexpect[39m(
+    [90m 30|[39m       [34mextractUserMentions[39m([32m"@alice and @bob.smith are here"[39m)
+    [90m 31|[39m     )[33m.[39m[34mtoEqual[39m([[32m"alice"[39m[33m,[39m [32m"bob.smith"[39m])[33m;[39m
+    [90m   |[39m       [31m^[39m
+    [90m 32|[39m   })[33m;[39m
+    [90m 33|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserMentions[2m > [22mshould handle mixed special and regular mentions
+[31m[1mAssertionError[22m: expected [ 'john' ] to deeply equal [ 'john.doe' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "john.doe",[39m
+[31m+   "john",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m52:20[22m[39m
+    [90m 50|[39m   [34mit[39m([32m"should handle mixed special and regular mentions"[39m[33m,[39m () [33m=>[39m {
+    [90m 51|[39m     const result = extractUserMentions("@all look at this @john.doe pl…
+    [90m 52|[39m     [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m([[32m"john.doe"[39m])[33m;[39m
+    [90m   |[39m                    [31m^[39m
+    [90m 53|[39m     [34mexpect[39m(result)[33m.[39mnot[33m.[39m[34mtoContain[39m([32m"all"[39m)[33m;[39m
+    [90m 54|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserMentions[2m > [22mshould extract mentions embedded in sentences
+[31m[1mAssertionError[22m: expected [ 'user' ] to deeply equal [ 'user.name' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "user.name",[39m
+[31m+   "user",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m58:20[22m[39m
+    [90m 56|[39m   [34mit[39m([32m"should extract mentions embedded in sentences"[39m[33m,[39m () [33m=>[39m {
+    [90m 57|[39m     const result = extractUserMentions("Dear @user.name, your ticket i…
+    [90m 58|[39m     [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m([[32m"user.name"[39m])[33m;[39m
+    [90m   |[39m                    [31m^[39m
+    [90m 59|[39m   })[33m;[39m
+    [90m 60|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserMentions[2m > [22mshould extract username after @all in same message
+[31m[1mAssertionError[22m: expected [ 'bob' ] to deeply equal [ 'bob.jones' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "bob.jones",[39m
+[31m+   "bob",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m74:20[22m[39m
+    [90m 72|[39m   [34mit[39m([32m"should extract username after @all in same message"[39m[33m,[39m () [33m=>[39m {
+    [90m 73|[39m     const result = extractUserMentions("Attention @all, especially @bo…
+    [90m 74|[39m     [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m([[32m"bob.jones"[39m])[33m;[39m
+    [90m   |[39m                    [31m^[39m
+    [90m 75|[39m     [34mexpect[39m(result)[33m.[39mnot[33m.[39m[34mtoContain[39m([32m"all"[39m)[33m;[39m
+    [90m 76|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserIds[2m > [22mshould resolve user IDs by username (PR change: username priority)
+[31m[1mAssertionError[22m: expected [] to deeply equal [ 'user-1' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "user-1",[39m
+[32m- ][39m
+[31m+ [][39m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m137:17[22m[39m
+    [90m135|[39m   it("should resolve user IDs by username (PR change: username priorit…
+    [90m136|[39m     [35mconst[39m ids [33m=[39m [34mextractUserIds[39m([[32m"alice"[39m][33m,[39m users)[33m;[39m
+    [90m137|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoEqual[39m([[32m"user-1"[39m])[33m;[39m
+    [90m   |[39m                 [31m^[39m
+    [90m138|[39m   })[33m;[39m
+    [90m139|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserIds[2m > [22mshould resolve user IDs by username with dots
+[31m[1mAssertionError[22m: expected [] to deeply equal [ 'user-2' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "user-2",[39m
+[32m- ][39m
+[31m+ [][39m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m142:17[22m[39m
+    [90m140|[39m   [34mit[39m([32m"should resolve user IDs by username with dots"[39m[33m,[39m () [33m=>[39m {
+    [90m141|[39m     [35mconst[39m ids [33m=[39m [34mextractUserIds[39m([[32m"bob.jones"[39m][33m,[39m users)[33m;[39m
+    [90m142|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoEqual[39m([[32m"user-2"[39m])[33m;[39m
+    [90m   |[39m                 [31m^[39m
+    [90m143|[39m   })[33m;[39m
+    [90m144|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserIds[2m > [22mshould handle mention lookup case-insensitively
+[31m[1mAssertionError[22m: expected [] to deeply equal [ 'user-1' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "user-1",[39m
+[32m- ][39m
+[31m+ [][39m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m174:17[22m[39m
+    [90m172|[39m   [34mit[39m([32m"should handle mention lookup case-insensitively"[39m[33m,[39m () [33m=>[39m {
+    [90m173|[39m     [35mconst[39m ids [33m=[39m [34mextractUserIds[39m([[32m"ALICE"[39m][33m,[39m users)[33m;[39m
+    [90m174|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoEqual[39m([[32m"user-1"[39m])[33m;[39m
+    [90m   |[39m                 [31m^[39m
+    [90m175|[39m   })[33m;[39m
+    [90m176|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserIds[2m > [22mshould handle multiple distinct users
+[31m[1mAssertionError[22m: expected [] to have a length of 2 but got +0[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 2[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m185:17[22m[39m
+    [90m183|[39m   [34mit[39m([32m"should handle multiple distinct users"[39m[33m,[39m () [33m=>[39m {
+    [90m184|[39m     [35mconst[39m ids [33m=[39m [34mextractUserIds[39m([[32m"alice"[39m[33m,[39m [32m"bob.jones"[39m][33m,[39m users)[33m;[39m
+    [90m185|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoHaveLength[39m([34m2[39m)[33m;[39m
+    [90m   |[39m                 [31m^[39m
+    [90m186|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"user-1"[39m)[33m;[39m
+    [90m187|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"user-2"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserIds[2m > [22mshould prefer username match over name match when username equals mention
+[31m[1mAssertionError[22m: expected [ 'user-a' ] to include 'user-b'[39m
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m197:17[22m[39m
+    [90m195|[39m     ][33m;[39m
+    [90m196|[39m     [35mconst[39m ids [33m=[39m [34mextractUserIds[39m([[32m"shared"[39m][33m,[39m usersWithConflict)[33m;[39m
+    [90m197|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"user-b"[39m)[33m;[39m
+    [90m   |[39m                 [31m^[39m
+    [90m198|[39m   })[33m;[39m
+    [90m199|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/62]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/common/utils/mention-utils.spec.ts[2m > [22mextractUserIds[2m > [22mshould match by username even with mixed case
+[31m[1mAssertionError[22m: expected [] to include 'user-2'[39m
+[36m [2m❯[22m src/common/utils/mention-utils.spec.ts:[2m208:17[22m[39m
+    [90m206|[39m   [34mit[39m([32m"should match by username even with mixed case"[39m[33m,[39m () [33m=>[39m {
+    [90m207|[39m     [35mconst[39m ids [33m=[39m [34mextractUserIds[39m([[32m"BOB.JONES"[39m][33m,[39m users)[33m;[39m
+    [90m208|[39m     [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"user-2"[39m)[33m;[39m
+    [90m   |[39m                 [31m^[39m
+    [90m209|[39m   })[33m;[39m
+    [90m210|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/62]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m10 failed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[31m58 failed[39m[22m[2m | [22m[1m[32m67 passed[39m[22m[90m (125)[39m
+[2m   Start at [22m 04:49:38
+[2m   Duration [22m 5.26s[2m (transform 1.64s, setup 0ms, import 9.63s, tests 435ms, environment 6ms)[22m
+
+/app/apps/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  api@0.0.1 test: `vitest run`
+Exit status 1
