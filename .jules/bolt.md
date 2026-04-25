@@ -19,3 +19,11 @@
 ## 2025-05-15 - [API] Consistent Optimization of Message Retrieval
 **Learning:** High-traffic endpoints like message retrieval in Channels and DMs often suffer from over-fetching due to broad `include` statements and large nested lists (e.g., all read receipts). Moving logic for reaction grouping and per-user read filtering to the server reduces JSON payload size by 40-60%.
 **Action:** Always replace broad Prisma `include` with targeted `select`, and filter user-specific relations at the DB level where possible.
+
+## 2025-05-15 - [API/Shared] Batch Notification Delivery
+**Learning:** Sequential database inserts and external service calls (Ably/Push) for channel-wide or multi-mention notifications create O(N) bottlenecks. Prisma's `createManyAndReturn` (O(1) insert) combined with `Promise.all` for delivery drastically improves throughput.
+**Action:** Consolidate notification logic into shared batch functions and use targeted relation queries (e.g., `where: { userId: { in: [...] } }`) to resolve preferences in one go.
+
+## 2025-05-15 - [Testing] Vitest Hoisting and Mock initialization
+**Learning:** Mocking shared packages that export multiple utilities often leads to `ReferenceError` if the mock variables aren't initialized before the module is hoisted.
+**Action:** Use `vi.hoisted` to define mock functions that need to be accessed inside a `vi.mock` factory, ensuring they are available during module evaluation.
