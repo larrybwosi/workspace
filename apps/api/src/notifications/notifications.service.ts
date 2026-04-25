@@ -130,6 +130,27 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * ⚡ Performance Optimization:
+   * Batches notification creation and delivery for multiple mentioned users.
+   */
+  async notifyMentions(
+    messageId: string,
+    mentionedUserIds: string[],
+    mentionedBy: string,
+    channelId: string,
+    messageContent: string
+  ) {
+    if (!mentionedUserIds.length) return;
+
+    // Parallelize processing
+    await Promise.all(
+      mentionedUserIds.map(userId =>
+        this.notifyMention(messageId, userId, mentionedBy, channelId, messageContent)
+      )
+    );
+  }
+
   async notifyChannel(
     channelId: string,
     sentBy: string,
