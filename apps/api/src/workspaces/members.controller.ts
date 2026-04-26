@@ -26,22 +26,25 @@ const updateMemberSchema = z.object({
 export class MembersController {
   @Get()
   async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Access denied');
@@ -75,22 +78,25 @@ export class MembersController {
     @Param('memberId') memberId: string,
     @Body() body: any
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and requester membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const requesterMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const requesterMember = workspace.members[0];
 
     if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
       throw new ForbiddenException('Access denied');
@@ -139,22 +145,25 @@ export class MembersController {
 
   @Delete(':memberId')
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and requester membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const requesterMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const requesterMember = workspace.members[0];
 
     if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
       throw new ForbiddenException('Access denied');
