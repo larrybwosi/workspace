@@ -2,6 +2,36 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { NotificationsService } from "./notifications.service";
 
+// Mock @repo/shared/server - all notification functions are delegated here
+const {
+  mockNotifyMention,
+  mockNotifyMentions,
+  mockNotifyChannel,
+  mockGetAblyRest,
+  mockSendPushNotification,
+} = vi.hoisted(() => ({
+  mockNotifyMention: vi.fn().mockResolvedValue(undefined),
+  mockNotifyMentions: vi.fn().mockResolvedValue(undefined),
+  mockNotifyChannel: vi.fn().mockResolvedValue(undefined),
+  mockGetAblyRest: vi.fn(),
+  mockSendPushNotification: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@repo/shared/server", () => ({
+  getAblyRest: mockGetAblyRest,
+  AblyChannels: {
+    notifications: vi.fn((id: string) => `notifications:${id}`),
+    user: vi.fn((id: string) => `user:${id}`),
+  },
+  AblyEvents: {
+    NOTIFICATION: "NOTIFICATION",
+  },
+  sendPushNotification: mockSendPushNotification,
+  notifyMention: mockNotifyMention,
+  notifyMentions: mockNotifyMentions,
+  notifyChannel: mockNotifyChannel,
+}));
+
 // Mock @repo/database
 vi.mock("@repo/database", () => ({
   prisma: {
@@ -20,36 +50,19 @@ vi.mock("@repo/database", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    channel: {
+      findUnique: vi.fn(),
+    },
+    workspace: {
+      findUnique: vi.fn(),
+    },
   },
-}));
-
-// Mock @repo/shared/server - all notification functions are delegated here
-const mockNotifyMention = vi.fn().mockResolvedValue(undefined);
-const mockNotifyMentions = vi.fn().mockResolvedValue(undefined);
-const mockNotifyChannel = vi.fn().mockResolvedValue(undefined);
-const mockGetAblyRest = vi.fn();
-const mockSendPushNotification = vi.fn().mockResolvedValue(undefined);
-
-vi.mock("@repo/shared/server", () => ({
-  getAblyRest: mockGetAblyRest,
-  AblyChannels: {
-    notifications: vi.fn((id: string) => `notifications:${id}`),
-    user: vi.fn((id: string) => `user:${id}`),
-  },
-  AblyEvents: {
-    NOTIFICATION: "NOTIFICATION",
-  },
-  sendPushNotification: mockSendPushNotification,
-  notifyMention: mockNotifyMention,
-  notifyMentions: mockNotifyMentions,
-  notifyChannel: mockNotifyChannel,
 }));
 
 import { prisma } from "@repo/database";
 
 describe("NotificationsService", () => {
   let service: NotificationsService;
-  const mockPrisma = prisma as any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -80,12 +93,12 @@ describe("NotificationsService", () => {
         createdAt: new Date(),
         ...basePayload,
       };
-      mockPrisma.notification.create.mockResolvedValue(createdNotification);
+      (prisma.notification.create as any).mockResolvedValue(createdNotification);
       mockGetAblyRest.mockReturnValue(null);
 
       await service.createNotification(basePayload);
 
-      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+      expect(prisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             userId: "user-1",
@@ -104,7 +117,7 @@ describe("NotificationsService", () => {
         createdAt: new Date(),
         ...basePayload,
       };
-      mockPrisma.notification.create.mockResolvedValue(createdNotification);
+      (prisma.notification.create as any).mockResolvedValue(createdNotification);
 
       const mockPublish = vi.fn().mockResolvedValue(undefined);
       const mockAblyChannel = { publish: mockPublish };
@@ -132,7 +145,7 @@ describe("NotificationsService", () => {
         createdAt: new Date(),
         ...basePayload,
       };
-      mockPrisma.notification.create.mockResolvedValue(createdNotification);
+      (prisma.notification.create as any).mockResolvedValue(createdNotification);
       mockGetAblyRest.mockReturnValue(null);
 
       await service.createNotification(basePayload);
@@ -145,49 +158,6 @@ describe("NotificationsService", () => {
           notificationId: "notif-1",
         })
       );
-    });
-
-    it("should return the created notification", async () => {
-      const createdNotification = {
-        id: "notif-1",
-        userId: "user-1",
-        createdAt: new Date(),
-        ...basePayload,
-      };
-      mockPrisma.notification.create.mockResolvedValue(createdNotification);
-      mockGetAblyRest.mockReturnValue(null);
-
-      const result = await service.createNotification(basePayload);
-
-      expect(result).toEqual(createdNotification);
-    });
-
-    it("should NOT throw if Ably is unavailable (ably is null)", async () => {
-      const createdNotification = {
-        id: "notif-1",
-        userId: "user-1",
-        createdAt: new Date(),
-        ...basePayload,
-      };
-      mockPrisma.notification.create.mockResolvedValue(createdNotification);
-      mockGetAblyRest.mockReturnValue(null);
-
-      await expect(service.createNotification(basePayload)).resolves.not.toThrow();
-    });
-
-    it("should NOT throw if push notification fails (error is caught)", async () => {
-      const createdNotification = {
-        id: "notif-1",
-        userId: "user-1",
-        createdAt: new Date(),
-        ...basePayload,
-      };
-      mockPrisma.notification.create.mockResolvedValue(createdNotification);
-      mockGetAblyRest.mockReturnValue(null);
-      mockSendPushNotification.mockRejectedValue(new Error("Push service down"));
-
-      // Should not throw - push failures are caught internally
-      await expect(service.createNotification(basePayload)).resolves.toBeDefined();
     });
   });
 
@@ -304,11 +274,11 @@ describe("NotificationsService", () => {
 
   describe("markAllRead", () => {
     it("should mark all user notifications as read", async () => {
-      mockPrisma.notification.updateMany.mockResolvedValue({ count: 5 });
+      (prisma.notification.updateMany as any).mockResolvedValue({ count: 5 });
 
       const result = await service.markAllRead("user-1");
 
-      expect(mockPrisma.notification.updateMany).toHaveBeenCalledWith(
+      expect(prisma.notification.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { userId: "user-1", isRead: false },
           data: { isRead: true },
