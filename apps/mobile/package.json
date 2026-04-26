@@ -24,6 +24,7 @@
     "better-auth": "^1.6.0",
     "date-fns": "^4.1.0",
     "expo": "~55.0.15",
+    "expo-camera": "^55.0.16",
     "expo-constants": "~55.0.14",
     "expo-font": "^55.0.6",
     "expo-linking": "~55.0.13",

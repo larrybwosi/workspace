@@ -64,6 +64,15 @@ export default function Profile() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          className="flex-row items-center p-4 bg-white rounded-xl mb-2 border border-surface-container"
+          onPress={() => router.push('/auth/qr-scanner')}
+        >
+          <MaterialIcons name="qr-code-scanner" size={24} color="#5f5e5e" />
+          <Text className="ml-4 flex-1 font-medium">Link Desktop Device</Text>
+          <MaterialIcons name="chevron-right" size={24} color="#5f5e5e" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           className="flex-row items-center p-4 bg-white rounded-xl mb-8 border border-surface-container"
           onPress={handleLogout}
         >
