@@ -13,7 +13,7 @@ import {
   Separator,
 } from '@repo/ui';
 import { signIn } from '../lib/auth/auth-client';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function LoginPage() {
@@ -94,6 +94,26 @@ export function LoginPage() {
                 Sign in
               </Button>
             </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full"
+              onClick={() => navigate('/login/qr')}
+              disabled={isLoading}
+            >
+              <QrCode className="mr-2 h-4 w-4" />
+              Sign in with QR Code
+            </Button>
           </CardContent>
         </Card>
       </div>
