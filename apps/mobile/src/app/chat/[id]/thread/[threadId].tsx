@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,43 +15,37 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   useMessages,
-  useSendMessage,
+  useReplyToMessage,
   useChannels,
   useWorkspaces,
-  useDMConversations,
   messageKeys,
   useAddReaction,
-  useRemoveReaction,
-  useUploadFile
+  useRemoveReaction
 } from '@repo/api-client';
-import { useSession } from '../../../lib/auth';
-import * as DocumentPicker from 'expo-document-picker';
-import { ReactionPicker } from '../../../components/chat/reaction-picker';
+import { useSession } from '../../../../lib/auth';
+import { ReactionPicker } from '../../../../components/chat/reaction-picker';
 import { formatTime, getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 
-export default function ChatScreen() {
-  const { id, workspaceId, isDM } = useLocalSearchParams<{ id: string; workspaceId?: string; isDM?: string }>();
+export default function ThreadScreen() {
+  const { id, threadId, workspaceId } = useLocalSearchParams<{ id: string; threadId: string; workspaceId?: string }>();
   const router = useRouter();
   const { data: session } = (useSession as any)();
   const [messageText, setMessageText] = useState('');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const {
     data: messagesData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(id as string, workspaceId);
+  } = useMessages(id as string, workspaceId, threadId);
 
-  const { mutate: sendMessage } = useSendMessage(workspaceId);
+  const { mutate: replyToMessage } = useReplyToMessage(workspaceId);
   const { mutate: addReaction } = useAddReaction();
   const { mutate: removeReaction } = useRemoveReaction();
-  const { mutateAsync: uploadFile } = useUploadFile();
   const { data: channels } = useChannels();
   const { data: workspaces } = useWorkspaces();
-  const { data: dms } = useDMConversations();
   const queryClient = useQueryClient();
 
   // Ably real-time integration
@@ -59,13 +53,12 @@ export default function ChatScreen() {
     const ably = getAblyClient();
     if (!ably || !id) return;
 
-    const channelName = isDM ? AblyChannels.dm(id) : AblyChannels.channel(id);
+    const channelName = AblyChannels.channel(id);
     const ablyChannel = ably.channels.get(channelName);
 
     const handleMessage = () => {
-        // Invalidate messages query to fetch new messages
         queryClient.invalidateQueries({
-          queryKey: messageKeys.list(id as string, workspaceId)
+          queryKey: messageKeys.list(id as string, workspaceId, threadId)
         });
     };
 
@@ -78,18 +71,20 @@ export default function ChatScreen() {
         ablyChannel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
         ablyChannel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
     };
-  }, [id, isDM, queryClient, workspaceId]);
+  }, [id, queryClient, workspaceId, threadId]);
 
   const channel = channels?.find((c: any) => c.id === id);
   const workspace = workspaces?.find((w: any) => w.id === workspaceId);
-  const dm = dms?.find((d: any) => d.id === id);
 
   const messages = messagesData?.pages.flatMap((page: any) => page.messages) || [];
+  const parentMessage = messages.find((m: any) => m.id === threadId);
+  const replies = messages.filter((m: any) => m.id !== threadId);
 
   const handleSend = () => {
     if (!messageText.trim()) return;
 
-    sendMessage({
+    replyToMessage({
+      messageId: threadId as string,
       channelId: id as string,
       content: messageText,
       mentions: [],
@@ -97,47 +92,9 @@ export default function ChatScreen() {
     setMessageText('');
   };
 
-  const handlePickFile = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0]) {
-        setIsUploading(true);
-        const asset = result.assets[0];
-
-        // Convert to File object for the hook
-        const file = new File(
-          [await (await fetch(asset.uri)).blob()],
-          asset.name,
-          { type: asset.mimeType }
-        );
-
-        await uploadFile({
-          file,
-          entityType: 'message',
-          entityId: id as string, // Temporary mapping until message is created
-        });
-
-        // Send message with attachment info in content for now
-        sendMessage({
-          channelId: id as string,
-          content: `${messageText}\n\n📎 Attached: ${asset.name}`,
-          mentions: [],
-        });
-
-        setIsUploading(false);
-      }
-    } catch (error) {
-      console.error('File pick error:', error);
-      setIsUploading(false);
-    }
-  };
-
   const renderMessage = ({ item: message }: { item: any }) => {
     const isMe = message.userId === session?.user?.id;
+    const isParent = message.id === threadId;
 
     const handleLongPress = () => {
         setSelectedMessageId(message.id);
@@ -164,7 +121,7 @@ export default function ChatScreen() {
     };
 
     return (
-      <View className="mb-6">
+      <View className={`mb-6 ${isParent ? 'border-b border-surface-container pb-6' : ''}`}>
         <View className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}>
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
@@ -208,29 +165,13 @@ export default function ChatScreen() {
                 ))}
             </View>
         )}
-        {message.replyCount > 0 && (
-          <TouchableOpacity
-            className={`mt-2 ${isMe ? 'self-end' : 'ml-11'}`}
-            onPress={() => router.push({
-                pathname: `/chat/[id]/thread/[threadId]`,
-                params: { id: id as string, threadId: message.id, workspaceId }
-            } as any)}
-          >
-            <Text className="text-xs font-bold text-primary">
-              {message.replyCount} {message.replyCount === 1 ? 'reply' : 'replies'}
+        {isParent && (
+            <Text className="mt-4 text-xs font-bold text-on-surface-variant/50 uppercase tracking-widest">
+                Replies
             </Text>
-          </TouchableOpacity>
         )}
       </View>
     );
-  };
-
-  const getTitle = () => {
-    if (isDM) {
-        const otherUser = dm?.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
-        return otherUser?.name || 'Direct Message';
-    }
-    return channel?.name || 'Chat';
   };
 
   return (
@@ -249,26 +190,17 @@ export default function ChatScreen() {
             }
         }}
       />
-      {/* TopAppBar */}
       <View className="h-16 flex-row items-center justify-between px-4 bg-white border-b border-surface-container">
         <View className="flex-row items-center gap-3">
           <TouchableOpacity onPress={() => router.back()}>
              <MaterialIcons name="arrow-back" size={24} color="#5f5e5e" />
           </TouchableOpacity>
           <View>
-            <Text className="font-body font-semibold text-lg tracking-tight text-on-surface">{getTitle()}</Text>
+            <Text className="font-body font-semibold text-lg tracking-tight text-on-surface">Thread</Text>
             <Text className="text-[10px] font-headline font-bold uppercase tracking-widest text-primary/60">
-                {isDM ? 'Active Now' : `# ${workspace?.name || ''}`}
+                # {channel?.name || ''}
             </Text>
           </View>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <TouchableOpacity
-            className="w-10 h-10 items-center justify-center rounded-lg"
-            onPress={() => router.push(`/chat/${id}/info`)}
-          >
-            <MaterialIcons name="info-outline" size={24} color="#5f5e5e" />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -287,35 +219,18 @@ export default function ChatScreen() {
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null}
       />
 
-      {/* Chat Input Area */}
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <View className="px-4 py-3 bg-white border-t border-surface-container-high">
-          {isUploading && (
-              <View className="flex-row items-center gap-2 mb-2 px-2">
-                  <ActivityIndicator size="small" color="#5f5f61" />
-                  <Text className="text-xs text-on-surface-variant font-medium">Uploading file...</Text>
-              </View>
-          )}
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity
-                className="w-10 h-10 items-center justify-center bg-surface-container-low rounded-lg"
-                onPress={handlePickFile}
-                disabled={isUploading}
-            >
-              <MaterialIcons name="add-circle" size={24} color={isUploading ? "#5f5f6150" : "#5f5f61"} />
-            </TouchableOpacity>
             <View className="flex-1 bg-surface-container-low px-4 py-2 rounded-lg flex-row items-center gap-3">
               <TextInput
                 className="flex-1 text-sm font-body text-on-surface"
-                placeholder="Type a message..."
+                placeholder="Reply to thread..."
                 placeholderTextColor="#5f5f6180"
                 value={messageText}
                 onChangeText={setMessageText}
                 multiline
               />
-              <TouchableOpacity>
-                <MaterialIcons name="sentiment-satisfied" size={20} color="#5f5f61" />
-              </TouchableOpacity>
             </View>
             <TouchableOpacity
                 className={`w-10 h-10 items-center justify-center rounded-lg shadow-sm ${messageText.trim() ? 'bg-primary' : 'bg-surface-container-high'}`}

@@ -52,9 +52,9 @@ export default function Channels() {
           <TouchableOpacity
             className="flex-row items-center p-4 mb-2 bg-white rounded-xl border border-surface-container"
             onPress={() => router.push({
-                pathname: `/chat/${item.id}`,
-                params: { workspaceId }
-            })}
+                pathname: `/chat/[id]`,
+                params: { id: item.id, workspaceId }
+            } as any)}
           >
             <MaterialIcons
               name={item.type === 'PUBLIC' ? 'tag' : 'lock'}
