@@ -9,6 +9,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Delete,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -16,6 +17,7 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared/server';
+import { TeamSyncService } from './team-sync.service';
 
 const createTeamSchema = z.object({
   name: z.string().min(1).max(100),
@@ -36,6 +38,8 @@ const createTeamSchema = z.object({
 @Controller('workspaces/:slug/teams')
 @UseGuards(AuthGuard)
 export class TeamsController {
+  constructor(private readonly teamSyncService: TeamSyncService) {}
+
   @Get()
   async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
     const workspace = await prisma.workspace.findUnique({
@@ -159,6 +163,18 @@ export class TeamsController {
           role: userId === data.leadId ? 'lead' : 'member',
         })),
       });
+
+      // Sync members to channel if it exists
+      if (channelId) {
+        await prisma.channelMember.createMany({
+          data: data.memberIds.map(userId => ({
+            channelId: channelId!,
+            userId,
+            role: 'member',
+          })),
+          skipDuplicates: true,
+        });
+      }
     }
 
     await prisma.workspaceAuditLog.create({
@@ -182,5 +198,65 @@ export class TeamsController {
     }
 
     return team;
+  }
+
+  @Post(':teamId/members')
+  async addMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Body() body: { userId: string; role?: string }) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    // Check if user is admin/owner
+    const member = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
+    });
+
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const teamMember = await prisma.workspaceTeamMember.create({
+      data: {
+        teamId,
+        userId: body.userId,
+        role: body.role || 'member',
+      },
+    });
+
+    await this.teamSyncService.syncTeamMemberToChannel(teamId, body.userId, 'add');
+
+    return teamMember;
+  }
+
+  @Delete(':teamId/members/:userId')
+  async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Param('userId') userId: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
+    });
+
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    await prisma.workspaceTeamMember.delete({
+      where: {
+        teamId_userId: {
+          teamId,
+          userId,
+        },
+      },
+    });
+
+    await this.teamSyncService.syncTeamMemberToChannel(teamId, userId, 'remove');
+
+    return { success: true };
   }
 }

@@ -12,13 +12,15 @@ export interface NotificationPayload {
     | 'workspace_alert'
     | 'workspace_invitation'
     | 'platform_invitation'
-    | 'direct_message';
+    | 'direct_message'
+    | 'exclusive_alert';
   title: string;
   message: string;
   entityType?: 'channel' | 'workspace' | 'direct_message' | 'invitation';
   entityId?: string;
   linkUrl?: string;
   metadata?: Record<string, any>;
+  priority?: 'normal' | 'exclusive';
 }
 
 export async function createNotification(payload: NotificationPayload) {
@@ -155,12 +157,6 @@ export async function notifyMentions(
   const channelSlug = channel.slug || channelId;
 
   // 1. Resolve preferences for all mentioned users
-  // We need to fetch workspace-level preferences for:
-  // - Members who don't have channel-level ones
-  // - Mentioned users who are not in the channel (if we want to respect their workspace prefs)
-  // Actually, the original logic only notified if the user was in the channel (implied by channel member lookup).
-  // Let's stick to the original behavior but optimize it.
-
   const memberIdsInChannel = new Set(channel.members.map(m => m.userId));
   const memberIdsWithoutChannelPref = channel.members
     .filter(m => !m.notificationPreference)
@@ -284,5 +280,42 @@ export async function notifyChannel(
   }
 
   // 4. Batch deliver
+  await createNotifications(payloads);
+}
+
+/**
+ * Exclusive notification for integrated apps.
+ * Bypasses standard notification preferences.
+ */
+export async function notifyAppExclusive(
+  channelId: string,
+  title: string,
+  message: string,
+  linkUrl?: string,
+  metadata?: Record<string, any>
+) {
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: {
+      members: {
+        select: { userId: true },
+      },
+    },
+  });
+
+  if (!channel) return;
+
+  const payloads: NotificationPayload[] = channel.members.map(m => ({
+    userId: m.userId,
+    type: 'exclusive_alert',
+    title,
+    message,
+    entityType: 'channel',
+    entityId: channelId,
+    linkUrl,
+    metadata,
+    priority: 'exclusive',
+  }));
+
   await createNotifications(payloads);
 }

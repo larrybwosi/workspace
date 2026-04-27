@@ -1,12 +1,12 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { publishToAbly, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { publishToAbly, AblyChannels, AblyEvents, notifyAppExclusive } from '@repo/shared/server';
 import { hasPermission, Permissions } from '../common/permissions';
 
 @Injectable()
 export class V10ChannelsService {
   async createMessage(bot: any, channelId: string, data: any) {
-    const { content, embeds, components, message_reference } = data;
+    const { content, embeds, components, message_reference, exclusive_notification } = data;
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -53,6 +53,17 @@ export class V10ChannelsService {
         metadata: { channelId },
       },
     });
+
+    // Handle exclusive notification if requested
+    if (exclusive_notification && channel.appId) {
+      await notifyAppExclusive(
+        channelId,
+        exclusive_notification.title || `New announcement from ${bot.name}`,
+        exclusive_notification.message || content || 'Click to view details',
+        exclusive_notification.linkUrl || `/workspace/${channel.workspace?.slug || 'default'}/channels/${channel.slug || channelId}?messageId=${message.id}`,
+        { botId: bot.id, appId: channel.appId }
+      );
+    }
 
     // Notify clients
     await publishToAbly(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, {
