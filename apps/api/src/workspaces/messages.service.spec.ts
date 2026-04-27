@@ -28,6 +28,7 @@ vi.mock("@repo/database", () => ({
     messageRead: {
       upsert: vi.fn(),
       findUnique: vi.fn(),
+      createMany: vi.fn(),
     },
     user: {
       findMany: vi.fn(),
@@ -295,6 +296,247 @@ describe("MessagesService", () => {
 
       // Sender self-mentioned - should filter out and not call notifyMentions
       expect(mockNotifyMentions).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // verifyWorkspaceAccess – single query optimization (PR change)
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe("verifyWorkspaceAccess - single query optimization (PR change)", () => {
+    it("should query workspace with member filter in a single database call", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: "ws-1",
+        slug: "my-ws",
+        members: [{ userId: "user-1" }],
+      });
+
+      await service.verifyWorkspaceAccess("user-1", "my-ws");
+
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "my-ws" },
+          include: expect.objectContaining({
+            members: expect.objectContaining({
+              where: { userId: "user-1" },
+            }),
+          }),
+        })
+      );
+    });
+
+    it("should NOT call workspaceMember.findUnique separately (optimization: single query)", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: "ws-1",
+        slug: "my-ws",
+        members: [{ userId: "user-1" }],
+      });
+
+      await service.verifyWorkspaceAccess("user-1", "my-ws");
+
+      // The optimization removes the separate workspaceMember lookup
+      expect(mockPrisma.workspaceMember.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundException when workspace is not found", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
+
+      const { NotFoundException } = await import("@nestjs/common");
+      await expect(
+        service.verifyWorkspaceAccess("user-1", "nonexistent-ws")
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw NotFoundException with message 'Workspace not found'", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.verifyWorkspaceAccess("user-1", "nonexistent-ws")
+      ).rejects.toThrow("Workspace not found");
+    });
+
+    it("should throw ForbiddenException when user is not a workspace member", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: "ws-1",
+        slug: "my-ws",
+        members: [], // empty: user is not a member
+      });
+
+      const { ForbiddenException } = await import("@nestjs/common");
+      await expect(
+        service.verifyWorkspaceAccess("user-not-member", "my-ws")
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should throw ForbiddenException with message 'Forbidden'", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: "ws-1",
+        slug: "my-ws",
+        members: [],
+      });
+
+      await expect(
+        service.verifyWorkspaceAccess("user-not-member", "my-ws")
+      ).rejects.toThrow("Forbidden");
+    });
+
+    it("should return the workspace when user is a member", async () => {
+      const mockWorkspace = {
+        id: "ws-1",
+        slug: "my-ws",
+        members: [{ userId: "user-1" }],
+      };
+      mockPrisma.workspace.findUnique.mockResolvedValue(mockWorkspace);
+
+      const result = await service.verifyWorkspaceAccess("user-1", "my-ws");
+
+      expect(result).toEqual(mockWorkspace);
+    });
+
+    it("should include member filter with correct userId in the query", async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: "ws-2",
+        slug: "other-ws",
+        members: [{ userId: "user-42" }],
+      });
+
+      await service.verifyWorkspaceAccess("user-42", "other-ws");
+
+      const callArg = mockPrisma.workspace.findUnique.mock.calls[0][0];
+      expect(callArg.include.members.where).toEqual({ userId: "user-42" });
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // batchMarkAsRead – createMany optimization (PR change)
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe("batchMarkAsRead - createMany optimization (PR change)", () => {
+    it("should return success early when messageIds is empty", async () => {
+      const result = await service.batchMarkAsRead("user-1", []);
+
+      expect(result).toEqual({ success: true });
+      expect(mockPrisma.messageRead.createMany).not.toHaveBeenCalled();
+    });
+
+    it("should use createMany instead of sequential upserts", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 2 });
+      mockGetAblyRest.mockReturnValue(null);
+
+      await service.batchMarkAsRead("user-1", ["msg-1", "msg-2"], "ch-1");
+
+      expect(mockPrisma.messageRead.createMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.messageRead.upsert).not.toHaveBeenCalled();
+    });
+
+    it("should use skipDuplicates: true for idempotency", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 0 });
+      mockGetAblyRest.mockReturnValue(null);
+
+      await service.batchMarkAsRead("user-1", ["msg-1"], "ch-1");
+
+      const callArg = mockPrisma.messageRead.createMany.mock.calls[0][0];
+      expect(callArg.skipDuplicates).toBe(true);
+    });
+
+    it("should call createMany with correct data for all messageIds", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 2 });
+      mockGetAblyRest.mockReturnValue(null);
+
+      await service.batchMarkAsRead("user-55", ["msg-a", "msg-b"], "ch-1");
+
+      expect(mockPrisma.messageRead.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.arrayContaining([
+            expect.objectContaining({ messageId: "msg-a", userId: "user-55" }),
+            expect.objectContaining({ messageId: "msg-b", userId: "user-55" }),
+          ]),
+        })
+      );
+    });
+
+    it("should use provided channelId directly without DB lookup when channelId is given", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 1 });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.batchMarkAsRead("user-1", ["msg-1"], "ch-provided");
+
+      // Should publish with provided channelId, no message lookup needed
+      expect(mockPublish).toHaveBeenCalledWith(
+        "message.read",
+        expect.objectContaining({ channelId: "ch-provided" })
+      );
+      // Should NOT need to look up the message for its channelId
+      expect(mockPrisma.message.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("should look up channelId from first message when channelId param is absent", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.message.findUnique.mockResolvedValue({
+        id: "msg-1",
+        channelId: "ch-from-lookup",
+      });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.batchMarkAsRead("user-1", ["msg-1", "msg-2"]);
+
+      expect(mockPrisma.message.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "msg-1" },
+          select: { channelId: true },
+        })
+      );
+    });
+
+    it("should publish MESSAGE_READ to user personal channel when channelId and Ably are available", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 2 });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      const mockChannelGet = vi.fn().mockReturnValue({ publish: mockPublish });
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: mockChannelGet },
+      });
+
+      await service.batchMarkAsRead("user-7", ["msg-1", "msg-2"], "ch-1");
+
+      // Should publish to user channel (user:userId)
+      expect(mockChannelGet).toHaveBeenCalledWith("user:user-7");
+      expect(mockPublish).toHaveBeenCalledWith(
+        "message.read",
+        expect.objectContaining({
+          channelId: "ch-1",
+          messageIds: ["msg-1", "msg-2"],
+        })
+      );
+    });
+
+    it("should NOT publish when Ably is null", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 1 });
+      mockGetAblyRest.mockReturnValue(null);
+
+      const result = await service.batchMarkAsRead("user-1", ["msg-1"], "ch-1");
+
+      expect(result).toEqual({ success: true });
+    });
+
+    it("should return { success: true } regardless of Ably availability", async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 1 });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      const result = await service.batchMarkAsRead("user-1", ["msg-1"], "ch-1");
+
+      expect(result).toEqual({ success: true });
     });
   });
 });

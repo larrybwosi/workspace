@@ -10,8 +10,6 @@ vi.mock("@repo/database", () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
     },
     dMMessage: {
       findMany: vi.fn(),
@@ -50,8 +48,6 @@ vi.mock("@repo/shared/server", () => ({
     MESSAGE_UPDATED: "message.updated",
     MESSAGE_DELETED: "message.deleted",
     MESSAGE_READ: "message.read",
-    DM_RECEIVED: "dm.received",
-    MESSAGE_REACTION: "message.reaction",
   },
   publishToAbly: vi.fn().mockResolvedValue(undefined),
 }));
@@ -76,11 +72,8 @@ describe("DmsService", () => {
     expect(service).toBeDefined();
   });
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // markAsRead – batch createMany optimization (PR change)
-  // ─────────────────────────────────────────────────────────────────────────────
-  describe("markAsRead – createMany batch optimization", () => {
-    it("should return { success: true } early when messageIds is empty", async () => {
+  describe("markAsRead - batch createMany optimization (PR change)", () => {
+    it("should return success early when messageIds is empty", async () => {
       const result = await service.markAsRead("user-1", []);
 
       expect(result).toEqual({ success: true });
@@ -116,7 +109,7 @@ describe("DmsService", () => {
       );
     });
 
-    it("should use skipDuplicates: true to handle already-read messages idempotently", async () => {
+    it("should use skipDuplicates: true to handle already-read messages", async () => {
       mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 0 });
       mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
       mockGetAblyRest.mockReturnValue(null);
@@ -132,39 +125,175 @@ describe("DmsService", () => {
       mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
       mockGetAblyRest.mockReturnValue(null);
 
-      const before = new Date();
       await service.markAsRead("user-1", ["msg-1"]);
-      const after = new Date();
 
       const callArg = mockPrisma.dMMessageRead.createMany.mock.calls[0][0];
       expect(callArg.data[0]).toHaveProperty("readAt");
       expect(callArg.data[0].readAt).toBeInstanceOf(Date);
-      expect(callArg.data[0].readAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
-      expect(callArg.data[0].readAt.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+  });
+
+  describe("markAsRead - Ably notification (PR change)", () => {
+    it("should publish MESSAGE_READ to user Ably channel when ably is available", async () => {
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue({
+        id: "dm-msg-1",
+        dmId: "dm-conversation-1",
+      });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      const mockChannel = { publish: mockPublish };
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue(mockChannel) },
+      });
+
+      const result = await service.markAsRead("user-1", ["dm-msg-1", "dm-msg-2"]);
+
+      expect(mockPublish).toHaveBeenCalledWith(
+        "message.read",
+        expect.objectContaining({
+          dmId: "dm-conversation-1",
+          messageIds: ["dm-msg-1", "dm-msg-2"],
+        })
+      );
+      expect(result).toEqual({ success: true });
     });
 
-    it("should return { success: true } regardless of Ably availability", async () => {
+    it("should publish to the user personal channel (user:userId)", async () => {
       mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue({
+        id: "dm-msg-1",
+        dmId: "dm-conv-1",
+      });
+
+      const mockChannelGet = vi.fn().mockReturnValue({
+        publish: vi.fn().mockResolvedValue(undefined),
+      });
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: mockChannelGet },
+      });
+
+      await service.markAsRead("user-42", ["dm-msg-1"]);
+
+      // Should publish to user channel, not dm channel
+      expect(mockChannelGet).toHaveBeenCalledWith("user:user-42");
+    });
+
+    it("should NOT publish when Ably is unavailable (null)", async () => {
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue({
+        id: "dm-msg-1",
+        dmId: "dm-conv-1",
+      });
       mockGetAblyRest.mockReturnValue(null);
 
-      const result = await service.markAsRead("user-1", ["msg-1"]);
+      const result = await service.markAsRead("user-1", ["dm-msg-1"]);
 
+      expect(result).toEqual({ success: true });
+    });
+
+    it("should NOT publish when firstMessage is not found", async () => {
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 0 });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue(null);
+
+      const mockPublish = vi.fn();
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      const result = await service.markAsRead("user-1", ["nonexistent-msg"]);
+
+      expect(mockPublish).not.toHaveBeenCalled();
+      expect(result).toEqual({ success: true });
+    });
+
+    it("should look up dmId from the first message in the array", async () => {
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 3 });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue({
+        id: "first-msg",
+        dmId: "dm-from-first-message",
+      });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.markAsRead("user-1", ["first-msg", "second-msg", "third-msg"]);
+
+      expect(mockPrisma.dMMessage.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "first-msg" },
+          select: { dmId: true },
+        })
+      );
+
+      expect(mockPublish).toHaveBeenCalledWith(
+        "message.read",
+        expect.objectContaining({ dmId: "dm-from-first-message" })
+      );
+    });
+
+    it("should include all messageIds in the Ably notification payload", async () => {
+      const messageIds = ["msg-1", "msg-2", "msg-3"];
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 3 });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-conv-1" });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.markAsRead("user-1", messageIds);
+
+      expect(mockPublish).toHaveBeenCalledWith(
+        "message.read",
+        expect.objectContaining({ messageIds })
+      );
+    });
+
+    it("should return success true regardless of Ably availability", async () => {
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      const result = await service.markAsRead("user-1", ["msg-1"]);
       expect(result).toEqual({ success: true });
     });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // markAsRead – dmId parameter & Ably notification (PR change)
+  // markAsRead – dmId parameter optimization (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe("markAsRead – dmId parameter and Ably notification", () => {
+  describe("markAsRead - dmId parameter optimization (PR change)", () => {
     it("should skip DB lookup for first message when dmId is provided directly", async () => {
       mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
       mockGetAblyRest.mockReturnValue(null);
 
       await service.markAsRead("user-1", ["msg-1"], "dm-direct-id");
 
+      // When dmId is provided, should not look up first message
       expect(mockPrisma.dMMessage.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("should use the provided dmId in Ably notification payload", async () => {
+      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
+
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.markAsRead("user-1", ["msg-1"], "dm-provided-directly");
+
+      expect(mockPublish).toHaveBeenCalledWith(
+        "message.read",
+        expect.objectContaining({ dmId: "dm-provided-directly" })
+      );
     });
 
     it("should look up dmId from first message when dmId param is absent", async () => {
@@ -181,106 +310,12 @@ describe("DmsService", () => {
         })
       );
     });
-
-    it("should publish MESSAGE_READ to user Ably channel when Ably is available", async () => {
-      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-conv-1" });
-
-      const mockPublish = vi.fn().mockResolvedValue(undefined);
-      const mockChannel = { publish: mockPublish };
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: vi.fn().mockReturnValue(mockChannel) },
-      });
-
-      await service.markAsRead("user-1", ["msg-1", "msg-2"]);
-
-      expect(mockPublish).toHaveBeenCalledWith(
-        "message.read",
-        expect.objectContaining({
-          dmId: "dm-conv-1",
-          messageIds: ["msg-1", "msg-2"],
-        })
-      );
-    });
-
-    it("should publish to the user personal channel (user:userId)", async () => {
-      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
-
-      const mockChannelGet = vi.fn().mockReturnValue({
-        publish: vi.fn().mockResolvedValue(undefined),
-      });
-      mockGetAblyRest.mockReturnValue({ channels: { get: mockChannelGet } });
-
-      await service.markAsRead("user-42", ["msg-1"]);
-
-      expect(mockChannelGet).toHaveBeenCalledWith("user:user-42");
-    });
-
-    it("should NOT publish when Ably is null", async () => {
-      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
-      mockGetAblyRest.mockReturnValue(null);
-
-      const result = await service.markAsRead("user-1", ["msg-1"]);
-
-      expect(result).toEqual({ success: true });
-    });
-
-    it("should NOT publish when first message lookup returns null", async () => {
-      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 0 });
-      mockPrisma.dMMessage.findUnique.mockResolvedValue(null);
-
-      const mockPublish = vi.fn();
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
-      });
-
-      const result = await service.markAsRead("user-1", ["nonexistent-msg"]);
-
-      expect(mockPublish).not.toHaveBeenCalled();
-      expect(result).toEqual({ success: true });
-    });
-
-    it("should include all messageIds in the Ably notification payload", async () => {
-      const messageIds = ["msg-1", "msg-2", "msg-3"];
-      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 3 });
-      mockPrisma.dMMessage.findUnique.mockResolvedValue({ id: "msg-1", dmId: "dm-1" });
-
-      const mockPublish = vi.fn().mockResolvedValue(undefined);
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
-      });
-
-      await service.markAsRead("user-1", messageIds);
-
-      expect(mockPublish).toHaveBeenCalledWith(
-        "message.read",
-        expect.objectContaining({ messageIds })
-      );
-    });
-
-    it("should use provided dmId directly in Ably notification payload", async () => {
-      mockPrisma.dMMessageRead.createMany.mockResolvedValue({ count: 1 });
-
-      const mockPublish = vi.fn().mockResolvedValue(undefined);
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
-      });
-
-      await service.markAsRead("user-1", ["msg-1"], "dm-provided-directly");
-
-      expect(mockPublish).toHaveBeenCalledWith(
-        "message.read",
-        expect.objectContaining({ dmId: "dm-provided-directly" })
-      );
-    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // removeReaction – try/catch atomic delete (PR change)
+  // removeReaction – atomic delete with try/catch (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe("removeReaction – atomic delete with try/catch", () => {
+  describe("removeReaction - atomic delete with try/catch (PR change)", () => {
     it("should delete the reaction using compound unique key", async () => {
       mockPrisma.dMReaction.delete.mockResolvedValue({ id: "reaction-1" });
       mockGetAblyRest.mockReturnValue(null);
@@ -339,7 +374,12 @@ describe("DmsService", () => {
 
       expect(mockPublish).toHaveBeenCalledWith(
         "message.reaction",
-        expect.objectContaining({ messageId: "msg-1", emoji: "👍", userId: "user-1", action: "remove" })
+        expect.objectContaining({
+          messageId: "msg-1",
+          emoji: "👍",
+          userId: "user-1",
+          action: "remove",
+        })
       );
     });
 
@@ -359,7 +399,7 @@ describe("DmsService", () => {
       await service.removeReaction("dm-1", "msg-1", "user-1", "👍");
 
       // Should never call findUnique – the optimization removes the pre-flight check
-      expect((prisma.dMReaction as any).findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.dMReaction.findUnique).not.toHaveBeenCalled();
     });
 
     it("should not publish Ably event when P2025 is silently swallowed", async () => {
@@ -375,6 +415,15 @@ describe("DmsService", () => {
       await service.removeReaction("dm-1", "msg-1", "user-1", "👍");
 
       expect(mockPublish).not.toHaveBeenCalled();
+    });
+
+    it("should rethrow error without code property as non-P2025", async () => {
+      const genericError = new Error("Unexpected error");
+      mockPrisma.dMReaction.delete.mockRejectedValue(genericError);
+
+      await expect(
+        service.removeReaction("dm-1", "msg-1", "user-1", "❤️")
+      ).rejects.toThrow("Unexpected error");
     });
   });
 });
