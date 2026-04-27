@@ -27,7 +27,7 @@ export class V2ApplicationsController {
   async updateApplication(
     @V2Context() context: ApiV2Context,
     @Param('id') id: string,
-    @Body() body: { name?: string; description?: string },
+    @Body() body: { name?: string; description?: string; channelDefinitions?: any },
   ) {
     return this.applicationsService.updateApplication(context.userId, id, body);
   }
