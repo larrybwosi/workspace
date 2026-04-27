@@ -27,3 +27,7 @@
 ## 2025-05-15 - [Testing] Vitest Hoisting and Mock initialization
 **Learning:** Mocking shared packages that export multiple utilities often leads to `ReferenceError` if the mock variables aren't initialized before the module is hoisted.
 **Action:** Use `vi.hoisted` to define mock functions that need to be accessed inside a `vi.mock` factory, ensuring they are available during module evaluation.
+
+## 2025-05-15 - [API] Consolidated Workspace Data Retrieval
+**Learning:** Sequential database queries for workspace lookup, membership verification, and data retrieval (O(3) round-trips) create significant latency in core navigation paths. Prisma's filtered 'include' allows combining these into a single atomic operation.
+**Action:** Always prefer consolidated queries with relation filtering (e.g., 'include: { members: { where: { userId } } }') for workspace-scoped access patterns to reduce database round-trips.

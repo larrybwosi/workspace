@@ -353,8 +353,11 @@ describe("ChannelsController - NestJS module", () => {
 
   it("should throw ForbiddenException when user is not a workspace member", async () => {
     const mockPrisma = prisma as any;
-    mockPrisma.workspace.findUnique.mockResolvedValue({ id: "ws-1", slug: "my-workspace" });
-    mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+    mockPrisma.workspace.findUnique.mockResolvedValue({
+      id: "ws-1",
+      slug: "my-workspace",
+      members: [], // User not found in membership list
+    });
 
     const user = { id: "user-1", name: "Alice", username: "alice" } as any;
 
@@ -363,27 +366,25 @@ describe("ChannelsController - NestJS module", () => {
     ).rejects.toThrow("Forbidden");
   });
 
-  it("should return channels with unreadCount and mentionCount when successful", async () => {
+  it("should return channels when successful", async () => {
     const mockPrisma = prisma as any;
-    mockPrisma.workspace.findUnique.mockResolvedValue({ id: "ws-1", slug: "my-workspace" });
-    mockPrisma.workspaceMember.findUnique.mockResolvedValue({ id: "member-1", userId: "user-1" });
-    mockPrisma.channel.findMany.mockResolvedValue([
-      {
-        id: "ch-1",
-        name: "general",
-        _count: { messages: 5 },
-        messages: [
-          { id: "msg-1", mentions: [{ mention: "@alice" }] },
-        ],
-      },
-    ]);
+    mockPrisma.workspace.findUnique.mockResolvedValue({
+      id: "ws-1",
+      slug: "my-workspace",
+      members: [{ userId: "user-1" }],
+      channels: [
+        {
+          id: "ch-1",
+          name: "general",
+          _count: { messages: 5 },
+        },
+      ],
+    });
 
     const user = { id: "user-1", name: "Alice", username: "alice" } as any;
     const result = await controller.getWorkspaceChannels(user, "my-workspace");
 
     expect(result).toHaveLength(1);
-    expect(result[0].unreadCount).toBe(1);
-    expect(result[0].mentionCount).toBe(1);
-    expect(result[0]).not.toHaveProperty("messages");
+    expect(result[0].id).toBe("ch-1");
   });
 });

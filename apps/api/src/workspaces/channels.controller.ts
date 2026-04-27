@@ -38,51 +38,52 @@ const updateChannelSchema = z.object({
 export class ChannelsController {
   @Get()
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership verification, and channel list retrieval
+     * into a single database query using relation filtering.
+     * Reduces database round-trips from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+          select: { userId: true },
+        },
+        channels: {
+          where: {
+            OR: [
+              { isPrivate: false },
+              {
+                isPrivate: true,
+                members: {
+                  some: {
+                    userId: user.id,
+                  },
+                },
+              },
+            ],
+          },
+          include: {
+            _count: { select: { messages: true } },
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channels = await prisma.channel.findMany({
-      where: {
-        workspaceId: workspace.id,
-        OR: [
-          { isPrivate: false },
-          {
-            isPrivate: true,
-            members: {
-              some: {
-                userId: user.id,
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        _count: { select: { messages: true } },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
-    return channels;
+    return workspace.channels;
   }
 
   @Post()
@@ -159,39 +160,41 @@ export class ChannelsController {
 
   @Get(':channelId')
   async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership verification, and specific channel retrieval
+     * into a single database query. Reduces database round-trips from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+          select: { userId: true },
+        },
+        channels: {
+          where: { id: channelId },
+          include: {
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true, threads: true } },
+          },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId, workspaceId: workspace.id },
-      include: {
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatar: true } },
-          },
-        },
-        _count: { select: { members: true, threads: true } },
-      },
-    });
-
+    const channel = workspace.channels[0];
     if (!channel) {
       throw new NotFoundException('Channel not found');
     }

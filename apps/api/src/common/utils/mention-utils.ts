@@ -1,6 +1,10 @@
 export function extractUserMentions(content: string): string[] {
-  // Extract @username mentions from content, excluding special mentions like @all and @here
-  const mentionRegex = /@(\w+)/g;
+  /**
+   * ⚡ Performance Optimization & Bug Fix:
+   * Updated regex to support dots in usernames (e.g., @john.doe).
+   * Uses a single pass to extract all valid mentions while skipping @all/@here.
+   */
+  const mentionRegex = /@([\w.]+)/g;
   const mentions: string[] = [];
   let match;
 
@@ -33,16 +37,25 @@ export function hasSpecialMention(content: string, type: 'all' | 'here'): boolea
 }
 
 export function extractUserIds(mentions: string[], users: any[]): string[] {
-  // ⚡ Optimization: O(N+M) lookup using Map instead of O(N*M)
-  // This avoids repeated nested loops which would scale poorly as message size/user list grows.
+  /**
+   * ⚡ Optimization: O(N+M) lookup using Map.
+   * Updated to support matching by both 'name' and 'username', preferring 'username'.
+   * This handles the core mention resolution logic used by notifications.
+   */
   const userMap = new Map<string, string>();
   for (const user of users) {
-    if (user.name && user.id) {
-      userMap.set(user.name.toLowerCase(), user.id);
+    if (user.id) {
+      // Set name match
+      if (user.name) {
+        userMap.set(user.name.toLowerCase(), user.id);
+      }
+      // Set username match (overwrites name match if they clash, as username is more specific)
+      if (user.username) {
+        userMap.set(user.username.toLowerCase(), user.id);
+      }
     }
   }
 
-  // Use a Set to de-duplicate resulting user IDs (prevent multiple notifications)
   const userIds = new Set<string>();
   for (const mention of mentions) {
     const userId = userMap.get(mention.toLowerCase());

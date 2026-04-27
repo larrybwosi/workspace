@@ -67,44 +67,45 @@ const createAnnouncementSchema = z.object({
 export class DepartmentsController {
   @Get()
   async getDepartments(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership verification, and department list retrieval
+     * into a single database query using relation filtering.
+     * Reduces database round-trips from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+          select: { userId: true },
+        },
+        departments: {
+          include: {
+            parent: { select: { id: true, name: true } },
+            children: { select: { id: true, name: true, icon: true, color: true } },
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatar: true } },
+              },
+            },
+            teams: { select: { id: true, name: true, icon: true, color: true } },
+            _count: { select: { members: true, teams: true, announcements: true } },
+          },
+          orderBy: { name: 'asc' },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const departments = await prisma.workspaceDepartment.findMany({
-      where: { workspaceId: workspace.id },
-      include: {
-        parent: { select: { id: true, name: true } },
-        children: { select: { id: true, name: true, icon: true, color: true } },
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatar: true } },
-          },
-        },
-        teams: { select: { id: true, name: true, icon: true, color: true } },
-        _count: { select: { members: true, teams: true, announcements: true } },
-      },
-      orderBy: { name: 'asc' },
-    });
-
-    return departments;
+    return workspace.departments;
   }
 
   @Post()
@@ -209,67 +210,69 @@ export class DepartmentsController {
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership verification, and specific department retrieval
+     * into a single database query. Reduces database round-trips from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+          select: { userId: true },
+        },
+        departments: {
+          where: { id: departmentId },
+          include: {
+            parent: true,
+            children: true,
+            members: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatar: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+            teams: {
+              include: {
+                members: {
+                  include: {
+                    user: { select: { id: true, name: true, avatar: true } },
+                  },
+                },
+                _count: { select: { members: true } },
+              },
+            },
+            announcements: {
+              orderBy: { createdAt: 'desc' },
+              take: 10,
+              include: {
+                author: { select: { id: true, name: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true, teams: true, announcements: true } },
+          },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (!member) {
+    if (workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const department = await prisma.workspaceDepartment.findUnique({
-      where: { id: departmentId },
-      include: {
-        parent: true,
-        children: true,
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-        },
-        teams: {
-          include: {
-            members: {
-              include: {
-                user: { select: { id: true, name: true, avatar: true } },
-              },
-            },
-            _count: { select: { members: true } },
-          },
-        },
-        announcements: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-          include: {
-            author: { select: { id: true, name: true, avatar: true } },
-          },
-        },
-        _count: { select: { members: true, teams: true, announcements: true } },
-      },
-    });
-
-    if (!department || department.workspaceId !== workspace.id) {
+    const department = workspace.departments[0];
+    if (!department) {
       throw new NotFoundException('Department not found');
     }
 
