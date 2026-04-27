@@ -38,22 +38,25 @@ const createTeamSchema = z.object({
 export class TeamsController {
   @Get()
   async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
@@ -83,22 +86,25 @@ export class TeamsController {
 
   @Post()
   async createTeam(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');

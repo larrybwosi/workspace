@@ -67,22 +67,25 @@ const createAnnouncementSchema = z.object({
 export class DepartmentsController {
   @Get()
   async getDepartments(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
@@ -109,22 +112,25 @@ export class DepartmentsController {
 
   @Post()
   async createDepartment(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
@@ -209,22 +215,25 @@ export class DepartmentsController {
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
@@ -283,22 +292,25 @@ export class DepartmentsController {
     @Param('departmentId') departmentId: string,
     @Body() body: any
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
@@ -344,22 +356,25 @@ export class DepartmentsController {
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
@@ -389,22 +404,25 @@ export class DepartmentsController {
     @Query('limit') limitNum = '20',
     @Query('priority') priority: string
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
@@ -454,22 +472,25 @@ export class DepartmentsController {
     @Param('departmentId') departmentId: string,
     @Body() body: any
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     const department = await prisma.workspaceDepartment.findUnique({
       where: { id: departmentId },
