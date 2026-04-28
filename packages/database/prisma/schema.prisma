@@ -96,6 +96,7 @@ model User {
   scheduledNotifications ScheduledNotification[]
   deviceTokens           DeviceToken[]
   pushNotificationLogs   PushNotificationLog[]
+  notificationQueue      NotificationQueue[]
   webhooks               Webhook[]
 
   banned     Boolean?  @default(false)
@@ -1085,6 +1086,30 @@ model PushNotificationLog {
   @@index([notificationId])
   @@index([status])
   @@map("push_notification_logs")
+}
+
+model NotificationQueue {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  body           String
+  data           Json?
+  imageUrl       String?
+  linkUrl        String?
+  notificationId String?
+  status         String   @default("pending") // pending, processing, sent, failed
+  retryCount     Int      @default(0)
+  maxRetries     Int      @default(3)
+  lastError      String?  @db.Text
+  scheduledFor   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([userId])
+  @@map("notification_queue")
 }
 
 // ============================================

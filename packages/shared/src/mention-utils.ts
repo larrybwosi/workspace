@@ -1,13 +1,17 @@
 export function extractUserMentions(content: string): string[] {
   // Extract @username mentions from content, excluding special mentions like @all and @here
-  const mentionRegex = /@(\w+)/g
+  // Supporting dots in usernames (e.g., @john.doe)
+  const mentionRegex = /@([\w.]+)/g
   const mentions: string[] = []
   let match
 
   while ((match = mentionRegex.exec(content)) !== null) {
     const mention = match[1]
-    if (mention !== "all" && mention !== "here") {
-      mentions.push(mention)
+    // Remove trailing dot if it's likely punctuation at the end of a sentence
+    const cleanMention = mention.endsWith(".") ? mention.slice(0, -1) : mention
+
+    if (cleanMention !== "all" && cleanMention !== "here") {
+      mentions.push(cleanMention)
     }
   }
 
@@ -33,13 +37,38 @@ export function hasSpecialMention(content: string, type: "all" | "here"): boolea
 }
 
 export function extractUserIds(mentions: string[], users: any[]): string[] {
-  // Convert usernames to user IDs
-  return mentions
-    .map((mention) => {
-      const user = users.find((u) => u.name.toLowerCase() === mention.toLowerCase())
-      return user?.id
-    })
-    .filter(Boolean) as string[]
+  // ⚡ Optimization: O(N+M) lookup using Map instead of O(N*M)
+  // This avoids repeated nested loops which would scale poorly as message size/user list grows.
+  const usernameMap = new Map<string, string>()
+  const nameMap = new Map<string, string>()
+
+  for (const user of users) {
+    if (user.username && user.id) {
+      usernameMap.set(user.username.toLowerCase(), user.id)
+    }
+    if (user.name && user.id) {
+      nameMap.set(user.name.toLowerCase(), user.id)
+    }
+  }
+
+  // Use a Set to de-duplicate resulting user IDs (prevent multiple notifications)
+  const userIds = new Set<string>()
+  for (const mention of mentions) {
+    const mentionLower = mention.toLowerCase()
+    // Prioritize username match
+    const userIdByUsername = usernameMap.get(mentionLower)
+    if (userIdByUsername) {
+      userIds.add(userIdByUsername)
+    } else {
+      // Fallback to name match
+      const userIdByName = nameMap.get(mentionLower)
+      if (userIdByName) {
+        userIds.add(userIdByName)
+      }
+    }
+  }
+
+  return Array.from(userIds)
 }
 
 export function highlightMentions(content: string): string {
