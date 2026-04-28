@@ -4,7 +4,7 @@ import {
   getAblyRest,
   AblyChannels,
   AblyEvents,
-  sendPushNotification,
+  queueNotification,
   notifyMention as sharedNotifyMention,
   notifyMentions as sharedNotifyMentions,
   notifyChannel as sharedNotifyChannel,
@@ -70,7 +70,7 @@ export class NotificationsService {
     }
 
     try {
-      await sendPushNotification({
+      await queueNotification({
         userId: payload.userId,
         title: payload.title,
         body: payload.message,
@@ -83,7 +83,7 @@ export class NotificationsService {
         notificationId: notification.id,
       });
     } catch (error) {
-      console.error(' Push notification error:', error);
+      console.error(' Push notification queue error:', error);
       // Don't fail the whole operation if push notifications fail
     }
 

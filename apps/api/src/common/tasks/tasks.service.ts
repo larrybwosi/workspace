@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { processScheduledNotifications, processScheduledCalls } from '@repo/shared/server';
+import { processScheduledNotifications, processScheduledCalls, processNotificationQueue } from '@repo/shared/server';
 
 @Injectable()
 export class TasksService {
@@ -8,10 +8,11 @@ export class TasksService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
-    this.logger.debug('Running scheduled notifications and calls task');
+    this.logger.debug('Running scheduled notifications, calls and queue task');
     try {
       await processScheduledNotifications();
       await processScheduledCalls();
+      await processNotificationQueue();
     } catch (error) {
       this.logger.error('Error in TasksService cron job:', error);
     }

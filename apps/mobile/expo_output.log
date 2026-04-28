@@ -1,0 +1,25 @@
+Starting project at /app/apps/mobile
+Using src/app as the root directory for Expo Router.
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+The following packages should be updated for best compatibility with the installed expo version:
+  @expo/metro-runtime@55.0.9 - expected version: ~55.0.10
+  expo@55.0.15 - expected version: ~55.0.18
+  expo-constants@55.0.14 - expected version: ~55.0.15
+  expo-linking@55.0.13 - expected version: ~55.0.14
+  expo-router@55.0.12 - expected version: ~55.0.13
+  expo-splash-screen@55.0.18 - expected version: ~55.0.19
+  react@19.2.5 - expected version: 19.2.0
+  react-dom@19.2.5 - expected version: 19.2.0
+  react-native@0.83.4 - expected version: 0.83.6
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% (159/334)
+Web node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% (437/713)
+Web node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 987/2605)
+Web node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.9% (2328/2605)
+Web node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.2% (3082/3225)
+Web Bundled 19747ms node_modules/.pnpm/expo-router@55.0.12_a07e6797529746ddd92761f5b238ab78/node_modules/expo-router/entry.js (3440 modules)
