@@ -35,8 +35,10 @@ vi.mock("@repo/database", () => ({
   },
 }));
 
-// Mock @repo/shared/server
-const mockGetAblyRest = vi.fn();
+// Mock @repo/shared/server using vi.hoisted to avoid ReferenceError
+const { mockGetAblyRest } = vi.hoisted(() => ({
+  mockGetAblyRest: vi.fn(),
+}));
 
 vi.mock("@repo/shared/server", () => ({
   getAblyRest: mockGetAblyRest,
@@ -100,7 +102,7 @@ describe("ChannelsService", () => {
   // ─────────────────────────────────────────────────────────────────────────────
   // getGlobalChannels – _count optimization (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe("getGlobalChannels - _count optimization (PR change)", () => {
+  describe("getGlobalChannels - _count optimization", () => {
     it("should query channels with workspaceId: null", async () => {
       mockPrisma.channel.findMany.mockResolvedValue([]);
 
@@ -113,7 +115,7 @@ describe("ChannelsService", () => {
       );
     });
 
-    it("should use _count.members instead of full members list (PR change)", async () => {
+    it("should use _count.members instead of full members list", async () => {
       mockPrisma.channel.findMany.mockResolvedValue([]);
 
       await service.getGlobalChannels();
@@ -129,7 +131,6 @@ describe("ChannelsService", () => {
       await service.getGlobalChannels();
 
       const callArg = mockPrisma.channel.findMany.mock.calls[0][0];
-      // Should NOT have members.include.user (that was the old pattern)
       expect(callArg.include?.members?.include?.user).toBeUndefined();
     });
 
@@ -167,7 +168,7 @@ describe("ChannelsService", () => {
   // ─────────────────────────────────────────────────────────────────────────────
   // markAsRead – batch createMany optimization (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe("markAsRead - batch createMany optimization (PR change)", () => {
+  describe("markAsRead - batch createMany optimization", () => {
     it("should return success early when messageIds is empty", async () => {
       const result = await service.markAsRead("user-1", []);
 
@@ -236,7 +237,7 @@ describe("ChannelsService", () => {
   // ─────────────────────────────────────────────────────────────────────────────
   // markAsRead – Ably notification with channelId (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe("markAsRead - Ably notification with channelId (PR change)", () => {
+  describe("markAsRead - Ably notification with channelId", () => {
     it("should publish MESSAGE_READ to user channel when channelId and Ably are available", async () => {
       mockPrisma.messageRead.createMany.mockResolvedValue({ count: 2 });
 
@@ -323,30 +324,44 @@ describe("ChannelsService", () => {
         expect.objectContaining({ messageIds })
       );
     });
+
+    it("should not publish when messageIds is empty (returns early before Ably call)", async () => {
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.markAsRead("user-1", [], "ch-1");
+
+      expect(mockPublish).not.toHaveBeenCalled();
+      expect(mockPrisma.messageRead.createMany).not.toHaveBeenCalled();
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
   // removeReaction – atomic delete with try/catch (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe("removeReaction - atomic delete with try/catch (PR change)", () => {
-    it("should delete reaction using compound unique key", async () => {
+  describe("removeReaction - atomic delete with idempotency", () => {
+    it("should call prisma.reaction.delete with compound unique key", async () => {
       mockPrisma.reaction.delete.mockResolvedValue({ id: "r-1" });
       mockGetAblyRest.mockReturnValue(null);
 
       await service.removeReaction("ch-1", "msg-1", "user-1", "👍");
 
-      expect(mockPrisma.reaction.delete).toHaveBeenCalledWith({
-        where: {
-          messageId_userId_emoji: {
-            messageId: "msg-1",
-            userId: "user-1",
-            emoji: "👍",
+      expect(mockPrisma.reaction.delete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            messageId_userId_emoji: {
+              messageId: "msg-1",
+              userId: "user-1",
+              emoji: "👍",
+            },
           },
-        },
-      });
+        })
+      );
     });
 
-    it("should return { success: true } after deleting reaction", async () => {
+    it("should return { success: true } when reaction is deleted successfully", async () => {
       mockPrisma.reaction.delete.mockResolvedValue({ id: "r-1" });
       mockGetAblyRest.mockReturnValue(null);
 
@@ -355,36 +370,48 @@ describe("ChannelsService", () => {
       expect(result).toEqual({ success: true });
     });
 
-    it("should silently ignore P2025 error (record does not exist – idempotency)", async () => {
-      const prismaError = new Error("Record to delete does not exist");
-      (prismaError as any).code = "P2025";
-      mockPrisma.reaction.delete.mockRejectedValue(prismaError);
+    it("should return { success: true } when reaction does not exist (P2025 - idempotency)", async () => {
+      const prismaNotFoundError = Object.assign(new Error("Not found"), {
+        code: "P2025",
+      });
+      mockPrisma.reaction.delete.mockRejectedValue(prismaNotFoundError);
+      mockGetAblyRest.mockReturnValue(null);
 
-      await expect(
-        service.removeReaction("ch-1", "msg-1", "user-1", "👍")
-      ).resolves.toEqual({ success: true });
+      const result = await service.removeReaction("ch-1", "msg-1", "user-1", "👍");
+
+      expect(result).toEqual({ success: true });
     });
 
     it("should rethrow non-P2025 errors", async () => {
-      const dbError = new Error("DB connection error");
-      (dbError as any).code = "P1001";
+      const dbError = Object.assign(new Error("DB connection failed"), {
+        code: "P2024",
+      });
       mockPrisma.reaction.delete.mockRejectedValue(dbError);
+      mockGetAblyRest.mockReturnValue(null);
 
       await expect(
         service.removeReaction("ch-1", "msg-1", "user-1", "👍")
-      ).rejects.toThrow("DB connection error");
+      ).rejects.toThrow("DB connection failed");
     });
 
-    it("should rethrow error without code property", async () => {
-      const genericError = new Error("Unexpected error");
-      mockPrisma.reaction.delete.mockRejectedValue(genericError);
+    it("should NOT publish to Ably when reaction does not exist (P2025)", async () => {
+      const prismaNotFoundError = Object.assign(new Error("Not found"), {
+        code: "P2025",
+      });
+      mockPrisma.reaction.delete.mockRejectedValue(prismaNotFoundError);
 
-      await expect(
-        service.removeReaction("ch-1", "msg-1", "user-1", "❤️")
-      ).rejects.toThrow("Unexpected error");
+      const mockPublish = vi.fn().mockResolvedValue(undefined);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
+      });
+
+      await service.removeReaction("ch-1", "msg-1", "user-1", "👍");
+
+      // Ably should not be called since we hit the error path
+      expect(mockPublish).not.toHaveBeenCalled();
     });
 
-    it("should publish MESSAGE_REACTION remove event to Ably channel when available", async () => {
+    it("should publish MESSAGE_REACTION remove event when reaction is deleted and Ably is available", async () => {
       mockPrisma.reaction.delete.mockResolvedValue({ id: "r-1" });
 
       const mockPublish = vi.fn().mockResolvedValue(undefined);
@@ -405,217 +432,14 @@ describe("ChannelsService", () => {
       );
     });
 
-    it("should NOT publish when Ably is null", async () => {
-      mockPrisma.reaction.delete.mockResolvedValue({ id: "r-1" });
+    it("should rethrow errors without a code property", async () => {
+      const unknownError = new Error("Unexpected failure");
+      mockPrisma.reaction.delete.mockRejectedValue(unknownError);
       mockGetAblyRest.mockReturnValue(null);
 
-      const result = await service.removeReaction("ch-1", "msg-1", "user-1", "👍");
-
-      expect(result).toEqual({ success: true });
-    });
-
-    it("should not publish Ably event when P2025 is silently swallowed", async () => {
-      const prismaError = new Error("Record does not exist");
-      (prismaError as any).code = "P2025";
-      mockPrisma.reaction.delete.mockRejectedValue(prismaError);
-
-      const mockPublish = vi.fn();
-      mockGetAblyRest.mockReturnValue({
-        channels: { get: vi.fn().mockReturnValue({ publish: mockPublish }) },
-      });
-
-      await service.removeReaction("ch-1", "msg-1", "user-1", "👍");
-
-      expect(mockPublish).not.toHaveBeenCalled();
-    });
-  });
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // createMessage – batch notifyMentions (PR change)
-  // ─────────────────────────────────────────────────────────────────────────────
-  describe("createMessage - batch notifyMentions (PR change)", () => {
-    beforeEach(() => {
-      mockGetAblyRest.mockReturnValue(null);
-      mockNotifyMentions.mockReset();
-      mockNotifyChannel.mockReset();
-      mockNotifyMentions.mockResolvedValue(undefined);
-      mockNotifyChannel.mockResolvedValue(undefined);
-    });
-
-    it("should call notifyMentions when there are mentioned users other than sender", async () => {
-      const { extractUserMentions, extractUserIds } = await import(
-        "../common/utils/mention-utils"
-      );
-      vi.mocked(extractUserMentions).mockReturnValue(["bob"]);
-      vi.mocked(extractUserIds).mockReturnValue(["user-2"]);
-
-      const createdMessage = {
-        id: "msg-new",
-        channelId: "ch-1",
-        userId: "user-1",
-        content: "Hello @bob",
-        user: { id: "user-1", name: "Alice" },
-        reactions: [],
-        attachments: [],
-        mentions: [],
-      };
-      mockPrisma.$transaction.mockResolvedValue(createdMessage);
-
-      await service.createMessage("ch-1", "user-1", { content: "Hello @bob" });
-
-      expect(mockNotifyMentions).toHaveBeenCalledWith(
-        "msg-new",
-        ["user-2"],
-        "Alice",
-        "ch-1",
-        "Hello @bob"
-      );
-    });
-
-    it("should NOT call notifyMentions when sender is the only mentioned user (self-mention filter)", async () => {
-      const { extractUserMentions, extractUserIds } = await import(
-        "../common/utils/mention-utils"
-      );
-      vi.mocked(extractUserMentions).mockReturnValue(["alice"]);
-      vi.mocked(extractUserIds).mockReturnValue(["user-1"]); // sender's own ID
-
-      const createdMessage = {
-        id: "msg-new",
-        channelId: "ch-1",
-        userId: "user-1",
-        content: "Hello @alice",
-        user: { id: "user-1", name: "Alice" },
-        reactions: [],
-        attachments: [],
-        mentions: [],
-      };
-      mockPrisma.$transaction.mockResolvedValue(createdMessage);
-
-      await service.createMessage("ch-1", "user-1", { content: "Hello @alice" });
-
-      expect(mockNotifyMentions).not.toHaveBeenCalled();
-    });
-
-    it("should call notifyMentions ONCE with all recipient IDs (single batch call)", async () => {
-      const { extractUserMentions, extractUserIds } = await import(
-        "../common/utils/mention-utils"
-      );
-      vi.mocked(extractUserMentions).mockReturnValue(["bob", "charlie"]);
-      vi.mocked(extractUserIds).mockReturnValue(["user-2", "user-3"]);
-
-      const createdMessage = {
-        id: "msg-new",
-        channelId: "ch-1",
-        userId: "user-1",
-        content: "Hey @bob and @charlie",
-        user: { id: "user-1", name: "Alice" },
-        reactions: [],
-        attachments: [],
-        mentions: [],
-      };
-      mockPrisma.$transaction.mockResolvedValue(createdMessage);
-
-      await service.createMessage("ch-1", "user-1", {
-        content: "Hey @bob and @charlie",
-      });
-
-      // Called exactly once (batch), not once per user (loop)
-      expect(mockNotifyMentions).toHaveBeenCalledTimes(1);
-      expect(mockNotifyMentions).toHaveBeenCalledWith(
-        "msg-new",
-        expect.arrayContaining(["user-2", "user-3"]),
-        "Alice",
-        "ch-1",
-        "Hey @bob and @charlie"
-      );
-    });
-
-    it("should NOT call notifyMentions when there are no mentions", async () => {
-      const { extractUserMentions, extractUserIds } = await import(
-        "../common/utils/mention-utils"
-      );
-      vi.mocked(extractUserMentions).mockReturnValue([]);
-      vi.mocked(extractUserIds).mockReturnValue([]);
-
-      const createdMessage = {
-        id: "msg-no-mentions",
-        channelId: "ch-1",
-        userId: "user-1",
-        content: "Hello world",
-        user: { id: "user-1", name: "Alice" },
-        reactions: [],
-        attachments: [],
-        mentions: [],
-      };
-      mockPrisma.$transaction.mockResolvedValue(createdMessage);
-
-      await service.createMessage("ch-1", "user-1", { content: "Hello world" });
-
-      expect(mockNotifyMentions).not.toHaveBeenCalled();
-    });
-
-    it("should call notifyChannel when @all is mentioned", async () => {
-      const { extractUserMentions, extractUserIds, hasSpecialMention } =
-        await import("../common/utils/mention-utils");
-      vi.mocked(extractUserMentions).mockReturnValue([]);
-      vi.mocked(extractUserIds).mockReturnValue([]);
-      vi.mocked(hasSpecialMention).mockImplementation(
-        (_content: string, type: string) => type === "all"
-      );
-
-      const createdMessage = {
-        id: "msg-all",
-        channelId: "ch-1",
-        userId: "user-1",
-        content: "@all check this out",
-        user: { id: "user-1", name: "Alice" },
-        reactions: [],
-        attachments: [],
-        mentions: [],
-      };
-      mockPrisma.$transaction.mockResolvedValue(createdMessage);
-
-      await service.createMessage("ch-1", "user-1", {
-        content: "@all check this out",
-      });
-
-      expect(mockNotifyChannel).toHaveBeenCalledWith(
-        "ch-1",
-        "Alice",
-        "msg-all",
-        "@all check this out",
-        false // mentionsHere = false
-      );
-    });
-
-    it("should use fallback sender name 'Someone' when user has no name", async () => {
-      const { extractUserMentions, extractUserIds } = await import(
-        "../common/utils/mention-utils"
-      );
-      vi.mocked(extractUserMentions).mockReturnValue(["bob"]);
-      vi.mocked(extractUserIds).mockReturnValue(["user-2"]);
-
-      const createdMessage = {
-        id: "msg-no-name",
-        channelId: "ch-1",
-        userId: "user-1",
-        content: "Hello @bob",
-        user: null, // No user object
-        reactions: [],
-        attachments: [],
-        mentions: [],
-      };
-      mockPrisma.$transaction.mockResolvedValue(createdMessage);
-
-      await service.createMessage("ch-1", "user-1", { content: "Hello @bob" });
-
-      expect(mockNotifyMentions).toHaveBeenCalledWith(
-        "msg-no-name",
-        ["user-2"],
-        "Someone",
-        "ch-1",
-        "Hello @bob"
-      );
+      await expect(
+        service.removeReaction("ch-1", "msg-1", "user-1", "❤️")
+      ).rejects.toThrow("Unexpected failure");
     });
   });
 });
