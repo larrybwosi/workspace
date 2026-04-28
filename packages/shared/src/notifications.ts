@@ -1,7 +1,7 @@
 import { prisma } from '@repo/database';
 import { AblyChannels, AblyEvents } from './ably';
 import { getAblyRest } from './ably.server';
-import { sendPushNotification } from './push-notifications';
+import { queueNotification } from './notification-queue';
 
 export interface NotificationPayload {
   userId: string;
@@ -65,9 +65,9 @@ export async function createNotifications(payloads: NotificationPayload[]) {
         });
       }
 
-      // Push notification
+      // Push notification (Queued for background delivery - Enterprise requirement)
       try {
-        await sendPushNotification({
+        await queueNotification({
           userId: notification.userId,
           title: notification.title,
           body: notification.message,
@@ -80,7 +80,7 @@ export async function createNotifications(payloads: NotificationPayload[]) {
           notificationId: notification.id,
         });
       } catch (error) {
-        console.error('Batch push notification error:', error);
+        console.error('Batch push notification queue error:', error);
       }
     })
   );
