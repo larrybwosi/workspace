@@ -1,17 +1,18 @@
 export function extractUserMentions(content: string): string[] {
   // Extract @username mentions from content, excluding special mentions like @all and @here
-  const mentionRegex = /@(\w+)/g
-  const mentions: string[] = []
-  let match
+  // Supporting dots in usernames
+  const mentionRegex = /@([\w.]+)/g;
+  const mentions: string[] = [];
+  let match;
 
   while ((match = mentionRegex.exec(content)) !== null) {
-    const mention = match[1]
-    if (mention !== "all" && mention !== "here") {
-      mentions.push(mention)
+    const mention = match[1];
+    if (mention !== 'all' && mention !== 'here') {
+      mentions.push(mention);
     }
   }
 
-  return mentions
+  return mentions;
 }
 
 export function extractChannelMentions(content: string): string[] {
@@ -33,13 +34,33 @@ export function hasSpecialMention(content: string, type: "all" | "here"): boolea
 }
 
 export function extractUserIds(mentions: string[], users: any[]): string[] {
-  // Convert usernames to user IDs
-  return mentions
-    .map((mention) => {
-      const user = users.find((u) => u.name.toLowerCase() === mention.toLowerCase())
-      return user?.id
-    })
-    .filter(Boolean) as string[]
+  // ⚡ Optimization: O(N+M) lookup using Map instead of O(N*M)
+  // PR change: Prioritize matching by username, fall back to name for backward compatibility
+  const userMap = new Map<string, string>();
+  for (const user of users) {
+    // Priority: username > name
+    const id = user.id;
+    if (!id) continue;
+
+    if (user.username) {
+      userMap.set(user.username.toLowerCase(), id);
+    }
+    // Only set if not already set by username (to prefer username matches)
+    if (user.name && !userMap.has(user.name.toLowerCase())) {
+      userMap.set(user.name.toLowerCase(), id);
+    }
+  }
+
+  // Use a Set to de-duplicate resulting user IDs
+  const userIds = new Set<string>();
+  for (const mention of mentions) {
+    const userId = userMap.get(mention.toLowerCase());
+    if (userId) {
+      userIds.add(userId);
+    }
+  }
+
+  return Array.from(userIds);
 }
 
 export function highlightMentions(content: string): string {
@@ -48,7 +69,7 @@ export function highlightMentions(content: string): string {
 
   // Highlight @user, @all, @here
   highlighted = highlighted.replace(
-    /@(\w+)/g,
+    /@([\w.]+)/g,
     (match, p1) => {
       const isSpecial = p1 === "all" || p1 === "here"
       const colorClass = isSpecial ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary"
