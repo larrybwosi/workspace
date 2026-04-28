@@ -23,6 +23,7 @@ interface Workspace {
   members?: any[];
   _count?: {
     channels: number;
+    members: number;
   };
 }
 

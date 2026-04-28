@@ -78,14 +78,54 @@ export class ChannelsController {
         ],
       },
       include: {
-        _count: { select: { messages: true } },
+        messages: {
+          where: {
+            readBy: {
+              none: {
+                userId: user.id,
+              },
+            },
+          },
+          select: {
+            id: true,
+            mentions: {
+              select: {
+                mention: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         name: 'asc',
       },
     });
 
-    return channels;
+    /**
+     * ⚡ Performance Optimization:
+     * Transforms the data to include unread and mention counts at the root level.
+     * This aligns with the frontend's expectations for efficient sidebar rendering
+     * and avoids sending full message objects over the wire.
+     */
+    return channels.map(channel => {
+      const unreadCount = channel.messages.length;
+      const mentionCount = channel.messages.filter(m =>
+        m.mentions.some(
+          mention =>
+            mention.mention === `@${user.name}` ||
+            (user.username && mention.mention === `@${user.username}`) ||
+            mention.mention === '@all' ||
+            mention.mention === '@here'
+        )
+      ).length;
+
+      const { messages, ...rest } = channel;
+      return {
+        ...rest,
+        unreadCount,
+        mentionCount,
+      };
+    });
   }
 
   @Post()
