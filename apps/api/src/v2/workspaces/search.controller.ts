@@ -6,18 +6,33 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 
+@ApiTags('Search')
+@ApiBearerAuth()
 @Controller('v2/workspaces/:slug/search')
 @UseGuards(ApiV2Guard)
 export class V2SearchController {
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get('members')
+  @ApiOperation({ summary: 'Search for members in the workspace', description: 'Requires members:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiQuery({ name: 'q', description: 'The search query' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Search results returned successfully.' })
   async searchMembers(
     @V2Context() context: ApiV2Context,
     @Query('q') query: string,
@@ -66,6 +81,12 @@ export class V2SearchController {
   }
 
   @Get('messages')
+  @ApiOperation({ summary: 'Search for messages in the workspace', description: 'Requires messages:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiQuery({ name: 'q', description: 'The search query' })
+  @ApiQuery({ name: 'channelId', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Search results returned successfully.' })
   async searchMessages(
     @V2Context() context: ApiV2Context,
     @Query('q') query: string,
