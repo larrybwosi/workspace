@@ -11,6 +11,15 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -18,6 +27,28 @@ import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+
+class CreateWebhookDto {
+  @ApiProperty({ example: 'My Webhook' })
+  name: string;
+  @ApiProperty({ example: 'https://example.com/webhook' })
+  url: string;
+  @ApiProperty({ example: ['message.sent', 'channel.created'] })
+  events: string[];
+  @ApiProperty({ default: true, required: false })
+  active?: boolean;
+}
+
+class UpdateWebhookDto {
+  @ApiProperty({ required: false })
+  name?: string;
+  @ApiProperty({ required: false })
+  url?: string;
+  @ApiProperty({ required: false })
+  events?: string[];
+  @ApiProperty({ required: false })
+  active?: boolean;
+}
 
 const createWebhookSchema = z.object({
   name: z.string().min(1).max(100),
@@ -33,12 +64,17 @@ const updateWebhookSchema = z.object({
   active: z.boolean().optional(),
 });
 
+@ApiTags('Webhooks')
+@ApiBearerAuth()
 @Controller('v2/workspaces/:slug/webhooks')
 @UseGuards(ApiV2Guard)
 export class V2WebhooksController {
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all webhooks in the workspace', description: 'Requires webhooks:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of webhooks returned successfully.' })
   async getWebhooks(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'webhooks:read')) {
       throw new ForbiddenException('Forbidden: Missing webhooks:read scope');
@@ -55,7 +91,11 @@ export class V2WebhooksController {
   }
 
   @Post()
-  async createWebhook(@V2Context() context: ApiV2Context, @Body() body: any) {
+  @ApiOperation({ summary: 'Create a new webhook', description: 'Requires webhooks:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateWebhookDto })
+  @ApiResponse({ status: 201, description: 'Webhook created successfully.' })
+  async createWebhook(@V2Context() context: ApiV2Context, @Body() body: CreateWebhookDto) {
     if (!this.hasScope(context, 'webhooks:write')) {
       throw new ForbiddenException('Forbidden: Missing webhooks:write scope');
     }
@@ -91,6 +131,10 @@ export class V2WebhooksController {
   }
 
   @Get(':webhookId')
+  @ApiOperation({ summary: 'Get details of a specific webhook', description: 'Requires webhooks:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
+  @ApiResponse({ status: 200, description: 'Webhook details returned successfully.' })
   async getWebhook(
     @V2Context() context: ApiV2Context,
     @Param('webhookId') webhookId: string,
@@ -114,10 +158,15 @@ export class V2WebhooksController {
   }
 
   @Patch(':webhookId')
+  @ApiOperation({ summary: 'Update a webhook', description: 'Requires webhooks:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
+  @ApiBody({ type: UpdateWebhookDto })
+  @ApiResponse({ status: 200, description: 'Webhook updated successfully.' })
   async updateWebhook(
     @V2Context() context: ApiV2Context,
     @Param('webhookId') webhookId: string,
-    @Body() body: any,
+    @Body() body: UpdateWebhookDto,
   ) {
     if (!this.hasScope(context, 'webhooks:write')) {
       throw new ForbiddenException('Forbidden: Missing webhooks:write scope');
@@ -147,6 +196,10 @@ export class V2WebhooksController {
   }
 
   @Delete(':webhookId')
+  @ApiOperation({ summary: 'Delete a webhook', description: 'Requires webhooks:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
+  @ApiResponse({ status: 200, description: 'Webhook deleted successfully.' })
   async deleteWebhook(
     @V2Context() context: ApiV2Context,
     @Param('webhookId') webhookId: string,

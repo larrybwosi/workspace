@@ -11,6 +11,15 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -20,11 +29,21 @@ import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { auth } from '../../auth/better-auth';
 
+class AddMemberDto {
+  @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
+  email: string;
+
+  @ApiProperty({ example: 'member', description: 'The role of the member', required: false, default: 'member' })
+  role?: string;
+}
+
 const addMemberSchema = z.object({
   email: z.string().email(),
   role: z.string().optional().default('member'),
 });
 
+@ApiTags('Members')
+@ApiBearerAuth()
 @Controller('v2/workspaces/:slug/members')
 @UseGuards(ApiV2Guard)
 export class V2WorkspacesController {
@@ -34,6 +53,10 @@ export class V2WorkspacesController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all workspace members', description: 'Requires members:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of members returned successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing scope.' })
   async getMembers(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'members:read')) {
       throw new ForbiddenException('Forbidden: Missing members:read scope');
@@ -71,7 +94,12 @@ export class V2WorkspacesController {
   }
 
   @Post()
-  async addMember(@V2Context() context: ApiV2Context, @Body() body: any) {
+  @ApiOperation({ summary: 'Add a member to the workspace', description: 'Requires members:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: AddMemberDto })
+  @ApiResponse({ status: 201, description: 'Member added successfully.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  async addMember(@V2Context() context: ApiV2Context, @Body() body: AddMemberDto) {
     if (!this.hasScope(context, 'members:write')) {
       throw new ForbiddenException('Forbidden: Missing members:write scope');
     }
@@ -115,6 +143,11 @@ export class V2WorkspacesController {
   }
 
   @Get(':userId')
+  @ApiOperation({ summary: 'Get details of a specific workspace member', description: 'Requires members:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'userId', description: 'The ID of the user' })
+  @ApiResponse({ status: 200, description: 'Member details returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Member not found.' })
   async getMember(@V2Context() context: ApiV2Context, @Param('userId') userId: string) {
     if (!this.hasScope(context, 'members:read')) {
       throw new ForbiddenException('Forbidden: Missing members:read scope');
@@ -150,6 +183,12 @@ export class V2WorkspacesController {
   }
 
   @Delete(':userId')
+  @ApiOperation({ summary: 'Remove a member from the workspace', description: 'Requires members:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'userId', description: 'The ID of the user' })
+  @ApiResponse({ status: 200, description: 'Member removed successfully.' })
+  @ApiResponse({ status: 400, description: 'Cannot remove workspace owner.' })
+  @ApiResponse({ status: 404, description: 'Member not found.' })
   async removeMember(@V2Context() context: ApiV2Context, @Param('userId') userId: string) {
     if (!this.hasScope(context, 'members:write')) {
       throw new ForbiddenException('Forbidden: Missing members:write scope');

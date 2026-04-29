@@ -5,9 +5,30 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import { z } from 'zod';
+
+class TokenRequestDto {
+  @ApiProperty({ example: 'client_credentials', enum: ['client_credentials'] })
+  grant_type: 'client_credentials';
+
+  @ApiProperty({ example: 'your_client_id' })
+  client_id: string;
+
+  @ApiProperty({ example: 'your_client_secret' })
+  client_secret: string;
+
+  @ApiProperty({ example: 'messages:send channels:read', required: false })
+  scope?: string;
+}
 
 const tokenRequestSchema = z.object({
   grant_type: z.enum(['client_credentials']),
@@ -16,10 +37,15 @@ const tokenRequestSchema = z.object({
   scope: z.string().optional(),
 });
 
+@ApiTags('Authentication')
 @Controller('v2/oauth')
 export class V2OAuthController {
   @Post('token')
-  async getToken(@Body() body: any) {
+  @ApiOperation({ summary: 'Exchange client credentials for an access token', description: 'Used for bot and integration authentication.' })
+  @ApiBody({ type: TokenRequestDto })
+  @ApiResponse({ status: 200, description: 'Access token returned successfully.' })
+  @ApiResponse({ status: 401, description: 'Invalid client credentials.' })
+  async getToken(@Body() body: TokenRequestDto) {
     const validatedData = tokenRequestSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
