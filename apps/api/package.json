@@ -9,6 +9,7 @@
     "start": "nest start",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "type-check": "tsc --noEmit",
+    "generate:openapi": "nest build && EXPORT_OPENAPI=true node dist/main.js",
     "test": "vitest run",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:watch": "vitest",
