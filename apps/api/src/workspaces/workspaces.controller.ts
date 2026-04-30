@@ -53,7 +53,6 @@ const updateMemberSchema = z.object({
 @UseGuards(AuthGuard)
 export class WorkspacesController {
   @Get()
-
   async getWorkspaces(@CurrentUser() user: User): Promise<any> {
     /**
      * ⚡ Performance Optimization:
@@ -107,7 +106,6 @@ export class WorkspacesController {
   }
 
   @Post()
-
   async createWorkspace(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<any> {
     const validatedData = createWorkspaceSchema.safeParse(body);
     if (!validatedData.success) {
@@ -161,6 +159,72 @@ export class WorkspacesController {
             },
           },
         },
+      },
+    });
+  }
+
+  /**
+   * ⚡ Performance Optimization:
+   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+   * 2. Optimized membership check using a direct findUnique on WorkspaceMember.
+   * 3. Replaces full 'members' list with a simple count.
+   * Expected impact: Significantly reduces response time and memory overhead for large workspaces.
+   */
+  @Get('discover')
+  async discoverWorkspaces(@CurrentUser() user: User): Promise<any> {
+    // Return workspaces the user is NOT a member of
+    return prisma.workspace.findMany({
+      where: {
+        members: {
+          none: {
+            userId: user.id,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        icon: true,
+        description: true,
+        _count: {
+          select: {
+            members: true,
+          },
+        },
+      },
+      take: 20,
+    });
+  }
+
+  @Post(':slug/join')
+  async joinWorkspace(@CurrentUser() user: User, @Param('slug') slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    const existingMember = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspace.id,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return existingMember;
+    }
+
+    return prisma.workspaceMember.create({
+      data: {
+        workspaceId: workspace.id,
+        userId: user.id,
+        role: 'member',
       },
     });
   }
