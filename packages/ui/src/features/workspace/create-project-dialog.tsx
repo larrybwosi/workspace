@@ -80,7 +80,7 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId: workspace
               placeholder="e.g., Q1 Product Launch"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              disabled={createProject.isPending}
+              disabled={isLoading}
             />
           </div>
 
@@ -139,7 +139,7 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId: workspace
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })} disabled={createProject.isPending}>
+            <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })} disabled={isLoading}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -157,7 +157,7 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId: workspace
               placeholder="Describe the project..."
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              disabled={createProject.isPending}
+              disabled={isLoading}
             />
           </div>
         </div>

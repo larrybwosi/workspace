@@ -4,16 +4,3 @@
 
 expo-env.d.ts
 # @end expo-cli
-
-node_modules/
-.expo/
-dist/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Android artifacts
-android/
-
-# iOS artifacts
-ios/

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Skryme",
-    "slug": "skryme-mobile",
-    "version": "0.1.0",
+    "name": "Skyrme",
+    "slug": "skyrme-mobile",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -36,7 +36,13 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Skyrme to access your camera to scan QR codes for desktop login."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

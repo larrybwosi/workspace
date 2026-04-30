@@ -10,6 +10,15 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -17,6 +26,49 @@ import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+
+class CreateTokenDto {
+  @ApiProperty({ example: 'My App Token' })
+  name: string;
+
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      actions: {
+        type: 'array',
+        items: {
+          type: 'string',
+          enum: [
+            'read:members',
+            'write:members',
+            'read:departments',
+            'write:departments',
+            'read:teams',
+            'write:teams',
+            'read:announcements',
+            'write:announcements',
+            'read:channels',
+            'write:channels',
+            'send:messages',
+            'read:messages',
+            'read:threads',
+            'read:webhooks',
+            'write:webhooks',
+            'read:tokens',
+            'write:tokens',
+          ],
+        },
+      },
+    },
+  })
+  permissions: { actions: string[] };
+
+  @ApiProperty({ required: false, default: 1000 })
+  rateLimit?: number;
+
+  @ApiProperty({ required: false, description: 'ISO string date' })
+  expiresAt?: string;
+}
 
 const createTokenSchema = z.object({
   name: z.string().min(1).max(100),
@@ -47,12 +99,17 @@ const createTokenSchema = z.object({
   expiresAt: z.string().datetime().optional().nullable(),
 });
 
+@ApiTags('API Tokens')
+@ApiBearerAuth()
 @Controller('v2/workspaces/:slug/api-tokens')
 @UseGuards(ApiV2Guard)
 export class V2ApiTokensController {
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all API tokens in the workspace', description: 'Requires tokens:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of tokens returned successfully.' })
   async getTokens(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'tokens:read')) {
       throw new ForbiddenException('Forbidden: Missing tokens:read scope');
@@ -80,7 +137,11 @@ export class V2ApiTokensController {
   }
 
   @Post()
-  async createToken(@V2Context() context: ApiV2Context, @Body() body: any) {
+  @ApiOperation({ summary: 'Create a new API token', description: 'Requires tokens:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateTokenDto })
+  @ApiResponse({ status: 201, description: 'Token created successfully.' })
+  async createToken(@V2Context() context: ApiV2Context, @Body() body: CreateTokenDto) {
     if (!this.hasScope(context, 'tokens:write')) {
       throw new ForbiddenException('Forbidden: Missing tokens:write scope');
     }
@@ -121,6 +182,10 @@ export class V2ApiTokensController {
   }
 
   @Delete(':tokenId')
+  @ApiOperation({ summary: 'Delete an API token', description: 'Requires tokens:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'tokenId', description: 'The token ID' })
+  @ApiResponse({ status: 200, description: 'Token deleted successfully.' })
   async deleteToken(
     @V2Context() context: ApiV2Context,
     @Param('tokenId') tokenId: string,
@@ -153,6 +218,10 @@ export class V2ApiTokensController {
   }
 
   @Post(':tokenId/rotate')
+  @ApiOperation({ summary: 'Rotate an API token (generate new token value)', description: 'Requires tokens:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'tokenId', description: 'The token ID' })
+  @ApiResponse({ status: 201, description: 'Token rotated successfully.' })
   async rotateToken(
     @V2Context() context: ApiV2Context,
     @Param('tokenId') tokenId: string,
