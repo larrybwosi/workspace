@@ -14,7 +14,6 @@ import {
   useReplyToMessage,
   useMarkMessagesAsRead,
   messageKeys,
-  useDM,
 } from '@repo/api-client';
 import { useAddReaction, useRemoveReaction } from '@repo/api-client';
 import { cn } from '../../lib/utils';
@@ -25,7 +24,7 @@ import { type UploadedFile } from '@repo/shared';
 import { toast } from 'sonner';
 import { useChannel } from '@repo/api-client';
 import { useSession } from '@repo/shared';
-import { Settings, Hash, Phone, Video, Sidebar as SidebarIcon, User as UserIcon } from 'lucide-react';
+import { Settings, Hash, Phone, Video, Sidebar as SidebarIcon } from 'lucide-react';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 
 interface ChannelViewProps {
@@ -35,10 +34,6 @@ interface ChannelViewProps {
   contextId?: string;
   isWidget?: boolean;
   onToggleInfo?: () => void;
-  type?: 'channel' | 'dm';
-  onVoiceCall?: () => void;
-  onVideoCall?: () => void;
-  onOpenSettings?: number; // Trigger by changing number
 }
 
 // --- Helper Components ---
@@ -101,17 +96,12 @@ export function ChannelView({
   contextId,
   isWidget,
   onToggleInfo,
-  type = 'channel',
-  onVoiceCall,
-  onVideoCall,
-  onOpenSettings,
 }: ChannelViewProps) {
   const searchParams = useSearchParams();
   const highlightedMessageId = searchParams.get('messageId');
   const queryClient = useQueryClient();
 
   const activeChannelId = channelId;
-  const isDM = type === 'dm';
 
   const {
     data: messagesData,
@@ -119,17 +109,17 @@ export function ChannelView({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(activeChannelId, workspaceSlug, initialThreadId, contextId, isWidget, isDM);
+  } = useMessages(activeChannelId, workspaceSlug, initialThreadId, contextId, isWidget);
 
-  const { data: channelData } = useChannel(activeChannelId, isDM ? undefined : workspaceSlug);
-  const { data: dmData } = useDM(isDM ? activeChannelId : '');
+  const { data: channelData } = useChannel(activeChannelId, workspaceSlug);
+
 
   // API Mutations
-  const sendMessageMutation = useSendMessage(workspaceSlug, isWidget, isDM);
-  const replyToMessageMutation = useReplyToMessage(workspaceSlug, isDM);
+  const sendMessageMutation = useSendMessage(workspaceSlug, isWidget);
+  const replyToMessageMutation = useReplyToMessage(workspaceSlug);
   const addReactionMutation = useAddReaction();
   const removeReactionMutation = useRemoveReaction();
-  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceSlug, isDM);
+  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceSlug);
 
   // Keep track of channels we've already shown the "New Messages" line for in this session
   // to satisfy the requirement: "disappear after the user leaves the channel and comes back"
@@ -161,11 +151,9 @@ export function ChannelView({
     const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
 
     const handleMessage = (message: any) => {
-      const queryKey = isDM
-        ? ['dms', 'list', activeChannelId]
-        : workspaceSlug
-          ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages']
-          : messageKeys.list(activeChannelId);
+      const queryKey = workspaceSlug
+        ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages']
+        : messageKeys.list(activeChannelId);
 
       queryClient.invalidateQueries({ queryKey });
     };
@@ -204,47 +192,28 @@ export function ChannelView({
     }
   }, [channelData]);
 
-  useEffect(() => {
-    if (onOpenSettings !== undefined && onOpenSettings > 0) {
-      setEditDialogOpen(true);
-    }
-  }, [onOpenSettings]);
-
   // 1. Flatten Data
   const messages = useMemo(() => {
     if (!messagesData?.pages) return [];
-    // Flatten and ensure they are sorted by timestamp for logic stability
-    return messagesData.pages
-      .flatMap(page => page.messages)
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    return messagesData.pages.flatMap(page => page.messages);
   }, [messagesData]);
 
   const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
   const firstUnreadMessageId = useMemo(() => {
-    // We only care about messages not sent by the current user
-    const firstUnread = messages.find(m => !m.readByCurrentUser && m.userId !== currentUser?.id);
+    const firstUnread = messages.find(m => !m.readByCurrentUser);
     return firstUnread?.id || null;
-  }, [messages, currentUser?.id]);
+  }, [messages]);
 
   // Set initial unread ID only once when messages load
   useEffect(() => {
-    if (!isLoading && messages.length > 0 && !hasInitialScrolled) {
+    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled) {
       if (!viewedChannels.has(activeChannelId)) {
-        if (firstUnreadMessageId) {
-          setInitialUnreadId(firstUnreadMessageId);
-        }
+        setInitialUnreadId(firstUnreadMessageId);
         viewedChannels.add(activeChannelId);
       }
     }
-  }, [
-    isLoading,
-    messages.length,
-    firstUnreadMessageId,
-    hasInitialScrolled,
-    activeChannelId,
-    viewedChannels,
-  ]);
+  }, [isLoading, messages.length, firstUnreadMessageId, initialUnreadId, hasInitialScrolled, activeChannelId, viewedChannels]);
 
   // Clear unread line on new message or user interaction
   useEffect(() => {
@@ -340,6 +309,8 @@ export function ChannelView({
         if (entry.isIntersecting) {
           const messageId = entry.target.getAttribute('data-message-id');
           if (messageId && !markedMessageIds.current.has(messageId)) {
+            // We use the latest messages from ref or closure
+            // In this case, we'll use a small trick: look up from the DOM or state
             visibleUnreadIds.push(messageId);
             markedMessageIds.current.add(messageId);
           }
@@ -347,6 +318,8 @@ export function ChannelView({
       });
 
       if (visibleUnreadIds.length > 0) {
+        // Filter out IDs that are already read or are by current user
+        // We'll do this check inside the mutation or here if we have latest messages
         markMessagesAsReadMutation.mutate({
           messageIds: visibleUnreadIds,
           channelId: activeChannelId,
@@ -356,7 +329,7 @@ export function ChannelView({
 
     observerRef.current = new IntersectionObserver(handleIntersect, {
       root: scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]'),
-      threshold: 0.1, // Trigger earlier
+      threshold: 0.5,
     });
 
     return () => {
@@ -369,6 +342,7 @@ export function ChannelView({
   useEffect(() => {
     if (!observerRef.current || messages.length === 0) return;
 
+    // Observe all message elements
     const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
     if (!viewport) return;
 
@@ -382,7 +356,7 @@ export function ChannelView({
         }
       }
     });
-  }, [messages, currentUser?.id, hasInitialScrolled]);
+  }, [messages, currentUser?.id]);
 
   // 4. Organize Messages
   const renderList = useMemo(() => {
@@ -485,9 +459,7 @@ export function ChannelView({
       const message = messagesRef.current.find(m => m.id === messageId);
       if (!message) return;
 
-      const hasReacted = message.reactions
-        .find(r => r.emoji === emoji)
-        ?.users.includes(currentUserRef.current?.id || '');
+      const hasReacted = message.reactions.find(r => r.emoji === emoji)?.users.includes(currentUserRef.current?.id || '');
 
       if (hasReacted) {
         removeReactionMutation.mutate({
@@ -495,7 +467,6 @@ export function ChannelView({
           emoji,
           channelId: activeChannelId,
           workspaceSlug,
-          isDM,
         });
       } else {
         addReactionMutation.mutate({
@@ -505,17 +476,57 @@ export function ChannelView({
           isCustom,
           customEmojiId,
           workspaceSlug,
-          isDM,
         });
       }
     },
-    [activeChannelId, workspaceSlug, removeReactionMutation, addReactionMutation, isDM]
+    [activeChannelId, workspaceSlug, removeReactionMutation, addReactionMutation]
   );
 
   return (
-    <div
-      className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}
-    >
+    <div className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
+      {/* Header */}
+      {!isWidget && (
+        <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Hash className="h-5 w-5" />
+              <span className="text-sm">/</span>
+              <span className="text-sm font-medium">v3.0</span>
+              <span className="text-sm">/</span>
+            </div>
+            <h2 className="font-bold text-lg truncate">
+              {channelData?.name || activeChannelId || 'general'}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
+              <Video className="h-4 w-4" />
+            </Button>
+            <div className="w-px h-4 bg-border/50 mx-1" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
+              onClick={() => setEditDialogOpen(true)}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
+              onClick={onToggleInfo}
+            >
+              <SidebarIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Main Scroll Area */}
       <div className="flex-1 min-h-0 w-full relative bg-dotted">
         <ScrollArea ref={scrollAreaRef} className="h-full w-full">
@@ -584,7 +595,7 @@ export function ChannelView({
                   return (
                     <div
                       key={message.id}
-                      ref={el => {
+                      ref={(el) => {
                         if (isHighlighted) highlightedMessageRef.current = el;
                         if (isInitialUnread) firstUnreadRef.current = el;
                       }}
@@ -617,7 +628,6 @@ export function ChannelView({
                               isHighlighted={isHighlighted}
                               channelId={channelId}
                               workspaceId={workspaceSlug}
-                              isDM={isDM}
                             />
                           </div>
                         </div>
@@ -632,7 +642,6 @@ export function ChannelView({
                           isHighlighted={isHighlighted}
                           channelId={channelId}
                           workspaceId={workspaceSlug}
-                          isDM={isDM}
                         />
                       )}
                     </div>
@@ -654,7 +663,6 @@ export function ChannelView({
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
           channelId={activeChannelId}
-          isDM={isDM}
         />
       </div>
 

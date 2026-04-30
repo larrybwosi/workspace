@@ -61,8 +61,12 @@ export class ChannelsController {
   }
 
   @Post(':channelId/messages/read')
-  async markAsRead(@CurrentUser() user: User, @Body() body: { messageIds: string[] }) {
-    return this.channelsService.markAsRead(user.id, body.messageIds);
+  async markAsRead(
+    @Param('channelId') channelId: string,
+    @CurrentUser() user: User,
+    @Body() body: { messageIds: string[] }
+  ) {
+    return this.channelsService.markAsRead(user.id, body.messageIds, channelId);
   }
 
   @Post(':channelId/messages/:messageId/reactions')

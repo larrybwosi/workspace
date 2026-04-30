@@ -22,17 +22,16 @@ COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds --ignore-scripts
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 # Build the project
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 
-ENV BETTER_AUTH_SECRET=dummy_secret_for_build_purposes_only_32_chars
 # Generate Prisma Client
 RUN npx turbo run db:generate
 
-RUN npx turbo build --filter=web...
+RUN npx turbo build --filter=web... -- --webpack
 
 FROM base AS runner
 WORKDIR /app
@@ -65,5 +64,7 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
+# Note: server.js in standalone mode is at apps/web/server.js usually,
+# but turbo prune + standalone might put it at the root of standalone output.
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "apps/web/server.js"]

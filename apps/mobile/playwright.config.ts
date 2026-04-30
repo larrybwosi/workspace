@@ -8,19 +8,28 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:8081',
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 13'] },
+    },
+    {
+        name: 'Mobile Chrome',
+        use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
   webServer: {
-    command: process.env.CI ? 'pnpm run build && pnpm run start' : 'pnpm run dev',
-    url: 'http://localhost:3001',
+    command: 'cd .. && npx expo start --web',
+    url: 'http://localhost:8081',
     reuseExistingServer: !process.env.CI,
-    timeout: 180 * 1000,
+    timeout: 120000,
   },
 });
