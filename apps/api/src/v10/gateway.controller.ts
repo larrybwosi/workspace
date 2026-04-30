@@ -20,7 +20,7 @@ export class V10GatewayController {
   @Get('bot')
   @UseGuards(ApiV10Guard)
   async getBotGateway() {
-    const gatewayUrl = this.configService.get<string>('DISCORD_GATEWAY_URL') || 'ws://localhost:3001/api/bot/v10/gateway';
+    const gatewayUrl = this.configService.get<string>('DISCORD_GATEWAY_URL') || 'ws://localhost:3000/v10/gateway';
 
     return {
       url: gatewayUrl,

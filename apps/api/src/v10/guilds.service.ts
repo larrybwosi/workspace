@@ -4,6 +4,112 @@ import { hasPermission, Permissions } from '../common/permissions';
 
 @Injectable()
 export class V10GuildsService {
+  async getChannels(bot: any, guildId: string) {
+    const channels = await prisma.channel.findMany({
+      where: { workspaceId: guildId },
+    });
+
+    return channels.map((c) => ({
+      id: c.id,
+      type: c.type === 'channel' ? 0 : 2,
+      guild_id: c.workspaceId,
+      name: c.name,
+      topic: c.description,
+      nsfw: false,
+      last_message_id: null,
+      bitrate: 64000,
+      user_limit: 0,
+      permission_overwrites: [],
+      position: 0,
+      parent_id: c.parentId,
+    }));
+  }
+
+  async getMembers(bot: any, guildId: string, query: { limit?: number; after?: string }) {
+    const { limit = 50, after } = query;
+
+    const members = await prisma.workspaceMember.findMany({
+      where: {
+        workspaceId: guildId,
+        ...(after && { id: { gt: after } }),
+      },
+      take: limit,
+      include: { user: true },
+    });
+
+    return members.map((m) => ({
+      user: {
+        id: m.user.id,
+        username: m.user.name,
+        avatar: m.user.avatar,
+        bot: m.user.isBot,
+      },
+      nick: null,
+      roles: [this.mapInternalRoleToDiscord(m.role)],
+      joined_at: m.joinedAt.toISOString(),
+      deaf: false,
+      mute: false,
+    }));
+  }
+
+  async getRoles(bot: any, guildId: string) {
+    // Our system has a simplified role system, but we can return some defaults
+    // Mapping internal roles to snowflake-like strings for Discord library compatibility
+    return [
+      {
+        id: '100000000000000001', // owner
+        name: 'Owner',
+        color: 0,
+        hoist: true,
+        position: 1,
+        permissions: '8', // ADMINISTRATOR
+        managed: false,
+        mentionable: true,
+      },
+      {
+        id: '100000000000000002', // admin
+        name: 'Admin',
+        color: 0,
+        hoist: true,
+        position: 2,
+        permissions: '8',
+        managed: false,
+        mentionable: true,
+      },
+      {
+        id: '100000000000000003', // member
+        name: 'Member',
+        color: 0,
+        hoist: false,
+        position: 3,
+        permissions: '104320577',
+        managed: false,
+        mentionable: false,
+      },
+    ];
+  }
+
+  private mapInternalRoleToDiscord(role: string): string {
+    switch (role) {
+      case 'owner': return '100000000000000001';
+      case 'admin': return '100000000000000002';
+      case 'member': return '100000000000000003';
+      default: return '100000000000000003';
+    }
+  }
+
+  private mapDiscordRoleToInternal(roleId: string): string {
+    switch (roleId) {
+      case '100000000000000001': return 'owner';
+      case '100000000000000002': return 'admin';
+      case '100000000000000003': return 'member';
+      case 'owner': return 'owner';
+      case 'admin': return 'admin';
+      case 'member': return 'member';
+      default: return 'member';
+    }
+  }
+
   async getGuild(bot: any, guildId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { id: guildId },
@@ -69,9 +175,28 @@ export class V10GuildsService {
 
     if (!member) throw new NotFoundException('Member not found');
 
+    // Discord allows multiple roles, but our system has one 'role' field and 'permissions' (BigInt).
+    // Mapping 'owner', 'admin', 'member' to our 'role' field.
+    const mappedRoleId = this.mapDiscordRoleToInternal(roleId);
+    let targetRole = member.role;
+    if (['owner', 'admin', 'member'].includes(mappedRoleId)) {
+      targetRole = mappedRoleId;
+    }
+
+    // Also update permissions if it's a known roleId
+    let targetPermissions = member.permissions;
+    if (mappedRoleId === 'admin') {
+        targetPermissions = BigInt(Permissions.ADMINISTRATOR);
+    } else if (mappedRoleId === 'member') {
+        targetPermissions = BigInt(104320577); // Default member permissions
+    }
+
     await prisma.workspaceMember.update({
       where: { id: member.id },
-      data: { role: roleId },
+      data: {
+        role: targetRole,
+        permissions: targetPermissions,
+      },
     });
 
     await prisma.workspaceAuditLog.create({
