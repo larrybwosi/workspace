@@ -1,4 +1,5 @@
 export * from './ably';
+export * from './realtime';
 export * from './auth/client';
 export * from './hooks/use-mobile';
 export * from './hooks/use-callstore';
