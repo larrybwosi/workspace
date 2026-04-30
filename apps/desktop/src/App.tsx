@@ -38,6 +38,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { data: session } = useSession();
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <DesktopTitleBar />
@@ -47,70 +48,12 @@ function AppContent() {
         </AgoraClientProvider>
       )}
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/qr" element={<QRCodeLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
-<<<<<<< HEAD
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workspace/:slug"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workspace/:slug/channels/:channelSlug"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workspace/:slug/assistant"
-              element={
-                <ProtectedRoute>
-                  <AssistantPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dm/:dmId"
-              element={
-                <ProtectedRoute>
-                  <DMPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <FriendsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assistant"
-              element={
-                <ProtectedRoute>
-                  <AssistantPage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-      </Router>
-=======
+        {/* Protected Routes */}
         <Route
           path="/"
           element={
@@ -144,7 +87,7 @@ function AppContent() {
           }
         />
         <Route
-          path="/dm/:userId"
+          path="/dm/:dmId"
           element={
             <ProtectedRoute>
               <DMPage />
@@ -168,7 +111,6 @@ function AppContent() {
           }
         />
       </Routes>
->>>>>>> dev
     </div>
   );
 }
