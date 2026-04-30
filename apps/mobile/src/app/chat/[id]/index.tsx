@@ -24,12 +24,12 @@ import {
   messageKeys,
   useAddReaction,
   useRemoveReaction,
-  useUploadFile, // Prioritizing the dev branch's hook name
+  useUploadFile,
 } from '@repo/api-client';
 import { useSession } from '../../../lib/auth';
 import * as DocumentPicker from 'expo-document-picker';
 import { ReactionPicker } from '../../../components/chat/reaction-picker';
-import { formatTime, getAblyClient, AblyChannels, AblyEvents, extractUserMentions } from '@repo/shared';
+import { formatTime, realtime, AblyChannels, AblyEvents, extractUserMentions } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -61,33 +61,31 @@ export default function ChatScreen() {
 
   const { data: channels } = useChannels();
   const { data: workspaceChannels } = useWorkspaceChannels(activeWorkspace?.slug);
-  const { data: workspaceMembers } = useWorkspaceMembers(activeWorkspace?.slug);
   const { data: dms } = useDMConversations();
 
   const queryClient = useQueryClient();
 
-  // Ably real-time integration
+  // Real-time integration
   useEffect(() => {
-    const ably = getAblyClient();
-    if (!ably || !id) return;
+    if (!id) return;
 
     const channelName = isDM ? AblyChannels.dm(id) : AblyChannels.channel(id);
-    const ablyChannel = ably.channels.get(channelName);
 
     const handleMessage = () => {
+      // Invalidate messages query to fetch new messages
       queryClient.invalidateQueries({
         queryKey: messageKeys.list(id as string, workspaceId),
       });
     };
 
-    ablyChannel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
 
     return () => {
-      ablyChannel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-      ablyChannel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-      ablyChannel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
     };
   }, [id, isDM, queryClient, workspaceId]);
 
@@ -124,10 +122,10 @@ export default function ChatScreen() {
         setIsUploading(true);
         const asset = result.assets[0];
 
-        // Process file for upload
+        // Convert to File object for the hook
         const file = new File([await (await fetch(asset.uri)).blob()], asset.name, { type: asset.mimeType });
 
-        const uploadResult = await uploadFile({
+        await uploadFile({
           file,
           entityType: 'message',
           entityId: id as string,
@@ -137,7 +135,6 @@ export default function ChatScreen() {
           channelId: id as string,
           content: `${messageText}\n\n📎 Attached: ${asset.name}`,
           mentions: [],
-          // Map uploaded data if your API supports attachments here
         });
 
         setIsUploading(false);
@@ -157,7 +154,7 @@ export default function ChatScreen() {
       try {
         for (const attachment of attachments) {
           const result = await uploadFile({
-            file: attachment, // Note: Ensure your hook handles this object type
+            file: attachment,
             entityType: 'message',
             entityId: id as string,
           });
@@ -200,21 +197,14 @@ export default function ChatScreen() {
         (r: any) => r.emoji === emoji && r.users?.some((u: any) => u.id === session?.user?.id)
       );
 
-      if (hasReacted) {
-        removeReaction({
-          messageId: message.id,
-          emoji,
-          channelId: id as string,
-          workspaceSlug: workspaceId,
-        });
-      } else {
-        addReaction({
-          messageId: message.id,
-          emoji,
-          channelId: id as string,
-          workspaceSlug: workspaceId,
-        });
-      }
+      const payload = {
+        messageId: message.id,
+        emoji,
+        channelId: id as string,
+        workspaceSlug: workspaceId,
+      };
+
+      hasReacted ? removeReaction(payload) : addReaction(payload);
     };
 
     return (
@@ -240,7 +230,6 @@ export default function ChatScreen() {
               activeOpacity={0.8}
               className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}
             >
-              {/* Attachments rendering from HEAD */}
               {message.attachments?.map((att: any, index: number) => (
                 <View key={index} className="mb-2">
                   {att.type?.startsWith('image/') ? (
@@ -268,7 +257,6 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        {/* Reactions Display from dev */}
         {message.reactions && message.reactions.length > 0 && (
           <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
             {message.reactions.map((r: any) => (
@@ -282,22 +270,6 @@ export default function ChatScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        )}
-
-        {message.replyCount > 0 && (
-          <TouchableOpacity
-            className={`mt-2 ${isMe ? 'self-end' : 'ml-11'}`}
-            onPress={() =>
-              router.push({
-                pathname: `/chat/[id]/thread/[threadId]`,
-                params: { id: id as string, threadId: message.id, workspaceId },
-              } as any)
-            }
-          >
-            <Text className="text-xs font-bold text-primary">
-              {message.replyCount} {message.replyCount === 1 ? 'reply' : 'replies'}
-            </Text>
-          </TouchableOpacity>
         )}
       </View>
     );
@@ -320,12 +292,7 @@ export default function ChatScreen() {
         onClose={() => setSelectedMessageId(null)}
         onSelect={emoji => {
           if (selectedMessageId) {
-            addReaction({
-              messageId: selectedMessageId,
-              emoji,
-              channelId: id as string,
-              workspaceSlug: workspaceId,
-            });
+            addReaction({ messageId: selectedMessageId, emoji, channelId: id as string, workspaceSlug: workspaceId });
           }
         }}
       />
@@ -353,11 +320,7 @@ export default function ChatScreen() {
         renderItem={renderMessage}
         inverted
         contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
+        onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
         onEndReachedThreshold={0.5}
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null}
       />
@@ -386,11 +349,10 @@ export default function ChatScreen() {
           {isUploading && (
             <View className="flex-row items-center gap-2 mb-2 px-2">
               <ActivityIndicator size="small" color="#5f5f61" />
-              <Text className="text-xs text-on-surface-variant font-medium">Uploading...</Text>
+              <Text className="text-xs text-on-surface-variant font-medium">Uploading file...</Text>
             </View>
           )}
           <View className="flex-row items-center gap-3">
-            {/* Added both triggers or you can create a menu */}
             <TouchableOpacity
               className="w-10 h-10 items-center justify-center bg-surface-container-low rounded-lg"
               onPress={pickImage}
@@ -399,9 +361,17 @@ export default function ChatScreen() {
               <MaterialIcons name="image" size={24} color={isUploading ? '#5f5f6150' : '#5f5f61'} />
             </TouchableOpacity>
 
-            <View className="flex-1 bg-surface-container-low px-4 py-2 rounded-lg flex-row items-center gap-3">
+            <TouchableOpacity
+              className="w-10 h-10 items-center justify-center bg-surface-container-low rounded-lg"
+              onPress={handlePickFile}
+              disabled={isUploading}
+            >
+              <MaterialIcons name="add-circle" size={24} color={isUploading ? '#5f5f6150' : '#5f5f61'} />
+            </TouchableOpacity>
+
+            <View className="flex-1 bg-surface-container-low px-4 py-2 rounded-lg">
               <TextInput
-                className="flex-1 text-sm font-body text-on-surface"
+                className="text-sm font-body text-on-surface"
                 placeholder="Type a message..."
                 value={messageText}
                 onChangeText={setMessageText}
