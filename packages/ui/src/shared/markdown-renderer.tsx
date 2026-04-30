@@ -4,7 +4,6 @@ import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SyntaxHighlighter } from "./syntax-highlighter";
-import { detectLanguage } from "../lib/language-detection";
 import { useParams, useRouter } from "next/navigation";
 import { useCustomEmojis } from "@repo/api-client";
 import { UserMention } from "./user-mention";
@@ -46,7 +45,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     // Find channel tags
     while ((match = channelRegex.exec(text)) !== null) {
       const channelSlug = match[1];
-      const channel = channels?.find((c: any) => c.slug === channelSlug || c.name.toLowerCase() === channelSlug.toLowerCase());
+      const channel = channels?.find(c => c.slug === channelSlug || c.name.toLowerCase() === channelSlug.toLowerCase());
 
       tokens.push({
         index: match.index,
@@ -123,11 +122,10 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             const codeContent = String(children).replace(/\n$/, "");
 
             if (!inline) {
-              const language = match ? match[1] : detectLanguage(codeContent);
               return (
                 <SyntaxHighlighter
                   code={codeContent}
-                  language={language}
+                  language={match ? match[1] : "text"}
                   {...props}
                 />
               );

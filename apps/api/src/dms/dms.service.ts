@@ -449,40 +449,38 @@ export class DmsService {
     return { success: true };
   }
 
-  async markAsRead(userId: string, messageIds: string[]) {
-    const readPromises = messageIds.map((messageId) =>
-      prisma.dMMessageRead.upsert({
-        where: {
-          messageId_userId: {
-            messageId,
-            userId,
-          },
-        },
-        update: {
-          readAt: new Date(),
-        },
-        create: {
-          messageId,
-          userId,
-          readAt: new Date(),
-        },
-      }),
-    );
+  async markAsRead(userId: string, messageIds: string[], dmId?: string) {
+    if (!messageIds.length) return { success: true };
 
-    await Promise.all(readPromises);
-
-    // Get the dmId to notify the client
-    const firstMessage = await prisma.dMMessage.findUnique({
-      where: { id: messageIds[0] },
-      select: { dmId: true },
+    // ⚡ Performance Optimization:
+    // Replaces sequential upsert calls with a single batch 'createMany' operation.
+    // This reduces O(N) database round-trips to O(1).
+    // We use skipDuplicates to avoid errors for already read messages.
+    await prisma.dMMessageRead.createMany({
+      data: messageIds.map(messageId => ({
+        messageId,
+        userId,
+        readAt: new Date(),
+      })),
+      skipDuplicates: true,
     });
 
-    if (firstMessage) {
+    // ⚡ Optimization: dmId is passed from the controller, avoiding a redundant database lookup.
+    let targetDmId = dmId;
+    if (!targetDmId) {
+      const firstMessage = await prisma.dMMessage.findUnique({
+        where: { id: messageIds[0] },
+        select: { dmId: true },
+      });
+      targetDmId = firstMessage?.dmId;
+    }
+
+    if (targetDmId) {
       const ably = getAblyRest();
       if (ably) {
         const channel = (ably as any).channels.get(AblyChannels.user(userId));
         await channel.publish(AblyEvents.MESSAGE_READ, {
-          dmId: firstMessage.dmId,
+          dmId: targetDmId,
           messageIds,
         });
       }
@@ -518,25 +516,33 @@ export class DmsService {
   }
 
   async removeReaction(dmId: string, messageId: string, userId: string, emoji: string) {
-    const reaction = await prisma.dMReaction.findUnique({
-      where: {
-        messageId_userId_emoji: {
-          messageId,
-          userId,
-          emoji,
-        },
-      },
-    });
-
-    if (reaction) {
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces sequential 'findUnique' and 'delete' with a single atomic 'delete' using the
+     * compound unique index. This reduces database round-trips from 2 down to 1.
+     * Expected impact: Faster reaction removal and reduced database load.
+     */
+    try {
       await prisma.dMReaction.delete({
-        where: { id: reaction.id },
+        where: {
+          messageId_userId_emoji: {
+            messageId,
+            userId,
+            emoji,
+          },
+        },
       });
 
       const ably = getAblyRest();
       if (ably) {
         const channel = ably.channels.get(AblyChannels.channel(dmId));
         await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
+      }
+    } catch (error) {
+      // Prisma error code for 'Record to delete does not exist' - we ignore it here
+      // to maintain idempotency and match previous behavior.
+      if ((error as any).code !== 'P2025') {
+        throw error;
       }
     }
 

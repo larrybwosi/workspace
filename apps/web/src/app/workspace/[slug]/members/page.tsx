@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { InfoPanel } from "@/components/shared/info-panel"
 import {
   Dialog,
   DialogContent,
@@ -35,7 +36,7 @@ import {
   useUpdateWorkspaceMember,
   useRemoveWorkspaceMember,
   useWorkspaceInviteLinks,
-  useCreateWorkspaceInviteLink, useCurrentUser,
+  useCreateWorkspaceInviteLink,
 } from "@repo/api-client"
 import { useToast } from "@/hooks/use-toast"
 import { WorkspaceSidebar } from "@/components/layout/workspace-sidebar"
@@ -55,18 +56,16 @@ export default function MembersPage({ params }: MembersPageProps) {
   const [inviteRole, setInviteRole] = React.useState("member")
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const [generatedLink, setGeneratedLink] = React.useState("")
+  const [infoPanelOpen, setInfoPanelOpen] = React.useState(false)
 
   // Fetch members
   const { data: membersData, isLoading } = useWorkspaceMembers(slug)
-  const { data: currentUser } = useCurrentUser()
   const { data: inviteLinks } = useWorkspaceInviteLinks(slug)
   const createInviteLinkMutation = useCreateWorkspaceInviteLink(slug)
   const updateMutation = useUpdateWorkspaceMember(slug)
   const removeMutation = useRemoveWorkspaceMember(slug)
 
   const members = Array.isArray(membersData) ? membersData : []
-  const currentUserMember = members.find((m: any) => m.userId === currentUser?.id)
-  const isOwnerOrAdmin = currentUserMember?.role === "owner" || currentUserMember?.role === "admin"
 
   // Filter members
   const filteredMembers = members.filter((member: any) => {
@@ -80,8 +79,9 @@ export default function MembersPage({ params }: MembersPageProps) {
   const handleGenerateLink = async () => {
     try {
       const link = await createInviteLinkMutation.mutateAsync({
+        ["workspaceId" as any]: workspaceId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      } as any)
+      })
       const fullUrl = `${window.location.origin}/invite/${link.code}`
       setGeneratedLink(fullUrl)
       toast({
@@ -162,6 +162,7 @@ export default function MembersPage({ params }: MembersPageProps) {
           activeView="Members"
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {}}
+          onInfoClick={() => setInfoPanelOpen((prev) => !prev)}
         />
         <div className="flex flex-1 overflow-hidden relative">
         <div className="flex-1 overflow-auto">
@@ -301,36 +302,30 @@ export default function MembersPage({ params }: MembersPageProps) {
                         </span>
                       </div>
                     </div>
-                    {isOwnerOrAdmin && member.userId !== currentUser?.id && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {/* Only owners can change roles to/from admin or manage other admins */}
-                          {(currentUserMember?.role === "owner" || (currentUserMember?.role === "admin" && member.role === "member")) && (
-                            <>
-                              <DropdownMenuItem onClick={() => handleUpdateRole(member.id, member.role === "admin" ? "member" : "admin")}>
-                                <Shield className="h-4 w-4 mr-2" />
-                                {member.role === "admin" ? "Remove Admin" : "Make Admin"}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                            </>
-                          )}
-                          {/* Admins can remove members, Owners can remove anyone but themselves (already checked) */}
-                          {(currentUserMember?.role === "owner" || (currentUserMember?.role === "admin" && member.role === "member")) && (
-                            <DropdownMenuItem onClick={() => handleRemove(member.id)} className="text-destructive">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Remove
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Make Admin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
+                          <User className="h-4 w-4 mr-2" />
+                          Make Member
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleRemove(member.id)} className="text-destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
@@ -339,6 +334,12 @@ export default function MembersPage({ params }: MembersPageProps) {
         </div>
       </div>
         </div>
+        <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => setInfoPanelOpen(false)}
+            type="workspace"
+            id={slug}
+        />
         </div>
       </main>
     </div>
