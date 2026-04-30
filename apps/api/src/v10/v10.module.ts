@@ -12,6 +12,7 @@ import { V10ApplicationsService } from './applications.service';
 import { V10InteractionsService } from './interactions.service';
 import { V10EnterpriseService } from './enterprise.service';
 import { ApiV10Guard } from '../auth/api-v10.guard';
+import { V10Gateway } from './v10.gateway';
 
 @Module({
   controllers: [
@@ -30,6 +31,8 @@ import { ApiV10Guard } from '../auth/api-v10.guard';
     V10InteractionsService,
     V10EnterpriseService,
     ApiV10Guard,
+    V10Gateway,
   ],
+  exports: [V10Gateway],
 })
 export class V10Module {}
