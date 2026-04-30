@@ -4,7 +4,7 @@ import {
   getAblyRest,
   AblyChannels,
   AblyEvents,
-  sendPushNotification,
+  queueNotification,
   notifyMention as sharedNotifyMention,
   notifyMentions as sharedNotifyMentions,
   notifyChannel as sharedNotifyChannel,
@@ -36,6 +36,12 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * ⚡ Performance Optimization:
+   * Deliver real-time and push notifications.
+   * This is used for individual ad-hoc notifications.
+   * For batch delivery, prefer using the optimized shared functions.
+   */
   async createNotification(payload: NotificationPayload) {
     // Create notification in database
     const notification = await prisma.notification.create({
@@ -51,43 +57,21 @@ export class NotificationsService {
       },
     });
 
-    // Send external notifications (real-time and push)
-    await this.deliverNotifications([{
-      id: notification.id,
-      userId: notification.userId,
-      createdAt: notification.createdAt,
-      payload
-    }]);
-
-    return notification;
-  }
-
-  /**
-   * ⚡ Performance Optimization:
-   * Shared delivery logic for both single and batch notifications.
-   * Parallelizes Ably and Push notification delivery for multiple notifications.
-   */
-  private async deliverNotifications(notifications: Array<{
-    id: string;
-    userId: string;
-    createdAt: Date;
-    payload: NotificationPayload;
-  }>) {
+    // Send real-time notification via Ably
     const ably = getAblyRest();
+    if (ably) {
+      const channel = ably.channels.get(AblyChannels.notifications(payload.userId));
 
-    const deliveryPromises = notifications.map(async ({ id, userId, createdAt, payload }) => {
-      // 1. Send real-time notification via Ably
-      const ablyPromise = ably
-        ? ably.channels.get(AblyChannels.notifications(userId)).publish(AblyEvents.NOTIFICATION, {
-            id,
-            ...payload,
-            createdAt,
-          })
-        : Promise.resolve();
+      await channel.publish(AblyEvents.NOTIFICATION, {
+        id: notification.id,
+        ...payload,
+        createdAt: notification.createdAt,
+      });
+    }
 
-      // 2. Send push notification
-      const pushPromise = sendPushNotification({
-        userId,
+    try {
+      await queueNotification({
+        userId: payload.userId,
         title: payload.title,
         body: payload.message,
         data: {
@@ -95,26 +79,21 @@ export class NotificationsService {
           entityType: payload.entityType || '',
           entityId: payload.entityId || '',
         },
-        linkUrl: payload.linkUrl || undefined,
-        notificationId: id,
-      }).catch(err => {
-        console.error(`Push notification failed for user ${userId}:`, err);
+        linkUrl: payload.linkUrl,
+        notificationId: notification.id,
       });
-
-      return Promise.all([ablyPromise, pushPromise]);
-    });
-
-    // Execute all deliveries in parallel and await them to ensure reliability
-    try {
-      await Promise.all(deliveryPromises);
-    } catch (err) {
-      console.error('Batch notification delivery failed partially:', err);
+    } catch (error) {
+      console.error(' Push notification queue error:', error);
+      // Don't fail the whole operation if push notifications fail
     }
+
+    return notification;
   }
 
   /**
    * ⚡ Performance Optimization:
-   * Delegated to shared implementation for consistent optimization across the platform.
+   * Delegates mention notifications to the optimized shared implementation.
+   * This ensures O(1) database round-trips for preference resolution and batch delivery.
    */
   async notifyMention(
     messageId: string,
@@ -128,7 +107,8 @@ export class NotificationsService {
 
   /**
    * ⚡ Performance Optimization:
-   * Batched implementation to avoid N+1 database queries and sequential external deliveries.
+   * Delegates batch mention notifications to the optimized shared implementation.
+   * Reduces database round-trips from O(N) to O(1).
    */
   async notifyMentions(
     messageId: string,
@@ -142,7 +122,8 @@ export class NotificationsService {
 
   /**
    * ⚡ Performance Optimization:
-   * Delegated to shared implementation for consistent optimization across the platform.
+   * Delegates channel-wide notifications to the optimized shared implementation.
+   * Eliminates expensive nested 'include' and enables batch notification creation.
    */
   async notifyChannel(
     channelId: string,

@@ -12,9 +12,10 @@ import { ApiTokensController } from './api-tokens.controller';
 import { WebhooksController } from './webhooks.controller';
 import { CallsController } from './calls.controller';
 import { MessagesService } from './messages.service';
+import { TeamSyncService } from './team-sync.service';
 
 @Module({
-  providers: [MessagesService],
+  providers: [MessagesService, TeamSyncService],
   controllers: [
     WorkspacesController,
     MembersController,
