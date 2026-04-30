@@ -38,6 +38,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { data: session } = useSession();
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <DesktopTitleBar />
@@ -47,10 +48,12 @@ function AppContent() {
         </AgoraClientProvider>
       )}
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/qr" element={<QRCodeLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
+        {/* Protected Routes */}
         <Route
           path="/"
           element={
@@ -84,7 +87,7 @@ function AppContent() {
           }
         />
         <Route
-          path="/dm/:userId"
+          path="/dm/:dmId"
           element={
             <ProtectedRoute>
               <DMPage />
