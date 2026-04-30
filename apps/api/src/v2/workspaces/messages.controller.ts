@@ -14,6 +14,17 @@ import {
   NotFoundException,
   Req,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+  ApiQuery,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
@@ -26,6 +37,51 @@ import { V2WebhooksService } from '../v2-webhooks.service';
 import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
 import { CustomMessageSchema } from '@repo/shared';
 import { StorageService } from '../../common/storage/storage.service';
+
+class CreateChannelDto {
+  @ApiProperty({ example: 'general' })
+  name: string;
+  @ApiProperty({ example: 'Hash', required: false, default: 'Hash' })
+  icon?: string;
+  @ApiProperty({ enum: ['public', 'private'], default: 'public', required: false })
+  type?: 'public' | 'private';
+  @ApiProperty({ required: false })
+  description?: string;
+  @ApiProperty({ required: false })
+  metadata?: Record<string, any>;
+}
+
+class UpdateChannelDto {
+  @ApiProperty({ required: false })
+  name?: string;
+  @ApiProperty({ required: false })
+  icon?: string;
+  @ApiProperty({ enum: ['public', 'private'], required: false })
+  type?: 'public' | 'private';
+  @ApiProperty({ required: false })
+  description?: string;
+}
+
+class SendMessageDto {
+  @ApiProperty({ required: false, description: 'Required if recipientId is not provided' })
+  channelId?: string;
+  @ApiProperty({ required: false, description: 'Required if channelId is not provided' })
+  recipientId?: string;
+  @ApiProperty({ example: 'Hello world!' })
+  content: string;
+  @ApiProperty({ required: false })
+  threadId?: string;
+  @ApiProperty({ required: false })
+  contextId?: string;
+  @ApiProperty({ required: false, default: 'standard' })
+  messageType?: string;
+  @ApiProperty({ required: false })
+  metadata?: Record<string, any>;
+  @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
+  actions?: any[];
+  @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
+  attachments?: any[];
+}
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
@@ -76,6 +132,8 @@ const sendMessageSchema = z
     message: 'Either channelId or recipientId must be provided',
   });
 
+@ApiTags('Channels & Messages')
+@ApiBearerAuth()
 @Controller('v2/workspaces/:slug')
 @UseGuards(ApiV2Guard)
 export class V2MessagesController {
@@ -87,6 +145,9 @@ export class V2MessagesController {
   ) {}
 
   @Get('channels')
+  @ApiOperation({ summary: 'List all channels in the workspace', description: 'Requires channels:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of channels returned successfully.' })
   async getChannels(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'channels:read')) {
       throw new ForbiddenException('Forbidden: Missing channels:read scope');
@@ -118,7 +179,11 @@ export class V2MessagesController {
   }
 
   @Post('channels')
-  async createChannel(@V2Context() context: ApiV2Context, @Body() body: any) {
+  @ApiOperation({ summary: 'Create a new channel', description: 'Requires channels:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateChannelDto })
+  @ApiResponse({ status: 201, description: 'Channel created successfully.' })
+  async createChannel(@V2Context() context: ApiV2Context, @Body() body: CreateChannelDto) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
     }
@@ -158,6 +223,22 @@ export class V2MessagesController {
   }
 
   @Post('channels/:channelId/icon')
+  @ApiOperation({ summary: 'Upload a channel icon', description: 'Requires channels:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Icon uploaded successfully.' })
   async uploadChannelIcon(
     @V2Context() context: ApiV2Context,
     @Param('channelId') channelId: string,
@@ -205,6 +286,10 @@ export class V2MessagesController {
   }
 
   @Get('channels/:channelId')
+  @ApiOperation({ summary: 'Get details of a specific channel', description: 'Requires channels:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'Channel details returned successfully.' })
   async getChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string) {
     if (!this.hasScope(context, 'channels:read')) {
       throw new ForbiddenException('Forbidden: Missing channels:read scope');
@@ -232,7 +317,12 @@ export class V2MessagesController {
   }
 
   @Patch('channels/:channelId')
-  async updateChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string, @Body() body: any) {
+  @ApiOperation({ summary: 'Update a channel', description: 'Requires channels:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ type: UpdateChannelDto })
+  @ApiResponse({ status: 200, description: 'Channel updated successfully.' })
+  async updateChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string, @Body() body: UpdateChannelDto) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
     }
@@ -266,6 +356,10 @@ export class V2MessagesController {
   }
 
   @Delete('channels/:channelId')
+  @ApiOperation({ summary: 'Delete a channel', description: 'Requires channels:write scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'Channel deleted successfully.' })
   async deleteChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
@@ -286,6 +380,14 @@ export class V2MessagesController {
   }
 
   @Get('messages')
+  @ApiOperation({ summary: 'List messages in the workspace', description: 'Requires messages:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiQuery({ name: 'channelId', required: false })
+  @ApiQuery({ name: 'threadId', required: false })
+  @ApiQuery({ name: 'contextId', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiResponse({ status: 200, description: 'List of messages returned successfully.' })
   async getMessages(
     @V2Context() context: ApiV2Context,
     @Query('channelId') channelId?: string,
@@ -346,6 +448,10 @@ export class V2MessagesController {
   }
 
   @Post('messages')
+  @ApiOperation({ summary: 'Send a message', description: 'Requires messages:send scope. Supports multipart/form-data for file uploads.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: SendMessageDto })
+  @ApiResponse({ status: 201, description: 'Message sent successfully.' })
   async sendMessage(@V2Context() context: ApiV2Context, @Req() req: FastifyRequest) {
     if (!this.hasScope(context, 'messages:send')) {
       throw new ForbiddenException('Forbidden: Missing messages:send scope');
