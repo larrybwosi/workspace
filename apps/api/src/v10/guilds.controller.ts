@@ -16,6 +16,32 @@ export class V10GuildsController {
     return this.guildsService.getGuild(bot, guildId);
   }
 
+  @Get(':guildId/channels')
+  async getChannels(
+    @CurrentBot() bot: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.guildsService.getChannels(bot, guildId);
+  }
+
+  @Get(':guildId/members')
+  async getMembers(
+    @CurrentBot() bot: any,
+    @Param('guildId') guildId: string,
+    @Param('limit') limit?: number,
+    @Param('after') after?: string,
+  ) {
+    return this.guildsService.getMembers(bot, guildId, { limit, after });
+  }
+
+  @Get(':guildId/roles')
+  async getRoles(
+    @CurrentBot() bot: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.guildsService.getRoles(bot, guildId);
+  }
+
   @Put(':guildId/members/:userId/roles/:roleId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async addMemberRole(
