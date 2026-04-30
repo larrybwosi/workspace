@@ -5,6 +5,37 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class V10InteractionsService {
+  async handleInteraction(bot: any, body: any) {
+    const { type, data, guild_id, channel_id, member, user } = body;
+
+    const interactionId = crypto.randomBytes(8).toString('hex');
+    const timestamp = Date.now().toString();
+    const tokenPayload = `${bot.id}.${interactionId}.${timestamp}`;
+    const signature = crypto
+      .createHmac('sha256', bot.botApplication.clientSecret)
+      .update(tokenPayload)
+      .digest('hex');
+
+    const interactionToken = `${bot.id}.${interactionId}.${timestamp}.${signature}`;
+
+    const interactionEvent = {
+        id: interactionId,
+        application_id: bot.botApplication.id,
+        type,
+        data,
+        guild_id,
+        channel_id,
+        member,
+        user,
+        token: interactionToken,
+        version: 1,
+    };
+
+    await publishToAbly('global-system-events', 'INTERACTION_CREATE', interactionEvent);
+
+    return interactionEvent;
+  }
+
   async handleCallback(interactionIdFromUrl: string, interactionToken: string, body: any) {
     const { type, data } = body;
 
