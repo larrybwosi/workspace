@@ -22,13 +22,12 @@ COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds --ignore-scripts
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 # Build the project
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 
-ENV BETTER_AUTH_SECRET=dummy_secret_for_build_purposes_only_32_chars
 # Generate Prisma Client
 RUN npx turbo run db:generate
 

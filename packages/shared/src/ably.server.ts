@@ -14,6 +14,7 @@ export function getAblyServer() {
     return null;
   }
   if (!ablyClientInstance) {
+    // @ts-ignore
     ablyClientInstance = new Ably.Realtime({
       key,
       clientId: 'server',
@@ -28,6 +29,7 @@ export function getAblyRest(): any {
     console.warn('ABLY_API_KEY is not defined, returning null');
     return null;
   }
+  // @ts-ignore
   return new Ably.Rest({
     key,
   });
@@ -63,6 +65,12 @@ export async function publishToAbly(channelName: string, eventName: string, data
     if (!ably) return;
     const channel = (ably as any).channels.get(channelName);
     await channel.publish(eventName, data);
+
+    // Forward to global system events for bots
+    if (channelName !== 'global-system-events') {
+      const globalChannel = (ably as any).channels.get('global-system-events');
+      await globalChannel.publish(eventName, data);
+    }
   } catch (error) {
     if (retries > 0) {
       console.warn(`Retrying Ably publish to ${channelName} (${eventName}). Retries left: ${retries - 1}`);

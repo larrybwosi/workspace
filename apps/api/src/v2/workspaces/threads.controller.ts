@@ -7,18 +7,33 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 
+@ApiTags('Threads')
+@ApiBearerAuth()
 @Controller('v2/workspaces/:slug/threads')
 @UseGuards(ApiV2Guard)
 export class V2ThreadsController {
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all threads in the workspace', description: 'Requires threads:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiQuery({ name: 'channelId', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'List of threads returned successfully.' })
   async getThreads(
     @V2Context() context: ApiV2Context,
     @Query('channelId') channelId?: string,
@@ -54,6 +69,12 @@ export class V2ThreadsController {
   }
 
   @Get(':threadId/messages')
+  @ApiOperation({ summary: 'List messages in a thread', description: 'Requires threads:read and messages:read scopes.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'threadId', description: 'The thread ID' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiResponse({ status: 200, description: 'List of messages returned successfully.' })
   async getThreadMessages(
     @V2Context() context: ApiV2Context,
     @Param('threadId') threadId: string,
@@ -100,6 +121,10 @@ export class V2ThreadsController {
   }
 
   @Get('context/:contextId')
+  @ApiOperation({ summary: 'Get a thread by its context ID', description: 'Requires threads:read scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'contextId', description: 'The custom context ID' })
+  @ApiResponse({ status: 200, description: 'Thread details returned successfully.' })
   async getThreadByContext(
     @V2Context() context: ApiV2Context,
     @Param('contextId') contextId: string,

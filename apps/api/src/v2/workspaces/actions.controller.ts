@@ -5,6 +5,13 @@ import {
   UseGuards,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -13,6 +20,8 @@ import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
 
+@ApiTags('Message Actions')
+@ApiBearerAuth()
 @Controller('v2/messages/:messageId/actions/:actionId')
 @UseGuards(ApiV2Guard)
 export class V2MessageActionsController {
@@ -23,6 +32,10 @@ export class V2MessageActionsController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Trigger a message action', description: 'Requires messages:send scope.' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiParam({ name: 'actionId', description: 'The custom action ID defined in the message' })
+  @ApiResponse({ status: 200, description: 'Action triggered successfully.' })
   async handleAction(
     @V2Context() context: ApiV2Context,
     @Param('messageId') messageId: string,

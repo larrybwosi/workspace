@@ -9,31 +9,11 @@ interface PageProps {
   params: Promise<{ token: string }>;
 }
 
-type InviteData = {
-  type: "workspace_link" | "workspace_invitation" | "platform_invitation";
-  invitation: {
-    workspace?: any;
-    inviter: { id: string; name: string; avatar: string | null };
-    email?: string;
-    uses?: number;
-    maxUses?: number | null;
-  };
-} | { error: string };
-
-async function getInviteData(token: string): Promise<InviteData> {
+async function getInviteData(token: string) {
     // 1. Check WorkspaceInviteLink (public link)
     const inviteLink = await prisma.workspaceInviteLink.findUnique({
       where: { code: token },
-      include: {
-        workspace: {
-          include: {
-            _count: {
-              select: { members: true }
-            }
-          }
-        },
-        createdBy: { select: { id: true, name: true, avatar: true } }
-      },
+      include: { workspace: true, createdBy: { select: { id: true, name: true, avatar: true } } },
     });
 
     if (inviteLink) {
@@ -53,16 +33,7 @@ async function getInviteData(token: string): Promise<InviteData> {
     // 2. Check WorkspaceInvitation (email-specific)
     const workspaceInvite = await prisma.workspaceInvitation.findUnique({
       where: { token },
-      include: {
-        workspace: {
-          include: {
-            _count: {
-              select: { members: true }
-            }
-          }
-        },
-        inviter: { select: { id: true, name: true, avatar: true } }
-      },
+      include: { workspace: true, inviter: { select: { id: true, name: true, avatar: true } } },
     });
 
     if (workspaceInvite) {
@@ -103,54 +74,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { token } = await params;
   const data = await getInviteData(token);
 
-  if ("error" in data) {
+  if ("error" in data || !data) {
     return { title: "Invitation Not Found", description: "This invitation link is invalid or has expired." };
   }
 
   const { invitation, type } = data;
   const inviterName = invitation.inviter?.name || "A team member";
-  const siteName = "Dealio";
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dealio.com";
-
-  let title = "";
-  let description = "";
-  let imageUrl = `${baseUrl}/placeholder.jpg`;
 
   if (type === "platform_invitation") {
-    title = `Invitation to join ${siteName}`;
-    description = `${inviterName} has invited you to join ${siteName}, the ultimate collaboration platform.`;
-    if (invitation.inviter?.avatar) imageUrl = invitation.inviter.avatar;
+    return { title: `Invitation to join Dealio`, description: `${inviterName} has invited you to join Dealio.` };
   } else {
-    const workspaceName = invitation.workspace?.name;
-    const memberCount = invitation.workspace?._count?.members || 0;
-    title = `Join ${workspaceName} on ${siteName}`;
-    description = `${inviterName} has invited you to join ${workspaceName} on ${siteName}. Join ${memberCount} other members today!`;
-    if (invitation.workspace?.icon) imageUrl = invitation.workspace.icon;
+    return { title: `Join ${invitation.workspace?.name} on Dealio`, description: `${inviterName} has invited you to join ${invitation.workspace?.name} on Dealio.` };
   }
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [imageUrl],
-    },
-  };
 }
 
 export default async function UnifiedInvitePage({ params }: PageProps) {
