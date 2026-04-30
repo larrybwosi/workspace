@@ -50,6 +50,7 @@ interface WorkspaceSidebarProps {
   onClose: () => void;
   currentWorkspaceId?: string;
   onWorkspaceChange?: (workspaceId: string) => void;
+  onChannelSelect?: (channelId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -130,7 +131,7 @@ function StatusDot({ status }: { status?: string }) {
 // Main Component
 // ---------------------------------------------------------------------------
 
-export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: WorkspaceSidebarProps) {
+export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannelSelect }: WorkspaceSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { slug } = useParams();
@@ -156,8 +157,12 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
       }
     : undefined;
 
-  const handleNavigate = (href: string) => {
-    router.push(href);
+  const handleNavigate = (href: string, id?: string) => {
+    if (onChannelSelect && id) {
+      onChannelSelect(id);
+    } else {
+      router.push(href);
+    }
     onClose();
   };
 
@@ -235,7 +240,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
                         key={item.href}
                         item={item}
                         isActive={pathname === item.href}
-                        onClick={() => (item.onClick ? item.onClick() : handleNavigate(item.href))}
+                        onClick={() => (item.onClick ? item.onClick() : handleNavigate(item.href, item.label.toLowerCase()))}
                       />
                     ))}
                   </div>
@@ -286,7 +291,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
                               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                               : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                           )}
-                          onClick={() => handleNavigate(href)}
+                          onClick={() => handleNavigate(href, channel.slug ?? channel.id)}
                         >
                           <Icon
                             className={cn(
