@@ -26,8 +26,6 @@ import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@repo/api-client';
-import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { User } from '../lib/types';
 import { usePresence } from '../lib/contexts/presence-context';
 
@@ -142,32 +140,11 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false);
 
-  const queryClient = useQueryClient();
   const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(workspaceSlug ?? '');
   const createChannelMutation = useCreateWorkspaceChannel(workspaceSlug ?? '');
   const session = useSession();
   const sessionUser = session.data?.user;
   const { onlineUsers } = usePresence();
-
-  // Real-time channel updates
-  React.useEffect(() => {
-    if (!sessionUser?.id) return;
-
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const userChannel = ably.channels.get(AblyChannels.user(sessionUser.id));
-
-    const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
-    };
-
-    userChannel.subscribe(AblyEvents.MESSAGE_READ, handleUpdate);
-
-    return () => {
-      userChannel.unsubscribe(AblyEvents.MESSAGE_READ, handleUpdate);
-    };
-  }, [sessionUser?.id, workspaceSlug, queryClient]);
 
   const currentUser: User | undefined = sessionUser
     ? {
@@ -317,18 +294,11 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange }: Workspa
                               isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
                             )}
                           />
-                          <span className={cn(
-                            "flex-1 truncate text-left",
-                            channel.unreadCount > 0 && "font-bold text-sidebar-foreground"
-                          )}>
-                            {channel.name}
-                          </span>
-                          {channel.mentionCount > 0 ? (
-                            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm">
-                              {channel.mentionCount > 99 ? '99+' : channel.mentionCount}
+                          <span className="flex-1 truncate text-left">{channel.name}</span>
+                          {channel.unreadCount > 0 && (
+                            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                              {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
                             </span>
-                          ) : channel.unreadCount > 0 && (
-                            <div className="ml-auto h-2 w-2 rounded-full bg-sidebar-foreground/80 shadow-[0_0_4px_rgba(255,255,255,0.3)]" />
                           )}
                         </Button>
                       );

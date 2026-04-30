@@ -1,15 +1,16 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useWorkspace, useCreateWorkspaceChannel } from '@repo/api-client';
+import { useWorkspaces, useCreateWorkspaceChannel } from '@repo/api-client';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { CreateChannelDialog } from '@/components/features/workspace/create-channel-dialog';
+import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
+import { InfoPanel } from '@/components/shared/info-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Define a proper interface for your Workspace data
@@ -19,9 +20,10 @@ interface Workspace {
   slug: string;
   description?: string;
   icon?: string;
+  members?: any[];
   _count?: {
-    channels: number;
     members: number;
+    channels: number;
   };
 }
 
@@ -29,12 +31,13 @@ export default function WorkspacePage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  // ⚡ Performance Optimization:
-  // Use the targeted useWorkspace(slug) hook instead of fetching all workspaces
-  // and filtering in-memory. This leverages backend optimizations (select/count).
-  const { data: workspace, isLoading } = useWorkspace(slug);
+  const { data: workspaces, isLoading } = useWorkspaces();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+
+  // Memoize the workspace lookup for performance
+  const workspace = useMemo(() => workspaces?.find((w: Workspace) => w.slug === slug), [workspaces, slug]);
 
   // Recommendation: Pass the workspace ID inside the mutate function
   // rather than at the hook level if your API client allows.
@@ -112,6 +115,7 @@ export default function WorkspacePage() {
           activeView="Workspace Dashboard"
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {}}
+          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
         />
 
         <div className="flex flex-1 overflow-hidden">
@@ -196,13 +200,20 @@ export default function WorkspacePage() {
               </CardContent>
             </Card>
           </div>
+
+          <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => setInfoPanelOpen(false)}
+            type="workspace"
+            id={workspace.id}
+          />
         </div>
       </main>
 
       <CreateChannelDialog
         open={createChannelOpen}
         onOpenChange={setCreateChannelOpen}
-        workspaceSlug={slug}
+        onCreateChannel={handleCreateChannel}
       />
     </div>
   );

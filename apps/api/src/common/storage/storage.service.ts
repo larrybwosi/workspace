@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FileData, StorageProvider, UploadResult } from './storage.interface';
 import { SanityStorageProvider } from './providers/sanity.provider';
 import { MinioStorageProvider } from './providers/minio.provider';
-import { validateEnv } from '@repo/shared/server';
+import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
 

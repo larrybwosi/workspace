@@ -56,7 +56,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
       onOpenChange(false)
       setSearchQuery("")
       // Navigate to DM
-      router.push(`/dm/${conversation.id}`)
+      router.push(`/dm/${userId}`)
     } catch (error) {
       toast.error("Failed to start conversation")
       console.error("Error starting DM:", error)
