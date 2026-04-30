@@ -8,13 +8,13 @@ const {
   mockNotifyMentions,
   mockNotifyChannel,
   mockGetAblyRest,
-  mockSendPushNotification,
+  mockQueueNotification,
 } = vi.hoisted(() => ({
   mockNotifyMention: vi.fn().mockResolvedValue(undefined),
   mockNotifyMentions: vi.fn().mockResolvedValue(undefined),
   mockNotifyChannel: vi.fn().mockResolvedValue(undefined),
   mockGetAblyRest: vi.fn(),
-  mockSendPushNotification: vi.fn().mockResolvedValue(undefined),
+  mockQueueNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@repo/shared/server", () => ({
@@ -26,7 +26,7 @@ vi.mock("@repo/shared/server", () => ({
   AblyEvents: {
     NOTIFICATION: "NOTIFICATION",
   },
-  sendPushNotification: mockSendPushNotification,
+  queueNotification: mockQueueNotification,
   notifyMention: mockNotifyMention,
   notifyMentions: mockNotifyMentions,
   notifyChannel: mockNotifyChannel,
@@ -138,7 +138,7 @@ describe("NotificationsService", () => {
       );
     });
 
-    it("should send push notification when creating a notification", async () => {
+    it("should queue push notification when creating a notification", async () => {
       const createdNotification = {
         id: "notif-1",
         userId: "user-1",
@@ -150,7 +150,7 @@ describe("NotificationsService", () => {
 
       await service.createNotification(basePayload);
 
-      expect(mockSendPushNotification).toHaveBeenCalledWith(
+      expect(mockQueueNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "user-1",
           title: "Test Title",
