@@ -16,6 +16,21 @@
         ]
       }
     },
+    "/api/config/realtime": {
+      "get": {
+        "operationId": "AppController_getRealtimeConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get realtime configuration",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
     "/api/users/me": {
       "get": {
         "operationId": "UsersController_getMe",
@@ -2564,6 +2579,65 @@
         ]
       }
     },
+    "/api/storage/upload": {
+      "post": {
+        "operationId": "StorageController_uploadFile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a file",
+        "tags": [
+          "Storage"
+        ]
+      }
+    },
+    "/api/bot/v10/users/{id}": {
+      "get": {
+        "operationId": "V10UsersController_getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Users"
+        ]
+      }
+    },
     "/api/bot/v10/users/@me": {
       "get": {
         "operationId": "V10UsersController_getMe",
@@ -2606,6 +2680,29 @@
         ]
       }
     },
+    "/api/bot/v10/channels/{id}": {
+      "get": {
+        "operationId": "V10ChannelsController_getChannel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Channels"
+        ]
+      }
+    },
     "/api/bot/v10/channels/{id}/messages": {
       "post": {
         "operationId": "V10ChannelsController_createMessage",
@@ -2627,11 +2724,201 @@
         "tags": [
           "V10Channels"
         ]
+      },
+      "get": {
+        "operationId": "V10ChannelsController_getMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "before",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "after",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Channels"
+        ]
+      }
+    },
+    "/api/bot/v10/channels/{id}/messages/{messageId}": {
+      "patch": {
+        "operationId": "V10ChannelsController_updateMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Channels"
+        ]
+      },
+      "delete": {
+        "operationId": "V10ChannelsController_deleteMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Channels"
+        ]
       }
     },
     "/api/bot/v10/guilds/{guildId}": {
       "get": {
         "operationId": "V10GuildsController_getGuild",
+        "parameters": [
+          {
+            "name": "guildId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Guilds"
+        ]
+      }
+    },
+    "/api/bot/v10/guilds/{guildId}/channels": {
+      "get": {
+        "operationId": "V10GuildsController_getChannels",
+        "parameters": [
+          {
+            "name": "guildId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Guilds"
+        ]
+      }
+    },
+    "/api/bot/v10/guilds/{guildId}/members": {
+      "get": {
+        "operationId": "V10GuildsController_getMembers",
+        "parameters": [
+          {
+            "name": "guildId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "after",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "V10Guilds"
+        ]
+      }
+    },
+    "/api/bot/v10/guilds/{guildId}/roles": {
+      "get": {
+        "operationId": "V10GuildsController_getRoles",
         "parameters": [
           {
             "name": "guildId",
@@ -4067,6 +4354,43 @@
       "post": {
         "operationId": "WorkspacesController_createWorkspace",
         "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/api/workspaces/discover": {
+      "get": {
+        "operationId": "WorkspacesController_discoverWorkspaces",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/join": {
+      "post": {
+        "operationId": "WorkspacesController_joinWorkspace",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""

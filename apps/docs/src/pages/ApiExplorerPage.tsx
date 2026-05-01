@@ -1,8 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Sidebar } from '@/components/sidebar';
-import { Badge, Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger, SyntaxHighlighter } from '@repo/ui';
-import { ChevronRight, Globe, Lock, Shield } from 'lucide-react';
+import { Badge, Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger, SyntaxHighlighter, Button, cn } from '@repo/ui';
+import { ChevronRight, Globe, Lock, Shield, Copy, Check, Terminal } from 'lucide-react';
 import openapi from '../content/openapi.json';
+
+const CopyButton = ({ value }: { value: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [value]);
+
+  return (
+    <Button
+      variant="ghost"
+      size="xs"
+      onClick={handleCopy}
+      className="h-6 px-2 text-[10px] gap-1.5 opacity-50 hover:opacity-100 transition-opacity"
+    >
+      {copied ? (
+        <>
+          <Check className="h-3 w-3" />
+          Copied
+        </>
+      ) : (
+        <>
+          <Copy className="h-3 w-3" />
+          Copy
+        </>
+      )}
+    </Button>
+  );
+};
 
 export default function ApiReferencePage() {
   const [spec] = useState(openapi);
@@ -51,6 +82,18 @@ export default function ApiReferencePage() {
     return <code className="text-sm">{JSON.stringify(schema, null, 2)}</code>;
   };
 
+  const generateCurl = (method: string, path: string, operation: any) => {
+    let curl = `curl -X ${method.toUpperCase()} "https://api.skyrme.chat${path}" \\\n`;
+    curl += `  -H "Authorization: Bearer <YOUR_TOKEN>"`;
+
+    if (operation.requestBody) {
+      curl += ` \\\n  -H "Content-Type: application/json" \\\n`;
+      curl += `  -d '${JSON.stringify(operation.requestBody.content['application/json']?.schema?.example || {}, null, 2)}'`;
+    }
+
+    return curl;
+  };
+
   return (
     <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1">
       <div className="flex flex-col md:flex-row gap-6 lg:gap-12 py-10">
@@ -76,6 +119,7 @@ export default function ApiReferencePage() {
                         if (!operation.tags?.includes(tag.name)) return null;
 
                         const opId = `${method}-${path}`.replace(/\//g, '-');
+                        const curl = generateCurl(method, path, operation);
 
                         return (
                           <Card key={opId} className="overflow-hidden border-border/10 bg-muted/5">
@@ -87,6 +131,7 @@ export default function ApiReferencePage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {operation.security && <Shield className="h-4 w-4 text-primary" />}
+                                  <CopyButton value={path} />
                                 </div>
                               </div>
                               <CardTitle className="text-lg mt-2">{operation.summary}</CardTitle>
@@ -94,11 +139,17 @@ export default function ApiReferencePage() {
                             </CardHeader>
                             <CardContent className="py-6">
                               <Tabs defaultValue="params">
-                                <TabsList className="mb-4 bg-muted/50">
-                                  <TabsTrigger value="params">Parameters</TabsTrigger>
-                                  <TabsTrigger value="request">Request</TabsTrigger>
-                                  <TabsTrigger value="responses">Responses</TabsTrigger>
-                                </TabsList>
+                                <div className="flex items-center justify-between mb-4">
+                                  <TabsList className="bg-muted/50">
+                                    <TabsTrigger value="params">Parameters</TabsTrigger>
+                                    <TabsTrigger value="request">Request</TabsTrigger>
+                                    <TabsTrigger value="responses">Responses</TabsTrigger>
+                                    <TabsTrigger value="curl" className="gap-2">
+                                      <Terminal className="h-3 w-3" />
+                                      cURL
+                                    </TabsTrigger>
+                                  </TabsList>
+                                </div>
 
                                 <TabsContent value="params">
                                   {operation.parameters?.length > 0 ? (
@@ -139,7 +190,10 @@ export default function ApiReferencePage() {
                                           <span className="text-sm font-medium">{response.description}</span>
                                         </div>
                                         {response.content?.['application/json'] && (
-                                          <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto">
+                                          <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto relative group">
+                                            <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                               <CopyButton value={JSON.stringify(response.content['application/json'].schema, null, 2)} />
+                                            </div>
                                             <pre className="text-xs text-muted-foreground">
                                               {JSON.stringify(response.content['application/json'].schema, null, 2)}
                                             </pre>
@@ -147,6 +201,15 @@ export default function ApiReferencePage() {
                                         )}
                                       </div>
                                     ))}
+                                  </div>
+                                </TabsContent>
+
+                                <TabsContent value="curl">
+                                  <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                                    <div className="absolute right-2 top-2">
+                                      <CopyButton value={curl} />
+                                    </div>
+                                    <SyntaxHighlighter code={curl} language="bash" />
                                   </div>
                                 </TabsContent>
                               </Tabs>
