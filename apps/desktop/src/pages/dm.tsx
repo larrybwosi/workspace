@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { ChannelView, Sidebar, DynamicHeader } from '@repo/ui';
 import { InfoPanel } from '../components/shared/info-panel';
-import { useDM, useStartCall } from '@repo/api-client';
+import { useUser, useStartCall } from '@repo/api-client';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@repo/ui';
 import { useSession, useCallStore } from '@repo/shared';
@@ -18,10 +18,10 @@ export function DMPage() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [infoPanelTab, setInfoPanelTab] = useState('info');
 
-  const { data: dm, isLoading } = useDM(dmId || '');
+  // For desktop app, we are using the user ID as dmId for now, matching web app's [userId] approach
+  const userId = dmId?.startsWith('dm-') ? dmId.replace('dm-', '') : dmId;
+  const { data: dmUser, isLoading } = useUser(userId || '');
   const startCallMutation = useStartCall();
-
-  const dmUser = dm?.members.find((m: any) => m.id !== session?.user?.id) || dm?.members[0];
 
   const handleChannelSelect = (id: string) => {
     if (id === 'assistant') {
@@ -59,29 +59,31 @@ export function DMPage() {
     );
   }
 
-  if (!dm) {
+  if (!dmUser) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Conversation not found</h2>
+          <h2 className="text-2xl font-semibold mb-2">User not found</h2>
           <Button onClick={() => navigate('/')}>Go Home</Button>
         </div>
       </div>
     );
   }
 
+  const channelId = `dm-${userId}`;
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        activeChannel={dmId || ''}
+        activeChannel={channelId}
         onChannelSelect={handleChannelSelect}
       />
 
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
         <DynamicHeader
-          activeView={dmId || ''}
+          activeView={channelId}
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {
             setInfoPanelOpen(true);
@@ -92,19 +94,17 @@ export function DMPage() {
             setInfoPanelOpen(newState);
             if (newState) setInfoPanelTab('info');
           }}
-          onVoiceCallClick={() => handleStartCall('voice')}
-          onVideoCallClick={() => handleStartCall('video')}
         />
 
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
-            <ChannelView channelId={dmId || ''} type="dm" />
+            <ChannelView channelId={channelId} />
           </main>
 
           <InfoPanel
             isOpen={infoPanelOpen}
             onClose={() => setInfoPanelOpen(false)}
-            id={dmId}
+            id={channelId}
             dmUser={dmUser ? {
               id: dmUser.id,
               name: dmUser.name,
