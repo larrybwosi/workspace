@@ -1,1 +1,1 @@
-export * from '@repo/shared';
+export * from '@repo/shared/mention-utils';
