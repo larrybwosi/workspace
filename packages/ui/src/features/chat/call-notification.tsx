@@ -16,13 +16,13 @@ interface CallNotificationProps {
   onDecline: () => void
 }
 
-export function CallNotification({ 
-  callId, 
-  initiatorName, 
-  initiatorAvatar, 
+export function CallNotification({
+  callId,
+  initiatorName,
+  initiatorAvatar,
   type,
   onAccept,
-  onDecline 
+  onDecline
 }: CallNotificationProps) {
   const [isRinging, setIsRinging] = useState(true)
 

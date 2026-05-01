@@ -96,6 +96,7 @@ model User {
   scheduledNotifications ScheduledNotification[]
   deviceTokens           DeviceToken[]
   pushNotificationLogs   PushNotificationLog[]
+  notificationQueue      NotificationQueue[]
   webhooks               Webhook[]
 
   banned     Boolean?  @default(false)
@@ -275,10 +276,12 @@ model WorkspaceTeam {
   leadId       String? // Team lead
   settings     Json?
   channelId    String? // Team channel
+  appId        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   workspace  Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  app        BotApplication?       @relation("AppOwnedTeams", fields: [appId], references: [id])
   department WorkspaceDepartment?  @relation(fields: [departmentId], references: [id])
   members    WorkspaceTeamMember[]
 
@@ -501,6 +504,9 @@ model Channel {
 
   // Inverse relation for Department Default Channel
   defaultForDepartments WorkspaceDepartment[] @relation("DepartmentDefaultChannel")
+
+  appId String?
+  app   BotApplication? @relation("AppOwnedChannels", fields: [appId], references: [id])
 
   @@unique([workspaceId, slug])
   @@map("channels")
@@ -1080,6 +1086,30 @@ model PushNotificationLog {
   @@index([notificationId])
   @@index([status])
   @@map("push_notification_logs")
+}
+
+model NotificationQueue {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  body           String
+  data           Json?
+  imageUrl       String?
+  linkUrl        String?
+  notificationId String?
+  status         String   @default("pending") // pending, processing, sent, failed
+  retryCount     Int      @default(0)
+  maxRetries     Int      @default(3)
+  lastError      String?  @db.Text
+  scheduledFor   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([userId])
+  @@map("notification_queue")
 }
 
 // ============================================
@@ -1683,7 +1713,10 @@ model BotApplication {
   owner User  @relation("BotOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   bot   User? @relation("BotUser", fields: [botId], references: [id], onDelete: SetNull)
 
+  channelDefinitions Json?
   commands BotCommand[]
+  ownedTeams         WorkspaceTeam[] @relation("AppOwnedTeams")
+  ownedChannels      Channel[]       @relation("AppOwnedChannels")
 
   @@map("bot_applications")
 }

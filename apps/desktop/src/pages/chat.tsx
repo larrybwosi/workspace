@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
 import { ChannelView, WorkspaceSidebar, Sidebar, DynamicHeader } from '@repo/ui';
-import { useWorkspaceChannels } from '@repo/api-client';
+import { useWorkspaceChannels, useStartCall } from '@repo/api-client';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import { useWorkspacesWithOffline } from '../hooks/offline/use-workspaces-offline';
 import { InfoPanel } from '@/components/shared/info-panel';
+import { useCallStore } from '@repo/shared';
+import { toast } from 'sonner';
 
 export function ChatPage() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+  const [infoPanelTab, setInfoPanelTab] = useState('info');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsTrigger, setSettingsTrigger] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { slug: workspaceSlug, channelSlug } = useParams();
+
+  const { setCall } = useCallStore();
+  const startCallMutation = useStartCall();
 
   const { data: workspaces, isOffline } = useWorkspacesWithOffline();
   const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug);
@@ -19,6 +26,35 @@ export function ChatPage() {
   const { data: channels } = useWorkspaceChannels(workspaceSlug || '');
   const channel = channels?.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
   const channelId = channel?.id || channelSlug;
+
+  const handleStartCall = async (type: 'voice' | 'video') => {
+    if (!workspaceSlug || !channelId) return;
+    try {
+      const data = await startCallMutation.mutateAsync({
+        type,
+        workspaceSlug,
+        channelId,
+      });
+      setCall(data);
+    } catch (error) {
+      toast.error('Failed to start call');
+    }
+  };
+
+  const handleChannelSelect = (id: string) => {
+    if (id === 'assistant') {
+      navigate('/assistant');
+    } else if (id === 'friends') {
+      navigate('/friends');
+    } else if (id === 'notifications') {
+      navigate('/notifications');
+    } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      navigate(`/dm/${id}`);
+    } else {
+      // It's a channel ID/slug
+      navigate(`/workspace/${workspaceSlug}/channels/${id}`);
+    }
+  };
 
   // Handle redirect to first workspace if none selected
   useEffect(() => {
@@ -34,16 +70,33 @@ export function ChatPage() {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           currentWorkspaceId={workspace?.id}
+          onChannelSelect={handleChannelSelect}
         />
       ) : (
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           activeChannel=""
-          onChannelSelect={() => {}}
+          onChannelSelect={handleChannelSelect}
         />
       )}
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
+        <DynamicHeader
+          activeView={channelId}
+          onMenuClick={() => setSidebarOpen(true)}
+          onSearchClick={() => {
+            setInfoPanelOpen(true);
+            setInfoPanelTab('search');
+          }}
+          onInfoClick={() => {
+            const newState = !infoPanelOpen;
+            setInfoPanelOpen(newState);
+            if (newState) setInfoPanelTab('info');
+          }}
+          onVoiceCallClick={() => handleStartCall('voice')}
+          onVideoCallClick={() => handleStartCall('video')}
+          onSettingsClick={() => setSettingsTrigger(prev => prev + 1)}
+        />
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
             {channelId ? (
@@ -51,6 +104,7 @@ export function ChatPage() {
                 channelId={channelId}
                 workspaceId={workspaceSlug}
                 onToggleInfo={() => setInfoPanelOpen(!infoPanelOpen)}
+                onOpenSettings={settingsTrigger}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-muted-foreground bg-dotted">
@@ -65,7 +119,14 @@ export function ChatPage() {
             )}
           </main>
 
-          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={channelId} type="channel" />
+          <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => setInfoPanelOpen(false)}
+            id={channelId}
+            type="channel"
+            activeTab={infoPanelTab}
+            onTabChange={setInfoPanelTab}
+          />
         </div>
       </div>
     </div>

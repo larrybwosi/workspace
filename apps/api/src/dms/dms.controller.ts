@@ -72,10 +72,11 @@ export class DmsController {
 
   @Post(':conversationId/messages/read')
   async markAsRead(
+    @Param('conversationId') conversationId: string,
     @CurrentUser() user: User,
     @Body() body: { messageIds: string[] },
   ) {
-    return this.dmsService.markAsRead(user.id, body.messageIds);
+    return this.dmsService.markAsRead(user.id, body.messageIds, conversationId);
   }
 
   @Post(':conversationId/messages/:messageId/reactions')
