@@ -12,12 +12,111 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared/server';
+
+class CreateWorkspaceDepartmentDto {
+  @ApiProperty({ example: 'Human Resources' })
+  name: string;
+
+  @ApiProperty({ example: 'hr' })
+  slug: string;
+
+  @ApiProperty({ required: false, example: 'HR department' })
+  description?: string;
+
+  @ApiProperty({ required: false, example: 'Building' })
+  icon?: string;
+
+  @ApiProperty({ required: false, example: '#f43f5e' })
+  color?: string;
+
+  @ApiProperty({ required: false, example: 'dept_123' })
+  parentId?: string;
+
+  @ApiProperty({ required: false, example: 'user_123' })
+  managerId?: string;
+
+  @ApiProperty({ required: false })
+  settings?: any;
+
+  @ApiProperty({ required: false, default: true })
+  createChannel?: boolean;
+}
+
+class UpdateWorkspaceDepartmentDto {
+  @ApiProperty({ required: false, example: 'New Name' })
+  name?: string;
+
+  @ApiProperty({ required: false, example: 'Updated description' })
+  description?: string;
+
+  @ApiProperty({ required: false, example: 'Building2' })
+  icon?: string;
+
+  @ApiProperty({ required: false, example: '#ef4444' })
+  color?: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  parentId?: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  managerId?: string | null;
+
+  @ApiProperty({ required: false })
+  settings?: any;
+}
+
+class TargetAudienceDto {
+  @ApiProperty({ type: [String], required: false })
+  departments?: string[];
+
+  @ApiProperty({ type: [String], required: false })
+  teams?: string[];
+
+  @ApiProperty({ type: [String], required: false })
+  roles?: string[];
+}
+
+class CreateDepartmentAnnouncementDto {
+  @ApiProperty({ example: 'Office Closed' })
+  title: string;
+
+  @ApiProperty({ example: 'The office will be closed tomorrow.' })
+  content: string;
+
+  @ApiProperty({ required: false, enum: ['low', 'normal', 'high', 'urgent'], default: 'normal' })
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+
+  @ApiProperty({ required: false, default: false })
+  pinned?: boolean;
+
+  @ApiProperty({ required: false, description: 'ISO format datetime' })
+  publishAt?: string;
+
+  @ApiProperty({ required: false, description: 'ISO format datetime' })
+  expiresAt?: string;
+
+  @ApiProperty({ required: false, type: TargetAudienceDto })
+  targetAudience?: TargetAudienceDto;
+
+  @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
+  attachments?: any[];
+}
 
 const createDepartmentSchema = z.object({
   name: z.string().min(1).max(100),
@@ -62,10 +161,15 @@ const createAnnouncementSchema = z.object({
   attachments: z.array(z.any()).optional(),
 });
 
+@ApiTags('Departments')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/departments')
 @UseGuards(AuthGuard)
 export class DepartmentsController {
   @Get()
+  @ApiOperation({ summary: 'Get all departments in a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of departments' })
   async getDepartments(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
@@ -111,7 +215,11 @@ export class DepartmentsController {
   }
 
   @Post()
-  async createDepartment(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+  @ApiOperation({ summary: 'Create a new department' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateWorkspaceDepartmentDto })
+  @ApiResponse({ status: 201, description: 'Department created successfully' })
+  async createDepartment(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceDepartmentDto) {
     /**
      * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.
@@ -210,6 +318,11 @@ export class DepartmentsController {
   }
 
   @Get(':departmentId')
+  @ApiOperation({ summary: 'Get department details' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'departmentId', description: 'The department ID' })
+  @ApiResponse({ status: 200, description: 'Department details' })
+  @ApiResponse({ status: 404, description: 'Department not found' })
   async getDepartment(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
@@ -286,11 +399,16 @@ export class DepartmentsController {
   }
 
   @Patch(':departmentId')
+  @ApiOperation({ summary: 'Update department details' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'departmentId', description: 'The department ID' })
+  @ApiBody({ type: UpdateWorkspaceDepartmentDto })
+  @ApiResponse({ status: 200, description: 'Department updated successfully' })
   async updateDepartment(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string,
-    @Body() body: any
+    @Body() body: UpdateWorkspaceDepartmentDto
   ) {
     /**
      * ⚡ Performance Optimization:
@@ -351,6 +469,10 @@ export class DepartmentsController {
   }
 
   @Delete(':departmentId')
+  @ApiOperation({ summary: 'Delete a department' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'departmentId', description: 'The department ID' })
+  @ApiResponse({ status: 200, description: 'Department deleted successfully' })
   async deleteDepartment(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
@@ -396,6 +518,13 @@ export class DepartmentsController {
   }
 
   @Get(':departmentId/announcements')
+  @ApiOperation({ summary: 'Get announcements for a department' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'departmentId', description: 'The department ID' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiQuery({ name: 'priority', required: false, enum: ['low', 'normal', 'high', 'urgent'] })
+  @ApiResponse({ status: 200, description: 'List of announcements' })
   async getAnnouncements(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
@@ -466,11 +595,16 @@ export class DepartmentsController {
   }
 
   @Post(':departmentId/announcements')
+  @ApiOperation({ summary: 'Create a new announcement in a department' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'departmentId', description: 'The department ID' })
+  @ApiBody({ type: CreateDepartmentAnnouncementDto })
+  @ApiResponse({ status: 201, description: 'Announcement created successfully' })
   async createAnnouncement(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string,
-    @Body() body: any
+    @Body() body: CreateDepartmentAnnouncementDto
   ) {
     /**
      * ⚡ Performance Optimization:
