@@ -47,14 +47,17 @@ export class MembersController {
   async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for initial verification.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -105,14 +108,17 @@ export class MembersController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and requester membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for initial verification.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -177,14 +183,17 @@ export class MembersController {
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and requester membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for initial verification.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
