@@ -37,9 +37,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "User profile details"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user profile",
         "tags": [
           "Users"
         ]
@@ -2005,6 +2011,7 @@
             "description": ""
           }
         },
+        "summary": "Handle Plane webhook",
         "tags": [
           "Integrations"
         ]
@@ -2018,6 +2025,7 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The webhook ID",
             "schema": {
               "type": "string"
             }
@@ -2028,6 +2036,7 @@
             "description": ""
           }
         },
+        "summary": "Handle Huly webhook",
         "tags": [
           "Integrations"
         ]
@@ -2039,9 +2048,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Integration statistics"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get integration statistics",
         "tags": [
           "Integrations"
         ]
@@ -2053,9 +2068,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of webhooks"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integration webhooks",
         "tags": [
           "Integrations"
         ]
@@ -2063,11 +2084,27 @@
       "post": {
         "operationId": "IntegrationsController_createWebhook",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationWebhookDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an integration webhook",
         "tags": [
           "Integrations"
         ]
@@ -2081,6 +2118,7 @@
             "name": "webhookId",
             "required": true,
             "in": "path",
+            "description": "The webhook ID",
             "schema": {
               "type": "string"
             }
@@ -2088,9 +2126,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Webhook updated"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an integration webhook",
         "tags": [
           "Integrations"
         ]
@@ -2102,6 +2146,7 @@
             "name": "webhookId",
             "required": true,
             "in": "path",
+            "description": "The webhook ID",
             "schema": {
               "type": "string"
             }
@@ -2109,9 +2154,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Webhook deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an integration webhook",
         "tags": [
           "Integrations"
         ]
@@ -2125,6 +2176,7 @@
             "name": "webhookId",
             "required": true,
             "in": "path",
+            "description": "The webhook ID",
             "schema": {
               "type": "string"
             }
@@ -2132,9 +2184,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Webhook logs"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get integration webhook logs",
         "tags": [
           "Integrations"
         ]
@@ -2146,9 +2204,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of API keys"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integration API keys",
         "tags": [
           "Integrations"
         ]
@@ -2162,6 +2226,7 @@
             "name": "keyId",
             "required": true,
             "in": "path",
+            "description": "The key ID",
             "schema": {
               "type": "string"
             }
@@ -2169,9 +2234,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "API key updated"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an integration API key",
         "tags": [
           "Integrations"
         ]
@@ -2183,6 +2254,7 @@
             "name": "keyId",
             "required": true,
             "in": "path",
+            "description": "The key ID",
             "schema": {
               "type": "string"
             }
@@ -2190,9 +2262,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "API key deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an integration API key",
         "tags": [
           "Integrations"
         ]
@@ -2206,6 +2284,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -2213,11 +2292,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of integrations"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integrations for a workspace",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       },
       "post": {
@@ -2227,18 +2312,35 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Integration created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new integration for a workspace",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       }
     },
@@ -2250,6 +2352,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -2258,6 +2361,7 @@
             "name": "integrationId",
             "required": true,
             "in": "path",
+            "description": "The integration ID",
             "schema": {
               "type": "string"
             }
@@ -2265,11 +2369,20 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Integration details"
+          },
+          "404": {
+            "description": "Integration not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get integration details",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       },
       "patch": {
@@ -2279,6 +2392,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -2287,6 +2401,7 @@
             "name": "integrationId",
             "required": true,
             "in": "path",
+            "description": "The integration ID",
             "schema": {
               "type": "string"
             }
@@ -2294,11 +2409,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Integration updated"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an integration",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       },
       "delete": {
@@ -2308,6 +2429,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -2316,6 +2438,7 @@
             "name": "integrationId",
             "required": true,
             "in": "path",
+            "description": "The integration ID",
             "schema": {
               "type": "string"
             }
@@ -2323,11 +2446,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Integration deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an integration",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       }
     },
@@ -2339,6 +2468,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -2347,6 +2477,7 @@
             "name": "integrationId",
             "required": true,
             "in": "path",
+            "description": "The integration ID",
             "schema": {
               "type": "string"
             }
@@ -2354,11 +2485,17 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Test successful"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Test an integration",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       }
     },
@@ -2370,6 +2507,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -2377,11 +2515,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of webhooks"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integration webhooks for a workspace",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       },
       "post": {
@@ -2391,18 +2535,35 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationWebhookDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an integration webhook for a workspace",
         "tags": [
-          "WorkspaceIntegrations"
+          "Workspace Integrations"
         ]
       }
     },
@@ -2412,16 +2573,18 @@
         "parameters": [
           {
             "name": "unreadOnly",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Filter by unread only",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "limit",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Number of notifications to return",
             "schema": {
               "type": "string"
             }
@@ -2429,9 +2592,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of notifications"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notifications for the current user",
         "tags": [
           "Notifications"
         ]
@@ -2443,9 +2612,15 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "All notifications marked as read"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark all notifications as read",
         "tags": [
           "Notifications"
         ]
@@ -2459,6 +2634,7 @@
             "name": "workspaceId",
             "required": true,
             "in": "query",
+            "description": "The workspace ID",
             "schema": {
               "type": "string"
             }
@@ -2466,9 +2642,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Workspace notification settings"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notification settings for a workspace",
         "tags": [
           "Notifications"
         ]
@@ -2476,11 +2658,27 @@
       "patch": {
         "operationId": "NotificationsController_updateWorkspaceSettings",
         "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSettingsDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Workspace notification settings updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update notification settings for a workspace",
         "tags": [
           "Notifications"
         ]
@@ -2494,6 +2692,7 @@
             "name": "channelId",
             "required": true,
             "in": "query",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -2501,9 +2700,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Channel notification settings"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notification settings for a channel",
         "tags": [
           "Notifications"
         ]
@@ -2511,11 +2716,27 @@
       "patch": {
         "operationId": "NotificationsController_updateChannelSettings",
         "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelSettingsDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Channel notification settings updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update notification settings for a channel",
         "tags": [
           "Notifications"
         ]
@@ -2529,16 +2750,33 @@
             "name": "notificationId",
             "required": true,
             "in": "path",
+            "description": "The notification ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Notification updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a notification (e.g. mark as read)",
         "tags": [
           "Notifications"
         ]
@@ -2550,6 +2788,7 @@
             "name": "notificationId",
             "required": true,
             "in": "path",
+            "description": "The notification ID",
             "schema": {
               "type": "string"
             }
@@ -2557,9 +2796,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Notification deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a notification",
         "tags": [
           "Notifications"
         ]
@@ -2688,6 +2933,7 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -2698,8 +2944,14 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get channel details",
         "tags": [
-          "V10Channels"
+          "V10 Channels"
         ]
       }
     },
@@ -2711,6 +2963,7 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -2721,8 +2974,14 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message to a channel",
         "tags": [
-          "V10Channels"
+          "V10 Channels"
         ]
       },
       "get": {
@@ -2732,30 +2991,31 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "limit",
-            "required": true,
-            "in": "path",
+            "required": false,
+            "in": "query",
             "schema": {
               "type": "number"
             }
           },
           {
             "name": "before",
-            "required": true,
-            "in": "path",
+            "required": false,
+            "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "after",
-            "required": true,
-            "in": "path",
+            "required": false,
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -2766,8 +3026,14 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages from a channel",
         "tags": [
-          "V10Channels"
+          "V10 Channels"
         ]
       }
     },
@@ -2779,6 +3045,7 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -2787,6 +3054,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -2797,8 +3065,14 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a message",
         "tags": [
-          "V10Channels"
+          "V10 Channels"
         ]
       },
       "delete": {
@@ -2808,6 +3082,7 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -2816,6 +3091,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -2826,8 +3102,14 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a message",
         "tags": [
-          "V10Channels"
+          "V10 Channels"
         ]
       }
     },
@@ -3179,8 +3461,9 @@
         "parameters": [
           {
             "name": "workspaceId",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Filter by workspace ID",
             "schema": {
               "type": "string"
             }
@@ -3188,9 +3471,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of invitations"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get invitations for the current user",
         "tags": [
           "Invitations"
         ]
@@ -3198,11 +3487,27 @@
       "post": {
         "operationId": "InvitationsController_createInvitation",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvitationDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Invitation created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new invitation",
         "tags": [
           "Invitations"
         ]
@@ -3216,6 +3521,7 @@
             "name": "token",
             "required": true,
             "in": "path",
+            "description": "The invitation token",
             "schema": {
               "type": "string"
             }
@@ -3223,9 +3529,13 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Invitation details"
+          },
+          "404": {
+            "description": "Invitation not found"
           }
         },
+        "summary": "Get invitation details by token",
         "tags": [
           "Invitations"
         ]
@@ -3239,6 +3549,7 @@
             "name": "token",
             "required": true,
             "in": "path",
+            "description": "The invitation token",
             "schema": {
               "type": "string"
             }
@@ -3246,9 +3557,18 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Invitation accepted"
+          },
+          "404": {
+            "description": "Invitation not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accept an invitation",
         "tags": [
           "Invitations"
         ]
@@ -3260,9 +3580,15 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Call started"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a new call",
         "tags": [
           "Calls"
         ]
@@ -3276,6 +3602,7 @@
             "name": "callId",
             "required": true,
             "in": "path",
+            "description": "The call ID",
             "schema": {
               "type": "string"
             }
@@ -3283,9 +3610,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Call updated"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update call state",
         "tags": [
           "Calls"
         ]
@@ -3299,6 +3632,7 @@
             "name": "callId",
             "required": true,
             "in": "path",
+            "description": "The call ID",
             "schema": {
               "type": "string"
             }
@@ -3306,9 +3640,15 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "User invited"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Invite a user to a call",
         "tags": [
           "Calls"
         ]
@@ -3322,6 +3662,7 @@
             "name": "callId",
             "required": true,
             "in": "path",
+            "description": "The call ID",
             "schema": {
               "type": "string"
             }
@@ -3329,9 +3670,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of participants"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get participants in a call",
         "tags": [
           "Calls"
         ]
@@ -3345,6 +3692,7 @@
             "name": "workspaceId",
             "required": true,
             "in": "query",
+            "description": "The workspace ID",
             "schema": {
               "type": "string"
             }
@@ -3352,9 +3700,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of scheduled calls"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get scheduled calls for a workspace",
         "tags": [
           "Calls"
         ]
@@ -3364,9 +3718,15 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Call scheduled"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Schedule a call",
         "tags": [
           "Calls"
         ]
@@ -3378,9 +3738,15 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Sound played"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Play a soundboard sound",
         "tags": [
           "Calls"
         ]
@@ -3392,9 +3758,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of global channels"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get global channels",
         "tags": [
           "Channels"
         ]
@@ -3404,9 +3776,15 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Channel created"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a global channel",
         "tags": [
           "Channels"
         ]
@@ -3420,24 +3798,37 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "cursor",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of messages"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages from a channel",
         "tags": [
           "Channels"
         ]
@@ -3449,6 +3840,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -3456,9 +3848,15 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Message sent"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message to a channel",
         "tags": [
           "Channels"
         ]
@@ -3472,6 +3870,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -3480,16 +3879,38 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Message updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a message",
         "tags": [
           "Channels"
         ]
@@ -3501,6 +3922,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -3509,6 +3931,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -3516,9 +3939,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Message deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a message",
         "tags": [
           "Channels"
         ]
@@ -3532,16 +3961,41 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messageIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Messages marked as read"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark messages as read",
         "tags": [
           "Channels"
         ]
@@ -3555,6 +4009,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -3563,16 +4018,38 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Reaction added"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a message",
         "tags": [
           "Channels"
         ]
@@ -3586,6 +4063,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -3594,6 +4072,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -3602,6 +4081,7 @@
             "name": "emoji",
             "required": true,
             "in": "path",
+            "description": "The emoji",
             "schema": {
               "type": "string"
             }
@@ -3609,9 +4089,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Reaction removed"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a message",
         "tags": [
           "Channels"
         ]
@@ -3625,6 +4111,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -3633,6 +4120,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -3640,9 +4128,15 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Reply sent"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reply to a message",
         "tags": [
           "Channels"
         ]
@@ -3959,23 +4453,45 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of DM conversations"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all DM conversations for the current user",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       },
       "post": {
         "operationId": "DmsController_createDm",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDmDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "DM conversation created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a new DM conversation",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -3987,6 +4503,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -3994,11 +4511,20 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Conversation details"
+          },
+          "404": {
+            "description": "DM not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get DM conversation details",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       },
       "delete": {
@@ -4008,6 +4534,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -4015,11 +4542,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Conversation deleted successfully"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a DM conversation",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -4031,26 +4564,41 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "cursor",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Pagination cursor",
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of messages to return",
+            "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of messages"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages in a DM conversation",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       },
       "post": {
@@ -4060,6 +4608,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -4067,11 +4616,17 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Message sent"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message in a DM",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -4083,6 +4638,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -4091,18 +4647,35 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDmMessageDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Message updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a DM message",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       },
       "delete": {
@@ -4112,6 +4685,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -4120,6 +4694,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -4127,11 +4702,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Message deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a DM message",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -4143,18 +4724,35 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAsReadDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Messages marked as read"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark messages as read in a DM",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -4166,6 +4764,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -4174,18 +4773,41 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string",
+                    "example": "👍"
+                  }
+                }
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Reaction added"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a DM message",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -4197,6 +4819,7 @@
             "name": "conversationId",
             "required": true,
             "in": "path",
+            "description": "The conversation ID",
             "schema": {
               "type": "string"
             }
@@ -4205,6 +4828,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -4213,6 +4837,7 @@
             "name": "emoji",
             "required": true,
             "in": "path",
+            "description": "The emoji to remove",
             "schema": {
               "type": "string"
             }
@@ -4220,11 +4845,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Reaction removed"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a DM message",
         "tags": [
-          "Dms"
+          "Direct Messages"
         ]
       }
     },
@@ -4234,8 +4865,9 @@
         "parameters": [
           {
             "name": "search",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Search for friends by name",
             "schema": {
               "type": "string"
             }
@@ -4243,9 +4875,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of friends"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get list of friends",
         "tags": [
           "Friends"
         ]
@@ -4257,26 +4895,43 @@
         "parameters": [
           {
             "name": "type",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Type of requests",
             "schema": {
+              "enum": [
+                "incoming",
+                "outgoing"
+              ],
               "type": "string"
             }
           },
           {
             "name": "status",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Status of requests",
             "schema": {
+              "enum": [
+                "pending",
+                "accepted",
+                "declined"
+              ],
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of friend requests"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get friend requests",
         "tags": [
           "Friends"
         ]
@@ -4284,11 +4939,27 @@
       "post": {
         "operationId": "FriendsController_sendFriendRequest",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendFriendRequestDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Friend request sent"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a friend request",
         "tags": [
           "Friends"
         ]
@@ -4302,16 +4973,33 @@
             "name": "requestId",
             "required": true,
             "in": "path",
+            "description": "The request ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFriendRequestDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Friend request updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accept, decline or cancel a friend request",
         "tags": [
           "Friends"
         ]
@@ -4323,6 +5011,7 @@
             "name": "requestId",
             "required": true,
             "in": "path",
+            "description": "The request ID",
             "schema": {
               "type": "string"
             }
@@ -4330,9 +5019,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Friend request or friendship deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a friend request or unfriend",
         "tags": [
           "Friends"
         ]
@@ -4344,9 +5039,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of workspaces"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all workspaces for the current user",
         "tags": [
           "Workspaces"
         ]
@@ -4354,11 +5055,30 @@
       "post": {
         "operationId": "WorkspacesController_createWorkspace",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Workspace created successfully"
+          },
+          "400": {
+            "description": "Invalid input or slug already taken"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new workspace",
         "tags": [
           "Workspaces"
         ]
@@ -4370,9 +5090,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of discoverable workspaces"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Discover public workspaces",
         "tags": [
           "Workspaces"
         ]
@@ -4386,6 +5112,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4393,9 +5120,18 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Joined successfully"
+          },
+          "404": {
+            "description": "Workspace not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Join a workspace",
         "tags": [
           "Workspaces"
         ]
@@ -4409,6 +5145,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4416,9 +5153,21 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Workspace details"
+          },
+          "403": {
+            "description": "Forbidden: Not a member"
+          },
+          "404": {
+            "description": "Workspace not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get workspace details by slug",
         "tags": [
           "Workspaces"
         ]
@@ -4430,16 +5179,36 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Workspace updated successfully"
+          },
+          "403": {
+            "description": "Forbidden: Not an owner or admin"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update workspace details",
         "tags": [
           "Workspaces"
         ]
@@ -4451,6 +5220,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4458,9 +5228,18 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Workspace deleted successfully"
+          },
+          "403": {
+            "description": "Forbidden: Only owner can delete"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a workspace",
         "tags": [
           "Workspaces"
         ]
@@ -4474,6 +5253,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4481,9 +5261,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of members"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all members of a workspace",
         "tags": [
           "Members"
         ]
@@ -4497,6 +5283,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4505,16 +5292,36 @@
             "name": "memberId",
             "required": true,
             "in": "path",
+            "description": "The member ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberRoleDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Member updated successfully"
+          },
+          "403": {
+            "description": "Forbidden: Only owner or admin can update"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a workspace member (e.g. change role)",
         "tags": [
           "Members"
         ]
@@ -4526,6 +5333,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4534,6 +5342,7 @@
             "name": "memberId",
             "required": true,
             "in": "path",
+            "description": "The member ID",
             "schema": {
               "type": "string"
             }
@@ -4541,9 +5350,18 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Member removed successfully"
+          },
+          "403": {
+            "description": "Forbidden: Only owner or admin can remove"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a member from a workspace",
         "tags": [
           "Members"
         ]
@@ -4557,6 +5375,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4564,9 +5383,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of channels"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all channels in a workspace",
         "tags": [
           "Channels"
         ]
@@ -4578,16 +5403,33 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceChannelDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Channel created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new channel in a workspace",
         "tags": [
           "Channels"
         ]
@@ -4601,6 +5443,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4609,6 +5452,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -4616,9 +5460,18 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Channel details"
+          },
+          "404": {
+            "description": "Channel not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get channel details",
         "tags": [
           "Channels"
         ]
@@ -4630,6 +5483,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4638,16 +5492,33 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceChannelDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Channel updated successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel details",
         "tags": [
           "Channels"
         ]
@@ -4659,6 +5530,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4667,6 +5539,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -4674,9 +5547,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Channel deleted successfully"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a channel",
         "tags": [
           "Channels"
         ]
@@ -4690,6 +5569,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4697,9 +5577,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of departments"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all departments in a workspace",
         "tags": [
           "Departments"
         ]
@@ -4711,16 +5597,33 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceDepartmentDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Department created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new department",
         "tags": [
           "Departments"
         ]
@@ -4734,6 +5637,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4742,6 +5646,7 @@
             "name": "departmentId",
             "required": true,
             "in": "path",
+            "description": "The department ID",
             "schema": {
               "type": "string"
             }
@@ -4749,9 +5654,18 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Department details"
+          },
+          "404": {
+            "description": "Department not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get department details",
         "tags": [
           "Departments"
         ]
@@ -4763,6 +5677,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4771,16 +5686,33 @@
             "name": "departmentId",
             "required": true,
             "in": "path",
+            "description": "The department ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceDepartmentDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Department updated successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update department details",
         "tags": [
           "Departments"
         ]
@@ -4792,6 +5724,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4800,6 +5733,7 @@
             "name": "departmentId",
             "required": true,
             "in": "path",
+            "description": "The department ID",
             "schema": {
               "type": "string"
             }
@@ -4807,9 +5741,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Department deleted successfully"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a department",
         "tags": [
           "Departments"
         ]
@@ -4823,6 +5763,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4831,24 +5772,51 @@
             "name": "departmentId",
             "required": true,
             "in": "path",
+            "description": "The department ID",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "priority",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "enum": [
+                "low",
+                "normal",
+                "high",
+                "urgent"
+              ],
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {}
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of announcements"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get announcements for a department",
         "tags": [
           "Departments"
         ]
@@ -4860,6 +5828,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4868,16 +5837,33 @@
             "name": "departmentId",
             "required": true,
             "in": "path",
+            "description": "The department ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepartmentAnnouncementDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Announcement created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new announcement in a department",
         "tags": [
           "Departments"
         ]
@@ -4891,14 +5877,16 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "departmentId",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Filter teams by department",
             "schema": {
               "type": "string"
             }
@@ -4906,9 +5894,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of teams"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all teams in a workspace",
         "tags": [
           "Teams"
         ]
@@ -4920,16 +5914,33 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceTeamDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Team created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new team",
         "tags": [
           "Teams"
         ]
@@ -4943,6 +5954,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4951,16 +5963,33 @@
             "name": "teamId",
             "required": true,
             "in": "path",
+            "description": "The team ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Member added to team"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a member to a team",
         "tags": [
           "Teams"
         ]
@@ -4974,6 +6003,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -4982,6 +6012,7 @@
             "name": "teamId",
             "required": true,
             "in": "path",
+            "description": "The team ID",
             "schema": {
               "type": "string"
             }
@@ -4990,6 +6021,7 @@
             "name": "userId",
             "required": true,
             "in": "path",
+            "description": "The user ID",
             "schema": {
               "type": "string"
             }
@@ -4997,9 +6029,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Member removed from team"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a member from a team",
         "tags": [
           "Teams"
         ]
@@ -5013,6 +6051,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5021,26 +6060,41 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "cursor",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Pagination cursor",
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of messages to return",
+            "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of messages"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages from a channel",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       },
       "post": {
@@ -5050,6 +6104,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5058,18 +6113,35 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMessageDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message to a channel",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       }
     },
@@ -5081,6 +6153,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5089,6 +6162,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -5097,18 +6171,35 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMessageDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Message updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a message",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       },
       "delete": {
@@ -5118,6 +6209,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5126,6 +6218,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -5134,6 +6227,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -5141,11 +6235,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Message deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a message",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       }
     },
@@ -5157,6 +6257,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5165,18 +6266,35 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkMessagesAsReadDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Messages marked as read"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark messages as read",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       }
     },
@@ -5188,6 +6306,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5196,6 +6315,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -5204,18 +6324,35 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddReactionDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Reaction added"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a message",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       }
     },
@@ -5227,6 +6364,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5235,6 +6373,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -5243,6 +6382,7 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
@@ -5251,6 +6391,7 @@
             "name": "emoji",
             "required": true,
             "in": "path",
+            "description": "The emoji to remove",
             "schema": {
               "type": "string"
             }
@@ -5258,11 +6399,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Reaction removed"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a message",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       }
     },
@@ -5274,6 +6421,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5282,6 +6430,7 @@
             "name": "channelId",
             "required": true,
             "in": "path",
+            "description": "The channel ID",
             "schema": {
               "type": "string"
             }
@@ -5290,18 +6439,35 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "description": "The message ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMessageDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Reply created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a reply to a message",
         "tags": [
-          "Messages"
+          "Channels & Messages"
         ]
       }
     },
@@ -5313,6 +6479,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5320,9 +6487,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of custom emojis"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all custom emojis for a workspace",
         "tags": [
           "Emojis"
         ]
@@ -5334,16 +6507,33 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmojiDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Emoji created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a custom emoji",
         "tags": [
           "Emojis"
         ]
@@ -5357,18 +6547,39 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {}
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of audit logs"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get audit logs for a workspace",
         "tags": [
-          "AuditLogs"
+          "Audit Logs"
         ]
       }
     },
@@ -5380,6 +6591,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5387,11 +6599,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "CSV file"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export audit logs as CSV",
         "tags": [
-          "AuditLogs"
+          "Audit Logs"
         ]
       }
     },
@@ -5403,6 +6621,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5410,11 +6629,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of invite links"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all invite links for a workspace",
         "tags": [
-          "InviteLinks"
+          "Invite Links"
         ]
       },
       "post": {
@@ -5424,18 +6649,35 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteLinkDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Invite link created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new invite link",
         "tags": [
-          "InviteLinks"
+          "Invite Links"
         ]
       }
     },
@@ -5447,6 +6689,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5454,11 +6697,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of API tokens"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all API tokens for a workspace",
         "tags": [
-          "ApiTokens"
+          "API Tokens"
         ]
       },
       "post": {
@@ -5468,18 +6717,35 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiTokenDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "API token created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new API token for a workspace",
         "tags": [
-          "ApiTokens"
+          "API Tokens"
         ]
       }
     },
@@ -5491,6 +6757,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5499,6 +6766,7 @@
             "name": "tokenId",
             "required": true,
             "in": "path",
+            "description": "The token ID",
             "schema": {
               "type": "string"
             }
@@ -5506,11 +6774,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "API token deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an API token",
         "tags": [
-          "ApiTokens"
+          "API Tokens"
         ]
       }
     },
@@ -5522,6 +6796,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5529,9 +6804,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of webhooks"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all webhooks for a workspace",
         "tags": [
           "Webhooks"
         ]
@@ -5543,16 +6824,33 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceWebhookDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new webhook for a workspace",
         "tags": [
           "Webhooks"
         ]
@@ -5566,6 +6864,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5574,16 +6873,33 @@
             "name": "webhookId",
             "required": true,
             "in": "path",
+            "description": "The webhook ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceWebhookDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Webhook updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a webhook",
         "tags": [
           "Webhooks"
         ]
@@ -5595,6 +6911,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5603,6 +6920,7 @@
             "name": "webhookId",
             "required": true,
             "in": "path",
+            "description": "The webhook ID",
             "schema": {
               "type": "string"
             }
@@ -5610,9 +6928,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Webhook deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook",
         "tags": [
           "Webhooks"
         ]
@@ -5626,6 +6950,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -5633,9 +6958,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of active calls"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get active calls in a workspace",
         "tags": [
           "Calls"
         ]
@@ -5698,8 +7029,9 @@
         "parameters": [
           {
             "name": "stats",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Return stats instead of list",
             "schema": {
               "type": "string"
             }
@@ -5707,23 +7039,45 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of scheduled notifications or stats"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get scheduled notifications for the current user",
         "tags": [
-          "ScheduledNotifications"
+          "Scheduled Notifications"
         ]
       },
       "post": {
         "operationId": "ScheduledNotificationsController_createNotification",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduledNotificationDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Notification scheduled"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a scheduled notification",
         "tags": [
-          "ScheduledNotifications"
+          "Scheduled Notifications"
         ]
       }
     },
@@ -5735,18 +7089,50 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The notification ID",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "pause",
+                      "resume"
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Notification updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a scheduled notification",
         "tags": [
-          "ScheduledNotifications"
+          "Scheduled Notifications"
         ]
       },
       "delete": {
@@ -5756,6 +7142,7 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The notification ID",
             "schema": {
               "type": "string"
             }
@@ -5763,11 +7150,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Notification deleted"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a scheduled notification",
         "tags": [
-          "ScheduledNotifications"
+          "Scheduled Notifications"
         ]
       }
     },
@@ -6340,6 +7733,877 @@
             "type": "object"
           }
         }
+      },
+      "CreateIntegrationWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Integration Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "event.name"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "events"
+        ]
+      },
+      "CreateIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "enum": [
+              "slack",
+              "github",
+              "gitlab",
+              "jira",
+              "linear",
+              "notion",
+              "figma",
+              "discord",
+              "teams",
+              "zapier",
+              "make",
+              "custom",
+              "huly"
+            ],
+            "example": "github"
+          },
+          "name": {
+            "type": "string",
+            "example": "My GitHub Integration"
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "webhookUrl": {
+                "type": "string"
+              },
+              "hulyUrl": {
+                "type": "string"
+              },
+              "apiKey": {
+                "type": "string"
+              },
+              "accessToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              },
+              "channelId": {
+                "type": "string"
+              },
+              "repositoryId": {
+                "type": "string"
+              },
+              "projectId": {
+                "type": "string"
+              },
+              "teamId": {
+                "type": "string"
+              },
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "customHeaders": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": {
+            "type": "string",
+            "example": "Integration with GitHub"
+          }
+        },
+        "required": [
+          "service",
+          "name",
+          "config"
+        ]
+      },
+      "WorkspaceSettingsDto": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "example": "workspace_123"
+          },
+          "preference": {
+            "type": "string",
+            "enum": [
+              "all",
+              "mentions",
+              "none"
+            ],
+            "example": "all"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "preference"
+        ]
+      },
+      "ChannelSettingsDto": {
+        "type": "object",
+        "properties": {
+          "channelId": {
+            "type": "string",
+            "example": "channel_123"
+          },
+          "preference": {
+            "type": "string",
+            "enum": [
+              "all",
+              "mentions",
+              "none",
+              "default"
+            ],
+            "example": "all"
+          }
+        },
+        "required": [
+          "channelId",
+          "preference"
+        ]
+      },
+      "UpdateNotificationDto": {
+        "type": "object",
+        "properties": {
+          "isRead": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "isRead"
+        ]
+      },
+      "CreateInvitationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "example": "member"
+          },
+          "workspaceId": {
+            "type": "string",
+            "example": "workspace_123"
+          },
+          "channelId": {
+            "type": "string",
+            "example": "channel_123"
+          },
+          "permissions": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "CreateDmDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "user_123",
+            "description": "The ID of the user to start a DM with"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "UpdateDmMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Updated message content"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "MarkAsReadDto": {
+        "type": "object",
+        "properties": {
+          "messageIds": {
+            "example": [
+              "msg_1",
+              "msg_2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "messageIds"
+        ]
+      },
+      "SendFriendRequestDto": {
+        "type": "object",
+        "properties": {
+          "receiverId": {
+            "type": "string",
+            "example": "user_123",
+            "description": "The ID of the user to send a request to"
+          },
+          "message": {
+            "type": "string",
+            "example": "Hi, let's be friends!"
+          }
+        },
+        "required": [
+          "receiverId"
+        ]
+      },
+      "UpdateFriendRequestDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "decline",
+              "cancel"
+            ],
+            "example": "accept"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "CreateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Workspace"
+          },
+          "slug": {
+            "type": "string",
+            "example": "my-workspace"
+          },
+          "icon": {
+            "type": "string",
+            "example": "https://example.com/icon.png"
+          },
+          "description": {
+            "type": "string",
+            "example": "A workspace for our team"
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "UpdateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Workspace Name"
+          },
+          "icon": {
+            "type": "string",
+            "example": "https://example.com/new-icon.png"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description"
+          },
+          "settings": {
+            "type": "object"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro",
+              "enterprise"
+            ]
+          }
+        }
+      },
+      "UpdateMemberRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "member",
+              "guest"
+            ],
+            "example": "admin"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "CreateWorkspaceChannelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "general"
+          },
+          "description": {
+            "type": "string",
+            "example": "The general channel for everyone"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "default": "public"
+          },
+          "departmentId": {
+            "type": "string",
+            "example": "dept_123"
+          },
+          "icon": {
+            "type": "string",
+            "example": "Hash"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateWorkspaceChannelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "new-name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private"
+            ]
+          },
+          "icon": {
+            "type": "string",
+            "example": "MessageSquare"
+          }
+        }
+      },
+      "CreateWorkspaceDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Human Resources"
+          },
+          "slug": {
+            "type": "string",
+            "example": "hr"
+          },
+          "description": {
+            "type": "string",
+            "example": "HR department"
+          },
+          "icon": {
+            "type": "string",
+            "example": "Building"
+          },
+          "color": {
+            "type": "string",
+            "example": "#f43f5e"
+          },
+          "parentId": {
+            "type": "string",
+            "example": "dept_123"
+          },
+          "managerId": {
+            "type": "string",
+            "example": "user_123"
+          },
+          "settings": {
+            "type": "object"
+          },
+          "createChannel": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "UpdateWorkspaceDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "New Name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description"
+          },
+          "icon": {
+            "type": "string",
+            "example": "Building2"
+          },
+          "color": {
+            "type": "string",
+            "example": "#ef4444"
+          },
+          "parentId": {
+            "type": "object",
+            "nullable": true
+          },
+          "managerId": {
+            "type": "object",
+            "nullable": true
+          },
+          "settings": {
+            "type": "object"
+          }
+        }
+      },
+      "TargetAudienceDto": {
+        "type": "object",
+        "properties": {
+          "departments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateDepartmentAnnouncementDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Office Closed"
+          },
+          "content": {
+            "type": "string",
+            "example": "The office will be closed tomorrow."
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ],
+            "default": "normal"
+          },
+          "pinned": {
+            "type": "boolean",
+            "default": false
+          },
+          "publishAt": {
+            "type": "string",
+            "description": "ISO format datetime"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "ISO format datetime"
+          },
+          "targetAudience": {
+            "$ref": "#/components/schemas/TargetAudienceDto"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
+      },
+      "CreateWorkspaceTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "slug": {
+            "type": "string",
+            "example": "engineering"
+          },
+          "description": {
+            "type": "string",
+            "example": "Our engineering team"
+          },
+          "icon": {
+            "type": "string",
+            "example": "Users"
+          },
+          "color": {
+            "type": "string",
+            "example": "#3b82f6"
+          },
+          "departmentId": {
+            "type": "string",
+            "example": "dept_123"
+          },
+          "leadId": {
+            "type": "string",
+            "example": "user_123"
+          },
+          "memberIds": {
+            "example": [
+              "user_123",
+              "user_456"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createChannel": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "AddTeamMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "user_123"
+          },
+          "role": {
+            "type": "string",
+            "example": "member"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "CreateMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Hello world!"
+          },
+          "threadId": {
+            "type": "string",
+            "example": "thread_123"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "stickerId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "UpdateMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Updated content"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "MarkMessagesAsReadDto": {
+        "type": "object",
+        "properties": {
+          "messageIds": {
+            "example": [
+              "msg_1",
+              "msg_2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "messageIds"
+        ]
+      },
+      "AddReactionDto": {
+        "type": "object",
+        "properties": {
+          "emoji": {
+            "type": "string",
+            "example": "👍"
+          },
+          "customEmojiId": {
+            "type": "string",
+            "example": "emoji_123"
+          }
+        },
+        "required": [
+          "emoji"
+        ]
+      },
+      "CreateEmojiDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "party-parrot"
+          },
+          "shortcode": {
+            "type": "string",
+            "example": "party_parrot"
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://example.com/emoji.png"
+          }
+        },
+        "required": [
+          "name",
+          "shortcode",
+          "imageUrl"
+        ]
+      },
+      "CreateInviteLinkDto": {
+        "type": "object",
+        "properties": {
+          "maxUses": {
+            "type": "number",
+            "example": 0,
+            "description": "Maximum uses, 0 for unlimited"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date in ISO format"
+          }
+        }
+      },
+      "CreateApiTokenDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My API Token"
+          },
+          "permissions": {
+            "type": "object",
+            "properties": {
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "read:members",
+                    "write:members",
+                    "read:departments",
+                    "write:departments",
+                    "read:teams",
+                    "write:teams",
+                    "read:announcements",
+                    "write:announcements",
+                    "read:channels",
+                    "write:channels",
+                    "send:messages"
+                  ]
+                }
+              },
+              "departments": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "teams": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "rateLimit": {
+            "type": "number",
+            "default": 1000,
+            "example": 5000
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "ISO format datetime"
+          }
+        },
+        "required": [
+          "name",
+          "permissions"
+        ]
+      },
+      "CreateWorkspaceWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "message.sent",
+              "channel.created"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "events"
+        ]
+      },
+      "UpdateWorkspaceWebhookDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateScheduledNotificationDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Reminder"
+          },
+          "message": {
+            "type": "string",
+            "example": "Meeting in 10 minutes"
+          },
+          "scheduleType": {
+            "type": "string",
+            "enum": [
+              "custom",
+              "once",
+              "daily",
+              "weekly",
+              "monthly"
+            ],
+            "example": "once"
+          },
+          "scheduledFor": {
+            "type": "string",
+            "description": "ISO format datetime"
+          },
+          "recurrence": {
+            "type": "object"
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "channel"
+            ]
+          },
+          "entityId": {
+            "type": "string"
+          },
+          "linkUrl": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "title",
+          "message",
+          "scheduleType",
+          "scheduledFor"
+        ]
       }
     }
   }
