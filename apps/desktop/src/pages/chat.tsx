@@ -11,7 +11,6 @@ export function ChatPage() {
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [infoPanelTab, setInfoPanelTab] = useState('info');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [settingsTrigger, setSettingsTrigger] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,7 +81,7 @@ export function ChatPage() {
       )}
       <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
         <DynamicHeader
-          activeView={channelId}
+          activeView={channelId || ''}
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {
             setInfoPanelOpen(true);
@@ -93,9 +92,6 @@ export function ChatPage() {
             setInfoPanelOpen(newState);
             if (newState) setInfoPanelTab('info');
           }}
-          onVoiceCallClick={() => handleStartCall('voice')}
-          onVideoCallClick={() => handleStartCall('video')}
-          onSettingsClick={() => setSettingsTrigger(prev => prev + 1)}
         />
         <div className="flex flex-1 overflow-hidden relative">
           <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
@@ -104,7 +100,6 @@ export function ChatPage() {
                 channelId={channelId}
                 workspaceId={workspaceSlug}
                 onToggleInfo={() => setInfoPanelOpen(!infoPanelOpen)}
-                onOpenSettings={settingsTrigger}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-muted-foreground bg-dotted">
