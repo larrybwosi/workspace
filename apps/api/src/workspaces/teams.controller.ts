@@ -11,6 +11,16 @@ import {
   ForbiddenException,
   Delete,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -18,6 +28,43 @@ import type { User } from '@repo/database';
 import { z } from 'zod';
 import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared/server';
 import { TeamSyncService } from './team-sync.service';
+
+class CreateWorkspaceTeamDto {
+  @ApiProperty({ example: 'Engineering' })
+  name: string;
+
+  @ApiProperty({ example: 'engineering' })
+  slug: string;
+
+  @ApiProperty({ required: false, example: 'Our engineering team' })
+  description?: string;
+
+  @ApiProperty({ required: false, example: 'Users' })
+  icon?: string;
+
+  @ApiProperty({ required: false, example: '#3b82f6' })
+  color?: string;
+
+  @ApiProperty({ required: false, example: 'dept_123' })
+  departmentId?: string;
+
+  @ApiProperty({ required: false, example: 'user_123' })
+  leadId?: string;
+
+  @ApiProperty({ required: false, type: [String], example: ['user_123', 'user_456'] })
+  memberIds?: string[];
+
+  @ApiProperty({ required: false, default: true })
+  createChannel?: boolean;
+}
+
+class AddTeamMemberDto {
+  @ApiProperty({ example: 'user_123' })
+  userId: string;
+
+  @ApiProperty({ required: false, example: 'member' })
+  role?: string;
+}
 
 const createTeamSchema = z.object({
   name: z.string().min(1).max(100),
@@ -35,12 +82,18 @@ const createTeamSchema = z.object({
   createChannel: z.boolean().optional().default(true),
 });
 
+@ApiTags('Teams')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/teams')
 @UseGuards(AuthGuard)
 export class TeamsController {
   constructor(private readonly teamSyncService: TeamSyncService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get all teams in a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiQuery({ name: 'departmentId', required: false, description: 'Filter teams by department' })
+  @ApiResponse({ status: 200, description: 'List of teams' })
   async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
     /**
      * ⚡ Performance Optimization:
@@ -89,7 +142,11 @@ export class TeamsController {
   }
 
   @Post()
-  async createTeam(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+  @ApiOperation({ summary: 'Create a new team' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateWorkspaceTeamDto })
+  @ApiResponse({ status: 201, description: 'Team created successfully' })
+  async createTeam(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceTeamDto) {
     /**
      * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.
@@ -207,7 +264,12 @@ export class TeamsController {
   }
 
   @Post(':teamId/members')
-  async addMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Body() body: { userId: string; role?: string }) {
+  @ApiOperation({ summary: 'Add a member to a team' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'teamId', description: 'The team ID' })
+  @ApiBody({ type: AddTeamMemberDto })
+  @ApiResponse({ status: 201, description: 'Member added to team' })
+  async addMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Body() body: AddTeamMemberDto) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -237,6 +299,11 @@ export class TeamsController {
   }
 
   @Delete(':teamId/members/:userId')
+  @ApiOperation({ summary: 'Remove a member from a team' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'teamId', description: 'The team ID' })
+  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiResponse({ status: 200, description: 'Member removed from team' })
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Param('userId') userId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

@@ -11,12 +11,52 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { AblyChannels, EVENTS, getAblyServer } from '@repo/shared/server';
+
+class CreateWorkspaceChannelDto {
+  @ApiProperty({ example: 'general' })
+  name: string;
+
+  @ApiProperty({ required: false, example: 'The general channel for everyone' })
+  description?: string;
+
+  @ApiProperty({ required: false, enum: ['public', 'private'], default: 'public' })
+  type?: 'public' | 'private';
+
+  @ApiProperty({ required: false, example: 'dept_123' })
+  departmentId?: string;
+
+  @ApiProperty({ required: false, example: 'Hash' })
+  icon?: string;
+}
+
+class UpdateWorkspaceChannelDto {
+  @ApiProperty({ required: false, example: 'new-name' })
+  name?: string;
+
+  @ApiProperty({ required: false, example: 'Updated description' })
+  description?: string;
+
+  @ApiProperty({ required: false, enum: ['public', 'private'] })
+  type?: 'public' | 'private';
+
+  @ApiProperty({ required: false, example: 'MessageSquare' })
+  icon?: string;
+}
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
@@ -33,10 +73,15 @@ const updateChannelSchema = z.object({
   icon: z.string().optional(),
 });
 
+@ApiTags('Channels')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/channels')
 @UseGuards(AuthGuard)
 export class ChannelsController {
   @Get()
+  @ApiOperation({ summary: 'Get all channels in a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of channels' })
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
@@ -89,7 +134,11 @@ export class ChannelsController {
   }
 
   @Post()
-  async createChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+  @ApiOperation({ summary: 'Create a new channel in a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateWorkspaceChannelDto })
+  @ApiResponse({ status: 201, description: 'Channel created successfully' })
+  async createChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceChannelDto) {
     /**
      * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.
@@ -164,6 +213,11 @@ export class ChannelsController {
   }
 
   @Get(':channelId')
+  @ApiOperation({ summary: 'Get channel details' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'Channel details' })
+  @ApiResponse({ status: 404, description: 'Channel not found' })
   async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     /**
      * ⚡ Performance Optimization:
@@ -209,11 +263,16 @@ export class ChannelsController {
   }
 
   @Patch(':channelId')
+  @ApiOperation({ summary: 'Update channel details' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ type: UpdateWorkspaceChannelDto })
+  @ApiResponse({ status: 200, description: 'Channel updated successfully' })
   async updateChannel(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Body() body: any
+    @Body() body: UpdateWorkspaceChannelDto
   ) {
     /**
      * ⚡ Performance Optimization:
@@ -277,6 +336,10 @@ export class ChannelsController {
   }
 
   @Delete(':channelId')
+  @ApiOperation({ summary: 'Delete a channel' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'Channel deleted successfully' })
   async deleteChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     /**
      * ⚡ Performance Optimization:
