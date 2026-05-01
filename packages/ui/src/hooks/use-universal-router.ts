@@ -5,17 +5,27 @@ import { useMemo } from 'react';
  * A hook that uses react-router hooks.
  */
 export function useUniversalRouter() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const params = useRRParams();
-  const [searchParams] = useRRSearchParams();
+  let navigate: any;
+  let location: any = { pathname: '' };
+  let params: any = {};
+  let searchParams: any = new URLSearchParams();
+
+  try {
+    navigate = useNavigate();
+    location = useLocation();
+    params = useRRParams();
+    const [sp] = useRRSearchParams();
+    searchParams = sp;
+  } catch (e) {
+    // Not in a React Router context
+  }
 
   return useMemo(() => ({
     router: {
-      push: (url: string) => navigate(url),
-      replace: (url: string) => navigate(url, { replace: true }),
-      back: () => navigate(-1),
-      forward: () => navigate(1),
+      push: (url: string) => navigate?.(url),
+      replace: (url: string) => navigate?.(url, { replace: true }),
+      back: () => navigate?.(-1),
+      forward: () => navigate?.(1),
     },
     params,
     pathname: location.pathname,
@@ -24,21 +34,41 @@ export function useUniversalRouter() {
 }
 
 export function useRouter() {
-  const navigate = useNavigate();
+  let navigate: any;
+  try {
+    navigate = useNavigate();
+  } catch (e) {}
+
   return useMemo(() => ({
-    push: (url: string) => navigate(url),
-    replace: (url: string) => navigate(url, { replace: true }),
-    back: () => navigate(-1),
-    forward: () => navigate(1),
+    push: (url: string) => navigate?.(url),
+    replace: (url: string) => navigate?.(url, { replace: true }),
+    back: () => navigate?.(-1),
+    forward: () => navigate?.(1),
   }), [navigate]);
 }
 
-export const useParams = useRRParams;
-export const usePathname = () => {
-  const location = useLocation();
-  return location.pathname;
+export const useParams = () => {
+  try {
+    return useRRParams();
+  } catch (e) {
+    return {};
+  }
 };
+
+export const usePathname = () => {
+  try {
+    const location = useLocation();
+    return location.pathname;
+  } catch (e) {
+    return '';
+  }
+};
+
 export const useSearchParams = () => {
-  const [searchParams] = useRRSearchParams();
-  return searchParams;
+  try {
+    const [searchParams] = useRRSearchParams();
+    return searchParams;
+  } catch (e) {
+    return new URLSearchParams();
+  }
 };

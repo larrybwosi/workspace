@@ -75,10 +75,17 @@ async function bootstrap() {
   });
 
   // We need to register multipart support
-  // @ts-ignore - Fastify version mismatch in types
-  await app.register(multipart);
+  await app.register(multipart as any);
 
-  app.useWebSocketAdapter(new WsAdapter(app));
+  const redisUrl = env.REDIS_URL;
+  if (redisUrl && env.REALTIME_PROVIDER === 'socketio') {
+    const { RedisIoAdapter } = await import('./common/realtime/redis-io.adapter');
+    const redisIoAdapter = new RedisIoAdapter(app, redisUrl);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+  } else {
+    app.useWebSocketAdapter(new WsAdapter(app));
+  }
 
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
