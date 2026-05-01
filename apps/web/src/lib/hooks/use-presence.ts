@@ -1,61 +1,53 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getAblyClient } from "@repo/shared"
+import { realtime } from "@repo/shared"
 
 const PRESENCE_CHANNEL = "global-presence"
 
 export function usePresence() {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
-  const ably = getAblyClient()
 
   useEffect(() => {
-    if (!ably) return
-
-    const channel = ably.channels.get(PRESENCE_CHANNEL)
-
-    const updatePresence = async () => {
-      const presenceMessages = await channel.presence.get()
-      const userIds = presenceMessages.map((msg: any) => msg.clientId)
-      setOnlineUsers(new Set(userIds))
+    const handleEnter = (member: any) => {
+      setOnlineUsers((prev) => new Set([...prev, member.userId || member.clientId]))
     }
 
-    channel.presence.subscribe("enter", (member: any) => {
-      setOnlineUsers((prev) => new Set([...prev, member.clientId]))
-    })
-
-    channel.presence.subscribe("leave", (member: any) => {
+    const handleLeave = (member: any) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev)
-        next.delete(member.clientId)
+        next.delete(member.userId || member.clientId)
         return next
       })
-    })
+    }
 
-    updatePresence()
+    realtime.subscribe(PRESENCE_CHANNEL, "presence:enter", handleEnter)
+    realtime.subscribe(PRESENCE_CHANNEL, "presence:leave", handleLeave)
+    // Ably compatibility
+    realtime.subscribe(PRESENCE_CHANNEL, "enter", handleEnter)
+    realtime.subscribe(PRESENCE_CHANNEL, "leave", handleLeave)
 
     return () => {
-      channel.presence.unsubscribe()
+      realtime.unsubscribe(PRESENCE_CHANNEL, "presence:enter", handleEnter)
+      realtime.unsubscribe(PRESENCE_CHANNEL, "presence:leave", handleLeave)
+      realtime.unsubscribe(PRESENCE_CHANNEL, "enter", handleEnter)
+      realtime.unsubscribe(PRESENCE_CHANNEL, "leave", handleLeave)
     }
-  }, [ably])
+  }, [])
 
   return onlineUsers
 }
 
 export function PresenceManager({ userId }: { userId?: string }) {
-  const ably = getAblyClient()
-
   useEffect(() => {
-    if (!ably || !userId) return
+    if (!userId) return
 
-    const channel = ably.channels.get(PRESENCE_CHANNEL)
-
-    channel.presence.enterClient(userId, { status: "online" })
+    realtime.enterPresence(PRESENCE_CHANNEL, userId, { status: "online" })
 
     return () => {
-      channel.presence.leaveClient(userId)
+      realtime.leavePresence(PRESENCE_CHANNEL, userId)
     }
-  }, [ably, userId])
+  }, [userId])
 
   return null
 }

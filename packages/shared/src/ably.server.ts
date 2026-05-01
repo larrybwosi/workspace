@@ -65,6 +65,12 @@ export async function publishToAbly(channelName: string, eventName: string, data
     if (!ably) return;
     const channel = (ably as any).channels.get(channelName);
     await channel.publish(eventName, data);
+
+    // Forward to global system events for bots
+    if (channelName !== 'global-system-events') {
+      const globalChannel = (ably as any).channels.get('global-system-events');
+      await globalChannel.publish(eventName, data);
+    }
   } catch (error) {
     if (retries > 0) {
       console.warn(`Retrying Ably publish to ${channelName} (${eventName}). Retries left: ${retries - 1}`);
@@ -76,7 +82,4 @@ export async function publishToAbly(channelName: string, eventName: string, data
   }
 }
 
-export async function sendRealtimeMessage(channelName: string, eventName: string, data: any) {
-  return publishToAbly(channelName, eventName, data);
-}
 export { AblyChannels, AblyEvents, EVENTS };

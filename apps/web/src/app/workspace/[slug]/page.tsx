@@ -22,6 +22,7 @@ interface Workspace {
   icon?: string;
   members?: any[];
   _count?: {
+    members: number;
     channels: number;
   };
 }
@@ -148,7 +149,7 @@ export default function WorkspacePage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <StatCard
                 title="Members"
-                value={workspace.members?.length || 0}
+                value={workspace._count?.members || 0}
                 description="Total workspace members"
                 icon={<Users className="h-4 w-4 text-muted-foreground" />}
                 actionLabel="View Members"

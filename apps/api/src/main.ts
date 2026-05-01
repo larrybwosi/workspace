@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
 import multipart from '@fastify/multipart';
 
@@ -76,17 +77,49 @@ async function bootstrap() {
   // We need to register multipart support
   await app.register(multipart);
 
+<<<<<<< HEAD
+  const redisUrl = env.REDIS_URL;
+  if (redisUrl && env.REALTIME_PROVIDER === 'socketio') {
+    const { RedisIoAdapter } = await import('./common/realtime/redis-io.adapter');
+    const redisIoAdapter = new RedisIoAdapter(app, redisUrl);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+  }
+=======
+  app.useWebSocketAdapter(new WsAdapter(app));
+>>>>>>> dev
+
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = new DocumentBuilder()
-    .setTitle('Dealio API')
-    .setDescription('Enterprise Backend for Dealio')
-    .setVersion('1.0')
+    .setTitle('Skyrme Chat API')
+    .setDescription('Comprehensive API documentation for Skyrme Chat V2. This documentation is used by developers and for Bot API integration.')
+    .setVersion('2.0')
     .addBearerAuth()
+    .addTag('Authentication', 'Bot and integration authentication using OAuth2 client credentials.')
+    .addTag('Members', 'Manage workspace members and their roles.')
+    .addTag('Channels & Messages', 'Communication via channels and direct messages.')
+    .addTag('Threads', 'Manage threaded conversations.')
+    .addTag('Teams', 'Workspace team management.')
+    .addTag('Departments', 'Organizational structure management.')
+    .addTag('Announcements', 'Broadcast messages to departments.')
+    .addTag('Webhooks', 'Configure real-time event delivery.')
+    .addTag('Search', 'Search for messages and members.')
+    .addTag('API Tokens', 'Manage long-lived workspace API tokens.')
+    .addTag('Bot Applications', 'Create and manage bot integrations.')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
+
+  if (process.env.EXPORT_OPENAPI === 'true') {
+    const fs = await import('fs');
+    const path = await import('path');
+    const outputPath = path.resolve(process.cwd(), 'openapi.json');
+    fs.writeFileSync(outputPath, JSON.stringify(document, null, 2));
+    console.log(`OpenAPI specification exported to ${outputPath}`);
+    process.exit(0);
+  }
 
   await app.listen(env.PORT);
 }

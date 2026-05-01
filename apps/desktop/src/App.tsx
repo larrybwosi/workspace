@@ -13,6 +13,7 @@ import { useTauri } from './hooks/use-tauri';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { AgoraClientProvider } from './components/features/calls/agora-provider';
 import { CallContainer } from './components/features/calls/call-container';
+import { DesktopTitleBar } from './components/layout/desktop-title-bar';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useTauri();
@@ -35,10 +36,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-import { DesktopTitleBar } from './components/layout/desktop-title-bar';
-
 function AppContent() {
   const { data: session } = useSession();
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <DesktopTitleBar />
@@ -47,79 +47,81 @@ function AppContent() {
           <CallContainer />
         </AgoraClientProvider>
       )}
-      <Router>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/login/qr" element={<QRCodeLoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login/qr" element={<QRCodeLoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workspace/:slug"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workspace/:slug/channels/:channelSlug"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workspace/:slug/assistant"
-              element={
-                <ProtectedRoute>
-                  <AssistantPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dm/:userId"
-              element={
-                <ProtectedRoute>
-                  <DMPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <FriendsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assistant"
-              element={
-                <ProtectedRoute>
-                  <AssistantPage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-      </Router>
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspace/:slug"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspace/:slug/channels/:channelSlug"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspace/:slug/assistant"
+          element={
+            <ProtectedRoute>
+              <AssistantPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dm/:dmId"
+          element={
+            <ProtectedRoute>
+              <DMPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <FriendsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRoute>
+              <AssistantPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </div>
   );
 }
 
 function App() {
   return (
-    <WebProviders>
-      <AppContent />
-    </WebProviders>
+    <Router>
+      <WebProviders>
+        <AppContent />
+      </WebProviders>
+    </Router>
   );
 }
 
