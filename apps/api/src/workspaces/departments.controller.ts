@@ -178,9 +178,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -197,11 +199,29 @@ export class DepartmentsController {
 
     const departments = await prisma.workspaceDepartment.findMany({
       where: { workspaceId: workspace.id },
-      include: {
+      select: {
+        id: true,
+        workspaceId: true,
+        name: true,
+        slug: true,
+        description: true,
+        icon: true,
+        color: true,
+        parentId: true,
+        managerId: true,
+        channelId: true,
+        createdAt: true,
+        updatedAt: true,
         parent: { select: { id: true, name: true } },
         children: { select: { id: true, name: true, icon: true, color: true } },
         members: {
-          include: {
+          select: {
+            id: true,
+            workspaceId: true,
+            userId: true,
+            departmentId: true,
+            role: true,
+            joinedAt: true,
             user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         },
@@ -227,9 +247,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -335,9 +357,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -417,9 +441,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -485,9 +511,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -540,9 +568,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -613,9 +643,11 @@ export class DepartmentsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
