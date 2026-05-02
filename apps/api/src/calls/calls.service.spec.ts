@@ -54,6 +54,12 @@ vi.mock("@repo/database", () => ({
     directMessage: {
       findFirst: vi.fn(),
     },
+    dMMessage: {
+      create: vi.fn(),
+    },
+    soundboardSound: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -88,7 +94,7 @@ describe("CallsService", () => {
   const mockPrisma = prisma as any;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [CallsService],

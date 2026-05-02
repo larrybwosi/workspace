@@ -11,12 +11,37 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+
+class CreateWorkspaceWebhookDto {
+  @ApiProperty({ example: 'My Webhook' })
+  name: string;
+
+  @ApiProperty({ example: 'https://example.com/webhook' })
+  url: string;
+
+  @ApiProperty({ type: [String], example: ['message.sent', 'channel.created'] })
+  events: string[];
+}
+
+class UpdateWorkspaceWebhookDto {
+  @ApiProperty({ required: false, example: true })
+  active?: boolean;
+}
 
 const createWebhookSchema = z.object({
   name: z.string().min(1),
@@ -28,10 +53,15 @@ const updateWebhookSchema = z.object({
   active: z.boolean().optional(),
 });
 
+@ApiTags('Webhooks')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/webhooks')
 @UseGuards(AuthGuard)
 export class WebhooksController {
   @Get()
+  @ApiOperation({ summary: 'Get all webhooks for a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of webhooks' })
   async getWebhooks(@CurrentUser() user: User, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -57,10 +87,14 @@ export class WebhooksController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new webhook for a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateWorkspaceWebhookDto })
+  @ApiResponse({ status: 201, description: 'Webhook created successfully' })
   async createWebhook(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
-    @Body() body: any,
+    @Body() body: CreateWorkspaceWebhookDto,
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -92,11 +126,16 @@ export class WebhooksController {
   }
 
   @Patch(':webhookId')
+  @ApiOperation({ summary: 'Update a webhook' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
+  @ApiBody({ type: UpdateWorkspaceWebhookDto })
+  @ApiResponse({ status: 200, description: 'Webhook updated' })
   async updateWebhook(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('webhookId') webhookId: string,
-    @Body() body: any,
+    @Body() body: UpdateWorkspaceWebhookDto,
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -129,6 +168,10 @@ export class WebhooksController {
   }
 
   @Delete(':webhookId')
+  @ApiOperation({ summary: 'Delete a webhook' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
+  @ApiResponse({ status: 200, description: 'Webhook deleted' })
   async deleteWebhook(
     @CurrentUser() user: User,
     @Param('slug') slug: string,

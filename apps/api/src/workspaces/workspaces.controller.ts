@@ -11,12 +11,52 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { AblyChannels, EVENTS, getAblyRest } from '@repo/shared/server';
+
+class CreateWorkspaceDto {
+  @ApiProperty({ example: 'My Workspace' })
+  name: string;
+
+  @ApiProperty({ example: 'my-workspace' })
+  slug: string;
+
+  @ApiProperty({ required: false, example: 'https://example.com/icon.png' })
+  icon?: string;
+
+  @ApiProperty({ required: false, example: 'A workspace for our team' })
+  description?: string;
+}
+
+class UpdateWorkspaceDto {
+  @ApiProperty({ required: false, example: 'Updated Workspace Name' })
+  name?: string;
+
+  @ApiProperty({ required: false, example: 'https://example.com/new-icon.png' })
+  icon?: string;
+
+  @ApiProperty({ required: false, example: 'Updated description' })
+  description?: string;
+
+  @ApiProperty({ required: false })
+  settings?: any;
+
+  @ApiProperty({ required: false, enum: ['free', 'pro', 'enterprise'] })
+  plan?: 'free' | 'pro' | 'enterprise';
+}
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),
@@ -37,22 +77,14 @@ const updateWorkspaceSchema = z.object({
   plan: z.enum(['free', 'pro', 'enterprise']).optional(),
 });
 
-const createChannelSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().optional(),
-  type: z.enum(['public', 'private']).default('public'),
-  departmentId: z.string().optional(),
-  icon: z.string().optional(),
-});
-
-const updateMemberSchema = z.object({
-  role: z.enum(['owner', 'admin', 'member', 'guest']),
-});
-
+@ApiTags('Workspaces')
+@ApiBearerAuth()
 @Controller('workspaces')
 @UseGuards(AuthGuard)
 export class WorkspacesController {
   @Get()
+  @ApiOperation({ summary: 'Get all workspaces for the current user' })
+  @ApiResponse({ status: 200, description: 'List of workspaces' })
   async getWorkspaces(@CurrentUser() user: User): Promise<any> {
     /**
      * ⚡ Performance Optimization:
@@ -106,7 +138,11 @@ export class WorkspacesController {
   }
 
   @Post()
-  async createWorkspace(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<any> {
+  @ApiOperation({ summary: 'Create a new workspace' })
+  @ApiBody({ type: CreateWorkspaceDto })
+  @ApiResponse({ status: 201, description: 'Workspace created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input or slug already taken' })
+  async createWorkspace(@CurrentUser() user: User, @Body() body: CreateWorkspaceDto): Promise<any> {
     const validatedData = createWorkspaceSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
@@ -171,6 +207,8 @@ export class WorkspacesController {
    * Expected impact: Significantly reduces response time and memory overhead for large workspaces.
    */
   @Get('discover')
+  @ApiOperation({ summary: 'Discover public workspaces' })
+  @ApiResponse({ status: 200, description: 'List of discoverable workspaces' })
   async discoverWorkspaces(@CurrentUser() user: User): Promise<any> {
     // Return workspaces the user is NOT a member of
     return prisma.workspace.findMany({
@@ -198,6 +236,10 @@ export class WorkspacesController {
   }
 
   @Post(':slug/join')
+  @ApiOperation({ summary: 'Join a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 201, description: 'Joined successfully' })
+  @ApiResponse({ status: 404, description: 'Workspace not found' })
   async joinWorkspace(@CurrentUser() user: User, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -230,6 +272,11 @@ export class WorkspacesController {
   }
 
   @Get(':slug')
+  @ApiOperation({ summary: 'Get workspace details by slug' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'Workspace details' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Not a member' })
+  @ApiResponse({ status: 404, description: 'Workspace not found' })
   async getWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
@@ -290,7 +337,12 @@ export class WorkspacesController {
   }
 
   @Patch(':slug')
-  async updateWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: any) {
+  @ApiOperation({ summary: 'Update workspace details' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: UpdateWorkspaceDto })
+  @ApiResponse({ status: 200, description: 'Workspace updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Not an owner or admin' })
+  async updateWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: UpdateWorkspaceDto) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -345,6 +397,10 @@ export class WorkspacesController {
   }
 
   @Delete(':slug')
+  @ApiOperation({ summary: 'Delete a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'Workspace deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only owner can delete' })
   async deleteWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
