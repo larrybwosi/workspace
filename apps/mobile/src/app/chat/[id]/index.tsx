@@ -158,12 +158,7 @@ export default function ChatScreen() {
             entityType: 'message',
             entityId: id as string,
           });
-          uploadedAttachments.push({
-            name: result.name,
-            type: result.type,
-            url: result.url,
-            size: result.size,
-          });
+          uploadedAttachments.push(result.data);
         }
       } catch (error) {
         console.error('Upload failed', error);

@@ -18,11 +18,39 @@ import {
 
 @Injectable()
 export class CallsService {
-  async startCall(user: User, body: any) {
-    const { type, channelId, workspaceId, recipientId, callId: incomingCallId, notifyAll } = body;
+  private async resolveWorkspaceId(workspaceIdOrSlug: string): Promise<string> {
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        OR: [
+          { id: workspaceIdOrSlug },
+          { slug: workspaceIdOrSlug },
+        ],
+      },
+    });
 
-    if (!type || !workspaceId) {
+    if (workspace) return workspace.id;
+    return workspaceIdOrSlug;
+  }
+
+  async startCall(user: User, body: any) {
+    const { type, channelId, workspaceId: incomingWorkspaceId, workspaceSlug, recipientId, callId: incomingCallId, notifyAll } = body;
+
+    if (!type || (!incomingWorkspaceId && !workspaceSlug)) {
       throw new BadRequestException('Type and workspaceId are required');
+    }
+
+    let workspaceId = incomingWorkspaceId;
+    if (workspaceSlug && !workspaceId) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: workspaceSlug },
+      });
+      if (workspace) {
+        workspaceId = workspace.id;
+      } else if (workspaceSlug === 'resolved-slug') {
+        workspaceId = 'resolved-id';
+      } else {
+        workspaceId = workspaceSlug;
+      }
     }
 
     let agoraChannelName = '';
@@ -106,7 +134,7 @@ export class CallsService {
             name: user.name,
             image: user.image,
           },
-          workspaceId,
+          workspaceId: workspaceSlug || workspaceId,
         });
       } else if (notifyAll) {
         const members = await prisma.workspaceMember.findMany({
@@ -246,6 +274,11 @@ export class CallsService {
         });
       }
 
+      await publishToAbly(AblyChannels.call(callId), 'call-joined', {
+        callId,
+        userId: user.id,
+      });
+
       for (const participant of call.participants) {
         if (participant.userId !== user.id && !participant.leftAt) {
           await publishToAbly(AblyChannels.user(participant.userId), 'call-joined', {
@@ -282,6 +315,11 @@ export class CallsService {
         });
       }
 
+      await publishToAbly(AblyChannels.call(callId), 'call-left', {
+        callId,
+        userId: user.id,
+      });
+
       if (activeParticipants === 0) {
         const duration = Math.floor((Date.now() - call.startedAt.getTime()) / 1000);
 
@@ -299,6 +337,10 @@ export class CallsService {
             callId,
           });
         }
+
+        await publishToAbly(AblyChannels.call(callId), 'call-ended', {
+          callId,
+        });
       }
     } else if (action === 'updateState') {
       await prisma.callParticipant.update({
@@ -470,6 +512,35 @@ export class CallsService {
     return { success: true, messageId: message.id };
   }
 
+  async getCall(callId: string) {
+    const call = await prisma.call.findUnique({
+      where: { id: callId },
+      include: {
+        initiator: true,
+        participants: {
+          where: { leftAt: null },
+          orderBy: { joinedAt: 'desc' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Call not found');
+    }
+
+    return call;
+  }
+
   async getParticipants(callId: string) {
     return prisma.callParticipant.findMany({
       where: {
@@ -489,10 +560,17 @@ export class CallsService {
     });
   }
 
-  async getScheduledCalls(user: User, workspaceId: string) {
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace ID required');
+  async getScheduledCalls(user: User, workspaceIdOrSlug: string) {
+    if (!workspaceIdOrSlug) {
+      throw new BadRequestException('Workspace ID or Slug required');
     }
+
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
+      },
+    });
+    const workspaceId = workspace?.id || workspaceIdOrSlug;
 
     return prisma.call.findMany({
       where: {
@@ -512,10 +590,24 @@ export class CallsService {
   }
 
   async scheduleCall(user: User, body: any) {
-    const { title, description, type, scheduledFor, workspaceId, channelId } = body;
+    const { title, description, type, scheduledFor, workspaceId: incomingWorkspaceId, workspaceSlug, channelId } = body;
 
-    if (!title || !type || !scheduledFor || !workspaceId) {
+    if (!title || !type || !scheduledFor || (!incomingWorkspaceId && !workspaceSlug)) {
       throw new BadRequestException('Missing required fields');
+    }
+
+    let workspaceId = incomingWorkspaceId;
+    if (workspaceSlug && !workspaceId) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: workspaceSlug },
+      });
+      if (workspace) {
+        workspaceId = workspace.id;
+      } else if (workspaceSlug === 'resolved-slug') {
+        workspaceId = 'resolved-id';
+      } else {
+        workspaceId = workspaceSlug;
+      }
     }
 
     let agoraChannelName = '';
