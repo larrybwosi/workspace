@@ -25,13 +25,14 @@ export class MessagesService {
   async verifyWorkspaceAccess(userId: string, slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * Combines workspace lookup and membership verification into a single database query
-     * using relation filtering. Reduces database round-trips from 2 to 1 for every
-     * workspace-scoped message operation.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for every workspace-scoped message operation.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId },
           select: { userId: true },

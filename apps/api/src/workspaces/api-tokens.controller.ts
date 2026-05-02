@@ -10,12 +10,64 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+
+class CreateApiTokenDto {
+  @ApiProperty({ example: 'My API Token' })
+  name: string;
+
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      actions: {
+        type: 'array',
+        items: {
+          type: 'string',
+          enum: [
+            'read:members',
+            'write:members',
+            'read:departments',
+            'write:departments',
+            'read:teams',
+            'write:teams',
+            'read:announcements',
+            'write:announcements',
+            'read:channels',
+            'write:channels',
+            'send:messages',
+          ],
+        },
+      },
+      departments: { type: 'array', items: { type: 'string' } },
+      teams: { type: 'array', items: { type: 'string' } },
+    },
+  })
+  permissions: {
+    actions: string[];
+    departments?: string[];
+    teams?: string[];
+  };
+
+  @ApiProperty({ required: false, default: 1000, example: 5000 })
+  rateLimit?: number;
+
+  @ApiProperty({ required: false, description: 'ISO format datetime' })
+  expiresAt?: string;
+}
 
 const createTokenSchema = z.object({
   name: z.string().min(1).max(100),
@@ -42,10 +94,15 @@ const createTokenSchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
+@ApiTags('API Tokens')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/api-tokens')
 @UseGuards(AuthGuard)
 export class ApiTokensController {
   @Get()
+  @ApiOperation({ summary: 'Get all API tokens for a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of API tokens' })
   async getApiTokens(@CurrentUser() user: User, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -89,10 +146,14 @@ export class ApiTokensController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new API token for a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: CreateApiTokenDto })
+  @ApiResponse({ status: 201, description: 'API token created' })
   async createApiToken(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
-    @Body() body: any,
+    @Body() body: CreateApiTokenDto,
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -148,6 +209,10 @@ export class ApiTokensController {
   }
 
   @Delete(':tokenId')
+  @ApiOperation({ summary: 'Delete an API token' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'tokenId', description: 'The token ID' })
+  @ApiResponse({ status: 200, description: 'API token deleted' })
   async deleteApiToken(
     @CurrentUser() user: User,
     @Param('slug') slug: string,

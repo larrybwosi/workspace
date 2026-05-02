@@ -5,15 +5,21 @@ import {
   UseGuards,
   NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 
+@ApiTags('Calls')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/calls')
 @UseGuards(AuthGuard)
 export class CallsController {
   @Get('active')
+  @ApiOperation({ summary: 'Get active calls in a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of active calls' })
   async getActiveCalls(@CurrentUser() user: User, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

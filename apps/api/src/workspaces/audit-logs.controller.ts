@@ -8,16 +8,31 @@ import {
   ForbiddenException,
   Res,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import type { FastifyReply } from 'fastify';
 
+@ApiTags('Audit Logs')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/audit-logs')
 @UseGuards(AuthGuard)
 export class AuditLogsController {
   @Get()
+  @ApiOperation({ summary: 'Get audit logs for a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiResponse({ status: 200, description: 'List of audit logs' })
   async getAuditLogs(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
@@ -103,6 +118,9 @@ export class AuditLogsController {
   }
 
   @Get('export')
+  @ApiOperation({ summary: 'Export audit logs as CSV' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'CSV file' })
   async exportAuditLogs(
     @CurrentUser() user: User,
     @Param('slug') slug: string,

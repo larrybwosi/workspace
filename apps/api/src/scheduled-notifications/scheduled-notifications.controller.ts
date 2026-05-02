@@ -1,4 +1,14 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
@@ -12,10 +22,44 @@ import {
   resumeScheduledNotification,
 } from '@repo/shared/server';
 
+class CreateScheduledNotificationDto {
+  @ApiProperty({ example: 'Reminder' })
+  title: string;
+
+  @ApiProperty({ example: 'Meeting in 10 minutes' })
+  message: string;
+
+  @ApiProperty({ enum: ['custom', 'once', 'daily', 'weekly', 'monthly'], example: 'once' })
+  scheduleType: 'custom' | 'once' | 'daily' | 'weekly' | 'monthly';
+
+  @ApiProperty({ description: 'ISO format datetime' })
+  scheduledFor: string;
+
+  @ApiProperty({ required: false, type: Object })
+  recurrence?: any;
+
+  @ApiProperty({ required: false, enum: ['channel'] })
+  entityType?: 'channel';
+
+  @ApiProperty({ required: false })
+  entityId?: string;
+
+  @ApiProperty({ required: false })
+  linkUrl?: string;
+
+  @ApiProperty({ required: false })
+  metadata?: any;
+}
+
+@ApiTags('Scheduled Notifications')
+@ApiBearerAuth()
 @Controller('scheduled-notifications')
 @UseGuards(AuthGuard)
 export class ScheduledNotificationsController {
   @Get()
+  @ApiOperation({ summary: 'Get scheduled notifications for the current user' })
+  @ApiQuery({ name: 'stats', required: false, description: 'Return stats instead of list' })
+  @ApiResponse({ status: 200, description: 'List of scheduled notifications or stats' })
   async getNotifications(
     @CurrentUser() user: User,
     @Query('stats') stats?: string,
@@ -27,9 +71,12 @@ export class ScheduledNotificationsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a scheduled notification' })
+  @ApiBody({ type: CreateScheduledNotificationDto })
+  @ApiResponse({ status: 201, description: 'Notification scheduled' })
   async createNotification(
     @CurrentUser() user: User,
-    @Body() body: any,
+    @Body() body: CreateScheduledNotificationDto,
   ) {
     const { title, message, scheduleType, scheduledFor, recurrence, entityType, entityId, linkUrl, metadata } = body;
     return createScheduledNotification({
@@ -47,6 +94,19 @@ export class ScheduledNotificationsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a scheduled notification' })
+  @ApiParam({ name: 'id', description: 'The notification ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['pause', 'resume'] },
+        title: { type: 'string' },
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Notification updated' })
   async updateNotification(
     @CurrentUser() user: User,
     @Param('id') id: string,
@@ -62,6 +122,9 @@ export class ScheduledNotificationsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a scheduled notification' })
+  @ApiParam({ name: 'id', description: 'The notification ID' })
+  @ApiResponse({ status: 200, description: 'Notification deleted' })
   async deleteNotification(
     @CurrentUser() user: User,
     @Param('id') id: string,
