@@ -1,6 +1,7 @@
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useWorkspaces } from '@repo/api-client';
 import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function Workspaces() {
   const { data: workspaces, isLoading } = useWorkspaces();
@@ -20,7 +21,7 @@ export default function Workspaces() {
         <Text className="text-2xl font-bold text-on-surface">Workspaces</Text>
         <TouchableOpacity
           className="p-2 bg-primary/10 rounded-full"
-          onPress={() => router.push('/discover')}
+          onPress={() => router.push('/discover' as any)}
         >
           <MaterialIcons name="explore" size={24} color="#2a3439" />
         </TouchableOpacity>
@@ -52,7 +53,7 @@ export default function Workspaces() {
             <Text className="text-xl font-bold mt-4 text-center">No workspaces yet</Text>
             <TouchableOpacity
               className="mt-6 bg-primary px-6 py-3 rounded-lg"
-              onPress={() => router.push('/discover')}
+              onPress={() => router.push('/discover' as any)}
             >
               <Text className="text-white font-bold">Discover Workspaces</Text>
             </TouchableOpacity>
