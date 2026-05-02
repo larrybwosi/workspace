@@ -29,6 +29,7 @@ import {
 import { useSession } from '../../../lib/auth';
 import * as DocumentPicker from 'expo-document-picker';
 import { ReactionPicker } from '../../../components/chat/reaction-picker';
+import { SwipeableMessage } from '../../../components/chat/swipeable-message';
 import { formatTime, realtime, AblyChannels, AblyEvents, extractUserMentions } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
@@ -148,7 +149,7 @@ export default function ChatScreen() {
   const handleSend = async () => {
     if (!messageText.trim() && attachments.length === 0) return;
 
-    let uploadedAttachments = [];
+    const uploadedAttachments = [];
     if (attachments.length > 0) {
       setIsUploading(true);
       try {
@@ -158,12 +159,7 @@ export default function ChatScreen() {
             entityType: 'message',
             entityId: id as string,
           });
-          uploadedAttachments.push({
-            name: result.name,
-            type: result.type,
-            url: result.url,
-            size: result.size,
-          });
+          uploadedAttachments.push(result.data);
         }
       } catch (error) {
         console.error('Upload failed', error);
@@ -204,14 +200,24 @@ export default function ChatScreen() {
         workspaceSlug: workspaceId,
       };
 
-      hasReacted ? removeReaction(payload) : addReaction(payload);
+      if (hasReacted) {
+        removeReaction(payload);
+      } else {
+        addReaction(payload);
+      }
     };
 
     return (
-      <View className="mb-6">
-        <View
-          className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}
-        >
+      <SwipeableMessage
+        onReply={() => {
+          setMessageText(`@${message.user?.name} `);
+        }}
+        onReact={handleLongPress}
+      >
+        <View className="mb-6 px-4">
+          <View
+            className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}
+          >
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
               {message.user?.image || message.user?.avatar ? (
@@ -257,21 +263,22 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        {message.reactions && message.reactions.length > 0 && (
-          <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
-            {message.reactions.map((r: any) => (
-              <TouchableOpacity
-                key={r.emoji}
-                onPress={() => toggleReaction(r.emoji)}
-                className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => u.id === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
-              >
-                <Text className="text-xs">{r.emoji}</Text>
-                <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
+          {message.reactions && message.reactions.length > 0 && (
+            <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
+              {message.reactions.map((r: any) => (
+                <TouchableOpacity
+                  key={r.emoji}
+                  onPress={() => toggleReaction(r.emoji)}
+                  className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => u.id === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+                >
+                  <Text className="text-xs">{r.emoji}</Text>
+                  <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </SwipeableMessage>
     );
   };
 
@@ -319,7 +326,7 @@ export default function ChatScreen() {
         keyExtractor={item => item.id}
         renderItem={renderMessage}
         inverted
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}
+        contentContainerStyle={{ paddingVertical: 24 }}
         onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
         onEndReachedThreshold={0.5}
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null}

@@ -10,6 +10,15 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -17,25 +26,38 @@ import type { User } from '@repo/database';
 import { z } from 'zod';
 import { publishToAbly, AblyChannels } from '@repo/shared/server';
 
+class UpdateMemberRoleDto {
+  @ApiProperty({ enum: ['owner', 'admin', 'member', 'guest'], example: 'admin' })
+  role: 'owner' | 'admin' | 'member' | 'guest';
+}
+
 const updateMemberSchema = z.object({
   role: z.enum(['owner', 'admin', 'member', 'guest']),
 });
 
+@ApiTags('Members')
+@ApiBearerAuth()
 @Controller('workspaces/:slug/members')
 @UseGuards(AuthGuard)
 export class MembersController {
   @Get()
+  @ApiOperation({ summary: 'Get all members of a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of members' })
   async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for initial verification.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -72,22 +94,31 @@ export class MembersController {
   }
 
   @Patch(':memberId')
+  @ApiOperation({ summary: 'Update a workspace member (e.g. change role)' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'memberId', description: 'The member ID' })
+  @ApiBody({ type: UpdateMemberRoleDto })
+  @ApiResponse({ status: 200, description: 'Member updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only owner or admin can update' })
   async updateMember(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('memberId') memberId: string,
-    @Body() body: any
+    @Body() body: UpdateMemberRoleDto
   ) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and requester membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for initial verification.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -144,17 +175,25 @@ export class MembersController {
   }
 
   @Delete(':memberId')
+  @ApiOperation({ summary: 'Remove a member from a workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'memberId', description: 'The member ID' })
+  @ApiResponse({ status: 200, description: 'Member removed successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only owner or admin can remove' })
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and requester membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Combines workspace lookup and membership verification into a single database query.
+     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
+     * 3. Reduces database payload and memory usage for initial verification.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });

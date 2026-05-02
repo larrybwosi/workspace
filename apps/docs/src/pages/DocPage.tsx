@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Sidebar } from '@/components/sidebar';
 import { SyntaxHighlighter, Button, Input, cn } from '@repo/ui';
-import { ChevronRight, MessageCircle, ThumbsUp, ThumbsDown, Info, AlertTriangle, CheckCircle2, Copy, Check } from 'lucide-react';
+import { ChevronRight, MessageCircle, ThumbsUp, ThumbsDown, Info, AlertTriangle, CheckCircle2, Copy, Check, Lightbulb } from 'lucide-react';
 
 const CodeBlock = ({ children, language }: { children: string; language: string }) => {
   const [copied, setCopied] = useState(false);
@@ -176,14 +176,36 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                     Icon = CheckCircle2;
                     title = 'Success';
                     colorClass = 'border-emerald-500/50 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300';
+                  } else if (text.includes('TIP:')) {
+                    Icon = Lightbulb;
+                    title = 'Tip';
+                    colorClass = 'border-purple-500/50 bg-purple-500/5 text-purple-700 dark:text-purple-300';
                   }
+
+                  const cleanChildren = Array.isArray(children)
+                    ? children.map(child => {
+                        if (typeof child === 'string') {
+                          return child.replace(/^(WARNING:|SUCCESS:|TIP:|INFO:)\s*/, '');
+                        }
+                        if (child?.props?.children && typeof child.props.children === 'string') {
+                           return {
+                             ...child,
+                             props: {
+                               ...child.props,
+                               children: child.props.children.replace(/^(WARNING:|SUCCESS:|TIP:|INFO:)\s*/, '')
+                             }
+                           };
+                        }
+                        return child;
+                      })
+                    : children;
 
                   return (
                     <div className={cn('my-6 rounded-lg border-l-4 p-4 flex gap-4', colorClass)}>
                       <Icon className="h-5 w-5 shrink-0 mt-0.5" />
                       <div>
                         <div className="font-bold text-sm uppercase tracking-wider mb-1">{title}</div>
-                        <div className="text-[15px] leading-relaxed opacity-90 prose-p:my-0">{children}</div>
+                        <div className="text-[15px] leading-relaxed opacity-90 prose-p:my-0">{cleanChildren}</div>
                       </div>
                     </div>
                   );
