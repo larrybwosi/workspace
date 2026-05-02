@@ -5,7 +5,7 @@ import { Button } from '../../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/tooltip';
 import { uploadFile, type UploadedFile } from '@repo/shared';
 import { MentionSelector, MentionItem } from '../../shared/mention-selector';
-import { EmojiPicker } from '../../shared/emoji-picker';
+import { CustomEmojiPicker } from '../../shared/custom-emoji-picker';
 import React, { ChangeEvent, useEffect, useRef, useState, useMemo } from 'react';
 import { useChannel } from '@repo/api-client';
 import { useParams } from 'next/navigation';
@@ -359,11 +359,11 @@ export function MessageComposer({
             <div className="flex items-center gap-1">
               <TooltipProvider delayDuration={300}>
                 <div className="flex items-center bg-muted/30 rounded-xl px-1">
-                  <EmojiPicker onEmojiSelect={insertEmoji}>
+                  <CustomEmojiPicker onEmojiSelect={insertEmoji}>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg">
                       <Smile className="h-4 w-4" />
                     </Button>
-                  </EmojiPicker>
+                  </CustomEmojiPicker>
                   <Button
                     variant="ghost"
                     size="icon"
