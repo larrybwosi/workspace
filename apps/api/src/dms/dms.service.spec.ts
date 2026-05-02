@@ -34,10 +34,8 @@ vi.mock('@repo/database', () => ({
 }));
 
 // Mock @repo/shared/server
-const mockGetAblyRest = vi.fn();
-
 vi.mock('@repo/shared/server', () => ({
-  getAblyRest: mockGetAblyRest,
+  getAblyRest: vi.fn(),
   AblyChannels: {
     user: vi.fn((id: string) => `user:${id}`),
     channel: vi.fn((id: string) => `channel:${id}`),
@@ -53,10 +51,12 @@ vi.mock('@repo/shared/server', () => ({
 }));
 
 import { prisma } from '@repo/database';
+import { getAblyRest } from '@repo/shared/server';
 
 describe('DmsService', () => {
   let service: DmsService;
   const mockPrisma = prisma as any;
+  const mockGetAblyRest = getAblyRest as any;
 
   beforeEach(async () => {
     vi.clearAllMocks();

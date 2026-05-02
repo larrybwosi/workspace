@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router';
 import type { ReactNode } from 'react';
-import { ThemeToggle, Input, Button } from '@repo/ui';
-import { Search, MessageSquare } from 'lucide-react';
+import { ThemeToggle, Button } from '@repo/ui';
+import { MessageSquare } from 'lucide-react';
 import { Icons } from './Icons';
+import { GlobalSearch } from './GlobalSearch';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -36,18 +37,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
           <div className="flex flex-1 items-center justify-end space-x-4">
             <div className="w-full flex-1 md:w-auto md:flex-initial">
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
-                <Input
-                  placeholder="Search..."
-                  className="pl-9 h-8 w-full md:w-[240px] lg:w-[320px] bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/30 text-sm"
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1">
-                  <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border border-border/50 bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 flex">
-                    <span>⌘</span>K
-                  </kbd>
-                </div>
-              </div>
+              <GlobalSearch />
             </div>
             <nav className="flex items-center gap-1">
               <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
