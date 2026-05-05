@@ -5,8 +5,21 @@ import { hasPermission, Permissions } from '../common/permissions';
 @Injectable()
 export class V10GuildsService {
   async getChannels(bot: any, guildId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses 'select' to fetch only required fields for Discord channel objects.
+     * Reduces database payload and memory usage for guild channel listings.
+     */
     const channels = await prisma.channel.findMany({
       where: { workspaceId: guildId },
+      select: {
+        id: true,
+        type: true,
+        workspaceId: true,
+        name: true,
+        description: true,
+        parentId: true,
+      },
     });
 
     return channels.map((c) => ({
