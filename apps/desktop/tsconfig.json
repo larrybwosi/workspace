@@ -4,11 +4,7 @@
     "types": ["node"],
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -21,39 +17,20 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["node"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@repo/ui": [
-        "../../packages/ui/src/index.ts"
-      ],
-      "@repo/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@repo/shared": [
-        "../../packages/shared/index.ts"
-      ],
-      "@repo/shared/*": [
-        "../../packages/shared/src/*"
-      ],
-      "next/navigation": [
-        "./src/hooks/use-router-shim.ts"
-      ],
-      "next/dynamic": [
-        "./src/hooks/use-dynamic-shim.tsx"
-      ]
+      "@/*": ["./src/*"],
+      "@repo/ui": ["../../packages/ui/src/index.ts"],
+      "@repo/ui/*": ["../../packages/ui/src/*"],
+      "@repo/shared": ["../../packages/shared/index.ts"],
+      "@repo/shared/*": ["../../packages/shared/src/*"],
+      "next/navigation": ["./src/hooks/use-router-shim.ts"],
+      "next/dynamic": ["./src/hooks/use-dynamic-shim.tsx"],
     },
-    "ignoreDeprecations": "6.0",
-    "types": ["node"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
-      "path": "./tsconfig.node.json"
-    }
-  ]
+      "path": "./tsconfig.node.json",
+    },
+  ],
 }
