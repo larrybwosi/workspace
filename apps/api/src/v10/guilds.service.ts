@@ -5,8 +5,21 @@ import { hasPermission, Permissions } from '../common/permissions';
 @Injectable()
 export class V10GuildsService {
   async getChannels(bot: any, guildId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses 'select' to fetch only required fields for Discord channel objects.
+     * Reduces database payload and memory usage for guild channel listings.
+     */
     const channels = await prisma.channel.findMany({
       where: { workspaceId: guildId },
+      select: {
+        id: true,
+        type: true,
+        workspaceId: true,
+        name: true,
+        description: true,
+        parentId: true,
+      },
     });
 
     return channels.map((c) => ({
@@ -28,13 +41,30 @@ export class V10GuildsService {
   async getMembers(bot: any, guildId: string, query: { limit?: number; after?: string }) {
     const { limit = 50, after } = query;
 
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces broad 'include' with targeted 'select' on the user relation.
+     * Fetches only necessary identity fields (id, name, avatar, isBot).
+     * Expected impact: Reduces JSON payload size and API memory overhead for large member lists.
+     */
     const members = await prisma.workspaceMember.findMany({
       where: {
         workspaceId: guildId,
         ...(after && { id: { gt: after } }),
       },
       take: limit,
-      include: { user: true },
+      select: {
+        joinedAt: true,
+        role: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            isBot: true,
+          },
+        },
+      },
     });
 
     return members.map((m) => ({
@@ -111,19 +141,43 @@ export class V10GuildsService {
   }
 
   async getGuild(bot: any, guildId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Uses 'select' and '_count' to fetch workspace metadata and member totals.
+     * 2. Replaces full O(N) member list fetch with targeted queries.
+     * 3. Presence count is retrieved via a separate focused count query.
+     * Expected impact: Drastically reduces API memory usage and DB load for large guilds (O(1) instead of O(N)).
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { id: guildId },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+        ownerId: true,
+        slug: true,
+        description: true,
         members: {
-          include: { user: true },
+          where: { userId: bot.id },
+          select: { userId: true },
+        },
+        _count: {
+          select: { members: true },
         },
       },
     });
 
     if (!workspace) throw new NotFoundException('Unknown Guild');
 
-    const botMember = workspace.members.find((m) => m.userId === bot.id);
-    if (!botMember) throw new ForbiddenException('Forbidden');
+    const isMember = workspace.members.length > 0;
+    if (!isMember) throw new ForbiddenException('Forbidden');
+
+    const approximatePresenceCount = await prisma.workspaceMember.count({
+      where: {
+        workspaceId: guildId,
+        user: { status: 'online' },
+      },
+    });
 
     return {
       id: workspace.id,
@@ -151,8 +205,8 @@ export class V10GuildsService {
       premium_subscription_count: 0,
       preferred_locale: 'en-US',
       public_updates_channel_id: null,
-      approximate_member_count: workspace.members.length,
-      approximate_presence_count: workspace.members.filter((m) => m.user.status === 'online').length,
+      approximate_member_count: workspace._count.members,
+      approximate_presence_count: approximatePresenceCount,
       nsfw_level: 0,
       stickers: [],
       premium_progress_bar_enabled: false,
