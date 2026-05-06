@@ -5,18 +5,23 @@ const getBaseURL = () => {
     if (process.env.NEXT_PUBLIC_API_URL) {
       return `${process.env.NEXT_PUBLIC_API_URL}/api`;
     }
-    if ((process.env as any).EXPO_PUBLIC_API_URL) {
-      return `${(process.env as any).EXPO_PUBLIC_API_URL}/api`;
+    if ((process.env as Record<string, string | undefined>).EXPO_PUBLIC_API_URL) {
+      return `${(process.env as Record<string, string | undefined>).EXPO_PUBLIC_API_URL}/api`;
     }
   }
 
-  const global = globalThis as any;
-  if (global.import && global.import.meta && global.import.meta.env) {
-    if (global.import.meta.env.NEXT_PUBLIC_API_URL) {
-      return `${global.import.meta.env.NEXT_PUBLIC_API_URL}/api`;
+  const global = globalThis as Record<string, unknown>;
+  if (
+    global.import &&
+    (global.import as Record<string, unknown>).meta &&
+    ((global.import as Record<string, unknown>).meta as Record<string, unknown>).env
+  ) {
+    const env = ((global.import as Record<string, unknown>).meta as Record<string, unknown>).env as Record<string, string | undefined>;
+    if (env.NEXT_PUBLIC_API_URL) {
+      return `${env.NEXT_PUBLIC_API_URL}/api`;
     }
-    if (global.import.meta.env.EXPO_PUBLIC_API_URL) {
-      return `${global.import.meta.env.EXPO_PUBLIC_API_URL}/api`;
+    if (env.EXPO_PUBLIC_API_URL) {
+      return `${env.EXPO_PUBLIC_API_URL}/api`;
     }
   }
 

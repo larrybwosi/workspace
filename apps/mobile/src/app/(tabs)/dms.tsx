@@ -5,7 +5,7 @@ import { useSession } from '../../lib/auth';
 
 export default function DMs() {
   const { data: conversations, isLoading } = useDMConversations();
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession() as { data: { user?: { id: string } } | null };
   const router = useRouter();
 
   if (isLoading) {
@@ -24,7 +24,7 @@ export default function DMs() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           // Find the other user in the conversation
-          const otherUser = item.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
+          const otherUser = item.participants?.find((p: { user: { id: string } }) => p.user.id !== session?.data?.user?.id)?.user;
 
           return (
             <TouchableOpacity

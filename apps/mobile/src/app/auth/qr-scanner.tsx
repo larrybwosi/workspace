@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ActivityIndicator, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
@@ -51,9 +51,10 @@ export default function QRScannerScreen() {
       await apiClient.post('/auth/device/qr/authorize', { sessionId });
       Alert.alert('Success', 'Login authorized successfully!');
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Authorization failed', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to authorize login. The QR code might have expired.');
+      const message = (error as Record<string, { data?: { message?: string } }>)?.response?.data?.message || 'Failed to authorize login. The QR code might have expired.';
+      Alert.alert('Error', message);
       setScanned(false);
       setShowConfirm(false);
     } finally {

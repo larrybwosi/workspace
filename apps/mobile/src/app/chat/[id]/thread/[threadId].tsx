@@ -17,7 +17,6 @@ import {
   useMessages,
   useReplyToMessage,
   useChannels,
-  useWorkspaces,
   messageKeys,
   useAddReaction,
   useRemoveReaction
@@ -26,11 +25,14 @@ import { useSession } from '../../../../lib/auth';
 import { ReactionPicker } from '../../../../components/chat/reaction-picker';
 import { formatTime, getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import type { Message, User } from '@repo/types';
+
+type MessageWithUser = Message & { user?: User };
 
 export default function ThreadScreen() {
   const { id, threadId, workspaceId } = useLocalSearchParams<{ id: string; threadId: string; workspaceId?: string }>();
   const router = useRouter();
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession() as { data: { user?: { id: string } } | null };
   const [messageText, setMessageText] = useState('');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
 
@@ -45,7 +47,6 @@ export default function ThreadScreen() {
   const { mutate: addReaction } = useAddReaction();
   const { mutate: removeReaction } = useRemoveReaction();
   const { data: channels } = useChannels();
-  const { data: workspaces } = useWorkspaces();
   const queryClient = useQueryClient();
 
   // Ably real-time integration
@@ -73,12 +74,9 @@ export default function ThreadScreen() {
     };
   }, [id, queryClient, workspaceId, threadId]);
 
-  const channel = channels?.find((c: any) => c.id === id);
-  const workspace = workspaces?.find((w: any) => w.id === workspaceId);
+  const channel = channels?.find((c: { id: string, name: string }) => c.id === id);
 
-  const messages = messagesData?.pages.flatMap((page: any) => page.messages) || [];
-  const parentMessage = messages.find((m: any) => m.id === threadId);
-  const replies = messages.filter((m: any) => m.id !== threadId);
+  const messages = messagesData?.pages.flatMap((page: { messages: unknown[] }) => page.messages as MessageWithUser[]) || [];
 
   const handleSend = () => {
     if (!messageText.trim()) return;
@@ -92,8 +90,8 @@ export default function ThreadScreen() {
     setMessageText('');
   };
 
-  const renderMessage = ({ item: message }: { item: any }) => {
-    const isMe = message.userId === session?.user?.id;
+  const renderMessage = ({ item: message }: { item: MessageWithUser }) => {
+    const isMe = message.userId === session?.data?.user?.id;
     const isParent = message.id === threadId;
 
     const handleLongPress = () => {
@@ -101,7 +99,7 @@ export default function ThreadScreen() {
     };
 
     const toggleReaction = (emoji: string) => {
-        const hasReacted = message.reactions?.some((r: any) => r.emoji === emoji && r.users?.some((u: any) => u.id === session?.user?.id));
+        const hasReacted = message.reactions?.some((r) => r.emoji === emoji && (r.users as unknown as { id: string }[])?.some((u) => u.id === session?.data?.user?.id));
 
         if (hasReacted) {
             removeReaction({
@@ -153,11 +151,11 @@ export default function ThreadScreen() {
         {/* Reactions Display */}
         {message.reactions && message.reactions.length > 0 && (
             <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
-                {message.reactions.map((r: any) => (
+                {message.reactions.map((r) => (
                     <TouchableOpacity
                         key={r.emoji}
                         onPress={() => toggleReaction(r.emoji)}
-                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => u.id === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${(r.users as unknown as { id: string }[])?.some((u) => u.id === session?.data?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
                     >
                         <Text className="text-xs">{r.emoji}</Text>
                         <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
