@@ -21,19 +21,15 @@ export function useMessages(
 ) {
   return useInfiniteQuery({
     queryKey: messageKeys.list(channelId, workspaceSlug, threadId || contextId),
-    queryFn: async ({ pageParam }: { pageParam: any }) => {
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? "/v2" : "";
 
-      let url = "";
-      if (isV2 && workspaceSlug) {
-        // Use V2 workspace-scoped path
-        url = `${prefix}/workspaces/${workspaceSlug}/messages`;
-      } else {
-        url = workspaceSlug
+      const url = isV2 && workspaceSlug
+        ? `${prefix}/workspaces/${workspaceSlug}/messages`
+        : workspaceSlug
           ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages`
           : `/channels/${channelId}/messages`;
-      }
 
       const { data } = await apiClient.get<{ messages: Message[]; nextCursor: string | null }>(url, {
         params: { cursor: pageParam, limit: 50, threadId, contextId, channelId },
@@ -61,14 +57,11 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
     }) => {
       const prefix = isV2 ? "/v2" : "";
 
-      let url = "";
-      if (isV2 && workspaceSlug) {
-        url = `${prefix}/workspaces/${workspaceSlug}/messages`;
-      } else {
-        url = workspaceSlug
+      const url = isV2 && workspaceSlug
+        ? `${prefix}/workspaces/${workspaceSlug}/messages`
+        : workspaceSlug
           ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages`
           : `/channels/${channelId}/messages`;
-      }
       const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
@@ -139,21 +132,21 @@ export function useReplyToMessage(workspaceSlug?: string) {
 // Mark messages as read mutation (Batch)
 // We use a simple debounce/buffer mechanism to avoid excessive API calls
 const readBuffer: { [channelId: string]: Set<string> } = {};
-const readTimeout: { [channelId: string]: any } = {};
-const readResolvers: { [channelId: string]: { resolve: (value: any) => void; reject: (reason: any) => void }[] } = {};
+const readTimeout: { [channelId: string]: ReturnType<typeof setTimeout> } = {};
+const readResolvers: { [channelId: string]: { resolve: (value: { channelId: string; messageIds: string[] }) => void; reject: (reason: unknown) => void }[] } = {};
 
 export function useMarkMessagesAsRead(workspaceSlug?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }) => {
+    mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }): Promise<{ channelId: string; messageIds: string[] }> => {
       // Buffer messages to be marked as read
       if (!readBuffer[channelId]) readBuffer[channelId] = new Set();
       messageIds.forEach(id => readBuffer[channelId].add(id));
 
       if (!readResolvers[channelId]) readResolvers[channelId] = [];
 
-      return new Promise((resolve, reject) => {
+      return new Promise<{ channelId: string; messageIds: string[] }>((resolve, reject) => {
         readResolvers[channelId].push({ resolve, reject });
 
         if (readTimeout[channelId]) clearTimeout(readTimeout[channelId]);
@@ -178,20 +171,21 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
         }, 1000); // 1 second buffer
       });
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: { channelId: string; messageIds: string[] }) => {
       // Optimistically update query data to mark messages as read in the UI
       const { channelId, messageIds } = data;
       const queryKey = workspaceSlug
         ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
         : messageKeys.list(channelId);
 
-      queryClient.setQueriesData({ queryKey }, (oldData: any) => {
-        if (!oldData?.pages) return oldData;
+      queryClient.setQueriesData({ queryKey }, (oldData: unknown) => {
+        if (!oldData || typeof oldData !== 'object' || !('pages' in oldData)) return oldData;
+        const typedOldData = oldData as { pages: { messages: Message[] }[] };
         return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
+          ...typedOldData,
+          pages: typedOldData.pages.map((page) => ({
             ...page,
-            messages: page.messages.map((m: any) =>
+            messages: page.messages.map((m) =>
               messageIds.includes(m.id) ? { ...m, readByCurrentUser: true } : m
             ),
           })),
@@ -264,9 +258,9 @@ export function useSendDMMessage() {
       dmId: string;
       content: string;
       replyToId?: string;
-      attachments?: any[];
+      attachments?: unknown[];
     }) => {
-      const { data } = await apiClient.post(`/dms/${dmId}/messages`, {
+      const { data } = await apiClient.post<Message>(`/dms/${dmId}/messages`, {
         content,
         replyToId,
         attachments,

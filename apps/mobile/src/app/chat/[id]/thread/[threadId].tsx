@@ -25,12 +25,14 @@ import { useSession } from '../../../../lib/auth';
 import { ReactionPicker } from '../../../../components/chat/reaction-picker';
 import { formatTime, realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { Message, Channel } from '@repo/types';
+import type { Message, User } from '@repo/types';
+
+type MessageWithUser = Message & { user?: User };
 
 export default function ThreadScreen() {
   const { id, threadId, workspaceId } = useLocalSearchParams<{ id: string; threadId: string; workspaceId?: string }>();
   const router = useRouter();
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession() as { data: { user?: { id: string } } | null };
   const [messageText, setMessageText] = useState('');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
 
@@ -70,9 +72,9 @@ export default function ThreadScreen() {
     };
   }, [id, queryClient, workspaceId, threadId]);
 
-  const channel = (channels as Channel[])?.find((c) => c.id === id);
+  const channel = channels?.find((c: { id: string, name: string }) => c.id === id);
 
-  const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
+  const messages = messagesData?.pages.flatMap((page: { messages: unknown[] }) => page.messages as MessageWithUser[]) || [];
 
   const handleSend = () => {
     if (!messageText.trim()) return;
@@ -86,8 +88,8 @@ export default function ThreadScreen() {
     setMessageText('');
   };
 
-  const renderMessage = ({ item: message }: { item: Message }) => {
-    const isMe = message.userId === (session?.user?.id || (session as any)?.user?.id);
+  const renderMessage = ({ item: message }: { item: MessageWithUser }) => {
+    const isMe = message.userId === session?.data?.user?.id;
     const isParent = message.id === threadId;
 
     const handleLongPress = () => {
@@ -95,7 +97,7 @@ export default function ThreadScreen() {
     };
 
     const toggleReaction = (emoji: string) => {
-        const hasReacted = message.reactions?.some((r) => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id));
+        const hasReacted = message.reactions?.some((r) => r.emoji === emoji && (r.users as unknown as { id: string }[])?.some((u) => u.id === session?.data?.user?.id));
 
         if (hasReacted) {
             removeReaction({
@@ -151,7 +153,7 @@ export default function ThreadScreen() {
                     <TouchableOpacity
                         key={r.emoji}
                         onPress={() => toggleReaction(r.emoji)}
-                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => (u.id || u) === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${(r.users as unknown as { id: string }[])?.some((u) => u.id === session?.data?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
                     >
                         <Text className="text-xs">{r.emoji}</Text>
                         <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>

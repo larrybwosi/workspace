@@ -27,19 +27,20 @@ export function useAddReaction() {
 
       const previousMessages = queryClient.getQueryData(messageKeys.list(channelId))
 
-      queryClient.setQueryData(messageKeys.list(channelId), (old: any) => {
+      queryClient.setQueryData(messageKeys.list(channelId), (old: unknown) => {
         if (!old) return old
+        const typedOld = old as { pages: { messages: (Record<string, unknown> & { id: string, reactions: { emoji: string, count: number }[] })[] }[] };
         return {
-          ...old,
-          pages: old.pages.map((page: any) => ({
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
             ...page,
-            messages: page.messages.map((msg: any) => {
+            messages: page.messages.map((msg) => {
               if (msg.id === messageId) {
-                const existingReaction = msg.reactions?.find((r: any) => r.emoji === emoji)
+                const existingReaction = msg.reactions?.find((r: { emoji: string }) => r.emoji === emoji)
                 if (existingReaction) {
                   return {
                     ...msg,
-                    reactions: msg.reactions.map((r: any) => (r.emoji === emoji ? { ...r, count: r.count + 1 } : r)),
+                    reactions: msg.reactions.map((r: { emoji: string, count: number }) => (r.emoji === emoji ? { ...r, count: r.count + 1 } : r)),
                   }
                 }
                 return {

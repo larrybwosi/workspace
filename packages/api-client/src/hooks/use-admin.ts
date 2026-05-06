@@ -53,7 +53,7 @@ export function useAdminAssets(type: string) {
 export function useCreateAdminAsset() {
     const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: async ({ type, data }: { type: string; data: any }) => {
+        mutationFn: async ({ type, data }: { type: string; data: unknown }) => {
             const response = await apiClient.post("/admin/assets", { type, data })
             return response.data
         },
@@ -67,7 +67,7 @@ export function useCreateAdminAsset() {
 export function useUpdateAdminAsset() {
     const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: async ({ type, id, data }: { type: string; id: string; data: any }) => {
+        mutationFn: async ({ type, id, data }: { type: string; id: string; data: unknown }) => {
             const response = await apiClient.patch("/admin/assets", { type, id, data })
             return response.data
         },

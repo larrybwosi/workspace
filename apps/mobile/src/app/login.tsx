@@ -27,7 +27,8 @@ export default function Login() {
       } else {
         router.replace("/");
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -67,7 +68,7 @@ export default function Login() {
 
       <View className="flex-row mt-6">
         <Text className="text-gray-600">Don't have an account? </Text>
-        <TouchableOpacity onPress={() => router.push("/signup" as any)}>
+        <TouchableOpacity onPress={() => router.push("/signup")}>
           <Text className="text-blue-600 font-semibold">Sign Up</Text>
         </TouchableOpacity>
       </View>
