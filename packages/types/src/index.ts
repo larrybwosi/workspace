@@ -52,6 +52,7 @@ export interface MessageMetadata {
 export interface Message {
   id: string;
   userId: string;
+  user?: User;
   content: string;
   timestamp: Date;
   reactions: Reaction[];
