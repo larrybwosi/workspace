@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,12 +19,11 @@ import {
   useChannels,
   useWorkspaces,
   useDMConversations,
-  useWorkspaceMembers,
   useWorkspaceChannels,
   messageKeys,
   useAddReaction,
   useRemoveReaction,
-  useUploadFile,
+  useStorageUpload,
 } from '@repo/api-client';
 import { useSession } from '../../../lib/auth';
 import * as DocumentPicker from 'expo-document-picker';
@@ -33,6 +32,7 @@ import { SwipeableMessage } from '../../../components/chat/swipeable-message';
 import { formatTime, realtime, AblyChannels, AblyEvents, extractUserMentions } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
+import { Message, Channel } from '@repo/types';
 
 export default function ChatScreen() {
   const {
@@ -46,7 +46,7 @@ export default function ChatScreen() {
 
   // Combined State
   const [messageText, setMessageText] = useState('');
-  const [attachments, setAttachments] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<{ uri: string; name: string; type: string }[]>([]);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -55,10 +55,10 @@ export default function ChatScreen() {
   const { mutate: sendMessage } = useSendMessage(workspaceId);
   const { mutate: addReaction } = useAddReaction();
   const { mutate: removeReaction } = useRemoveReaction();
-  const { mutateAsync: uploadFile } = useUploadFile();
+  const { mutateAsync: uploadFile } = useStorageUpload();
 
   const { data: workspaces } = useWorkspaces();
-  const activeWorkspace = workspaces?.find((w: any) => w.id === workspaceId);
+  const activeWorkspace = (workspaces as any[])?.find((w) => w.id === workspaceId);
 
   const { data: channels } = useChannels();
   const { data: workspaceChannels } = useWorkspaceChannels(activeWorkspace?.slug);
@@ -90,7 +90,7 @@ export default function ChatScreen() {
     };
   }, [id, isDM, queryClient, workspaceId]);
 
-  const messages = messagesData?.pages.flatMap((page: any) => page.messages) || [];
+  const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -123,19 +123,17 @@ export default function ChatScreen() {
         setIsUploading(true);
         const asset = result.assets[0];
 
-        // Convert to File object for the hook
-        const file = new File([await (await fetch(asset.uri)).blob()], asset.name, { type: asset.mimeType });
-
-        await uploadFile({
-          file,
-          entityType: 'message',
-          entityId: id as string,
+        const uploadedFile = await uploadFile({
+          uri: asset.uri,
+          name: asset.name,
+          type: asset.mimeType || 'application/octet-stream',
         });
 
         sendMessage({
           channelId: id as string,
-          content: `${messageText}\n\n📎 Attached: ${asset.name}`,
+          content: messageText,
           mentions: [],
+          attachments: [uploadedFile],
         });
 
         setIsUploading(false);
@@ -155,11 +153,11 @@ export default function ChatScreen() {
       try {
         for (const attachment of attachments) {
           const result = await uploadFile({
-            file: attachment,
-            entityType: 'message',
-            entityId: id as string,
+            uri: attachment.uri,
+            name: attachment.name,
+            type: attachment.type,
           });
-          uploadedAttachments.push(result.data);
+          uploadedAttachments.push(result);
         }
       } catch (error) {
         console.error('Upload failed', error);
@@ -181,8 +179,8 @@ export default function ChatScreen() {
     setAttachments([]);
   };
 
-  const renderMessage = ({ item: message }: { item: any }) => {
-    const isMe = message.userId === session?.user?.id;
+  const renderMessage = ({ item: message }: { item: Message }) => {
+    const isMe = message.userId === (session?.user?.id || (session as any)?.user?.id);
 
     const handleLongPress = () => {
       setSelectedMessageId(message.id);
@@ -190,7 +188,7 @@ export default function ChatScreen() {
 
     const toggleReaction = (emoji: string) => {
       const hasReacted = message.reactions?.some(
-        (r: any) => r.emoji === emoji && r.users?.some((u: any) => u.id === session?.user?.id)
+        (r) => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id)
       );
 
       const payload = {
@@ -220,8 +218,8 @@ export default function ChatScreen() {
           >
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-              {message.user?.image || message.user?.avatar ? (
-                <Image source={{ uri: message.user.image || message.user.avatar }} className="w-full h-full" />
+              {(message.user as any)?.image || (message.user as any)?.avatar ? (
+                <Image source={{ uri: (message.user as any).image || (message.user as any).avatar }} className="w-full h-full" />
               ) : (
                 <View className="w-full h-full items-center justify-center bg-primary/10">
                   <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
@@ -236,7 +234,7 @@ export default function ChatScreen() {
               activeOpacity={0.8}
               className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}
             >
-              {message.attachments?.map((att: any, index: number) => (
+              {message.attachments?.map((att, index) => (
                 <View key={index} className="mb-2">
                   {att.type?.startsWith('image/') ? (
                     <Image source={{ uri: att.url }} className="w-48 h-32 rounded-lg" />
@@ -265,11 +263,11 @@ export default function ChatScreen() {
 
           {message.reactions && message.reactions.length > 0 && (
             <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
-              {message.reactions.map((r: any) => (
+              {message.reactions.map((r) => (
                 <TouchableOpacity
                   key={r.emoji}
                   onPress={() => toggleReaction(r.emoji)}
-                  className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => u.id === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+                  className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => (u.id || u) === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
                 >
                   <Text className="text-xs">{r.emoji}</Text>
                   <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
@@ -284,11 +282,11 @@ export default function ChatScreen() {
 
   const getTitle = () => {
     if (isDM) {
-      const dmData = dms?.find((d: any) => d.id === id);
-      const otherUser = dmData?.user || dmData?.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
+      const dmData = (dms as any[])?.find((d) => d.id === id);
+      const otherUser = (dmData as any)?.user || (dmData as any)?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
       return otherUser?.name || 'Direct Message';
     }
-    const currentChannel = workspaceChannels?.find((c: any) => c.id === id) || channels?.find((c: any) => c.id === id);
+    const currentChannel = (workspaceChannels as Channel[])?.find((c) => c.id === id) || (channels as Channel[])?.find((c) => c.id === id);
     return currentChannel?.name || 'Chat';
   };
 
