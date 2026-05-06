@@ -26,12 +26,14 @@ const getBaseURL = () => {
   }
 
   // Check for Next.js public env specifically if not in process.env yet (sometimes during build)
-  if (global.process && global.process.env) {
-    if (global.process.env.NEXT_PUBLIC_API_URL) {
-      return `${global.process.env.NEXT_PUBLIC_API_URL}/api`;
+  const globalProcess = global.process as Record<string, any> | undefined;
+  if (globalProcess && globalProcess.env) {
+    const env = globalProcess.env as Record<string, string | undefined>;
+    if (env.NEXT_PUBLIC_API_URL) {
+      return `${env.NEXT_PUBLIC_API_URL}/api`;
     }
-    if (global.process.env.EXPO_PUBLIC_API_URL) {
-      return `${global.process.env.EXPO_PUBLIC_API_URL}/api`;
+    if (env.EXPO_PUBLIC_API_URL) {
+      return `${env.EXPO_PUBLIC_API_URL}/api`;
     }
   }
 

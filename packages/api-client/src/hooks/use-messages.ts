@@ -133,20 +133,20 @@ export function useReplyToMessage(workspaceSlug?: string) {
 // We use a simple debounce/buffer mechanism to avoid excessive API calls
 const readBuffer: { [channelId: string]: Set<string> } = {};
 const readTimeout: { [channelId: string]: ReturnType<typeof setTimeout> } = {};
-const readResolvers: { [channelId: string]: { resolve: (value: unknown) => void; reject: (reason: unknown) => void }[] } = {};
+const readResolvers: { [channelId: string]: { resolve: (value: { channelId: string; messageIds: string[] }) => void; reject: (reason: unknown) => void }[] } = {};
 
 export function useMarkMessagesAsRead(workspaceSlug?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }) => {
+    mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }): Promise<{ channelId: string; messageIds: string[] }> => {
       // Buffer messages to be marked as read
       if (!readBuffer[channelId]) readBuffer[channelId] = new Set();
       messageIds.forEach(id => readBuffer[channelId].add(id));
 
       if (!readResolvers[channelId]) readResolvers[channelId] = [];
 
-      return new Promise((resolve, reject) => {
+      return new Promise<{ channelId: string; messageIds: string[] }>((resolve, reject) => {
         readResolvers[channelId].push({ resolve, reject });
 
         if (readTimeout[channelId]) clearTimeout(readTimeout[channelId]);
