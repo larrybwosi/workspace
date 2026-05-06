@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, dev ]
 
 env:
   PG_U: runner_u
@@ -121,10 +121,102 @@ jobs:
         path: playwright-report/
         retention-days: 30
 
+  mobile-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Build Shared Packages
+        run: |
+          pnpm --filter @repo/shared build || true
+          pnpm --filter @repo/api-client build || true
+      - name: Lint and Typecheck
+        run: |
+          pnpm --filter mobile run lint
+          pnpm --filter mobile run type-check
+      - name: Prebuild Android
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL || 'https://api.skryme.com' }}
+        run: npx expo prebuild --platform android
+      - name: Assemble Debug APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Run E2E Tests
+        run: pnpm --filter mobile run test:e2e
+
+  desktop-verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: ubuntu-latest
+          - host: windows-latest
+          - host: macos-latest
+    runs-on: ${{ matrix.settings.host }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install dependencies (ubuntu only)
+        if: matrix.settings.host == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Build Shared Packages
+        run: |
+          pnpm --filter @repo/shared build || true
+          pnpm --filter @repo/api-client build || true
+      - name: Lint and Typecheck
+        if: matrix.settings.host == 'ubuntu-latest'
+        run: |
+          pnpm --filter desktop run lint
+          pnpm --filter desktop run type-check
+      - name: Verify Compilation
+        uses: tauri-apps/tauri-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --debug
+          projectPath: apps/desktop
+
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, e2e-tests]
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, mobile-verify, desktop-verify]
     permissions:
       contents: write
       pull-requests: write
@@ -194,3 +286,109 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  mobile-release:
+    needs: [version]
+    if: needs.version.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Build Shared Packages
+        run: |
+          pnpm --filter @repo/shared build || true
+          pnpm --filter @repo/api-client build || true
+      - name: Prebuild Android
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL || 'https://api.skryme.com' }}
+        run: npx expo prebuild --platform android
+      - name: Build Release APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(node -p "require('./apps/mobile/package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          files: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  desktop-release:
+    needs: [version]
+    if: needs.version.outputs.published == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: ubuntu-latest
+          - host: windows-latest
+          - host: macos-latest
+    runs-on: ${{ matrix.settings.host }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install dependencies (ubuntu only)
+        if: matrix.settings.host == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Build Shared Packages
+        run: |
+          pnpm --filter @repo/shared build || true
+          pnpm --filter @repo/api-client build || true
+      - name: Get Version
+        id: get_version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./apps/desktop/package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Build Release
+        uses: tauri-apps/tauri-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: v${{ steps.get_version.outputs.VERSION }}
+          args: ${{ matrix.settings.host == 'windows-latest' && '--bundles msi' || '' }}
