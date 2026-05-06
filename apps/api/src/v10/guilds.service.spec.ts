@@ -60,6 +60,7 @@ describe('V10GuildsService', () => {
     it('should fetch members with select optimization', async () => {
       const mockMembers = [
         {
+          id: 'wm1',
           joinedAt: new Date(),
           role: 'member',
           user: { id: 'u1', name: 'user1', avatar: 'av1', isBot: false },
@@ -73,6 +74,7 @@ describe('V10GuildsService', () => {
         where: { workspaceId: 'guild1' },
         take: 10,
         select: {
+          id: true,
           joinedAt: true,
           role: true,
           user: {
