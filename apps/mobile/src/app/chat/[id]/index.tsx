@@ -23,7 +23,7 @@ import {
   messageKeys,
   useAddReaction,
   useRemoveReaction,
-  useUploadFile,
+  useStorageUpload,
 } from '@repo/api-client';
 import { useSession } from '../../../lib/auth';
 import * as DocumentPicker from 'expo-document-picker';
@@ -57,7 +57,7 @@ export default function ChatScreen() {
   const { mutate: sendMessage } = useSendMessage(workspaceId);
   const { mutate: addReaction } = useAddReaction();
   const { mutate: removeReaction } = useRemoveReaction();
-  const { mutateAsync: uploadFile } = useUploadFile();
+  const { mutateAsync: uploadFile } = useStorageUpload();
 
   const { data: workspaces } = useWorkspaces();
   const activeWorkspace = workspaces?.find((w: { id: string, name: string, slug: string }) => w.id === workspaceId);
@@ -125,19 +125,17 @@ export default function ChatScreen() {
         setIsUploading(true);
         const asset = result.assets[0];
 
-        // Convert to File object for the hook
-        const file = new File([await (await fetch(asset.uri)).blob()], asset.name, { type: asset.mimeType });
-
-        await uploadFile({
-          file,
-          entityType: 'message',
-          entityId: id as string,
+        const uploadedFile = await uploadFile({
+          uri: asset.uri,
+          name: asset.name,
+          type: asset.mimeType || 'application/octet-stream',
         });
 
         sendMessage({
           channelId: id as string,
-          content: `${messageText}\n\n📎 Attached: ${asset.name}`,
+          content: messageText,
           mentions: [],
+          attachments: [uploadedFile],
         });
 
         setIsUploading(false);
@@ -157,11 +155,11 @@ export default function ChatScreen() {
       try {
         for (const attachment of attachments) {
           const result = await uploadFile({
-            file: attachment,
-            entityType: 'message',
-            entityId: id as string,
+            uri: attachment.uri,
+            name: attachment.name,
+            type: attachment.type,
           });
-          uploadedAttachments.push(result.data);
+          uploadedAttachments.push(result);
         }
       } catch (error) {
         console.error('Upload failed', error);
@@ -222,8 +220,8 @@ export default function ChatScreen() {
           >
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-              {message.user?.image || message.user?.avatar ? (
-                <Image source={{ uri: message.user.image || message.user.avatar }} className="w-full h-full" />
+              {(message.user as any)?.image || (message.user as any)?.avatar ? (
+                <Image source={{ uri: (message.user as any).image || (message.user as any).avatar }} className="w-full h-full" />
               ) : (
                 <View className="w-full h-full items-center justify-center bg-primary/10">
                   <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>

@@ -11,4 +11,4 @@ export const useRouter = () => {
   };
 };
 export const usePathname = () => useLocation().pathname;
-export const useSearchParams = useRRSearchParams;
+export const useSearchParams = () => useRRSearchParams()[0];

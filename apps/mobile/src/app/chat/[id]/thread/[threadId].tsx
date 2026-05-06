@@ -23,7 +23,7 @@ import {
 } from '@repo/api-client';
 import { useSession } from '../../../../lib/auth';
 import { ReactionPicker } from '../../../../components/chat/reaction-picker';
-import { formatTime, getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { formatTime, realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Message, User } from '@repo/types';
 
@@ -51,26 +51,24 @@ export default function ThreadScreen() {
 
   // Ably real-time integration
   useEffect(() => {
-    const ably = getAblyClient();
-    if (!ably || !id) return;
+    if (!id) return;
 
     const channelName = AblyChannels.channel(id);
-    const ablyChannel = ably.channels.get(channelName);
 
     const handleMessage = () => {
-        queryClient.invalidateQueries({
-          queryKey: messageKeys.list(id as string, workspaceId, threadId)
-        });
+      queryClient.invalidateQueries({
+        queryKey: messageKeys.list(id as string, workspaceId, threadId),
+      });
     };
 
-    ablyChannel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
 
     return () => {
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
     };
   }, [id, queryClient, workspaceId, threadId]);
 
@@ -123,8 +121,8 @@ export default function ThreadScreen() {
         <View className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}>
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-              {message.user?.image ? (
-                <Image source={{ uri: message.user.image }} className="w-full h-full" />
+              {(message.user as any)?.image ? (
+                <Image source={{ uri: (message.user as any).image }} className="w-full h-full" />
               ) : (
                 <View className="w-full h-full items-center justify-center bg-primary/10">
                   <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
@@ -203,7 +201,7 @@ export default function ThreadScreen() {
       </View>
 
       <FlatList
-        data={messages}
+        data={messages as Message[]}
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
         inverted
