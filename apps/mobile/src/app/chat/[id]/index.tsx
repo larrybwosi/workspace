@@ -32,7 +32,9 @@ import { SwipeableMessage } from '../../../components/chat/swipeable-message';
 import { formatTime, realtime, AblyChannels, AblyEvents, extractUserMentions } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { Message, Channel } from '@repo/types';
+import type { Message, User } from '@repo/types';
+
+type MessageWithUser = Message & { user?: User };
 
 export default function ChatScreen() {
   const {
@@ -42,11 +44,11 @@ export default function ChatScreen() {
   } = useLocalSearchParams<{ id: string; workspaceId?: string; isDM?: string }>();
   const isDM = isDMParam === 'true';
   const router = useRouter();
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession() as { data: { user?: { id: string } } | null };
 
   // Combined State
   const [messageText, setMessageText] = useState('');
-  const [attachments, setAttachments] = useState<{ uri: string; name: string; type: string }[]>([]);
+  const [attachments, setAttachments] = useState<unknown[]>([]);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -58,7 +60,7 @@ export default function ChatScreen() {
   const { mutateAsync: uploadFile } = useStorageUpload();
 
   const { data: workspaces } = useWorkspaces();
-  const activeWorkspace = (workspaces as any[])?.find((w) => w.id === workspaceId);
+  const activeWorkspace = workspaces?.find((w: { id: string, name: string, slug: string }) => w.id === workspaceId);
 
   const { data: channels } = useChannels();
   const { data: workspaceChannels } = useWorkspaceChannels(activeWorkspace?.slug);
@@ -90,7 +92,7 @@ export default function ChatScreen() {
     };
   }, [id, isDM, queryClient, workspaceId]);
 
-  const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
+  const messages = messagesData?.pages.flatMap((page: { messages: unknown[] }) => page.messages as MessageWithUser[]) || [];
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -179,8 +181,8 @@ export default function ChatScreen() {
     setAttachments([]);
   };
 
-  const renderMessage = ({ item: message }: { item: Message }) => {
-    const isMe = message.userId === (session?.user?.id || (session as any)?.user?.id);
+  const renderMessage = ({ item: message }: { item: MessageWithUser }) => {
+    const isMe = message.userId === session?.data?.user?.id;
 
     const handleLongPress = () => {
       setSelectedMessageId(message.id);
@@ -188,7 +190,7 @@ export default function ChatScreen() {
 
     const toggleReaction = (emoji: string) => {
       const hasReacted = message.reactions?.some(
-        (r) => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id)
+        (r) => r.emoji === emoji && (r.users as unknown as { id: string }[])?.some((u) => u.id === session?.data?.user?.id)
       );
 
       const payload = {
@@ -267,7 +269,7 @@ export default function ChatScreen() {
                 <TouchableOpacity
                   key={r.emoji}
                   onPress={() => toggleReaction(r.emoji)}
-                  className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => (u.id || u) === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+                  className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${(r.users as unknown as { id: string }[])?.some((u) => u.id === session?.data?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
                 >
                   <Text className="text-xs">{r.emoji}</Text>
                   <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
@@ -282,11 +284,11 @@ export default function ChatScreen() {
 
   const getTitle = () => {
     if (isDM) {
-      const dmData = (dms as any[])?.find((d) => d.id === id);
-      const otherUser = (dmData as any)?.user || (dmData as any)?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
-      return otherUser?.name || 'Direct Message';
+      const dmData = dms?.find((d: { id: string, user: Record<string, unknown>, participants: { user: User }[] }) => d.id === id);
+      const otherUser = dmData?.user || dmData?.participants?.find((p) => p.user.id !== session?.data?.user?.id)?.user;
+      return (otherUser as User | undefined)?.name || 'Direct Message';
     }
-    const currentChannel = (workspaceChannels as Channel[])?.find((c) => c.id === id) || (channels as Channel[])?.find((c) => c.id === id);
+    const currentChannel = workspaceChannels?.find((c: { id: string, name: string }) => c.id === id) || channels?.find((c: { id: string, name: string }) => c.id === id);
     return currentChannel?.name || 'Chat';
   };
 

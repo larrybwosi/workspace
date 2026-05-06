@@ -98,7 +98,7 @@ export function ChannelView({
   onToggleInfo,
 }: ChannelViewProps) {
   const searchParams = useSearchParams();
-  const highlightedMessageId = searchParams.get('messageId');
+  const highlightedMessageId = (searchParams as any)?.get?.('messageId');
   const queryClient = useQueryClient();
 
   const activeChannelId = channelId;
