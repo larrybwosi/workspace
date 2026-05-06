@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { BarChart3, Users, Sparkles, Activity, Shield, Settings } from 'lucide-react';
+import { BarChart3, Users, Sparkles, Activity, Shield, Settings, Megaphone } from 'lucide-react';
 import { Button } from '../components/button';
 import { cn } from '../lib/utils';
 import { useNavigate, useLocation } from 'react-router';
@@ -11,6 +11,7 @@ interface AdminSidebarProps {
 
 const navItems = [
   { label: 'Overview', icon: BarChart3, href: '/' },
+  { label: 'Announcements', icon: Megaphone, href: '/announcements' },
   { label: 'Members', icon: Users, href: '/members' },
   { label: 'Assets', icon: Sparkles, href: '/assets' },
   { label: 'Analytics', icon: BarChart3, href: '/analytics' },
