@@ -254,10 +254,23 @@ export default function ChatScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <Text className="text-[10px] font-medium text-on-surface-variant/70 px-1">
-                {!isMe && `${message.user?.name} • `}
-                {formatTime(message.timestamp)}
-              </Text>
+              <View className="flex-row items-center gap-2 px-1">
+                <Text className="text-[10px] font-medium text-on-surface-variant/70">
+                  {!isMe && `${message.user?.name} • `}
+                  {formatTime(message.timestamp)}
+                </Text>
+                {message.replyCount !== undefined && message.replyCount > 0 && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push(`/chat/${id}/thread/${message.id}?workspaceId=${workspaceId}`)
+                    }
+                  >
+                    <Text className="text-[10px] font-bold text-primary">
+                      {message.replyCount} {message.replyCount === 1 ? 'reply' : 'replies'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
 
