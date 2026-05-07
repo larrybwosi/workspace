@@ -143,7 +143,7 @@ export class MessagesService {
     const nextCursor = hasMore ? rawData[rawData.length - 1].timestamp.toISOString() : null;
 
     // Transform messages to match frontend expectations and reduce size
-    const formattedMessages = [...rawData].map(msg => {
+    const formattedMessages = [...rawData].reverse().map(msg => {
       // Group reactions by emoji
       const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();
       msg.reactions.forEach(r => {

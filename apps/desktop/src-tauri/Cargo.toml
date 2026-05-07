@@ -5,6 +5,10 @@ description = "Workspace Desktop Application"
 authors = ["you"]
 edition = "2021"
 
+[lib]
+name = "desktop_lib"
+path = "src/lib.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
