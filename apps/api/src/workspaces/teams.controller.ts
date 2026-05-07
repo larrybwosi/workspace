@@ -102,9 +102,11 @@ export class TeamsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -126,10 +128,27 @@ export class TeamsController {
 
     const teams = await prisma.workspaceTeam.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        workspaceId: true,
+        departmentId: true,
+        name: true,
+        slug: true,
+        description: true,
+        icon: true,
+        color: true,
+        leadId: true,
+        channelId: true,
+        createdAt: true,
+        updatedAt: true,
         department: { select: { id: true, name: true, icon: true, color: true } },
         members: {
-          include: {
+          select: {
+            id: true,
+            teamId: true,
+            userId: true,
+            role: true,
+            joinedAt: true,
             user: { select: { id: true, name: true, email: true, avatar: true, status: true } },
           },
         },
@@ -154,9 +173,11 @@ export class TeamsController {
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      include: {
+      select: {
+        id: true,
         members: {
           where: { userId: user.id },
+          select: { role: true },
         },
       },
     });
@@ -269,17 +290,28 @@ export class TeamsController {
   @ApiParam({ name: 'teamId', description: 'The team ID' })
   @ApiBody({ type: AddTeamMemberDto })
   @ApiResponse({ status: 201, description: 'Member added to team' })
-  async addMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Body() body: AddTeamMemberDto) {
+  async addMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('teamId') teamId: string,
+    @Body() body: AddTeamMemberDto
+  ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
     });
 
-    if (!workspace) throw new NotFoundException('Workspace not found');
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
 
-    // Check if user is admin/owner
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
@@ -304,16 +336,33 @@ export class TeamsController {
   @ApiParam({ name: 'teamId', description: 'The team ID' })
   @ApiParam({ name: 'userId', description: 'The user ID' })
   @ApiResponse({ status: 200, description: 'Member removed from team' })
-  async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Param('userId') userId: string) {
+  async removeMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('teamId') teamId: string,
+    @Param('userId') userId: string
+  ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
     });
 
-    if (!workspace) throw new NotFoundException('Workspace not found');
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');

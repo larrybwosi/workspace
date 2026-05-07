@@ -10,6 +10,7 @@ export const userKeys = {
   details: () => [...userKeys.all, "detail"] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
   current: () => [...userKeys.all, "current"] as const,
+  socialProfile: (id: string) => [...userKeys.detail(id), "social-profile"] as const,
 }
 
 // Fetch all users
@@ -46,6 +47,18 @@ export function useUser(id: string) {
   })
 }
 
+// Fetch social profile for a user
+export function useUserSocialProfile(id: string) {
+  return useQuery({
+    queryKey: userKeys.socialProfile(id),
+    queryFn: async () => {
+      const { data } = await apiClient.get<any>(`/users/${id}/social-profile`)
+      return data
+    },
+    enabled: !!id,
+  })
+}
+
 // Update user
 export function useUpdateUser() {
   const queryClient = useQueryClient()
@@ -73,6 +86,36 @@ export function useUpdateUserStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.current() })
+    },
+  })
+}
+
+// Block a user
+export function useBlockUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<any>(`/users/${id}/block`)
+      return data
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(id) })
+    },
+  })
+}
+
+// Unblock a user
+export function useUnblockUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.delete<any>(`/users/${id}/block`)
+      return data
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(id) })
     },
   })
 }

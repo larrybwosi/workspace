@@ -27,3 +27,10 @@
 ## 2025-05-15 - [Testing] Vitest Hoisting and Mock initialization
 **Learning:** Mocking shared packages that export multiple utilities often leads to `ReferenceError` if the mock variables aren't initialized before the module is hoisted.
 **Action:** Use `vi.hoisted` to define mock functions that need to be accessed inside a `vi.mock` factory, ensuring they are available during module evaluation.
+## 2025-05-15 - [API/V10] Optimized Discord V10 Guild and Member Retrieval
+**Learning:** Fetching full member lists with nested user objects to calculate counts or check single-user membership is a major O(N) bottleneck that causes memory spikes and latency in large workspaces.
+**Action:** Use Prisma `select` with `_count` for totals and targeted `where` filters for specific membership checks. For presence counts, use a separate `prisma.model.count({ where: { ... } })` instead of filtering a large array in-memory.
+
+## 2025-05-15 - [API] Consolidated Workspace Operations in InviteLinks
+**Learning:** Sequential queries to resolve a workspace slug before performing operations on nested resources (like invite links) doubled the database RTT and increased latency.
+**Action:** Use Prisma's nested `select` or `include` on a single `findUnique({ where: { slug } })` call to perform existence checks, membership authorization, and data retrieval in one round-trip.
