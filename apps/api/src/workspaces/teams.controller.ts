@@ -290,12 +290,12 @@ export class TeamsController {
   @ApiParam({ name: 'teamId', description: 'The team ID' })
   @ApiBody({ type: AddTeamMemberDto })
   @ApiResponse({ status: 201, description: 'Member added to team' })
-  async addMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Body() body: AddTeamMemberDto) {
-    /**
-     * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
-     */
+  async addMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('teamId') teamId: string,
+    @Body() body: AddTeamMemberDto
+  ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -336,7 +336,12 @@ export class TeamsController {
   @ApiParam({ name: 'teamId', description: 'The team ID' })
   @ApiParam({ name: 'userId', description: 'The user ID' })
   @ApiResponse({ status: 200, description: 'Member removed from team' })
-  async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('teamId') teamId: string, @Param('userId') userId: string) {
+  async removeMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('teamId') teamId: string,
+    @Param('userId') userId: string
+  ) {
     /**
      * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.

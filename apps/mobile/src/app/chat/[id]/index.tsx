@@ -58,7 +58,7 @@ export default function ChatScreen() {
   const { mutateAsync: uploadFile } = useStorageUpload();
 
   const { data: workspaces } = useWorkspaces();
-  const activeWorkspace = (workspaces as any[])?.find((w) => w.id === workspaceId);
+  const activeWorkspace = (workspaces as any[])?.find(w => w.id === workspaceId);
 
   const { data: channels } = useChannels();
   const { data: workspaceChannels } = useWorkspaceChannels(activeWorkspace?.slug);
@@ -90,7 +90,7 @@ export default function ChatScreen() {
     };
   }, [id, isDM, queryClient, workspaceId]);
 
-  const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
+  const messages = messagesData?.pages.flatMap(page => page.messages) || [];
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -188,7 +188,7 @@ export default function ChatScreen() {
 
     const toggleReaction = (emoji: string) => {
       const hasReacted = message.reactions?.some(
-        (r) => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id)
+        r => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id)
       );
 
       const payload = {
@@ -216,54 +216,57 @@ export default function ChatScreen() {
           <View
             className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}
           >
-          {!isMe && (
-            <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-              {(message.user as any)?.image || (message.user as any)?.avatar ? (
-                <Image source={{ uri: (message.user as any).image || (message.user as any).avatar }} className="w-full h-full" />
-              ) : (
-                <View className="w-full h-full items-center justify-center bg-primary/10">
-                  <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
-                </View>
-              )}
-            </View>
-          )}
+            {!isMe && (
+              <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
+                {(message.user as any)?.image || (message.user as any)?.avatar ? (
+                  <Image
+                    source={{ uri: (message.user as any).image || (message.user as any).avatar }}
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <View className="w-full h-full items-center justify-center bg-primary/10">
+                    <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
+                  </View>
+                )}
+              </View>
+            )}
 
-          <View className={`gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
-            <TouchableOpacity
-              onLongPress={handleLongPress}
-              activeOpacity={0.8}
-              className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}
-            >
-              {message.attachments?.map((att, index) => (
-                <View key={index} className="mb-2">
-                  {att.type?.startsWith('image/') ? (
-                    <Image source={{ uri: att.url }} className="w-48 h-32 rounded-lg" />
-                  ) : (
-                    <View className="flex-row items-center bg-surface-container p-2 rounded-lg">
-                      <MaterialIcons name="insert-drive-file" size={20} color="#5f5e5e" />
-                      <Text className="ml-2 text-xs" numberOfLines={1}>
-                        {att.name}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ))}
+            <View className={`gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
+              <TouchableOpacity
+                onLongPress={handleLongPress}
+                activeOpacity={0.8}
+                className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}
+              >
+                {message.attachments?.map((att, index) => (
+                  <View key={index} className="mb-2">
+                    {att.type?.startsWith('image/') ? (
+                      <Image source={{ uri: att.url }} className="w-48 h-32 rounded-lg" />
+                    ) : (
+                      <View className="flex-row items-center bg-surface-container p-2 rounded-lg">
+                        <MaterialIcons name="insert-drive-file" size={20} color="#5f5e5e" />
+                        <Text className="ml-2 text-xs" numberOfLines={1}>
+                          {att.name}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
 
-              <Text className={`font-body text-sm leading-relaxed ${isMe ? 'text-on-primary' : 'text-on-surface'}`}>
-                {message.content}
+                <Text className={`font-body text-sm leading-relaxed ${isMe ? 'text-on-primary' : 'text-on-surface'}`}>
+                  {message.content}
+                </Text>
+              </TouchableOpacity>
+
+              <Text className="text-[10px] font-medium text-on-surface-variant/70 px-1">
+                {!isMe && `${message.user?.name} • `}
+                {formatTime(message.timestamp)}
               </Text>
-            </TouchableOpacity>
-
-            <Text className="text-[10px] font-medium text-on-surface-variant/70 px-1">
-              {!isMe && `${message.user?.name} • `}
-              {formatTime(message.timestamp)}
-            </Text>
+            </View>
           </View>
-        </View>
 
           {message.reactions && message.reactions.length > 0 && (
             <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
-              {message.reactions.map((r) => (
+              {message.reactions.map(r => (
                 <TouchableOpacity
                   key={r.emoji}
                   onPress={() => toggleReaction(r.emoji)}
@@ -282,11 +285,14 @@ export default function ChatScreen() {
 
   const getTitle = () => {
     if (isDM) {
-      const dmData = (dms as any[])?.find((d) => d.id === id);
-      const otherUser = (dmData as any)?.user || (dmData as any)?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
+      const dmData = (dms as any[])?.find(d => d.id === id);
+      const otherUser =
+        (dmData as any)?.user ||
+        (dmData as any)?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
       return otherUser?.name || 'Direct Message';
     }
-    const currentChannel = (workspaceChannels as Channel[])?.find((c) => c.id === id) || (channels as Channel[])?.find((c) => c.id === id);
+    const currentChannel =
+      (workspaceChannels as Channel[])?.find(c => c.id === id) || (channels as Channel[])?.find(c => c.id === id);
     return currentChannel?.name || 'Chat';
   };
 
