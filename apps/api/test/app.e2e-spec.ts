@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterAll, it, expect } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import request from 'supertest';
@@ -22,6 +23,7 @@ describe('AppController (e2e)', () => {
 
   it('/health (GET)', async () => {
     const response = await request(app.getHttpServer()).get('/health');
-    expect([200, 401]).toContain(response.status);
+    // Basic connectivity check
+    expect([200, 401, 'OK']).toContain(response.status === 200 ? response.text : response.status);
   });
 });

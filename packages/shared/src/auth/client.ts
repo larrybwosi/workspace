@@ -6,8 +6,9 @@ import { createAuthClient } from 'better-auth/react';
 const getEnv = (name: string) => {
   if (typeof window !== 'undefined') {
     try {
-      // @ts-ignore
-      const metaEnv = import.meta.env;
+      // Use conditional check to avoid syntax errors in CJS environments (Jest)
+      const meta = (import.meta as any);
+      const metaEnv = meta?.env;
       if (metaEnv) {
         const viteVal = metaEnv[name] || metaEnv[`VITE_${name}`];
         if (viteVal) return viteVal;
