@@ -87,6 +87,8 @@ model User {
   friendOf                Friend[]                 @relation("FriendOf")
   sentFriendRequests      FriendRequest[]          @relation("SentFriendRequests")
   receivedFriendRequests  FriendRequest[]          @relation("ReceivedFriendRequests")
+  blockedUsers            BlockedUser[]            @relation("BlockedBy")
+  blockedBy               BlockedUser[]            @relation("UserBlocked")
   createdChannelWebhooks  ChannelWebhook[]
   createdIncomingWebhooks ChannelIncomingWebhook[]
 
@@ -1737,3 +1739,33 @@ model BotCommand {
   @@unique([applicationId, name, guildId])
   @@map("bot_commands")
 }
+<<<<<<< update-ci-cd-mobile-desktop-releases-9430777286168098829
+=======
+
+model BlockedUser {
+  id            String   @id @default(cuid())
+  blockerId     String
+  blockedUserId String
+  createdAt     DateTime @default(now())
+
+  blocker     User @relation("BlockedBy", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedUser User @relation("UserBlocked", fields: [blockedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedUserId])
+  @@index([blockerId])
+  @@index([blockedUserId])
+  @@map("blocked_users")
+  }
+model SystemAnnouncement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  linkUrl   String?
+  imageUrl  String?
+  adminId   String
+  admin     User     @relation("AdminAnnouncements", fields: [adminId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("system_announcements")
+}
+>>>>>>> dev

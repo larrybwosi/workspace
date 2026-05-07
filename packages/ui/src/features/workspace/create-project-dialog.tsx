@@ -44,7 +44,7 @@ export function CreateProjectDialog({
     endDate: undefined as Date | undefined,
   });
   const { toast } = useToast();
-  const { mutateAsync: createProject, isLoading } = useCreateWorkspaceProject(workspaceSlug);
+  const createProject = useCreateWorkspaceProject(workspaceSlug);
 
   const handleCreate = async () => {
     if (!form.name.trim()) {
@@ -52,7 +52,7 @@ export function CreateProjectDialog({
       return;
     }
 
-    createProject(
+    createProject.mutate(
       {
         name: form.name,
         description: form.description,
@@ -88,7 +88,7 @@ export function CreateProjectDialog({
               placeholder="e.g., Q1 Product Launch"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              disabled={isLoading}
+              disabled={createProject.isPending}
             />
           </div>
 
@@ -147,7 +147,7 @@ export function CreateProjectDialog({
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })} disabled={isLoading}>
+            <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })} disabled={createProject.isPending}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -165,7 +165,7 @@ export function CreateProjectDialog({
               placeholder="Describe the project..."
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
-              disabled={isLoading}
+              disabled={createProject.isPending}
             />
           </div>
         </div>

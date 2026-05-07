@@ -29,7 +29,7 @@ export default function SignUp() {
       } else {
         router.replace("/");
       }
-    } catch (e) {
+    } catch {
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);

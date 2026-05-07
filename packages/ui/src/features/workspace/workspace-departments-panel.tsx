@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "../../components/button"
 import { Input } from "../../components/input"
 import { Label } from "../../components/label"
@@ -210,11 +210,11 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                     e.preventDefault()
                     const formData = new FormData(e.currentTarget)
                     createDepartment.mutate({
-                      name: formData.get("name"),
-                      slug: formData.get("slug"),
-                      description: formData.get("description"),
-                      color: formData.get("color"),
-                      parentId: formData.get("parentId") || undefined,
+                      name: formData.get("name") as string,
+                      slug: formData.get("slug") as string,
+                      description: formData.get("description") as string | undefined,
+                      color: formData.get("color") as string | undefined,
+                      parentId: (formData.get("parentId") as string | null) || undefined,
                     })
                   }}
                   className="space-y-4"
