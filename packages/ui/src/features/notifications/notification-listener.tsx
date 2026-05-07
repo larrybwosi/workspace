@@ -20,9 +20,15 @@ export function NotificationListener() {
   useEffect(() => {
     if (isTauri) {
       // Warm up the imports
-      import('@tauri-apps/plugin-notification');
-      import('@tauri-apps/api/webviewWindow');
-      import('@tauri-apps/api/core');
+      const pluginNotification = '@tauri-apps/plugin-notification';
+      const apiWebviewWindow = '@tauri-apps/api/webviewWindow';
+      const apiCore = '@tauri-apps/api/core';
+      // @ts-ignore
+      import(/* @vite-ignore */ pluginNotification);
+      // @ts-ignore
+      import(/* @vite-ignore */ apiWebviewWindow);
+      // @ts-ignore
+      import(/* @vite-ignore */ apiCore);
     }
   }, []);
 
@@ -31,10 +37,14 @@ export function NotificationListener() {
     if (!isTauri) return;
 
     const setupClickhandler = async () => {
-      const { onNotificationClick } = await import('@tauri-apps/plugin-notification');
-      const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+      const pluginNotification = '@tauri-apps/plugin-notification';
+      const apiWebviewWindow = '@tauri-apps/api/webviewWindow';
+      // @ts-ignore
+      const { onNotificationClick } = await import(/* @vite-ignore */ pluginNotification);
+      // @ts-ignore
+      const { getCurrentWebviewWindow } = await import(/* @vite-ignore */ apiWebviewWindow);
 
-      onNotificationClick((event) => {
+      onNotificationClick((event: any) => {
         const window = getCurrentWebviewWindow();
         window.show();
         window.setFocus();
@@ -73,7 +83,9 @@ export function NotificationListener() {
 
       // Show Native Desktop Notification if in Tauri
       if (isTauri) {
-        import('@tauri-apps/plugin-notification').then(({ isPermissionGranted, requestPermission, sendNotification }) => {
+        const pluginNotification = '@tauri-apps/plugin-notification';
+        // @ts-ignore
+        import(/* @vite-ignore */ pluginNotification).then(({ isPermissionGranted, requestPermission, sendNotification }: any) => {
           const handleNativeNotification = async () => {
             let permissionGranted = await isPermissionGranted();
             if (!permissionGranted) {
@@ -112,7 +124,9 @@ export function NotificationListener() {
 
   useEffect(() => {
     if (isTauri && unreadNotifications) {
-      import('@tauri-apps/api/core').then(({ invoke }) => {
+      const apiCore = '@tauri-apps/api/core';
+      // @ts-ignore
+      import(/* @vite-ignore */ apiCore).then(({ invoke }: any) => {
         invoke('set_badge_count', { count: unreadNotifications.length });
       });
     }
