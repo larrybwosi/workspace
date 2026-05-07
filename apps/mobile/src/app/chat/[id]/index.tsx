@@ -5,7 +5,6 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -33,6 +32,7 @@ import { formatTime, realtime, AblyChannels, AblyEvents, extractUserMentions } f
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { Message, Channel } from '@repo/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ChatScreen() {
   const {
@@ -218,11 +218,8 @@ export default function ChatScreen() {
           >
             {!isMe && (
               <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-                {(message.user as any)?.image || (message.user as any)?.avatar ? (
-                  <Image
-                    source={{ uri: (message.user as any).image || (message.user as any).avatar }}
-                    className="w-full h-full"
-                  />
+                {message.user?.image || message.user?.avatar ? (
+                  <Image source={{ uri: message.user.image || message.user.avatar }} className="w-full h-full" />
                 ) : (
                   <View className="w-full h-full items-center justify-center bg-primary/10">
                     <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
@@ -286,9 +283,7 @@ export default function ChatScreen() {
   const getTitle = () => {
     if (isDM) {
       const dmData = (dms as any[])?.find(d => d.id === id);
-      const otherUser =
-        (dmData as any)?.user ||
-        (dmData as any)?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
+      const otherUser = dmData?.user || dmData?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
       return otherUser?.name || 'Direct Message';
     }
     const currentChannel =
