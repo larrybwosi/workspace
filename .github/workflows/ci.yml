@@ -206,7 +206,7 @@ jobs:
           pnpm --filter desktop run lint
           pnpm --filter desktop run type-check
       - name: Verify Compilation
-        uses: tauri-apps/tauri-action@v2
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -385,7 +385,7 @@ jobs:
           VERSION=$(node -p "require('./apps/desktop/package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Build Release
-        uses: tauri-apps/tauri-action@v2
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

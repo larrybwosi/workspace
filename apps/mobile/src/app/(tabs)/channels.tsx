@@ -9,7 +9,7 @@ export default function Channels() {
   const { data: channels, isLoading } = useChannels();
   const router = useRouter();
 
-  const activeWorkspace = workspaces?.find((w: { id: string, name: string }) => w.id === workspaceId);
+  const activeWorkspace = workspaces?.find((w: any) => w.id === workspaceId);
 
   if (!workspaceId) {
     return (
@@ -52,9 +52,9 @@ export default function Channels() {
           <TouchableOpacity
             className="flex-row items-center p-4 mb-2 bg-white rounded-xl border border-surface-container"
             onPress={() => router.push({
-                pathname: '/chat/[id]',
+                pathname: `/chat/[id]`,
                 params: { id: item.id, workspaceId }
-            })}
+            } as any)}
           >
             <MaterialIcons
               name={item.type === 'PUBLIC' ? 'tag' : 'lock'}

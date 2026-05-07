@@ -8,6 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "type-check": "tsc --noEmit",
     "test:e2e": "playwright test"
   },
   "dependencies": {
