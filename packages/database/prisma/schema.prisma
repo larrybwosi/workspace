@@ -79,8 +79,9 @@ model User {
   dmParticipant2 DirectMessage[] @relation("DMParticipant2")
   dmMessages     DMMessage[]
 
-  teamMemberships WorkspaceTeamMember[]
-  announcements   DepartmentAnnouncement[]
+  teamMemberships     WorkspaceTeamMember[]
+  announcements       DepartmentAnnouncement[]
+  systemAnnouncements SystemAnnouncement[]     @relation("AdminAnnouncements")
 
   // Social & Webhooks (Added for consistency with lower models)
   friends                 Friend[]                 @relation("UserFriends")
