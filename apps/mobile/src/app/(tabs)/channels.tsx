@@ -46,15 +46,15 @@ export default function Channels() {
       </View>
 
       <FlatList
-        data={channels}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        data={channels as any[]}
+        keyExtractor={(item: any) => item.id}
+        renderItem={({ item }: { item: any }) => (
           <TouchableOpacity
             className="flex-row items-center p-4 mb-2 bg-white rounded-xl border border-surface-container"
             onPress={() => router.push({
                 pathname: `/chat/[id]`,
                 params: { id: item.id, workspaceId }
-            } as any)}
+            })}
           >
             <MaterialIcons
               name={item.type === 'PUBLIC' ? 'tag' : 'lock'}

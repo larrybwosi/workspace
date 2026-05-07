@@ -58,7 +58,7 @@ export default function ChatScreen() {
   const { mutateAsync: uploadFile } = useStorageUpload();
 
   const { data: workspaces } = useWorkspaces();
-  const activeWorkspace = (workspaces as any[])?.find(w => w.id === workspaceId);
+  const activeWorkspace = Array.isArray(workspaces) ? workspaces.find((w: any) => w.id === workspaceId) : null;
 
   const { data: channels } = useChannels();
   const { data: workspaceChannels } = useWorkspaceChannels(activeWorkspace?.slug);
@@ -187,8 +187,9 @@ export default function ChatScreen() {
     };
 
     const toggleReaction = (emoji: string) => {
+      const userId = session?.user?.id;
       const hasReacted = message.reactions?.some(
-        r => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id)
+        r => r.emoji === emoji && r.users?.some((u: string | { id: string }) => (typeof u === 'string' ? u : u.id) === userId)
       );
 
       const payload = {
@@ -228,7 +229,7 @@ export default function ChatScreen() {
               </View>
             )}
 
-            <View className={`gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
+            <View className={`gap-1 ${isMe ? 'items-end' : 'items-start'} flex-1`}>
               <TouchableOpacity
                 onLongPress={handleLongPress}
                 activeOpacity={0.8}
@@ -295,7 +296,7 @@ export default function ChatScreen() {
 
   const getTitle = () => {
     if (isDM) {
-      const dmData = (dms as any[])?.find(d => d.id === id);
+      const dmData = Array.isArray(dms) ? dms.find((d: any) => d.id === id) : null;
       const otherUser = dmData?.user || dmData?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
       return otherUser?.name || 'Direct Message';
     }

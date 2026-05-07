@@ -85,6 +85,7 @@ export class MessagesService {
             id: true,
             name: true,
             avatar: true,
+            image: true,
           },
         },
         reactions: {
@@ -118,10 +119,13 @@ export class MessagesService {
         replyTo: {
           select: {
             id: true,
+            content: true,
             user: {
               select: {
                 id: true,
                 name: true,
+                avatar: true,
+                image: true,
               },
             },
           },
@@ -142,8 +146,14 @@ export class MessagesService {
     const rawData = hasMore ? messages.slice(0, limit) : messages;
     const nextCursor = hasMore ? rawData[rawData.length - 1].timestamp.toISOString() : null;
 
-    // Transform messages to match frontend expectations and reduce size
-    const formattedMessages = [...rawData].reverse().map(msg => {
+    /**
+     * ⚡ Performance Optimization:
+     * Returns messages in the order they were fetched (newest first).
+     * The mobile app uses 'inverted' FlatList which expects this order.
+     * The web app sorts them oldest-first in-memory anyway.
+     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency for mobile.
+     */
+    const formattedMessages = rawData.map(msg => {
       // Group reactions by emoji
       const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();
       msg.reactions.forEach(r => {

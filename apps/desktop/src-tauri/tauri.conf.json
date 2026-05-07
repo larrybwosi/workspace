@@ -32,7 +32,7 @@
       "icons/icon.ico"
     ],
     "publisher": "Workspace",
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   },
   "plugins": {
     "shell": {
@@ -50,8 +50,7 @@
     "updater": {
       "endpoints": [
         "https://github.com/your-username/your-repo/releases/latest/download/latest.json"
-      ],
-      "pubkey": ""
+      ]
     },
     "fs": {
       "scope": [

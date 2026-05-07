@@ -21,15 +21,15 @@ export default function Workspaces() {
         <Text className="text-2xl font-bold text-on-surface">Workspaces</Text>
         <TouchableOpacity
           className="p-2 bg-primary/10 rounded-full"
-          onPress={() => router.push('/discover' as any)}
+        onPress={() => router.push('/discover')}
         >
           <MaterialIcons name="explore" size={24} color="#2a3439" />
         </TouchableOpacity>
       </View>
       <FlatList
         data={workspaces}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        keyExtractor={(item: any) => item.id}
+        renderItem={({ item }: { item: any }) => (
           <TouchableOpacity
             className="flex-row items-center p-4 mb-3 bg-white rounded-xl border border-surface-container shadow-sm"
             onPress={() => router.push(`/(tabs)/channels?workspaceId=${item.id}`)}
@@ -53,7 +53,7 @@ export default function Workspaces() {
             <Text className="text-xl font-bold mt-4 text-center">No workspaces yet</Text>
             <TouchableOpacity
               className="mt-6 bg-primary px-6 py-3 rounded-lg"
-              onPress={() => router.push('/discover' as any)}
+              onPress={() => router.push('/discover')}
             >
               <Text className="text-white font-bold">Discover Workspaces</Text>
             </TouchableOpacity>
