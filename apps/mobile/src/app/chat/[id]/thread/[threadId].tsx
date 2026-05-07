@@ -17,15 +17,15 @@ import {
   useMessages,
   useReplyToMessage,
   useChannels,
-  useWorkspaces,
   messageKeys,
   useAddReaction,
   useRemoveReaction
 } from '@repo/api-client';
 import { useSession } from '../../../../lib/auth';
 import { ReactionPicker } from '../../../../components/chat/reaction-picker';
-import { formatTime, getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { formatTime, realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { Message, Channel } from '@repo/types';
 
 export default function ThreadScreen() {
   const { id, threadId, workspaceId } = useLocalSearchParams<{ id: string; threadId: string; workspaceId?: string }>();
@@ -45,40 +45,34 @@ export default function ThreadScreen() {
   const { mutate: addReaction } = useAddReaction();
   const { mutate: removeReaction } = useRemoveReaction();
   const { data: channels } = useChannels();
-  const { data: workspaces } = useWorkspaces();
   const queryClient = useQueryClient();
 
   // Ably real-time integration
   useEffect(() => {
-    const ably = getAblyClient();
-    if (!ably || !id) return;
+    if (!id) return;
 
     const channelName = AblyChannels.channel(id);
-    const ablyChannel = ably.channels.get(channelName);
 
     const handleMessage = () => {
-        queryClient.invalidateQueries({
-          queryKey: messageKeys.list(id as string, workspaceId, threadId)
-        });
+      queryClient.invalidateQueries({
+        queryKey: messageKeys.list(id as string, workspaceId, threadId),
+      });
     };
 
-    ablyChannel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    ablyChannel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+    realtime.subscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
 
     return () => {
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-        ablyChannel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_SENT, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_UPDATED, handleMessage);
+      realtime.unsubscribe(channelName, AblyEvents.MESSAGE_DELETED, handleMessage);
     };
   }, [id, queryClient, workspaceId, threadId]);
 
-  const channel = channels?.find((c: any) => c.id === id);
-  const workspace = workspaces?.find((w: any) => w.id === workspaceId);
+  const channel = (channels as Channel[])?.find((c) => c.id === id);
 
-  const messages = messagesData?.pages.flatMap((page: any) => page.messages) || [];
-  const parentMessage = messages.find((m: any) => m.id === threadId);
-  const replies = messages.filter((m: any) => m.id !== threadId);
+  const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
 
   const handleSend = () => {
     if (!messageText.trim()) return;
@@ -92,8 +86,8 @@ export default function ThreadScreen() {
     setMessageText('');
   };
 
-  const renderMessage = ({ item: message }: { item: any }) => {
-    const isMe = message.userId === session?.user?.id;
+  const renderMessage = ({ item: message }: { item: Message }) => {
+    const isMe = message.userId === (session?.user?.id || (session as any)?.user?.id);
     const isParent = message.id === threadId;
 
     const handleLongPress = () => {
@@ -101,7 +95,7 @@ export default function ThreadScreen() {
     };
 
     const toggleReaction = (emoji: string) => {
-        const hasReacted = message.reactions?.some((r: any) => r.emoji === emoji && r.users?.some((u: any) => u.id === session?.user?.id));
+        const hasReacted = message.reactions?.some((r) => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id));
 
         if (hasReacted) {
             removeReaction({
@@ -125,8 +119,8 @@ export default function ThreadScreen() {
         <View className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}>
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
-              {message.user?.image ? (
-                <Image source={{ uri: message.user.image }} className="w-full h-full" />
+              {(message.user as any)?.image ? (
+                <Image source={{ uri: (message.user as any).image }} className="w-full h-full" />
               ) : (
                 <View className="w-full h-full items-center justify-center bg-primary/10">
                   <Text className="text-[10px] font-bold text-primary">{message.user?.name?.charAt(0)}</Text>
@@ -153,11 +147,11 @@ export default function ThreadScreen() {
         {/* Reactions Display */}
         {message.reactions && message.reactions.length > 0 && (
             <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
-                {message.reactions.map((r: any) => (
+                {message.reactions.map((r) => (
                     <TouchableOpacity
                         key={r.emoji}
                         onPress={() => toggleReaction(r.emoji)}
-                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => u.id === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => (u.id || u) === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
                     >
                         <Text className="text-xs">{r.emoji}</Text>
                         <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
@@ -205,7 +199,7 @@ export default function ThreadScreen() {
       </View>
 
       <FlatList
-        data={messages}
+        data={messages as Message[]}
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
         inverted
