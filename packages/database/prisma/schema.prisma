@@ -1739,8 +1739,6 @@ model BotCommand {
   @@unique([applicationId, name, guildId])
   @@map("bot_commands")
 }
-<<<<<<< update-ci-cd-mobile-desktop-releases-9430777286168098829
-=======
 
 model BlockedUser {
   id            String   @id @default(cuid())
@@ -1755,7 +1753,8 @@ model BlockedUser {
   @@index([blockerId])
   @@index([blockedUserId])
   @@map("blocked_users")
-  }
+}
+
 model SystemAnnouncement {
   id        String   @id @default(cuid())
   title     String
@@ -1768,4 +1767,3 @@ model SystemAnnouncement {
 
   @@map("system_announcements")
 }
->>>>>>> dev
