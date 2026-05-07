@@ -213,7 +213,8 @@ export default function WorkspacePage() {
       <CreateChannelDialog
         open={createChannelOpen}
         onOpenChange={setCreateChannelOpen}
-        onCreateChannel={handleCreateChannel}
+        workspaceSlug={slug}
+        onCreateChannel={handleCreateChannel as any}
       />
     </div>
   );
