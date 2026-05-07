@@ -97,7 +97,10 @@ export function ChannelView({
   isWidget,
   onToggleInfo,
 }: ChannelViewProps) {
-  const searchParams = useSearchParams();
+  const searchParamsResult = useSearchParams();
+  // next/navigation's useSearchParams returns ReadonlyURLSearchParams,
+  // while the shim/react-router version might return [URLSearchParams, setter].
+  const searchParams = Array.isArray(searchParamsResult) ? searchParamsResult[0] : searchParamsResult;
   const highlightedMessageId = searchParams.get('messageId');
   const queryClient = useQueryClient();
 
