@@ -1,6 +1,6 @@
 import { prisma } from '@repo/database';
 import { AblyChannels, AblyEvents } from './ably';
-import { getAblyRest } from './ably.server';
+import { publishRealtime } from './realtime.server';
 import { queueNotification } from './notification-queue';
 
 export interface NotificationPayload {
@@ -52,18 +52,14 @@ export async function createNotifications(payloads: NotificationPayload[]) {
   });
 
   // 2. Parallelize delivery
-  const ably = getAblyRest();
   await Promise.all(
     notifications.map(async notification => {
-      // Real-time via Ably
-      if (ably) {
-        const channel = (ably as any).channels.get(AblyChannels.notifications(notification.userId));
-        await channel.publish(AblyEvents.NOTIFICATION, {
-          ...notification,
-          // Ensure metadata is correctly passed
-          metadata: notification.metadata as Record<string, any>,
-        });
-      }
+      // Real-time delivery
+      await publishRealtime(AblyChannels.notifications(notification.userId), AblyEvents.NOTIFICATION, {
+        ...notification,
+        // Ensure metadata is correctly passed
+        metadata: notification.metadata as Record<string, any>,
+      });
 
       // Push notification (Queued for background delivery - Enterprise requirement)
       try {
@@ -103,12 +99,8 @@ export async function createSystemMessage(channelId: string, content: string, me
     },
   });
 
-  // Broadcast via Ably
-  const ably = getAblyRest();
-  if (ably) {
-    const channel = (ably as any).channels.get(AblyChannels.thread(channelId));
-    await channel.publish(AblyEvents.MESSAGE_SENT, message);
-  }
+  // Broadcast via Realtime provider
+  await publishRealtime(AblyChannels.thread(channelId), AblyEvents.MESSAGE_SENT, message);
 
   return message;
 }

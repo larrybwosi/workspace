@@ -1,10 +1,18 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Manager, RunEvent, WebviewEvent, Runtime,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[tauri::command]
+fn set_badge_count<R: Runtime>(app_handle: tauri::AppHandle<R>, count: i32) {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = app_handle.set_badge_count(count as i64);
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -63,7 +71,21 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .invoke_handler(tauri::generate_handler![set_badge_count])
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| match event {
+            RunEvent::WindowEvent {
+                label,
+                event: win_event,
+                ..
+            } => {
+                if let WebviewEvent::CloseRequested { api, .. } = win_event {
+                    let window = app_handle.get_webview_window(&label).unwrap();
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+            _ => {}
+        });
 }

@@ -1,0 +1,12 @@
+
+> admin@0.1.0 dev /app/apps/admin
+> vite --port 3002
+
+Port 3002 is in use, trying another one...
+Port 3003 is in use, trying another one...
+Port 3004 is in use, trying another one...
+
+  VITE v8.0.10  ready in 448 ms
+
+  ➜  Local:   http://localhost:3005/
+  ➜  Network: use --host to expose
