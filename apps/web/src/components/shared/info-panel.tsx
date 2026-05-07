@@ -19,6 +19,12 @@ import {
   UserPlus,
   Search,
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@repo/ui/components/tooltip';
 import { Button } from '@repo/ui/components/button';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar';
@@ -37,6 +43,7 @@ import {
   useJoinCall,
   useStartCall,
   useGenerateInviteLink,
+  useUserSocialProfile,
 } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
@@ -69,6 +76,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
   const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
   const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
+  const { data: socialProfile, isLoading: isSocialLoading } = useUserSocialProfile(dmUser?.id || '');
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
@@ -167,7 +175,19 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">{dmUser.name}</h3>
+                  <div className="flex items-center justify-center gap-2">
+                    <h3 className="font-semibold text-lg">{dmUser.name}</h3>
+                    {socialProfile?.isFriend && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <UserIcon className="h-4 w-4 text-primary fill-primary/10" />
+                          </TooltipTrigger>
+                          <TooltipContent>You are friends</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">{dmUser.role}</p>
                   <Badge
                     variant="secondary"
@@ -219,6 +239,84 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold mb-2">Shared Files</h3>
                 <p className="text-sm text-muted-foreground">No files shared yet</p>
+              </div>
+
+              <Separator />
+
+              {/* Mutual Workspaces */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Mutual Workspaces</h3>
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                    {socialProfile?.mutualWorkspaces?.length || 0}
+                  </Badge>
+                </div>
+                {isSocialLoading ? (
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : socialProfile?.mutualWorkspaces?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {socialProfile.mutualWorkspaces.map((ws: any) => (
+                      <TooltipProvider key={ws.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Avatar className="h-8 w-8 rounded-lg border border-border cursor-help">
+                              <AvatarImage src={ws.icon} />
+                              <AvatarFallback className="rounded-lg text-[10px]">
+                                {ws.name.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent>{ws.name}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No mutual workspaces</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Mutual Friends */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Mutual Friends</h3>
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                    {socialProfile?.mutualFriends?.length || 0}
+                  </Badge>
+                </div>
+                {isSocialLoading ? (
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : socialProfile?.mutualFriends?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {socialProfile.mutualFriends.map((friend: any) => (
+                      <TooltipProvider key={friend.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Avatar className="h-8 w-8 border border-border cursor-help">
+                              <AvatarImage src={friend.avatar} />
+                              <AvatarFallback className="text-[10px]">
+                                {friend.name.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent>{friend.name}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No mutual friends</p>
+                )}
               </div>
 
               <Separator />
