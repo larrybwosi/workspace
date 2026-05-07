@@ -81,6 +81,7 @@ model User {
 
   teamMemberships WorkspaceTeamMember[]
   announcements   DepartmentAnnouncement[]
+  systemAnnouncements SystemAnnouncement[] @relation("AdminAnnouncements")
 
   // Social & Webhooks (Added for consistency with lower models)
   friends                 Friend[]                 @relation("UserFriends")
@@ -1753,4 +1754,16 @@ model BlockedUser {
   @@index([blockerId])
   @@index([blockedUserId])
   @@map("blocked_users")
+  }
+model SystemAnnouncement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  linkUrl   String?
+  imageUrl  String?
+  adminId   String
+  admin     User     @relation("AdminAnnouncements", fields: [adminId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("system_announcements")
 }

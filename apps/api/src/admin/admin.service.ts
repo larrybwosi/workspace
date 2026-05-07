@@ -11,6 +11,69 @@ export class AdminService {
     private readonly storageService: StorageService
   ) {}
 
+  async getAnnouncements() {
+    return this.prismaService.client.systemAnnouncement.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        admin: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
+  async sendAnnouncement(adminId: string, data: { title: string; content: string; linkUrl?: string; imageUrl?: string }) {
+    // 1. Create the announcement record
+    const announcement = await this.prismaService.client.systemAnnouncement.create({
+      data: {
+        title: data.title,
+        content: data.content,
+        linkUrl: data.linkUrl,
+        imageUrl: data.imageUrl,
+        adminId,
+      },
+    });
+
+    // 2. Fetch all user IDs (this could be optimized for very large user bases)
+    // For now, we'll fetch all and batch them.
+    const users = await this.prismaService.client.user.findMany({
+      select: { id: true },
+    });
+
+    const userIds = users.map(u => u.id);
+
+    // 3. Batch create notifications using the shared utility
+    const { createNotifications } = await import('@repo/shared/server');
+
+    // Create payloads for all users
+    const payloads = userIds.map(userId => ({
+      userId,
+      type: 'system' as const,
+      title: data.title,
+      message: data.content,
+      linkUrl: data.linkUrl,
+      metadata: {
+        announcementId: announcement.id,
+        imageUrl: data.imageUrl,
+        isSystemAnnouncement: true,
+      },
+    }));
+
+    // Deliver in batches of 100 to avoid overwhelming the database/realtime provider
+    const batchSize = 100;
+    for (let i = 0; i < payloads.length; i += batchSize) {
+      const batch = payloads.slice(i, i + batchSize);
+      await createNotifications(batch);
+    }
+
+    return announcement;
+  }
+
   async getStats() {
     const totalUsers = await this.prismaService.client.user.count();
     const activeUsers = await this.prismaService.client.user.count();

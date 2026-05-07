@@ -21,6 +21,27 @@ export class AdminController {
     return this.adminService.getStats();
   }
 
+  @Get('announcements')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Get system announcements history' })
+  async getAnnouncements() {
+    return this.adminService.getAnnouncements();
+  }
+
+  @Post('announcements')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Send a system-wide announcement' })
+  async sendAnnouncement(
+    @Req() req: any,
+    @Body() body: { title: string; content: string; linkUrl?: string; imageUrl?: string }
+  ) {
+    const adminId = req.user?.id;
+    if (!adminId) {
+      throw new BadRequestException('Admin ID not found in request');
+    }
+    return this.adminService.sendAnnouncement(adminId, body);
+  }
+
   @Get('members')
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Get all members across all workspaces' })

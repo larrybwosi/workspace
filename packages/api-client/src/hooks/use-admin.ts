@@ -12,6 +12,32 @@ export function useAdminStats() {
   })
 }
 
+// Announcements
+export function useAnnouncements() {
+  return useQuery({
+    queryKey: ["admin", "announcements"],
+    queryFn: async () => {
+      const response = await apiClient.get("/admin/announcements")
+      return response.data
+    },
+  })
+}
+
+// Send announcement
+export function useSendAnnouncement() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: { title: string; content: string; linkUrl?: string; imageUrl?: string }) => {
+      const response = await apiClient.post("/admin/announcements", data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "announcements"] })
+    },
+  })
+}
+
 // Admin members
 export function useAdminMembers(filters?: { search?: string; role?: string; status?: string }) {
   return useQuery({
