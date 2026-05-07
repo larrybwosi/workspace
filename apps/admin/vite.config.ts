@@ -6,15 +6,6 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  build: {
-    rollupOptions: {
-      external: [
-        '@tauri-apps/plugin-notification',
-        '@tauri-apps/api/webviewWindow',
-        '@tauri-apps/api/core',
-      ],
-    },
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

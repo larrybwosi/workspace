@@ -51,10 +51,9 @@ export default function QRScannerScreen() {
       await apiClient.post('/auth/device/qr/authorize', { sessionId });
       Alert.alert('Success', 'Login authorized successfully!');
       router.back();
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Authorization failed', error);
-      const message = (error as Record<string, { data?: { message?: string } }>)?.response?.data?.message || 'Failed to authorize login. The QR code might have expired.';
-      Alert.alert('Error', message);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to authorize login. The QR code might have expired.');
       setScanned(false);
       setShowConfirm(false);
     } finally {

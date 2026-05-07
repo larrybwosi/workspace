@@ -245,7 +245,7 @@ export function useCreateWorkspaceIntegration(workspaceSlug: string) {
     mutationFn: async (data: {
       service: string
       name: string
-      config: Record<string, unknown>
+      config: Record<string, any>
       description?: string
     }) => {
       const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/integrations`, data)
@@ -265,7 +265,7 @@ export function useUpdateWorkspaceIntegration(workspaceSlug: string) {
       data,
     }: {
       integrationId: string
-      data: { config?: Record<string, unknown>; active?: boolean }
+      data: { config?: Record<string, any>; active?: boolean }
     }) => {
       const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}/integrations/${integrationId}`, data)
       return response
