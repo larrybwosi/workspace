@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function Profile() {
-  const { data: session } = useSession() as { data: { user: { id: string, name?: string, email?: string, image?: string } } | null };
+  const { data: session } = (useSession as any)();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -12,7 +12,7 @@ export default function Profile() {
     router.replace('/login');
   };
 
-  if (!session?.data) {
+  if (!session) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-6">
         <Text className="text-xl font-bold mb-4">You are not logged in</Text>
@@ -30,14 +30,14 @@ export default function Profile() {
     <ScrollView className="flex-1 bg-background">
       <View className="p-6 pt-16 items-center bg-white border-b border-surface-container">
         <View className="w-24 h-24 rounded-full bg-surface-container items-center justify-center mb-4 overflow-hidden border-4 border-primary/10">
-          {session.data.user.image ? (
-            <Image source={{ uri: session.data.user.image }} className="w-full h-full" />
+          {session.user.image ? (
+            <Image source={{ uri: session.user.image }} className="w-full h-full" />
           ) : (
-            <Text className="text-3xl font-bold text-on-surface">{session.data.user.name?.charAt(0)}</Text>
+            <Text className="text-3xl font-bold text-on-surface">{session.user.name?.charAt(0)}</Text>
           )}
         </View>
-        <Text className="text-2xl font-bold text-on-surface">{session.data.user.name}</Text>
-        <Text className="text-on-surface-variant mb-6">{session.data.user.email}</Text>
+        <Text className="text-2xl font-bold text-on-surface">{session.user.name}</Text>
+        <Text className="text-on-surface-variant mb-6">{session.user.email}</Text>
 
         <TouchableOpacity
           className="flex-row items-center bg-surface-container-low px-4 py-2 rounded-full"

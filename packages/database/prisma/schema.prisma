@@ -81,7 +81,6 @@ model User {
 
   teamMemberships WorkspaceTeamMember[]
   announcements   DepartmentAnnouncement[]
-  systemAnnouncements SystemAnnouncement[] @relation("AdminAnnouncements")
 
   // Social & Webhooks (Added for consistency with lower models)
   friends                 Friend[]                 @relation("UserFriends")
@@ -1740,6 +1739,8 @@ model BotCommand {
   @@unique([applicationId, name, guildId])
   @@map("bot_commands")
 }
+<<<<<<< update-ci-cd-mobile-desktop-releases-9430777286168098829
+=======
 
 model BlockedUser {
   id            String   @id @default(cuid())
@@ -1767,3 +1768,4 @@ model SystemAnnouncement {
 
   @@map("system_announcements")
 }
+>>>>>>> dev

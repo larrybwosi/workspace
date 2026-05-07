@@ -3,7 +3,7 @@ import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
 export const authClient = createAuthClient({
-    baseURL: (process.env as Record<string, string | undefined>).EXPO_PUBLIC_API_URL || "http://localhost:3000",
+    baseURL: (process.env as any).EXPO_PUBLIC_API_URL || "http://localhost:3000",
     plugins: [
         expoClient({
             storage: SecureStore,
@@ -13,9 +13,9 @@ export const authClient = createAuthClient({
 
 import { apiClient } from "@repo/api-client";
 
-(authClient.$store as Record<string, unknown> & { listen: (cb: (event: { type: string, data: unknown }) => void) => void }).listen((event: { type: string, data: unknown }) => {
+(authClient.$store as any).listen((event: any) => {
     if (event.type === "setSession") {
-        const session = event.data;
+        const session = (event as any).data;
         if (session) {
             // In a real mobile app, you might want to use SecureStore or similar
             // Better Auth expo plugin handles the storage, but we need to tell axios about it

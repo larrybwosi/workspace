@@ -2,7 +2,6 @@ import { AdminProviders } from '@repo/ui';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router';
 import { AdminOverviewPage } from './pages/overview';
 import { AdminAssetsPage } from './pages/assets';
-import { AdminAnnouncementsPage } from './pages/announcements';
 import { LoginPage } from './pages/login';
 import { useSession } from './lib/auth';
 import { Loader2 } from 'lucide-react';
@@ -43,14 +42,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminOverviewPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/announcements"
-            element={
-              <ProtectedRoute>
-                <AdminAnnouncementsPage />
               </ProtectedRoute>
             }
           />
