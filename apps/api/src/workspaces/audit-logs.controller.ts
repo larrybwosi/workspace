@@ -69,19 +69,16 @@ export class AuditLogsController {
     const skip = (page - 1) * limit;
 
     const [logs, total] = await Promise.all([
+      /**
+       * ⚡ Optimization: Removes redundant workspace include.
+       * All logs in this set belong to the same workspace, which we already have in memory.
+       * Reduces database payload size and prevents redundant repeated data retrieval.
+       */
       prisma.workspaceAuditLog.findMany({
         where: { workspaceId: workspace.id },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
-          workspace: {
-            select: {
-              name: true,
-              slug: true,
-            },
-          },
-        },
       }),
       prisma.workspaceAuditLog.count({
         where: { workspaceId: workspace.id },
@@ -109,6 +106,10 @@ export class AuditLogsController {
 
     const enrichedLogs = logs.map((log) => ({
       ...log,
+      workspace: {
+        name: workspace.name,
+        slug: workspace.slug,
+      },
       user: userMap[log.userId] || null,
     }));
 
