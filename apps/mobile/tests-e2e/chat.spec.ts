@@ -46,8 +46,8 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
-  // Mock messages
-  await page.route('**/api/channels/test-channel-id/messages*', async (route) => {
+  // Mock messages - updated pattern to catch workspace-scoped URLs
+  await page.route('**/api/**/channels/test-channel-id/messages*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -58,9 +58,10 @@ test.beforeEach(async ({ page }) => {
             content: 'Hello world',
             userId: 'other-user-id',
             timestamp: new Date().toISOString(),
-            user: { id: 'other-user-id', name: 'Other User' },
+            user: { id: 'other-user-id', name: 'Other User', avatar: null },
             reactions: [],
             replyCount: 0,
+            mentions: [],
           },
         ],
         nextCursor: null,
@@ -76,7 +77,7 @@ test('can send a message', async ({ page }) => {
   await expect(page.getByText('Hello world')).toBeVisible();
 
   // Mock send message
-  await page.route('**/api/channels/test-channel-id/messages', async (route) => {
+  await page.route('**/api/**/channels/test-channel-id/messages', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -102,7 +103,7 @@ test('can send a message', async ({ page }) => {
 
 test('can navigate to thread', async ({ page }) => {
     // Update mock to include a message with replies
-    await page.route('**/api/channels/test-channel-id/messages*', async (route) => {
+    await page.route('**/api/**/channels/test-channel-id/messages*', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -113,9 +114,10 @@ test('can navigate to thread', async ({ page }) => {
                 content: 'Hello world',
                 userId: 'other-user-id',
                 timestamp: new Date().toISOString(),
-                user: { id: 'other-user-id', name: 'Other User' },
+                user: { id: 'other-user-id', name: 'Other User', avatar: null },
                 reactions: [],
                 replyCount: 2,
+                mentions: [],
               },
             ],
             nextCursor: null,
