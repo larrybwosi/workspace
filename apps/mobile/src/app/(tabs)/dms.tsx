@@ -20,9 +20,9 @@ export default function DMs() {
     <View className="flex-1 bg-background p-4 pt-12">
       <Text className="text-2xl font-bold mb-6 text-on-surface">Direct Messages</Text>
       <FlatList
-        data={conversations}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
+        data={conversations as any[]}
+        keyExtractor={(item: any) => item.id}
+        renderItem={({ item }: { item: any }) => {
           // Find the other user in the conversation
           const otherUser = item.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
 
