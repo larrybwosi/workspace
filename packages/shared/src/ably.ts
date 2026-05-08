@@ -35,34 +35,28 @@ export const AblyEvents = {
 
 export const EVENTS = AblyEvents;
 
+// Helper to safely access env variables across Vite, Next.js and React Native
+const getEnv = (name: string) => {
+  const g = globalThis as any;
+  const env = g.process?.env || (g.import?.meta?.env) || g.__env__;
+  if (!env) return undefined;
+  return env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`];
+};
+
 // Singleton pattern for Ably client
 let ablyClientInstance: any = null;
 
 export function getAblyClient() {
   if (typeof window === "undefined") {
-    // This part should technically be in ably.server.ts if we want strictly separated code,
-    // but for now, we'll keep it here for compatibility if needed,
-    // or just make it return null/throw if we want strict client-only in this file.
-    // However, some "universal" code might still use it.
-
-    // Better to keep it minimal and let server use ably.server.ts
     return null;
   } else {
     // Client-side
     if (!ablyClientInstance) {
-      const getBaseURL = () => {
-        if (typeof process !== 'undefined' && process.env) {
-          if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-          if ((process.env as any).EXPO_PUBLIC_API_URL) return (process.env as any).EXPO_PUBLIC_API_URL;
-        }
-        return '';
-      };
-
-      const baseURL = getBaseURL();
+      const baseURL = getEnv('API_URL') || getEnv('NEXT_PUBLIC_API_URL') || getEnv('VITE_API_URL') || getEnv('EXPO_PUBLIC_API_URL') || '';
 
       // @ts-ignore
       ablyClientInstance = new Ably.Realtime({
-        authUrl: `${baseURL}/api/ably/token`,
+        authUrl: `${baseURL.replace(/\/$/, '')}/api/ably/token`,
         authMethod: "POST",
       })
     }
