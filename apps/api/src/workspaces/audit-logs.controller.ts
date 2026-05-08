@@ -39,30 +39,34 @@ export class AuditLogsController {
     @Query('page') pageNum = '1',
     @Query('limit') limitNum = '50',
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const page = parseInt(pageNum);
-    const limit = parseInt(limitNum);
-    const skip = (page - 1) * limit;
-
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
     }
+
+    const page = parseInt(pageNum);
+    const limit = parseInt(limitNum);
+    const skip = (page - 1) * limit;
 
     const [logs, total] = await Promise.all([
       prisma.workspaceAuditLog.findMany({
@@ -126,22 +130,26 @@ export class AuditLogsController {
     @Param('slug') slug: string,
     @Res() res: FastifyReply,
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden - Admin access required');
