@@ -118,10 +118,13 @@ jobs:
       if: always()
       with:
         name: playwright-report
-        path: playwright-report/
+        path: |
+          apps/web/playwright-report/
+          apps/mobile/playwright-report/
         retention-days: 30
 
   mobile-verify:
+    needs: [lint-and-typecheck, unit-tests, e2e-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -153,10 +156,6 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
-      - name: Lint and Typecheck
-        run: |
-          pnpm --filter mobile run lint
-          pnpm --filter mobile run type-check
       - name: Prebuild Android
         working-directory: apps/mobile
         env:
@@ -165,12 +164,9 @@ jobs:
       - name: Assemble Debug APK
         working-directory: apps/mobile/android
         run: ./gradlew assembleDebug
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      - name: Run E2E Tests
-        run: pnpm --filter mobile run test:e2e
 
   desktop-verify:
+    needs: [lint-and-typecheck, unit-tests, e2e-tests]
     strategy:
       fail-fast: false
       matrix:
@@ -200,11 +196,6 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
-      - name: Lint and Typecheck
-        if: matrix.settings.host == 'ubuntu-latest'
-        run: |
-          pnpm --filter desktop run lint
-          pnpm --filter desktop run type-check
       - name: Verify Compilation
         uses: tauri-apps/tauri-action@v0
         env:
@@ -244,7 +235,7 @@ jobs:
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [version]
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, version]
     permissions:
       contents: read
       packages: write
