@@ -4,6 +4,7 @@ import { Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrop
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import "../lib/nativewind";
 import "../global.css";
 import "../lib/auth"; // Initialize auth interceptors
 

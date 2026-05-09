@@ -400,6 +400,7 @@ export default function ChatScreen() {
             </View>
 
             <TouchableOpacity
+              testID="send-button"
               className={`w-10 h-10 items-center justify-center rounded-lg shadow-sm ${(messageText.trim() || attachments.length > 0) && !isUploading ? 'bg-primary' : 'bg-surface-container-high'}`}
               onPress={handleSend}
               disabled={(!messageText.trim() && attachments.length === 0) || isUploading}

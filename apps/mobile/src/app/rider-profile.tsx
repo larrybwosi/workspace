@@ -1,17 +1,20 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import MapView from 'react-native-maps';
+import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
 import { Menu, Star, MessageSquare, Phone } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../lib/nativewind';
+
+const MapView = Platform.OS === 'web'
+  ? View
+  : require('react-native-maps').default;
 
 export default function RiderProfileScreen() {
   return (
     <View className="flex-1 bg-background">
       {/* Map Background */}
       <MapView
-        className="flex-1"
-        initialRegion={{
+        className="flex-1 bg-surface-container-highest"
+        initialRegion={Platform.OS === 'web' ? undefined : {
           latitude: 37.78825,
           longitude: -122.4324,
           latitudeDelta: 0.0922,
