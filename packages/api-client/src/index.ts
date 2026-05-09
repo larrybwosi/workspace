@@ -19,3 +19,4 @@ export * from './hooks/use-workspaces';
 export * from './hooks/use-applications';
 export * from './hooks/use-calls';
 export * from './hooks/use-storage';
+export * from './hooks/use-support';

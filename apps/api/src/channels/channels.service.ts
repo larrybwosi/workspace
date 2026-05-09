@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
   extractUserMentions,
@@ -77,6 +77,56 @@ export class ChannelsService {
    * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
    */
   async getMessages(channelId: string, userId: string, cursor?: string, limitNum = 50) {
+    /**
+     * ⚡ Performance Optimization:
+     * Check access using existence checks (findFirst) instead of deep joins (include).
+     * This avoids massive DB result sets when channels have many members or are shared extensively.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { id: true, workspaceId: true, isPrivate: true },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    // Check direct membership first (most common for private/shared channels)
+    const isMember = await prisma.channelMember.findUnique({
+      where: { channelId_userId: { channelId, userId } },
+    });
+
+    if (!isMember) {
+      // Check workspace membership
+      if (channel.workspaceId) {
+        const isWorkspaceMember = await prisma.workspaceMember.findUnique({
+          where: { workspaceId_userId: { workspaceId: channel.workspaceId, userId } },
+        });
+
+        if (!isWorkspaceMember) {
+          // Check shared channel access
+          const isSharedMember = await prisma.sharedChannel.findFirst({
+            where: {
+              channelId,
+              status: 'ACTIVE',
+              workspace: {
+                members: { some: { userId } },
+              },
+            },
+          });
+
+          if (!isSharedMember) {
+            throw new ForbiddenException('You do not have access to this channel');
+          }
+        } else if (channel.isPrivate) {
+          // Private channels in a workspace still require explicit membership
+          throw new ForbiddenException('You do not have access to this private channel');
+        }
+      } else if (channel.isPrivate) {
+        throw new ForbiddenException('You do not have access to this private channel');
+      }
+    }
+
     const messages = await prisma.message.findMany({
       where: {
         channelId,
@@ -427,6 +477,16 @@ export class ChannelsService {
     }
 
     return { success: true };
+  }
+
+  async inviteWorkspaceToChannel(channelId: string, workspaceId: string) {
+    return prisma.sharedChannel.create({
+      data: {
+        channelId,
+        workspaceId,
+        status: 'PENDING',
+      },
+    });
   }
 
   async createReply(channelId: string, messageId: string, userId: string, body: any) {
