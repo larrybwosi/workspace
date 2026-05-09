@@ -83,6 +83,7 @@ export * from './lib/providers';
 export * from './lib/utils';
 export * from './lib/types';
 export * from './lib/haptics';
+export * from './hooks/use-branding';
 export * from './features/assistant/assistant-channel';
 export * from './features/calls/call-chat';
 export * from './features/calls/schedule-call-dialog';
