@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useWorkspaces, useCreateWorkspaceChannel } from '@repo/api-client';
-import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
+import { useWorkspaces, useCreateWorkspaceChannel, useWorkspace } from '@repo/api-client';
+import { WorkspaceSidebar, useBranding } from '@repo/ui';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,9 @@ interface Workspace {
 export default function WorkspacePage() {
   const params = useParams();
   const slug = params?.slug as string;
+
+  const { data: workspaceData } = useWorkspace(slug);
+  useBranding(workspaceData?.brandingConfig);
 
   const { data: workspaces, isLoading } = useWorkspaces();
   const [sidebarOpen, setSidebarOpen] = useState(false);
