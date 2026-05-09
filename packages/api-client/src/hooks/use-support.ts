@@ -25,6 +25,19 @@ export function useCreateSupportTicket() {
   })
 }
 
+export function useAssignTicket() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ticketId, assigneeId }: { ticketId: string; assigneeId: string | null }) => {
+      const { data } = await apiClient.patch(`/support/tickets/${ticketId}/assign`, { assigneeId })
+      return data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["support-tickets", data.workspaceId] })
+    },
+  })
+}
+
 export function useUpdateTicketStatus() {
   const queryClient = useQueryClient()
   return useMutation({
