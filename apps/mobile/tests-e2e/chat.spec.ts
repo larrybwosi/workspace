@@ -37,6 +37,15 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
+  // Mock realtime config
+  await page.route('**/api/config/realtime', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ provider: 'ably' }),
+    });
+  });
+
   // Mock channels
   await page.route('**/api/channels', async (route) => {
     await route.fulfill({
@@ -95,7 +104,7 @@ test('can send a message', async ({ page }) => {
 
   const input = page.getByPlaceholder('Type a message...');
   await input.fill('Test reply');
-  await page.locator('button').filter({ hasText: 'send' }).or(page.locator('div[role="button"]').filter({ hasText: 'send' })).click();
+  await page.getByTestId('send-button').click();
 
   // Verification depends on implementation details, but we expect input to be cleared
   await expect(input).toHaveValue('');
