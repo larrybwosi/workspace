@@ -5,19 +5,39 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import "../global.css";
-import "../lib/auth"; // Initialize auth interceptors
+import "../lib/auth";
+import { setupNotifications } from '../lib/notifications';
+import { useCallSignaling } from '../hooks/use-call-signaling';
+import { IncomingCallOverlay } from '../components/calls/IncomingCallOverlay';
+import { MinimizedCallOverlay } from '../components/calls/MinimizedCallOverlay';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
     },
   },
 });
+
+function AppContent() {
+  useCallSignaling();
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="chat/[id]" />
+        <Stack.Screen name="call/[id]" options={{ presentation: 'fullScreenModal' }} />
+      </Stack>
+      <IncomingCallOverlay />
+      <MinimizedCallOverlay />
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -27,6 +47,10 @@ export default function RootLayout() {
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
+
+  useEffect(() => {
+    setupNotifications();
+  }, []);
 
   useEffect(() => {
     if (loaded || error) {
@@ -41,10 +65,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }} className={colorScheme === 'dark' ? 'dark' : ''}>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="chat/[id]" />
-        </Stack>
+        <AppContent />
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
