@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ThreadInfoPanel() {
   const router = useRouter();
@@ -39,7 +40,9 @@ export default function ThreadInfoPanel() {
             <View className="flex-row items-center gap-4">
               <View className="w-10 h-10 rounded-full bg-surface-container overflow-hidden">
                 <Image
-                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB014_hMryIIUvnPpNffDPuf2V5DnKiGC71P49obUCUlXIZGbwjpQ2JWvFMF-yPekt0ZY0sgboOCdsMTBfFHhymmhwcd4zrNPXLMlklshwZ0TAUN7UacNwNqTVngnJrwRCvfx9e9EqqWGcJ0Gg7nVjAFP-u6reFffkrv_QlAhvxGyqXz2N0E5ulDARY-txGzr4rwSw-5Qb9rsZsHZ-YI_6QyZ377x89mTLnuYT6HBdMmq5a8KO0MnmQasQJMWv01cw5rRKJ63aWpXM' }}
+                  source={{
+                    uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB014_hMryIIUvnPpNffDPuf2V5DnKiGC71P49obUCUlXIZGbwjpQ2JWvFMF-yPekt0ZY0sgboOCdsMTBfFHhymmhwcd4zrNPXLMlklshwZ0TAUN7UacNwNqTVngnJrwRCvfx9e9EqqWGcJ0Gg7nVjAFP-u6reFffkrv_QlAhvxGyqXz2N0E5ulDARY-txGzr4rwSw-5Qb9rsZsHZ-YI_6QyZ377x89mTLnuYT6HBdMmq5a8KO0MnmQasQJMWv01cw5rRKJ63aWpXM',
+                  }}
                   className="w-full h-full"
                 />
               </View>
@@ -51,11 +54,15 @@ export default function ThreadInfoPanel() {
 
             <View className="flex-row justify-between border-t border-outline-variant/10 pt-4">
               <View>
-                <Text className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">DATE CREATED</Text>
+                <Text className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">
+                  DATE CREATED
+                </Text>
                 <Text className="text-sm font-semibold text-on-surface">Oct 24, 2023</Text>
               </View>
               <View className="items-end">
-                <Text className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">LAST UPDATE</Text>
+                <Text className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">
+                  LAST UPDATE
+                </Text>
                 <Text className="text-sm font-semibold text-on-surface">2h ago</Text>
               </View>
             </View>
@@ -65,7 +72,9 @@ export default function ThreadInfoPanel() {
         {/* Thread Activity Visualization */}
         <View className="bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-outline-variant/10 mb-6">
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">THREAD ACTIVITY</Text>
+            <Text className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+              THREAD ACTIVITY
+            </Text>
             <Text className="text-[10px] text-secondary font-bold">+12% vs last week</Text>
           </View>
           <View className="h-24 flex-row items-end justify-between gap-1">
@@ -93,8 +102,12 @@ export default function ThreadInfoPanel() {
         {/* Linked Threads */}
         <View className="mb-6">
           <View className="flex-row items-center justify-between px-1 mb-3">
-            <Text className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">LINKED THREADS</Text>
-            <TouchableOpacity><Text className="text-xs font-bold text-secondary">View all</Text></TouchableOpacity>
+            <Text className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+              LINKED THREADS
+            </Text>
+            <TouchableOpacity>
+              <Text className="text-xs font-bold text-secondary">View all</Text>
+            </TouchableOpacity>
           </View>
           <View className="gap-2">
             <TouchableOpacity className="bg-surface-container-lowest p-4 rounded-xl flex-row items-center justify-between border border-outline-variant/5">
@@ -128,14 +141,18 @@ export default function ThreadInfoPanel() {
         <View className="mb-10">
           <View className="flex-row items-center justify-between px-1 mb-3">
             <Text className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">MEMBERS</Text>
-            <TouchableOpacity><Text className="text-xs font-bold text-secondary">Add Participant</Text></TouchableOpacity>
+            <TouchableOpacity>
+              <Text className="text-xs font-bold text-secondary">Add Participant</Text>
+            </TouchableOpacity>
           </View>
           <View className="bg-surface-container-lowest rounded-xl divide-y divide-outline-variant/10 overflow-hidden shadow-sm border border-outline-variant/5">
             <View className="p-4 flex-row items-center justify-between">
               <View className="flex-row items-center gap-3">
                 <View className="w-10 h-10 rounded-full border-2 border-surface-container p-0.5">
                   <Image
-                    source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9HFlvAWLKXSr6fQnvbF3D3inbuI2n5AUCw49vLtjvnVxS7zDbzk9W65pdmkt14fSQyIsSvPfINwxCao6ztR2pJaH5OKCGlWvwx46mCGIM9wIceH8AKK2-xsF7T7ys47C9kkR3vRjqITC30HUxzg-ymHfSKImMswSROCGgYysdqj3_bwS_-4kwSw25g2AhliDQ3hcLrxQMg6SzEBmtdZ0B_Y27DWaSMu6KIUHMPFX4UoMET2icwOp7KjAMNSm0n4mrrpw07lXTV20' }}
+                    source={{
+                      uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9HFlvAWLKXSr6fQnvbF3D3inbuI2n5AUCw49vLtjvnVxS7zDbzk9W65pdmkt14fSQyIsSvPfINwxCao6ztR2pJaH5OKCGlWvwx46mCGIM9wIceH8AKK2-xsF7T7ys47C9kkR3vRjqITC30HUxzg-ymHfSKImMswSROCGgYysdqj3_bwS_-4kwSw25g2AhliDQ3hcLrxQMg6SzEBmtdZ0B_Y27DWaSMu6KIUHMPFX4UoMET2icwOp7KjAMNSm0n4mrrpw07lXTV20',
+                    }}
                     className="w-full h-full rounded-full"
                   />
                 </View>
@@ -152,7 +169,9 @@ export default function ThreadInfoPanel() {
               <View className="flex-row items-center gap-3">
                 <View className="w-10 h-10 rounded-full border-2 border-surface-container p-0.5">
                   <Image
-                    source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoX5h09DAOWFQEE8-X4l9FIVmddflfxbLuVt_SjCfbCxonTMRhCE02jarfWjNGbNBiF3aTaf-9w7laT_oUHAzsMrSDn3EKjw6C_KNYI2D7QpKNYdYr5CFD793CWXuwSHblgwW1kPw53t1qZncKy6fnJTJv-HxM_t-B0KCh7jxdj1GUbPMRmuV0Itrg33F-7WB4dujSKxdxmlg3yg6ZVhNHcoWmTrgeIMYePUph4pmpy20DFgRCvAFTRAIe8mnmCLxWr5tQnbO5Clg' }}
+                    source={{
+                      uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoX5h09DAOWFQEE8-X4l9FIVmddflfxbLuVt_SjCfbCxonTMRhCE02jarfWjNGbNBiF3aTaf-9w7laT_oUHAzsMrSDn3EKjw6C_KNYI2D7QpKNYdYr5CFD793CWXuwSHblgwW1kPw53t1qZncKy6fnJTJv-HxM_t-B0KCh7jxdj1GUbPMRmuV0Itrg33F-7WB4dujSKxdxmlg3yg6ZVhNHcoWmTrgeIMYePUph4pmpy20DFgRCvAFTRAIe8mnmCLxWr5tQnbO5Clg',
+                    }}
                     className="w-full h-full rounded-full"
                   />
                 </View>

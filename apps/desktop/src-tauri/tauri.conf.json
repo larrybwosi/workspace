@@ -32,13 +32,7 @@
       "icons/icon.ico"
     ],
     "publisher": "Workspace",
-    "updater": {
-      "active": true,
-      "endpoints": [
-        "https://github.com/your-username/your-repo/releases/latest/download/latest.json"
-      ],
-      "pubkey": ""
-    }
+    "createUpdaterArtifacts": false
   },
   "plugins": {
     "shell": {
@@ -53,7 +47,11 @@
     "sql": {
       "db": "sqlite:workspace.db"
     },
-    "updater": {},
+    "updater": {
+      "endpoints": [
+        "https://github.com/your-username/your-repo/releases/latest/download/latest.json"
+      ]
+    },
     "fs": {
       "scope": [
         "$APPDATA/**",

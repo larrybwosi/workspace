@@ -34,3 +34,7 @@
 ## 2025-05-15 - [API] Consolidated Workspace Operations in InviteLinks
 **Learning:** Sequential queries to resolve a workspace slug before performing operations on nested resources (like invite links) doubled the database RTT and increased latency.
 **Action:** Use Prisma's nested `select` or `include` on a single `findUnique({ where: { slug } })` call to perform existence checks, membership authorization, and data retrieval in one round-trip.
+
+## 2026-05-09 - [Database] Consolidated Workspace Authorization & Retrieval
+**Learning:** Performing sequential Prisma queries for workspace existence, membership authorization, and data retrieval (logs, members, etc.) increases latency due to multiple database round-trips.
+**Action:** Use Prisma's nested `select` or `include` with filtered relations on a single `findUnique({ where: { slug } })` call to perform all checks and data fetching in one round-trip. Re-map results in-memory if necessary to maintain API contracts.

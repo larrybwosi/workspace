@@ -79,8 +79,11 @@ model User {
   dmParticipant2 DirectMessage[] @relation("DMParticipant2")
   dmMessages     DMMessage[]
 
-  teamMemberships WorkspaceTeamMember[]
-  announcements   DepartmentAnnouncement[]
+  assignedTickets SupportTicket[] @relation("TicketAssignee")
+
+  teamMemberships     WorkspaceTeamMember[]
+  announcements       DepartmentAnnouncement[]
+  systemAnnouncements SystemAnnouncement[]     @relation("AdminAnnouncements")
 
   // Social & Webhooks (Added for consistency with lower models)
   friends                 Friend[]                 @relation("UserFriends")
@@ -116,6 +119,8 @@ model User {
   oauthrefreshtokens OauthRefreshToken[]
   oauthaccesstokens  OauthAccessToken[]
   oauthconsents      OauthConsent[]
+
+  customerProfile CustomerProfile?
 
   notificationPreferences Json?
 
@@ -208,10 +213,17 @@ model Workspace {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Business & Branding
+  isPublic       Boolean @default(false)
+  customDomain   String? @unique
+  brandingConfig Json? // { colors: { primary, accent }, logoUrl, customCss }
+  industry       String?
+
   owner User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
 
   members          WorkspaceMember[]
   channels         Channel[]
+  sharedChannels   SharedChannel[]       @relation("SharedWorkspace")
   invitations      WorkspaceInvitation[]
   webhooks         WorkspaceWebhook[]
   integrations     WorkspaceIntegration[]
@@ -225,6 +237,9 @@ model Workspace {
   departments      WorkspaceDepartment[]
   teams            WorkspaceTeam[]
   apiTokens        WorkspaceApiToken[]
+  customerProfiles CustomerProfile[]
+  supportTickets   SupportTicket[]
+  liveChatSessions LiveChatSession[]
 
   @@map("workspaces")
 }
@@ -354,6 +369,7 @@ model WorkspaceMember {
   userId                 String
   departmentId           String?
   role                   String   @default("member")
+  memberType             String   @default("INTERNAL") // INTERNAL, GUEST, CUSTOMER
   permissions            BigInt   @default(0)
   joinedAt               DateTime @default(now())
   notificationPreference String   @default("all") // all, mentions, nothing
@@ -503,6 +519,11 @@ model Channel {
 
   createdById String?
   createdBy   User?   @relation("ChannelCreator", fields: [createdById], references: [id])
+
+  sharedWith SharedChannel[]
+
+  supportTicket   SupportTicket?
+  liveChatSession LiveChatSession?
 
   // Inverse relation for Department Default Channel
   defaultForDepartments WorkspaceDepartment[] @relation("DepartmentDefaultChannel")
@@ -1471,6 +1492,92 @@ model FriendRequest {
   @@index([receiverId])
   @@index([status])
   @@map("friend_requests")
+}
+
+// ============================================
+// CUSTOMER & BUSINESS MODELS
+// ============================================
+
+model SharedChannel {
+  id          String   @id @default(cuid())
+  channelId   String
+  workspaceId String // The external workspace this channel is shared with
+  permissions Json?
+  status      String   @default("PENDING") // PENDING, ACTIVE, REVOKED
+  createdAt   DateTime @default(now())
+
+  channel   Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation("SharedWorkspace", fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, workspaceId])
+  @@map("shared_channels")
+}
+
+model CustomerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  workspaceId String
+  company     String?
+  jobTitle    String?
+  crmId       String? // External CRM ID (e.g., Salesforce, HubSpot)
+  metadata    Json? // Arbitrary customer metadata
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  tickets  SupportTicket[]
+  sessions LiveChatSession[]
+
+  @@index([workspaceId])
+  @@map("customer_profiles")
+}
+
+model SupportTicket {
+  id            String   @id @default(cuid())
+  workspaceId   String
+  customerId    String
+  assigneeId    String?
+  subject       String
+  status        String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority      String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  channelId     String?  @unique // Dedicated channel for the ticket
+  metadata      Json?
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer  CustomerProfile  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignee  User?            @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  channel   Channel?         @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  sessions  LiveChatSession[]
+
+  @@index([workspaceId, status])
+  @@index([assigneeId])
+  @@map("support_tickets")
+}
+
+model LiveChatSession {
+  id          String    @id @default(cuid())
+  workspaceId String
+  customerId  String?
+  ticketId    String?
+  channelId   String    @unique
+  status      String    @default("ACTIVE") // ACTIVE, ENDED
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  metadata    Json?
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer  CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  ticket    SupportTicket?   @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  channel   Channel          @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@map("live_chat_sessions")
 }
 
 model Organization {

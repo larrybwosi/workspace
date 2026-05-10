@@ -1,28 +1,18 @@
-import { createAuthClient } from "better-auth/client";
+import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 
 export const authClient = createAuthClient({
     baseURL: (process.env as any).EXPO_PUBLIC_API_URL || "http://localhost:3000",
     plugins: [
-        expoClient({
+        ...(Platform.OS !== 'web' ? [expoClient({
             storage: SecureStore,
-        })
+        })] : [])
     ]
 });
 
 import { apiClient } from "@repo/api-client";
-
-(authClient.$store as any).listen((event: any) => {
-    if (event.type === "setSession") {
-        const session = (event as any).data;
-        if (session) {
-            // In a real mobile app, you might want to use SecureStore or similar
-            // Better Auth expo plugin handles the storage, but we need to tell axios about it
-            // if we are not using the session cookie (which might be the case in some mobile environments)
-        }
-    }
-});
 
 // Add interceptor to sync auth with apiClient
 apiClient.interceptors.request.use(async (config) => {

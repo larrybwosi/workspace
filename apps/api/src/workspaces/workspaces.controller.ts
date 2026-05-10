@@ -56,6 +56,18 @@ class UpdateWorkspaceDto {
 
   @ApiProperty({ required: false, enum: ['free', 'pro', 'enterprise'] })
   plan?: 'free' | 'pro' | 'enterprise';
+
+  @ApiProperty({ required: false })
+  isPublic?: boolean;
+
+  @ApiProperty({ required: false })
+  customDomain?: string;
+
+  @ApiProperty({ required: false })
+  brandingConfig?: any;
+
+  @ApiProperty({ required: false })
+  industry?: string;
 }
 
 const createWorkspaceSchema = z.object({
@@ -67,6 +79,8 @@ const createWorkspaceSchema = z.object({
     .regex(/^[a-z0-9-]+$/),
   icon: z.string().optional(),
   description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  industry: z.string().optional(),
 });
 
 const updateWorkspaceSchema = z.object({
@@ -75,6 +89,10 @@ const updateWorkspaceSchema = z.object({
   description: z.string().optional(),
   settings: z.any().optional(),
   plan: z.enum(['free', 'pro', 'enterprise']).optional(),
+  isPublic: z.boolean().optional(),
+  customDomain: z.string().optional(),
+  brandingConfig: z.any().optional(),
+  industry: z.string().optional(),
 });
 
 @ApiTags('Workspaces')
@@ -109,6 +127,10 @@ export class WorkspacesController {
         description: true,
         ownerId: true,
         createdAt: true,
+        isPublic: true,
+        customDomain: true,
+        brandingConfig: true,
+        industry: true,
         owner: {
           select: {
             id: true,
@@ -156,7 +178,7 @@ export class WorkspacesController {
       throw new BadRequestException('Workspace slug already taken');
     }
 
-    const { name, slug, icon, description } = validatedData.data;
+    const { name, slug, icon, description, isPublic, industry } = validatedData.data;
 
     return prisma.workspace.create({
       data: {
@@ -164,6 +186,8 @@ export class WorkspacesController {
         slug,
         icon,
         description,
+        isPublic,
+        industry,
         owner: {
           connect: { id: user.id },
         },
@@ -213,6 +237,7 @@ export class WorkspacesController {
     // Return workspaces the user is NOT a member of
     return prisma.workspace.findMany({
       where: {
+        isPublic: true,
         members: {
           none: {
             userId: user.id,
@@ -241,22 +266,26 @@ export class WorkspacesController {
   @ApiResponse({ status: 201, description: 'Joined successfully' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async joinWorkspace(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1 while maintaining API response contracts.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const existingMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const existingMember = workspace.members[0];
 
     if (existingMember) {
       return existingMember;
@@ -297,6 +326,10 @@ export class WorkspacesController {
         createdAt: true,
         plan: true,
         settings: true,
+        isPublic: true,
+        customDomain: true,
+        brandingConfig: true,
+        industry: true,
         owner: {
           select: {
             id: true,
@@ -343,22 +376,26 @@ export class WorkspacesController {
   @ApiResponse({ status: 200, description: 'Workspace updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden: Not an owner or admin' })
   async updateWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: UpdateWorkspaceDto) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('You do not have permission to update this workspace');
