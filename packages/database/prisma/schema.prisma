@@ -1581,6 +1581,7 @@ model LiveChatSession {
 }
 
 model Organization {
+  m2mApplications M2mApplication[]
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
@@ -1873,4 +1874,21 @@ model SystemAnnouncement {
   createdAt DateTime @default(now())
 
   @@map("system_announcements")
+}
+
+model M2mApplication {
+  id             String   @id @default(cuid())
+  name           String
+  clientId       String   @unique
+  clientSecret   String
+  organizationId String
+  scopes         String[]
+  allowedIps     String[]
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("m2m_applications")
 }
