@@ -82,12 +82,46 @@ export class FriendsService {
   }
 
   async sendFriendRequest(senderId: string, senderName: string, receiverEmailOrUsername: string, message?: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates 3 separate database queries into a single 'prisma.user.findFirst' call.
+     * 2. Uses nested 'select' and 'where' filters to check for existing friendship and
+     *    pending requests in one database round-trip.
+     * Expected impact: Reduces database RTT from 3 down to 1 during the verification phase.
+     */
     const receiver = await prisma.user.findFirst({
       where: {
         OR: [
           { email: receiverEmailOrUsername },
           { username: receiverEmailOrUsername },
         ],
+      },
+      select: {
+        id: true,
+        // Check if sender is already a friend of receiver
+        friendOf: {
+          where: { userId: senderId },
+          select: { id: true },
+          take: 1,
+        },
+        // Check if receiver is already a friend of sender (redundant but safe)
+        friends: {
+          where: { friendId: senderId },
+          select: { id: true },
+          take: 1,
+        },
+        // Check if there is a pending request from sender to receiver
+        receivedFriendRequests: {
+          where: { senderId, status: 'pending' },
+          select: { id: true },
+          take: 1,
+        },
+        // Check if there is a pending request from receiver to sender
+        sentFriendRequests: {
+          where: { receiverId: senderId, status: 'pending' },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
 
@@ -101,29 +135,11 @@ export class FriendsService {
       throw new BadRequestException('Cannot send friend request to yourself');
     }
 
-    const existingFriend = await prisma.friend.findFirst({
-      where: {
-        OR: [
-          { userId: senderId, friendId: receiverId },
-          { userId: receiverId, friendId: senderId },
-        ],
-      },
-    });
-
-    if (existingFriend) {
+    if (receiver.friendOf.length > 0 || receiver.friends.length > 0) {
       throw new BadRequestException('Already friends with this user');
     }
 
-    const existingRequest = await prisma.friendRequest.findFirst({
-      where: {
-        OR: [
-          { senderId: senderId, receiverId: receiverId, status: "pending" },
-          { senderId: receiverId, receiverId: senderId, status: "pending" },
-        ],
-      },
-    });
-
-    if (existingRequest) {
+    if (receiver.receivedFriendRequests.length > 0 || receiver.sentFriendRequests.length > 0) {
       throw new BadRequestException('Friend request already pending');
     }
 

@@ -38,3 +38,6 @@
 ## 2026-05-09 - [Database] Consolidated Workspace Authorization & Retrieval
 **Learning:** Performing sequential Prisma queries for workspace existence, membership authorization, and data retrieval (logs, members, etc.) increases latency due to multiple database round-trips.
 **Action:** Use Prisma's nested `select` or `include` with filtered relations on a single `findUnique({ where: { slug } })` call to perform all checks and data fetching in one round-trip. Re-map results in-memory if necessary to maintain API contracts.
+## 2026-05-10 - [Database] Consolidated Friend Request Verification
+**Learning:** Sequential queries to check existence, friendship, and pending requests can be consolidated into a single 'prisma.user.findFirst' call using nested 'select' and 'where' filters.
+**Action:** Use nested relations and filtered counts/selections to reduce database RTT for multi-stage verification logic.
