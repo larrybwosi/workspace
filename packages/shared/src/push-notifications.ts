@@ -206,8 +206,10 @@ async function sendExpoPushNotification(
           ...payload.data,
           notificationId: payload.notificationId || '',
         },
+        categoryIdentifier: (payload.data?.type === 'direct_message' || payload.data?.type === 'channel_alert' || payload.data?.type === 'mention') ? 'MESSAGE_REPLY' : undefined,
         badge: 1,
         priority: 'high',
+        threadId: payload.data?.entityId,
       }),
     });
 
