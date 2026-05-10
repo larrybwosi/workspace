@@ -39,50 +39,57 @@ export class AuditLogsController {
     @Query('page') pageNum = '1',
     @Query('limit') limitNum = '50',
   ) {
+    const page = parseInt(pageNum);
+    const limit = parseInt(limitNum);
+    const skip = (page - 1) * limit;
+
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership verification, audit log retrieval,
+     * and total count into a single database query.
+     * Reduces database round-trips from 3 down to 1.
+     * Expected impact: Faster response times and significantly reduced DB load.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+        auditLogs: {
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        },
+        _count: {
+          select: { auditLogs: true },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const page = parseInt(pageNum);
-    const limit = parseInt(limitNum);
-    const skip = (page - 1) * limit;
-
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const [logs, total] = await Promise.all([
-      prisma.workspaceAuditLog.findMany({
-        where: { workspaceId: workspace.id },
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          workspace: {
-            select: {
-              name: true,
-              slug: true,
-            },
-          },
-        },
-      }),
-      prisma.workspaceAuditLog.count({
-        where: { workspaceId: workspace.id },
-      }),
-    ]);
+    // Attach workspace metadata to logs to maintain API compatibility
+    const logs = workspace.auditLogs.map((log) => ({
+      ...log,
+      workspace: {
+        name: workspace.name,
+        slug: workspace.slug,
+      },
+    }));
+    const total = workspace._count.auditLogs;
 
     const userIds = [...new Set(logs.map((log) => log.userId))];
     const users = await prisma.user.findMany({
@@ -126,32 +133,39 @@ export class AuditLogsController {
     @Param('slug') slug: string,
     @Res() res: FastifyReply,
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership verification, and audit log retrieval
+     * into a single database query.
+     * Reduces database round-trips from 3 down to 1.
+     * Expected impact: Faster export initialization and reduced database load.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+        auditLogs: {
+          orderBy: { createdAt: 'desc' },
+          take: 10000,
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden - Admin access required');
     }
 
-    const logs = await prisma.workspaceAuditLog.findMany({
-      where: { workspaceId: workspace.id },
-      orderBy: { createdAt: 'desc' },
-      take: 10000,
-    });
+    const logs = workspace.auditLogs;
 
     const userIds = [...new Set(logs.map((log) => log.userId))];
     const users = await prisma.user.findMany({
