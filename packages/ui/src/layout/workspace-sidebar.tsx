@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Users,
+  LifeBuoy,
   Settings,
   Sparkles,
   Plug2,
@@ -25,7 +26,8 @@ import { WorkspaceRail } from './workspace-rail';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
-import { useCreateWorkspaceChannel, useWorkspaceChannels } from '@repo/api-client';
+import { CreateTicketDialog } from '../features/support/create-ticket-dialog';
+import { useCreateWorkspaceChannel, useWorkspaceChannels, useWorkspace } from '@repo/api-client';
 import { User } from '../lib/types';
 import { usePresence } from '../lib/contexts/presence-context';
 
@@ -140,7 +142,9 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false);
+  const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
 
+  const { data: workspace } = useWorkspace(workspaceSlug ?? '');
   const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(workspaceSlug ?? '');
   const createChannelMutation = useCreateWorkspaceChannel(workspaceSlug ?? '');
   const session = useSession();
@@ -252,6 +256,43 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
               {/* Channels */}
               <div>
                 <div className="flex items-center justify-between px-3 mb-1">
+                  <SectionLabel>Support</SectionLabel>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
+                          onClick={() => setCreateTicketOpen(true)}
+                          aria-label="Create ticket"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">New ticket</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <div className="space-y-0.5 mb-5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                      pathname === `/workspace/${slug}/tickets`
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                    )}
+                    onClick={() => handleNavigate(`/workspace/${slug}/tickets`)}
+                  >
+                    <LifeBuoy className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 truncate text-left">All Tickets</span>
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between px-3 mb-1">
                   <SectionLabel>Channels</SectionLabel>
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
@@ -332,6 +373,14 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
         open={createWorkspaceOpen}
         onOpenChange={setCreateWorkspaceOpen}
       />
+
+      {workspace && (
+        <CreateTicketDialog
+          open={createTicketOpen}
+          onOpenChange={setCreateTicketOpen}
+          workspaceId={workspace.id}
+        />
+      )}
     </>
   );
 }

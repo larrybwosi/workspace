@@ -81,7 +81,13 @@ export class SupportService {
               },
             },
           },
+          assignee: {
+            select: { id: true, name: true, avatar: true },
+          },
           channel: true,
+        },
+        orderBy: {
+          lastMessageAt: 'desc',
         },
       });
     }
@@ -168,6 +174,48 @@ export class SupportService {
     }
 
     return ticket;
+  }
+
+  async assignTicket(ticketId: string, assigneeId: string | null) {
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    if (assigneeId) {
+      const member = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: ticket.workspaceId,
+            userId: assigneeId,
+          },
+        },
+      });
+
+      if (!member || !['owner', 'admin', 'moderator'].includes(member.role)) {
+        throw new BadRequestException('User is not an authorized agent in this workspace');
+      }
+    }
+
+    return prisma.supportTicket.update({
+      where: { id: ticketId },
+      data: { assigneeId },
+      include: {
+        assignee: {
+          select: { id: true, name: true, avatar: true },
+        },
+      },
+    });
+  }
+
+  async updateLastMessageAt(ticketId: string) {
+    return prisma.supportTicket.update({
+      where: { id: ticketId },
+      data: { lastMessageAt: new Date() },
+    });
   }
 
   async createCustomerProfile(workspaceId: string, userId: string, data: any) {
