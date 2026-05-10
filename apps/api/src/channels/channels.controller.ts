@@ -135,6 +135,15 @@ export class ChannelsController {
     return this.channelsService.removeReaction(channelId, messageId, user.id, emoji);
   }
 
+  @Post(':channelId/share')
+  @ApiOperation({ summary: 'Share a channel with another workspace' })
+  async shareChannel(
+    @Param('channelId') channelId: string,
+    @Body('workspaceId') workspaceId: string
+  ) {
+    return this.channelsService.inviteWorkspaceToChannel(channelId, workspaceId);
+  }
+
   @Post(':channelId/messages/:messageId/reply')
   @ApiOperation({ summary: 'Reply to a message' })
   @ApiParam({ name: 'channelId', description: 'The channel ID' })

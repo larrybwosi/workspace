@@ -31,6 +31,15 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
+  // Mock realtime config
+  await page.route('**/api/config/realtime', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ provider: 'ably' }),
+    });
+  });
+
   // Mock channels
   await page.route('**/api/channels', async (route) => {
     await route.fulfill({
