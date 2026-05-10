@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,24 +10,26 @@ import {
   Image,
   ActivityIndicator,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   useMessages,
   useSendMessage,
-  useWorkspaces,
   useChannels,
   useDMConversations,
   useAddReaction,
-  useRemoveReaction,
   useStorageUpload,
+  useWorkspaceMembers,
 } from '@repo/api-client';
 import { realtime } from '@repo/shared';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { useSession } from '../../../lib/auth';
 import { DiscordMessage } from '../../../components/chat/DiscordMessage';
 import { ReactionPicker } from '../../../components/chat/reaction-picker';
+import { EmojiPickerButton } from '../../../components/chat/EmojiPickerButton';
+import { MentionAutocomplete } from '../../../components/chat/MentionAutocomplete';
 
 export default function ChatScreen() {
   const { id, workspaceId, isDM: isDMParam } = useLocalSearchParams<{ id: string; workspaceId: string, isDM: string }>();
@@ -48,7 +50,10 @@ export default function ChatScreen() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
 
-  const { data: workspaces } = useWorkspaces();
+  const [mentionSearch, setMentionSearch] = useState<string | null>(null);
+
+  const { data: members } = useWorkspaceMembers(workspaceId || '');
+
   const { data: channels } = useChannels();
   const { data: dms } = useDMConversations();
 
@@ -85,10 +90,27 @@ export default function ChatScreen() {
 
   const handleTextChange = (text: string) => {
     setMessageText(text);
+
+    const words = text.split(' ');
+    const lastWord = words[words.length - 1];
+
+    if (lastWord.startsWith('@')) {
+      setMentionSearch(lastWord.slice(1));
+    } else {
+      setMentionSearch(null);
+    }
+
     if (text.length > 0 && id) {
        const channelName = isDM ? `dm:${id}` : `channel:${id}`;
        realtime.publish(channelName, 'typing', { userId: session?.user?.id, userName: session?.user?.name });
     }
+  };
+
+  const handleMentionSelect = (user: any) => {
+    const words = messageText.split(' ');
+    words[words.length - 1] = `@${user.name} `;
+    setMessageText(words.join(' '));
+    setMentionSearch(null);
   };
 
   const handleSend = async () => {
@@ -105,22 +127,25 @@ export default function ChatScreen() {
     setAttachments([]);
   };
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
+  const pickFiles = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      multiple: true,
+      type: '*/*',
     });
 
     if (!result.canceled) {
       setIsUploading(true);
       try {
-        const file = result.assets[0];
-        const uploaded = await uploadFile({
-          uri: file.uri,
-          name: file.fileName || 'image.jpg',
-          type: 'image/jpeg',
-        } as any);
-        setAttachments([...attachments, { url: uploaded.url, name: file.fileName || 'image.jpg', type: 'image/jpeg' }]);
+        const newAttachments = [...attachments];
+        for (const asset of result.assets) {
+          const uploaded = await uploadFile({
+            uri: asset.uri,
+            name: asset.name,
+            type: asset.mimeType || 'application/octet-stream',
+          } as any);
+          newAttachments.push({ url: uploaded.url, name: asset.name, type: asset.mimeType });
+        }
+        setAttachments(newAttachments);
       } catch (err) {
         console.error(err);
       } finally {
@@ -154,6 +179,10 @@ export default function ChatScreen() {
     }
     return activeChannel?.name || 'Chat';
   };
+
+  const filteredMembers = members?.filter((m: any) =>
+    m.user?.name?.toLowerCase().includes(mentionSearch?.toLowerCase() || '')
+  ).map((m: any) => m.user) || [];
 
   const typingNames = Object.values(typingUsers);
 
@@ -209,41 +238,56 @@ export default function ChatScreen() {
            )}
 
            <View className="p-3">
+              <MentionAutocomplete
+                isVisible={mentionSearch !== null}
+                users={filteredMembers}
+                onSelect={handleMentionSelect}
+              />
+
               {isUploading && (
                 <View className="flex-row items-center mb-2 px-2">
                   <ActivityIndicator size="small" color="#5865F2" />
-                  <Text className="text-discord-muted ml-2 text-xs">Uploading file...</Text>
+                  <Text className="text-discord-muted ml-2 text-xs">Uploading files...</Text>
                 </View>
               )}
               {attachments.length > 0 && (
-                <View className="flex-row gap-2 mb-2">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2 mb-2">
                   {attachments.map((att, idx) => (
-                    <View key={idx} className="relative">
-                      <Image source={{ uri: att.url }} className="w-16 h-16 rounded-lg" />
+                    <View key={idx} className="relative mr-2">
+                      {att.type?.startsWith('image/') ? (
+                        <Image source={{ uri: att.url }} className="w-20 h-20 rounded-lg" />
+                      ) : (
+                        <View className="w-20 h-20 bg-discord-tertiary rounded-lg items-center justify-center p-2 border border-black/10">
+                           <MaterialIcons name="insert-drive-file" size={24} color="#949BA4" />
+                           <Text className="text-discord-header text-[8px] text-center mt-1" numberOfLines={2}>{att.name}</Text>
+                        </View>
+                      )}
                       <TouchableOpacity
-                        className="absolute -top-1 -right-1 bg-red-500 rounded-full"
+                        className="absolute -top-1 -right-1 bg-discord-secondary rounded-full p-0.5 border border-black/20"
                         onPress={() => setAttachments(attachments.filter((_, i) => i !== idx))}
                       >
-                        <MaterialIcons name="close" size={16} color="white" />
+                        <MaterialIcons name="close" size={14} color="#F23F42" />
                       </TouchableOpacity>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               )}
 
-              <View className="flex-row items-center bg-discord-tertiary rounded-full px-4 py-2">
-                <TouchableOpacity onPress={pickImage} className="mr-2">
+              <View className="flex-row items-center bg-discord-tertiary rounded-2xl px-4 py-2">
+                <TouchableOpacity onPress={pickFiles} className="mr-2">
                   <MaterialIcons name="add-circle" size={24} color="#949BA4" />
                 </TouchableOpacity>
 
                 <TextInput
-                  className="flex-1 text-discord-header py-1"
+                  className="flex-1 text-discord-header py-1 min-h-[36px]"
                   placeholder={`Message ${isDM ? '@' : '#'}${getTitle()}`}
                   placeholderTextColor="#949BA4"
                   value={messageText}
                   onChangeText={handleTextChange}
                   multiline
                 />
+
+                <EmojiPickerButton onSelect={(emoji) => setMessageText(prev => prev + emoji)} />
 
                 {(messageText.trim() || attachments.length > 0) && (
                   <TouchableOpacity onPress={handleSend}>
