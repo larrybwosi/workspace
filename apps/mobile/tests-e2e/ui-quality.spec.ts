@@ -43,7 +43,7 @@ test.beforeEach(async ({ page }) => {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        items: [
+        messages: [
           {
             id: 'm-1',
             content: 'Welcome to the server!',
