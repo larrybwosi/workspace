@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,30 +14,28 @@ export default function QRScannerScreen() {
   const router = useRouter();
 
   if (!permission) {
-    // Camera permissions are still loading.
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+      <View className="flex-1 bg-discord-base items-center justify-center">
+        <ActivityIndicator size="large" color="#5865F2" />
       </View>
     );
   }
 
   if (!permission.granted) {
-    // Camera permissions are not granted yet.
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <TouchableOpacity onPress={requestPermission} style={styles.button}>
-          <Text style={styles.buttonText}>Grant Permission</Text>
+      <SafeAreaView className="flex-1 bg-discord-base items-center justify-center p-6">
+        <MaterialIcons name="camera-alt" size={64} color="#949BA4" />
+        <Text className="text-discord-header text-xl font-bold mt-4 text-center">Camera Access Required</Text>
+        <Text className="text-discord-muted text-center mt-2 mb-8">We need your permission to scan QR codes for desktop login.</Text>
+        <TouchableOpacity onPress={requestPermission} className="bg-discord-blurple px-8 py-3 rounded-lg">
+          <Text className="text-white font-bold">Grant Permission</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     if (scanned) return;
-
-    // We expect the data to be just the sessionId now as per requirements
     setSessionId(data);
     setScanned(true);
     setShowConfirm(true);
@@ -45,7 +43,6 @@ export default function QRScannerScreen() {
 
   const handleAuthorize = async () => {
     if (!sessionId) return;
-
     setLoading(true);
     try {
       await apiClient.post('/auth/device/qr/authorize', { sessionId });
@@ -68,7 +65,7 @@ export default function QRScannerScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-black">
       <CameraView
         style={StyleSheet.absoluteFillObject}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
@@ -77,55 +74,55 @@ export default function QRScannerScreen() {
         }}
       />
 
-      <View style={styles.overlay}>
-        <View style={styles.unfocusedContainer}></View>
-        <View style={styles.middleContainer}>
-          <View style={styles.unfocusedContainer}></View>
-          <View style={styles.focusedContainer}></View>
-          <View style={styles.unfocusedContainer}></View>
-        </View>
-        <View style={styles.unfocusedContainer}>
-          <Text style={styles.instructionText}>Scan the QR code on your desktop screen</Text>
-        </View>
+      <View className="absolute top-12 left-4 z-10">
+        <TouchableOpacity
+          className="bg-black/50 p-2 rounded-full"
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-        <MaterialIcons name="close" size={28} color="white" />
-      </TouchableOpacity>
+      <View className="flex-1 items-center justify-center">
+        <View className="w-64 h-64 border-2 border-discord-blurple rounded-3xl" />
+        <Text className="text-white font-bold mt-8 bg-black/50 px-4 py-2 rounded-full">
+           Scan QR code on desktop
+        </Text>
+      </View>
 
       <Modal
         visible={showConfirm}
         transparent={true}
         animationType="slide"
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.iconContainer}>
-              <MaterialIcons name="laptop-mac" size={48} color="#2563eb" />
+        <View className="flex-1 bg-black/60 justify-end">
+          <View className="bg-discord-base rounded-t-3xl p-8 items-center">
+            <View className="w-20 h-20 rounded-full bg-discord-blurple/10 items-center justify-center mb-4">
+              <MaterialIcons name="laptop-mac" size={48} color="#5865F2" />
             </View>
-            <Text style={styles.modalTitle}>Authorize Login?</Text>
-            <Text style={styles.modalDescription}>
+            <Text className="text-discord-header text-2xl font-bold mb-2">Authorize Login?</Text>
+            <Text className="text-discord-muted text-center mb-8">
               Are you trying to log in to Skyrme on a desktop device?
             </Text>
 
-            <View style={styles.modalButtons}>
+            <View className="flex-row gap-4 w-full">
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                className="flex-1 bg-discord-tertiary p-4 rounded-xl items-center"
                 onPress={handleCancel}
                 disabled={loading}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text className="text-discord-header font-bold">Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
+                className="flex-1 bg-discord-blurple p-4 rounded-xl items-center"
                 onPress={handleAuthorize}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.confirmButtonText}>Yes, Log Me In</Text>
+                  <Text className="text-white font-bold">Yes, Log Me In</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -135,127 +132,3 @@ export default function QRScannerScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  message: {
-    textAlign: 'center',
-    paddingBottom: 10,
-    color: 'white',
-  },
-  button: {
-    backgroundColor: '#2563eb',
-    padding: 15,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    padding: 10,
-    borderRadius: 25,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  unfocusedContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  middleContainer: {
-    flexDirection: 'row',
-    height: 250,
-  },
-  focusedContainer: {
-    width: 250,
-    borderWidth: 2,
-    borderColor: '#2563eb',
-    backgroundColor: 'transparent',
-    borderRadius: 20,
-  },
-  instructionText: {
-    color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-    paddingHorizontal: 40,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 30,
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#eff6ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#1e293b',
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 22,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: 15,
-  },
-  modalButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#f1f5f9',
-  },
-  cancelButtonText: {
-    color: '#475569',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  confirmButton: {
-    backgroundColor: '#2563eb',
-  },
-  confirmButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-});

@@ -48,6 +48,12 @@ export const serverEnvSchema = baseEnvSchema.extend({
   BOT_TOKEN_SECRET: z.string().default('default_secret'),
   WEBHOOK_SECRET: z.string().default('default_secret'),
   ALLOWED_ORIGINS: z.string().default('http://localhost:3001'),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
+  INSTAGRAM_CLIENT_ID: z.string().optional(),
+  INSTAGRAM_CLIENT_SECRET: z.string().optional(),
 });
 
 /**
