@@ -181,7 +181,16 @@ export async function notifyMentions(
     let preference = channelMember?.notificationPreference;
 
     if (!preference && workspaceId) {
-      preference = workspacePrefMap.get(userId) || 'all';
+      preference = workspacePrefMap.get(userId);
+    }
+
+    if (!preference) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { notificationPreferences: true }
+      });
+      const userPrefs = (user?.notificationPreferences as any) || {};
+      preference = userPrefs.mentions || 'all';
     }
 
     if (preference === 'nothing') continue;
@@ -199,6 +208,7 @@ export async function notifyMentions(
         mentionedBy,
         channelName: channel.name,
         messageId,
+        type: 'mention',
       },
     });
   }
@@ -316,6 +326,135 @@ export async function notifyAppExclusive(
     metadata,
     priority: 'exclusive',
   }));
+
+  await createNotifications(payloads);
+}
+
+/**
+ * Notify a user about a new direct message.
+ */
+export async function notifyDM(
+  dmId: string,
+  senderId: string,
+  senderName: string,
+  recipientId: string,
+  messageId: string,
+  content: string
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: recipientId },
+    select: { notificationPreferences: true },
+  });
+
+  const prefs = (user?.notificationPreferences as any) || { dms: 'all' };
+
+  if (prefs.dms === 'nothing') return;
+
+  await createNotification({
+    userId: recipientId,
+    type: 'direct_message',
+    title: senderName,
+    message: content.slice(0, 100),
+    entityType: 'direct_message',
+    entityId: dmId,
+    linkUrl: `/chat/${dmId}?messageId=${messageId}`,
+    metadata: {
+      dmId,
+      senderId,
+      messageId,
+      type: 'direct_message'
+    },
+  });
+}
+
+/**
+ * Notify all channel members about a new message, respecting their preferences.
+ */
+export async function notifyNewMessage(
+  channelId: string,
+  senderId: string,
+  senderName: string,
+  messageId: string,
+  content: string,
+  excludedUserIds: string[] = []
+) {
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: {
+      workspace: {
+        select: { id: true, slug: true },
+      },
+      members: {
+        where: { userId: { not: senderId } },
+        select: { userId: true, notificationPreference: true },
+      },
+    },
+  });
+
+  if (!channel) return;
+
+  const workspaceId = channel.workspaceId;
+  const workspaceSlug = channel.workspace?.slug || 'default';
+  const channelSlug = channel.slug || channelId;
+
+  const membersWithoutChannelPref = channel.members
+    .filter(m => !m.notificationPreference)
+    .map(m => m.userId);
+
+  const workspaceMembers =
+    workspaceId && membersWithoutChannelPref.length > 0
+      ? await prisma.workspaceMember.findMany({
+          where: { workspaceId, userId: { in: membersWithoutChannelPref } },
+          select: { userId: true, notificationPreference: true },
+        })
+      : [];
+
+  const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
+
+  const membersWithoutAnyPref = channel.members
+    .filter(m => !m.notificationPreference && (!workspaceId || !workspacePrefMap.has(m.userId)))
+    .map(m => m.userId);
+
+  const usersWithGlobalPrefs = membersWithoutAnyPref.length > 0
+    ? await prisma.user.findMany({
+        where: { id: { in: membersWithoutAnyPref } },
+        select: { id: true, notificationPreferences: true }
+      })
+    : [];
+
+  const globalPrefMap = new Map(usersWithGlobalPrefs.map(u => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all']));
+
+  const payloads: NotificationPayload[] = [];
+  const excludedSet = new Set(excludedUserIds);
+  for (const cm of channel.members) {
+    if (excludedSet.has(cm.userId)) continue;
+    let preference: string | null | undefined = cm.notificationPreference;
+    if (!preference && workspaceId) {
+      preference = workspacePrefMap.get(cm.userId);
+    }
+
+    if (!preference) {
+      preference = globalPrefMap.get(cm.userId) || 'all';
+    }
+
+    // Only notify if preference is 'all'
+    if (preference !== 'all') continue;
+
+    payloads.push({
+      userId: cm.userId,
+      type: 'channel_alert',
+      title: `#${channel.name}`,
+      message: `${senderName}: ${content.slice(0, 100)}`,
+      entityType: 'channel',
+      entityId: channelId,
+      linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${messageId}`,
+      metadata: {
+        messageId,
+        senderId,
+        type: 'channel_alert'
+      },
+    });
+  }
 
   await createNotifications(payloads);
 }
