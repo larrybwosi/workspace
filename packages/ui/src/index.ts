@@ -87,3 +87,7 @@ export * from './hooks/use-branding';
 export * from './features/assistant/assistant-channel';
 export * from './features/calls/call-chat';
 export * from './features/calls/schedule-call-dialog';
+export * from './features/support/ticket-list';
+export * from './features/support/ticket-card';
+export * from './features/support/ticket-status-badge';
+export * from './features/support/create-ticket-dialog';

@@ -62,6 +62,15 @@ export class SupportController {
     return this.supportService.updateTicketStatus(ticketId, status);
   }
 
+  @Patch('tickets/:ticketId/assign')
+  @ApiOperation({ summary: 'Assign ticket to an agent' })
+  async assignTicket(
+    @Param('ticketId') ticketId: string,
+    @Body('assigneeId') assigneeId: string | null
+  ) {
+    return this.supportService.assignTicket(ticketId, assigneeId);
+  }
+
   @Post('customers')
   @ApiOperation({ summary: 'Create or update customer profile' })
   async createCustomerProfile(@Body() body: any) {

@@ -269,6 +269,25 @@ export class ChannelsService {
     }
 
     const message = await prisma.$transaction(async tx => {
+      // Optimization: Only check for support ticket if channel type suggests it
+      const channel = await tx.channel.findUnique({
+        where: { id: channelId },
+        select: { type: true },
+      });
+
+      if (channel?.type === 'support_ticket') {
+        const ticket = await tx.supportTicket.findUnique({
+          where: { channelId },
+        });
+
+        if (ticket) {
+          await tx.supportTicket.update({
+            where: { id: ticket.id },
+            data: { lastMessageAt: new Date() },
+          });
+        }
+      }
+
       const msg = await tx.message.create({
         data: {
           channelId,
