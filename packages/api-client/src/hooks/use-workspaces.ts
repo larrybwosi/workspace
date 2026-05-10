@@ -57,7 +57,14 @@ export function useWorkspace(workspaceSlug: string) {
 export function useCreateWorkspace() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { name: string; slug: string; icon?: string; description?: string }) => {
+    mutationFn: async (data: {
+      name: string;
+      slug: string;
+      icon?: string;
+      description?: string;
+      isPublic?: boolean;
+      industry?: string;
+    }) => {
       const { data: response } = await apiClient.post("/workspaces", data)
       return response
     },
@@ -70,7 +77,15 @@ export function useCreateWorkspace() {
 export function useUpdateWorkspace(workspaceSlug: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { name?: string; icon?: string; description?: string }) => {
+    mutationFn: async (data: {
+      name?: string;
+      icon?: string;
+      description?: string;
+      isPublic?: boolean;
+      customDomain?: string;
+      brandingConfig?: any;
+      industry?: string;
+    }) => {
       const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}`, data)
       return response
     },

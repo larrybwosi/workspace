@@ -8,8 +8,12 @@ edition = "2021"
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
+[lib]
+name = "desktop_lib"
+path = "src/lib.rs"
+
 [dependencies]
-tauri = { version = "2.1", features = [] }
+tauri = { version = "2.1", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-shell = "2.1"
 tauri-plugin-notification = "2.1"
 tauri-plugin-deep-link = "2.1"

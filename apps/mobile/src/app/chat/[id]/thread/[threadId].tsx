@@ -5,7 +5,6 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -19,13 +18,14 @@ import {
   useChannels,
   messageKeys,
   useAddReaction,
-  useRemoveReaction
+  useRemoveReaction,
 } from '@repo/api-client';
 import { useSession } from '../../../../lib/auth';
 import { ReactionPicker } from '../../../../components/chat/reaction-picker';
 import { formatTime, realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { Message, Channel } from '@repo/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ThreadScreen() {
   const { id, threadId, workspaceId } = useLocalSearchParams<{ id: string; threadId: string; workspaceId?: string }>();
@@ -70,9 +70,9 @@ export default function ThreadScreen() {
     };
   }, [id, queryClient, workspaceId, threadId]);
 
-  const channel = (channels as Channel[])?.find((c) => c.id === id);
+  const channel = (channels as Channel[])?.find(c => c.id === id);
 
-  const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
+  const messages = messagesData?.pages.flatMap(page => page.messages) || [];
 
   const handleSend = () => {
     if (!messageText.trim()) return;
@@ -91,32 +91,36 @@ export default function ThreadScreen() {
     const isParent = message.id === threadId;
 
     const handleLongPress = () => {
-        setSelectedMessageId(message.id);
+      setSelectedMessageId(message.id);
     };
 
     const toggleReaction = (emoji: string) => {
-        const hasReacted = message.reactions?.some((r) => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id));
+      const hasReacted = message.reactions?.some(
+        r => r.emoji === emoji && r.users?.some((u: any) => (u.id || u) === session?.user?.id)
+      );
 
-        if (hasReacted) {
-            removeReaction({
-                messageId: message.id,
-                emoji,
-                channelId: id as string,
-                workspaceSlug: workspaceId
-            });
-        } else {
-            addReaction({
-                messageId: message.id,
-                emoji,
-                channelId: id as string,
-                workspaceSlug: workspaceId
-            });
-        }
+      if (hasReacted) {
+        removeReaction({
+          messageId: message.id,
+          emoji,
+          channelId: id as string,
+          workspaceSlug: workspaceId,
+        });
+      } else {
+        addReaction({
+          messageId: message.id,
+          emoji,
+          channelId: id as string,
+          workspaceSlug: workspaceId,
+        });
+      }
     };
 
     return (
       <View className={`mb-6 ${isParent ? 'border-b border-surface-container pb-6' : ''}`}>
-        <View className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}>
+        <View
+          className={`flex-row items-end gap-3 ${isMe ? 'flex-row-reverse self-end max-w-[85%]' : 'self-start max-w-[85%]'}`}
+        >
           {!isMe && (
             <View className="w-8 h-8 rounded-lg overflow-hidden bg-surface-container">
               {(message.user as any)?.image ? (
@@ -130,39 +134,38 @@ export default function ThreadScreen() {
           )}
           <View className={`gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
             <TouchableOpacity
-                onLongPress={handleLongPress}
-                activeOpacity={0.8}
-                className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}
+              onLongPress={handleLongPress}
+              activeOpacity={0.8}
+              className={`p-4 rounded-xl shadow-sm ${isMe ? 'bg-primary rounded-tr-none' : 'bg-surface-container-low rounded-tl-none border border-outline-variant/10'}`}
             >
               <Text className={`font-body text-sm leading-relaxed ${isMe ? 'text-on-primary' : 'text-on-surface'}`}>
                 {message.content}
               </Text>
             </TouchableOpacity>
             <Text className="text-[10px] font-medium text-on-surface-variant/70 px-1">
-              {!isMe && `${message.user?.name} • `}{formatTime(message.timestamp)}
+              {!isMe && `${message.user?.name} • `}
+              {formatTime(message.timestamp)}
             </Text>
           </View>
         </View>
 
         {/* Reactions Display */}
         {message.reactions && message.reactions.length > 0 && (
-            <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
-                {message.reactions.map((r) => (
-                    <TouchableOpacity
-                        key={r.emoji}
-                        onPress={() => toggleReaction(r.emoji)}
-                        className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => (u.id || u) === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
-                    >
-                        <Text className="text-xs">{r.emoji}</Text>
-                        <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+          <View className={`flex-row flex-wrap gap-1 mt-2 ${isMe ? 'justify-end' : 'ml-11'}`}>
+            {message.reactions.map(r => (
+              <TouchableOpacity
+                key={r.emoji}
+                onPress={() => toggleReaction(r.emoji)}
+                className={`px-2 py-1 rounded-full flex-row items-center gap-1 border ${r.users?.some((u: any) => (u.id || u) === session?.user?.id) ? 'bg-primary/10 border-primary/30' : 'bg-surface-container-low border-outline-variant/20'}`}
+              >
+                <Text className="text-xs">{r.emoji}</Text>
+                <Text className="text-[10px] font-bold text-on-surface-variant">{r.count}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
         {isParent && (
-            <Text className="mt-4 text-xs font-bold text-on-surface-variant/50 uppercase tracking-widest">
-                Replies
-            </Text>
+          <Text className="mt-4 text-xs font-bold text-on-surface-variant/50 uppercase tracking-widest">Replies</Text>
         )}
       </View>
     );
@@ -173,26 +176,26 @@ export default function ThreadScreen() {
       <ReactionPicker
         isVisible={!!selectedMessageId}
         onClose={() => setSelectedMessageId(null)}
-        onSelect={(emoji) => {
-            if (selectedMessageId) {
-                addReaction({
-                    messageId: selectedMessageId,
-                    emoji,
-                    channelId: id as string,
-                    workspaceSlug: workspaceId
-                });
-            }
+        onSelect={emoji => {
+          if (selectedMessageId) {
+            addReaction({
+              messageId: selectedMessageId,
+              emoji,
+              channelId: id as string,
+              workspaceSlug: workspaceId,
+            });
+          }
         }}
       />
       <View className="h-16 flex-row items-center justify-between px-4 bg-white border-b border-surface-container">
         <View className="flex-row items-center gap-3">
           <TouchableOpacity onPress={() => router.back()}>
-             <MaterialIcons name="arrow-back" size={24} color="#5f5e5e" />
+            <MaterialIcons name="arrow-back" size={24} color="#5f5e5e" />
           </TouchableOpacity>
           <View>
             <Text className="font-body font-semibold text-lg tracking-tight text-on-surface">Thread</Text>
             <Text className="text-[10px] font-headline font-bold uppercase tracking-widest text-primary/60">
-                # {channel?.name || ''}
+              # {channel?.name || ''}
             </Text>
           </View>
         </View>
@@ -200,20 +203,23 @@ export default function ThreadScreen() {
 
       <FlatList
         data={messages as Message[]}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={renderMessage}
         inverted
         contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}
         onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) {
-                fetchNextPage();
-            }
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
         }}
         onEndReachedThreshold={0.5}
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
         <View className="px-4 py-3 bg-white border-t border-surface-container-high">
           <View className="flex-row items-center gap-3">
             <View className="flex-1 bg-surface-container-low px-4 py-2 rounded-lg flex-row items-center gap-3">
@@ -227,9 +233,9 @@ export default function ThreadScreen() {
               />
             </View>
             <TouchableOpacity
-                className={`w-10 h-10 items-center justify-center rounded-lg shadow-sm ${messageText.trim() ? 'bg-primary' : 'bg-surface-container-high'}`}
-                onPress={handleSend}
-                disabled={!messageText.trim()}
+              className={`w-10 h-10 items-center justify-center rounded-lg shadow-sm ${messageText.trim() ? 'bg-primary' : 'bg-surface-container-high'}`}
+              onPress={handleSend}
+              disabled={!messageText.trim()}
             >
               <MaterialIcons name="send" size={20} color={messageText.trim() ? '#f7f7ff' : '#5f5f61'} />
             </TouchableOpacity>
