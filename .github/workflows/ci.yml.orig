@@ -117,35 +117,35 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Run Prisma Generate
-        run: pnpm --filter @repo/database run db:generate
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      - name: Run Playwright tests
-        env:
-          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
-          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
-          PORT: 3001
-        run: pnpm run test:e2e
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: |
-            apps/web/playwright-report/
-            apps/mobile/playwright-report/
-          retention-days: 30
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'pnpm'
+    - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+    - name: Run Prisma Generate
+      run: pnpm --filter @repo/database run db:generate
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+    - name: Run Playwright tests
+      env:
+        DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+        BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+        PORT: 3001
+      run: pnpm run test:e2e
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: |
+          apps/web/playwright-report/
+          apps/mobile/playwright-report/
+        retention-days: 30
 
   mobile-verify:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == "pull_request"
     needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
     runs-on: ubuntu-latest
     steps:
@@ -188,7 +188,7 @@ jobs:
         run: ./gradlew assembleDebug
 
   desktop-verify:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == "pull_request"
     needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
     strategy:
       fail-fast: false
