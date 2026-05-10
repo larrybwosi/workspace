@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Stack } from "expo-router";
 import { useFonts, Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
@@ -8,7 +9,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useColorScheme, View } from 'react-native';
 import "../global.css";
 import "../lib/auth";
-import { setupNotifications } from '../lib/notifications';
+import { setupNotifications, handleNotificationResponse } from '../lib/notifications';
+import * as Notifications from 'expo-notifications';
 import { useCallSignaling } from '../hooks/use-call-signaling';
 import { IncomingCallOverlay } from '../components/calls/IncomingCallOverlay';
 import { MinimizedCallOverlay } from '../components/calls/MinimizedCallOverlay';
@@ -24,7 +26,16 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
+  const router = useRouter();
   useCallSignaling();
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      handleNotificationResponse(response, router);
+    });
+
+    return () => subscription.remove();
+  }, [router]);
 
   return (
     <View style={{ flex: 1 }}>
