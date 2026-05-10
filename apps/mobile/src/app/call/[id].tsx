@@ -9,10 +9,10 @@ import {
   IRtcEngine
 } from 'react-native-agora';
 import { useCallStore } from '@repo/shared';
-import { useSession } from '../../lib/auth';
 import { CallControls } from '../../components/calls/CallControls';
 import { MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
+import { AGORA_APP_ID } from '../../lib/agora';
 
 export default function CallScreen() {
   const { id: callIdParam, type, workspaceId, workspaceSlug, recipientId, channelId } = useLocalSearchParams<{
@@ -24,8 +24,7 @@ export default function CallScreen() {
     channelId?: string;
   }>();
 
-  const { data: session } = (useSession as any)();
-  const { setCall, endCall, activeCall, updateActiveCall, setMinimized } = useCallStore();
+  const { setCall, endCall, updateActiveCall, setMinimized } = useCallStore();
   const router = useRouter();
   const engine = useRef<IRtcEngine | null>(null);
 
@@ -37,100 +36,99 @@ export default function CallScreen() {
   const [currentCallId, setCurrentCallId] = useState<string | null>(callIdParam === 'new' ? null : callIdParam);
 
   useEffect(() => {
+    const init = async () => {
+      try {
+        const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+        const body: any = {
+          type: type || 'voice',
+          workspaceId,
+          workspaceSlug
+        };
+
+        if (callIdParam !== 'new') {
+          body.callId = callIdParam;
+        } else {
+          if (recipientId) body.recipientId = recipientId;
+          if (channelId) body.channelId = channelId;
+        }
+
+        const response = await axios.post(`${baseURL}/api/calls`, body);
+
+        const { token, appId, channelName, uid, callId } = response.data;
+        setCurrentCallId(callId);
+
+        setCall({
+          callId,
+          channelName,
+          type: type || 'voice',
+          token,
+          uid,
+          appId,
+        });
+
+        engine.current = createAgoraRtcEngine();
+        engine.current.initialize({ appId: appId || AGORA_APP_ID });
+
+        engine.current.registerEventHandler({
+          onJoinChannelSuccess: async () => {
+            setJoined(true);
+            try {
+              await axios.patch(`${baseURL}/api/calls/${callId}`, {
+                action: 'join',
+                uid
+              });
+            } catch (err) {
+              console.error('Failed to notify backend of join:', err);
+            }
+          },
+          onUserJoined: (_connection, uid) => {
+            setRemoteUid(prev => [...prev, uid]);
+          },
+          onUserOffline: (_connection, uid) => {
+            setRemoteUid(prev => prev.filter(id => id !== uid));
+          },
+          onError: (err) => {
+            console.error('Agora Error:', err);
+          }
+        });
+
+        if (type === 'video') {
+          engine.current.enableVideo();
+        } else {
+          engine.current.enableAudio();
+        }
+
+        engine.current.joinChannel(token, channelName, uid, {
+          channelProfile: ChannelProfileType.ChannelProfileCommunication,
+          clientRoleType: ClientRoleType.ClientRoleBroadcaster,
+        });
+
+      } catch (e) {
+        console.error('Failed to initialize call:', e);
+        Alert.alert('Error', 'Failed to join call');
+        router.back();
+      }
+    };
+
     init();
     return () => {
       engine.current?.leaveChannel();
       engine.current?.release();
     };
-  }, []);
-
-  const init = async () => {
-    try {
-      // 1. Join or Start call via API to get token
-      const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
-      const body: any = {
-        type: type || 'voice',
-        workspaceId,
-        workspaceSlug
-      };
-
-      if (callIdParam !== 'new') {
-        body.callId = callIdParam;
-      } else {
-        if (recipientId) body.recipientId = recipientId;
-        if (channelId) body.channelId = channelId;
-      }
-
-      const response = await axios.post(`${baseURL}/api/calls`, body);
-
-      const { token, appId, channelName, uid, callId } = response.data;
-      setCurrentCallId(callId);
-
-      setCall({
-        callId,
-        channelName,
-        type: type || 'voice',
-        token,
-        uid,
-        appId,
-      });
-
-      // 2. Initialize Agora Engine
-      engine.current = createAgoraRtcEngine();
-      engine.current.initialize({ appId });
-
-      // 3. Setup Listeners
-      engine.current.registerEventHandler({
-        onJoinChannelSuccess: async () => {
-          setJoined(true);
-          // Mark as joined in backend
-          await axios.patch(`${baseURL}/api/calls/${callId}`, {
-            action: 'join',
-            uid
-          });
-        },
-        onUserJoined: (connection, uid) => {
-          setRemoteUid(prev => [...prev, uid]);
-        },
-        onUserOffline: (connection, uid) => {
-          setRemoteUid(prev => prev.filter(id => id !== uid));
-        },
-        onError: (err) => {
-          console.error('Agora Error:', err);
-        }
-      });
-
-      // 4. Configure based on type
-      if (type === 'video') {
-        engine.current.enableVideo();
-      } else {
-        engine.current.enableAudio();
-      }
-
-      // 5. Join Channel
-      engine.current.joinChannel(token, channelName, uid, {
-        channelProfile: ChannelProfileType.ChannelProfileCommunication,
-        clientRoleType: ClientRoleType.ClientRoleBroadcaster,
-      });
-
-    } catch (e) {
-      console.error('Failed to initialize call:', e);
-      Alert.alert('Error', 'Failed to join call');
-      router.back();
-    }
-  };
+  }, [callIdParam, type, workspaceId, workspaceSlug, recipientId, channelId, setCall, router]);
 
   const handleEndCall = async () => {
     engine.current?.leaveChannel();
     endCall();
     router.back();
 
-    // Notify backend
     const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
     if (currentCallId) {
       try {
         await axios.patch(`${baseURL}/api/calls/${currentCallId}`, { action: 'leave' });
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Failed to leave call on backend:', e);
+      }
     }
   };
 
@@ -163,7 +161,6 @@ export default function CallScreen() {
   return (
     <SafeAreaView className="flex-1 bg-discord-base">
       <View className="flex-1 px-4 py-6">
-        {/* Header */}
         <View className="flex-row justify-between items-center mb-8">
           <TouchableOpacity onPress={handleMinimize}>
             <MaterialIcons name="keyboard-arrow-down" size={32} color="white" />
@@ -175,7 +172,6 @@ export default function CallScreen() {
           <View style={{ width: 32 }} />
         </View>
 
-        {/* Call View */}
         <View className="flex-1 bg-discord-sidebar rounded-3xl overflow-hidden items-center justify-center">
           {type === 'video' ? (
             <View className="w-full h-full">
@@ -192,7 +188,6 @@ export default function CallScreen() {
                   <Text className="text-white mt-4 font-medium">Waiting for others...</Text>
                 </View>
               )}
-              {/* Local Preview */}
               {!isVideoOff && (
                 <View className="absolute bottom-4 right-4 w-32 h-48 bg-black rounded-xl overflow-hidden border-2 border-discord-blurple">
                   <RtcSurfaceView
@@ -213,7 +208,6 @@ export default function CallScreen() {
           )}
         </View>
 
-        {/* Controls */}
         <CallControls
           type={type || 'voice'}
           onEndCall={handleEndCall}
