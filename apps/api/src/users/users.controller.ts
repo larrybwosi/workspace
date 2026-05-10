@@ -206,4 +206,22 @@ export class UsersController {
       throw error;
     }
   }
+
+  @Post('me')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated' })
+  async updateMe(@CurrentUser() user: User, @Body() body: any) {
+    const { name, avatar, banner, statusText, statusEmoji } = body;
+
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name,
+        avatar,
+        banner,
+        statusText,
+        statusEmoji
+      }
+    });
+  }
 }
