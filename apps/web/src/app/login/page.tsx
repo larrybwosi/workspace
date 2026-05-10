@@ -52,7 +52,7 @@ export default function LoginPage() {
         }
     };
 
-    const handleSocialLogin = async (provider: "google" | "github") => {
+    const handleSocialLogin = async (provider: "google" | "github" | "instagram") => {
         setIsLoading(true);
         try {
             const callbackURL = inviteToken
@@ -89,12 +89,13 @@ export default function LoginPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {/* Social Login Buttons */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-3">
                             <Button
                                 variant="outline"
                                 onClick={() => handleSocialLogin("google")}
                                 disabled={isLoading}
                                 className="w-full"
+                                size="sm"
                             >
                                 <svg
                                     className="mr-2 h-4 w-4"
@@ -124,9 +125,19 @@ export default function LoginPage() {
                                 onClick={() => handleSocialLogin("github")}
                                 disabled={isLoading}
                                 className="w-full"
+                                size="sm"
                             >
                                 {/*<Github className="mr-2 h-4 w-4" />*/}
                                 Github
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleSocialLogin("instagram")}
+                                disabled={isLoading}
+                                className="w-full"
+                                size="sm"
+                            >
+                                Instagram
                             </Button>
                         </div>
 
