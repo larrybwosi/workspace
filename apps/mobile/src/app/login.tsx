@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity, Alert, ScrollView } from "react-native";
-import { signIn, authClient } from "../lib/auth";
+import { Text, View, TouchableOpacity, Alert, ScrollView } from "react-native";
+import { authClient } from "../lib/auth";
 import { useRouter } from "expo-router";
 
 export default function Login() {
@@ -14,7 +14,7 @@ export default function Login() {
         provider,
         callbackURL: "skryme-auth://",
       });
-    } catch (error) {
+    } catch {
       Alert.alert("Error", `Unable to login with ${provider}. Please try again.`);
     } finally {
       setLoading(false);
