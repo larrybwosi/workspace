@@ -1,69 +1,54 @@
 import { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity, Alert } from "react-native";
-import { signIn } from "../lib/auth";
+import { Text, View, TouchableOpacity, Alert, ScrollView } from "react-native";
+import { authClient } from "../lib/auth";
 import { useRouter } from "expo-router";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
-    }
-
+  const handleSocialLogin = async (provider: "google" | "github" | "instagram") => {
     setLoading(true);
     try {
-      const { error } = await signIn.email({
-        email,
-        password,
+      await authClient.signIn.social({
+        provider,
+        callbackURL: "skryme-auth://",
       });
-
-      if (error) {
-        Alert.alert("Login Failed", error.message || "An unknown error occurred");
-      } else {
-        router.replace("/");
-      }
     } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      Alert.alert("Error", `Unable to login with ${provider}. Please try again.`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View className="flex-1 items-center justify-center p-6 bg-white">
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-white">
+    <View className="flex-1 items-center justify-center p-6">
       <Text className="text-3xl font-bold mb-8">Login</Text>
 
-      <TextInput
-        className="w-full h-12 border border-gray-300 rounded-lg px-4 mb-4"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-
-      <TextInput
-        className="w-full h-12 border border-gray-300 rounded-lg px-4 mb-6"
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        className={`w-full h-12 rounded-lg items-center justify-center ${loading ? 'bg-blue-300' : 'bg-blue-600'}`}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        <Text className="text-white font-semibold text-lg">
-          {loading ? "Logging in..." : "Login"}
-        </Text>
-      </TouchableOpacity>
+      <View className="w-full flex-row justify-between mb-6">
+        <TouchableOpacity
+          className="flex-1 h-12 border border-gray-300 rounded-lg items-center justify-center mr-2"
+          onPress={() => handleSocialLogin("google")}
+          disabled={loading}
+        >
+          <Text className="font-semibold">Google</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-1 h-12 border border-gray-300 rounded-lg items-center justify-center mx-1"
+          onPress={() => handleSocialLogin("github")}
+          disabled={loading}
+        >
+          <Text className="font-semibold">GitHub</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-1 h-12 border border-gray-300 rounded-lg items-center justify-center ml-2"
+          onPress={() => handleSocialLogin("instagram")}
+          disabled={loading}
+        >
+          <Text className="font-semibold">Instagram</Text>
+        </TouchableOpacity>
+      </View>
 
       <View className="flex-row mt-6">
         <Text className="text-gray-600">Don't have an account? </Text>
@@ -72,5 +57,6 @@ export default function Login() {
         </TouchableOpacity>
       </View>
     </View>
+    </ScrollView>
   );
 }
