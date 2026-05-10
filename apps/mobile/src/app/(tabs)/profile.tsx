@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, SafeAreaView } from 'react-native';
 import { useSession, signOut } from '../../lib/auth';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,74 +12,48 @@ export default function Profile() {
     router.replace('/login');
   };
 
-  if (!session) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background p-6">
-        <Text className="text-xl font-bold mb-4">You are not logged in</Text>
-        <TouchableOpacity
-          className="bg-primary px-6 py-3 rounded-lg"
-          onPress={() => router.push('/login')}
-        >
-          <Text className="text-white font-bold">Go to Login</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  if (!session) return null;
 
   return (
-    <ScrollView className="flex-1 bg-background">
-      <View className="p-6 pt-16 items-center bg-white border-b border-surface-container">
-        <View className="w-24 h-24 rounded-full bg-surface-container items-center justify-center mb-4 overflow-hidden border-4 border-primary/10">
-          {session.user.image ? (
-            <Image source={{ uri: session.user.image }} className="w-full h-full" />
-          ) : (
-            <Text className="text-3xl font-bold text-on-surface">{session.user.name?.charAt(0)}</Text>
-          )}
+    <SafeAreaView className="flex-1 bg-discord-base">
+      <ScrollView>
+        <View className="h-32 bg-discord-blurple" />
+        <View className="px-4 -mt-12 items-start mb-6">
+          <View className="w-24 h-24 rounded-full bg-discord-tertiary p-1 overflow-hidden border-4 border-discord-base">
+            {session.user.image ? (
+              <Image source={{ uri: session.user.image }} className="w-full h-full rounded-full" />
+            ) : (
+              <View className="w-full h-full rounded-full items-center justify-center bg-discord-blurple">
+                <Text className="text-3xl font-bold text-white">{session.user.name?.charAt(0)}</Text>
+              </View>
+            )}
+            <View className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-discord-green border-4 border-discord-base" />
+          </View>
+          <Text className="text-discord-header text-2xl font-bold mt-2">{session.user.name}</Text>
+          <Text className="text-discord-muted">#{session.user.id.slice(0, 4)}</Text>
         </View>
-        <Text className="text-2xl font-bold text-on-surface">{session.user.name}</Text>
-        <Text className="text-on-surface-variant mb-6">{session.user.email}</Text>
 
-        <TouchableOpacity
-          className="flex-row items-center bg-surface-container-low px-4 py-2 rounded-full"
-          onPress={() => {/* TODO: Edit profile */}}
-        >
-          <MaterialIcons name="edit" size={16} color="#5f5e5e" />
-          <Text className="ml-2 font-semibold text-on-surface">Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
+        <View className="px-4 gap-2">
+          <ProfileItem icon="edit" label="Edit Profile" onPress={() => {}} />
+          <ProfileItem icon="notifications" label="Notifications" onPress={() => {}} />
+          <ProfileItem icon="security" label="Privacy & Safety" onPress={() => {}} />
+          <ProfileItem icon="qr-code-scanner" label="Scan QR Code" onPress={() => router.push('/auth/qr-scanner')} />
+          <ProfileItem icon="logout" label="Log Out" color="#F23F43" onPress={handleLogout} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
 
-      <View className="p-4">
-        <Text className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-4 ml-2">Account</Text>
-
-        <TouchableOpacity className="flex-row items-center p-4 bg-white rounded-xl mb-2 border border-surface-container">
-          <MaterialIcons name="notifications-none" size={24} color="#5f5e5e" />
-          <Text className="ml-4 flex-1 font-medium">Notifications</Text>
-          <MaterialIcons name="chevron-right" size={24} color="#5f5e5e" />
-        </TouchableOpacity>
-
-        <TouchableOpacity className="flex-row items-center p-4 bg-white rounded-xl mb-2 border border-surface-container">
-          <MaterialIcons name="security" size={24} color="#5f5e5e" />
-          <Text className="ml-4 flex-1 font-medium">Privacy & Security</Text>
-          <MaterialIcons name="chevron-right" size={24} color="#5f5e5e" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-row items-center p-4 bg-white rounded-xl mb-2 border border-surface-container"
-          onPress={() => router.push('/auth/qr-scanner')}
-        >
-          <MaterialIcons name="qr-code-scanner" size={24} color="#5f5e5e" />
-          <Text className="ml-4 flex-1 font-medium">Link Desktop Device</Text>
-          <MaterialIcons name="chevron-right" size={24} color="#5f5e5e" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-row items-center p-4 bg-white rounded-xl mb-8 border border-surface-container"
-          onPress={handleLogout}
-        >
-          <MaterialIcons name="logout" size={24} color="#ef4444" />
-          <Text className="ml-4 flex-1 font-medium text-red-500">Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+function ProfileItem({ icon, label, onPress, color }: { icon: any, label: string, onPress: () => void, color?: string }) {
+  return (
+    <TouchableOpacity
+      className="flex-row items-center p-4 bg-discord-sidebar/50 rounded-xl"
+      onPress={onPress}
+    >
+      <MaterialIcons name={icon} size={24} color={color || "#949BA4"} />
+      <Text className={`ml-4 flex-1 font-medium ${color ? 'text-red-500' : 'text-discord-header'}`}>{label}</Text>
+      <MaterialIcons name="chevron-right" size={24} color="#949BA4" />
+    </TouchableOpacity>
   );
 }
