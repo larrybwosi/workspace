@@ -68,24 +68,31 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('verify profile layout', async ({ page }) => {
-  await page.goto('/(tabs)/profile');
-  await page.waitForResponse('**/api/auth/get-session');
+  // Use Promise.all to avoid race condition between goto and waitForResponse
+  await Promise.all([
+    page.waitForResponse('**/api/auth/get-session').catch(() => null), // Optional if already cached
+    page.goto('/(tabs)/profile'),
+  ]);
   await expect(page.locator('text=Edit Profile')).toBeVisible();
   await expect(page.locator('text=Scan QR Code')).toBeVisible();
   await page.screenshot({ path: 'tests-e2e/screenshots/profile.png' });
 });
 
 test('verify sidebar navigation structure', async ({ page }) => {
-  await page.goto('/(tabs)/workspaces');
-  await page.waitForResponse('**/api/workspaces');
+  await Promise.all([
+    page.waitForResponse('**/api/workspaces').catch(() => null),
+    page.goto('/(tabs)/workspaces'),
+  ]);
   // Check for presence of sidebar or main area hint
   await expect(page.locator('text=Select a server')).toBeVisible();
   await page.screenshot({ path: 'tests-e2e/screenshots/sidebar.png' });
 });
 
 test('verify chat screen elements', async ({ page }) => {
-  await page.goto('/chat/c-1');
-  await page.waitForResponse('**/api/**/messages*');
+  await Promise.all([
+    page.waitForResponse('**/api/**/messages*').catch(() => null),
+    page.goto('/chat/c-1'),
+  ]);
   // Use locator that handles partial matches or ignore case if needed
   await expect(page.locator('text=Welcome to the server')).toBeVisible();
   await page.screenshot({ path: 'tests-e2e/screenshots/chat.png' });
