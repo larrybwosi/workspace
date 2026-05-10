@@ -25,7 +25,7 @@ export function useMessages(
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? "/v2" : "";
 
-      let url = "";
+      let url;
       if (isV2 && workspaceSlug) {
         // Use V2 workspace-scoped path
         url = `${prefix}/workspaces/${workspaceSlug}/messages`;
@@ -61,7 +61,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
     }) => {
       const prefix = isV2 ? "/v2" : "";
 
-      let url = "";
+      let url;
       if (isV2 && workspaceSlug) {
         url = `${prefix}/workspaces/${workspaceSlug}/messages`;
       } else {
