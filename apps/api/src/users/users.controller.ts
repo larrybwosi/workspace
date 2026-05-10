@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, UseGuards, Body, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -205,5 +205,23 @@ export class UsersController {
       }
       throw error;
     }
+  }
+
+  @Post('me')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated' })
+  async updateMe(@CurrentUser() user: User, @Body() body: any) {
+    const { name, avatar, banner, statusText, statusEmoji } = body;
+
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name,
+        avatar,
+        banner,
+        statusText,
+        statusEmoji
+      }
+    });
   }
 }
