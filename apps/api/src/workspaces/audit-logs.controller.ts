@@ -112,6 +112,10 @@ export class AuditLogsController {
 
     const enrichedLogs = logs.map((log) => ({
       ...log,
+      workspace: {
+        name: workspace.name,
+        slug: workspace.slug,
+      },
       user: userMap[log.userId] || null,
     }));
 

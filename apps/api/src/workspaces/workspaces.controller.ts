@@ -266,22 +266,26 @@ export class WorkspacesController {
   @ApiResponse({ status: 201, description: 'Joined successfully' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async joinWorkspace(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1 while maintaining API response contracts.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const existingMember = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const existingMember = workspace.members[0];
 
     if (existingMember) {
       return existingMember;
@@ -372,22 +376,26 @@ export class WorkspacesController {
   @ApiResponse({ status: 200, description: 'Workspace updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden: Not an owner or admin' })
   async updateWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: UpdateWorkspaceDto) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      include: {
+        members: {
+          where: { userId: user.id },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: workspace.id,
-          userId: user.id,
-        },
-      },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('You do not have permission to update this workspace');
