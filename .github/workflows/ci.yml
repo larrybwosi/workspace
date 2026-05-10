@@ -145,7 +145,7 @@ jobs:
           retention-days: 30
 
   mobile-verify:
-    if: github.event_name == "pull_request"
+    if: github.event_name == 'pull_request'
     needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
     runs-on: ubuntu-latest
     steps:
@@ -188,7 +188,7 @@ jobs:
         run: ./gradlew assembleDebug
 
   desktop-verify:
-    if: github.event_name == "pull_request"
+    if: github.event_name == 'pull_request'
     needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
     strategy:
       fail-fast: false
