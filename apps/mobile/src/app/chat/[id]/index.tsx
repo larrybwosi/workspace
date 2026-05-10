@@ -36,7 +36,7 @@ export default function ChatScreen() {
   const { data: session } = (useSession as any)();
 
   const { data: messagesData, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(id as string);
-  const messages = messagesData?.pages.flatMap(page => page.items) || [];
+  const messages = messagesData?.pages.flatMap(page => page.messages) || [];
 
   const { mutate: sendMessage } = useSendMessage();
   const { mutate: addReaction } = useAddReaction();
@@ -97,7 +97,8 @@ export default function ChatScreen() {
     sendMessage({
       channelId: id as string,
       content: messageText,
-      attachments: attachments.map(a => ({ url: a.url, name: a.name, type: a.type })),
+      attachments: attachments.map(a => ({ id: Math.random().toString(), url: a.url, name: a.name, type: a.type })),
+      mentions: [],
     });
 
     setMessageText('');

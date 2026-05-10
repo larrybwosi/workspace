@@ -95,7 +95,7 @@ function ChannelList({ workspaceId }: { workspaceId: string }) {
         <TouchableOpacity
           key={c.id}
           className={`flex-row items-center p-2 rounded-md mb-1 ${activeChannelId === c.id ? 'bg-discord-bg/50' : ''}`}
-          onPress={() => router.push({ pathname: `/chat/${c.id}`, params: { workspaceId } })}
+          onPress={() => router.push({ pathname: '/chat/[id]', params: { id: c.id, workspaceId } } as any)}
         >
           <MaterialIcons
             name={c.type === 'PUBLIC' ? 'tag' : 'lock'}
