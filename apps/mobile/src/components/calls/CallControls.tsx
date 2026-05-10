@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useCallStore } from '@repo/shared';
 
 interface Props {
   onEndCall: () => void;

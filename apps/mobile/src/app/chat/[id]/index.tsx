@@ -15,7 +15,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   useMessages,
   useSendMessage,
-  useWorkspaces,
+
   useChannels,
   useDMConversations,
   useAddReaction,
@@ -47,7 +47,6 @@ export default function ChatScreen() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
 
-  const { data: workspaces } = useWorkspaces();
   const { data: channels } = useChannels();
   const { data: dms } = useDMConversations();
 
