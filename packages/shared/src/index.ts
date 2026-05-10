@@ -8,5 +8,3 @@ export * from './utils/date-utils';
 export * from './env';
 export * from './messages/custom-message-schema';
 export * from './mention-utils';
-export * from './notifications';
-export * from './push-notifications';
