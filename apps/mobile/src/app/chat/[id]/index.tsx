@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,6 @@ import {
   useChannels,
   useDMConversations,
   useAddReaction,
-  useRemoveReaction,
   useStorageUpload,
 } from '@repo/api-client';
 import { realtime } from '@repo/shared';
@@ -129,6 +128,21 @@ export default function ChatScreen() {
     }
   };
 
+  const startCall = (type: 'voice' | 'video') => {
+    const otherUser = activeDM?.participants?.find((p: any) => p.user?.id !== session?.user?.id)?.user;
+
+    router.push({
+      pathname: '/call/[id]',
+      params: {
+        id: 'new', // The CallScreen will handle creating a new call
+        type,
+        workspaceId: workspaceId || '',
+        recipientId: otherUser?.id || '',
+        channelId: isDM ? '' : id
+      }
+    } as any);
+  };
+
   const renderMessage = ({ item, index }: { item: any; index: number }) => {
     const nextMessage = messages[index + 1];
     const isSameUser = nextMessage?.user?.id === item.user?.id &&
@@ -178,9 +192,17 @@ export default function ChatScreen() {
             {isDM ? '' : '# '}{getTitle()}
           </Text>
         </View>
-        <TouchableOpacity>
-           <MaterialIcons name="people" size={24} color="#949BA4" />
-        </TouchableOpacity>
+        <View className="flex-row gap-4">
+          <TouchableOpacity onPress={() => startCall('voice')}>
+            <MaterialIcons name="call" size={24} color="#949BA4" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => startCall('video')}>
+            <MaterialIcons name="videocam" size={24} color="#949BA4" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <MaterialIcons name="people" size={24} color="#949BA4" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
