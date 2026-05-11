@@ -12,8 +12,10 @@ const patch = versionParts[2] || '0';
 
 // MSI version requirements: major.minor.patch.build where each is numeric.
 const newVersion = `${major}.${minor}.${patch}.${buildNumber}`;
+// Tauri 2 requires a 3-part SemVer string for its config.
+const semverVersion = `${major}.${minor}.${patch}`;
 
-console.log(`Updating version from ${rootPackageJson.version} to ${newVersion}`);
+console.log(`Updating version from ${rootPackageJson.version} to ${newVersion} (SemVer: ${semverVersion})`);
 
 function updateJsonFile(filePath, updateFn) {
   if (fs.existsSync(filePath)) {
@@ -45,13 +47,13 @@ directories.forEach(dir => {
       if (subDir === 'desktop') {
         const tauriPath = path.join(fullDir, subDir, 'src-tauri', 'tauri.conf.json');
         updateJsonFile(tauriPath, (json) => {
-          json.version = newVersion;
+          json.version = semverVersion;
         });
 
         const cargoPath = path.join(fullDir, subDir, 'src-tauri', 'Cargo.toml');
         if (fs.existsSync(cargoPath)) {
             let cargoContent = fs.readFileSync(cargoPath, 'utf8');
-            cargoContent = cargoContent.replace(/^version = \".*\"/m, `version = "${newVersion}"`);
+            cargoContent = cargoContent.replace(/^version = \".*\"/m, `version = "${semverVersion}"`);
             fs.writeFileSync(cargoPath, cargoContent);
             console.log(`Updated ${cargoPath}`);
         }
