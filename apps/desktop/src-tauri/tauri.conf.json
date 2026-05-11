@@ -1,6 +1,6 @@
 {
   "productName": "Workspace",
-  "version": "0.0.1",
+  "version": "0.0.1.327",
   "identifier": "com.workspace.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",

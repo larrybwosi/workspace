@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.0.1"
+version = "0.0.1.327"
 description = "Workspace Desktop Application"
 authors = ["you"]
 edition = "2021"
