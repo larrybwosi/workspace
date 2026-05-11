@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001 --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev --port 3001",
+    "build": "next build",
     "start": "next start",
     "test": "jest --passWithNoTests",
     "test:e2e": "playwright test",
