@@ -15,10 +15,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  turbopack: {},
   webpack: (config: any) => {
     return config;
   },
-  output: 'standalone' as any,
+  output: (process.env.NEXT_STANDALONE === 'true' ? 'standalone' : undefined) as any,
   async rewrites() {
     return [
       {
