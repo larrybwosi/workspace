@@ -176,6 +176,7 @@ jobs:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
           BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+          PORT: 3001
         run: pnpm turbo run test:e2e --filter=web
       - uses: actions/upload-artifact@v4
         if: always()
@@ -361,7 +362,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version: ${{ steps.update_version.outputs.version }}
+      version: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: Create Release

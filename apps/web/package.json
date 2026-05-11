@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --port 3001 --webpack",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "node .next/standalone/apps/web/server.js || next start",
     "test": "jest --passWithNoTests",
     "test:e2e": "playwright test",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
