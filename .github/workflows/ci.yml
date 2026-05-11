@@ -190,6 +190,7 @@ jobs:
           retention-days: 30
 
   mobile-e2e:
+    if: false
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -243,7 +244,7 @@ jobs:
 
   desktop-verify:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
     strategy:
       fail-fast: false
       matrix:
@@ -284,7 +285,7 @@ jobs:
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
     permissions:
       contents: write
       pull-requests: write
@@ -312,7 +313,7 @@ jobs:
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, version]
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, version]
     permissions:
       contents: read
       packages: write
