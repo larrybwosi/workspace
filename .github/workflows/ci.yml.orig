@@ -90,8 +90,8 @@ jobs:
           BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
         run: pnpm run test
 
-  api-e2e:
-    timeout-minutes: 30
+  e2e-tests:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -117,140 +117,36 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Run Prisma Generate
-        run: pnpm --filter @repo/database run db:generate
-      - name: Run API E2E tests
-        env:
-          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
-          EXPO_PUBLIC_API_URL: http://localhost:8081
-          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
-        run: pnpm --filter api run test:e2e
-
-  web-e2e:
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_E2E }}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Run Prisma Generate
-        run: pnpm --filter @repo/database run db:generate
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Build Web
-        run: pnpm exec turbo build --filter web
-      - name: Run Web E2E tests
-        env:
-          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
-          EXPO_PUBLIC_API_URL: http://localhost:8081
-          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
-          PORT: 3001
-        run: pnpm --filter web run test:e2e
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-web
-          path: apps/web/playwright-report/
-          retention-days: 30
-
-  mobile-e2e:
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_E2E }}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Run Prisma Generate
-        run: pnpm --filter @repo/database run db:generate
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      - name: Run Mobile E2E tests
-        env:
-          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
-          EXPO_PUBLIC_API_URL: http://localhost:8081
-          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
-        run: pnpm --filter mobile run test:e2e
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-mobile
-          path: apps/mobile/playwright-report/
-          retention-days: 30
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'pnpm'
+    - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+    - name: Run Prisma Generate
+      run: pnpm --filter @repo/database run db:generate
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+    - name: Run Playwright tests
+      env:
+        DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+        BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+        PORT: 3001
+      run: pnpm run test:e2e
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: |
+          apps/web/playwright-report/
+          apps/mobile/playwright-report/
+        retention-days: 30
 
   mobile-verify:
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+    if: github.event_name == "pull_request"
     needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
->>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
-=======
-    if: github.event_name == 'pull_request'
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -282,16 +178,6 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
-<<<<<<< HEAD
-<<<<<<< HEAD
-      - name: Lint and Typecheck
-        run: |
-          pnpm --filter mobile run lint
-          pnpm --filter mobile run type-check
-=======
->>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
-=======
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
       - name: Prebuild Android
         working-directory: apps/mobile
         env:
@@ -300,25 +186,10 @@ jobs:
       - name: Assemble Debug APK
         working-directory: apps/mobile/android
         run: ./gradlew assembleDebug
-<<<<<<< HEAD
-<<<<<<< HEAD
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      - name: Run E2E Tests
-        run: pnpm --filter mobile run test:e2e
 
   desktop-verify:
-=======
-
-  desktop-verify:
+    if: github.event_name == "pull_request"
     needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
->>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
-=======
-
-  desktop-verify:
-    if: github.event_name == 'pull_request'
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
     strategy:
       fail-fast: false
       matrix:
@@ -348,17 +219,6 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
-<<<<<<< HEAD
-<<<<<<< HEAD
-      - name: Lint and Typecheck
-        if: matrix.settings.host == 'ubuntu-latest'
-        run: |
-          pnpm --filter desktop run lint
-          pnpm --filter desktop run type-check
-=======
->>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
-=======
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
       - name: Verify Compilation
         uses: tauri-apps/tauri-action@v0
         env:
@@ -370,15 +230,7 @@ jobs:
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-<<<<<<< HEAD
-<<<<<<< HEAD
-    needs: [lint-and-typecheck, unit-tests, e2e-tests, mobile-verify, desktop-verify]
-=======
-    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit, mobile-verify, desktop-verify]
->>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
-=======
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
     permissions:
       contents: write
       pull-requests: write
@@ -406,7 +258,7 @@ jobs:
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, version]
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, version]
     permissions:
       contents: read
       packages: write
