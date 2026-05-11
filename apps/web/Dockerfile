@@ -44,7 +44,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Install Prisma globally for migrations
-RUN pnpm add -g prisma@7.6.0
+RUN pnpm add -g prisma@7.8.0
 
 # Set up pnpm and prisma engines (as seen in original Dockerfile)
 RUN chown -R nextjs:nodejs /pnpm
