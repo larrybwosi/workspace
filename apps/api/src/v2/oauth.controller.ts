@@ -75,7 +75,8 @@ export class V2OAuthController {
     });
 
     if (m2mApp) {
-      if (m2mApp.clientSecret !== client_secret) {
+      const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
+      if (m2mApp.clientSecret !== hashedSecret && m2mApp.clientSecret !== client_secret) {
         throw new UnauthorizedException('Invalid client credentials');
       }
 

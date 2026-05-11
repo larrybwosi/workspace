@@ -17,6 +17,19 @@ export class ProvisioningService {
         throw new BadRequestException('Owner user not found');
       }
 
+      // If M2M, verify owner belongs to organization
+      if (context.organizationId) {
+        const isMember = await tx.member.findFirst({
+          where: {
+            organizationId: context.organizationId,
+            userId: owner.id,
+          }
+        });
+        if (!isMember) {
+          throw new BadRequestException('Workspace owner must be a member of your organization');
+        }
+      }
+
       // 1. Create Workspace
       const workspace = await tx.workspace.create({
         data: {
@@ -56,6 +69,14 @@ export class ProvisioningService {
         for (const member of data.initialMembers) {
           const user = await tx.user.findUnique({ where: { email: member.email } });
           if (user) {
+            // Verify member belongs to organization if M2M
+            if (context.organizationId) {
+               const isOrgMember = await tx.member.findFirst({
+                 where: { organizationId: context.organizationId, userId: user.id }
+               });
+               if (!isOrgMember) continue;
+            }
+
             await tx.workspaceMember.upsert({
               where: {
                 workspaceId_userId: {
