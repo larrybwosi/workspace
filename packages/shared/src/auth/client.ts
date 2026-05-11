@@ -30,7 +30,7 @@ const getBaseURL = () => {
   return url.replace(/\/$/, '') + '/api/auth';
 };
 
-export const authClient = createAuthClient({
+export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
 });
 
