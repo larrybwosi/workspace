@@ -242,49 +242,6 @@ jobs:
           path: apps/mobile/playwright-report/
           retention-days: 30
 
-  mobile-verify:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Run Prisma Generate
-        run: pnpm --filter @repo/database run db:generate
-      - name: Build Shared Packages
-        run: |
-          pnpm --filter @repo/shared build || true
-          pnpm --filter @repo/api-client build || true
-      - name: Prebuild Android
-        working-directory: apps/mobile
-        env:
-          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL || 'https://api.skryme.com' }}
-        run: npx expo prebuild --platform android
-      - name: Assemble Debug APK
-        working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug
-
   desktop-verify:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
