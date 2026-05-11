@@ -1,62 +1,56 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useColorScheme } from 'react-native';
 
 export default function TabsLayout() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          height: 64,
-          backgroundColor: '#ffffff',
-          borderTopWidth: 1,
-          borderTopColor: '#f0edef',
+          backgroundColor: isDark ? '#1E1F22' : '#E3E5E8',
+          borderTopWidth: 0,
+          height: 60,
           paddingBottom: 8,
-          paddingTop: 8,
         },
-        tabBarActiveTintColor: '#2a3439',
-        tabBarInactiveTintColor: '#566166',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '700',
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        },
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#949BA4',
+        tabBarActiveBackgroundColor: isDark ? '#313338' : '#FFFFFF',
       }}
     >
       <Tabs.Screen
         name="workspaces"
         options={{
-          title: 'Workspaces',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="grid-view" size={size} color={color} />
+          title: 'Servers',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="grid-view" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="channels"
         options={{
-          title: 'Channels',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="chat-bubble-outline" size={size} color={color} />
-          ),
+          href: null, // Hidden from tabs, accessed via Drawer/Sidebar
         }}
       />
       <Tabs.Screen
         name="dms"
         options={{
-          title: 'DMs',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="alternate-email" size={size} color={color} />
+          title: 'Messages',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="chat" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person-outline" size={size} color={color} />
+          title: 'You',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person" size={24} color={color} />
           ),
         }}
       />

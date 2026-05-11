@@ -27,6 +27,27 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run tsc
 
+  fallow-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Run Fallow Audit
+        uses: fallow-rs/fallow@v2
+        with:
+          command: audit
+        env:
+          FALLOW_PRODUCTION: "true"
+
   unit-tests:
     runs-on: ubuntu-latest
     services:
@@ -66,7 +87,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-          BETTER_AUTH_SECRET: dummy_auth_val_ci
+          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
         run: pnpm run test
 
   e2e-tests:
@@ -111,17 +132,23 @@ jobs:
       env:
         DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
         REDIS_URL: redis://localhost:${{ env.RD_PORT }}
-        BETTER_AUTH_SECRET: dummy_auth_val_ci
+        BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
         PORT: 3001
       run: pnpm run test:e2e
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
-        path: playwright-report/
+        path: |
+          apps/web/playwright-report/
+          apps/mobile/playwright-report/
         retention-days: 30
 
   mobile-verify:
+<<<<<<< HEAD
+=======
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
+>>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -153,10 +180,13 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
+<<<<<<< HEAD
       - name: Lint and Typecheck
         run: |
           pnpm --filter mobile run lint
           pnpm --filter mobile run type-check
+=======
+>>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
       - name: Prebuild Android
         working-directory: apps/mobile
         env:
@@ -165,12 +195,18 @@ jobs:
       - name: Assemble Debug APK
         working-directory: apps/mobile/android
         run: ./gradlew assembleDebug
+<<<<<<< HEAD
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
       - name: Run E2E Tests
         run: pnpm --filter mobile run test:e2e
 
   desktop-verify:
+=======
+
+  desktop-verify:
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
+>>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
     strategy:
       fail-fast: false
       matrix:
@@ -200,11 +236,14 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
+<<<<<<< HEAD
       - name: Lint and Typecheck
         if: matrix.settings.host == 'ubuntu-latest'
         run: |
           pnpm --filter desktop run lint
           pnpm --filter desktop run type-check
+=======
+>>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
       - name: Verify Compilation
         uses: tauri-apps/tauri-action@v0
         env:
@@ -216,7 +255,11 @@ jobs:
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     needs: [lint-and-typecheck, unit-tests, e2e-tests, mobile-verify, desktop-verify]
+=======
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit, mobile-verify, desktop-verify]
+>>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
     permissions:
       contents: write
       pull-requests: write
@@ -244,7 +287,7 @@ jobs:
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [version]
+    needs: [lint-and-typecheck, unit-tests, e2e-tests, version]
     permissions:
       contents: read
       packages: write

@@ -1,3 +1,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-container: #F2F3F5;
+    --on-surface: #060607;
+    --on-surface-variant: #4E5058;
+    --primary: #5865F2;
+  }
+
+  .dark {
+    --background: #313338;
+    --surface: #313338;
+    --surface-container: #2B2D31;
+    --on-surface: #DBDEE1;
+    --on-surface-variant: #949BA4;
+    --primary: #5865F2;
+  }
+}
+
+@layer utilities {
+  .text-discord-header {
+    @apply text-discord-light-header dark:text-discord-dark-header;
+  }
+  .text-discord-body {
+    @apply text-discord-light-text dark:text-discord-dark-text;
+  }
+  .text-discord-muted {
+    @apply text-discord-light-muted dark:text-discord-dark-muted;
+  }
+  .bg-discord-base {
+    @apply bg-discord-light-bg dark:bg-discord-dark-bg;
+  }
+  .bg-discord-sidebar {
+    @apply bg-discord-light-sidebar dark:bg-discord-dark-sidebar;
+  }
+  .bg-discord-tertiary {
+    @apply bg-discord-light-tertiary dark:bg-discord-dark-tertiary;
+  }
+}
