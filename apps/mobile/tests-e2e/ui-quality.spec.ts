@@ -69,22 +69,40 @@ test.beforeEach(async ({ page }) => {
 
 test('verify profile layout', async ({ page }) => {
   await page.goto('/(tabs)/profile');
+<<<<<<< HEAD
   await expect(page.getByText('Jane Doe')).toBeVisible();
   await expect(page.getByText('Edit Profile')).toBeVisible();
   await expect(page.getByText('Scan QR Code')).toBeVisible();
+=======
+  await page.waitForResponse('**/api/auth/get-session');
+  await expect(page.locator('text=Edit Profile')).toBeVisible();
+  await expect(page.locator('text=Scan QR Code')).toBeVisible();
+>>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
   await page.screenshot({ path: 'tests-e2e/screenshots/profile.png' });
 });
 
 test('verify sidebar navigation structure', async ({ page }) => {
   await page.goto('/(tabs)/workspaces');
+<<<<<<< HEAD
   await expect(page.getByText('Select a server to see channels')).toBeVisible();
+=======
+  await page.waitForResponse('**/api/workspaces');
+  // Check for presence of sidebar or main area hint
+  await expect(page.locator('text=Select a server')).toBeVisible();
+>>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
   await page.screenshot({ path: 'tests-e2e/screenshots/sidebar.png' });
 });
 
 test('verify chat screen elements', async ({ page }) => {
   await page.goto('/chat/c-1');
+<<<<<<< HEAD
   await expect(page.getByText('# general')).toBeVisible();
   await expect(page.getByText('Welcome to the server!')).toBeVisible();
   await expect(page.getByPlaceholder('Message #general')).toBeVisible();
+=======
+  await page.waitForResponse('**/api/**/messages*');
+  // Use locator that handles partial matches or ignore case if needed
+  await expect(page.locator('text=Welcome to the server')).toBeVisible();
+>>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
   await page.screenshot({ path: 'tests-e2e/screenshots/chat.png' });
 });

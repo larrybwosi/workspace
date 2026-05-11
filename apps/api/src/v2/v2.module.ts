@@ -1,3 +1,6 @@
+import { ProvisioningService } from "./provisioning.service";
+import { ProvisioningController } from "./provisioning.controller";
+import { M2mController } from "./m2m/m2m.controller";
 import { Module } from '@nestjs/common';
 import { V2WorkspacesController } from './workspaces/workspaces.controller';
 import { V2MessagesController } from './workspaces/messages.controller';
@@ -34,7 +37,10 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     V2OAuthController,
     V2ApplicationsController,
     V2ContactController,
+    M2mController,
+    ProvisioningController,
   ],
-  providers: [ApiV2Guard, V2AuditService, V2WebhooksService, V2ApplicationsService],
+  providers: [ApiV2Guard, V2AuditService, V2WebhooksService, V2ApplicationsService, ProvisioningService],
 })
 export class V2Module {}
+// To be cleaned up if it was a real file but I'll use sed to insert it properly.
