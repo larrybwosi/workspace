@@ -31,7 +31,8 @@ COPY turbo.json turbo.json
 # Generate Prisma Client
 RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo run db:generate
 
-RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo build --filter=web...
+ENV NEXT_STANDALONE=true
+RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo build --filter=web... -- --webpack
 
 FROM base AS runner
 WORKDIR /app

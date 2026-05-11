@@ -1,6 +1,6 @@
 {
   "name": "@repo/ui",
-  "version": "0.0.0",
+  "version": "0.0.1.0",
   "private": true,
   "main": "./src/index.ts",
   "scripts": {
@@ -50,9 +50,8 @@
     "@types/node": "^22.19.15",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/react-syntax-highlighter": "latest",
     "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2",
-    "@types/react-syntax-highlighter": "latest"
+    "typescript": "^6.0.2"
   }
 }
