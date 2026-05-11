@@ -64,6 +64,7 @@ export interface Message {
   actions?: MessageAction[];
   replyTo?: string;
   replies?: Message[];
+  replyCount?: number;
   depth?: number;
   readByCurrentUser?: boolean;
 }
