@@ -129,7 +129,6 @@ jobs:
       - name: Run API E2E tests
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
-          EXPO_PUBLIC_API_URL: http://localhost:8081
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
           BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
         run: pnpm --filter api run test:e2e
@@ -171,16 +170,12 @@ jobs:
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run db:generate
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Build Web
-        run: pnpm exec turbo build --filter web
+        run: pnpm exec playwright install --with-deps
       - name: Run Web E2E tests
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
-          EXPO_PUBLIC_API_URL: http://localhost:8081
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
           BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
-          PORT: 3001
         run: pnpm --filter web run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
@@ -190,7 +185,6 @@ jobs:
           retention-days: 30
 
   mobile-e2e:
-    if: false
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -243,7 +237,7 @@ jobs:
           retention-days: 30
 
   desktop-verify:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'pull_request'
     needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
     strategy:
       fail-fast: false
@@ -290,25 +284,29 @@ jobs:
       contents: write
       pull-requests: write
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
+      version: ${{ steps.update_version.outputs.version }}
+      published: 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm run version:ci
-          publish: npx changeset tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Version
+        id: update_version
+        run: node scripts/update-version.js
+      - name: Commit and Push Version Update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: bump version to ${{ steps.update_version.outputs.version }} [skip ci]" || echo "No changes to commit"
+          git push origin main
 
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -322,12 +320,17 @@ jobs:
         apps: [api, web]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Update Version
+        run: node scripts/update-version.js
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Get version
         id: get_version
         run: |
-          VERSION=$(node -p "require('./apps/${{ matrix.apps }}/package.json').version")
+          VERSION=${{ needs.version.outputs.version }}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Lowercase repo name
         run: |
@@ -358,19 +361,14 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version: ${{ steps.get_version.outputs.VERSION }}
+      version: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - name: Get Version
-        id: get_version
-        run: |
-          VERSION=$(node -p "require('./apps/api/package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get_version.outputs.VERSION }}
-          name: v${{ steps.get_version.outputs.VERSION }}
+          tag_name: v${{ needs.version.outputs.version }}
+          name: v${{ needs.version.outputs.version }}
           draft: false
           prerelease: false
         env:
@@ -412,6 +410,8 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
+      - name: Update Version
+        run: node scripts/update-version.js
       - name: Prebuild Android
         working-directory: apps/mobile
         env:
@@ -420,15 +420,10 @@ jobs:
       - name: Build Release APK
         working-directory: apps/mobile/android
         run: ./gradlew assembleRelease
-      - name: Get Version
-        id: get_version
-        run: |
-          VERSION=$(node -p "require('./apps/mobile/package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          tag_name: v${{ needs.version.outputs.version }}
           files: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -467,17 +462,13 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
-      - name: Get Version
-        id: get_version
-        shell: bash
-        run: |
-          VERSION=$(node -p "require('./apps/desktop/package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Update Version
+        run: node scripts/update-version.js
       - name: Build Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop
-          tagName: v${{ steps.get_version.outputs.VERSION }}
+          tagName: v${{ needs.version.outputs.version }}
           args: ${{ matrix.settings.host == 'windows-latest' && '--bundles msi' || '' }}
