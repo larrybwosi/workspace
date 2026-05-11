@@ -1,7 +1,7 @@
 # Agent Instructions
 
 ## Prisma Configuration
-- Use Prisma v7.6.0.
+- Use Prisma v7.8.0.
 - The Prisma client is generated to `packages/database/src/generated`.
 - **Note:** The `src/generated` directory is excluded from version control. It is automatically generated during the install/build process via the `prepare` script.
 - All applications should import `PrismaClient` and the `prisma` singleton from `@repo/database`.
