@@ -2,8 +2,10 @@ import {
   Controller,
   Post,
   Body,
+  Req,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,7 +28,7 @@ class TokenRequestDto {
   @ApiProperty({ example: 'your_client_secret' })
   client_secret: string;
 
-  @ApiProperty({ example: 'messages:send channels:read', required: false })
+  @ApiProperty({ example: 'provisioning:workspaces', required: false })
   scope?: string;
 }
 
@@ -41,11 +43,11 @@ const tokenRequestSchema = z.object({
 @Controller('v2/oauth')
 export class V2OAuthController {
   @Post('token')
-  @ApiOperation({ summary: 'Exchange client credentials for an access token', description: 'Used for bot and integration authentication.' })
+  @ApiOperation({ summary: 'Exchange client credentials for an access token', description: 'Used for bot, integration, and M2M authentication.' })
   @ApiBody({ type: TokenRequestDto })
   @ApiResponse({ status: 200, description: 'Access token returned successfully.' })
   @ApiResponse({ status: 401, description: 'Invalid client credentials.' })
-  async getToken(@Body() body: TokenRequestDto) {
+  async getToken(@Req() req: any, @Body() body: TokenRequestDto) {
     const validatedData = tokenRequestSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
@@ -53,37 +55,68 @@ export class V2OAuthController {
 
     const { client_id, client_secret, scope } = validatedData.data;
 
+    // 1. Try Bot Application
     const botApp = await prisma.botApplication.findUnique({
       where: { clientId: client_id },
       include: { bot: true },
     });
 
-    if (!botApp || botApp.clientSecret !== client_secret) {
-      throw new UnauthorizedException('Invalid client credentials');
+    if (botApp) {
+      if (botApp.clientSecret !== client_secret) {
+        throw new UnauthorizedException('Invalid client credentials');
+      }
+
+      return this.issueToken(client_id, botApp.botId!, scope, 'bot');
     }
 
-    // For Client Credentials flow, we can issue a JWT or a reference token.
-    // Given the existing ApiV2Guard handles wst_ and better-auth tokens,
-    // we can create a temporary workspace-independent token or a session-like token.
-    // However, the requirement is "remote interaction with the workspace".
-    // A bot application might be linked to multiple workspaces or have global access.
+    // 2. Try M2M Application
+    const m2mApp = await prisma.m2mApplication.findUnique({
+      where: { clientId: client_id },
+    });
 
-    // For now, let's use a signed JWT-like token or a reference to a Personal Access Token / API Token if appropriate.
-    // Or we can just return a token that the ApiV2Guard will recognize.
+    if (m2mApp) {
+      const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
+      if (m2mApp.clientSecret !== hashedSecret && m2mApp.clientSecret !== client_secret) {
+        throw new UnauthorizedException('Invalid client credentials');
+      }
 
-    // Let's create a specialized token for this bot interaction.
+      // Enterprise Feature: IP Whitelisting
+      if (m2mApp.allowedIps && m2mApp.allowedIps.length > 0) {
+        const clientIp = req.ip || req.socket.remoteAddress;
+        if (!clientIp || !m2mApp.allowedIps.includes(clientIp)) {
+          throw new ForbiddenException('IP not allowed');
+        }
+      }
+
+      // Check scopes
+      const requestedScopes = scope ? scope.split(' ') : [];
+      const allowedScopes = m2mApp.scopes;
+
+      const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s) && allowedScopes[0] !== '*');
+      if (unauthorizedScopes.length > 0) {
+        throw new ForbiddenException(`Unauthorized scopes: ${unauthorizedScopes.join(', ')}`);
+      }
+
+      return this.issueToken(client_id, `m2m:${m2mApp.organizationId}`, scope || allowedScopes.join(' '), 'm2m');
+    }
+
+    throw new UnauthorizedException('Invalid client credentials');
+  }
+
+  private async issueToken(clientId: string, userId: string, scope: string | undefined, type: string) {
     const rawToken = `oat_${crypto.randomBytes(32).toString('hex')}`;
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
 
-    // We'll store this in Redis or DB. Let's use a reference token for simplicity and security.
-    const accessToken = await prisma.oAuthAccessToken.create({
+    const accessToken = await (prisma as any).oauthAccessToken.create({
       data: {
+        id: crypto.randomBytes(16).toString('hex'),
         token: hashedToken,
-        clientId: client_id,
-        userId: botApp.botId!,
+        clientId: clientId,
+        userId: userId,
         expiresAt,
         scopes: scope ? scope.split(' ') : ['*'],
+        createdAt: new Date(),
       },
     });
 

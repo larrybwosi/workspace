@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Delete, Param, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
+<<<<<<< HEAD
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  UseGuards,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+=======
+import { Controller, Get, Post, Delete, Param, UseGuards, Body, NotFoundException, BadRequestException } from '@nestjs/common';
+>>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -71,12 +84,14 @@ export class UsersController {
           take: 1,
         },
         // Blocks
-        blockedBy: { // People who blocked this user
+        blockedBy: {
+          // People who blocked this user
           where: { blockerId: currentUser.id },
           select: { id: true },
           take: 1,
         },
-        blockedUsers: { // People this user blocked
+        blockedUsers: {
+          // People this user blocked
           where: { blockedUserId: currentUser.id },
           select: { id: true },
           take: 1,
@@ -136,15 +151,15 @@ export class UsersController {
     const friendRequest = targetUser.receivedFriendRequests[0] || targetUser.sentFriendRequests[0];
 
     return {
-      isFriend: targetUser.friendOf.length > 0 || targetUser.friends.some((f) => f.friend.id === currentUser.id),
+      isFriend: targetUser.friendOf.length > 0 || targetUser.friends.some(f => f.friend.id === currentUser.id),
       friendRequestStatus: friendRequest?.status || null,
       friendRequestSide: friendRequest ? (friendRequest.senderId === currentUser.id ? 'sender' : 'receiver') : null,
       isBlockedByMe: targetUser.blockedBy.length > 0,
       hasBlockedMe: targetUser.blockedUsers.length > 0,
-      mutualWorkspaces: targetUser.workspaceMemberships.map((m) => m.workspace),
+      mutualWorkspaces: targetUser.workspaceMemberships.map(m => m.workspace),
       mutualFriends: targetUser.friends
-        .filter((f) => f.friend.id !== currentUser.id)
-        .map((f) => ({
+        .filter(f => f.friend.id !== currentUser.id)
+        .map(f => ({
           id: f.friend.id,
           name: f.friend.name,
           avatar: f.friend.avatar || (f.friend as any).image,
@@ -205,5 +220,23 @@ export class UsersController {
       }
       throw error;
     }
+  }
+
+  @Post('me')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated' })
+  async updateMe(@CurrentUser() user: User, @Body() body: any) {
+    const { name, avatar, banner, statusText, statusEmoji } = body;
+
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name,
+        avatar,
+        banner,
+        statusText,
+        statusEmoji
+      }
+    });
   }
 }
