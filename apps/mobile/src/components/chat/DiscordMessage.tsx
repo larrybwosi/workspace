@@ -3,8 +3,6 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { SwipeableMessage } from './swipeable-message';
-<<<<<<< HEAD
-=======
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { CodeMessage } from './message-types/code-message';
 import { ApprovalMessage } from './message-types/approval-message';
@@ -12,24 +10,20 @@ import { CommentRequestMessage } from './message-types/comment-request-message';
 import { ReportMessage } from './message-types/report-message';
 
 const RENDERERS: Record<string, React.ComponentType<any>> = {
-  'code': CodeMessage,
-  'approval': ApprovalMessage,
+  code: CodeMessage,
+  approval: ApprovalMessage,
   'comment-request': CommentRequestMessage,
-  'report': ReportMessage,
-  'custom': ApprovalMessage, // Fallback
+  report: ReportMessage,
+  custom: ApprovalMessage, // Fallback
 };
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
 
 export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onReact }: any) {
   const timestamp = new Date(message.timestamp);
   const timeStr = format(timestamp, 'p');
 
-<<<<<<< HEAD
-=======
   const type = message.messageType || 'standard';
   const SpecialRenderer = RENDERERS[type];
 
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
   return (
     <SwipeableMessage onReply={onReply} onReact={() => onLongPress(message.id)}>
       <TouchableOpacity
@@ -63,13 +57,6 @@ export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onRe
             {message.attachments?.map((att: any, idx: number) => (
               <View key={idx} className="mb-2">
                 {att.type?.startsWith('image/') ? (
-<<<<<<< HEAD
-                  <Image source={{ uri: att.url }} className="w-full h-48 rounded-lg" resizeMode="cover" />
-                ) : (
-                  <View className="bg-discord-tertiary p-3 rounded-lg flex-row items-center">
-                    <MaterialIcons name="insert-drive-file" size={24} color="#949BA4" />
-                    <Text className="text-discord-header ml-2 flex-1" numberOfLines={1}>{att.name}</Text>
-=======
                   <View className="bg-discord-tertiary rounded-lg overflow-hidden border border-black/20">
                     <Image source={{ uri: att.url }} className="w-full h-48" resizeMode="cover" />
                   </View>
@@ -77,25 +64,24 @@ export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onRe
                   <View className="bg-discord-tertiary p-3 rounded-lg flex-row items-center border border-black/10">
                     <MaterialIcons name="insert-drive-file" size={24} color="#949BA4" />
                     <View className="ml-2 flex-1">
-                      <Text className="text-discord-header font-bold text-sm" numberOfLines={1}>{att.name}</Text>
-                      <Text className="text-discord-muted text-[10px] uppercase">{att.type?.split('/')[1] || 'FILE'}</Text>
+                      <Text className="text-discord-header font-bold text-sm" numberOfLines={1}>
+                        {att.name}
+                      </Text>
+                      <Text className="text-discord-muted text-[10px] uppercase">
+                        {att.type?.split('/')[1] || 'FILE'}
+                      </Text>
                     </View>
                     <MaterialIcons name="file-download" size={20} color="#949BA4" />
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
                   </View>
                 )}
               </View>
             ))}
-<<<<<<< HEAD
-            <Text className="text-discord-header text-base leading-5">{message.content}</Text>
-=======
 
             {SpecialRenderer ? (
               <SpecialRenderer message={message} metadata={message.metadata} />
             ) : (
               <MarkdownRenderer content={message.content} />
             )}
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
           </View>
 
           {message.reactions && message.reactions.length > 0 && (

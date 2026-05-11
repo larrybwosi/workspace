@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   // Mock session
-  await page.route('**/api/auth/get-session', async (route) => {
+  await page.route('**/api/auth/get-session', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -14,31 +14,31 @@ test.beforeEach(async ({ page }) => {
   });
 
   // Mock workspaces
-  await page.route('**/api/workspaces', async (route) => {
+  await page.route('**/api/workspaces', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify([
         { id: 'w-1', name: 'Engineering', slug: 'eng' },
-        { id: 'w-2', name: 'Design', slug: 'design' }
+        { id: 'w-2', name: 'Design', slug: 'design' },
       ]),
     });
   });
 
   // Mock channels
-  await page.route('**/api/channels', async (route) => {
+  await page.route('**/api/channels', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify([
         { id: 'c-1', name: 'general', type: 'PUBLIC' },
-        { id: 'c-2', name: 'private-vault', type: 'PRIVATE' }
+        { id: 'c-2', name: 'private-vault', type: 'PRIVATE' },
       ]),
     });
   });
 
   // Mock messages
-  await page.route('**/api/**/messages*', async (route) => {
+  await page.route('**/api/**/messages*', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -49,16 +49,16 @@ test.beforeEach(async ({ page }) => {
             content: 'Welcome to the server!',
             timestamp: new Date().toISOString(),
             user: { id: 'u-2', name: 'System', image: null },
-            reactions: [{ emoji: '👋', count: 5 }]
-          }
+            reactions: [{ emoji: '👋', count: 5 }],
+          },
         ],
-        nextCursor: null
+        nextCursor: null,
       }),
     });
   });
 
   // Mock realtime config
-  await page.route('**/api/config/realtime', async (route) => {
+  await page.route('**/api/config/realtime', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -69,40 +69,31 @@ test.beforeEach(async ({ page }) => {
 
 test('verify profile layout', async ({ page }) => {
   await page.goto('/(tabs)/profile');
-<<<<<<< HEAD
+  // Wait for session data to hydrate the UI
+  await page.waitForResponse('**/api/auth/get-session');
+
   await expect(page.getByText('Jane Doe')).toBeVisible();
   await expect(page.getByText('Edit Profile')).toBeVisible();
   await expect(page.getByText('Scan QR Code')).toBeVisible();
-=======
-  await page.waitForResponse('**/api/auth/get-session');
-  await expect(page.locator('text=Edit Profile')).toBeVisible();
-  await expect(page.locator('text=Scan QR Code')).toBeVisible();
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
   await page.screenshot({ path: 'tests-e2e/screenshots/profile.png' });
 });
 
 test('verify sidebar navigation structure', async ({ page }) => {
   await page.goto('/(tabs)/workspaces');
-<<<<<<< HEAD
-  await expect(page.getByText('Select a server to see channels')).toBeVisible();
-=======
+  // Ensure workspaces are loaded before checking UI state
   await page.waitForResponse('**/api/workspaces');
-  // Check for presence of sidebar or main area hint
-  await expect(page.locator('text=Select a server')).toBeVisible();
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
+
+  await expect(page.getByText('Select a server to see channels')).toBeVisible();
   await page.screenshot({ path: 'tests-e2e/screenshots/sidebar.png' });
 });
 
 test('verify chat screen elements', async ({ page }) => {
   await page.goto('/chat/c-1');
-<<<<<<< HEAD
+  // Wait for message history to load
+  await page.waitForResponse('**/api/**/messages*');
+
   await expect(page.getByText('# general')).toBeVisible();
   await expect(page.getByText('Welcome to the server!')).toBeVisible();
   await expect(page.getByPlaceholder('Message #general')).toBeVisible();
-=======
-  await page.waitForResponse('**/api/**/messages*');
-  // Use locator that handles partial matches or ignore case if needed
-  await expect(page.locator('text=Welcome to the server')).toBeVisible();
->>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
   await page.screenshot({ path: 'tests-e2e/screenshots/chat.png' });
 });
