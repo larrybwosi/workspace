@@ -14,8 +14,24 @@ export default function Login() {
         provider,
         callbackURL: "skryme-auth://",
       });
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+      if (error) {
+        Alert.alert("Login Failed", error.message || "An unknown error occurred");
+      } else {
+        router.replace("/");
+      }
+    } catch {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+=======
     } catch {
       Alert.alert("Error", `Unable to login with ${provider}. Please try again.`);
+>>>>>>> 50fd6ca5fff36015158cde7b8f0d1fcd6ce52064
+=======
+    } catch {
+      Alert.alert("Error", `Unable to login with ${provider}. Please try again.`);
+>>>>>>> 2162c4e4c246182311b63e68f6998e8baad44cc6
     } finally {
       setLoading(false);
     }
