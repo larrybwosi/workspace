@@ -27,21 +27,6 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('can navigate to dm list', async ({ page }) => {
-<<<<<<< bolt/optimize-friend-request-verification-17737381184358624134
-  await Promise.all([
-    page.waitForResponse('**/api/auth/get-session').catch(() => null),
-    page.goto('/(tabs)/dms'),
-  ]);
-  await expect(page.locator('text=Direct Messages')).toBeVisible();
-});
-
-test('can navigate to profile', async ({ page }) => {
-  await Promise.all([
-    page.waitForResponse('**/api/auth/get-session').catch(() => null),
-    page.goto('/(tabs)/profile'),
-  ]);
-  await expect(page.locator('text=Edit Profile')).toBeVisible();
-=======
   await page.goto('/(tabs)/dms');
   // Wait for session to ensure the UI is hydrated
   await page.waitForResponse('**/api/auth/get-session');
@@ -56,5 +41,4 @@ test('can navigate to profile', async ({ page }) => {
   // Verify both identity and profile structure
   await expect(page.getByText('Tester')).toBeVisible();
   await expect(page.getByText('Edit Profile')).toBeVisible();
->>>>>>> dev
 });
