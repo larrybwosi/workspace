@@ -25,7 +25,6 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
-import { auth } from '../../auth/better-auth';
 
 class CreateM2mApplicationDto {
   @ApiProperty({ example: 'Provisioning App' })
@@ -90,14 +89,13 @@ export class M2mController {
 
     const clientId = `m2m_${crypto.randomBytes(16).toString('hex')}`;
     const clientSecret = crypto.randomBytes(32).toString('hex');
-    // In a real enterprise app, we'd hash this. For simplicity in this demo environment:
-    // const hashedSecret = crypto.createHash('sha256').update(clientSecret).digest('hex');
+    const hashedSecret = crypto.createHash('sha256').update(clientSecret).digest('hex');
 
     const application = await prisma.m2mApplication.create({
       data: {
         name,
         clientId,
-        clientSecret, // Storing raw for demo, but hashing is better
+        clientSecret: hashedSecret,
         organizationId: organization.id,
         scopes,
         allowedIps,
@@ -129,8 +127,6 @@ export class M2mController {
   }
 
   private async verifyOrgAdmin(userId: string, orgSlug: string) {
-    // Note: 'organization' plugin in better-auth might have its own way,
-    // but we'll use the DB directly for absolute certainty.
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
       include: {
