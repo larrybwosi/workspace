@@ -14,6 +14,43 @@ env:
   RD_PORT: 6379
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      desktop: ${{ steps.filter.outputs.desktop }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/database/**'
+              - 'packages/shared/**'
+              - 'packages/types/**'
+            web:
+              - 'apps/web/**'
+              - 'packages/ui/**'
+              - 'packages/api-client/**'
+              - 'packages/shared/**'
+              - 'packages/types/**'
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/ui/**'
+              - 'packages/api-client/**'
+              - 'packages/shared/**'
+              - 'packages/types/**'
+            desktop:
+              - 'apps/desktop/**'
+              - 'packages/ui/**'
+              - 'packages/api-client/**'
+              - 'packages/shared/**'
+              - 'packages/types/**'
+
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -90,8 +127,112 @@ jobs:
           BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
         run: pnpm run test
 
-  e2e-tests:
-    timeout-minutes: 60
+  api-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.api == 'true'
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_E2E }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Run API E2E tests
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+        run: pnpm --filter api run test:e2e
+
+  web-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.web == 'true'
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_E2E }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Build Web
+        run: pnpm exec turbo build --filter web
+      - name: Run Web E2E tests
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+          EXPO_PUBLIC_API_URL: http://localhost:8081
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+          PORT: 3001
+        run: pnpm --filter web run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-web
+          path: apps/web/playwright-report/
+          retention-days: 30
+
+  mobile-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.mobile == 'true'
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -128,25 +269,23 @@ jobs:
         run: pnpm --filter @repo/database run db:generate
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
-      - name: Run Playwright tests
+      - name: Run Mobile E2E tests
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+          EXPO_PUBLIC_API_URL: http://localhost:8081
           REDIS_URL: redis://localhost:${{ env.RD_PORT }}
           BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
-          PORT: 3001
-        run: pnpm run test:e2e
+        run: pnpm --filter mobile run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
-          path: |
-            apps/web/playwright-report/
-            apps/mobile/playwright-report/
+          name: playwright-report-mobile
+          path: apps/mobile/playwright-report/
           retention-days: 30
 
   mobile-verify:
-    if: github.event_name == 'pull_request'
-    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.mobile == 'true'
+    needs: [changes, lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -188,8 +327,8 @@ jobs:
         run: ./gradlew assembleDebug
 
   desktop-verify:
-    if: github.event_name == 'pull_request'
-    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.desktop == 'true'
+    needs: [changes, lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
     strategy:
       fail-fast: false
       matrix:
@@ -230,7 +369,7 @@ jobs:
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, e2e-tests, fallow-audit]
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
     permissions:
       contents: write
       pull-requests: write
@@ -258,7 +397,7 @@ jobs:
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, e2e-tests, version]
+    needs: [changes, lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, version]
     permissions:
       contents: read
       packages: write
@@ -267,22 +406,36 @@ jobs:
         apps: [api, web]
     steps:
       - uses: actions/checkout@v4
+      - name: Check if app changed
+        id: check
+        run: |
+          if [ "${{ matrix.apps }}" == "api" ] && [ "${{ needs.changes.outputs.api }}" == "false" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.apps }}" == "web" ] && [ "${{ needs.changes.outputs.web }}" == "false" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
+        if: steps.check.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Get version
+        if: steps.check.outputs.changed == 'true'
         id: get_version
         run: |
           VERSION=$(node -p "require('./apps/${{ matrix.apps }}/package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Lowercase repo name
+        if: steps.check.outputs.changed == 'true'
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=ghcr.io/$REPO_LOWER/${{ matrix.apps }}" >> $GITHUB_ENV
 
       - name: Log in to GHCR
+        if: steps.check.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -290,6 +443,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        if: steps.check.outputs.changed == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -327,8 +481,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   mobile-release:
-    needs: [version, create-release]
-    if: needs.version.outputs.published == 'true'
+    needs: [changes, version, create-release]
+    if: needs.version.outputs.published == 'true' && needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -384,8 +538,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   desktop-release:
-    needs: [version, create-release]
-    if: needs.version.outputs.published == 'true'
+    needs: [changes, version, create-release]
+    if: needs.version.outputs.published == 'true' && needs.changes.outputs.desktop == 'true'
     strategy:
       fail-fast: false
       matrix:
