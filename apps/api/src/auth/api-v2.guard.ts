@@ -173,24 +173,30 @@ export class ApiV2Guard implements CanActivate {
         }
 
         if (slug) {
-          const organization = await prisma.workspace.findUnique({
+          const workspace = await prisma.workspace.findUnique({
             where: { slug },
           });
 
-          if (!organization) {
+          if (!workspace) {
             throw new NotFoundException('Workspace not found');
           }
 
           // If M2M, check if it belongs to the organization that owns the workspace
           if (context.organizationId) {
-             // In this system, workspaces might not have a direct organizationId yet
-             // but let's assume if it's M2M it can access any workspace in its "provisioning realm"
-             // or check if the workspace owner belongs to the organization.
-             // For now, let's keep it simple.
+             const isAuthorized = await prisma.member.findFirst({
+               where: {
+                 organizationId: context.organizationId,
+                 userId: workspace.ownerId,
+               }
+             });
+
+             if (!isAuthorized) {
+               throw new ForbiddenException('M2M application is not authorized to access this workspace');
+             }
           } else {
             const member = await prisma.workspaceMember.findFirst({
               where: {
-                workspaceId: organization.id,
+                workspaceId: workspace.id,
                 userId: context.userId,
               },
             });
@@ -200,8 +206,8 @@ export class ApiV2Guard implements CanActivate {
             }
           }
 
-          context.workspaceId = organization.id;
-          context.workspaceSlug = organization.slug;
+          context.workspaceId = workspace.id;
+          context.workspaceSlug = workspace.slug;
         }
 
         rateLimit = 1000;

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   // Mock session
-  await page.route('**/api/auth/get-session', async (route) => {
+  await page.route('**/api/auth/get-session', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -14,31 +14,31 @@ test.beforeEach(async ({ page }) => {
   });
 
   // Mock workspaces
-  await page.route('**/api/workspaces', async (route) => {
+  await page.route('**/api/workspaces', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify([
         { id: 'w-1', name: 'Engineering', slug: 'eng' },
-        { id: 'w-2', name: 'Design', slug: 'design' }
+        { id: 'w-2', name: 'Design', slug: 'design' },
       ]),
     });
   });
 
   // Mock channels
-  await page.route('**/api/channels', async (route) => {
+  await page.route('**/api/channels', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify([
         { id: 'c-1', name: 'general', type: 'PUBLIC' },
-        { id: 'c-2', name: 'private-vault', type: 'PRIVATE' }
+        { id: 'c-2', name: 'private-vault', type: 'PRIVATE' },
       ]),
     });
   });
 
   // Mock messages
-  await page.route('**/api/**/messages*', async (route) => {
+  await page.route('**/api/**/messages*', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -49,16 +49,16 @@ test.beforeEach(async ({ page }) => {
             content: 'Welcome to the server!',
             timestamp: new Date().toISOString(),
             user: { id: 'u-2', name: 'System', image: null },
-            reactions: [{ emoji: '👋', count: 5 }]
-          }
+            reactions: [{ emoji: '👋', count: 5 }],
+          },
         ],
-        nextCursor: null
+        nextCursor: null,
       }),
     });
   });
 
   // Mock realtime config
-  await page.route('**/api/config/realtime', async (route) => {
+  await page.route('**/api/config/realtime', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

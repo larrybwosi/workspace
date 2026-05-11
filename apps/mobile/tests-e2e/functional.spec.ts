@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   // Mock everything for functional testing
-  await page.route('**/api/auth/get-session', async (route) => {
+  await page.route('**/api/auth/get-session', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -13,20 +13,21 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
-  await page.route('**/api/config/realtime', async (route) => {
+  await page.route('**/api/config/realtime', async route => {
     await route.fulfill({ status: 200, body: JSON.stringify({ provider: 'ably' }) });
   });
 
-  await page.route('**/api/workspaces', async (route) => {
+  await page.route('**/api/workspaces', async route => {
     await route.fulfill({ status: 200, body: JSON.stringify([{ id: 'w-1', name: 'Server 1', slug: 's1' }]) });
   });
 
-  await page.route('**/api/channels', async (route) => {
+  await page.route('**/api/channels', async route => {
     await route.fulfill({ status: 200, body: JSON.stringify([{ id: 'c-1', name: 'general', type: 'PUBLIC' }]) });
   });
 });
 
 test('can navigate to dm list', async ({ page }) => {
+<<<<<<< bolt/optimize-friend-request-verification-17737381184358624134
   await Promise.all([
     page.waitForResponse('**/api/auth/get-session').catch(() => null),
     page.goto('/(tabs)/dms'),
@@ -40,4 +41,20 @@ test('can navigate to profile', async ({ page }) => {
     page.goto('/(tabs)/profile'),
   ]);
   await expect(page.locator('text=Edit Profile')).toBeVisible();
+=======
+  await page.goto('/(tabs)/dms');
+  // Wait for session to ensure the UI is hydrated
+  await page.waitForResponse('**/api/auth/get-session');
+  await expect(page.getByText('Direct Messages')).toBeVisible();
+});
+
+test('can navigate to profile', async ({ page }) => {
+  await page.goto('/(tabs)/profile');
+  // Ensure data is loaded to prevent flakes on name rendering
+  await page.waitForResponse('**/api/auth/get-session');
+
+  // Verify both identity and profile structure
+  await expect(page.getByText('Tester')).toBeVisible();
+  await expect(page.getByText('Edit Profile')).toBeVisible();
+>>>>>>> dev
 });

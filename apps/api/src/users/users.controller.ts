@@ -71,12 +71,14 @@ export class UsersController {
           take: 1,
         },
         // Blocks
-        blockedBy: { // People who blocked this user
+        blockedBy: {
+          // People who blocked this user
           where: { blockerId: currentUser.id },
           select: { id: true },
           take: 1,
         },
-        blockedUsers: { // People this user blocked
+        blockedUsers: {
+          // People this user blocked
           where: { blockedUserId: currentUser.id },
           select: { id: true },
           take: 1,
@@ -136,15 +138,15 @@ export class UsersController {
     const friendRequest = targetUser.receivedFriendRequests[0] || targetUser.sentFriendRequests[0];
 
     return {
-      isFriend: targetUser.friendOf.length > 0 || targetUser.friends.some((f) => f.friend.id === currentUser.id),
+      isFriend: targetUser.friendOf.length > 0 || targetUser.friends.some(f => f.friend.id === currentUser.id),
       friendRequestStatus: friendRequest?.status || null,
       friendRequestSide: friendRequest ? (friendRequest.senderId === currentUser.id ? 'sender' : 'receiver') : null,
       isBlockedByMe: targetUser.blockedBy.length > 0,
       hasBlockedMe: targetUser.blockedUsers.length > 0,
-      mutualWorkspaces: targetUser.workspaceMemberships.map((m) => m.workspace),
+      mutualWorkspaces: targetUser.workspaceMemberships.map(m => m.workspace),
       mutualFriends: targetUser.friends
-        .filter((f) => f.friend.id !== currentUser.id)
-        .map((f) => ({
+        .filter(f => f.friend.id !== currentUser.id)
+        .map(f => ({
           id: f.friend.id,
           name: f.friend.name,
           avatar: f.friend.avatar || (f.friend as any).image,

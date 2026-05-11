@@ -10,11 +10,11 @@ import { CommentRequestMessage } from './message-types/comment-request-message';
 import { ReportMessage } from './message-types/report-message';
 
 const RENDERERS: Record<string, React.ComponentType<any>> = {
-  'code': CodeMessage,
-  'approval': ApprovalMessage,
+  code: CodeMessage,
+  approval: ApprovalMessage,
   'comment-request': CommentRequestMessage,
-  'report': ReportMessage,
-  'custom': ApprovalMessage, // Fallback
+  report: ReportMessage,
+  custom: ApprovalMessage, // Fallback
 };
 
 export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onReact }: any) {
@@ -64,8 +64,12 @@ export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onRe
                   <View className="bg-discord-tertiary p-3 rounded-lg flex-row items-center border border-black/10">
                     <MaterialIcons name="insert-drive-file" size={24} color="#949BA4" />
                     <View className="ml-2 flex-1">
-                      <Text className="text-discord-header font-bold text-sm" numberOfLines={1}>{att.name}</Text>
-                      <Text className="text-discord-muted text-[10px] uppercase">{att.type?.split('/')[1] || 'FILE'}</Text>
+                      <Text className="text-discord-header font-bold text-sm" numberOfLines={1}>
+                        {att.name}
+                      </Text>
+                      <Text className="text-discord-muted text-[10px] uppercase">
+                        {att.type?.split('/')[1] || 'FILE'}
+                      </Text>
                     </View>
                     <MaterialIcons name="file-download" size={20} color="#949BA4" />
                   </View>

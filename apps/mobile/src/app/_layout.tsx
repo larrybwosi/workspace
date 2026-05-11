@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { Stack } from "expo-router";
+import { useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useFonts, Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import * as SplashScreen from 'expo-splash-screen';
@@ -7,8 +7,8 @@ import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useColorScheme, View } from 'react-native';
-import "../global.css";
-import "../lib/auth";
+import '../global.css';
+import '../lib/auth';
 import { setupNotifications, handleNotificationResponse } from '../lib/notifications';
 import * as Notifications from 'expo-notifications';
 import { useCallSignaling } from '../hooks/use-call-signaling';
