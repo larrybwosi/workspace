@@ -38,3 +38,6 @@
 ## 2026-05-09 - [Database] Consolidated Workspace Authorization & Retrieval
 **Learning:** Performing sequential Prisma queries for workspace existence, membership authorization, and data retrieval (logs, members, etc.) increases latency due to multiple database round-trips.
 **Action:** Use Prisma's nested `select` or `include` with filtered relations on a single `findUnique({ where: { slug } })` call to perform all checks and data fetching in one round-trip. Re-map results in-memory if necessary to maintain API contracts.
+## 2026-05-11 - [Database] Consolidated Workspace Data Retrieval
+**Learning:** Sequential Prisma queries for workspace authorization and nested resource retrieval (channels, members) can be consolidated into a single 'findUnique' call using nested 'select' or 'include'.
+**Action:** Always aim to fetch related resources and perform authorization checks in a single database round-trip for high-traffic workspace-scoped endpoints.
