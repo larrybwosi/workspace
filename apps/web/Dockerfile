@@ -32,7 +32,7 @@ COPY turbo.json turbo.json
 RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo run db:generate
 
 ENV NEXT_STANDALONE=true
-RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo build --filter=web... -- --webpack
+RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo build --filter=web...
 
 FROM base AS runner
 WORKDIR /app
