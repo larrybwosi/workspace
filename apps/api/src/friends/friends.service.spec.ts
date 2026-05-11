@@ -137,23 +137,17 @@ describe("FriendsService", () => {
   });
 
   describe("sendFriendRequest - accepts email OR username (PR change)", () => {
-    const defaultReceiver = {
-      id: "user-2",
-      name: "Bob",
-      friendOf: [],
-      friends: [],
-      receivedFriendRequests: [],
-      sentFriendRequests: [],
-    };
-
     it("should use findFirst with OR [email, username] to find receiver", async () => {
-      mockPrisma.user.findFirst.mockResolvedValue(defaultReceiver);
+      const receiver = { id: "user-2", name: "Bob" };
+      mockPrisma.user.findFirst.mockResolvedValue(receiver);
+      mockPrisma.friend.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue({
         id: "req-1",
         senderId: "user-1",
         receiverId: "user-2",
         sender: { id: "user-1" },
-        receiver: defaultReceiver,
+        receiver: receiver,
       });
       mockPrisma.notification.create.mockResolvedValue({});
 
@@ -172,13 +166,16 @@ describe("FriendsService", () => {
     });
 
     it("should find receiver by username (PR change: username lookup support)", async () => {
-      mockPrisma.user.findFirst.mockResolvedValue(defaultReceiver);
+      const receiver = { id: "user-2", name: "Bob" };
+      mockPrisma.user.findFirst.mockResolvedValue(receiver);
+      mockPrisma.friend.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue({
         id: "req-1",
         senderId: "user-1",
         receiverId: "user-2",
         sender: { id: "user-1" },
-        receiver: defaultReceiver,
+        receiver: receiver,
       });
       mockPrisma.notification.create.mockResolvedValue({});
 
@@ -213,7 +210,7 @@ describe("FriendsService", () => {
     });
 
     it("should throw BadRequestException when sender tries to send request to themselves", async () => {
-      mockPrisma.user.findFirst.mockResolvedValue({ ...defaultReceiver, id: "user-1", name: "Self" });
+      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-1", name: "Self" });
 
       await expect(
         service.sendFriendRequest("user-1", "Alice", "self@example.com")
@@ -225,10 +222,8 @@ describe("FriendsService", () => {
     });
 
     it("should throw BadRequestException when already friends", async () => {
-      mockPrisma.user.findFirst.mockResolvedValue({
-        ...defaultReceiver,
-        friendOf: [{ id: "friendship-1" }],
-      });
+      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-2", name: "Bob" });
+      mockPrisma.friend.findFirst.mockResolvedValue({ id: "friendship-1" });
 
       await expect(
         service.sendFriendRequest("user-1", "Alice", "bob@example.com")
@@ -236,10 +231,9 @@ describe("FriendsService", () => {
     });
 
     it("should throw BadRequestException when pending request already exists", async () => {
-      mockPrisma.user.findFirst.mockResolvedValue({
-        ...defaultReceiver,
-        receivedFriendRequests: [{ id: "req-1" }],
-      });
+      mockPrisma.user.findFirst.mockResolvedValue({ id: "user-2", name: "Bob" });
+      mockPrisma.friend.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.findFirst.mockResolvedValue({ id: "req-1", status: "pending" });
 
       await expect(
         service.sendFriendRequest("user-1", "Alice", "bob@example.com")
@@ -247,7 +241,7 @@ describe("FriendsService", () => {
     });
 
     it("should successfully create friend request and notification", async () => {
-      const receiver = defaultReceiver;
+      const receiver = { id: "user-2", name: "Bob" };
       const createdRequest = {
         id: "req-1",
         senderId: "user-1",
@@ -257,6 +251,8 @@ describe("FriendsService", () => {
       };
 
       mockPrisma.user.findFirst.mockResolvedValue(receiver);
+      mockPrisma.friend.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue(createdRequest);
       mockPrisma.notification.create.mockResolvedValue({ id: "notif-1" });
 
@@ -299,7 +295,7 @@ describe("FriendsService", () => {
 
     it("should send Ably notification to receiver on success", async () => {
       const { publishToAbly } = await import("@repo/shared/server");
-      const receiver = defaultReceiver;
+      const receiver = { id: "user-2", name: "Bob" };
       const createdRequest = {
         id: "req-1",
         senderId: "user-1",
@@ -309,6 +305,8 @@ describe("FriendsService", () => {
       };
 
       mockPrisma.user.findFirst.mockResolvedValue(receiver);
+      mockPrisma.friend.findFirst.mockResolvedValue(null);
+      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue(createdRequest);
       mockPrisma.notification.create.mockResolvedValue({ id: "notif-1" });
 
