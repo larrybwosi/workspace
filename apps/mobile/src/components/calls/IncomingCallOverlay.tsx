@@ -12,13 +12,13 @@ export function IncomingCallOverlay() {
 
   const handleAccept = () => {
     router.push({
-      pathname: "/call/[id]",
+      pathname: '/call/[id]',
       params: {
         id: incomingCallData.callId,
         type: incomingCallData.type,
         workspaceId: incomingCallData.workspaceId || '',
-        workspaceSlug: incomingCallData.workspaceSlug || ''
-      }
+        workspaceSlug: incomingCallData.workspaceSlug || '',
+      },
     } as any);
   };
 

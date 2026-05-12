@@ -30,7 +30,7 @@ Clients can subscribe to the `qr-session:${sessionId}` channel via Ably to recei
 
 ```typescript
 const channel = ably.channels.get(`qr-session:${sessionId}`);
-channel.subscribe('authorized', (message) => {
+channel.subscribe('authorized', message => {
   const { sessionToken } = message.data;
   // Use sessionToken to authenticate
 });
@@ -43,6 +43,7 @@ When the mobile app scans the code, it should verify the user's intent and then 
 **Endpoint:** `POST /api/auth/device/qr/authorize`
 
 **Body:**
+
 ```json
 {
   "sessionId": "..."

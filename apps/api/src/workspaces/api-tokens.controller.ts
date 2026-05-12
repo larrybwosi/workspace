@@ -10,15 +10,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -87,7 +79,7 @@ const createTokenSchema = z.object({
         'read:channels',
         'write:channels',
         'send:messages',
-      ]),
+      ])
     ),
   }),
   rateLimit: z.number().min(100).max(100000).optional().default(1000),
@@ -137,7 +129,7 @@ export class ApiTokensController {
       orderBy: { createdAt: 'desc' },
     });
 
-    const maskedTokens = tokens.map((t) => ({
+    const maskedTokens = tokens.map(t => ({
       ...t,
       token: `wst_${'*'.repeat(24)}${t.token.slice(-8)}`,
     }));
@@ -150,11 +142,7 @@ export class ApiTokensController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateApiTokenDto })
   @ApiResponse({ status: 201, description: 'API token created' })
-  async createApiToken(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: CreateApiTokenDto,
-  ) {
+  async createApiToken(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateApiTokenDto) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -213,11 +201,7 @@ export class ApiTokensController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'tokenId', description: 'The token ID' })
   @ApiResponse({ status: 200, description: 'API token deleted' })
-  async deleteApiToken(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('tokenId') tokenId: string,
-  ) {
+  async deleteApiToken(@CurrentUser() user: User, @Param('slug') slug: string, @Param('tokenId') tokenId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });

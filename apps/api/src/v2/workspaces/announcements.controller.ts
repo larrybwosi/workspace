@@ -11,15 +11,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -91,7 +83,10 @@ export class V2AnnouncementsController {
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all announcements in the workspace', description: 'Requires announcements:read scope.' })
+  @ApiOperation({
+    summary: 'List all announcements in the workspace',
+    description: 'Requires announcements:read scope.',
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of announcements returned successfully.' })
   async getAnnouncements(@V2Context() context: ApiV2Context) {
@@ -159,7 +154,10 @@ export class V2AnnouncementsController {
   }
 
   @Get(':announcementId')
-  @ApiOperation({ summary: 'Get details of a specific announcement', description: 'Requires announcements:read scope.' })
+  @ApiOperation({
+    summary: 'Get details of a specific announcement',
+    description: 'Requires announcements:read scope.',
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'announcementId', description: 'The announcement ID' })
   @ApiResponse({ status: 200, description: 'Announcement details returned successfully.' })

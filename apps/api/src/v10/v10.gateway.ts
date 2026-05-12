@@ -1,9 +1,4 @@
-import {
-  WebSocketGateway,
-  WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server } from 'ws';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { prisma } from '@repo/database';
@@ -37,7 +32,7 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
 
   private subscribeToGlobalEvents() {
     const channel = this.ably.channels.get('global-system-events');
-    channel.subscribe((message) => {
+    channel.subscribe(message => {
       const { name, data } = message;
       this.handleSystemEvent(name, data);
     });
@@ -208,7 +203,8 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
   }
 
   private sendOp(client: any, op: number, d?: any, t?: string, s?: number) {
-    if (client.readyState === 1) { // OPEN
+    if (client.readyState === 1) {
+      // OPEN
       client.send(JSON.stringify({ op, d, t, s }));
     }
   }
@@ -258,18 +254,24 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
     sockets.add(client);
 
     // Send READY event
-    this.sendOp(client, 0, {
-      v: 10,
-      user: {
-        id: bot.id,
-        username: bot.name,
-        discriminator: '0000',
-        avatar: bot.avatar,
-        bot: true,
+    this.sendOp(
+      client,
+      0,
+      {
+        v: 10,
+        user: {
+          id: bot.id,
+          username: bot.name,
+          discriminator: '0000',
+          avatar: bot.avatar,
+          bot: true,
+        },
+        guilds: [],
+        session_id: crypto.randomBytes(16).toString('hex'),
       },
-      guilds: [],
-      session_id: crypto.randomBytes(16).toString('hex'),
-    }, 'READY', 1);
+      'READY',
+      1
+    );
 
     this.logger.log(`Bot ${bot.name} (${bot.id}) identified successfully`);
   }

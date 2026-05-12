@@ -1,128 +1,130 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Plus, Copy, Trash2, Key, Check, AlertTriangle } from "lucide-react"
-import { Card, CardContent } from "../../../components/card"
-import { Button } from "../../../components/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/dialog"
-import { Input } from "../../../components/input"
-import { Label } from "../../../components/label"
-import { Badge } from "../../../components/badge"
-import { Checkbox } from "../../../components/checkbox"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useToast } from "../../../hooks/use-toast"
-import { format } from "date-fns"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
-import { useWorkspaceApiTokens, useCreateWorkspaceApiToken, apiClient } from "@repo/api-client"
+import { useState } from 'react';
+import { Plus, Copy, Trash2, Key, Check, AlertTriangle } from 'lucide-react';
+import { Card, CardContent } from '../../../components/card';
+import { Button } from '../../../components/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../components/dialog';
+import { Input } from '../../../components/input';
+import { Label } from '../../../components/label';
+import { Badge } from '../../../components/badge';
+import { Checkbox } from '../../../components/checkbox';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../../../hooks/use-toast';
+import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
+import { useWorkspaceApiTokens, useCreateWorkspaceApiToken, apiClient } from '@repo/api-client';
 
 interface ApiKeysManagementProps {
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceId: string; // This is now treated as workspaceSlug
 }
 
 const AVAILABLE_PERMISSIONS = [
-  { id: "read:members", label: "Read Members", category: "Members" },
-  { id: "write:members", label: "Write Members", category: "Members" },
-  { id: "read:departments", label: "Read Departments", category: "Departments" },
-  { id: "write:departments", label: "Write Departments", category: "Departments" },
-  { id: "read:channels", label: "Read Channels", category: "Channels" },
-  { id: "write:channels", label: "Write Channels", category: "Channels" },
-  { id: "send:messages", label: "Send Messages", category: "Messages" },
-  { id: "read:projects", label: "Read Projects", category: "Projects" },
-  { id: "write:projects", label: "Write Projects", category: "Projects" },
-]
+  { id: 'read:members', label: 'Read Members', category: 'Members' },
+  { id: 'write:members', label: 'Write Members', category: 'Members' },
+  { id: 'read:departments', label: 'Read Departments', category: 'Departments' },
+  { id: 'write:departments', label: 'Write Departments', category: 'Departments' },
+  { id: 'read:channels', label: 'Read Channels', category: 'Channels' },
+  { id: 'write:channels', label: 'Write Channels', category: 'Channels' },
+  { id: 'send:messages', label: 'Send Messages', category: 'Messages' },
+  { id: 'read:projects', label: 'Read Projects', category: 'Projects' },
+  { id: 'write:projects', label: 'Write Projects', category: 'Projects' },
+];
 
 export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagementProps) {
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [viewTokenDialog, setViewTokenDialog] = useState<any>(null)
-  const [copiedToken, setCopiedToken] = useState(false)
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewTokenDialog, setViewTokenDialog] = useState<any>(null);
+  const [copiedToken, setCopiedToken] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: "",
+    name: '',
     permissions: [] as string[],
-    rateLimit: "1000",
-    expiresIn: "never",
-  })
+    rateLimit: '1000',
+    expiresIn: 'never',
+  });
 
   // Fetch API keys
-  const { data, isLoading } = useWorkspaceApiTokens(workspaceSlug)
+  const { data, isLoading } = useWorkspaceApiTokens(workspaceSlug);
 
-  const tokens = data?.tokens || []
+  const tokens = data?.tokens || [];
 
   // Create API key mutation
-  const createMutation = useCreateWorkspaceApiToken(workspaceSlug)
+  const createMutation = useCreateWorkspaceApiToken(workspaceSlug);
 
   // Use the original onSuccess logic by wrapping it if needed, or just use the hook's onSuccess
   // The hook already invalidates queries.
   const originalOnSuccess = (data: any) => {
-    setCreateDialogOpen(false)
-    setViewTokenDialog(data)
+    setCreateDialogOpen(false);
+    setViewTokenDialog(data);
     setFormData({
-      name: "",
+      name: '',
       permissions: [],
-      rateLimit: "1000",
-      expiresIn: "never",
-    })
+      rateLimit: '1000',
+      expiresIn: 'never',
+    });
     toast({
-      title: "API key created",
-      description: "Your API key has been created successfully. Make sure to copy it now.",
-    })
-  }
+      title: 'API key created',
+      description: 'Your API key has been created successfully. Make sure to copy it now.',
+    });
+  };
 
   const handleCreateToken = () => {
     const expiresAt =
-      formData.expiresIn !== "never"
+      formData.expiresIn !== 'never'
         ? new Date(Date.now() + Number.parseInt(formData.expiresIn) * 24 * 60 * 60 * 1000).toISOString()
-        : undefined
+        : undefined;
 
-    createMutation.mutate({
-      name: formData.name,
-      permissions: {
-        actions: formData.permissions,
+    createMutation.mutate(
+      {
+        name: formData.name,
+        permissions: {
+          actions: formData.permissions,
+        },
+        rateLimit: Number.parseInt(formData.rateLimit),
+        expiresAt,
       },
-      rateLimit: Number.parseInt(formData.rateLimit),
-      expiresAt,
-    }, {
-      onSuccess: originalOnSuccess,
-      onError: (error: any) => {
-        toast({
-          title: "Failed to create API key",
-          description: error.message,
-          variant: "destructive",
-        })
+      {
+        onSuccess: originalOnSuccess,
+        onError: (error: any) => {
+          toast({
+            title: 'Failed to create API key',
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
       }
-    })
-  }
+    );
+  };
 
   // Delete API key mutation
   const deleteMutation = useMutation({
     mutationFn: async (tokenId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/api-tokens/${tokenId}`)
-      return data
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/api-tokens/${tokenId}`);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-api-tokens", workspaceSlug] })
+      queryClient.invalidateQueries({ queryKey: ['workspace-api-tokens', workspaceSlug] });
       toast({
-        title: "API key deleted",
-        description: "The API key has been revoked and can no longer be used.",
-      })
+        title: 'API key deleted',
+        description: 'The API key has been revoked and can no longer be used.',
+      });
     },
-  })
-
+  });
 
   const copyToken = (token: string) => {
-    navigator.clipboard.writeText(token)
-    setCopiedToken(true)
-    setTimeout(() => setCopiedToken(false), 2000)
+    navigator.clipboard.writeText(token);
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2000);
     toast({
-      title: "Copied to clipboard",
-      description: "API key has been copied to your clipboard.",
-    })
-  }
+      title: 'Copied to clipboard',
+      description: 'API key has been copied to your clipboard.',
+    });
+  };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading API keys...</div>
+    return <div className="flex items-center justify-center p-8">Loading API keys...</div>;
   }
 
   return (
@@ -157,11 +159,11 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="font-mono">{token.token}</span>
                     <span>•</span>
-                    <span>Created {format(new Date(token.createdAt), "MMM d, yyyy")}</span>
+                    <span>Created {format(new Date(token.createdAt), 'MMM d, yyyy')}</span>
                     {token.lastUsedAt && (
                       <>
                         <span>•</span>
-                        <span>Last used {format(new Date(token.lastUsedAt), "MMM d, yyyy")}</span>
+                        <span>Last used {format(new Date(token.lastUsedAt), 'MMM d, yyyy')}</span>
                       </>
                     )}
                   </div>
@@ -216,7 +218,7 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
               <Input
                 placeholder="e.g., Production Integration"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
@@ -226,29 +228,29 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
                 {Object.entries(
                   AVAILABLE_PERMISSIONS.reduce(
                     (acc, perm) => {
-                      if (!acc[perm.category]) acc[perm.category] = []
-                      acc[perm.category].push(perm)
-                      return acc
+                      if (!acc[perm.category]) acc[perm.category] = [];
+                      acc[perm.category].push(perm);
+                      return acc;
                     },
-                    {} as Record<string, typeof AVAILABLE_PERMISSIONS>,
-                  ),
+                    {} as Record<string, typeof AVAILABLE_PERMISSIONS>
+                  )
                 ).map(([category, perms]) => (
                   <div key={category} className="space-y-2">
                     <h4 className="font-medium text-sm">{category}</h4>
                     <div className="grid grid-cols-2 gap-2">
-                      {perms.map((perm) => (
+                      {perms.map(perm => (
                         <div key={perm.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={perm.id}
                             checked={formData.permissions.includes(perm.id)}
-                            onCheckedChange={(checked) => {
+                            onCheckedChange={checked => {
                               if (checked) {
-                                setFormData({ ...formData, permissions: [...formData.permissions, perm.id] })
+                                setFormData({ ...formData, permissions: [...formData.permissions, perm.id] });
                               } else {
                                 setFormData({
                                   ...formData,
-                                  permissions: formData.permissions.filter((p) => p !== perm.id),
-                                })
+                                  permissions: formData.permissions.filter(p => p !== perm.id),
+                                });
                               }
                             }}
                           />
@@ -266,7 +268,7 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Rate Limit (requests/hour)</Label>
-                <Select value={formData.rateLimit} onValueChange={(v) => setFormData({ ...formData, rateLimit: v })}>
+                <Select value={formData.rateLimit} onValueChange={v => setFormData({ ...formData, rateLimit: v })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -281,7 +283,7 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
 
               <div className="space-y-2">
                 <Label>Expiration</Label>
-                <Select value={formData.expiresIn} onValueChange={(v) => setFormData({ ...formData, expiresIn: v })}>
+                <Select value={formData.expiresIn} onValueChange={v => setFormData({ ...formData, expiresIn: v })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -304,7 +306,7 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
                 onClick={handleCreateToken}
                 disabled={!formData.name || formData.permissions.length === 0 || createMutation.isPending}
               >
-                {createMutation.isPending ? "Creating..." : "Create API Key"}
+                {createMutation.isPending ? 'Creating...' : 'Create API Key'}
               </Button>
             </div>
           </div>
@@ -331,7 +333,7 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
             <div className="space-y-2">
               <Label>API Key</Label>
               <div className="flex gap-2">
-                <Input value={viewTokenDialog?.token || ""} readOnly className="font-mono text-sm" />
+                <Input value={viewTokenDialog?.token || ''} readOnly className="font-mono text-sm" />
                 <Button
                   variant="outline"
                   size="icon"
@@ -345,5 +347,5 @@ export function ApiKeysManagement({ workspaceId: workspaceSlug }: ApiKeysManagem
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

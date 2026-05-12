@@ -7,9 +7,7 @@ const authPrefix = '/api/auth';
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith(`${route}/`)
-  );
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
 
   if (isPublicRoute || pathname.startsWith(authPrefix)) {
     return NextResponse.next();

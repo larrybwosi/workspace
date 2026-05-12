@@ -1,6 +1,4 @@
-import {
-  Controller, Post, UseGuards, Req, BadRequestException
-} from '@nestjs/common';
+import { Controller, Post, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { AuthGuard } from '../../auth/auth.guard';

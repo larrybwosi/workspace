@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { SyntaxHighlighter } from "./syntax-highlighter";
-import { useParams, useRouter } from "next/navigation";
-import { useCustomEmojis } from "@repo/api-client";
-import { UserMention } from "./user-mention";
-import { cn } from "../lib/utils";
-import { useChannels } from "@repo/api-client";
+import * as React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { SyntaxHighlighter } from './syntax-highlighter';
+import { useParams, useRouter } from 'next/navigation';
+import { useCustomEmojis } from '@repo/api-client';
+import { UserMention } from './user-mention';
+import { cn } from '../lib/utils';
+import { useChannels } from '@repo/api-client';
 
 interface MarkdownRendererProps {
   content: string;
@@ -34,11 +34,11 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     // Find mentions
     while ((match = mentionRegex.exec(text)) !== null) {
       const username = match[1];
-      const isSpecial = username === "all" || username === "here";
+      const isSpecial = username === 'all' || username === 'here';
       tokens.push({
         index: match.index,
         length: match[0].length,
-        element: <UserMention key={`mention-${match.index}`} username={username} isSpecial={isSpecial} />
+        element: <UserMention key={`mention-${match.index}`} username={username} isSpecial={isSpecial} />,
       });
     }
 
@@ -54,7 +54,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           <span
             key={`channel-${match.index}`}
             className="text-primary hover:underline cursor-pointer font-medium"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               if (workspaceSlug) {
                 router.push(`/workspace/${workspaceSlug}/channels/${channelSlug}`);
@@ -63,7 +63,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           >
             #{channel?.name || channelSlug}
           </span>
-        )
+        ),
       });
     }
 
@@ -83,7 +83,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 title={emoji.shortcode}
                 className="inline-block h-5 w-5 align-text-bottom mx-0.5"
               />
-            )
+            ),
           });
         }
       });
@@ -113,26 +113,26 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   };
 
   return (
-    <div className={cn("prose prose-sm dark:prose-invert max-w-none break-words", className)}>
+    <div className={cn('prose prose-sm dark:prose-invert max-w-none break-words', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           code({ node, inline, className, children, ...props }: any) {
-            const match = /language-(\w+)/.exec(className || "");
-            const codeContent = String(children).replace(/\n$/, "");
+            const match = /language-(\w+)/.exec(className || '');
+            const codeContent = String(children).replace(/\n$/, '');
 
             if (!inline) {
-              return (
-                <SyntaxHighlighter
-                  code={codeContent}
-                  language={match ? match[1] : "text"}
-                  {...props}
-                />
-              );
+              return <SyntaxHighlighter code={codeContent} language={match ? match[1] : 'text'} {...props} />;
             }
 
             return (
-              <code className={cn("bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded text-sm font-mono text-primary", className)} {...props}>
+              <code
+                className={cn(
+                  'bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded text-sm font-mono text-primary',
+                  className
+                )}
+                {...props}
+              >
                 {children}
               </code>
             );
@@ -145,9 +145,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           table({ children }) {
             return (
               <div className="overflow-x-auto my-4">
-                <table className="min-w-full divide-y divide-border border">
-                  {children}
-                </table>
+                <table className="min-w-full divide-y divide-border border">{children}</table>
               </div>
             );
           },
@@ -167,11 +165,19 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             return <li className="my-0">{children}</li>;
           },
           blockquote({ children }) {
-            return <blockquote className="border-l-4 border-primary/30 pl-4 italic my-2 text-muted-foreground">{children}</blockquote>;
+            return (
+              <blockquote className="border-l-4 border-primary/30 pl-4 italic my-2 text-muted-foreground">
+                {children}
+              </blockquote>
+            );
           },
           a({ href, children }) {
-            return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{children}</a>;
-          }
+            return (
+              <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                {children}
+              </a>
+            );
+          },
         }}
       >
         {content}

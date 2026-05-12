@@ -1,25 +1,58 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Plus, Trash2, Power, PowerOff, SettingsIcon, ExternalLink, Copy, Check, Play, Globe, Zap, MessageSquare, GitBranch, Activity, Layout, Pentagon, RefreshCw } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
-import { Button } from "../../../components/button"
-import { Badge } from "../../../components/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../../../components/dialog"
-import { Input } from "../../../components/input"
-import { Label } from "../../../components/label"
-import { Textarea } from "../../../components/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/tabs"
-import { ScrollArea } from "../../../components/scroll-area"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useToast } from "../../../hooks/use-toast"
-import { Switch } from "../../../components/switch"
-import { useWorkspaceChannels, useWorkspaceIntegrations, useCreateWorkspaceIntegration, useUpdateWorkspaceIntegration, useDeleteWorkspaceIntegration, useTestWorkspaceIntegration, apiClient } from "@repo/api-client"
-import { toast } from "sonner"
+import { useState } from 'react';
+import {
+  Plus,
+  Trash2,
+  Power,
+  PowerOff,
+  SettingsIcon,
+  ExternalLink,
+  Copy,
+  Check,
+  Play,
+  Globe,
+  Zap,
+  MessageSquare,
+  GitBranch,
+  Activity,
+  Layout,
+  Pentagon,
+  RefreshCw,
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/card';
+import { Button } from '../../../components/button';
+import { Badge } from '../../../components/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../../components/dialog';
+import { Input } from '../../../components/input';
+import { Label } from '../../../components/label';
+import { Textarea } from '../../../components/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/tabs';
+import { ScrollArea } from '../../../components/scroll-area';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../../../hooks/use-toast';
+import { Switch } from '../../../components/switch';
+import {
+  useWorkspaceChannels,
+  useWorkspaceIntegrations,
+  useCreateWorkspaceIntegration,
+  useUpdateWorkspaceIntegration,
+  useDeleteWorkspaceIntegration,
+  useTestWorkspaceIntegration,
+  apiClient,
+} from '@repo/api-client';
+import { toast } from 'sonner';
 
 interface ExternalIntegrationsProps {
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceId: string; // This is now treated as workspaceSlug
 }
 
 const SERVICE_ICONS: Record<string, React.ReactNode> = {
@@ -35,135 +68,141 @@ const SERVICE_ICONS: Record<string, React.ReactNode> = {
   zapier: <Zap className="h-5 w-5" />,
   make: <Zap className="h-5 w-5" />,
   custom: <Globe className="h-5 w-5" />,
-}
+};
 
 export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalIntegrationsProps) {
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [configDialogOpen, setConfigDialogOpen] = useState(false)
-  const [selectedIntegration, setSelectedIntegration] = useState<any>(null)
-  const [copiedSecret, setCopiedSecret] = useState(false)
-  const [testingId, setTestingId] = useState<string | null>(null)
-  const queryClient = useQueryClient()
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
+  const [copiedSecret, setCopiedSecret] = useState(false);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    service: "",
-    name: "",
-    description: "",
-    webhookUrl: "",
-    hulyUrl: "",
-    channelId: "",
-    projectId: "",
-    apiKey: "",
+    service: '',
+    name: '',
+    description: '',
+    webhookUrl: '',
+    hulyUrl: '',
+    channelId: '',
+    projectId: '',
+    apiKey: '',
     events: [] as string[],
-  })
+  });
 
   // Fetch integrations
-  const { data, isLoading } = useWorkspaceIntegrations(workspaceSlug)
+  const { data, isLoading } = useWorkspaceIntegrations(workspaceSlug);
 
-  const integrations = data?.integrations || []
-  const availableServices = data?.availableServices || []
+  const integrations = data?.integrations || [];
+  const availableServices = data?.availableServices || [];
 
-  const { data: channels } = useWorkspaceChannels(workspaceSlug)
+  const { data: channels } = useWorkspaceChannels(workspaceSlug);
 
   // Create integration mutation
-  const createMutation = useCreateWorkspaceIntegration(workspaceSlug)
+  const createMutation = useCreateWorkspaceIntegration(workspaceSlug);
 
   // Update integration mutation
-  const updateMutation = useUpdateWorkspaceIntegration(workspaceSlug)
+  const updateMutation = useUpdateWorkspaceIntegration(workspaceSlug);
 
   // Delete integration mutation
-  const deleteMutation = useDeleteWorkspaceIntegration(workspaceSlug)
+  const deleteMutation = useDeleteWorkspaceIntegration(workspaceSlug);
 
   // Test integration mutation
-  const testIntegration = useTestWorkspaceIntegration(workspaceSlug)
+  const testIntegration = useTestWorkspaceIntegration(workspaceSlug);
 
   const handleCreateIntegration = () => {
-    createMutation.mutate({
-      service: formData.service,
-      name: formData.name,
-      description: formData.description,
-      config: {
-        webhookUrl: formData.webhookUrl,
-        hulyUrl: formData.hulyUrl,
-        channelId: formData.channelId,
-        projectId: formData.projectId,
-        apiKey: formData.apiKey,
-        events: formData.events,
+    createMutation.mutate(
+      {
+        service: formData.service,
+        name: formData.name,
+        description: formData.description,
+        config: {
+          webhookUrl: formData.webhookUrl,
+          hulyUrl: formData.hulyUrl,
+          channelId: formData.channelId,
+          projectId: formData.projectId,
+          apiKey: formData.apiKey,
+          events: formData.events,
+        },
       },
-    }, {
-      onSuccess: (data) => {
-        setCreateDialogOpen(false)
-        setFormData({
-          service: "",
-          name: "",
-          description: "",
-          webhookUrl: "",
-          hulyUrl: "",
-          channelId: "",
-          projectId: "",
-          apiKey: "",
-          events: [],
-        })
-        toast.success("Integration created successfully")
-        // Show the secret to the user
-        setSelectedIntegration({ ...data, newSecret: data.secret })
-        setConfigDialogOpen(true)
-      },
-      onError: (error: any) => {
-        toast.error("Failed to create integration")
+      {
+        onSuccess: data => {
+          setCreateDialogOpen(false);
+          setFormData({
+            service: '',
+            name: '',
+            description: '',
+            webhookUrl: '',
+            hulyUrl: '',
+            channelId: '',
+            projectId: '',
+            apiKey: '',
+            events: [],
+          });
+          toast.success('Integration created successfully');
+          // Show the secret to the user
+          setSelectedIntegration({ ...data, newSecret: data.secret });
+          setConfigDialogOpen(true);
+        },
+        onError: (error: any) => {
+          toast.error('Failed to create integration');
+        },
       }
-    })
-  }
+    );
+  };
 
   const handleDeleteIntegration = async (integrationId: string) => {
     deleteMutation.mutate(integrationId, {
       onSuccess: () => {
-        toast.success("Integration deleted successfully")
+        toast.success('Integration deleted successfully');
       },
       onError: (error: any) => {
-        toast.error("Failed to delete integration")
-      }
-    })
-  }
+        toast.error('Failed to delete integration');
+      },
+    });
+  };
 
   const handleToggleIntegration = async (integrationId: string, active: boolean) => {
-    updateMutation.mutate({
-      integrationId,
-      data: { active }
-    }, {
-      onSuccess: () => {
-        toast.success(active ? "Integration enabled" : "Integration disabled")
+    updateMutation.mutate(
+      {
+        integrationId,
+        data: { active },
+      },
+      {
+        onSuccess: () => {
+          toast.success(active ? 'Integration enabled' : 'Integration disabled');
+        },
       }
-    })
-  }
+    );
+  };
 
   const handleTestIntegration = async (integrationId: string) => {
-    setTestingId(integrationId)
+    setTestingId(integrationId);
     try {
-      const result = await testIntegration.mutateAsync(integrationId)
+      const result = await testIntegration.mutateAsync(integrationId);
       if (result.success) {
-        toast.success("Integration test passed")
+        toast.success('Integration test passed');
       } else {
-        toast.error("Integration test failed")
+        toast.error('Integration test failed');
       }
     } catch (error) {
-      toast.error("Test failed")
+      toast.error('Test failed');
     } finally {
-      setTestingId(null)
+      setTestingId(null);
     }
-  }
+  };
 
   const copySecret = (secret: string) => {
-    navigator.clipboard.writeText(secret)
-    setCopiedSecret(true)
-    setTimeout(() => setCopiedSecret(false), 2000)
-    toast.success("Secret copied to clipboard")
-  }
+    navigator.clipboard.writeText(secret);
+    setCopiedSecret(true);
+    setTimeout(() => setCopiedSecret(false), 2000);
+    toast.success('Secret copied to clipboard');
+  };
 
-  const selectedServiceMeta = availableServices.find((s: any) => s.id === formData.service)
+  const selectedServiceMeta = availableServices.find((s: any) => s.id === formData.service);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading integrations...</div>
+    return <div className="flex items-center justify-center p-8">Loading integrations...</div>;
   }
 
   return (
@@ -188,25 +227,27 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                 <div className="flex items-center gap-3">
                   <div
                     className="flex items-center justify-center size-10 rounded-lg text-white font-semibold"
-                    style={{ backgroundColor: integration.metadata?.color || "#6366F1" }}
+                    style={{ backgroundColor: integration.metadata?.color || '#6366F1' }}
                   >
                     {SERVICE_ICONS[integration.service] || <Globe className="h-5 w-5" />}
                   </div>
                   <div>
-                    <CardTitle className="text-base">{(integration.config as any)?.name || integration.service}</CardTitle>
+                    <CardTitle className="text-base">
+                      {(integration.config as any)?.name || integration.service}
+                    </CardTitle>
                     <CardDescription className="text-xs">
                       {integration.metadata?.name || integration.service}
                     </CardDescription>
                   </div>
                 </div>
-                <Badge variant={integration.active ? "default" : "secondary"}>
-                  {integration.active ? "Active" : "Inactive"}
+                <Badge variant={integration.active ? 'default' : 'secondary'}>
+                  {integration.active ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground line-clamp-2">
-                {(integration.config as any)?.description || "No description provided"}
+                {(integration.config as any)?.description || 'No description provided'}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -214,8 +255,8 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                   size="sm"
                   className="flex-1 bg-transparent"
                   onClick={() => {
-                    setSelectedIntegration(integration)
-                    setConfigDialogOpen(true)
+                    setSelectedIntegration(integration);
+                    setConfigDialogOpen(true);
                   }}
                 >
                   <SettingsIcon className="h-3 w-3 mr-1" />
@@ -243,7 +284,11 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                   onClick={() => handleTestIntegration(integration.id)}
                   disabled={testingId === integration.id}
                 >
-                  {testingId === integration.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                  {testingId === integration.id ? (
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Play className="h-3 w-3" />
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -292,7 +337,7 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                     <Card
                       key={service.id}
                       className={`cursor-pointer transition-all hover:border-primary ${
-                        formData.service === service.id ? "border-primary bg-primary/5" : ""
+                        formData.service === service.id ? 'border-primary bg-primary/5' : ''
                       }`}
                       onClick={() => setFormData({ ...formData, service: service.id })}
                     >
@@ -322,7 +367,7 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                     id="name"
                     placeholder="e.g., Production Slack"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
 
@@ -332,25 +377,25 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                     id="description"
                     placeholder="Describe what this integration is used for"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
 
                 {selectedServiceMeta && (
                   <>
-                    {["slack", "discord", "teams", "custom"].includes(formData.service) && (
+                    {['slack', 'discord', 'teams', 'custom'].includes(formData.service) && (
                       <div className="space-y-2">
                         <Label htmlFor="webhookUrl">Webhook URL *</Label>
                         <Input
                           id="webhookUrl"
                           placeholder="https://hooks.slack.com/services/..."
                           value={formData.webhookUrl}
-                          onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
+                          onChange={e => setFormData({ ...formData, webhookUrl: e.target.value })}
                         />
                       </div>
                     )}
 
-                    {formData.service === "huly" && (
+                    {formData.service === 'huly' && (
                       <>
                         <div className="space-y-2">
                           <Label>Huly URL (Self-hosted)</Label>
@@ -358,14 +403,14 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                             type="url"
                             placeholder="https://huly.your-domain.com"
                             value={formData.hulyUrl}
-                            onChange={(e) => setFormData({ ...formData, hulyUrl: e.target.value })}
+                            onChange={e => setFormData({ ...formData, hulyUrl: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label>Target Channel (for Notifications)</Label>
                           <Select
                             value={formData.channelId}
-                            onValueChange={(value) => setFormData({ ...formData, channelId: value })}
+                            onValueChange={value => setFormData({ ...formData, channelId: value })}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select a channel" />
@@ -388,7 +433,7 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                         type="password"
                         placeholder="Enter your API key or token"
                         value={formData.apiKey}
-                        onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                        onChange={e => setFormData({ ...formData, apiKey: e.target.value })}
                       />
                     </div>
                   </>
@@ -402,7 +447,7 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                     onClick={handleCreateIntegration}
                     disabled={!formData.service || !formData.name || createMutation.isPending}
                   >
-                    {createMutation.isPending ? "Creating..." : "Create Integration"}
+                    {createMutation.isPending ? 'Creating...' : 'Create Integration'}
                   </Button>
                 </div>
               </div>
@@ -417,7 +462,7 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
           <DialogHeader>
             <DialogTitle>Integration Configuration</DialogTitle>
             <DialogDescription>
-              {selectedIntegration?.newSecret ? "Save your integration secret" : "Manage integration settings"}
+              {selectedIntegration?.newSecret ? 'Save your integration secret' : 'Manage integration settings'}
             </DialogDescription>
           </DialogHeader>
           {selectedIntegration?.newSecret && (
@@ -452,11 +497,9 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={selectedIntegration.active}
-                    onCheckedChange={(checked) =>
-                      handleToggleIntegration(selectedIntegration.id, checked)
-                    }
+                    onCheckedChange={checked => handleToggleIntegration(selectedIntegration.id, checked)}
                   />
-                  <span className="text-sm">{selectedIntegration.active ? "Active" : "Inactive"}</span>
+                  <span className="text-sm">{selectedIntegration.active ? 'Active' : 'Inactive'}</span>
                 </div>
               </div>
             </div>
@@ -464,5 +507,5 @@ export function ExternalIntegrations({ workspaceId: workspaceSlug }: ExternalInt
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

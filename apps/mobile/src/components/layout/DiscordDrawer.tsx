@@ -15,10 +15,7 @@ export function DiscordSidebar() {
 
   return (
     <View className="flex-row h-full">
-      <CreateWorkspaceModal
-        isVisible={isWorkspaceModalVisible}
-        onClose={() => setWorkspaceModalVisible(false)}
-      />
+      <CreateWorkspaceModal isVisible={isWorkspaceModalVisible} onClose={() => setWorkspaceModalVisible(false)} />
 
       {/* Workspace Icons (Leftmost) */}
       <View className="w-16 bg-discord-tertiary pt-12 items-center">
@@ -60,12 +57,12 @@ export function DiscordSidebar() {
         {workspaceId ? (
           <>
             <View className="flex-row items-center justify-between px-2 mb-4">
-               <Text className="text-discord-header font-bold text-lg flex-1" numberOfLines={1}>
-                 {workspaces?.find((w: any) => w.id === workspaceId)?.name}
-               </Text>
-               <TouchableOpacity onPress={() => setChannelModalVisible(true)}>
-                 <MaterialIcons name="add" size={20} color="#949BA4" />
-               </TouchableOpacity>
+              <Text className="text-discord-header font-bold text-lg flex-1" numberOfLines={1}>
+                {workspaces?.find((w: any) => w.id === workspaceId)?.name}
+              </Text>
+              <TouchableOpacity onPress={() => setChannelModalVisible(true)}>
+                <MaterialIcons name="add" size={20} color="#949BA4" />
+              </TouchableOpacity>
             </View>
             <ChannelList workspaceId={workspaceId} />
             <CreateChannelModal
@@ -76,7 +73,7 @@ export function DiscordSidebar() {
           </>
         ) : (
           <View className="flex-1 items-center justify-center px-4">
-             <Text className="text-discord-muted text-center italic">Select a server to see channels</Text>
+            <Text className="text-discord-muted text-center italic">Select a server to see channels</Text>
           </View>
         )}
       </View>

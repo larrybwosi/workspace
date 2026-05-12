@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { Send, Download, Key, Shield, FileText } from "lucide-react"
-import { WorkspaceIncomingWebhooks } from "./workspace-incoming-webhooks"
-import { WorkspaceOutgoingWebhooks } from "./workspace-outgoing-webhooks"
-import { WorkspaceResourceManagement } from "./workspace-resource-management"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { Send, Download, Key, Shield, FileText } from 'lucide-react';
+import { WorkspaceIncomingWebhooks } from './workspace-incoming-webhooks';
+import { WorkspaceOutgoingWebhooks } from './workspace-outgoing-webhooks';
+import { WorkspaceResourceManagement } from './workspace-resource-management';
 
 interface WorkspaceWebhooksManagementProps {
-  workspaceSlug: string
+  workspaceSlug: string;
 }
 
 export function WorkspaceWebhooksManagement({ workspaceSlug }: WorkspaceWebhooksManagementProps) {
@@ -73,5 +73,5 @@ export function WorkspaceWebhooksManagement({ workspaceSlug }: WorkspaceWebhooks
         </Card>
       </TabsContent>
     </Tabs>
-  )
+  );
 }

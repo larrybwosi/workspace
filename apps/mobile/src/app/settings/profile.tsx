@@ -22,7 +22,7 @@ export default function ProfileSettings() {
       const baseURL = getBaseURL();
       await axios.post(`${baseURL}/api/users/me`, {
         avatar,
-        banner
+        banner,
       });
       Alert.alert('Success', 'Profile updated successfully');
       router.back();
@@ -43,7 +43,11 @@ export default function ProfileSettings() {
         </TouchableOpacity>
         <Text className="text-discord-header font-bold text-lg flex-1">Edit Profile</Text>
         <TouchableOpacity onPress={handleSave} disabled={isUpdating}>
-          {isUpdating ? <ActivityIndicator size="small" color="#5865F2" /> : <Text className="text-discord-blurple font-bold">Save</Text>}
+          {isUpdating ? (
+            <ActivityIndicator size="small" color="#5865F2" />
+          ) : (
+            <Text className="text-discord-blurple font-bold">Save</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -73,28 +77,32 @@ export default function ProfileSettings() {
             <View>
               <Text className="text-discord-header font-medium mb-2">Avatars</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row mb-6">
-                {assets?.profileAssets?.filter((a: any) => a.type === 'avatar').map((asset: any) => (
-                  <TouchableOpacity
-                    key={asset.id}
-                    onPress={() => setAvatar(asset.url)}
-                    className={`mr-3 rounded-full p-1 ${avatar === asset.url ? 'border-2 border-discord-blurple' : ''}`}
-                  >
-                    <Image source={{ uri: asset.url }} className="w-16 h-16 rounded-full" />
-                  </TouchableOpacity>
-                ))}
+                {assets?.profileAssets
+                  ?.filter((a: any) => a.type === 'avatar')
+                  .map((asset: any) => (
+                    <TouchableOpacity
+                      key={asset.id}
+                      onPress={() => setAvatar(asset.url)}
+                      className={`mr-3 rounded-full p-1 ${avatar === asset.url ? 'border-2 border-discord-blurple' : ''}`}
+                    >
+                      <Image source={{ uri: asset.url }} className="w-16 h-16 rounded-full" />
+                    </TouchableOpacity>
+                  ))}
               </ScrollView>
 
               <Text className="text-discord-header font-medium mb-2">Banners</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                {assets?.profileAssets?.filter((a: any) => a.type === 'banner').map((asset: any) => (
-                  <TouchableOpacity
-                    key={asset.id}
-                    onPress={() => setBanner(asset.url)}
-                    className={`mr-3 rounded-lg overflow-hidden ${banner === asset.url ? 'border-2 border-discord-blurple' : ''}`}
-                  >
-                    <Image source={{ uri: asset.url }} className="w-24 h-12" />
-                  </TouchableOpacity>
-                ))}
+                {assets?.profileAssets
+                  ?.filter((a: any) => a.type === 'banner')
+                  .map((asset: any) => (
+                    <TouchableOpacity
+                      key={asset.id}
+                      onPress={() => setBanner(asset.url)}
+                      className={`mr-3 rounded-lg overflow-hidden ${banner === asset.url ? 'border-2 border-discord-blurple' : ''}`}
+                    >
+                      <Image source={{ uri: asset.url }} className="w-24 h-12" />
+                    </TouchableOpacity>
+                  ))}
               </ScrollView>
             </View>
           )}

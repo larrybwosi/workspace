@@ -1,15 +1,15 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import { Button } from "../../components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Badge } from "../../components/badge"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Switch } from "../../components/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
+import { useState } from 'react';
+import { Button } from '../../components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Badge } from '../../components/badge';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Switch } from '../../components/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/dialog"
-import { Textarea } from "../../components/textarea"
-import { ScrollArea } from "../../components/scroll-area"
-import { toast } from "sonner"
+} from '../../components/dialog';
+import { Textarea } from '../../components/textarea';
+import { ScrollArea } from '../../components/scroll-area';
+import { toast } from 'sonner';
 import {
   useWorkspaceIntegrations,
   useCreateWorkspaceIntegration,
   useUpdateWorkspaceIntegration,
   useDeleteWorkspaceIntegration,
   useTestWorkspaceIntegration,
-} from "@repo/api-client"
+} from '@repo/api-client';
 import {
   Plus,
   Trash2,
@@ -42,10 +42,10 @@ import {
   GitBranch,
   Layout,
   Pentagon,
-} from "lucide-react"
+} from 'lucide-react';
 
 interface WorkspaceIntegrationsPanelProps {
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceId: string; // This is now treated as workspaceSlug
 }
 
 const SERVICE_ICONS: Record<string, React.ReactNode> = {
@@ -61,27 +61,27 @@ const SERVICE_ICONS: Record<string, React.ReactNode> = {
   zapier: <Zap className="h-5 w-5" />,
   make: <Zap className="h-5 w-5" />,
   custom: <Globe className="h-5 w-5" />,
-}
+};
 
 export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: WorkspaceIntegrationsPanelProps) {
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [selectedService, setSelectedService] = useState("")
-  const [configForm, setConfigForm] = useState<Record<string, any>>({})
-  const [testingId, setTestingId] = useState<string | null>(null)
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState('');
+  const [configForm, setConfigForm] = useState<Record<string, any>>({});
+  const [testingId, setTestingId] = useState<string | null>(null);
 
-  const { data, isLoading } = useWorkspaceIntegrations(workspaceSlug)
-  const createIntegration = useCreateWorkspaceIntegration(workspaceSlug)
-  const updateIntegration = useUpdateWorkspaceIntegration(workspaceSlug)
-  const deleteIntegration = useDeleteWorkspaceIntegration(workspaceSlug)
-  const testIntegration = useTestWorkspaceIntegration(workspaceSlug)
+  const { data, isLoading } = useWorkspaceIntegrations(workspaceSlug);
+  const createIntegration = useCreateWorkspaceIntegration(workspaceSlug);
+  const updateIntegration = useUpdateWorkspaceIntegration(workspaceSlug);
+  const deleteIntegration = useDeleteWorkspaceIntegration(workspaceSlug);
+  const testIntegration = useTestWorkspaceIntegration(workspaceSlug);
 
-  const integrations = data?.integrations || []
-  const availableServices = data?.availableServices || []
+  const integrations = data?.integrations || [];
+  const availableServices = data?.availableServices || [];
 
   const handleCreate = async () => {
     if (!selectedService || !configForm.name) {
-      toast.error("Please fill in required fields")
-      return
+      toast.error('Please fill in required fields');
+      return;
     }
 
     try {
@@ -90,67 +90,67 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
         name: configForm.name,
         config: configForm,
         description: configForm.description,
-      })
+      });
 
-      toast.success("Integration created", {
+      toast.success('Integration created', {
         description: "Store the secret key securely - it won't be shown again.",
-      })
+      });
 
       if (result.secret) {
-        navigator.clipboard.writeText(result.secret)
-        toast.info("Secret copied to clipboard")
+        navigator.clipboard.writeText(result.secret);
+        toast.info('Secret copied to clipboard');
       }
 
-      setIsAddOpen(false)
-      setSelectedService("")
-      setConfigForm({})
+      setIsAddOpen(false);
+      setSelectedService('');
+      setConfigForm({});
     } catch (error) {
-      toast.error("Failed to create integration")
+      toast.error('Failed to create integration');
     }
-  }
+  };
 
   const handleTest = async (integrationId: string) => {
-    setTestingId(integrationId)
+    setTestingId(integrationId);
     try {
-      const result = await testIntegration.mutateAsync(integrationId)
+      const result = await testIntegration.mutateAsync(integrationId);
       if (result.success) {
-        toast.success("Integration test passed", {
+        toast.success('Integration test passed', {
           description: `Latency: ${result.latency}ms`,
-        })
+        });
       } else {
-        toast.error("Integration test failed", {
+        toast.error('Integration test failed', {
           description: result.message,
-        })
+        });
       }
     } catch (error) {
-      toast.error("Test failed")
+      toast.error('Test failed');
     } finally {
-      setTestingId(null)
+      setTestingId(null);
     }
-  }
+  };
 
   const handleToggle = async (integrationId: string, active: boolean) => {
     try {
       await updateIntegration.mutateAsync({
         integrationId,
         data: { active },
-      })
-      toast.success(active ? "Integration enabled" : "Integration disabled")
+      });
+      toast.success(active ? 'Integration enabled' : 'Integration disabled');
     } catch (error) {
-      toast.error("Failed to update integration")
+      toast.error('Failed to update integration');
     }
-  }
+  };
 
   const handleDelete = async (integrationId: string) => {
     try {
-      await deleteIntegration.mutateAsync(integrationId)
-      toast.success("Integration deleted")
+      await deleteIntegration.mutateAsync(integrationId);
+      toast.success('Integration deleted');
     } catch (error) {
-      toast.error("Failed to delete integration")
+      toast.error('Failed to delete integration');
     }
-  }
+  };
 
-  const selectedServiceMeta = availableServices.find((s: any) => s.id === selectedService)
+  const selectedServiceMeta = availableServices.find((s: any) => s.id === selectedService);
 
   return (
     <div className="space-y-6">
@@ -189,7 +189,7 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                       <Card
                         key={service.id}
                         className={`cursor-pointer transition-all hover:border-primary ${
-                          selectedService === service.id ? "border-primary bg-primary/5" : ""
+                          selectedService === service.id ? 'border-primary bg-primary/5' : ''
                         }`}
                         onClick={() => setSelectedService(service.id)}
                       >
@@ -203,8 +203,8 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                           <div>
                             <p className="font-medium">{service.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {service.events.length === 1 && service.events[0] === "*"
-                                ? "All events"
+                              {service.events.length === 1 && service.events[0] === '*'
+                                ? 'All events'
                                 : `${service.events.length} events`}
                             </p>
                           </div>
@@ -238,8 +238,8 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                         <Input
                           id="name"
                           placeholder="e.g., Production Slack"
-                          value={configForm.name || ""}
-                          onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
+                          value={configForm.name || ''}
+                          onChange={e => setConfigForm({ ...configForm, name: e.target.value })}
                         />
                       </div>
 
@@ -248,32 +248,32 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                         <Textarea
                           id="description"
                           placeholder="What is this integration for?"
-                          value={configForm.description || ""}
-                          onChange={(e) => setConfigForm({ ...configForm, description: e.target.value })}
+                          value={configForm.description || ''}
+                          onChange={e => setConfigForm({ ...configForm, description: e.target.value })}
                         />
                       </div>
 
-                      {["slack", "discord", "teams", "custom"].includes(selectedService) && (
+                      {['slack', 'discord', 'teams', 'custom'].includes(selectedService) && (
                         <div className="space-y-2">
                           <Label htmlFor="webhookUrl">Webhook URL *</Label>
                           <Input
                             id="webhookUrl"
                             placeholder="https://hooks.slack.com/services/..."
-                            value={configForm.webhookUrl || ""}
-                            onChange={(e) => setConfigForm({ ...configForm, webhookUrl: e.target.value })}
+                            value={configForm.webhookUrl || ''}
+                            onChange={e => setConfigForm({ ...configForm, webhookUrl: e.target.value })}
                           />
                         </div>
                       )}
 
-                      {["github", "gitlab", "jira", "linear", "notion", "figma"].includes(selectedService) && (
+                      {['github', 'gitlab', 'jira', 'linear', 'notion', 'figma'].includes(selectedService) && (
                         <div className="space-y-2">
                           <Label htmlFor="accessToken">Access Token *</Label>
                           <Input
                             id="accessToken"
                             type="password"
                             placeholder="Enter your access token"
-                            value={configForm.accessToken || ""}
-                            onChange={(e) => setConfigForm({ ...configForm, accessToken: e.target.value })}
+                            value={configForm.accessToken || ''}
+                            onChange={e => setConfigForm({ ...configForm, accessToken: e.target.value })}
                           />
                         </div>
                       )}
@@ -287,15 +287,15 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                                 type="checkbox"
                                 className="rounded border-input"
                                 checked={configForm.events?.includes(event) || false}
-                                onChange={(e) => {
-                                  const events = configForm.events || []
+                                onChange={e => {
+                                  const events = configForm.events || [];
                                   if (e.target.checked) {
-                                    setConfigForm({ ...configForm, events: [...events, event] })
+                                    setConfigForm({ ...configForm, events: [...events, event] });
                                   } else {
                                     setConfigForm({
                                       ...configForm,
                                       events: events.filter((ev: string) => ev !== event),
-                                    })
+                                    });
                                   }
                                 }}
                               />
@@ -311,7 +311,7 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                         Cancel
                       </Button>
                       <Button onClick={handleCreate} disabled={createIntegration.isPending}>
-                        {createIntegration.isPending ? "Creating..." : "Create Integration"}
+                        {createIntegration.isPending ? 'Creating...' : 'Create Integration'}
                       </Button>
                     </div>
                   </>
@@ -342,15 +342,15 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                 <div className="flex items-center gap-4">
                   <div
                     className="flex h-12 w-12 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: `${integration.metadata?.color || "#6366f1"}20` }}
+                    style={{ backgroundColor: `${integration.metadata?.color || '#6366f1'}20` }}
                   >
                     {SERVICE_ICONS[integration.service] || <Globe className="h-6 w-6" />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{(integration.config as any)?.name || integration.service}</h4>
-                      <Badge variant={integration.active ? "default" : "secondary"}>
-                        {integration.active ? "Active" : "Inactive"}
+                      <Badge variant={integration.active ? 'default' : 'secondary'}>
+                        {integration.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{integration.metadata?.name || integration.service}</p>
@@ -374,7 +374,7 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
 
                   <Switch
                     checked={integration.active}
-                    onCheckedChange={(checked) => handleToggle(integration.id, checked)}
+                    onCheckedChange={checked => handleToggle(integration.id, checked)}
                   />
 
                   <Button
@@ -407,9 +407,9 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `${window.location.origin}/api/workspaces/${workspaceSlug}/integrations/incoming`,
-                  )
-                  toast.success("URL copied to clipboard")
+                    `${window.location.origin}/api/workspaces/${workspaceSlug}/integrations/incoming`
+                  );
+                  toast.success('URL copied to clipboard');
                 }}
               >
                 <Copy className="h-4 w-4" />
@@ -445,5 +445,5 @@ export function WorkspaceIntegrationsPanel({ workspaceId: workspaceSlug }: Works
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

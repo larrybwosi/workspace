@@ -7,11 +7,7 @@ export class V10InteractionsController {
 
   @Post(':id/:token/callback')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async handleCallback(
-    @Param('id') id: string,
-    @Param('token') token: string,
-    @Body() body: any,
-  ) {
+  async handleCallback(@Param('id') id: string, @Param('token') token: string, @Body() body: any) {
     return this.interactionsService.handleCallback(id, token, body);
   }
 }

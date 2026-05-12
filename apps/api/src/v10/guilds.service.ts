@@ -22,7 +22,7 @@ export class V10GuildsService {
       },
     });
 
-    return channels.map((c) => ({
+    return channels.map(c => ({
       id: c.id,
       type: c.type === 'channel' ? 0 : 2,
       guild_id: c.workspaceId,
@@ -68,7 +68,7 @@ export class V10GuildsService {
       },
     });
 
-    return members.map((m) => ({
+    return members.map(m => ({
       user: {
         id: m.user.id,
         username: m.user.name,
@@ -122,22 +122,33 @@ export class V10GuildsService {
 
   private mapInternalRoleToDiscord(role: string): string {
     switch (role) {
-      case 'owner': return '100000000000000001';
-      case 'admin': return '100000000000000002';
-      case 'member': return '100000000000000003';
-      default: return '100000000000000003';
+      case 'owner':
+        return '100000000000000001';
+      case 'admin':
+        return '100000000000000002';
+      case 'member':
+        return '100000000000000003';
+      default:
+        return '100000000000000003';
     }
   }
 
   private mapDiscordRoleToInternal(roleId: string): string {
     switch (roleId) {
-      case '100000000000000001': return 'owner';
-      case '100000000000000002': return 'admin';
-      case '100000000000000003': return 'member';
-      case 'owner': return 'owner';
-      case 'admin': return 'admin';
-      case 'member': return 'member';
-      default: return 'member';
+      case '100000000000000001':
+        return 'owner';
+      case '100000000000000002':
+        return 'admin';
+      case '100000000000000003':
+        return 'member';
+      case 'owner':
+        return 'owner';
+      case 'admin':
+        return 'admin';
+      case 'member':
+        return 'member';
+      default:
+        return 'member';
     }
   }
 
@@ -243,9 +254,9 @@ export class V10GuildsService {
     // Also update permissions if it's a known roleId
     let targetPermissions = member.permissions;
     if (mappedRoleId === 'admin') {
-        targetPermissions = BigInt(Permissions.ADMINISTRATOR);
+      targetPermissions = BigInt(Permissions.ADMINISTRATOR);
     } else if (mappedRoleId === 'member') {
-        targetPermissions = BigInt(104320577); // Default member permissions
+      targetPermissions = BigInt(104320577); // Default member permissions
     }
 
     await prisma.workspaceMember.update({

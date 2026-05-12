@@ -1,24 +1,26 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Search, ExternalLink, Loader2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
-import { Input } from "../../../components/input"
-import { Button } from "../../../components/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/table"
-import { Badge } from "../../../components/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../components/avatar"
-import { useCustomerProfiles } from "@repo/api-client"
+import { useState } from 'react';
+import { Search, ExternalLink, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/card';
+import { Input } from '../../../components/input';
+import { Button } from '../../../components/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/table';
+import { Badge } from '../../../components/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../components/avatar';
+import { useCustomerProfiles } from '@repo/api-client';
 
 export function CustomersTab({ workspaceId }: { workspaceId: string }) {
-  const [search, setSearch] = useState("")
-  const { data: customers, isLoading } = useCustomerProfiles(workspaceId)
+  const [search, setSearch] = useState('');
+  const { data: customers, isLoading } = useCustomerProfiles(workspaceId);
 
-  const filteredCustomers = customers?.filter((customer: any) =>
-    customer.user.name.toLowerCase().includes(search.toLowerCase()) ||
-    customer.user.email.toLowerCase().includes(search.toLowerCase()) ||
-    customer.company?.toLowerCase().includes(search.toLowerCase())
-  ) || []
+  const filteredCustomers =
+    customers?.filter(
+      (customer: any) =>
+        customer.user.name.toLowerCase().includes(search.toLowerCase()) ||
+        customer.user.email.toLowerCase().includes(search.toLowerCase()) ||
+        customer.company?.toLowerCase().includes(search.toLowerCase())
+    ) || [];
 
   return (
     <div className="space-y-6">
@@ -43,7 +45,7 @@ export function CustomersTab({ workspaceId }: { workspaceId: string }) {
                 placeholder="Search customers..."
                 className="pl-8"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
               />
             </div>
           </div>
@@ -54,9 +56,7 @@ export function CustomersTab({ workspaceId }: { workspaceId: string }) {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : filteredCustomers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No customers found.
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No customers found.</div>
           ) : (
             <Table>
               <TableHeader>
@@ -97,7 +97,9 @@ export function CustomersTab({ workspaceId }: { workspaceId: string }) {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">View Details</Button>
+                      <Button variant="ghost" size="sm">
+                        View Details
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -107,5 +109,5 @@ export function CustomersTab({ workspaceId }: { workspaceId: string }) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

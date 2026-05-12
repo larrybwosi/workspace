@@ -1,3 +1,3 @@
-import "server-only"
-import { prisma } from "@repo/database"
-export { prisma }
+import 'server-only';
+import { prisma } from '@repo/database';
+export { prisma };

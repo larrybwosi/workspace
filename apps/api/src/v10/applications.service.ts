@@ -12,7 +12,7 @@ export class V10ApplicationsService {
       where: { applicationId, guildId: null },
     });
 
-    return commands.map((cmd) => ({
+    return commands.map(cmd => ({
       id: cmd.id,
       application_id: cmd.applicationId,
       name: cmd.name,
@@ -75,7 +75,7 @@ export class V10ApplicationsService {
       where: { applicationId, guildId },
     });
 
-    return commands.map((cmd) => ({
+    return commands.map(cmd => ({
       id: cmd.id,
       application_id: cmd.applicationId,
       name: cmd.name,

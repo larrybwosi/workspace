@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import * as React from "react"
+import * as React from 'react';
 import {
   Plus,
   Search,
@@ -17,16 +17,16 @@ import {
   Zap,
   Heart,
   Trophy,
-} from "lucide-react"
-import { Button } from "../../components/button"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Badge } from "../../components/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { ScrollArea } from "../../components/scroll-area"
-import { Switch } from "../../components/switch"
-import { Textarea } from "../../components/textarea"
+} from 'lucide-react';
+import { Button } from '../../components/button';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Badge } from '../../components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { ScrollArea } from '../../components/scroll-area';
+import { Switch } from '../../components/switch';
+import { Textarea } from '../../components/textarea';
 import {
   Dialog,
   DialogContent,
@@ -35,243 +35,243 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/dialog"
+} from '../../components/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
-import { cn } from "../../lib/utils"
+} from '../../components/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { cn } from '../../lib/utils';
 
 interface CustomEmoji {
-  id: string
-  name: string
-  shortcode: string
-  imageUrl: string
-  animated: boolean
-  category: string
-  isGlobal: boolean
-  usageCount: number
-  createdAt: Date
+  id: string;
+  name: string;
+  shortcode: string;
+  imageUrl: string;
+  animated: boolean;
+  category: string;
+  isGlobal: boolean;
+  usageCount: number;
+  createdAt: Date;
 }
 
 interface UserBadge {
-  id: string
-  name: string
-  description?: string
-  icon: string
-  color: string
-  bgColor: string
-  tier: "standard" | "premium" | "elite" | "legendary"
-  category: string
-  isGlobal: boolean
-  assignedCount: number
-  createdAt: Date
+  id: string;
+  name: string;
+  description?: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+  tier: 'standard' | 'premium' | 'elite' | 'legendary';
+  category: string;
+  isGlobal: boolean;
+  assignedCount: number;
+  createdAt: Date;
 }
 
 interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
 }
 
 const BADGE_ICONS = [
-  { icon: "shield", label: "Shield", component: Shield },
-  { icon: "star", label: "Star", component: Star },
-  { icon: "crown", label: "Crown", component: Crown },
-  { icon: "sparkles", label: "Sparkles", component: Sparkles },
-  { icon: "award", label: "Award", component: Award },
-  { icon: "zap", label: "Zap", component: Zap },
-  { icon: "heart", label: "Heart", component: Heart },
-  { icon: "trophy", label: "Trophy", component: Trophy },
-]
+  { icon: 'shield', label: 'Shield', component: Shield },
+  { icon: 'star', label: 'Star', component: Star },
+  { icon: 'crown', label: 'Crown', component: Crown },
+  { icon: 'sparkles', label: 'Sparkles', component: Sparkles },
+  { icon: 'award', label: 'Award', component: Award },
+  { icon: 'zap', label: 'Zap', component: Zap },
+  { icon: 'heart', label: 'Heart', component: Heart },
+  { icon: 'trophy', label: 'Trophy', component: Trophy },
+];
 
 const BADGE_COLORS = [
-  { color: "#ef4444", bg: "#fef2f2", name: "Red" },
-  { color: "#f97316", bg: "#fff7ed", name: "Orange" },
-  { color: "#eab308", bg: "#fefce8", name: "Yellow" },
-  { color: "#22c55e", bg: "#f0fdf4", name: "Green" },
-  { color: "#3b82f6", bg: "#eff6ff", name: "Blue" },
-  { color: "#8b5cf6", bg: "#f5f3ff", name: "Purple" },
-  { color: "#ec4899", bg: "#fdf2f8", name: "Pink" },
-  { color: "#6b7280", bg: "#f9fafb", name: "Gray" },
-]
+  { color: '#ef4444', bg: '#fef2f2', name: 'Red' },
+  { color: '#f97316', bg: '#fff7ed', name: 'Orange' },
+  { color: '#eab308', bg: '#fefce8', name: 'Yellow' },
+  { color: '#22c55e', bg: '#f0fdf4', name: 'Green' },
+  { color: '#3b82f6', bg: '#eff6ff', name: 'Blue' },
+  { color: '#8b5cf6', bg: '#f5f3ff', name: 'Purple' },
+  { color: '#ec4899', bg: '#fdf2f8', name: 'Pink' },
+  { color: '#6b7280', bg: '#f9fafb', name: 'Gray' },
+];
 
-const EMOJI_CATEGORIES = ["custom", "memes", "reactions", "brand", "animated"]
-const BADGE_CATEGORIES = ["achievement", "role", "special", "event"]
-const BADGE_TIERS = ["standard", "premium", "elite", "legendary"]
+const EMOJI_CATEGORIES = ['custom', 'memes', 'reactions', 'brand', 'animated'];
+const BADGE_CATEGORIES = ['achievement', 'role', 'special', 'event'];
+const BADGE_TIERS = ['standard', 'premium', 'elite', 'legendary'];
 
 export function AdminEmojisBadges() {
-  const [activeTab, setActiveTab] = React.useState("emojis")
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [createEmojiOpen, setCreateEmojiOpen] = React.useState(false)
-  const [createBadgeOpen, setCreateBadgeOpen] = React.useState(false)
-  const [assignBadgeOpen, setAssignBadgeOpen] = React.useState(false)
-  const [selectedBadge, setSelectedBadge] = React.useState<UserBadge | null>(null)
+  const [activeTab, setActiveTab] = React.useState('emojis');
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [createEmojiOpen, setCreateEmojiOpen] = React.useState(false);
+  const [createBadgeOpen, setCreateBadgeOpen] = React.useState(false);
+  const [assignBadgeOpen, setAssignBadgeOpen] = React.useState(false);
+  const [selectedBadge, setSelectedBadge] = React.useState<UserBadge | null>(null);
 
   // Form states
-  const [emojiName, setEmojiName] = React.useState("")
-  const [emojiShortcode, setEmojiShortcode] = React.useState("")
-  const [emojiUrl, setEmojiUrl] = React.useState("")
-  const [emojiCategory, setEmojiCategory] = React.useState("custom")
-  const [emojiAnimated, setEmojiAnimated] = React.useState(false)
-  const [emojiGlobal, setEmojiGlobal] = React.useState(false)
+  const [emojiName, setEmojiName] = React.useState('');
+  const [emojiShortcode, setEmojiShortcode] = React.useState('');
+  const [emojiUrl, setEmojiUrl] = React.useState('');
+  const [emojiCategory, setEmojiCategory] = React.useState('custom');
+  const [emojiAnimated, setEmojiAnimated] = React.useState(false);
+  const [emojiGlobal, setEmojiGlobal] = React.useState(false);
 
-  const [badgeName, setBadgeName] = React.useState("")
-  const [badgeDescription, setBadgeDescription] = React.useState("")
-  const [badgeIcon, setBadgeIcon] = React.useState("star")
-  const [badgeColor, setBadgeColor] = React.useState(BADGE_COLORS[4])
-  const [badgeTier, setBadgeTier] = React.useState("standard")
-  const [badgeCategory, setBadgeCategory] = React.useState("achievement")
-  const [badgeGlobal, setBadgeGlobal] = React.useState(false)
+  const [badgeName, setBadgeName] = React.useState('');
+  const [badgeDescription, setBadgeDescription] = React.useState('');
+  const [badgeIcon, setBadgeIcon] = React.useState('star');
+  const [badgeColor, setBadgeColor] = React.useState(BADGE_COLORS[4]);
+  const [badgeTier, setBadgeTier] = React.useState('standard');
+  const [badgeCategory, setBadgeCategory] = React.useState('achievement');
+  const [badgeGlobal, setBadgeGlobal] = React.useState(false);
 
   // Mock data
   const [customEmojis] = React.useState<CustomEmoji[]>([
     {
-      id: "1",
-      name: "Party Parrot",
-      shortcode: "party_parrot",
-      imageUrl: "/placeholder.svg?height=48&width=48",
+      id: '1',
+      name: 'Party Parrot',
+      shortcode: 'party_parrot',
+      imageUrl: '/placeholder.svg?height=48&width=48',
       animated: true,
-      category: "animated",
+      category: 'animated',
       isGlobal: true,
       usageCount: 1234,
       createdAt: new Date(),
     },
     {
-      id: "2",
-      name: "This is Fine",
-      shortcode: "this_is_fine",
-      imageUrl: "/placeholder.svg?height=48&width=48",
+      id: '2',
+      name: 'This is Fine',
+      shortcode: 'this_is_fine',
+      imageUrl: '/placeholder.svg?height=48&width=48',
       animated: false,
-      category: "memes",
+      category: 'memes',
       isGlobal: false,
       usageCount: 892,
       createdAt: new Date(),
     },
     {
-      id: "3",
-      name: "Stonks",
-      shortcode: "stonks",
-      imageUrl: "/placeholder.svg?height=48&width=48",
+      id: '3',
+      name: 'Stonks',
+      shortcode: 'stonks',
+      imageUrl: '/placeholder.svg?height=48&width=48',
       animated: false,
-      category: "memes",
+      category: 'memes',
       isGlobal: true,
       usageCount: 567,
       createdAt: new Date(),
     },
     {
-      id: "4",
-      name: "Company Logo",
-      shortcode: "company_logo",
-      imageUrl: "/placeholder.svg?height=48&width=48",
+      id: '4',
+      name: 'Company Logo',
+      shortcode: 'company_logo',
+      imageUrl: '/placeholder.svg?height=48&width=48',
       animated: false,
-      category: "brand",
+      category: 'brand',
       isGlobal: true,
       usageCount: 234,
       createdAt: new Date(),
     },
-  ])
+  ]);
 
   const [userBadges] = React.useState<UserBadge[]>([
     {
-      id: "1",
-      name: "Early Adopter",
-      description: "Joined during beta",
-      icon: "star",
-      color: "#eab308",
-      bgColor: "#fefce8",
-      tier: "premium",
-      category: "special",
+      id: '1',
+      name: 'Early Adopter',
+      description: 'Joined during beta',
+      icon: 'star',
+      color: '#eab308',
+      bgColor: '#fefce8',
+      tier: 'premium',
+      category: 'special',
       isGlobal: true,
       assignedCount: 156,
       createdAt: new Date(),
     },
     {
-      id: "2",
-      name: "Top Contributor",
-      description: "Made significant contributions",
-      icon: "trophy",
-      color: "#8b5cf6",
-      bgColor: "#f5f3ff",
-      tier: "elite",
-      category: "achievement",
+      id: '2',
+      name: 'Top Contributor',
+      description: 'Made significant contributions',
+      icon: 'trophy',
+      color: '#8b5cf6',
+      bgColor: '#f5f3ff',
+      tier: 'elite',
+      category: 'achievement',
       isGlobal: true,
       assignedCount: 42,
       createdAt: new Date(),
     },
     {
-      id: "3",
-      name: "Admin",
-      description: "System administrator",
-      icon: "shield",
-      color: "#ef4444",
-      bgColor: "#fef2f2",
-      tier: "legendary",
-      category: "role",
+      id: '3',
+      name: 'Admin',
+      description: 'System administrator',
+      icon: 'shield',
+      color: '#ef4444',
+      bgColor: '#fef2f2',
+      tier: 'legendary',
+      category: 'role',
       isGlobal: true,
       assignedCount: 5,
       createdAt: new Date(),
     },
     {
-      id: "4",
-      name: "Bug Hunter",
-      description: "Found and reported bugs",
-      icon: "zap",
-      color: "#22c55e",
-      bgColor: "#f0fdf4",
-      tier: "standard",
-      category: "achievement",
+      id: '4',
+      name: 'Bug Hunter',
+      description: 'Found and reported bugs',
+      icon: 'zap',
+      color: '#22c55e',
+      bgColor: '#f0fdf4',
+      tier: 'standard',
+      category: 'achievement',
       isGlobal: false,
       assignedCount: 89,
       createdAt: new Date(),
     },
-  ])
+  ]);
 
   const [users] = React.useState<User[]>([
-    { id: "1", name: "John Doe", email: "john@example.com", avatar: "/placeholder.svg?height=40&width=40" },
-    { id: "2", name: "Jane Smith", email: "jane@example.com", avatar: "/placeholder.svg?height=40&width=40" },
-    { id: "3", name: "Bob Wilson", email: "bob@example.com", avatar: "/placeholder.svg?height=40&width=40" },
-  ])
+    { id: '1', name: 'John Doe', email: 'john@example.com', avatar: '/placeholder.svg?height=40&width=40' },
+    { id: '2', name: 'Jane Smith', email: 'jane@example.com', avatar: '/placeholder.svg?height=40&width=40' },
+    { id: '3', name: 'Bob Wilson', email: 'bob@example.com', avatar: '/placeholder.svg?height=40&width=40' },
+  ]);
 
   const filteredEmojis = customEmojis.filter(
-    (emoji) =>
+    emoji =>
       emoji.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      emoji.shortcode.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      emoji.shortcode.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const filteredBadges = userBadges.filter(
-    (badge) =>
+    badge =>
       badge.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      badge.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      badge.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleCreateEmoji = () => {
     // API call would go here
-    setCreateEmojiOpen(false)
-    setEmojiName("")
-    setEmojiShortcode("")
-    setEmojiUrl("")
-  }
+    setCreateEmojiOpen(false);
+    setEmojiName('');
+    setEmojiShortcode('');
+    setEmojiUrl('');
+  };
 
   const handleCreateBadge = () => {
     // API call would go here
-    setCreateBadgeOpen(false)
-    setBadgeName("")
-    setBadgeDescription("")
-  }
+    setCreateBadgeOpen(false);
+    setBadgeName('');
+    setBadgeDescription('');
+  };
 
   const handleAssignBadge = (userId: string) => {
     // API call would go here
-    setAssignBadgeOpen(false)
-    setSelectedBadge(null)
-  }
+    setAssignBadgeOpen(false);
+    setSelectedBadge(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -289,7 +289,7 @@ export function AdminEmojisBadges() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{customEmojis.length}</div>
-            <p className="text-xs text-muted-foreground">{customEmojis.filter((e) => e.animated).length} animated</p>
+            <p className="text-xs text-muted-foreground">{customEmojis.filter(e => e.animated).length} animated</p>
           </CardContent>
         </Card>
         <Card>
@@ -299,7 +299,7 @@ export function AdminEmojisBadges() {
           <CardContent>
             <div className="text-2xl font-bold">{userBadges.length}</div>
             <p className="text-xs text-muted-foreground">
-              {userBadges.filter((b) => b.tier === "legendary").length} legendary
+              {userBadges.filter(b => b.tier === 'legendary').length} legendary
             </p>
           </CardContent>
         </Card>
@@ -344,12 +344,12 @@ export function AdminEmojisBadges() {
               <Input
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9 w-64"
               />
             </div>
 
-            {activeTab === "emojis" ? (
+            {activeTab === 'emojis' ? (
               <Dialog open={createEmojiOpen} onOpenChange={setCreateEmojiOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -367,7 +367,7 @@ export function AdminEmojisBadges() {
                       <div className="h-20 w-20 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center bg-muted/50">
                         {emojiUrl ? (
                           <img
-                            src={emojiUrl || "/placeholder.svg"}
+                            src={emojiUrl || '/placeholder.svg'}
                             alt="Preview"
                             className="h-12 w-12 object-contain"
                           />
@@ -380,7 +380,7 @@ export function AdminEmojisBadges() {
                         <Input
                           placeholder="https://example.com/emoji.png"
                           value={emojiUrl}
-                          onChange={(e) => setEmojiUrl(e.target.value)}
+                          onChange={e => setEmojiUrl(e.target.value)}
                         />
                         <p className="text-xs text-muted-foreground">Recommended: 128x128px, PNG or GIF</p>
                       </div>
@@ -391,7 +391,7 @@ export function AdminEmojisBadges() {
                         <Input
                           placeholder="Party Parrot"
                           value={emojiName}
-                          onChange={(e) => setEmojiName(e.target.value)}
+                          onChange={e => setEmojiName(e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -402,9 +402,7 @@ export function AdminEmojisBadges() {
                             className="px-6"
                             placeholder="party_parrot"
                             value={emojiShortcode}
-                            onChange={(e) =>
-                              setEmojiShortcode(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))
-                            }
+                            onChange={e => setEmojiShortcode(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">:</span>
                         </div>
@@ -418,7 +416,7 @@ export function AdminEmojisBadges() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {EMOJI_CATEGORIES.map((cat) => (
+                            {EMOJI_CATEGORIES.map(cat => (
                               <SelectItem key={cat} value={cat} className="capitalize">
                                 {cat}
                               </SelectItem>
@@ -463,17 +461,17 @@ export function AdminEmojisBadges() {
                     <div className="flex items-start gap-4">
                       <div
                         className={cn(
-                          "h-16 w-16 rounded-xl flex items-center justify-center shrink-0",
-                          badgeTier === "legendary" && "ring-2 ring-amber-500/50 shadow-amber-500/30 shadow-md",
-                          badgeTier === "elite" && "ring-2 ring-purple-500/50",
-                          badgeTier === "premium" && "ring-2 ring-blue-500/50",
-                          badgeTier === "standard" && "ring-1 ring-border",
+                          'h-16 w-16 rounded-xl flex items-center justify-center shrink-0',
+                          badgeTier === 'legendary' && 'ring-2 ring-amber-500/50 shadow-amber-500/30 shadow-md',
+                          badgeTier === 'elite' && 'ring-2 ring-purple-500/50',
+                          badgeTier === 'premium' && 'ring-2 ring-blue-500/50',
+                          badgeTier === 'standard' && 'ring-1 ring-border'
                         )}
                         style={{ backgroundColor: badgeColor.bg, color: badgeColor.color }}
                       >
                         {(() => {
-                          const IconComp = BADGE_ICONS.find((i) => i.icon === badgeIcon)?.component || Star
-                          return <IconComp className="h-8 w-8" />
+                          const IconComp = BADGE_ICONS.find(i => i.icon === badgeIcon)?.component || Star;
+                          return <IconComp className="h-8 w-8" />;
                         })()}
                       </div>
                       <div className="flex-1 space-y-3">
@@ -482,7 +480,7 @@ export function AdminEmojisBadges() {
                           <Input
                             placeholder="Top Contributor"
                             value={badgeName}
-                            onChange={(e) => setBadgeName(e.target.value)}
+                            onChange={e => setBadgeName(e.target.value)}
                           />
                         </div>
                         <div className="space-y-2">
@@ -490,7 +488,7 @@ export function AdminEmojisBadges() {
                           <Textarea
                             placeholder="Awarded to users who..."
                             value={badgeDescription}
-                            onChange={(e) => setBadgeDescription(e.target.value)}
+                            onChange={e => setBadgeDescription(e.target.value)}
                             rows={2}
                           />
                         </div>
@@ -500,11 +498,11 @@ export function AdminEmojisBadges() {
                     <div className="space-y-2">
                       <Label>Icon</Label>
                       <div className="flex gap-2">
-                        {BADGE_ICONS.map((item) => (
+                        {BADGE_ICONS.map(item => (
                           <Button
                             key={item.icon}
                             type="button"
-                            variant={badgeIcon === item.icon ? "default" : "outline"}
+                            variant={badgeIcon === item.icon ? 'default' : 'outline'}
                             size="icon"
                             className="h-10 w-10"
                             onClick={() => setBadgeIcon(item.icon)}
@@ -518,13 +516,13 @@ export function AdminEmojisBadges() {
                     <div className="space-y-2">
                       <Label>Color</Label>
                       <div className="flex gap-2">
-                        {BADGE_COLORS.map((c) => (
+                        {BADGE_COLORS.map(c => (
                           <button
                             key={c.name}
                             type="button"
                             className={cn(
-                              "h-8 w-8 rounded-full border-2 transition-transform hover:scale-110",
-                              badgeColor.name === c.name ? "border-foreground scale-110" : "border-transparent",
+                              'h-8 w-8 rounded-full border-2 transition-transform hover:scale-110',
+                              badgeColor.name === c.name ? 'border-foreground scale-110' : 'border-transparent'
                             )}
                             style={{ backgroundColor: c.color }}
                             onClick={() => setBadgeColor(c)}
@@ -542,7 +540,7 @@ export function AdminEmojisBadges() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {BADGE_TIERS.map((tier) => (
+                            {BADGE_TIERS.map(tier => (
                               <SelectItem key={tier} value={tier} className="capitalize">
                                 {tier}
                               </SelectItem>
@@ -557,7 +555,7 @@ export function AdminEmojisBadges() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {BADGE_CATEGORIES.map((cat) => (
+                            {BADGE_CATEGORIES.map(cat => (
                               <SelectItem key={cat} value={cat} className="capitalize">
                                 {cat}
                               </SelectItem>
@@ -603,12 +601,12 @@ export function AdminEmojisBadges() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmojis.map((emoji) => (
+                  {filteredEmojis.map(emoji => (
                     <TableRow key={emoji.id}>
                       <TableCell>
                         <div className="relative">
                           <img
-                            src={emoji.imageUrl || "/placeholder.svg"}
+                            src={emoji.imageUrl || '/placeholder.svg'}
                             alt={emoji.name}
                             className="h-8 w-8 object-contain"
                           />
@@ -678,18 +676,18 @@ export function AdminEmojisBadges() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBadges.map((badge) => {
-                    const IconComp = BADGE_ICONS.find((i) => i.icon === badge.icon)?.component || Award
+                  {filteredBadges.map(badge => {
+                    const IconComp = BADGE_ICONS.find(i => i.icon === badge.icon)?.component || Award;
                     return (
                       <TableRow key={badge.id}>
                         <TableCell>
                           <div
                             className={cn(
-                              "h-10 w-10 rounded-lg flex items-center justify-center",
-                              badge.tier === "legendary" && "ring-2 ring-amber-500/50",
-                              badge.tier === "elite" && "ring-2 ring-purple-500/50",
-                              badge.tier === "premium" && "ring-2 ring-blue-500/50",
-                              badge.tier === "standard" && "ring-1 ring-border",
+                              'h-10 w-10 rounded-lg flex items-center justify-center',
+                              badge.tier === 'legendary' && 'ring-2 ring-amber-500/50',
+                              badge.tier === 'elite' && 'ring-2 ring-purple-500/50',
+                              badge.tier === 'premium' && 'ring-2 ring-blue-500/50',
+                              badge.tier === 'standard' && 'ring-1 ring-border'
                             )}
                             style={{ backgroundColor: badge.bgColor, color: badge.color }}
                           >
@@ -698,16 +696,16 @@ export function AdminEmojisBadges() {
                         </TableCell>
                         <TableCell className="font-medium">{badge.name}</TableCell>
                         <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
-                          {badge.description || "-"}
+                          {badge.description || '-'}
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
                             className={cn(
-                              "capitalize",
-                              badge.tier === "legendary" && "border-amber-500/50 text-amber-600",
-                              badge.tier === "elite" && "border-purple-500/50 text-purple-600",
-                              badge.tier === "premium" && "border-blue-500/50 text-blue-600",
+                              'capitalize',
+                              badge.tier === 'legendary' && 'border-amber-500/50 text-amber-600',
+                              badge.tier === 'elite' && 'border-purple-500/50 text-purple-600',
+                              badge.tier === 'premium' && 'border-blue-500/50 text-blue-600'
                             )}
                           >
                             {badge.tier}
@@ -729,8 +727,8 @@ export function AdminEmojisBadges() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => {
-                                  setSelectedBadge(badge)
-                                  setAssignBadgeOpen(true)
+                                  setSelectedBadge(badge);
+                                  setAssignBadgeOpen(true);
                                 }}
                               >
                                 <Users className="h-4 w-4 mr-2" />
@@ -749,7 +747,7 @@ export function AdminEmojisBadges() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    )
+                    );
                   })}
                 </TableBody>
               </Table>
@@ -767,14 +765,14 @@ export function AdminEmojisBadges() {
           </DialogHeader>
           <ScrollArea className="max-h-[300px]">
             <div className="space-y-2 p-1">
-              {users.map((user) => (
+              {users.map(user => (
                 <button
                   key={user.id}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
                   onClick={() => handleAssignBadge(user.id)}
                 >
                   <Avatar>
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} />
+                    <AvatarImage src={user.avatar || '/placeholder.svg'} />
                     <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -788,5 +786,5 @@ export function AdminEmojisBadges() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

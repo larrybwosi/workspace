@@ -1,44 +1,58 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { TrendingUp, Users, MessageSquare, FolderKanban, Clock } from 'lucide-react'
-import { Card } from "../../components/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, Pie, PieChart, Cell } from "recharts"
+import * as React from 'react';
+import { TrendingUp, Users, MessageSquare, FolderKanban, Clock } from 'lucide-react';
+import { Card } from '../../components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+  Pie,
+  PieChart,
+  Cell,
+} from 'recharts';
 
 export function AdminAnalytics() {
-  const [timeRange, setTimeRange] = React.useState("30d")
+  const [timeRange, setTimeRange] = React.useState('30d');
 
   const userGrowthData = [
-    { month: "Jan", users: 850 },
-    { month: "Feb", users: 920 },
-    { month: "Mar", users: 1050 },
-    { month: "Apr", users: 1180 },
-    { month: "May", users: 1247 },
-  ]
+    { month: 'Jan', users: 850 },
+    { month: 'Feb', users: 920 },
+    { month: 'Mar', users: 1050 },
+    { month: 'Apr', users: 1180 },
+    { month: 'May', users: 1247 },
+  ];
 
   const activityData = [
-    { date: "Week 1", messages: 4200, tasks: 380, projects: 42 },
-    { date: "Week 2", messages: 4680, tasks: 420, projects: 48 },
-    { date: "Week 3", messages: 5120, tasks: 390, projects: 51 },
-    { date: "Week 4", messages: 5540, tasks: 450, projects: 56 },
-  ]
+    { date: 'Week 1', messages: 4200, tasks: 380, projects: 42 },
+    { date: 'Week 2', messages: 4680, tasks: 420, projects: 48 },
+    { date: 'Week 3', messages: 5120, tasks: 390, projects: 51 },
+    { date: 'Week 4', messages: 5540, tasks: 450, projects: 56 },
+  ];
 
   const projectStatusData = [
-    { name: "Active", value: 89, color: "hsl(var(--chart-1))" },
-    { name: "On Hold", value: 32, color: "hsl(var(--chart-2))" },
-    { name: "Completed", value: 35, color: "hsl(var(--chart-3))" },
-  ]
+    { name: 'Active', value: 89, color: 'hsl(var(--chart-1))' },
+    { name: 'On Hold', value: 32, color: 'hsl(var(--chart-2))' },
+    { name: 'Completed', value: 35, color: 'hsl(var(--chart-3))' },
+  ];
 
   const peakHoursData = [
-    { hour: "6 AM", activity: 120 },
-    { hour: "9 AM", activity: 450 },
-    { hour: "12 PM", activity: 680 },
-    { hour: "3 PM", activity: 820 },
-    { hour: "6 PM", activity: 540 },
-    { hour: "9 PM", activity: 280 },
-  ]
+    { hour: '6 AM', activity: 120 },
+    { hour: '9 AM', activity: 450 },
+    { hour: '12 PM', activity: 680 },
+    { hour: '3 PM', activity: 820 },
+    { hour: '6 PM', activity: 540 },
+    { hour: '9 PM', activity: 280 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -82,7 +96,13 @@ export function AdminAnalytics() {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Area type="monotone" dataKey="users" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
+                <Area
+                  type="monotone"
+                  dataKey="users"
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--primary))"
+                  fillOpacity={0.2}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -157,5 +177,5 @@ export function AdminAnalytics() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

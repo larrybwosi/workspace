@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/db/prisma";
-import crypto from "crypto";
+import { prisma } from '@/lib/db/prisma';
+import crypto from 'crypto';
 
 /**
  * Helper function to trigger an INTERACTION_CREATE event for a slash command.
@@ -15,7 +15,7 @@ export async function triggerBotCommandInteraction(
   // Find the command and its application
   const command = await prisma.botCommand.findFirst({
     where: { name: commandName, OR: [{ guildId: workspaceId }, { guildId: null }] },
-    include: { application: { include: { bot: true } } }
+    include: { application: { include: { bot: true } } },
   });
 
   if (!command || !command.application.bot) return null;
@@ -26,10 +26,7 @@ export async function triggerBotCommandInteraction(
 
   // Secure, timed, and unique interaction token: [botId].[interactionId].[timestamp].[signature]
   const tokenPayload = `${bot.id}.${interactionId}.${timestamp}`;
-  const signature = crypto
-    .createHmac("sha256", command.application.clientSecret)
-    .update(tokenPayload)
-    .digest("hex");
+  const signature = crypto.createHmac('sha256', command.application.clientSecret).update(tokenPayload).digest('hex');
 
   const interactionToken = `${tokenPayload}.${signature}`;
 
@@ -41,13 +38,13 @@ export async function triggerBotCommandInteraction(
       id: command.id,
       name: command.name,
       options,
-      type: command.type
+      type: command.type,
     },
     guildId: workspaceId,
     channelId: channelId,
     token: interactionToken,
     user: { id: userId },
-    member: { user: { id: userId } }
+    member: { user: { id: userId } },
   };
 
   return interaction;

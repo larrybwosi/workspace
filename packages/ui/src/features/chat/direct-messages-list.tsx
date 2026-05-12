@@ -1,31 +1,31 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Avatar, AvatarFallback } from "../../components/avatar"
-import { Button } from "../../components/button"
-import { Badge } from "../../components/badge"
-import { ScrollArea } from "../../components/scroll-area"
-import { mockUsers } from "../../lib/mock-data"
-import { cn } from "../../lib/utils"
+import * as React from 'react';
+import { Avatar, AvatarFallback } from '../../components/avatar';
+import { Button } from '../../components/button';
+import { Badge } from '../../components/badge';
+import { ScrollArea } from '../../components/scroll-area';
+import { mockUsers } from '../../lib/mock-data';
+import { cn } from '../../lib/utils';
 
 interface DirectMessagesListProps {
-  activeUserId?: string
-  onUserSelect: (userId: string) => void
+  activeUserId?: string;
+  onUserSelect: (userId: string) => void;
 }
 
 export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessagesListProps) {
-  const [users] = React.useState(mockUsers.slice(1)) // Exclude current user
+  const [users] = React.useState(mockUsers.slice(1)); // Exclude current user
 
   return (
     <ScrollArea className="flex-1">
       <div className="p-2 space-y-0.5">
-        {users.map((user) => (
+        {users.map(user => (
           <Button
             key={user.id}
-            variant={activeUserId === user.id ? "secondary" : "ghost"}
+            variant={activeUserId === user.id ? 'secondary' : 'ghost'}
             className={cn(
-              "w-full justify-start h-auto py-2 px-3",
-              activeUserId === user.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent",
+              'w-full justify-start h-auto py-2 px-3',
+              activeUserId === user.id ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent'
             )}
             onClick={() => onUserSelect(user.id)}
           >
@@ -36,12 +36,8 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                 </Avatar>
                 <div
                   className={cn(
-                    "absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-sidebar rounded-full",
-                    user.status === "online"
-                      ? "bg-green-500"
-                      : user.status === "away"
-                        ? "bg-yellow-500"
-                        : "bg-gray-400",
+                    'absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-sidebar rounded-full',
+                    user.status === 'online' ? 'bg-green-500' : user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
                   )}
                 />
               </div>
@@ -59,5 +55,5 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
         ))}
       </div>
     </ScrollArea>
-  )
+  );
 }

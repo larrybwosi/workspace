@@ -21,9 +21,7 @@ export function CodeMessage({ message, metadata }: any) {
         </TouchableOpacity>
       </View>
       <ScrollView horizontal className="p-3">
-        <Text className="text-discord-header font-mono text-sm leading-5">
-          {code}
-        </Text>
+        <Text className="text-discord-header font-mono text-sm leading-5">{code}</Text>
       </ScrollView>
     </View>
   );

@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Hash, Lock, Users } from "lucide-react"
+import * as React from 'react';
+import { Hash, Lock, Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,37 +9,37 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Button } from "../../components/button"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { RadioGroup, RadioGroupItem } from "../../components/radio-group"
-import { Textarea } from "../../components/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { IconPicker } from "../../shared/icon-picker"
-import { MemberSelector } from "../workspace/member-selector"
+} from '../../components/dialog';
+import { Button } from '../../components/button';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { RadioGroup, RadioGroupItem } from '../../components/radio-group';
+import { Textarea } from '../../components/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { IconPicker } from '../../shared/icon-picker';
+import { MemberSelector } from '../workspace/member-selector';
 
 interface CreateChannelDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  workspaceSlug: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  workspaceSlug: string;
   onCreateChannel: (channel: {
-    name: string
-    type: string
-    description: string
-    isPrivate: boolean
-    icon: string
-    members: string[]
-  }) => void
+    name: string;
+    type: string;
+    description: string;
+    isPrivate: boolean;
+    icon: string;
+    members: string[];
+  }) => void;
 }
 
 export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreateChannel }: CreateChannelDialogProps) {
-  const [name, setName] = React.useState("")
-  const [type, setType] = React.useState("channel")
-  const [description, setDescription] = React.useState("")
-  const [isPrivate, setIsPrivate] = React.useState(false)
-  const [icon, setIcon] = React.useState("#")
-  const [selectedMembers, setSelectedMembers] = React.useState<string[]>([])
+  const [name, setName] = React.useState('');
+  const [type, setType] = React.useState('channel');
+  const [description, setDescription] = React.useState('');
+  const [isPrivate, setIsPrivate] = React.useState(false);
+  const [icon, setIcon] = React.useState('#');
+  const [selectedMembers, setSelectedMembers] = React.useState<string[]>([]);
 
   const handleCreate = () => {
     if (name.trim()) {
@@ -50,17 +50,17 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
         isPrivate,
         icon,
         members: selectedMembers,
-      })
+      });
       // Reset form
-      setName("")
-      setType("channel")
-      setDescription("")
-      setIsPrivate(false)
-      setIcon("#")
-      setSelectedMembers([])
-      onOpenChange(false)
+      setName('');
+      setType('channel');
+      setDescription('');
+      setIsPrivate(false);
+      setIcon('#');
+      setSelectedMembers([]);
+      onOpenChange(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,9 +68,9 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
         <DialogHeader>
           <DialogTitle>Create a new {type}</DialogTitle>
           <DialogDescription>
-            {type === "channel"
+            {type === 'channel'
               ? "Channels are where your team communicates. They're best organized around a topic."
-              : "Groups are private spaces for smaller teams to collaborate."}
+              : 'Groups are private spaces for smaller teams to collaborate.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +113,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   placeholder="e.g. marketing"
                   className="pl-10"
                   autoFocus
@@ -126,7 +126,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
               <Textarea
                 id="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 placeholder="What's this channel about?"
                 rows={3}
               />
@@ -134,7 +134,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
 
             <div className="space-y-2">
               <Label>Privacy</Label>
-              <RadioGroup value={isPrivate ? "private" : "public"} onValueChange={(v) => setIsPrivate(v === "private")}>
+              <RadioGroup value={isPrivate ? 'private' : 'public'} onValueChange={v => setIsPrivate(v === 'private')}>
                 <div className="flex items-start space-x-2">
                   <RadioGroupItem value="public" id="public" className="mt-1" />
                   <div className="flex-1">
@@ -184,5 +184,5 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

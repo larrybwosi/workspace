@@ -1,13 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
@@ -22,8 +25,19 @@ const createWebhookSchema = z.object({
 
 const createIntegrationSchema = z.object({
   service: z.enum([
-    "slack", "github", "gitlab", "jira", "linear", "notion",
-    "figma", "discord", "teams", "zapier", "make", "custom", "huly",
+    'slack',
+    'github',
+    'gitlab',
+    'jira',
+    'linear',
+    'notion',
+    'figma',
+    'discord',
+    'teams',
+    'zapier',
+    'make',
+    'custom',
+    'huly',
   ]),
   name: z.string().min(1).max(100),
   config: z.object({
@@ -57,9 +71,7 @@ class CreateIntegrationWebhookDto {
 @ApiTags('Integrations')
 @Controller('integrations')
 export class IntegrationsController {
-  constructor(
-    private readonly integrationsService: IntegrationsService,
-  ) {}
+  constructor(private readonly integrationsService: IntegrationsService) {}
 
   @Post('plane/webhook')
   @ApiOperation({ summary: 'Handle Plane webhook' })
@@ -230,7 +242,11 @@ export class WorkspaceIntegrationsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateIntegrationDto })
   @ApiResponse({ status: 201, description: 'Integration created successfully' })
-  async createWorkspaceIntegration(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateIntegrationDto) {
+  async createWorkspaceIntegration(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Body() body: CreateIntegrationDto
+  ) {
     const validatedData = createIntegrationSchema.parse(body);
     return this.integrationsService.createWorkspaceIntegration(user.id, slug, validatedData);
   }
@@ -241,7 +257,11 @@ export class WorkspaceIntegrationsController {
   @ApiParam({ name: 'integrationId', description: 'The integration ID' })
   @ApiResponse({ status: 200, description: 'Integration details' })
   @ApiResponse({ status: 404, description: 'Integration not found' })
-  async getWorkspaceIntegration(@CurrentUser() user: User, @Param('slug') slug: string, @Param('integrationId') integrationId: string) {
+  async getWorkspaceIntegration(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('integrationId') integrationId: string
+  ) {
     return this.integrationsService.getWorkspaceIntegration(user.id, slug, integrationId);
   }
 
@@ -250,7 +270,12 @@ export class WorkspaceIntegrationsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'integrationId', description: 'The integration ID' })
   @ApiResponse({ status: 200, description: 'Integration updated' })
-  async updateWorkspaceIntegration(@CurrentUser() user: User, @Param('slug') slug: string, @Param('integrationId') integrationId: string, @Body() body: any) {
+  async updateWorkspaceIntegration(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('integrationId') integrationId: string,
+    @Body() body: any
+  ) {
     return this.integrationsService.updateWorkspaceIntegration(user.id, slug, integrationId, body);
   }
 
@@ -259,7 +284,11 @@ export class WorkspaceIntegrationsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'integrationId', description: 'The integration ID' })
   @ApiResponse({ status: 200, description: 'Integration deleted' })
-  async deleteWorkspaceIntegration(@CurrentUser() user: User, @Param('slug') slug: string, @Param('integrationId') integrationId: string) {
+  async deleteWorkspaceIntegration(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('integrationId') integrationId: string
+  ) {
     return this.integrationsService.deleteWorkspaceIntegration(user.id, slug, integrationId);
   }
 
@@ -268,7 +297,11 @@ export class WorkspaceIntegrationsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'integrationId', description: 'The integration ID' })
   @ApiResponse({ status: 201, description: 'Test successful' })
-  async testWorkspaceIntegration(@CurrentUser() user: User, @Param('slug') slug: string, @Param('integrationId') integrationId: string) {
+  async testWorkspaceIntegration(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('integrationId') integrationId: string
+  ) {
     return this.integrationsService.testWorkspaceIntegration(user.id, slug, integrationId);
   }
 
@@ -285,7 +318,11 @@ export class WorkspaceIntegrationsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateIntegrationWebhookDto })
   @ApiResponse({ status: 201, description: 'Webhook created successfully' })
-  async createWorkspaceWebhook(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateIntegrationWebhookDto) {
+  async createWorkspaceWebhook(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Body() body: CreateIntegrationWebhookDto
+  ) {
     const validatedData = createWebhookSchema.parse(body);
     return this.integrationsService.createWorkspaceWebhook(user.id, slug, validatedData);
   }

@@ -70,7 +70,11 @@ export class V2ApplicationsService {
     return app;
   }
 
-  async updateApplication(ownerId: string, id: string, data: { name?: string; description?: string; channelDefinitions?: any }) {
+  async updateApplication(
+    ownerId: string,
+    id: string,
+    data: { name?: string; description?: string; channelDefinitions?: any }
+  ) {
     const app = await this.getApplication(ownerId, id);
 
     return prisma.botApplication.update({
@@ -130,7 +134,7 @@ export class V2ApplicationsService {
     if (!member) throw new ForbiddenException('Not a member of this workspace');
 
     const perms = BigInt(member.permissions);
-    const canManageGuild = (perms & (1n << 3n)) === (1n << 3n) || (perms & (1n << 5n)) === (1n << 5n);
+    const canManageGuild = (perms & (1n << 3n)) === 1n << 3n || (perms & (1n << 5n)) === 1n << 5n;
 
     if (member.role !== 'owner' && !canManageGuild) {
       throw new ForbiddenException('Missing MANAGE_GUILD permission');
@@ -163,99 +167,101 @@ export class V2ApplicationsService {
     if (app.channelDefinitions && Array.isArray(app.channelDefinitions)) {
       const definitions = app.channelDefinitions as any[];
 
-      await Promise.all(definitions.map(async (def) => {
-        if (!def.teamName || !def.channelName) return;
+      await Promise.all(
+        definitions.map(async def => {
+          if (!def.teamName || !def.channelName) return;
 
-        // 1. Create or find the team
-        const teamSlug = def.teamSlug || def.teamName.toLowerCase().replace(/ /g, '-');
-        let team = await prisma.workspaceTeam.findUnique({
-          where: { workspaceId_slug: { workspaceId, slug: teamSlug } },
-        });
-
-        if (!team) {
-          team = await prisma.workspaceTeam.create({
-            data: {
-              workspaceId,
-              name: def.teamName,
-              slug: teamSlug,
-              description: def.teamDescription || `Team for ${app.name}`,
-              appId: app.id,
-            },
-          });
-        }
-
-        // 2. Create the channel if it doesn't exist
-        const channelSlug = def.channelSlug || def.channelName.toLowerCase().replace(/ /g, '-');
-        let channel = await prisma.channel.findUnique({
-          where: { workspaceId_slug: { workspaceId, slug: channelSlug } },
-        });
-
-        if (!channel) {
-          channel = await prisma.channel.create({
-            data: {
-              workspaceId,
-              name: def.channelName,
-              slug: channelSlug,
-              description: def.channelDescription || `Channel for ${app.name}`,
-              type: 'private',
-              icon: def.icon || 'bot',
-              appId: app.id,
-              createdById: app.botId,
-            },
+          // 1. Create or find the team
+          const teamSlug = def.teamSlug || def.teamName.toLowerCase().replace(/ /g, '-');
+          let team = await prisma.workspaceTeam.findUnique({
+            where: { workspaceId_slug: { workspaceId, slug: teamSlug } },
           });
 
-          // Link channel to team
-          await prisma.workspaceTeam.update({
-            where: { id: team.id },
-            data: { channelId: channel.id },
-          });
-        }
-
-        // 4. Add the bot to the team and channel so it can manage them
-        await prisma.workspaceTeamMember.upsert({
-          where: { teamId_userId: { teamId: team.id, userId: app.botId! } },
-          update: { role: 'lead' },
-          create: { teamId: team.id, userId: app.botId!, role: 'lead' }
-        });
-
-        await prisma.channelMember.upsert({
-          where: { channelId_userId: { channelId: channel.id, userId: app.botId! } },
-          update: { role: 'owner' },
-          create: { channelId: channel.id, userId: app.botId!, role: 'owner' }
-        });
-
-        // 3. Auto-populate team based on roles if specified
-        if (def.autoPopulateRoles && Array.isArray(def.autoPopulateRoles)) {
-          const membersToSync = await prisma.workspaceMember.findMany({
-            where: {
-              workspaceId,
-              role: { in: def.autoPopulateRoles },
-            },
-          });
-
-          if (membersToSync.length > 0) {
-            // Batch create team members
-            await prisma.workspaceTeamMember.createMany({
-              data: membersToSync.map(m => ({
-                teamId: team!.id,
-                userId: m.userId,
-                role: 'member',
-              })),
-              skipDuplicates: true,
-            });
-
-            // Batch create channel members
-            await prisma.channelMember.createMany({
-              data: membersToSync.map(m => ({
-                channelId: channel!.id,
-                userId: m.userId,
-                role: 'member',
-              })),
-              skipDuplicates: true,
+          if (!team) {
+            team = await prisma.workspaceTeam.create({
+              data: {
+                workspaceId,
+                name: def.teamName,
+                slug: teamSlug,
+                description: def.teamDescription || `Team for ${app.name}`,
+                appId: app.id,
+              },
             });
           }
-        }
-      }));
+
+          // 2. Create the channel if it doesn't exist
+          const channelSlug = def.channelSlug || def.channelName.toLowerCase().replace(/ /g, '-');
+          let channel = await prisma.channel.findUnique({
+            where: { workspaceId_slug: { workspaceId, slug: channelSlug } },
+          });
+
+          if (!channel) {
+            channel = await prisma.channel.create({
+              data: {
+                workspaceId,
+                name: def.channelName,
+                slug: channelSlug,
+                description: def.channelDescription || `Channel for ${app.name}`,
+                type: 'private',
+                icon: def.icon || 'bot',
+                appId: app.id,
+                createdById: app.botId,
+              },
+            });
+
+            // Link channel to team
+            await prisma.workspaceTeam.update({
+              where: { id: team.id },
+              data: { channelId: channel.id },
+            });
+          }
+
+          // 4. Add the bot to the team and channel so it can manage them
+          await prisma.workspaceTeamMember.upsert({
+            where: { teamId_userId: { teamId: team.id, userId: app.botId! } },
+            update: { role: 'lead' },
+            create: { teamId: team.id, userId: app.botId!, role: 'lead' },
+          });
+
+          await prisma.channelMember.upsert({
+            where: { channelId_userId: { channelId: channel.id, userId: app.botId! } },
+            update: { role: 'owner' },
+            create: { channelId: channel.id, userId: app.botId!, role: 'owner' },
+          });
+
+          // 3. Auto-populate team based on roles if specified
+          if (def.autoPopulateRoles && Array.isArray(def.autoPopulateRoles)) {
+            const membersToSync = await prisma.workspaceMember.findMany({
+              where: {
+                workspaceId,
+                role: { in: def.autoPopulateRoles },
+              },
+            });
+
+            if (membersToSync.length > 0) {
+              // Batch create team members
+              await prisma.workspaceTeamMember.createMany({
+                data: membersToSync.map(m => ({
+                  teamId: team!.id,
+                  userId: m.userId,
+                  role: 'member',
+                })),
+                skipDuplicates: true,
+              });
+
+              // Batch create channel members
+              await prisma.channelMember.createMany({
+                data: membersToSync.map(m => ({
+                  channelId: channel!.id,
+                  userId: m.userId,
+                  role: 'member',
+                })),
+                skipDuplicates: true,
+              });
+            }
+          }
+        })
+      );
     }
 
     return member_result;

@@ -25,9 +25,7 @@ export default function TabsLayout() {
         name="workspaces"
         options={{
           title: 'Servers',
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="grid-view" size={24} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <MaterialIcons name="grid-view" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -40,18 +38,14 @@ export default function TabsLayout() {
         name="dms"
         options={{
           title: 'Messages',
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="chat" size={24} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <MaterialIcons name="chat" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'You',
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person" size={24} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <MaterialIcons name="person" size={24} color={color} />,
         }}
       />
     </Tabs>

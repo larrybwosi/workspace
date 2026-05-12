@@ -1,17 +1,5 @@
-import {
-  Controller,
-  Post,
-  Param,
-  UseGuards,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
+import { Controller, Post, Param, UseGuards, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -28,7 +16,7 @@ export class V2MessageActionsController {
   constructor(
     private readonly auditService: V2AuditService,
     private readonly webhooksService: V2WebhooksService,
-    private readonly integrationsService: IntegrationsService,
+    private readonly integrationsService: IntegrationsService
   ) {}
 
   @Post()
@@ -39,7 +27,7 @@ export class V2MessageActionsController {
   async handleAction(
     @V2Context() context: ApiV2Context,
     @Param('messageId') messageId: string,
-    @Param('actionId') actionId: string,
+    @Param('actionId') actionId: string
   ) {
     const message = await prisma.message.findFirst({
       where: {
@@ -53,7 +41,7 @@ export class V2MessageActionsController {
       throw new NotFoundException('Message not found or access denied');
     }
 
-    const action = message.actions.find((a) => a.actionId === actionId);
+    const action = message.actions.find(a => a.actionId === actionId);
     if (!action) {
       throw new NotFoundException('Action not found');
     }
@@ -68,13 +56,7 @@ export class V2MessageActionsController {
       },
     });
 
-    await this.auditService.log(
-      context,
-      'messages.action',
-      'message_action',
-      action.id,
-      { messageId, actionId },
-    );
+    await this.auditService.log(context, 'messages.action', 'message_action', action.id, { messageId, actionId });
 
     // Handle specific actions
     if (actionId === 'create-huly-task') {
@@ -89,17 +71,13 @@ export class V2MessageActionsController {
     }
 
     // Dispatch webhook
-    await this.webhooksService.dispatch(
-      message.channel.workspaceId!,
-      'message.action',
-      {
-        messageId,
-        actionId,
-        actionValue: action.value || action.label,
-        userId: context.userId,
-        responseId: response.id,
-      },
-    );
+    await this.webhooksService.dispatch(message.channel.workspaceId!, 'message.action', {
+      messageId,
+      actionId,
+      actionValue: action.value || action.label,
+      userId: context.userId,
+      responseId: response.id,
+    });
 
     return { success: true, responseId: response.id };
   }

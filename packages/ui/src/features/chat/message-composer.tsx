@@ -360,7 +360,11 @@ export function MessageComposer({
               <TooltipProvider delayDuration={300}>
                 <div className="flex items-center bg-muted/30 rounded-xl px-1">
                   <CustomEmojiPicker onEmojiSelect={insertEmoji}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg"
+                    >
                       <Smile className="h-4 w-4" />
                     </Button>
                   </CustomEmojiPicker>
@@ -386,13 +390,28 @@ export function MessageComposer({
                 <div className="w-px h-4 bg-border/50 mx-1" />
 
                 <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('**')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground rounded-lg"
+                    onClick={() => wrapSelection('**')}
+                  >
                     <Bold className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('_')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground rounded-lg"
+                    onClick={() => wrapSelection('_')}
+                  >
                     <Italic className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => wrapSelection('`')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground rounded-lg"
+                    onClick={() => wrapSelection('`')}
+                  >
                     <Code className="h-3.5 w-3.5" />
                   </Button>
                 </div>

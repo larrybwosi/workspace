@@ -1,131 +1,131 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Plus, Trash2, Copy, Check, Activity } from "lucide-react"
-import { Card, CardContent } from "../../../components/card"
-import { Button } from "../../../components/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/dialog"
-import { Input } from "../../../components/input"
-import { Label } from "../../../components/label"
-import { Badge } from "../../../components/badge"
-import { Checkbox } from "../../../components/checkbox"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useToast } from "../../../hooks/use-toast"
-import { Switch } from "../../../components/switch"
-import { apiClient } from "@repo/api-client"
+import { useState } from 'react';
+import { Plus, Trash2, Copy, Check, Activity } from 'lucide-react';
+import { Card, CardContent } from '../../../components/card';
+import { Button } from '../../../components/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../components/dialog';
+import { Input } from '../../../components/input';
+import { Label } from '../../../components/label';
+import { Badge } from '../../../components/badge';
+import { Checkbox } from '../../../components/checkbox';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../../../hooks/use-toast';
+import { Switch } from '../../../components/switch';
+import { apiClient } from '@repo/api-client';
 
 interface WebhooksManagementProps {
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceId: string; // This is now treated as workspaceSlug
 }
 
 const WEBHOOK_EVENTS = [
-  { id: "message.created", label: "Message Created", category: "Messages" },
-  { id: "message.updated", label: "Message Updated", category: "Messages" },
-  { id: "message.deleted", label: "Message Deleted", category: "Messages" },
-  { id: "channel.created", label: "Channel Created", category: "Channels" },
-  { id: "channel.updated", label: "Channel Updated", category: "Channels" },
-  { id: "channel.deleted", label: "Channel Deleted", category: "Channels" },
-  { id: "member.joined", label: "Member Joined", category: "Members" },
-  { id: "member.left", label: "Member Left", category: "Members" },
-  { id: "member.role_changed", label: "Member Role Changed", category: "Members" },
-  { id: "project.created", label: "Project Created", category: "Projects" },
-  { id: "project.updated", label: "Project Updated", category: "Projects" },
-  { id: "task.created", label: "Task Created", category: "Tasks" },
-  { id: "task.completed", label: "Task Completed", category: "Tasks" },
-]
+  { id: 'message.created', label: 'Message Created', category: 'Messages' },
+  { id: 'message.updated', label: 'Message Updated', category: 'Messages' },
+  { id: 'message.deleted', label: 'Message Deleted', category: 'Messages' },
+  { id: 'channel.created', label: 'Channel Created', category: 'Channels' },
+  { id: 'channel.updated', label: 'Channel Updated', category: 'Channels' },
+  { id: 'channel.deleted', label: 'Channel Deleted', category: 'Channels' },
+  { id: 'member.joined', label: 'Member Joined', category: 'Members' },
+  { id: 'member.left', label: 'Member Left', category: 'Members' },
+  { id: 'member.role_changed', label: 'Member Role Changed', category: 'Members' },
+  { id: 'project.created', label: 'Project Created', category: 'Projects' },
+  { id: 'project.updated', label: 'Project Updated', category: 'Projects' },
+  { id: 'task.created', label: 'Task Created', category: 'Tasks' },
+  { id: 'task.completed', label: 'Task Completed', category: 'Tasks' },
+];
 
 export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManagementProps) {
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [viewSecretDialog, setViewSecretDialog] = useState<any>(null)
-  const [copiedSecret, setCopiedSecret] = useState(false)
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewSecretDialog, setViewSecretDialog] = useState<any>(null);
+  const [copiedSecret, setCopiedSecret] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: "",
-    url: "",
+    name: '',
+    url: '',
     events: [] as string[],
-  })
+  });
 
   // Fetch webhooks
   const { data, isLoading } = useQuery({
-    queryKey: ["workspace-webhooks", workspaceSlug],
+    queryKey: ['workspace-webhooks', workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/webhooks`)
-      return data
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/webhooks`);
+      return data;
     },
-  })
+  });
 
-  const webhooks = data || []
+  const webhooks = data || [];
 
   // Create webhook mutation
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks`, data)
-      return response
+      const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks`, data);
+      return response;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
-      setCreateDialogOpen(false)
-      setViewSecretDialog(data)
+    onSuccess: data => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
+      setCreateDialogOpen(false);
+      setViewSecretDialog(data);
       setFormData({
-        name: "",
-        url: "",
+        name: '',
+        url: '',
         events: [],
-      })
+      });
       toast({
-        title: "Webhook created",
-        description: "Your webhook has been created successfully.",
-      })
+        title: 'Webhook created',
+        description: 'Your webhook has been created successfully.',
+      });
     },
-  })
+  });
 
   // Delete webhook mutation
   const deleteMutation = useMutation({
     mutationFn: async (webhookId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`)
-      return data
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
+      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
       toast({
-        title: "Webhook deleted",
-        description: "The webhook has been deleted successfully.",
-      })
+        title: 'Webhook deleted',
+        description: 'The webhook has been deleted successfully.',
+      });
     },
-  })
+  });
 
   // Toggle webhook mutation
   const toggleMutation = useMutation({
     mutationFn: async ({ webhookId, active }: { webhookId: string; active: boolean }) => {
-      const { data } = await apiClient.patch(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`, { active })
-      return data
+      const { data } = await apiClient.patch(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`, { active });
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
+      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
     },
-  })
+  });
 
   const handleCreateWebhook = () => {
     createMutation.mutate({
       name: formData.name,
       url: formData.url,
       events: formData.events,
-    })
-  }
+    });
+  };
 
   const copySecret = (secret: string) => {
-    navigator.clipboard.writeText(secret)
-    setCopiedSecret(true)
-    setTimeout(() => setCopiedSecret(false), 2000)
+    navigator.clipboard.writeText(secret);
+    setCopiedSecret(true);
+    setTimeout(() => setCopiedSecret(false), 2000);
     toast({
-      title: "Copied to clipboard",
-      description: "Webhook secret has been copied.",
-    })
-  }
+      title: 'Copied to clipboard',
+      description: 'Webhook secret has been copied.',
+    });
+  };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading webhooks...</div>
+    return <div className="flex items-center justify-center p-8">Loading webhooks...</div>;
   }
 
   return (
@@ -153,8 +153,8 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
                   <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-muted-foreground" />
                     <h4 className="font-semibold">{webhook.name}</h4>
-                    <Badge variant={webhook.active ? "default" : "secondary"}>
-                      {webhook.active ? "Active" : "Inactive"}
+                    <Badge variant={webhook.active ? 'default' : 'secondary'}>
+                      {webhook.active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -171,7 +171,7 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
                 <div className="flex gap-2">
                   <Switch
                     checked={webhook.active}
-                    onCheckedChange={(checked) => toggleMutation.mutate({ webhookId: webhook.id, active: checked })}
+                    onCheckedChange={checked => toggleMutation.mutate({ webhookId: webhook.id, active: checked })}
                   />
                   <Button
                     variant="ghost"
@@ -217,7 +217,7 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
               <Input
                 placeholder="e.g., Slack Notifications"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
@@ -227,7 +227,7 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
                 type="url"
                 placeholder="https://example.com/webhook"
                 value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                onChange={e => setFormData({ ...formData, url: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
                 This URL will receive POST requests when selected events occur
@@ -240,29 +240,29 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
                 {Object.entries(
                   WEBHOOK_EVENTS.reduce(
                     (acc, event) => {
-                      if (!acc[event.category]) acc[event.category] = []
-                      acc[event.category].push(event)
-                      return acc
+                      if (!acc[event.category]) acc[event.category] = [];
+                      acc[event.category].push(event);
+                      return acc;
                     },
-                    {} as Record<string, typeof WEBHOOK_EVENTS>,
-                  ),
+                    {} as Record<string, typeof WEBHOOK_EVENTS>
+                  )
                 ).map(([category, events]) => (
                   <div key={category} className="space-y-2">
                     <h4 className="font-medium text-sm">{category}</h4>
                     <div className="space-y-2">
-                      {events.map((event) => (
+                      {events.map(event => (
                         <div key={event.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={event.id}
                             checked={formData.events.includes(event.id)}
-                            onCheckedChange={(checked) => {
+                            onCheckedChange={checked => {
                               if (checked) {
-                                setFormData({ ...formData, events: [...formData.events, event.id] })
+                                setFormData({ ...formData, events: [...formData.events, event.id] });
                               } else {
                                 setFormData({
                                   ...formData,
-                                  events: formData.events.filter((e) => e !== event.id),
-                                })
+                                  events: formData.events.filter(e => e !== event.id),
+                                });
                               }
                             }}
                           />
@@ -285,7 +285,7 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
                 onClick={handleCreateWebhook}
                 disabled={!formData.name || !formData.url || formData.events.length === 0 || createMutation.isPending}
               >
-                {createMutation.isPending ? "Creating..." : "Create Webhook"}
+                {createMutation.isPending ? 'Creating...' : 'Create Webhook'}
               </Button>
             </div>
           </div>
@@ -309,7 +309,7 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
             <div className="space-y-2">
               <Label>Secret</Label>
               <div className="flex gap-2">
-                <Input value={viewSecretDialog?.secret || ""} readOnly className="font-mono text-sm" />
+                <Input value={viewSecretDialog?.secret || ''} readOnly className="font-mono text-sm" />
                 <Button
                   variant="outline"
                   size="icon"
@@ -323,5 +323,5 @@ export function WebhooksManagement({ workspaceId: workspaceSlug }: WebhooksManag
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

@@ -239,7 +239,11 @@ export class DepartmentsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateWorkspaceDepartmentDto })
   @ApiResponse({ status: 201, description: 'Department created successfully' })
-  async createDepartment(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceDepartmentDto) {
+  async createDepartment(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Body() body: CreateWorkspaceDepartmentDto
+  ) {
     /**
      * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.

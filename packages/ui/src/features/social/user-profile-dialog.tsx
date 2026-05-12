@@ -62,7 +62,7 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                   src={user.banner}
                   alt="Profile Banner"
                   className="w-full h-full object-cover"
-                  onError={(e) => {
+                  onError={e => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
@@ -122,9 +122,7 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      Joined {user.createdAt ? format(new Date(user.createdAt), 'PP') : 'May 2024'}
-                    </span>
+                    <span>Joined {user.createdAt ? format(new Date(user.createdAt), 'PP') : 'May 2024'}</span>
                   </div>
                   {(user as any).phone && (
                     <div className="flex items-center gap-3 text-sm">

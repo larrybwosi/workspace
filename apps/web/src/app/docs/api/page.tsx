@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function ApiDocsPage() {
   return (
@@ -56,9 +56,7 @@ export default function ApiDocsPage() {
                 <p className="text-sm text-muted-foreground">
                   Recommended for third-party applications. Uses the standard OAuth2 authorization code flow.
                 </p>
-                <div className="bg-muted p-3 rounded-md font-mono text-sm">
-                  Authorization: Bearer [access_token]
-                </div>
+                <div className="bg-muted p-3 rounded-md font-mono text-sm">Authorization: Bearer [access_token]</div>
               </div>
             </CardContent>
           </Card>
@@ -80,7 +78,7 @@ export default function ApiDocsPage() {
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">Request Body</h4>
                   <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-{`{
+                    {`{
   "channelId": "clx...",
   "content": "Hello world!",
   "messageType": "standard",
@@ -122,7 +120,7 @@ export default function ApiDocsPage() {
               <CardContent>
                 <p className="text-sm mb-4">Create a new channel in a workspace.</p>
                 <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-{`{
+                  {`{
   "name": "new-project",
   "workspaceId": "ws_...",
   "type": "public"
@@ -137,23 +135,30 @@ export default function ApiDocsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Outgoing Webhooks</CardTitle>
-              <CardDescription>
-                Receive real-time notifications when events occur in Scrymechat.
-              </CardDescription>
+              <CardDescription>Receive real-time notifications when events occur in Scrymechat.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm">Supported Events:</p>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                <li><code>message.created</code></li>
-                <li><code>message.updated</code></li>
-                <li><code>channel.created</code></li>
-                <li><code>member.joined</code></li>
+                <li>
+                  <code>message.created</code>
+                </li>
+                <li>
+                  <code>message.updated</code>
+                </li>
+                <li>
+                  <code>channel.created</code>
+                </li>
+                <li>
+                  <code>member.joined</code>
+                </li>
               </ul>
 
               <div className="space-y-2 mt-6">
                 <h4 className="text-sm font-semibold">Security</h4>
                 <p className="text-sm text-muted-foreground">
-                  Each payload is signed with your webhook secret using HMAC-SHA256. The signature is sent in the <code>X-Webhook-Signature</code> header.
+                  Each payload is signed with your webhook secret using HMAC-SHA256. The signature is sent in the{' '}
+                  <code>X-Webhook-Signature</code> header.
                 </p>
               </div>
             </CardContent>
@@ -164,9 +169,7 @@ export default function ApiDocsPage() {
           <Card>
             <CardHeader>
               <CardTitle>n8n Integration Guide</CardTitle>
-              <CardDescription>
-                Connect Scrymechat to n8n to automate your messaging workflows.
-              </CardDescription>
+              <CardDescription>Connect Scrymechat to n8n to automate your messaging workflows.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -175,11 +178,21 @@ export default function ApiDocsPage() {
                   Use the <strong>HTTP Request</strong> node in n8n to send messages to Scrymechat channels.
                 </p>
                 <div className="bg-muted p-4 rounded-md space-y-2">
-                  <p className="text-xs font-mono"><strong>Method:</strong> POST</p>
-                  <p className="text-xs font-mono"><strong>URL:</strong> https://your-domain.com/api/v1/messages</p>
-                  <p className="text-xs font-mono"><strong>Authentication:</strong> Header Auth</p>
-                  <p className="text-xs font-mono"><strong>Name:</strong> Authorization</p>
-                  <p className="text-xs font-mono"><strong>Value:</strong> Bearer [YOUR_PAT_TOKEN]</p>
+                  <p className="text-xs font-mono">
+                    <strong>Method:</strong> POST
+                  </p>
+                  <p className="text-xs font-mono">
+                    <strong>URL:</strong> https://your-domain.com/api/v1/messages
+                  </p>
+                  <p className="text-xs font-mono">
+                    <strong>Authentication:</strong> Header Auth
+                  </p>
+                  <p className="text-xs font-mono">
+                    <strong>Name:</strong> Authorization
+                  </p>
+                  <p className="text-xs font-mono">
+                    <strong>Value:</strong> Bearer [YOUR_PAT_TOKEN]
+                  </p>
                 </div>
               </div>
 
@@ -189,9 +202,11 @@ export default function ApiDocsPage() {
                   For simpler integrations, use an incoming webhook URL. No complex auth headers required in n8n.
                 </p>
                 <div className="bg-muted p-4 rounded-md space-y-2">
-                  <p className="text-xs font-mono"><strong>URL:</strong> https://your-domain.com/api/webhooks/incoming/[TOKEN]</p>
+                  <p className="text-xs font-mono">
+                    <strong>URL:</strong> https://your-domain.com/api/webhooks/incoming/[TOKEN]
+                  </p>
                   <pre className="text-xs overflow-auto">
-{`{
+                    {`{
   "content": "Alert from n8n: High server load detected!",
   "messageType": "alert"
 }`}
@@ -205,7 +220,7 @@ export default function ApiDocsPage() {
                   Notify a sales channel when a new invoice is created in your ERP.
                 </p>
                 <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-{`{
+                  {`{
   "content": "💰 New Invoice Created: #INV-2024-001",
   "metadata": {
     "amount": "$5,000",
@@ -228,17 +243,21 @@ export default function ApiDocsPage() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Authorize</h3>
-                <code className="text-xs bg-muted p-1 block rounded">GET /api/auth/oauth2/authorize?client_id=...&redirect_uri=...&response_type=code</code>
+                <code className="text-xs bg-muted p-1 block rounded">
+                  GET /api/auth/oauth2/authorize?client_id=...&redirect_uri=...&response_type=code
+                </code>
               </div>
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Token Exchange</h3>
                 <code className="text-xs bg-muted p-1 block rounded">POST /api/auth/oauth2/token</code>
-                <p className="text-xs text-muted-foreground">Supports <code>grant_type=authorization_code</code> and <code>grant_type=refresh_token</code></p>
+                <p className="text-xs text-muted-foreground">
+                  Supports <code>grant_type=authorization_code</code> and <code>grant_type=refresh_token</code>
+                </p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

@@ -4,13 +4,7 @@ import { ApiV2Context } from '../auth/api-v2.guard';
 
 @Injectable()
 export class V2AuditService {
-  async log(
-    context: ApiV2Context,
-    action: string,
-    resource: string,
-    resourceId?: string,
-    metadata?: any,
-  ) {
+  async log(context: ApiV2Context, action: string, resource: string, resourceId?: string, metadata?: any) {
     if (!context.workspaceId) return;
 
     try {

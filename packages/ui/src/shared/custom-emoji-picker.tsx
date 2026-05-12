@@ -1,66 +1,66 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2 } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "../components/popover"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/tabs"
-import { Input } from "../components/input"
-import { Button } from "../components/button"
-import { ScrollArea } from "../components/scroll-area"
-import data from "@emoji-mart/data"
-import Picker from "@emoji-mart/react"
-import { useTheme } from "../layout/theme-provider"
-import { useCustomEmojis, useEligibleAssets } from "@repo/api-client"
-import { cn } from "../lib/utils"
+import * as React from 'react';
+import { Search, Smile, Clock, Star, Sparkles, ImageIcon, Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/tabs';
+import { Input } from '../components/input';
+import { Button } from '../components/button';
+import { ScrollArea } from '../components/scroll-area';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+import { useTheme } from '../layout/theme-provider';
+import { useCustomEmojis, useEligibleAssets } from '@repo/api-client';
+import { cn } from '../lib/utils';
 
 interface CustomEmoji {
-  id: string
-  name: string
-  shortcode: string
-  imageUrl: string
-  animated: boolean
-  category: string
+  id: string;
+  name: string;
+  shortcode: string;
+  imageUrl: string;
+  animated: boolean;
+  category: string;
 }
 
 interface CustomEmojiPickerProps {
-  onEmojiSelect: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void
-  children: React.ReactNode
-  workspaceId?: string
+  onEmojiSelect: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void;
+  children: React.ReactNode;
+  workspaceId?: string;
 }
 
-const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡", "🎉", "🚀", "👀", "🔥", "✅", "❌"]
+const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡', '🎉', '🚀', '👀', '🔥', '✅', '❌'];
 
 export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: CustomEmojiPickerProps) {
-  const [open, setOpen] = React.useState(false)
-  const [search, setSearch] = React.useState("")
-  const [activeTab, setActiveTab] = React.useState("quick")
-  const { theme } = useTheme()
+  const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState('');
+  const [activeTab, setActiveTab] = React.useState('quick');
+  const { theme } = useTheme();
 
-  const { data: eligibleAssets, isLoading: isLoadingEligible } = useEligibleAssets()
+  const { data: eligibleAssets, isLoading: isLoadingEligible } = useEligibleAssets();
 
-  const customEmojis = eligibleAssets?.emojis || []
-  const isLoadingCustom = isLoadingEligible
+  const customEmojis = eligibleAssets?.emojis || [];
+  const isLoadingCustom = isLoadingEligible;
 
   const filteredCustomEmojis = (customEmojis || []).filter(
     (emoji: any) =>
       emoji.name.toLowerCase().includes(search.toLowerCase()) ||
-      emoji.shortcode.toLowerCase().includes(search.toLowerCase()),
-  )
+      emoji.shortcode.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleEmojiSelect = (emoji: string) => {
-    onEmojiSelect(emoji, false)
-    setOpen(false)
-  }
+    onEmojiSelect(emoji, false);
+    setOpen(false);
+  };
 
   const handleCustomEmojiSelect = (emoji: any) => {
-    onEmojiSelect(emoji.shortcode, true, emoji.id)
-    setOpen(false)
-  }
+    onEmojiSelect(emoji.shortcode, true, emoji.id);
+    setOpen(false);
+  };
 
   const handleStandardEmojiSelect = (emoji: any) => {
-    onEmojiSelect(emoji.native, false)
-    setOpen(false)
-  }
+    onEmojiSelect(emoji.native, false);
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -87,7 +87,7 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
           <TabsContent value="quick" className="m-0 p-3">
             <p className="text-xs text-muted-foreground mb-2">Quick Reactions</p>
             <div className="grid grid-cols-6 gap-1">
-              {QUICK_REACTIONS.map((emoji) => (
+              {QUICK_REACTIONS.map(emoji => (
                 <Button
                   key={emoji}
                   variant="ghost"
@@ -111,20 +111,20 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                       size="sm"
                       disabled={!emoji.isEligible}
                       className={cn(
-                        "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative",
-                        !emoji.isEligible && "opacity-60 grayscale cursor-not-allowed"
+                        'h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative',
+                        !emoji.isEligible && 'opacity-60 grayscale cursor-not-allowed'
                       )}
                       onClick={() => handleCustomEmojiSelect(emoji)}
                       title={emoji.shortcode}
                     >
                       <img
-                        src={emoji.imageUrl || "/placeholder.svg"}
+                        src={emoji.imageUrl || '/placeholder.svg'}
                         alt={emoji.name}
                         className="h-6 w-6 object-contain"
                       />
                       {!emoji.isEligible && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-                          {React.createElement(Lock as any, { className: "h-3 w-3 text-white" })}
+                          {React.createElement(Lock as any, { className: 'h-3 w-3 text-white' })}
                         </div>
                       )}
                       {emoji.animated && (
@@ -146,7 +146,7 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                 <Input
                   placeholder="Search custom emojis..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={e => setSearch(e.target.value)}
                   className="pl-9 h-8"
                 />
               </div>
@@ -172,20 +172,20 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
                         size="sm"
                         disabled={!emoji.isEligible}
                         className={cn(
-                          "h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group",
-                          !emoji.isEligible && "opacity-60 grayscale cursor-not-allowed"
+                          'h-10 w-10 p-0 hover:bg-muted hover:scale-110 transition-transform relative group',
+                          !emoji.isEligible && 'opacity-60 grayscale cursor-not-allowed'
                         )}
                         onClick={() => handleCustomEmojiSelect(emoji)}
                         title={emoji.shortcode}
                       >
                         <img
-                          src={emoji.imageUrl || "/placeholder.svg"}
+                          src={emoji.imageUrl || '/placeholder.svg'}
                           alt={emoji.name}
                           className="h-6 w-6 object-contain"
                         />
                         {!emoji.isEligible && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-                            {React.createElement(Lock as any, { className: "h-3 w-3 text-white" })}
+                            {React.createElement(Lock as any, { className: 'h-3 w-3 text-white' })}
                           </div>
                         )}
                         {emoji.animated && (
@@ -205,7 +205,7 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
             <Picker
               data={data}
               onEmojiSelect={handleStandardEmojiSelect}
-              theme={theme === "dark" ? "dark" : "light"}
+              theme={theme === 'dark' ? 'dark' : 'light'}
               previewPosition="none"
               skinTonePosition="none"
             />
@@ -213,5 +213,5 @@ export function CustomEmojiPicker({ onEmojiSelect, children, workspaceId }: Cust
         </Tabs>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

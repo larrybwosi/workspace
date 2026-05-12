@@ -1,18 +1,18 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Key, Webhook, Plus, Copy, Trash2, Eye, EyeOff, RefreshCw, Activity, Shield, Zap } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { TopBar } from "@/components/layout/top-bar"
-import { IntegrationStats } from "@/components/features/admin/integration-stats"
-import { ApiKeysPanel } from "@/components/features/admin/api-keys-panel"
-import { WebhooksPanel } from "@/components/features/admin/webhooks-panel"
+import * as React from 'react';
+import { Key, Webhook, Plus, Copy, Trash2, Eye, EyeOff, RefreshCw, Activity, Shield, Zap } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { TopBar } from '@/components/layout/top-bar';
+import { IntegrationStats } from '@/components/features/admin/integration-stats';
+import { ApiKeysPanel } from '@/components/features/admin/api-keys-panel';
+import { WebhooksPanel } from '@/components/features/admin/webhooks-panel';
 
 export default function IntegrationsPage() {
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
-  const [activeTab, setActiveTab] = React.useState("api-keys")
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('api-keys');
 
   return (
     <div className="flex h-screen bg-background">
@@ -66,5 +66,5 @@ export default function IntegrationsPage() {
         </ScrollArea>
       </div>
     </div>
-  )
+  );
 }

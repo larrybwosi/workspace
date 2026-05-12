@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import { useWorkspaces as useRemoteWorkspaces } from "@repo/api-client";
-import { getCachedWorkspaces, cacheWorkspaces } from "../../lib/db";
-import { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { useWorkspaces as useRemoteWorkspaces } from '@repo/api-client';
+import { getCachedWorkspaces, cacheWorkspaces } from '../../lib/db';
+import { useEffect, useState } from 'react';
 
 export function useWorkspacesWithOffline() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -11,12 +11,12 @@ export function useWorkspacesWithOffline() {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
@@ -28,7 +28,7 @@ export function useWorkspacesWithOffline() {
   }, [remoteWorkspaces]);
 
   const { data: cachedWorkspaces, isLoading: isLoadingCache } = useQuery({
-    queryKey: ["cached-workspaces"],
+    queryKey: ['cached-workspaces'],
     queryFn: getCachedWorkspaces,
     enabled: isOffline || isError,
   });

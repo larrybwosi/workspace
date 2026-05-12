@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Button } from "../../components/button"
-import { Plus } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Button } from '../../components/button';
+import { Plus } from 'lucide-react';
 
 interface WorkspaceOutgoingWebhooksProps {
-  workspaceSlug: string
+  workspaceSlug: string;
 }
 
 export function WorkspaceOutgoingWebhooks({ workspaceSlug }: WorkspaceOutgoingWebhooksProps) {
@@ -30,5 +30,5 @@ export function WorkspaceOutgoingWebhooks({ workspaceSlug }: WorkspaceOutgoingWe
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }

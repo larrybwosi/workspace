@@ -25,16 +25,12 @@ async function uploadFile(workspaceSlug: string, channelId: string, filePath: st
   form.append('content', 'Here is the file you requested!');
   form.append('file', fs.createReadStream(filePath));
 
-  const response = await axios.post(
-    `https://api.skyrme.chat/v2/workspaces/${workspaceSlug}/messages`,
-    form,
-    {
-      headers: {
-        ...form.getHeaders(),
-        'Authorization': `Bearer ${YOUR_ACCESS_TOKEN}`
-      }
-    }
-  );
+  const response = await axios.post(`https://api.skyrme.chat/v2/workspaces/${workspaceSlug}/messages`, form, {
+    headers: {
+      ...form.getHeaders(),
+      Authorization: `Bearer ${YOUR_ACCESS_TOKEN}`,
+    },
+  });
 
   return response.data;
 }

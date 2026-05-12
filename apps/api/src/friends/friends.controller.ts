@@ -18,7 +18,7 @@ class SendFriendRequestDto {
   @ApiProperty({ example: 'user_123', description: 'The ID of the user to send a request to' })
   receiverId: string;
 
-  @ApiProperty({ required: false, example: 'Hi, let\'s be friends!' })
+  @ApiProperty({ required: false, example: "Hi, let's be friends!" })
   message?: string;
 }
 
@@ -46,13 +46,14 @@ export class FriendsController {
   @Get('requests')
   @ApiOperation({ summary: 'Get friend requests' })
   @ApiQuery({ name: 'type', required: false, enum: ['incoming', 'outgoing'], description: 'Type of requests' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'accepted', 'declined'], description: 'Status of requests' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'accepted', 'declined'],
+    description: 'Status of requests',
+  })
   @ApiResponse({ status: 200, description: 'List of friend requests' })
-  async getFriendRequests(
-    @CurrentUser() user: User,
-    @Query('type') type?: string,
-    @Query('status') status?: string,
-  ) {
+  async getFriendRequests(@CurrentUser() user: User, @Query('type') type?: string, @Query('status') status?: string) {
     const requests = await this.friendsService.getFriendRequests(user.id, type, status);
     return { requests };
   }
@@ -61,15 +62,12 @@ export class FriendsController {
   @ApiOperation({ summary: 'Send a friend request' })
   @ApiBody({ type: SendFriendRequestDto })
   @ApiResponse({ status: 201, description: 'Friend request sent' })
-  async sendFriendRequest(
-    @CurrentUser() user: User,
-    @Body() body: SendFriendRequestDto,
-  ) {
+  async sendFriendRequest(@CurrentUser() user: User, @Body() body: SendFriendRequestDto) {
     const request = await this.friendsService.sendFriendRequest(
       user.id,
       user.name || 'Someone',
       body.receiverId,
-      body.message,
+      body.message
     );
     return { request };
   }
@@ -82,7 +80,7 @@ export class FriendsController {
   async updateFriendRequest(
     @CurrentUser() user: User,
     @Param('requestId') requestId: string,
-    @Body() body: UpdateFriendRequestDto,
+    @Body() body: UpdateFriendRequestDto
   ) {
     const request = await this.friendsService.updateFriendRequest(user.id, requestId, body.action);
     return { request };
