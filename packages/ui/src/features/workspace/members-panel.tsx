@@ -1,35 +1,29 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  Search,
-  UserPlus,
-  MoreVertical,
-  Crown,
-  Shield,
-} from "lucide-react";
-import { Input } from "../../components/input";
-import { Button } from "../../components/button";
-import { ScrollArea } from "../../components/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
-import { Badge } from "../../components/badge";
+import * as React from 'react';
+import { Search, UserPlus, MoreVertical, Crown, Shield } from 'lucide-react';
+import { Input } from '../../components/input';
+import { Button } from '../../components/button';
+import { ScrollArea } from '../../components/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Badge } from '../../components/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/dropdown-menu";
-import type { User } from "../../lib/types";
-import { cn } from "../../lib/utils";
-import { Skeleton } from "../../components/skeleton";
-import { UserProfileDialog } from "../social/user-profile-dialog";
-import { useWorkspaceMembers } from "@repo/api-client";
-import { useParams } from "next/navigation";
-import { usePresence } from "../../lib/contexts/presence-context";
+} from '../../components/dropdown-menu';
+import type { User } from '../../lib/types';
+import { cn } from '../../lib/utils';
+import { Skeleton } from '../../components/skeleton';
+import { UserProfileDialog } from '../social/user-profile-dialog';
+import { useWorkspaceMembers } from '@repo/api-client';
+import { useParams } from 'next/navigation';
+import { usePresence } from '../../lib/contexts/presence-context';
 
 export function MembersPanel() {
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const [profileOpen, setProfileOpen] = React.useState(false);
 
@@ -47,20 +41,20 @@ export function MembersPanel() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "owner":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      case "admin":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+      case 'owner':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'admin':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
     }
   };
 
   const getRoleIcon = (role: string) => {
-    if (role === "owner") {
+    if (role === 'owner') {
       return <Crown className="h-3 w-3" />;
     }
-    if (role === "admin") {
+    if (role === 'admin') {
       return <Shield className="h-3 w-3" />;
     }
     return null;
@@ -114,7 +108,7 @@ export function MembersPanel() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search members..."
               className="pl-8 h-8 text-xs"
             />
@@ -148,9 +142,7 @@ export function MembersPanel() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
-                          <p className="text-xs font-medium truncate">
-                            {m.user.name}
-                          </p>
+                          <p className="text-xs font-medium truncate">{m.user.name}</p>
                           {getRoleIcon(m.role)}
                         </div>
                         <p className="text-[10px] text-muted-foreground capitalize">{m.role}</p>
@@ -184,9 +176,7 @@ export function MembersPanel() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
-                          <p className="text-xs font-medium truncate">
-                            {m.user.name}
-                          </p>
+                          <p className="text-xs font-medium truncate">{m.user.name}</p>
                           {getRoleIcon(m.role)}
                         </div>
                         <p className="text-[10px] text-muted-foreground capitalize">{m.role}</p>
@@ -201,13 +191,7 @@ export function MembersPanel() {
       </div>
 
       {/* User Profile Dialog */}
-      {selectedUser && (
-        <UserProfileDialog
-          user={selectedUser}
-          open={profileOpen}
-          onOpenChange={setProfileOpen}
-        />
-      )}
+      {selectedUser && <UserProfileDialog user={selectedUser} open={profileOpen} onOpenChange={setProfileOpen} />}
     </>
   );
 }

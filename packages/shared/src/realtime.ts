@@ -10,9 +10,11 @@ export interface RealtimeClient {
 // Helper to safely access env variables across Vite, Next.js and React Native
 const getEnv = (name: string) => {
   const g = globalThis as any;
-  const env = g.process?.env || (g.import?.meta?.env) || g.__env__;
+  const env = g.process?.env || g.import?.meta?.env || g.__env__;
   if (!env) return undefined;
-  return env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`];
+  return (
+    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`]
+  );
 };
 
 let socketioClient: Socket | null = null;
@@ -22,7 +24,12 @@ async function fetchProviderType() {
   if (providerType) return providerType;
 
   try {
-    const baseURL = getEnv('API_URL') || getEnv('NEXT_PUBLIC_API_URL') || getEnv('VITE_API_URL') || getEnv('EXPO_PUBLIC_API_URL') || 'http://localhost:3000';
+    const baseURL =
+      getEnv('API_URL') ||
+      getEnv('NEXT_PUBLIC_API_URL') ||
+      getEnv('VITE_API_URL') ||
+      getEnv('EXPO_PUBLIC_API_URL') ||
+      'http://localhost:3000';
     const response = await fetch(`${baseURL.replace(/\/$/, '')}/api/config/realtime`);
     const data = await response.json();
     providerType = data.provider;
@@ -37,7 +44,12 @@ function getSocketioClient() {
   if (typeof window === 'undefined') return null;
 
   if (!socketioClient) {
-    const baseURL = getEnv('API_URL') || getEnv('NEXT_PUBLIC_API_URL') || getEnv('VITE_API_URL') || getEnv('EXPO_PUBLIC_API_URL') || 'http://localhost:3000';
+    const baseURL =
+      getEnv('API_URL') ||
+      getEnv('NEXT_PUBLIC_API_URL') ||
+      getEnv('VITE_API_URL') ||
+      getEnv('EXPO_PUBLIC_API_URL') ||
+      'http://localhost:3000';
     socketioClient = io(baseURL, {
       withCredentials: true,
       autoConnect: true,
@@ -155,7 +167,7 @@ export const realtime = {
       const channel = ably.channels.get(channelName);
       channel.presence.leaveClient(userId);
     }
-  }
+  },
 };
 
 export { AblyChannels, AblyEvents };

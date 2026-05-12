@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
 export const docs = [
   {
-    slug: "getting-started",
-    title: "Getting Started",
-    description: "Quick introduction to the platform and key features",
+    slug: 'getting-started',
+    title: 'Getting Started',
+    description: 'Quick introduction to the platform and key features',
     content: `# Getting Started
 
 Welcome to the enterprise collaboration platform! This guide will help you get started quickly.
@@ -32,9 +32,9 @@ Welcome to the enterprise collaboration platform! This guide will help you get s
 `,
   },
   {
-    slug: "api-integration",
-    title: "API Integration",
-    description: "Complete guide for integrating with the backend API using TanStack Query",
+    slug: 'api-integration',
+    title: 'API Integration',
+    description: 'Complete guide for integrating with the backend API using TanStack Query',
     content: `# API Integration Guide
 
 Comprehensive guide for integrating with the backend API using TanStack Query and Axios.
@@ -103,9 +103,9 @@ export function ProjectsList() {
 `,
   },
   {
-    slug: "integrations",
-    title: "External Integrations",
-    description: "Guide for integrating external systems like ERP, CRM, and CI/CD",
+    slug: 'integrations',
+    title: 'External Integrations',
+    description: 'Guide for integrating external systems like ERP, CRM, and CI/CD',
     content: `# External Integrations Guide
 
 Complete guide for integrating external systems with the collaboration platform.
@@ -178,9 +178,9 @@ Alert teams about new leads and opportunities.
 `,
   },
   {
-    slug: "invitation-system",
-    title: "Invitation System",
-    description: "Invite team members with SEO-optimized invitation pages",
+    slug: 'invitation-system',
+    title: 'Invitation System',
+    description: 'Invite team members with SEO-optimized invitation pages',
     content: `# Invitation System Documentation
 
 ## Overview
@@ -250,9 +250,9 @@ Invitation pages include:
 `,
   },
   {
-    slug: "cron-jobs",
-    title: "Cron Jobs & Automation",
-    description: "Set up automated tasks for notifications, reminders, and project management",
+    slug: 'cron-jobs',
+    title: 'Cron Jobs & Automation',
+    description: 'Set up automated tasks for notifications, reminders, and project management',
     content: `# Cron Jobs & Automation Guide
 
 ## Overview
@@ -424,4 +424,4 @@ Monitor cron job execution:
 6. **Set notifications wisely**: Avoid alert fatigue
 `,
   },
-]
+];

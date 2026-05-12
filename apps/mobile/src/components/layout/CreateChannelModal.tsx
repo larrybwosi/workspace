@@ -3,20 +3,31 @@ import { View, Text, Modal, TextInput, TouchableOpacity, SafeAreaView, ActivityI
 import { MaterialIcons } from '@expo/vector-icons';
 import { useCreateChannel } from '@repo/api-client';
 
-export function CreateChannelModal({ isVisible, onClose, workspaceId }: { isVisible: boolean, onClose: () => void, workspaceId: string }) {
+export function CreateChannelModal({
+  isVisible,
+  onClose,
+  workspaceId,
+}: {
+  isVisible: boolean;
+  onClose: () => void;
+  workspaceId: string;
+}) {
   const [name, setName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const { mutate: createChannel, isPending } = useCreateChannel(workspaceId);
 
   const handleCreate = () => {
     if (!name.trim()) return;
-    createChannel({ name, type: isPrivate ? 'PRIVATE' : 'PUBLIC' }, {
-      onSuccess: () => {
-        setName('');
-        setIsPrivate(false);
-        onClose();
+    createChannel(
+      { name, type: isPrivate ? 'PRIVATE' : 'PUBLIC' },
+      {
+        onSuccess: () => {
+          setName('');
+          setIsPrivate(false);
+          onClose();
+        },
       }
-    });
+    );
   };
 
   return (
@@ -51,11 +62,7 @@ export function CreateChannelModal({ isVisible, onClose, workspaceId }: { isVisi
               </View>
               <Text className="text-discord-muted text-xs mt-1">Only selected members can view this channel</Text>
             </View>
-            <Switch
-              value={isPrivate}
-              onValueChange={setIsPrivate}
-              trackColor={{ false: '#72767D', true: '#23A559' }}
-            />
+            <Switch value={isPrivate} onValueChange={setIsPrivate} trackColor={{ false: '#72767D', true: '#23A559' }} />
           </View>
 
           <TouchableOpacity

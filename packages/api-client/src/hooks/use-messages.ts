@@ -6,7 +6,9 @@ export const messageKeys = {
   all: ['messages'] as const,
   lists: () => [...messageKeys.all, 'list'] as const,
   list: (channelId: string, workspaceSlug?: string, threadId?: string) =>
-    workspaceSlug ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages', { threadId }] : [...messageKeys.lists(), channelId, { threadId }] as const,
+    workspaceSlug
+      ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages', { threadId }]
+      : ([...messageKeys.lists(), channelId, { threadId }] as const),
   details: () => [...messageKeys.all, 'detail'] as const,
   detail: (id: string) => [...messageKeys.details(), id] as const,
 };
@@ -23,7 +25,7 @@ export function useMessages(
     queryKey: messageKeys.list(channelId, workspaceSlug, threadId || contextId),
     queryFn: async ({ pageParam }: { pageParam: any }) => {
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
-      const prefix = isV2 ? "/v2" : "";
+      const prefix = isV2 ? '/v2' : '';
 
       let url;
       if (isV2 && workspaceSlug) {
@@ -59,7 +61,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       threadId?: string;
       contextId?: string;
     }) => {
-      const prefix = isV2 ? "/v2" : "";
+      const prefix = isV2 ? '/v2' : '';
 
       let url;
       if (isV2 && workspaceSlug) {
@@ -73,7 +75,9 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(variables.channelId, workspaceSlug, variables.threadId) });
+      queryClient.invalidateQueries({
+        queryKey: messageKeys.list(variables.channelId, workspaceSlug, variables.threadId),
+      });
     },
   });
 }

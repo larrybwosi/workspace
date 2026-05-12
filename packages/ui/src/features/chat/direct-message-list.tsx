@@ -1,27 +1,27 @@
-"use client"
-import { Avatar, AvatarFallback } from "../../components/avatar"
-import { Button } from "../../components/button"
-import { Badge } from "../../components/badge"
-import { ScrollArea } from "../../components/scroll-area"
-import { useDMConversations } from "@repo/api-client"
-import { cn } from "../../lib/utils"
-import { usePresence } from "../../lib/contexts/presence-context"
+'use client';
+import { Avatar, AvatarFallback } from '../../components/avatar';
+import { Button } from '../../components/button';
+import { Badge } from '../../components/badge';
+import { ScrollArea } from '../../components/scroll-area';
+import { useDMConversations } from '@repo/api-client';
+import { cn } from '../../lib/utils';
+import { usePresence } from '../../lib/contexts/presence-context';
 
 interface DirectMessagesListProps {
-  activeUserId?: string
-  onUserSelect: (userId: string) => void
+  activeUserId?: string;
+  onUserSelect: (userId: string) => void;
 }
 
 export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessagesListProps) {
-  const { data: dmConversations = [], isLoading } = useDMConversations()
-  const { onlineUsers } = usePresence()
+  const { data: dmConversations = [], isLoading } = useDMConversations();
+  const { onlineUsers } = usePresence();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-4">
         <p className="text-sm text-muted-foreground">Loading conversations...</p>
       </div>
-    )
+    );
   }
 
   if (dmConversations.length === 0) {
@@ -29,23 +29,23 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
       <div className="flex items-center justify-center p-4">
         <p className="text-sm text-muted-foreground">No conversations yet</p>
       </div>
-    )
+    );
   }
 
   return (
     <ScrollArea className="flex-1">
       <div className="p-2 space-y-0.5">
         {dmConversations.map((dm: any) => {
-          const otherUser = dm.user
-          const lastMessage = dm.lastMessage
+          const otherUser = dm.user;
+          const lastMessage = dm.lastMessage;
 
           return (
             <Button
               key={dm.id}
-              variant={activeUserId === otherUser.id ? "secondary" : "ghost"}
+              variant={activeUserId === otherUser.id ? 'secondary' : 'ghost'}
               className={cn(
-                "w-full justify-start h-auto py-2 px-3",
-                activeUserId === otherUser.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent",
+                'w-full justify-start h-auto py-2 px-3',
+                activeUserId === otherUser.id ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent'
               )}
               onClick={() => onUserSelect(otherUser.id)}
             >
@@ -58,20 +58,18 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                   </Avatar>
                   <div
                     className={cn(
-                      "absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-sidebar rounded-full",
+                      'absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-sidebar rounded-full',
                       onlineUsers.has(otherUser.id)
-                        ? "bg-green-500"
-                        : otherUser.status === "away"
-                          ? "bg-yellow-500"
-                          : "bg-gray-400",
+                        ? 'bg-green-500'
+                        : otherUser.status === 'away'
+                          ? 'bg-yellow-500'
+                          : 'bg-gray-400'
                     )}
                   />
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="text-sm font-medium truncate">{otherUser.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {lastMessage?.content || "No messages yet"}
-                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{lastMessage?.content || 'No messages yet'}</p>
                 </div>
                 {dm._count?.messages > 0 && (
                   <Badge variant="secondary" className="ml-auto">
@@ -80,9 +78,9 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                 )}
               </div>
             </Button>
-          )
+          );
         })}
       </div>
     </ScrollArea>
-  )
+  );
 }

@@ -17,7 +17,9 @@ async function generate() {
 
   const config = new DocumentBuilder()
     .setTitle('Skyrme Chat API')
-    .setDescription('Comprehensive API documentation for Skyrme Chat V2. This documentation is used by developers and for Bot API integration.')
+    .setDescription(
+      'Comprehensive API documentation for Skyrme Chat V2. This documentation is used by developers and for Bot API integration.'
+    )
     .setVersion('2.0')
     .addBearerAuth()
     .addTag('Authentication', 'Bot and integration authentication using OAuth2 client credentials.')

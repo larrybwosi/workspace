@@ -12,19 +12,22 @@ Large organizations often need to keep their Skyrme Chat workspace membership in
 ## Implementation Guide
 
 ### 1. Get an Access Token
+
 Ensure your Bot App has the `members:read` and `members:write` scopes.
 
 ### 2. Fetch Existing Members
+
 Use the `GET /v2/workspaces/:slug/members` endpoint.
 
 ```javascript
 const response = await axios.get(`https://api.skyrme.chat/v2/workspaces/${SLUG}/members`, {
-  headers: { Authorization: `Bearer ${TOKEN}` }
+  headers: { Authorization: `Bearer ${TOKEN}` },
 });
 const currentMembers = response.data.members;
 ```
 
 ### 3. Identify Changes
+
 Map your HR system data to Skyrme Chat users by email address.
 
 ```javascript
@@ -40,20 +43,26 @@ const toRemove = currentMembers.filter(m => !hrUsers.find(u => u.email === m.use
 ### 4. Apply Updates
 
 **Adding Members:**
+
 ```javascript
 for (const user of toAdd) {
-  await axios.post(`https://api.skyrme.chat/v2/workspaces/${SLUG}/members`, {
-    email: user.email,
-    role: 'member'
-  }, { headers: { Authorization: `Bearer ${TOKEN}` } });
+  await axios.post(
+    `https://api.skyrme.chat/v2/workspaces/${SLUG}/members`,
+    {
+      email: user.email,
+      role: 'member',
+    },
+    { headers: { Authorization: `Bearer ${TOKEN}` } }
+  );
 }
 ```
 
 **Removing Members:**
+
 ```javascript
 for (const member of toRemove) {
   await axios.delete(`https://api.skyrme.chat/v2/workspaces/${SLUG}/members/${member.user.id}`, {
-    headers: { Authorization: `Bearer ${TOKEN}` }
+    headers: { Authorization: `Bearer ${TOKEN}` },
   });
 }
 ```

@@ -6,7 +6,7 @@ import {
   ChannelProfileType,
   ClientRoleType,
   RtcSurfaceView,
-  IRtcEngine
+  IRtcEngine,
 } from 'react-native-agora';
 import { useCallStore } from '@repo/shared';
 import { CallControls } from '../../components/calls/CallControls';
@@ -16,7 +16,14 @@ import { AGORA_APP_ID } from '../../lib/agora';
 import { getBaseURL } from '../../lib/env';
 
 export default function CallScreen() {
-  const { id: callIdParam, type, workspaceId, workspaceSlug, recipientId, channelId } = useLocalSearchParams<{
+  const {
+    id: callIdParam,
+    type,
+    workspaceId,
+    workspaceSlug,
+    recipientId,
+    channelId,
+  } = useLocalSearchParams<{
     id: string;
     type: 'voice' | 'video';
     workspaceId?: string;
@@ -43,7 +50,7 @@ export default function CallScreen() {
         const body: any = {
           type: type || 'voice',
           workspaceId,
-          workspaceSlug
+          workspaceSlug,
         };
 
         if (callIdParam !== 'new') {
@@ -76,7 +83,7 @@ export default function CallScreen() {
             try {
               await axios.patch(`${baseURL}/api/calls/${callId}`, {
                 action: 'join',
-                uid
+                uid,
               });
             } catch (err) {
               console.error('Failed to notify backend of join:', err);
@@ -88,9 +95,9 @@ export default function CallScreen() {
           onUserOffline: (_connection, uid) => {
             setRemoteUid(prev => prev.filter(id => id !== uid));
           },
-          onError: (err) => {
+          onError: err => {
             console.error('Agora Error:', err);
-          }
+          },
         });
 
         if (type === 'video') {
@@ -103,7 +110,6 @@ export default function CallScreen() {
           channelProfile: ChannelProfileType.ChannelProfileCommunication,
           clientRoleType: ClientRoleType.ClientRoleBroadcaster,
         });
-
       } catch (e) {
         console.error('Failed to initialize call:', e);
         Alert.alert('Error', 'Failed to join call');
@@ -177,10 +183,7 @@ export default function CallScreen() {
           {type === 'video' ? (
             <View className="w-full h-full">
               {remoteUid.length > 0 ? (
-                <RtcSurfaceView
-                  canvas={{ uid: remoteUid[0] }}
-                  style={{ flex: 1 }}
-                />
+                <RtcSurfaceView canvas={{ uid: remoteUid[0] }} style={{ flex: 1 }} />
               ) : (
                 <View className="flex-1 items-center justify-center">
                   <View className="w-24 h-24 rounded-full bg-discord-blurple items-center justify-center">
@@ -191,16 +194,13 @@ export default function CallScreen() {
               )}
               {!isVideoOff && (
                 <View className="absolute bottom-4 right-4 w-32 h-48 bg-black rounded-xl overflow-hidden border-2 border-discord-blurple">
-                  <RtcSurfaceView
-                    canvas={{ uid: 0 }}
-                    style={{ flex: 1 }}
-                  />
+                  <RtcSurfaceView canvas={{ uid: 0 }} style={{ flex: 1 }} />
                 </View>
               )}
             </View>
           ) : (
             <View className="items-center">
-               <View className="w-32 h-32 rounded-full bg-discord-blurple items-center justify-center mb-6">
+              <View className="w-32 h-32 rounded-full bg-discord-blurple items-center justify-center mb-6">
                 <MaterialIcons name="person" size={64} color="white" />
               </View>
               <Text className="text-white text-2xl font-bold">In Call</Text>

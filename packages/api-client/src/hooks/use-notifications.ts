@@ -1,65 +1,65 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "../client"
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../client';
 
 export const notificationKeys = {
-  all: ["notifications"] as const,
-  lists: () => [...notificationKeys.all, "list"] as const,
+  all: ['notifications'] as const,
+  lists: () => [...notificationKeys.all, 'list'] as const,
   list: (params: Record<string, any>) => [...notificationKeys.lists(), params] as const,
-}
+};
 
 export function useNotifications(unreadOnly = false) {
   return useQuery({
     queryKey: notificationKeys.list({ unreadOnly }),
     queryFn: async () => {
-      const { data } = await apiClient.get("/notifications", {
+      const { data } = await apiClient.get('/notifications', {
         params: { unreadOnly },
-      })
-      return data
+      });
+      return data;
     },
-  })
+  });
 }
 
 export function useUpdateUserDeviceToken() {
   return useMutation({
     mutationFn: async (data: { token: string; platform: string; deviceInfo?: any }) => {
-      const response = await apiClient.post("/device-tokens", data)
-      return response.data
+      const response = await apiClient.post('/device-tokens', data);
+      return response.data;
     },
-  })
+  });
 }
 
 export function useMarkNotificationRead() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      await apiClient.patch(`/notifications/${notificationId}`, { isRead: true })
+      await apiClient.patch(`/notifications/${notificationId}`, { isRead: true });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
-  })
+  });
 }
 
 export function useMarkAllNotificationsRead() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      await apiClient.post("/notifications/mark-all-read")
+      await apiClient.post('/notifications/mark-all-read');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
-  })
+  });
 }
 
 export function useDeleteNotification() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      await apiClient.delete(`/notifications/${notificationId}`)
+      await apiClient.delete(`/notifications/${notificationId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
-  })
+  });
 }

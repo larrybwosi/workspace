@@ -1,8 +1,8 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Building2, Globe, Lock, Users, Sparkles } from "lucide-react"
-import { Button } from "../../components/button"
+import * as React from 'react';
+import { Building2, Globe, Lock, Users, Sparkles } from 'lucide-react';
+import { Button } from '../../components/button';
 import {
   Dialog,
   DialogContent,
@@ -10,79 +10,79 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Textarea } from "../../components/textarea"
-import { RadioGroup, RadioGroupItem } from "../../components/radio-group"
-import { useCreateWorkspace } from "@repo/api-client"
-import { toast } from "sonner"
-import { cn } from "../../lib/utils"
-import { useRouter } from "../../hooks/use-universal-router"
+} from '../../components/dialog';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Textarea } from '../../components/textarea';
+import { RadioGroup, RadioGroupItem } from '../../components/radio-group';
+import { useCreateWorkspace } from '@repo/api-client';
+import { toast } from 'sonner';
+import { cn } from '../../lib/utils';
+import { useRouter } from '../../hooks/use-universal-router';
 
 interface CreateWorkspaceDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const workspaceTemplates = [
-  { id: "blank", name: "Blank Workspace", description: "Start from scratch", icon: Building2 },
-  { id: "team", name: "Team Workspace", description: "For small to medium teams", icon: Users },
-  { id: "enterprise", name: "Enterprise", description: "For large organizations", icon: Globe },
-]
+  { id: 'blank', name: 'Blank Workspace', description: 'Start from scratch', icon: Building2 },
+  { id: 'team', name: 'Team Workspace', description: 'For small to medium teams', icon: Users },
+  { id: 'enterprise', name: 'Enterprise', description: 'For large organizations', icon: Globe },
+];
 
-const workspaceIcons = ["🏢", "🚀", "💼", "🎯", "⚡", "🔥", "💡", "🌟", "🎨", "📊", "🔧", "🌐"]
+const workspaceIcons = ['🏢', '🚀', '💼', '🎯', '⚡', '🔥', '💡', '🌟', '🎨', '📊', '🔧', '🌐'];
 
 export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDialogProps) {
-  const router = useRouter()
-  const [step, setStep] = React.useState(1)
-  const [name, setName] = React.useState("")
-  const [slug, setSlug] = React.useState("")
-  const [icon, setIcon] = React.useState("")
-  const [description, setDescription] = React.useState("")
-  const [template, setTemplate] = React.useState("blank")
-  const [visibility, setVisibility] = React.useState("private")
-  const createWorkspace = useCreateWorkspace()
+  const router = useRouter();
+  const [step, setStep] = React.useState(1);
+  const [name, setName] = React.useState('');
+  const [slug, setSlug] = React.useState('');
+  const [icon, setIcon] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [template, setTemplate] = React.useState('blank');
+  const [visibility, setVisibility] = React.useState('private');
+  const createWorkspace = useCreateWorkspace();
 
   const handleNameChange = (value: string) => {
-    setName(value)
-    if (!slug || slug === name.toLowerCase().replace(/\s+/g, "-")) {
+    setName(value);
+    if (!slug || slug === name.toLowerCase().replace(/\s+/g, '-')) {
       setSlug(
         value
           .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, ""),
-      )
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+      );
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const workspace = await createWorkspace.mutateAsync({ name, slug, icon, description })
-      toast.success("Workspace created successfully")
-      onOpenChange(false)
-      resetForm()
-      router.push(`/workspace/${workspace.slug}`)
+      const workspace = await createWorkspace.mutateAsync({ name, slug, icon, description });
+      toast.success('Workspace created successfully');
+      onOpenChange(false);
+      resetForm();
+      router.push(`/workspace/${workspace.slug}`);
     } catch (error) {
-      toast.error("Failed to create workspace")
+      toast.error('Failed to create workspace');
     }
-  }
+  };
 
   const resetForm = () => {
-    setStep(1)
-    setName("")
-    setSlug("")
-    setIcon("")
-    setDescription("")
-    setTemplate("blank")
-    setVisibility("private")
-  }
+    setStep(1);
+    setName('');
+    setSlug('');
+    setIcon('');
+    setDescription('');
+    setTemplate('blank');
+    setVisibility('private');
+  };
 
   const handleClose = (open: boolean) => {
-    if (!open) resetForm()
-    onOpenChange(open)
-  }
+    if (!open) resetForm();
+    onOpenChange(open);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -93,8 +93,8 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
             Create New Workspace
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && "Choose a template to get started quickly"}
-            {step === 2 && "Configure your workspace details"}
+            {step === 1 && 'Choose a template to get started quickly'}
+            {step === 2 && 'Configure your workspace details'}
           </DialogDescription>
         </DialogHeader>
 
@@ -105,18 +105,18 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
               <div className="space-y-3">
                 <Label>Choose Template</Label>
                 <div className="grid grid-cols-3 gap-3">
-                  {workspaceTemplates.map((t) => (
+                  {workspaceTemplates.map(t => (
                     <button
                       key={t.id}
                       type="button"
                       onClick={() => setTemplate(t.id)}
                       className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all hover:border-primary/50",
-                        template === t.id ? "border-primary bg-primary/5" : "border-muted",
+                        'p-4 rounded-lg border-2 text-left transition-all hover:border-primary/50',
+                        template === t.id ? 'border-primary bg-primary/5' : 'border-muted'
                       )}
                     >
                       <t.icon
-                        className={cn("h-8 w-8 mb-2", template === t.id ? "text-primary" : "text-muted-foreground")}
+                        className={cn('h-8 w-8 mb-2', template === t.id ? 'text-primary' : 'text-muted-foreground')}
                       />
                       <div className="font-medium text-sm">{t.name}</div>
                       <div className="text-xs text-muted-foreground">{t.description}</div>
@@ -132,12 +132,12 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                   <Label
                     htmlFor="private"
                     className={cn(
-                      "flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all",
-                      visibility === "private" ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50",
+                      'flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all',
+                      visibility === 'private' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'
                     )}
                   >
                     <RadioGroupItem value="private" id="private" />
-                    {React.createElement(Lock as any, { className: "h-5 w-5 text-muted-foreground" })}
+                    {React.createElement(Lock as any, { className: 'h-5 w-5 text-muted-foreground' })}
                     <div>
                       <div className="font-medium text-sm">Private</div>
                       <div className="text-xs text-muted-foreground">Only invited members</div>
@@ -146,8 +146,8 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                   <Label
                     htmlFor="public"
                     className={cn(
-                      "flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all",
-                      visibility === "public" ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50",
+                      'flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all',
+                      visibility === 'public' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'
                     )}
                   >
                     <RadioGroupItem value="public" id="public" />
@@ -169,18 +169,18 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                 <Label>Workspace Icon</Label>
                 <div className="flex items-center gap-4">
                   <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl shadow-lg">
-                    {icon || name?.charAt(0) || "W"}
+                    {icon || name?.charAt(0) || 'W'}
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-wrap gap-2">
-                      {workspaceIcons.map((emoji) => (
+                      {workspaceIcons.map(emoji => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={() => setIcon(emoji)}
                           className={cn(
-                            "h-9 w-9 rounded-lg flex items-center justify-center text-lg transition-all",
-                            icon === emoji ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80",
+                            'h-9 w-9 rounded-lg flex items-center justify-center text-lg transition-all',
+                            icon === emoji ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'
                           )}
                         >
                           {emoji}
@@ -197,7 +197,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
+                  onChange={e => handleNameChange(e.target.value)}
                   placeholder="My Organization"
                   required
                   className="h-11"
@@ -217,7 +217,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                   <Input
                     id="slug"
                     value={slug}
-                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                     placeholder="my-organization"
                     pattern="[a-z0-9-]+"
                     required
@@ -232,7 +232,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                 <Textarea
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Describe your workspace and what it's for..."
                   rows={3}
                 />
@@ -256,7 +256,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                   Back
                 </Button>
                 <Button type="submit" disabled={createWorkspace.isPending || !name || !slug}>
-                  {createWorkspace.isPending ? "Creating..." : "Create Workspace"}
+                  {createWorkspace.isPending ? 'Creating...' : 'Create Workspace'}
                 </Button>
               </>
             )}
@@ -264,5 +264,5 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

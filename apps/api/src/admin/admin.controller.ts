@@ -1,6 +1,15 @@
-import { 
-  Controller, Get, Post, Patch, Delete, Body, Query, Param, 
-  UseGuards, Req, BadRequestException
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
@@ -79,10 +88,7 @@ export class AdminController {
   @Get('assets/stats')
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Get asset statistics' })
-  async getAssetStats(
-    @Query('assetId') assetId: string,
-    @Query('assetType') assetType: string,
-  ) {
+  async getAssetStats(@Query('assetId') assetId: string, @Query('assetType') assetType: string) {
     if (!assetId || !assetType) {
       throw new BadRequestException('Asset ID and type are required');
     }

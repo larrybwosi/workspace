@@ -6,7 +6,10 @@ import Redis from 'ioredis';
 export class RedisIoAdapter extends IoAdapter {
   private adapterConstructor: ReturnType<typeof createAdapter>;
 
-  constructor(app: any, private readonly redisUrl: string) {
+  constructor(
+    app: any,
+    private readonly redisUrl: string
+  ) {
     super(app);
   }
 

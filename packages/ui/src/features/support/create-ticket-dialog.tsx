@@ -22,11 +22,7 @@ interface CreateTicketDialogProps {
   workspaceId: string;
 }
 
-export function CreateTicketDialog({
-  open,
-  onOpenChange,
-  workspaceId,
-}: CreateTicketDialogProps) {
+export function CreateTicketDialog({ open, onOpenChange, workspaceId }: CreateTicketDialogProps) {
   const [subject, setSubject] = React.useState('');
   const [message, setMessage] = React.useState('');
   const createTicketMutation = useCreateSupportTicket();
@@ -72,7 +68,7 @@ export function CreateTicketDialog({
                 id="subject"
                 placeholder="What do you need help with?"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                onChange={e => setSubject(e.target.value)}
                 required
               />
             </div>
@@ -82,17 +78,13 @@ export function CreateTicketDialog({
                 id="message"
                 placeholder="Provide more details about your request..."
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={e => setMessage(e.target.value)}
                 className="min-h-[100px]"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={createTicketMutation.isPending}>

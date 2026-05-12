@@ -1,11 +1,11 @@
-import { prisma } from "@/lib/db/prisma"
-import crypto from "crypto"
+import { prisma } from '@/lib/db/prisma';
+import crypto from 'crypto';
 
 export interface OAuth2TokenContext {
-  accessToken: string
-  userId: string
-  clientId: string
-  scopes: string[]
+  accessToken: string;
+  userId: string;
+  clientId: string;
+  scopes: string[];
 }
 
 /**
@@ -15,13 +15,13 @@ export async function validateOAuth2Token(accessToken: string): Promise<OAuth2To
   const token = await prisma.oAuthToken.findUnique({
     where: { accessToken },
     include: { user: true },
-  })
+  });
 
-  if (!token) return null
+  if (!token) return null;
 
   // Check if token has expired
   if (token.expiresAt < new Date()) {
-    return null
+    return null;
   }
 
   return {
@@ -29,19 +29,19 @@ export async function validateOAuth2Token(accessToken: string): Promise<OAuth2To
     userId: token.userId,
     clientId: token.clientId,
     scopes: token.scopes,
-  }
+  };
 }
 
 /**
  * Generate a cryptographically strong random string
  */
 export function generateRandomString(length: number = 32): string {
-  return crypto.randomBytes(length).toString("hex")
+  return crypto.randomBytes(length).toString('hex');
 }
 
 /**
  * Check if a set of scopes includes a required scope
  */
 export function hasScope(grantedScopes: string[], requiredScope: string): boolean {
-  return grantedScopes.includes(requiredScope) || grantedScopes.includes("*")
+  return grantedScopes.includes(requiredScope) || grantedScopes.includes('*');
 }

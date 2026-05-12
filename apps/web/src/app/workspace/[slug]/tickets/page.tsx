@@ -2,18 +2,18 @@
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { WorkspaceSidebar, TicketList, ChannelView, useBranding, TicketStatusBadge } from '@repo/ui';
-import { useWorkspace, useSupportTickets, useUpdateTicketStatus, useAssignTicket, useUsers, useWorkspaceMembers } from '@repo/api-client';
+import {
+  useWorkspace,
+  useSupportTickets,
+  useUpdateTicketStatus,
+  useAssignTicket,
+  useUsers,
+  useWorkspaceMembers,
+} from '@repo/api-client';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  CheckCircle2,
-  Clock,
-  UserPlus,
-  MoreVertical,
-  XCircle,
-  ChevronDown
-} from 'lucide-react';
+import { CheckCircle2, Clock, UserPlus, MoreVertical, XCircle, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,8 +36,8 @@ export default function TicketsPage() {
   const { data: members } = useWorkspaceMembers(slug);
   useBranding(workspaceData?.brandingConfig);
 
-  const activeAgents = useMemo(() =>
-    members?.filter((m: any) => ['owner', 'admin', 'moderator'].includes(m.role)),
+  const activeAgents = useMemo(
+    () => members?.filter((m: any) => ['owner', 'admin', 'moderator'].includes(m.role)),
     [members]
   );
 
@@ -47,10 +47,7 @@ export default function TicketsPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const activeTicket = useMemo(() =>
-    tickets?.find((t: any) => t.id === activeTicketId),
-    [tickets, activeTicketId]
-  );
+  const activeTicket = useMemo(() => tickets?.find((t: any) => t.id === activeTicketId), [tickets, activeTicketId]);
 
   const handleTicketSelect = (id: string) => {
     router.push(`/workspace/${slug}/tickets?id=${id}`);
@@ -58,18 +55,24 @@ export default function TicketsPage() {
 
   const handleStatusChange = (status: string) => {
     if (!activeTicketId) return;
-    updateStatusMutation.mutate({ ticketId: activeTicketId, status }, {
-      onSuccess: () => toast.success(`Ticket marked as ${status.toLowerCase()}`),
-      onError: () => toast.error('Failed to update ticket status'),
-    });
+    updateStatusMutation.mutate(
+      { ticketId: activeTicketId, status },
+      {
+        onSuccess: () => toast.success(`Ticket marked as ${status.toLowerCase()}`),
+        onError: () => toast.error('Failed to update ticket status'),
+      }
+    );
   };
 
   const handleAssign = (assigneeId: string | null) => {
     if (!activeTicketId) return;
-    assignTicketMutation.mutate({ ticketId: activeTicketId, assigneeId }, {
-      onSuccess: () => toast.success(assigneeId ? 'Ticket assigned' : 'Ticket unassigned'),
-      onError: () => toast.error('Failed to assign ticket'),
-    });
+    assignTicketMutation.mutate(
+      { ticketId: activeTicketId, assigneeId },
+      {
+        onSuccess: () => toast.success(assigneeId ? 'Ticket assigned' : 'Ticket unassigned'),
+        onError: () => toast.error('Failed to assign ticket'),
+      }
+    );
   };
 
   return (
@@ -81,11 +84,7 @@ export default function TicketsPage() {
       />
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <DynamicHeader
-          activeView="Support Tickets"
-          onMenuClick={() => setSidebarOpen(true)}
-          onSearchClick={() => {}}
-        />
+        <DynamicHeader activeView="Support Tickets" onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
 
         <div className="flex flex-1 overflow-hidden">
           {/* Ticket Sidebar */}
@@ -104,9 +103,7 @@ export default function TicketsPage() {
                 {/* Ticket Header/Toolbar */}
                 <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
                   <div className="flex items-center gap-4 min-w-0">
-                    <h2 className="font-bold text-lg truncate">
-                      {activeTicket.subject}
-                    </h2>
+                    <h2 className="font-bold text-lg truncate">{activeTicket.subject}</h2>
                     <TicketStatusBadge status={activeTicket.status} />
                   </div>
 
@@ -130,7 +127,10 @@ export default function TicketsPage() {
                           <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Resolve Ticket
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleStatusChange('CLOSED')} className="font-medium text-destructive">
+                        <DropdownMenuItem
+                          onClick={() => handleStatusChange('CLOSED')}
+                          className="font-medium text-destructive"
+                        >
                           <XCircle className="mr-2 h-4 w-4" /> Close Ticket
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -162,7 +162,10 @@ export default function TicketsPage() {
                         <DropdownMenuLabel>Assign Agent</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {/* Here you would ideally map through workspace agents */}
-                        <DropdownMenuItem onClick={() => handleAssign(null)} className="text-muted-foreground italic font-medium">
+                        <DropdownMenuItem
+                          onClick={() => handleAssign(null)}
+                          className="text-muted-foreground italic font-medium"
+                        >
                           Unassign
                         </DropdownMenuItem>
                         {activeAgents?.map((member: any) => (
@@ -195,10 +198,7 @@ export default function TicketsPage() {
 
                 {/* Ticket Chat View */}
                 <div className="flex-1 overflow-hidden">
-                  <ChannelView
-                    channelId={activeTicket.channelId}
-                    workspaceId={slug}
-                  />
+                  <ChannelView channelId={activeTicket.channelId} workspaceId={slug} />
                 </div>
               </>
             ) : (

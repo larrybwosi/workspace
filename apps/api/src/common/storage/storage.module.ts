@@ -7,11 +7,7 @@ import { StorageController } from './storage.controller';
 @Global()
 @Module({
   controllers: [StorageController],
-  providers: [
-    StorageService,
-    SanityStorageProvider,
-    MinioStorageProvider,
-  ],
+  providers: [StorageService, SanityStorageProvider, MinioStorageProvider],
   exports: [StorageService],
 })
 export class StorageModule {}

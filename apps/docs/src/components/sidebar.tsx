@@ -54,9 +54,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
           {Object.entries(groupedLinks).map(([category, items]) => (
             <div key={category} className="space-y-3">
               {!isUserGuide && (
-                <h5 className="px-3 text-[11px] font-bold text-foreground/70 uppercase tracking-widest">
-                  {category}
-                </h5>
+                <h5 className="px-3 text-[11px] font-bold text-foreground/70 uppercase tracking-widest">{category}</h5>
               )}
               <div className="flex flex-col space-y-0.5">
                 {items.map(link => {

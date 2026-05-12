@@ -7,12 +7,15 @@ Skyrme Chat supports hierarchical organization of workspace members through Depa
 Departments represent the high-level organizational units (e.g., "Engineering", "Marketing").
 
 ### List Departments
+
 **Endpoint:** `GET /v2/workspaces/:slug/departments`
 
 ### Create Department
+
 **Endpoint:** `POST /v2/workspaces/:slug/departments`
 
 **Body:**
+
 ```json
 {
   "name": "Engineering",
@@ -26,12 +29,15 @@ Departments represent the high-level organizational units (e.g., "Engineering", 
 Teams are specific groups within or across departments (e.g., "Frontend", "SRE").
 
 ### List Teams
+
 **Endpoint:** `GET /v2/workspaces/:slug/teams`
 
 ### Create Team
+
 **Endpoint:** `POST /v2/workspaces/:slug/teams`
 
 **Body:**
+
 ```json
 {
   "name": "Core Platform",

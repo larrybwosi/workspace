@@ -7,11 +7,11 @@ export function extractUserMentions(content: string): string[] {
 
   while ((match = mentionRegex.exec(content)) !== null) {
     const mention = match[1];
-    
-    // Remove trailing dot if it's likely punctuation at the end of a sentence
-    const cleanMention = mention.endsWith(".") ? mention.slice(0, -1) : mention;
 
-    if (cleanMention !== "all" && cleanMention !== "here") {
+    // Remove trailing dot if it's likely punctuation at the end of a sentence
+    const cleanMention = mention.endsWith('.') ? mention.slice(0, -1) : mention;
+
+    if (cleanMention !== 'all' && cleanMention !== 'here') {
       mentions.push(cleanMention);
     }
   }
@@ -32,8 +32,8 @@ export function extractChannelMentions(content: string): string[] {
   return channels;
 }
 
-export function hasSpecialMention(content: string, type: "all" | "here"): boolean {
-  const regex = new RegExp(`@${type}\\b`, "g");
+export function hasSpecialMention(content: string, type: 'all' | 'here'): boolean {
+  const regex = new RegExp(`@${type}\\b`, 'g');
   return regex.test(content);
 }
 
@@ -45,7 +45,7 @@ export function extractUserIds(mentions: string[], users: any[]): string[] {
 
   for (const user of users) {
     if (!user.id) continue;
-    
+
     if (user.username) {
       usernameMap.set(user.username.toLowerCase(), user.id);
     }
@@ -58,7 +58,7 @@ export function extractUserIds(mentions: string[], users: any[]): string[] {
   const userIds = new Set<string>();
   for (const mention of mentions) {
     const mentionLower = mention.toLowerCase();
-    
+
     // Prioritize matching by username, fall back to name for backward compatibility
     const userIdByUsername = usernameMap.get(mentionLower);
     if (userIdByUsername) {
@@ -79,14 +79,11 @@ export function highlightMentions(content: string): string {
   let highlighted = content;
 
   // Highlight @user, @all, @here
-  highlighted = highlighted.replace(
-    /@([\w.]+)/g,
-    (match, p1) => {
-      const isSpecial = p1 === "all" || p1 === "here";
-      const colorClass = isSpecial ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary";
-      return `<span class="${colorClass} font-medium px-1 rounded cursor-pointer mention-user" data-user="${p1}">@${p1}</span>`;
-    }
-  );
+  highlighted = highlighted.replace(/@([\w.]+)/g, (match, p1) => {
+    const isSpecial = p1 === 'all' || p1 === 'here';
+    const colorClass = isSpecial ? 'bg-amber-100 text-amber-700' : 'bg-primary/10 text-primary';
+    return `<span class="${colorClass} font-medium px-1 rounded cursor-pointer mention-user" data-user="${p1}">@${p1}</span>`;
+  });
 
   // Highlight #channel
   highlighted = highlighted.replace(

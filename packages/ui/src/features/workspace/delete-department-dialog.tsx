@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Button } from "../../components/button"
+} from '../../components/dialog';
+import { Button } from '../../components/button';
 
 interface Department {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface DeleteDeptDialogProps {
-  deleteDeptOpen: boolean
-  setDeleteDeptOpen: (open: boolean) => void
-  selectedDept: Department | null
-  handleDeleteDept: () => void
+  deleteDeptOpen: boolean;
+  setDeleteDeptOpen: (open: boolean) => void;
+  selectedDept: Department | null;
+  handleDeleteDept: () => void;
 }
 
 export function DeleteDepartmentDialog({
@@ -46,5 +46,5 @@ export function DeleteDepartmentDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,19 +1,15 @@
-"use client"
+'use client';
 
-import { useMemo, ReactNode } from "react"
-import AgoraRTC, { AgoraRTCProvider } from "agora-rtc-react"
+import { useMemo, ReactNode } from 'react';
+import AgoraRTC, { AgoraRTCProvider } from 'agora-rtc-react';
 
 export function AgoraClientProvider({ children }: { children: React.ReactNode }) {
   const client = useMemo(() => {
-    if (typeof window === 'undefined') return null
-    return AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
-  }, [])
+    if (typeof window === 'undefined') return null;
+    return AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+  }, []);
 
-  if (!client) return <>{children}</>
+  if (!client) return <>{children}</>;
 
-  return (
-    <AgoraRTCProvider client={client}>
-      {children}
-    </AgoraRTCProvider>
-  )
+  return <AgoraRTCProvider client={client}>{children}</AgoraRTCProvider>;
 }

@@ -41,10 +41,11 @@ export const useCallStore = create<CallState>(set => ({
   isMinimized: false,
   setCall: call => set({ activeCall: call, isIncoming: false, incomingCallData: null, isMinimized: false }),
   setIncoming: data => set({ isIncoming: true, incomingCallData: data }),
-  updateActiveCall: (updates) => set(state => ({
-    activeCall: state.activeCall ? { ...state.activeCall, ...updates } : null
-  })),
+  updateActiveCall: updates =>
+    set(state => ({
+      activeCall: state.activeCall ? { ...state.activeCall, ...updates } : null,
+    })),
   endCall: () => set({ activeCall: null, isMinimized: false }),
   rejectCall: () => set({ isIncoming: false, incomingCallData: null }),
-  setMinimized: (minimized) => set({ isMinimized: minimized }),
+  setMinimized: minimized => set({ isMinimized: minimized }),
 }));

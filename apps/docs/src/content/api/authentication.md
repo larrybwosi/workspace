@@ -10,12 +10,12 @@ To interact with the API, you first need to exchange your `client_id` and `clien
 
 ### Request Body
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `grant_type` | `string` | Must be `client_credentials`. |
-| `client_id` | `string` | Your application's client ID. |
-| `client_secret` | `string` | Your application's client secret. |
-| `scope` | `string` | (Optional) Space-separated list of scopes (e.g., `messages:send channels:read`). Defaults to `*` if not specified. |
+| Field           | Type     | Description                                                                                                        |
+| :-------------- | :------- | :----------------------------------------------------------------------------------------------------------------- |
+| `grant_type`    | `string` | Must be `client_credentials`.                                                                                      |
+| `client_id`     | `string` | Your application's client ID.                                                                                      |
+| `client_secret` | `string` | Your application's client secret.                                                                                  |
+| `scope`         | `string` | (Optional) Space-separated list of scopes (e.g., `messages:send channels:read`). Defaults to `*` if not specified. |
 
 ### Example Request
 
@@ -40,7 +40,7 @@ async function getAccessToken() {
     grant_type: 'client_credentials',
     client_id: 'your_client_id',
     client_secret: 'your_client_secret',
-    scope: 'messages:send channels:read'
+    scope: 'messages:send channels:read',
   });
 
   return response.data.access_token;

@@ -52,7 +52,6 @@ interface MessageItemProps {
   highlightRef?: React.RefObject<HTMLDivElement>;
 }
 
-
 // Discord uses a fixed left column of 72px (16px padding + 40px avatar + 16px gap)
 const AVATAR_COL_WIDTH = 'w-10'; // 40px
 const GAP = 'gap-3'; // 12px → total offset = 16 + 40 + 12 = 68px ≈ Discord's ~72px
@@ -80,7 +79,8 @@ export const MessageItem = memo(function MessageItem({
   const currentUser = session?.user;
   const { data: users } = useUsers();
 
-  const user = (message as any).user || users?.find((u: any) => u.id === message.userId) || { name: "Unknown", avatar: "" };
+  const user = (message as any).user ||
+    users?.find((u: any) => u.id === message.userId) || { name: 'Unknown', avatar: '' };
   const isMentioned = currentUser?.username && message.content.includes(`@${currentUser.username}`);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -138,7 +138,7 @@ export const MessageItem = memo(function MessageItem({
           <SyntaxHighlighter
             code={code}
             language={language as string}
-            fileName={((message.metadata?.fileName as string) || "") as any}
+            fileName={((message.metadata?.fileName as string) || '') as any}
           />
         </div>
       );

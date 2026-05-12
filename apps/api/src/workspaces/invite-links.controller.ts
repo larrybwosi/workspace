@@ -1,22 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, UseGuards, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -95,11 +78,7 @@ export class InviteLinksController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateInviteLinkDto })
   @ApiResponse({ status: 201, description: 'Invite link created' })
-  async createInviteLink(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: CreateInviteLinkDto,
-  ) {
+  async createInviteLink(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateInviteLinkDto) {
     /**
      * ⚡ Performance Optimization:
      * 1. Consolidates workspace lookup and membership verification into a single query.

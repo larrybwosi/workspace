@@ -1,36 +1,28 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/dialog"
-import { ScrollArea } from "../../components/scroll-area"
-import { Badge } from "../../components/badge"
-import { useWebhookLogs } from "@repo/api-client"
-import { format } from "date-fns"
-import { CheckCircle2, XCircle, Clock } from 'lucide-react'
+import * as React from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/dialog';
+import { ScrollArea } from '../../components/scroll-area';
+import { Badge } from '../../components/badge';
+import { useWebhookLogs } from '@repo/api-client';
+import { format } from 'date-fns';
+import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 
 interface WebhookLogsDialogProps {
-  webhookId: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  webhookId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function WebhookLogsDialog({ webhookId, open, onOpenChange }: WebhookLogsDialogProps) {
-  const { data: logs, isLoading } = useWebhookLogs(webhookId)
+  const { data: logs, isLoading } = useWebhookLogs(webhookId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>Webhook Delivery Logs</DialogTitle>
-          <DialogDescription>
-            Recent webhook deliveries and their responses
-          </DialogDescription>
+          <DialogDescription>Recent webhook deliveries and their responses</DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[60vh]">
           {isLoading ? (
@@ -43,10 +35,7 @@ export function WebhookLogsDialog({ webhookId, open, onOpenChange }: WebhookLogs
           ) : (
             <div className="space-y-4 p-4">
               {logs?.map((log: any) => (
-                <div
-                  key={log.id}
-                  className="border rounded-lg p-4 space-y-3"
-                >
+                <div key={log.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {log.success ? (
@@ -57,29 +46,23 @@ export function WebhookLogsDialog({ webhookId, open, onOpenChange }: WebhookLogs
                       <span className="font-semibold">{log.event}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")}
+                      {format(new Date(log.createdAt), 'MMM d, yyyy HH:mm:ss')}
                     </span>
                   </div>
 
                   {log.statusCode && (
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">Status:</span>
-                      <Badge variant={log.success ? "default" : "destructive"}>
-                        {log.statusCode}
-                      </Badge>
+                      <Badge variant={log.success ? 'default' : 'destructive'}>{log.statusCode}</Badge>
                     </div>
                   )}
 
                   {log.error && (
-                    <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950/20 p-2 rounded">
-                      {log.error}
-                    </div>
+                    <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950/20 p-2 rounded">{log.error}</div>
                   )}
 
                   <details className="text-sm">
-                    <summary className="cursor-pointer text-muted-foreground">
-                      View Payload
-                    </summary>
+                    <summary className="cursor-pointer text-muted-foreground">View Payload</summary>
                     <pre className="mt-2 bg-muted p-2 rounded overflow-x-auto text-xs">
                       {JSON.stringify(log.payload, null, 2)}
                     </pre>
@@ -91,5 +74,5 @@ export function WebhookLogsDialog({ webhookId, open, onOpenChange }: WebhookLogs
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

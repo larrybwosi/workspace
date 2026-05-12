@@ -1,38 +1,38 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Check } from "lucide-react"
-import { Avatar, AvatarFallback } from "../../components/avatar"
-import { Button } from "../../components/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../../components/command"
-import { Popover, PopoverContent, PopoverTrigger } from "../../components/popover"
-import { Badge } from "../../components/badge"
-import { cn } from "../../lib/utils"
-import { useWorkspaceMembers } from "@repo/api-client"
-import { Skeleton } from "../../components/skeleton"
+import * as React from 'react';
+import { Check } from 'lucide-react';
+import { Avatar, AvatarFallback } from '../../components/avatar';
+import { Button } from '../../components/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/command';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/popover';
+import { Badge } from '../../components/badge';
+import { cn } from '../../lib/utils';
+import { useWorkspaceMembers } from '@repo/api-client';
+import { Skeleton } from '../../components/skeleton';
 
 interface MemberSelectorProps {
-  workspaceSlug: string
-  selectedMembers: string[]
-  onChange: (members: string[]) => void
+  workspaceSlug: string;
+  selectedMembers: string[];
+  onChange: (members: string[]) => void;
 }
 
 export function MemberSelector({ workspaceSlug, selectedMembers, onChange }: MemberSelectorProps) {
-  const [open, setOpen] = React.useState(false)
-  const { data: members, isLoading } = useWorkspaceMembers(workspaceSlug)
+  const [open, setOpen] = React.useState(false);
+  const { data: members, isLoading } = useWorkspaceMembers(workspaceSlug);
 
   const toggleMember = (userId: string) => {
     if (selectedMembers.includes(userId)) {
-      onChange(selectedMembers.filter((id) => id !== userId))
+      onChange(selectedMembers.filter(id => id !== userId));
     } else {
-      onChange([...selectedMembers, userId])
+      onChange([...selectedMembers, userId]);
     }
-  }
+  };
 
   const selectedUsers = React.useMemo(() => {
-    if (!members) return []
-    return members.filter((member: any) => selectedMembers.includes(member.user.id))
-  }, [members, selectedMembers])
+    if (!members) return [];
+    return members.filter((member: any) => selectedMembers.includes(member.user.id));
+  }, [members, selectedMembers]);
 
   return (
     <div className="space-y-2">
@@ -60,7 +60,7 @@ export function MemberSelector({ workspaceSlug, selectedMembers, onChange }: Mem
                   </div>
                 ) : (
                   members?.map((member: any) => {
-                    const isSelected = selectedMembers.includes(member.user.id)
+                    const isSelected = selectedMembers.includes(member.user.id);
                     return (
                       <CommandItem
                         key={member.user.id}
@@ -78,9 +78,9 @@ export function MemberSelector({ workspaceSlug, selectedMembers, onChange }: Mem
                             <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
                           </div>
                         </div>
-                        <Check className={cn("h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+                        <Check className={cn('h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')} />
                       </CommandItem>
-                    )
+                    );
                   })
                 )}
               </CommandGroup>
@@ -105,5 +105,5 @@ export function MemberSelector({ workspaceSlug, selectedMembers, onChange }: Mem
         </div>
       )}
     </div>
-  )
+  );
 }

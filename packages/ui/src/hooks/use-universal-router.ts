@@ -20,17 +20,20 @@ export function useUniversalRouter() {
     // Not in a React Router context
   }
 
-  return useMemo(() => ({
-    router: {
-      push: (url: string) => navigate?.(url),
-      replace: (url: string) => navigate?.(url, { replace: true }),
-      back: () => navigate?.(-1),
-      forward: () => navigate?.(1),
-    },
-    params,
-    pathname: location.pathname,
-    searchParams: searchParams,
-  }), [navigate, location, params, searchParams]);
+  return useMemo(
+    () => ({
+      router: {
+        push: (url: string) => navigate?.(url),
+        replace: (url: string) => navigate?.(url, { replace: true }),
+        back: () => navigate?.(-1),
+        forward: () => navigate?.(1),
+      },
+      params,
+      pathname: location.pathname,
+      searchParams: searchParams,
+    }),
+    [navigate, location, params, searchParams]
+  );
 }
 
 export function useRouter() {
@@ -39,12 +42,15 @@ export function useRouter() {
     navigate = useNavigate();
   } catch (e) {}
 
-  return useMemo(() => ({
-    push: (url: string) => navigate?.(url),
-    replace: (url: string) => navigate?.(url, { replace: true }),
-    back: () => navigate?.(-1),
-    forward: () => navigate?.(1),
-  }), [navigate]);
+  return useMemo(
+    () => ({
+      push: (url: string) => navigate?.(url),
+      replace: (url: string) => navigate?.(url, { replace: true }),
+      back: () => navigate?.(-1),
+      forward: () => navigate?.(1),
+    }),
+    [navigate]
+  );
 }
 
 export const useParams = () => {

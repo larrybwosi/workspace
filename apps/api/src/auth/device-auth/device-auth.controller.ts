@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Body, UseGuards, Param, Inject, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Param,
+  Inject,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth.guard';
 import { CurrentUser } from '../current-user.decorator';
 import { nanoid } from 'nanoid';
@@ -8,9 +18,7 @@ import { publishToAbly } from '@repo/shared/server';
 
 @Controller('auth/device')
 export class DeviceAuthController {
-  constructor(
-    @Inject('REDIS_CLIENT') private readonly redis: Redis,
-  ) {}
+  constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
 
   @Post('qr/generate')
   async generateQR() {
@@ -44,29 +52,29 @@ export class DeviceAuthController {
     // Create a new session for the user via Better-Auth
     // We use the auth.api.createSession which is part of Better-Auth's internal API
     const newSession = await auth.api.createSession({
-        body: {
-            userId: user.id,
-        }
+      body: {
+        userId: user.id,
+      },
     });
 
     if (!newSession) {
-        throw new UnauthorizedException('Could not create session');
+      throw new UnauthorizedException('Could not create session');
     }
 
     const payload = {
       status: 'authorized',
       userId: user.id,
       token: newSession.token,
-      session: newSession
+      session: newSession,
     };
 
     await this.redis.set(key, JSON.stringify(payload), 'EX', 120);
 
     // Notify desktop client via Ably for instant update
     try {
-        await publishToAbly(`qr-session:${body.sessionId}`, 'authorized', payload);
+      await publishToAbly(`qr-session:${body.sessionId}`, 'authorized', payload);
     } catch (e) {
-        console.error('Failed to publish Ably notification for QR auth', e);
+      console.error('Failed to publish Ably notification for QR auth', e);
     }
 
     return { success: true };

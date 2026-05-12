@@ -72,9 +72,7 @@ export class MinioStorageProvider implements StorageProvider {
         const metadata = await sharpInstance.metadata();
         dimensions = { width: metadata.width, height: metadata.height };
 
-        buffer = await sharpInstance
-          .webp({ quality: 80 })
-          .toBuffer();
+        buffer = await sharpInstance.webp({ quality: 80 }).toBuffer();
 
         mimetype = 'image/webp';
         if (!originalname.toLocaleLowerCase().endsWith('.webp')) {
@@ -85,13 +83,7 @@ export class MinioStorageProvider implements StorageProvider {
       const fileExtension = originalname.split('.').pop();
       const fileName = `${randomUUID()}.${fileExtension}`;
 
-      await this.minioClient.putObject(
-        this.bucketName,
-        fileName,
-        buffer,
-        buffer.length,
-        { 'Content-Type': mimetype }
-      );
+      await this.minioClient.putObject(this.bucketName, fileName, buffer, buffer.length, { 'Content-Type': mimetype });
 
       // Generate a signed URL (valid for 7 days - maximum allowed by Minio/S3)
       const url = await this.minioClient.presignedGetObject(this.bucketName, fileName, 7 * 24 * 60 * 60);

@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Body,
-  Param,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -24,20 +15,12 @@ export class SupportController {
   @Post('tickets')
   @ApiOperation({ summary: 'Create a support ticket' })
   async createTicket(@CurrentUser() user: User, @Body() body: any) {
-    return this.supportService.createTicket(
-      body.workspaceId,
-      user.id,
-      body.subject,
-      body.initialMessage
-    );
+    return this.supportService.createTicket(body.workspaceId, user.id, body.subject, body.initialMessage);
   }
 
   @Get('tickets')
   @ApiOperation({ summary: 'Get support tickets' })
-  async getTickets(
-    @CurrentUser() user: User,
-    @Query('workspaceId') workspaceId: string
-  ) {
+  async getTickets(@CurrentUser() user: User, @Query('workspaceId') workspaceId: string) {
     return this.supportService.getTickets(workspaceId, user.id);
   }
 
@@ -55,19 +38,13 @@ export class SupportController {
 
   @Patch('tickets/:ticketId/status')
   @ApiOperation({ summary: 'Update ticket status' })
-  async updateTicketStatus(
-    @Param('ticketId') ticketId: string,
-    @Body('status') status: string
-  ) {
+  async updateTicketStatus(@Param('ticketId') ticketId: string, @Body('status') status: string) {
     return this.supportService.updateTicketStatus(ticketId, status);
   }
 
   @Patch('tickets/:ticketId/assign')
   @ApiOperation({ summary: 'Assign ticket to an agent' })
-  async assignTicket(
-    @Param('ticketId') ticketId: string,
-    @Body('assigneeId') assigneeId: string | null
-  ) {
+  async assignTicket(@Param('ticketId') ticketId: string, @Body('assigneeId') assigneeId: string | null) {
     return this.supportService.assignTicket(ticketId, assigneeId);
   }
 

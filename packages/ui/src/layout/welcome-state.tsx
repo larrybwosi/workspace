@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, CardContent } from "../components/card";
-import { MessageSquare, Users, Sparkles } from "lucide-react";
+import { Card, CardContent } from '../components/card';
+import { MessageSquare, Users, Sparkles } from 'lucide-react';
 
 export function WelcomeState() {
   return (

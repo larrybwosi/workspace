@@ -1,6 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Sidebar } from '@/components/sidebar';
-import { Badge, Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger, SyntaxHighlighter, Button, cn } from '@repo/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  SyntaxHighlighter,
+  Button,
+  cn,
+} from '@repo/ui';
 import { ChevronRight, Globe, Lock, Shield, Copy, Check, Terminal } from 'lucide-react';
 import openapi from '../content/openapi.json';
 
@@ -40,11 +53,16 @@ export default function ApiReferencePage() {
 
   const getBadgeColor = (method: string) => {
     switch (method.toUpperCase()) {
-      case 'GET': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'POST': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'PATCH': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'DELETE': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+      case 'GET':
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'POST':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'PATCH':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'DELETE':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      default:
+        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
     }
   };
 
@@ -64,13 +82,19 @@ export default function ApiReferencePage() {
               <div className="flex items-center gap-2">
                 <code className="text-primary font-bold">{name}</code>
                 <span className="text-xs text-muted-foreground">{prop.type || 'any'}</span>
-                {schema.required?.includes(name) && <Badge variant="outline" className="text-[10px] h-4 px-1 text-red-500 border-red-500/20 bg-red-500/5">Required</Badge>}
+                {schema.required?.includes(name) && (
+                  <Badge variant="outline" className="text-[10px] h-4 px-1 text-red-500 border-red-500/20 bg-red-500/5">
+                    Required
+                  </Badge>
+                )}
               </div>
               {prop.description && <p className="text-sm text-muted-foreground">{prop.description}</p>}
               {prop.enum && (
                 <div className="flex flex-wrap gap-1 mt-1">
                   {prop.enum.map((val: string) => (
-                    <code key={val} className="text-[10px] bg-muted px-1 rounded">{val}</code>
+                    <code key={val} className="text-[10px] bg-muted px-1 rounded">
+                      {val}
+                    </code>
                   ))}
                 </div>
               )}
@@ -114,7 +138,7 @@ export default function ApiReferencePage() {
                   <p className="text-muted-foreground mb-6">{tag.description}</p>
 
                   <div className="space-y-6">
-                    {Object.entries(spec.paths).map(([path, methods]: [string, any]) => (
+                    {Object.entries(spec.paths).map(([path, methods]: [string, any]) =>
                       Object.entries(methods).map(([method, operation]: [string, any]) => {
                         if (!operation.tags?.includes(tag.name)) return null;
 
@@ -135,7 +159,9 @@ export default function ApiReferencePage() {
                                 </div>
                               </div>
                               <CardTitle className="text-lg mt-2">{operation.summary}</CardTitle>
-                              {operation.description && <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>}
+                              {operation.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>
+                              )}
                             </CardHeader>
                             <CardContent className="py-6">
                               <Tabs defaultValue="params">
@@ -155,13 +181,27 @@ export default function ApiReferencePage() {
                                   {operation.parameters?.length > 0 ? (
                                     <div className="space-y-4">
                                       {operation.parameters.map((param: any) => (
-                                        <div key={param.name} className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0">
+                                        <div
+                                          key={param.name}
+                                          className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0"
+                                        >
                                           <div className="flex items-center gap-2">
                                             <code className="text-primary font-bold">{param.name}</code>
-                                            <Badge variant="ghost" className="text-[10px] uppercase">{param.in}</Badge>
-                                            {param.required && <Badge variant="outline" className="text-[10px] h-4 px-1 text-red-500 border-red-500/20">Required</Badge>}
+                                            <Badge variant="ghost" className="text-[10px] uppercase">
+                                              {param.in}
+                                            </Badge>
+                                            {param.required && (
+                                              <Badge
+                                                variant="outline"
+                                                className="text-[10px] h-4 px-1 text-red-500 border-red-500/20"
+                                              >
+                                                Required
+                                              </Badge>
+                                            )}
                                           </div>
-                                          {param.description && <p className="text-sm text-muted-foreground">{param.description}</p>}
+                                          {param.description && (
+                                            <p className="text-sm text-muted-foreground">{param.description}</p>
+                                          )}
                                         </div>
                                       ))}
                                     </div>
@@ -173,8 +213,13 @@ export default function ApiReferencePage() {
                                 <TabsContent value="request">
                                   {operation.requestBody ? (
                                     <div className="space-y-4">
-                                      <div className="text-sm font-medium">Content Type: <code>application/json</code></div>
-                                      {renderSchema(operation.requestBody.content['application/json']?.schema || operation.requestBody.content['multipart/form-data']?.schema)}
+                                      <div className="text-sm font-medium">
+                                        Content Type: <code>application/json</code>
+                                      </div>
+                                      {renderSchema(
+                                        operation.requestBody.content['application/json']?.schema ||
+                                          operation.requestBody.content['multipart/form-data']?.schema
+                                      )}
                                     </div>
                                   ) : (
                                     <p className="text-sm text-muted-foreground italic">No request body</p>
@@ -186,13 +231,24 @@ export default function ApiReferencePage() {
                                     {Object.entries(operation.responses).map(([code, response]: [string, any]) => (
                                       <div key={code} className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                          <Badge variant={code.startsWith('2') ? 'outline' : 'destructive'} className="text-[10px]">{code}</Badge>
+                                          <Badge
+                                            variant={code.startsWith('2') ? 'outline' : 'destructive'}
+                                            className="text-[10px]"
+                                          >
+                                            {code}
+                                          </Badge>
                                           <span className="text-sm font-medium">{response.description}</span>
                                         </div>
                                         {response.content?.['application/json'] && (
                                           <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto relative group">
                                             <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                               <CopyButton value={JSON.stringify(response.content['application/json'].schema, null, 2)} />
+                                              <CopyButton
+                                                value={JSON.stringify(
+                                                  response.content['application/json'].schema,
+                                                  null,
+                                                  2
+                                                )}
+                                              />
                                             </div>
                                             <pre className="text-xs text-muted-foreground">
                                               {JSON.stringify(response.content['application/json'].schema, null, 2)}
@@ -217,7 +273,7 @@ export default function ApiReferencePage() {
                           </Card>
                         );
                       })
-                    ))}
+                    )}
                   </div>
                 </section>
               ))}

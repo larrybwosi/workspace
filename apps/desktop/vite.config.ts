@@ -1,18 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@repo/ui": path.resolve(__dirname, "../../packages/ui/src"),
-      "@repo/shared": path.resolve(__dirname, "../../packages/shared/index.ts"),
-      "next/navigation": path.resolve(__dirname, "./src/hooks/use-router-shim.ts"),
-      "next/dynamic": path.resolve(__dirname, "./src/hooks/use-dynamic-shim.tsx"),
+      '@': path.resolve(__dirname, './src'),
+      '@repo/ui': path.resolve(__dirname, '../../packages/ui/src'),
+      '@repo/shared': path.resolve(__dirname, '../../packages/shared/index.ts'),
+      'next/navigation': path.resolve(__dirname, './src/hooks/use-router-shim.ts'),
+      'next/dynamic': path.resolve(__dirname, './src/hooks/use-dynamic-shim.tsx'),
     },
   },
   clearScreen: false,
@@ -25,4 +25,4 @@ export default defineConfig({
   define: {
     'process.env': {},
   },
-})
+});

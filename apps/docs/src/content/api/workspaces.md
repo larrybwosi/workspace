@@ -14,11 +14,13 @@ Most workspace-related endpoints are prefixed with the workspace slug:
 Manage the users who have access to your Skyrme Chat workspace.
 
 ### List Members
+
 Returns a list of all members in the workspace, including their profile details and status.
 
 **Endpoint:** `GET /v2/workspaces/:slug/members`
 
 **Response:**
+
 ```json
 {
   "members": [
@@ -43,11 +45,13 @@ Returns a list of all members in the workspace, including their profile details 
 ---
 
 ### Add Member
+
 Adds an existing Skyrme Chat user to the workspace.
 
 **Endpoint:** `POST /v2/workspaces/:slug/members`
 
 **Body:**
+
 ```json
 {
   "email": "newuser@example.com",
@@ -58,6 +62,7 @@ Adds an existing Skyrme Chat user to the workspace.
 ---
 
 ### Get Member Details
+
 Retrieve detailed information about a specific workspace member.
 
 **Endpoint:** `GET /v2/workspaces/:slug/members/:userId`
@@ -65,6 +70,7 @@ Retrieve detailed information about a specific workspace member.
 ---
 
 ### Remove Member
+
 Removes a user from the workspace. Note: The workspace owner cannot be removed.
 
 **Endpoint:** `DELETE /v2/workspaces/:slug/members/:userId`
@@ -76,7 +82,9 @@ Removes a user from the workspace. Note: The workspace owner cannot be removed.
 Skyrme Chat workspaces can be further organized into **Departments** and **Teams** to reflect your company's structure.
 
 ### List Departments
+
 `GET /v2/workspaces/:slug/departments`
 
 ### List Teams
+
 `GET /v2/workspaces/:slug/teams`

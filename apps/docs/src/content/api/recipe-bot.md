@@ -7,9 +7,11 @@ Building a bot for Skyrme Chat is simple and powerful. You can choose between us
 The V2 API is designed specifically for Skyrme Chat features like Workspaces, Teams, and Departments.
 
 ### 1. Create a Bot Application
+
 Go to your **Workspace Settings > Developer Portal** and create a new application. Copy your **Client ID** and **Client Secret**.
 
 ### 2. Authenticate
+
 Use the `client_credentials` flow to get an access token.
 
 ```bash
@@ -18,12 +20,14 @@ curl -X POST https://api.skyrme.chat/v2/oauth/token \
 ```
 
 ### 3. Handle Events
+
 You have two options for receiving real-time events:
 
 - **Webhooks**: Provide a URL and we'll POST events to it. Best for serverless or PHP/Ruby/Python backends.
 - **Ably (WebSockets)**: Connect to our Ably integration for a persistent socket connection. Best for Node.js or high-frequency interactions.
 
 ### 4. Respond to Messages
+
 Use the messages endpoint to send replies.
 
 ```bash

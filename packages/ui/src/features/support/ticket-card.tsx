@@ -29,10 +29,12 @@ export function TicketCard({ ticket, isActive, onClick }: TicketCardProps) {
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <h4 className={cn(
-            'text-sm font-bold truncate group-hover:text-primary transition-colors',
-            isActive ? 'text-primary' : 'text-foreground'
-          )}>
+          <h4
+            className={cn(
+              'text-sm font-bold truncate group-hover:text-primary transition-colors',
+              isActive ? 'text-primary' : 'text-foreground'
+            )}
+          >
             {ticket.subject}
           </h4>
         </div>
@@ -69,16 +71,12 @@ export function TicketCard({ ticket, isActive, onClick }: TicketCardProps) {
                   {assignee.name?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-[10px] font-bold text-muted-foreground">
-                {assignee.name.split(' ')[0]}
-              </span>
+              <span className="text-[10px] font-bold text-muted-foreground">{assignee.name.split(' ')[0]}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-yellow-500/5 border border-yellow-500/10">
               <User className="h-3 w-3 text-yellow-500/60" />
-              <span className="text-[10px] font-bold text-yellow-500/60 uppercase tracking-tighter">
-                Unassigned
-              </span>
+              <span className="text-[10px] font-bold text-yellow-500/60 uppercase tracking-tighter">Unassigned</span>
             </div>
           )}
         </div>
