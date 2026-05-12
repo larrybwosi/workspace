@@ -13,6 +13,7 @@ import { CallControls } from '../../components/calls/CallControls';
 import { MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { AGORA_APP_ID } from '../../lib/agora';
+import { getBaseURL } from '../../lib/env';
 
 export default function CallScreen() {
   const { id: callIdParam, type, workspaceId, workspaceSlug, recipientId, channelId } = useLocalSearchParams<{
@@ -38,7 +39,7 @@ export default function CallScreen() {
   useEffect(() => {
     const init = async () => {
       try {
-        const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseURL = getBaseURL();
         const body: any = {
           type: type || 'voice',
           workspaceId,
@@ -122,7 +123,7 @@ export default function CallScreen() {
     endCall();
     router.back();
 
-    const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseURL = getBaseURL();
     if (currentCallId) {
       try {
         await axios.patch(`${baseURL}/api/calls/${currentCallId}`, { action: 'leave' });

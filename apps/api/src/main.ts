@@ -1,3 +1,5 @@
+import "class-validator";
+import "class-transformer";
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
