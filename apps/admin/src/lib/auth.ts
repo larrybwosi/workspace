@@ -23,7 +23,7 @@ const getBaseURL = () => {
   return url.replace(/\/$/, '') + '/api/auth';
 };
 
-export const authClient = createAuthClient({
+const authClient = createAuthClient({
   baseURL: getBaseURL(),
 });
 
