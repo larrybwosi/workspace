@@ -82,7 +82,7 @@ export function SearchView({ onClose }: SearchViewProps) {
             <Input
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search in Dealio..."
+              placeholder="Search in Scrymechat..."
               className="pl-9 pr-9"
               autoFocus
             />

@@ -54,6 +54,7 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/publ
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/packages/database/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/packages/database/prisma.config.ts ./
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
 
 RUN chmod +x ./docker-entrypoint.sh
