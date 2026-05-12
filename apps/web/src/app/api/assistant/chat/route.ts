@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         const result = await streamText({
             model: google("gemini-3-flash-preview"),
             messages,
-            system: `You are Dealio AI, a helpful assistant integrated into the Dealio messaging platform.
+            system: `You are Scrymechat AI, a helpful assistant integrated into the Scrymechat messaging platform.
       You help users manage their workspaces, channels, and messages.
       Current user: ${session.user.name}.
       Keep responses professional, concise, and focused on helping the user within the platform context.`,

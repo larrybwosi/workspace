@@ -5,7 +5,7 @@ test('has title', async ({ page }) => {
 
   // Expect a title "to contain" a substring.
   // Replace with an actual title expected from your app
-  // await expect(page).toHaveTitle(/Dealio/);
+  // await expect(page).toHaveTitle(/Scrymechat/);
 });
 
 test('login page loads', async ({ page }) => {

@@ -105,7 +105,7 @@ export class InvitationsService {
         userId: invitedUser.id,
         type: data.workspaceId ? 'workspace_invitation' : 'platform_invitation',
         title: 'Invitation Received',
-        message: `${user.name} invited you to join ${invitation.workspace?.name || 'Dealio'}`,
+        message: `${user.name} invited you to join ${invitation.workspace?.name || 'Scrymechat'}`,
         entityType: 'invitation',
         entityId: invitation.id,
         metadata: {

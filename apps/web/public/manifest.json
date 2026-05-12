@@ -1,6 +1,6 @@
 {
-  "name": "Dealio",
-  "short_name": "Dealio",
+  "name": "Scrymechat",
+  "short_name": "Scrymechat",
   "description": "Messaging and Team Chat Application",
   "start_url": "/",
   "display": "standalone",
