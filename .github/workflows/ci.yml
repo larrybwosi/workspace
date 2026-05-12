@@ -269,6 +269,8 @@ jobs:
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
+      - name: Update Version
+        run: node scripts/update-version.js
       - name: Verify Compilation
         uses: tauri-apps/tauri-action@v0
         env:
