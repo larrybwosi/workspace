@@ -36,8 +36,8 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:0.0.1.332",
-    "@repo/typescript-config": "workspace:0.0.1.332",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@tauri-apps/cli": "^2.1.0",
     "@types/node": "^22.19.15",
