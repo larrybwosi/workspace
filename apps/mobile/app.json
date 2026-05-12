@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.scrymechat.com",
-      "versionCode": 327
+      "versionCode": 999
     },
     "web": {
       "favicon": "./assets/favicon.png",
