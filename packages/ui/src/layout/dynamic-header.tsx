@@ -62,7 +62,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
       )
     }
 
-    return <span className="font-semibold">Dealio</span>
+    return <span className="font-semibold">Scrymechat</span>
   }
 
   const channel = activeView && !activeView.startsWith("dm-")

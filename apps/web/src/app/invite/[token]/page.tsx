@@ -82,9 +82,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const inviterName = invitation.inviter?.name || "A team member";
 
   if (type === "platform_invitation") {
-    return { title: `Invitation to join Dealio`, description: `${inviterName} has invited you to join Dealio.` };
+    return { title: `Invitation to join Scrymechat`, description: `${inviterName} has invited you to join Scrymechat.` };
   } else {
-    return { title: `Join ${invitation.workspace?.name} on Dealio`, description: `${inviterName} has invited you to join ${invitation.workspace?.name} on Dealio.` };
+    return { title: `Join ${invitation.workspace?.name} on Scrymechat`, description: `${inviterName} has invited you to join ${invitation.workspace?.name} on Scrymechat.` };
   }
 }
 

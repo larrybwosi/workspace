@@ -72,9 +72,9 @@ export default function InviteClient({ token, initialInviteData }: InviteClientP
                     <CardTitle className="text-2xl">You've been invited!</CardTitle>
                     <CardDescription>
                         {type === "platform_invitation" ? (
-                            <span><span className="font-bold text-foreground">{inviterName}</span> invited you to join Dealio</span>
+                            <span><span className="font-bold text-foreground">{inviterName}</span> invited you to join Scrymechat</span>
                         ) : (
-                            <span>Join <span className="font-bold text-foreground">{invitation.workspace?.name}</span> on Dealio</span>
+                            <span>Join <span className="font-bold text-foreground">{invitation.workspace?.name}</span> on Scrymechat</span>
                         )}
                     </CardDescription>
                 </CardHeader>
