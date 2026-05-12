@@ -32,7 +32,7 @@
       "icons/icon.ico"
     ],
     "publisher": "Scrymechat",
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   },
   "plugins": {
     "shell": {
@@ -41,7 +41,7 @@
     "notification": {},
     "deep-link": {
       "schemes": [
-        "workspace"
+        "scrymechat"
       ]
     },
     "sql": {
