@@ -1,8 +1,30 @@
 import { createAuthClient } from 'better-auth/react';
 
+// Helper to safely access env variables across Vite, Next.js and React Native
+const getEnv = (name: string) => {
+  const g = globalThis as any;
+  const env = g.process?.env || g.import?.meta?.env || g.__env__;
+  if (!env) return undefined;
+  return (
+    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`]
+  );
+};
+
+const getBaseURL = () => {
+  const url =
+    getEnv('API_URL') ||
+    getEnv('NEXT_PUBLIC_API_URL') ||
+    getEnv('VITE_API_URL') ||
+    getEnv('EXPO_PUBLIC_API_URL') ||
+    'http://localhost:3000';
+  if (url.includes('/api/auth')) {
+    return url;
+  }
+  return url.replace(/\/$/, '') + '/api/auth';
+};
+
 export const authClient = createAuthClient({
-  // baseURL: import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
-  baseURL: 'http://localhost:3000',
+  baseURL: getBaseURL(),
 });
 
 export const { signIn, signOut, signUp, useSession } = authClient;
