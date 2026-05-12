@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: dealio-workspace-postgres
+    container_name: scrymechat-workspace-postgres
     restart: always
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -17,11 +17,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dealio-network
+      - scrymechat-network
 
   redis:
     image: redis:7-alpine # Switched to alpine for consistency/size
-    container_name: dealio-workspace-redis
+    container_name: scrymechat-workspace-redis
     restart: always
     ports:
       - '6379:6379'
@@ -33,12 +33,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dealio-network
+      - scrymechat-network
 
 volumes:
   db_data:
   redis_data:
 
 networks:
-  dealio-network:
+  scrymechat-network:
     driver: bridge
