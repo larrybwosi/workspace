@@ -21,11 +21,7 @@ export class V10ChannelsController {
   @Post(':id/messages')
   @ApiOperation({ summary: 'Send a message to a channel' })
   @ApiParam({ name: 'id', description: 'The channel ID' })
-  async createMessage(
-    @CurrentBot() bot: any,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async createMessage(@CurrentBot() bot: any, @Param('id') id: string, @Body() body: any) {
     return this.channelsService.createMessage(bot, id, body);
   }
 
@@ -39,7 +35,7 @@ export class V10ChannelsController {
     @Param('id') id: string,
     @Query('limit') limit?: number,
     @Query('before') before?: string,
-    @Query('after') after?: string,
+    @Query('after') after?: string
   ) {
     return this.channelsService.getMessages(id, { limit, before, after });
   }
@@ -52,7 +48,7 @@ export class V10ChannelsController {
     @CurrentBot() bot: any,
     @Param('id') channelId: string,
     @Param('messageId') messageId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     return this.channelsService.updateMessage(bot, channelId, messageId, body);
   }
@@ -62,11 +58,7 @@ export class V10ChannelsController {
   @ApiParam({ name: 'id', description: 'The channel ID' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
   @HttpCode(204)
-  async deleteMessage(
-    @CurrentBot() bot: any,
-    @Param('id') channelId: string,
-    @Param('messageId') messageId: string,
-  ) {
+  async deleteMessage(@CurrentBot() bot: any, @Param('id') channelId: string, @Param('messageId') messageId: string) {
     return this.channelsService.deleteMessage(bot, channelId, messageId);
   }
 }

@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { Hash, Users, FolderKanban, Building } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { Hash, Users, FolderKanban, Building } from 'lucide-react';
 
 interface WorkspaceResourceManagementProps {
-  workspaceSlug: string
+  workspaceSlug: string;
 }
 
 export function WorkspaceResourceManagement({ workspaceSlug }: WorkspaceResourceManagementProps) {
@@ -97,5 +97,5 @@ export function WorkspaceResourceManagement({ workspaceSlug }: WorkspaceResource
         </Card>
       </TabsContent>
     </Tabs>
-  )
+  );
 }

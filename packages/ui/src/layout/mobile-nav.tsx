@@ -45,9 +45,7 @@ export function MobileNav() {
   ];
 
   const isActive = (item: NavItem) => {
-    return item.activePaths.some((path) =>
-      path === '/' ? pathname === '/' : pathname.startsWith(path)
-    );
+    return item.activePaths.some(path => (path === '/' ? pathname === '/' : pathname.startsWith(path)));
   };
 
   const handleNavigate = (href: string) => {
@@ -58,7 +56,7 @@ export function MobileNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border pb-safe lg:hidden">
       <div className="flex items-center justify-around h-16">
-        {navItems.map((item) => {
+        {navItems.map(item => {
           const active = isActive(item);
           return (
             <button

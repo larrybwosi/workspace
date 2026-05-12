@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Button } from "../../components/button"
-import { Plus, Trash2, Copy, RefreshCw, CheckCircle2, XCircle } from "lucide-react"
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Button } from '../../components/button';
+import { Plus, Trash2, Copy, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,96 +11,96 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
-import { Badge } from "../../components/badge"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@repo/api-client"
-import { toast } from "sonner"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
+} from '../../components/dialog';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import { Badge } from '../../components/badge';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@repo/api-client';
+import { toast } from 'sonner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table';
 
 interface WorkspaceIncomingWebhooksProps {
-  workspaceSlug: string
+  workspaceSlug: string;
 }
 
 export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWebhooksProps) {
-  const queryClient = useQueryClient()
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [action, setAction] = useState("create_channel")
-  const [selectedWebhook, setSelectedWebhook] = useState<any>(null)
+  const queryClient = useQueryClient();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [action, setAction] = useState('create_channel');
+  const [selectedWebhook, setSelectedWebhook] = useState<any>(null);
 
   // Fetch webhooks
   const { data: webhooks, isLoading } = useQuery({
-    queryKey: ["workspace-webhooks", workspaceSlug],
+    queryKey: ['workspace-webhooks', workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/webhooks`)
-      return data
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/webhooks`);
+      return data;
     },
-  })
+  });
 
   // Create webhook
   const createWebhook = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks`, data)
-      return response.data
+      const response = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks`, data);
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
-      toast.success("Webhook created successfully")
-      setCreateDialogOpen(false)
-      setName("")
+      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
+      toast.success('Webhook created successfully');
+      setCreateDialogOpen(false);
+      setName('');
     },
     onError: () => {
-      toast.error("Failed to create webhook")
+      toast.error('Failed to create webhook');
     },
-  })
+  });
 
   // Delete webhook
   const deleteWebhook = useMutation({
     mutationFn: async (webhookId: string) => {
-      await apiClient.delete(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`)
+      await apiClient.delete(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
-      toast.success("Webhook deleted")
+      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
+      toast.success('Webhook deleted');
     },
     onError: () => {
-      toast.error("Failed to delete webhook")
+      toast.error('Failed to delete webhook');
     },
-  })
+  });
 
   // Regenerate token
   const regenerateToken = useMutation({
     mutationFn: async (webhookId: string) => {
-      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks/${webhookId}/regenerate`)
-      return data
+      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks/${webhookId}/regenerate`);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-webhooks", workspaceSlug] })
-      toast.success("Token regenerated")
+      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
+      toast.success('Token regenerated');
     },
     onError: () => {
-      toast.error("Failed to regenerate token")
+      toast.error('Failed to regenerate token');
     },
-  })
+  });
 
   const handleCreate = () => {
-    createWebhook.mutate({ name, action })
-  }
+    createWebhook.mutate({ name, action });
+  };
 
   const handleCopyUrl = (webhook: any) => {
-    const url = `${window.location.origin}/api/webhooks/${webhook.id}`
-    navigator.clipboard.writeText(url)
-    toast.success("Webhook URL copied")
-  }
+    const url = `${window.location.origin}/api/webhooks/${webhook.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Webhook URL copied');
+  };
 
   const handleCopyToken = (token: string) => {
-    navigator.clipboard.writeText(token)
-    toast.success("Token copied")
-  }
+    navigator.clipboard.writeText(token);
+    toast.success('Token copied');
+  };
 
   return (
     <>
@@ -154,7 +154,7 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
                     </TableCell>
                     <TableCell>{webhook.deliveryCount || 0}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {webhook.lastUsedAt ? new Date(webhook.lastUsedAt).toLocaleDateString() : "Never"}
+                      {webhook.lastUsedAt ? new Date(webhook.lastUsedAt).toLocaleDateString() : 'Never'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
@@ -204,12 +204,7 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Webhook Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="GitHub Integration"
-              />
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="GitHub Integration" />
             </div>
             <div className="space-y-2">
               <Label>Action</Label>
@@ -234,11 +229,11 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={createWebhook.isPending || !name}>
-              {createWebhook.isPending ? "Creating..." : "Create Webhook"}
+              {createWebhook.isPending ? 'Creating...' : 'Create Webhook'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

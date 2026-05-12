@@ -90,8 +90,8 @@ const nextConfig = {
         source: '/api/v2/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v2/:path*`,
       },
-    ]
+    ];
   },
-}
+};
 
-export default withPWA(nextConfig)
+export default withPWA(nextConfig);

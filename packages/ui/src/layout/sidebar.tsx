@@ -289,136 +289,135 @@ export function Sidebar({
 
           {/* Scrollable nav */}
           <ScrollArea className="flex-1 py-4">
-          <div className="space-y-5 px-2">
-            {/* Quick access */}
-            <div>
-              <SectionLabel>Quick access</SectionLabel>
-              <div className="space-y-0.5">
-                <NavButton
-                  icon={Sparkles}
-                  label="Assistant"
-                  isActive={pathname === '/assistant'}
-                  badge={
-                    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500/15 text-blue-500 border-0 font-semibold">
-                      NEW
-                    </Badge>
-                  }
-                  onClick={() => handleNavigate('/assistant')}
+            <div className="space-y-5 px-2">
+              {/* Quick access */}
+              <div>
+                <SectionLabel>Quick access</SectionLabel>
+                <div className="space-y-0.5">
+                  <NavButton
+                    icon={Sparkles}
+                    label="Assistant"
+                    isActive={pathname === '/assistant'}
+                    badge={
+                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500/15 text-blue-500 border-0 font-semibold">
+                        NEW
+                      </Badge>
+                    }
+                    onClick={() => handleNavigate('/assistant')}
+                  />
+                  <NavButton
+                    icon={Inbox}
+                    label="Inbox"
+                    isActive={pathname === '/notifications' || activeChannel === 'notifications'}
+                    badge={
+                      notifCount > 0 ? (
+                        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                          {notifCount > 99 ? '99+' : notifCount}
+                        </span>
+                      ) : undefined
+                    }
+                    onClick={() => handleNavigate('/notifications')}
+                  />
+                  <NavButton
+                    icon={Users}
+                    label="Friends"
+                    isActive={pathname === '/friends' || activeChannel === 'friends'}
+                    onClick={() => handleNavigate('/friends')}
+                  />
+                  <NavButton
+                    icon={FileText}
+                    label="Drafts"
+                    isActive={pathname === '/drafts'}
+                    onClick={() => handleNavigate('/drafts')}
+                  />
+                  <NavButton
+                    icon={Bookmark}
+                    label="Saved items"
+                    isActive={pathname === '/saved'}
+                    onClick={() => handleNavigate('/saved')}
+                  />
+                </div>
+              </div>
+
+              <Separator className="bg-sidebar-border" />
+
+              {/* Direct messages */}
+              <div>
+                <CollapsibleSectionHeader
+                  label="Direct messages"
+                  isOpen={dmsOpen}
+                  onToggle={() => setDmsOpen(v => !v)}
+                  count={dmConversations.length}
+                  onAction={() => setStartDMOpen(true)}
+                  actionLabel="New message"
                 />
-                <NavButton
-                  icon={Inbox}
-                  label="Inbox"
-                  isActive={pathname === '/notifications' || activeChannel === 'notifications'}
-                  badge={
-                    notifCount > 0 ? (
-                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                        {notifCount > 99 ? '99+' : notifCount}
-                      </span>
-                    ) : undefined
-                  }
-                  onClick={() => handleNavigate('/notifications')}
+
+                {dmsOpen && (
+                  <div className="space-y-0.5">
+                    {dmsLoading ? (
+                      <DMSkeleton count={3} />
+                    ) : dmConversations.length === 0 ? (
+                      <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">
+                        No conversations yet
+                      </p>
+                    ) : (
+                      dmConversations.map((dm: any) => {
+                        const other = dm.members.find((m: any) => m.id !== dm.creatorId) ?? dm.members[0];
+                        const status = onlineUsers.has(other.id) ? 'online' : 'offline';
+                        const dmId = `dm-${other.id}`;
+                        const href = `/dm/${other.id}`;
+                        const isActive = activeChannel === dmId || pathname === href;
+                        const unread: number = dm._count?.messages ?? 0;
+
+                        return (
+                          <Button
+                            key={dm.id}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                              isActive
+                                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                            )}
+                            onClick={() => handleNavigate(href)}
+                          >
+                            <div className="relative shrink-0">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={other.avatar} alt={other.name} />
+                                <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-semibold">
+                                  {other.name?.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <StatusDot status={status} />
+                            </div>
+                            <span className="flex-1 truncate text-left">{other.name}</span>
+                            {unread > 0 && (
+                              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                                {unread > 99 ? '99+' : unread}
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Favorites */}
+              <div>
+                <CollapsibleSectionHeader
+                  label="Favorites"
+                  isOpen={favoritesOpen}
+                  onToggle={() => setFavoritesOpen(v => !v)}
                 />
-                <NavButton
-                  icon={Users}
-                  label="Friends"
-                  isActive={pathname === '/friends' || activeChannel === 'friends'}
-                  onClick={() => handleNavigate('/friends')}
-                />
-                <NavButton
-                  icon={FileText}
-                  label="Drafts"
-                  isActive={pathname === '/drafts'}
-                  onClick={() => handleNavigate('/drafts')}
-                />
-                <NavButton
-                  icon={Bookmark}
-                  label="Saved items"
-                  isActive={pathname === '/saved'}
-                  onClick={() => handleNavigate('/saved')}
-                />
+                {favoritesOpen && (
+                  <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No favorites yet</p>
+                )}
               </div>
             </div>
-
-            <Separator className="bg-sidebar-border" />
-
-            {/* Direct messages */}
-            <div>
-              <CollapsibleSectionHeader
-                label="Direct messages"
-                isOpen={dmsOpen}
-                onToggle={() => setDmsOpen(v => !v)}
-                count={dmConversations.length}
-                onAction={() => setStartDMOpen(true)}
-                actionLabel="New message"
-              />
-
-              {dmsOpen && (
-                <div className="space-y-0.5">
-                  {dmsLoading ? (
-                    <DMSkeleton count={3} />
-                  ) : dmConversations.length === 0 ? (
-                    <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">
-                      No conversations yet
-                    </p>
-                  ) : (
-                    dmConversations.map((dm: any) => {
-                      const other = dm.members.find((m: any) => m.id !== dm.creatorId) ?? dm.members[0];
-                      const status = onlineUsers.has(other.id) ? 'online' : 'offline';
-                      const dmId = `dm-${other.id}`;
-                      const href = `/dm/${other.id}`;
-                      const isActive = activeChannel === dmId || pathname === href;
-                      const unread: number = dm._count?.messages ?? 0;
-
-                      return (
-                        <Button
-                          key={dm.id}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
-                            isActive
-                              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                          )}
-                          onClick={() => handleNavigate(href)}
-                        >
-                          <div className="relative shrink-0">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={other.avatar} alt={other.name} />
-                              <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-semibold">
-                                {other.name?.slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <StatusDot status={status} />
-                          </div>
-                          <span className="flex-1 truncate text-left">{other.name}</span>
-                          {unread > 0 && (
-                            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                              {unread > 99 ? '99+' : unread}
-                            </span>
-                          )}
-                        </Button>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Favorites */}
-            <div>
-              <CollapsibleSectionHeader
-                label="Favorites"
-                isOpen={favoritesOpen}
-                onToggle={() => setFavoritesOpen(v => !v)}
-              />
-              {favoritesOpen && (
-                <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No favorites yet</p>
-              )}
-            </div>
-          </div>
-        </ScrollArea>
-
+          </ScrollArea>
         </div>
       </aside>
 

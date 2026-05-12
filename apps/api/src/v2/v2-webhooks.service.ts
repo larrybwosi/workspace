@@ -38,11 +38,8 @@ export class V2WebhooksService {
 
       const payload = JSON.stringify(event);
 
-      const deliveryPromises = webhooks.map(async (webhook) => {
-        const signature = crypto
-          .createHmac('sha256', webhook.secret)
-          .update(payload)
-          .digest('hex');
+      const deliveryPromises = webhooks.map(async webhook => {
+        const signature = crypto.createHmac('sha256', webhook.secret).update(payload).digest('hex');
 
         try {
           const response = await axios.post(webhook.url, event, {

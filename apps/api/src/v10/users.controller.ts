@@ -9,8 +9,8 @@ export class V10UsersController {
   @Get(':id')
   async getUser(@Param('id') id: string) {
     if (id === '@me') {
-        // This is handled by getMe but just in case
-        return null;
+      // This is handled by getMe but just in case
+      return null;
     }
     const user = await prisma.user.findUnique({
       where: { id },

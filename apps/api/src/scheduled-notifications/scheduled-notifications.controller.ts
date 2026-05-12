@@ -60,10 +60,7 @@ export class ScheduledNotificationsController {
   @ApiOperation({ summary: 'Get scheduled notifications for the current user' })
   @ApiQuery({ name: 'stats', required: false, description: 'Return stats instead of list' })
   @ApiResponse({ status: 200, description: 'List of scheduled notifications or stats' })
-  async getNotifications(
-    @CurrentUser() user: User,
-    @Query('stats') stats?: string,
-  ) {
+  async getNotifications(@CurrentUser() user: User, @Query('stats') stats?: string) {
     if (stats === 'true') {
       return getNotificationStats(user.id);
     }
@@ -74,10 +71,7 @@ export class ScheduledNotificationsController {
   @ApiOperation({ summary: 'Create a scheduled notification' })
   @ApiBody({ type: CreateScheduledNotificationDto })
   @ApiResponse({ status: 201, description: 'Notification scheduled' })
-  async createNotification(
-    @CurrentUser() user: User,
-    @Body() body: CreateScheduledNotificationDto,
-  ) {
+  async createNotification(@CurrentUser() user: User, @Body() body: CreateScheduledNotificationDto) {
     const { title, message, scheduleType, scheduledFor, recurrence, entityType, entityId, linkUrl, metadata } = body;
     return createScheduledNotification({
       userId: user.id,
@@ -107,11 +101,7 @@ export class ScheduledNotificationsController {
     },
   })
   @ApiResponse({ status: 200, description: 'Notification updated' })
-  async updateNotification(
-    @CurrentUser() user: User,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async updateNotification(@CurrentUser() user: User, @Param('id') id: string, @Body() body: any) {
     const { action, ...updates } = body;
     if (action === 'pause') {
       return pauseScheduledNotification(id);
@@ -125,10 +115,7 @@ export class ScheduledNotificationsController {
   @ApiOperation({ summary: 'Delete a scheduled notification' })
   @ApiParam({ name: 'id', description: 'The notification ID' })
   @ApiResponse({ status: 200, description: 'Notification deleted' })
-  async deleteNotification(
-    @CurrentUser() user: User,
-    @Param('id') id: string,
-  ) {
+  async deleteNotification(@CurrentUser() user: User, @Param('id') id: string) {
     return deleteScheduledNotification(id);
   }
 }

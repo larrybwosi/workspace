@@ -9,6 +9,7 @@ You can manage your bot applications via the Developer Portal in your Skyrme Cha
 **Endpoint:** `POST /v2/applications`
 
 ### Bot Token vs OAuth
+
 - **Bot Token**: A long-lived token used by the bot user itself to authenticate.
 - **Client ID / Secret**: Used in the OAuth2 flow to obtain a short-lived access token.
 

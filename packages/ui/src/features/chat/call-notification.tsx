@@ -1,19 +1,19 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import { Phone, Video, X } from 'lucide-react'
-import { Button } from "../../components/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
-import { Card } from "../../components/card"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from 'react';
+import { Phone, Video, X } from 'lucide-react';
+import { Button } from '../../components/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Card } from '../../components/card';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CallNotificationProps {
-  callId: string
-  initiatorName: string
-  initiatorAvatar: string
-  type: "voice" | "video"
-  onAccept: () => void
-  onDecline: () => void
+  callId: string;
+  initiatorName: string;
+  initiatorAvatar: string;
+  type: 'voice' | 'video';
+  onAccept: () => void;
+  onDecline: () => void;
 }
 
 export function CallNotification({
@@ -22,18 +22,18 @@ export function CallNotification({
   initiatorAvatar,
   type,
   onAccept,
-  onDecline
+  onDecline,
 }: CallNotificationProps) {
-  const [isRinging, setIsRinging] = useState(true)
+  const [isRinging, setIsRinging] = useState(true);
 
   useEffect(() => {
     // Auto-decline after 30 seconds
     const timeout = setTimeout(() => {
-      onDecline()
-    }, 30000)
+      onDecline();
+    }, 30000);
 
-    return () => clearTimeout(timeout)
-  }, [onDecline])
+    return () => clearTimeout(timeout);
+  }, [onDecline]);
 
   return (
     <AnimatePresence>
@@ -52,33 +52,19 @@ export function CallNotification({
               </Avatar>
               <div className="flex-1">
                 <p className="font-semibold">{initiatorName}</p>
-                <p className="text-sm text-muted-foreground">
-                  Incoming {type} call...
-                </p>
+                <p className="text-sm text-muted-foreground">Incoming {type} call...</p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onDecline}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDecline}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             <div className="flex gap-2">
-              <Button
-                variant="destructive"
-                className="flex-1"
-                onClick={onDecline}
-              >
+              <Button variant="destructive" className="flex-1" onClick={onDecline}>
                 Decline
               </Button>
-              <Button
-                className="flex-1 bg-green-500 hover:bg-green-600"
-                onClick={onAccept}
-              >
-                {type === "video" ? (
+              <Button className="flex-1 bg-green-500 hover:bg-green-600" onClick={onAccept}>
+                {type === 'video' ? (
                   <>
                     <Video className="h-4 w-4 mr-2" />
                     Accept
@@ -95,5 +81,5 @@ export function CallNotification({
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }

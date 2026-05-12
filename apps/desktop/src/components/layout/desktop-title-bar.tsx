@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { X, Minus, Square, Copy } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { X, Minus, Square, Copy } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -57,11 +57,7 @@ export function DesktopTitleBar() {
           onClick={() => appWindow.toggleMaximize()}
           className="flex h-full w-10 items-center justify-center hover:bg-muted-foreground/10"
         >
-          {isMaximized ? (
-            <Copy className="h-3 w-3" />
-          ) : (
-            <Square className="h-3 w-3" />
-          )}
+          {isMaximized ? <Copy className="h-3 w-3" /> : <Square className="h-3 w-3" />}
         </button>
         <button
           onClick={() => appWindow.close()}

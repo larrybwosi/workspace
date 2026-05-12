@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Test, TestingModule } from "@nestjs/testing";
-import { ChannelsController } from "./channels.controller";
-import { AuthGuard } from "../auth/auth.guard";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ChannelsController } from './channels.controller';
+import { AuthGuard } from '../auth/auth.guard';
 
 // Mock @repo/database prisma
-vi.mock("@repo/database", () => ({
+vi.mock('@repo/database', () => ({
   prisma: {
     workspace: {
       findUnique: vi.fn(),
@@ -26,20 +26,20 @@ vi.mock("@repo/database", () => ({
 }));
 
 // Mock @repo/shared/server
-vi.mock("@repo/shared/server", () => ({
+vi.mock('@repo/shared/server', () => ({
   AblyChannels: {
     workspace: vi.fn((id: string) => `workspace:${id}`),
     channel: vi.fn((id: string) => `channel:${id}`),
   },
   EVENTS: {
-    CHANNEL_CREATED: "channel.created",
-    CHANNEL_UPDATED: "channel.updated",
-    CHANNEL_DELETED: "channel.deleted",
+    CHANNEL_CREATED: 'channel.created',
+    CHANNEL_UPDATED: 'channel.updated',
+    CHANNEL_DELETED: 'channel.deleted',
   },
   getAblyServer: vi.fn().mockReturnValue(null),
 }));
 
-import { prisma } from "@repo/database";
+import { prisma } from '@repo/database';
 
 /**
  * Helper function that mirrors the mapping logic from channels.controller.ts getWorkspaceChannels.
@@ -55,15 +55,15 @@ function computeChannelMetrics(
   }>,
   user: { id: string; name?: string; username?: string }
 ) {
-  return channels.map((channel) => {
+  return channels.map(channel => {
     const unreadCount = channel.messages.length;
-    const mentionCount = channel.messages.filter((m) =>
+    const mentionCount = channel.messages.filter(m =>
       m.mentions.some(
-        (mention) =>
+        mention =>
           mention.mention === `@${user.name}` ||
           mention.mention === `@${user.username}` ||
-          mention.mention === "@all" ||
-          mention.mention === "@here"
+          mention.mention === '@all' ||
+          mention.mention === '@here'
       )
     ).length;
 
@@ -76,84 +76,82 @@ function computeChannelMetrics(
   });
 }
 
-describe("ChannelsController - getWorkspaceChannels unread/mention logic", () => {
-  describe("unreadCount computation (PR change)", () => {
-    it("should count unread messages as the number of unread message objects", () => {
+describe('ChannelsController - getWorkspaceChannels unread/mention logic', () => {
+  describe('unreadCount computation (PR change)', () => {
+    it('should count unread messages as the number of unread message objects', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           messages: [
-            { id: "msg-1", mentions: [] },
-            { id: "msg-2", mentions: [] },
+            { id: 'msg-1', mentions: [] },
+            { id: 'msg-2', mentions: [] },
           ],
         },
       ];
-      const user = { id: "user-1", name: "Alice", username: "alice" };
+      const user = { id: 'user-1', name: 'Alice', username: 'alice' };
 
       const result = computeChannelMetrics(channels, user);
       expect(result[0].unreadCount).toBe(2);
     });
 
-    it("should return unreadCount of 0 when no unread messages", () => {
+    it('should return unreadCount of 0 when no unread messages', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           messages: [],
         },
       ];
-      const user = { id: "user-1", name: "Alice", username: "alice" };
+      const user = { id: 'user-1', name: 'Alice', username: 'alice' };
 
       const result = computeChannelMetrics(channels, user);
       expect(result[0].unreadCount).toBe(0);
     });
 
-    it("should strip messages array from returned channel object", () => {
+    it('should strip messages array from returned channel object', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [{ id: "msg-1", mentions: [] }],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [] }],
         },
       ];
-      const user = { id: "user-1", name: "Alice", username: "alice" };
+      const user = { id: 'user-1', name: 'Alice', username: 'alice' };
 
       const result = computeChannelMetrics(channels, user);
-      expect(result[0]).not.toHaveProperty("messages");
+      expect(result[0]).not.toHaveProperty('messages');
     });
 
-    it("should preserve all other channel fields in the result", () => {
+    it('should preserve all other channel fields in the result', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          slug: "general",
+          id: 'ch-1',
+          name: 'general',
+          slug: 'general',
           _count: { messages: 10 },
           messages: [],
         },
       ];
-      const user = { id: "user-1", name: "Alice", username: "alice" };
+      const user = { id: 'user-1', name: 'Alice', username: 'alice' };
 
       const result = computeChannelMetrics(channels, user);
-      expect(result[0].id).toBe("ch-1");
-      expect(result[0].name).toBe("general");
-      expect(result[0].slug).toBe("general");
+      expect(result[0].id).toBe('ch-1');
+      expect(result[0].name).toBe('general');
+      expect(result[0].slug).toBe('general');
       expect(result[0]._count).toEqual({ messages: 10 });
     });
   });
 
-  describe("mentionCount computation (PR change)", () => {
-    const user = { id: "user-1", name: "Alice", username: "alice" };
+  describe('mentionCount computation (PR change)', () => {
+    const user = { id: 'user-1', name: 'Alice', username: 'alice' };
 
-    it("should count message as mention when @username matches user.username", () => {
+    it('should count message as mention when @username matches user.username', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [{ mention: "@alice" }] },
-          ],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@alice' }] }],
         },
       ];
 
@@ -161,14 +159,12 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(1);
     });
 
-    it("should count message as mention when @name matches user.name", () => {
+    it('should count message as mention when @name matches user.name', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [{ mention: "@Alice" }] },
-          ],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@Alice' }] }],
         },
       ];
 
@@ -176,14 +172,12 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(1);
     });
 
-    it("should count message as mention when @all is present", () => {
+    it('should count message as mention when @all is present', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [{ mention: "@all" }] },
-          ],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@all' }] }],
         },
       ];
 
@@ -191,14 +185,12 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(1);
     });
 
-    it("should count message as mention when @here is present", () => {
+    it('should count message as mention when @here is present', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [{ mention: "@here" }] },
-          ],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@here' }] }],
         },
       ];
 
@@ -206,13 +198,27 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(1);
     });
 
-    it("should NOT count message as mention when @other user is mentioned", () => {
+    it('should NOT count message as mention when @other user is mentioned', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@bob' }] }],
+        },
+      ];
+
+      const result = computeChannelMetrics(channels, user);
+      expect(result[0].mentionCount).toBe(0);
+    });
+
+    it('should return mentionCount 0 when no messages have mentions', () => {
+      const channels = [
+        {
+          id: 'ch-1',
+          name: 'general',
           messages: [
-            { id: "msg-1", mentions: [{ mention: "@bob" }] },
+            { id: 'msg-1', mentions: [] },
+            { id: 'msg-2', mentions: [] },
           ],
         },
       ];
@@ -221,34 +227,18 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(0);
     });
 
-    it("should return mentionCount 0 when no messages have mentions", () => {
+    it('should count only messages where the current user is mentioned (not all mentions)', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [] },
-            { id: "msg-2", mentions: [] },
-          ],
-        },
-      ];
-
-      const result = computeChannelMetrics(channels, user);
-      expect(result[0].mentionCount).toBe(0);
-    });
-
-    it("should count only messages where the current user is mentioned (not all mentions)", () => {
-      const channels = [
-        {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           messages: [
             // msg with mention of this user
-            { id: "msg-1", mentions: [{ mention: "@alice" }] },
+            { id: 'msg-1', mentions: [{ mention: '@alice' }] },
             // msg with mention of another user
-            { id: "msg-2", mentions: [{ mention: "@bob" }] },
+            { id: 'msg-2', mentions: [{ mention: '@bob' }] },
             // msg with no mention
-            { id: "msg-3", mentions: [] },
+            { id: 'msg-3', mentions: [] },
           ],
         },
       ];
@@ -258,19 +248,16 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(1);
     });
 
-    it("should count a single message only once even if it has multiple matching mentions", () => {
+    it('should count a single message only once even if it has multiple matching mentions', () => {
       // A message that has both @alice and @all mentions should only count once
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           messages: [
             {
-              id: "msg-1",
-              mentions: [
-                { mention: "@alice" },
-                { mention: "@all" },
-              ],
+              id: 'msg-1',
+              mentions: [{ mention: '@alice' }, { mention: '@all' }],
             },
           ],
         },
@@ -281,21 +268,17 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[0].mentionCount).toBe(1);
     });
 
-    it("should handle multiple channels independently", () => {
+    it('should handle multiple channels independently', () => {
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [{ mention: "@alice" }] },
-          ],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@alice' }] }],
         },
         {
-          id: "ch-2",
-          name: "random",
-          messages: [
-            { id: "msg-2", mentions: [{ mention: "@bob" }] },
-          ],
+          id: 'ch-2',
+          name: 'random',
+          messages: [{ id: 'msg-2', mentions: [{ mention: '@bob' }] }],
         },
       ];
 
@@ -304,15 +287,13 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
       expect(result[1].mentionCount).toBe(0);
     });
 
-    it("should handle user without username field", () => {
-      const userNoUsername = { id: "user-2", name: "Bob" };
+    it('should handle user without username field', () => {
+      const userNoUsername = { id: 'user-2', name: 'Bob' };
       const channels = [
         {
-          id: "ch-1",
-          name: "general",
-          messages: [
-            { id: "msg-1", mentions: [{ mention: "@Bob" }] },
-          ],
+          id: 'ch-1',
+          name: 'general',
+          messages: [{ id: 'msg-1', mentions: [{ mention: '@Bob' }] }],
         },
       ];
 
@@ -322,7 +303,7 @@ describe("ChannelsController - getWorkspaceChannels unread/mention logic", () =>
   });
 });
 
-describe("ChannelsController - NestJS module", () => {
+describe('ChannelsController - NestJS module', () => {
   let controller: ChannelsController;
 
   beforeEach(async () => {
@@ -336,55 +317,51 @@ describe("ChannelsController - NestJS module", () => {
     controller = module.get<ChannelsController>(ChannelsController);
   });
 
-  it("should be defined", () => {
+  it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it("should throw NotFoundException when workspace not found in getWorkspaceChannels", async () => {
+  it('should throw NotFoundException when workspace not found in getWorkspaceChannels', async () => {
     const mockPrisma = prisma as any;
     mockPrisma.workspace.findUnique.mockResolvedValue(null);
 
-    const user = { id: "user-1", name: "Alice", username: "alice" } as any;
+    const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
 
-    await expect(
-      controller.getWorkspaceChannels(user, "non-existent-slug")
-    ).rejects.toThrow("Workspace not found");
+    await expect(controller.getWorkspaceChannels(user, 'non-existent-slug')).rejects.toThrow('Workspace not found');
   });
 
-  it("should throw ForbiddenException when user is not a workspace member", async () => {
+  it('should throw ForbiddenException when user is not a workspace member', async () => {
     const mockPrisma = prisma as any;
     // Updated mock to match optimized select structure
     mockPrisma.workspace.findUnique.mockResolvedValue({
-      id: "ws-1",
-      members: []
+      id: 'ws-1',
+      members: [],
     });
 
-    const user = { id: "user-1", name: "Alice", username: "alice" } as any;
+    const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
 
-    await expect(
-      controller.getWorkspaceChannels(user, "my-workspace")
-    ).rejects.toThrow("Forbidden");
+    await expect(controller.getWorkspaceChannels(user, 'my-workspace')).rejects.toThrow('Forbidden');
   });
 
-  it("should return channels when successful", async () => {
+  it('should return channels when successful', async () => {
     const mockPrisma = prisma as any;
     // Updated mock to match optimized select structure
     mockPrisma.workspace.findUnique.mockResolvedValue({
-      id: "ws-1",
-      members: [{ role: "member" }]
+      id: 'ws-1',
+      members: [{ role: 'member' }],
     });
     mockPrisma.channel.findMany.mockResolvedValue([
       {
-        id: "ch-1",
-        name: "general",
+        id: 'ch-1',
+        name: 'general',
         _count: { messages: 5 },
       },
     ]);
 
-    const user = { id: "user-1", name: "Alice", username: "alice" } as any;
-    const result = await controller.getWorkspaceChannels(user, "my-workspace");
+    const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
+    const result = await controller.getWorkspaceChannels(user, 'my-workspace');
 
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("ch-1");
+    expect(result[0].id).toBe('ch-1');
   });
 });

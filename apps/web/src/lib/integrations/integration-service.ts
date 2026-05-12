@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from 'crypto';
 
 export interface IntegrationPayload {
   event: string;
@@ -42,16 +42,13 @@ export interface DiscordEmbed {
 export const IntegrationService = {
   // Generate signature for webhook verification
   generateSignature(payload: string, secret: string): string {
-    return crypto.createHmac("sha256", secret).update(payload).digest("hex");
+    return crypto.createHmac('sha256', secret).update(payload).digest('hex');
   },
 
   // Verify incoming webhook signature
   verifySignature(payload: string, signature: string, secret: string): boolean {
     const expected = this.generateSignature(payload, secret);
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected),
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   },
 
   // Format message for Slack
@@ -59,30 +56,27 @@ export const IntegrationService = {
     const { event, workspace, data } = payload;
 
     const eventColors: Record<string, string> = {
-      "task.created": "#36a64f",
-      "task.completed": "#2eb886",
-      "task.overdue": "#dc3545",
-      "project.created": "#0066cc",
-      "member.joined": "#6f42c1",
-      "message.created": "#17a2b8",
+      'task.created': '#36a64f',
+      'task.completed': '#2eb886',
+      'task.overdue': '#dc3545',
+      'project.created': '#0066cc',
+      'member.joined': '#6f42c1',
+      'message.created': '#17a2b8',
     };
 
     return {
       text: `${event} in ${workspace.name}`,
       attachments: [
         {
-          color: eventColors[event] || "#6366f1",
+          color: eventColors[event] || '#6366f1',
           title: this.formatEventTitle(event),
           text: this.formatEventDescription(event, data),
           fields: Object.entries(data)
-            .filter(([key]) => !["id", "createdAt", "updatedAt"].includes(key))
+            .filter(([key]) => !['id', 'createdAt', 'updatedAt'].includes(key))
             .slice(0, 5)
             .map(([key, value]) => ({
               title: this.formatFieldName(key),
-              value:
-                typeof value === "object"
-                  ? JSON.stringify(value)
-                  : String(value),
+              value: typeof value === 'object' ? JSON.stringify(value) : String(value),
               short: String(value).length < 30,
             })),
           footer: `Workspace: ${workspace.name}`,
@@ -97,12 +91,12 @@ export const IntegrationService = {
     const { event, workspace, data } = payload;
 
     const eventColors: Record<string, number> = {
-      "task.created": 0x36a64f,
-      "task.completed": 0x2eb886,
-      "task.overdue": 0xdc3545,
-      "project.created": 0x0066cc,
-      "member.joined": 0x6f42c1,
-      "message.created": 0x17a2b8,
+      'task.created': 0x36a64f,
+      'task.completed': 0x2eb886,
+      'task.overdue': 0xdc3545,
+      'project.created': 0x0066cc,
+      'member.joined': 0x6f42c1,
+      'message.created': 0x17a2b8,
     };
 
     return {
@@ -112,14 +106,11 @@ export const IntegrationService = {
           description: this.formatEventDescription(event, data),
           color: eventColors[event] || 0x6366f1,
           fields: Object.entries(data)
-            .filter(([key]) => !["id", "createdAt", "updatedAt"].includes(key))
+            .filter(([key]) => !['id', 'createdAt', 'updatedAt'].includes(key))
             .slice(0, 5)
             .map(([key, value]) => ({
               name: this.formatFieldName(key),
-              value:
-                typeof value === "object"
-                  ? JSON.stringify(value)
-                  : String(value),
+              value: typeof value === 'object' ? JSON.stringify(value) : String(value),
               inline: String(value).length < 30,
             })),
           footer: { text: `Workspace: ${workspace.name}` },
@@ -134,23 +125,20 @@ export const IntegrationService = {
     const { event, workspace, data } = payload;
 
     return {
-      "@type": "MessageCard",
-      "@context": "http://schema.org/extensions",
-      themeColor: "6366f1",
+      '@type': 'MessageCard',
+      '@context': 'http://schema.org/extensions',
+      themeColor: '6366f1',
       summary: `${event} in ${workspace.name}`,
       sections: [
         {
           activityTitle: this.formatEventTitle(event),
           activitySubtitle: `Workspace: ${workspace.name}`,
           facts: Object.entries(data)
-            .filter(([key]) => !["id", "createdAt", "updatedAt"].includes(key))
+            .filter(([key]) => !['id', 'createdAt', 'updatedAt'].includes(key))
             .slice(0, 5)
             .map(([key, value]) => ({
               name: this.formatFieldName(key),
-              value:
-                typeof value === "object"
-                  ? JSON.stringify(value)
-                  : String(value),
+              value: typeof value === 'object' ? JSON.stringify(value) : String(value),
             })),
           markdown: true,
         },
@@ -160,69 +148,66 @@ export const IntegrationService = {
 
   formatEventTitle(event: string): string {
     const titles: Record<string, string> = {
-      "task.created": "New Task Created",
-      "task.completed": "Task Completed",
-      "task.updated": "Task Updated",
-      "task.overdue": "Task Overdue",
-      "project.created": "New Project Created",
-      "project.updated": "Project Updated",
-      "member.joined": "New Member Joined",
-      "member.left": "Member Left",
-      "message.created": "New Message",
-      "comment.created": "New Comment",
-      "sprint.started": "Sprint Started",
-      "sprint.completed": "Sprint Completed",
+      'task.created': 'New Task Created',
+      'task.completed': 'Task Completed',
+      'task.updated': 'Task Updated',
+      'task.overdue': 'Task Overdue',
+      'project.created': 'New Project Created',
+      'project.updated': 'Project Updated',
+      'member.joined': 'New Member Joined',
+      'member.left': 'Member Left',
+      'message.created': 'New Message',
+      'comment.created': 'New Comment',
+      'sprint.started': 'Sprint Started',
+      'sprint.completed': 'Sprint Completed',
       // Cal.com events
-      "booking.created": "New Booking Created",
-      "booking.rescheduled": "Booking Rescheduled",
-      "booking.cancelled": "Booking Cancelled",
+      'booking.created': 'New Booking Created',
+      'booking.rescheduled': 'Booking Rescheduled',
+      'booking.cancelled': 'Booking Cancelled',
       // Affine events
-      "page.created": "New Page Created",
-      "page.updated": "Page Updated",
-      "page.deleted": "Page Deleted",
+      'page.created': 'New Page Created',
+      'page.updated': 'Page Updated',
+      'page.deleted': 'Page Deleted',
       // Plane events
-      "issue.created": "New Issue Created",
-      "issue.updated": "Issue Updated",
-      "issue.deleted": "Issue Deleted",
+      'issue.created': 'New Issue Created',
+      'issue.updated': 'Issue Updated',
+      'issue.deleted': 'Issue Deleted',
     };
-    return (
-      titles[event] ||
-      event.replace(".", " ").replace(/\b\w/g, (l) => l.toUpperCase())
-    );
+    return titles[event] || event.replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
   },
 
   formatEventDescription(event: string, data: Record<string, any>): string {
     switch (event) {
-      case "task.created":
-        return `Task "${data.title}" was created${data.assignee ? ` and assigned to ${data.assignee}` : ""}`;
-      case "task.completed":
-        return `Task "${data.title}" was marked as completed${data.completedBy ? ` by ${data.completedBy}` : ""}`;
-      case "project.created":
+      case 'task.created':
+        return `Task "${data.title}" was created${data.assignee ? ` and assigned to ${data.assignee}` : ''}`;
+      case 'task.completed':
+        return `Task "${data.title}" was marked as completed${data.completedBy ? ` by ${data.completedBy}` : ''}`;
+      case 'project.created':
         return `Project "${data.name}" was created`;
-      case "member.joined":
+      case 'member.joined':
         return `${data.name || data.email} joined the workspace`;
-      case "message.created":
-        return data.content?.slice(0, 200) || "New message";
+      case 'message.created':
+        return data.content?.slice(0, 200) || 'New message';
       // Cal.com events
-      case "booking.created":
+      case 'booking.created':
         return `New booking "${data.title}" scheduled for ${data.startTime}`;
-      case "booking.rescheduled":
+      case 'booking.rescheduled':
         return `Booking "${data.title}" rescheduled to ${data.startTime}`;
-      case "booking.cancelled":
+      case 'booking.cancelled':
         return `Booking "${data.title}" was cancelled`;
       // Affine events
-      case "page.created":
+      case 'page.created':
         return `New page "${data.title}" created in Affine`;
-      case "page.updated":
+      case 'page.updated':
         return `Page "${data.title}" was updated`;
-      case "page.deleted":
+      case 'page.deleted':
         return `Page "${data.title}" was deleted`;
       // Plane events
-      case "issue.created":
+      case 'issue.created':
         return `New issue "${data.name}" created in ${data.project}`;
-      case "issue.updated":
+      case 'issue.updated':
         return `Issue "${data.name}" was updated`;
-      case "issue.deleted":
+      case 'issue.deleted':
         return `Issue "${data.name}" was deleted`;
       default:
         return data.description || data.message || `Event: ${event}`;
@@ -231,62 +216,53 @@ export const IntegrationService = {
 
   formatFieldName(key: string): string {
     return key
-      .replace(/([A-Z])/g, " $1")
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase())
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase())
       .trim();
   },
 
   // Send to Slack
-  async sendToSlack(
-    webhookUrl: string,
-    message: SlackMessage,
-  ): Promise<boolean> {
+  async sendToSlack(webhookUrl: string, message: SlackMessage): Promise<boolean> {
     try {
       const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(message),
       });
       return response.ok;
     } catch (error) {
-      console.error("Slack send failed:", error);
+      console.error('Slack send failed:', error);
       return false;
     }
   },
 
   // Send to Discord
-  async sendToDiscord(
-    webhookUrl: string,
-    message: DiscordMessage,
-  ): Promise<boolean> {
+  async sendToDiscord(webhookUrl: string, message: DiscordMessage): Promise<boolean> {
     try {
       const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(message),
       });
       return response.ok;
     } catch (error) {
-      console.error("Discord send failed:", error);
+      console.error('Discord send failed:', error);
       return false;
     }
   },
 
   // Send to Microsoft Teams
-  async sendToTeams(
-    webhookUrl: string,
-    message: Record<string, any>,
-  ): Promise<boolean> {
+  async sendToTeams(webhookUrl: string, message: Record<string, any>): Promise<boolean> {
     try {
       const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(message),
       });
       return response.ok;
     } catch (error) {
-      console.error("Teams send failed:", error);
+      console.error('Teams send failed:', error);
       return false;
     }
   },
@@ -296,25 +272,25 @@ export const IntegrationService = {
     webhookUrl: string,
     payload: IntegrationPayload,
     secret: string,
-    headers?: Record<string, string>,
+    headers?: Record<string, string>
   ): Promise<boolean> {
     try {
       const body = JSON.stringify(payload);
       const signature = this.generateSignature(body, secret);
 
       const response = await fetch(webhookUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "X-Webhook-Signature": signature,
-          "X-Webhook-Timestamp": Date.now().toString(),
+          'Content-Type': 'application/json',
+          'X-Webhook-Signature': signature,
+          'X-Webhook-Timestamp': Date.now().toString(),
           ...headers,
         },
         body,
       });
       return response.ok;
     } catch (error) {
-      console.error("Custom webhook send failed:", error);
+      console.error('Custom webhook send failed:', error);
       return false;
     }
   },

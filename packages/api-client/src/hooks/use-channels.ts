@@ -100,7 +100,9 @@ export function useJoinChannel(workspaceSlug?: string) {
 
   return useMutation({
     mutationFn: async (channelId: string) => {
-      const url = workspaceSlug ? `/workspaces/${workspaceSlug}/channels/${channelId}/join` : `/channels/${channelId}/join`;
+      const url = workspaceSlug
+        ? `/workspaces/${workspaceSlug}/channels/${channelId}/join`
+        : `/channels/${channelId}/join`;
       const { data } = await apiClient.post(url);
       return data;
     },

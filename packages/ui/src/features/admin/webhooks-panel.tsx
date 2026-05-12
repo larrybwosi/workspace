@@ -1,20 +1,20 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Webhook, Plus, Trash2, MoreVertical, CheckCircle2, XCircle, Activity } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Button } from "../../components/button"
-import { Badge } from "../../components/badge"
-import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from "@repo/api-client"
-import { CreateWebhookDialog } from "../settings/create-webhook-dialog"
-import { toast } from "sonner"
-import { format } from "date-fns"
+import * as React from 'react';
+import { Webhook, Plus, Trash2, MoreVertical, CheckCircle2, XCircle, Activity } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Button } from '../../components/button';
+import { Badge } from '../../components/badge';
+import { useWebhooks, useCreateWebhook, useDeleteWebhook, useUpdateWebhook } from '@repo/api-client';
+import { CreateWebhookDialog } from '../settings/create-webhook-dialog';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../components/dropdown-menu"
+} from '../../components/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,38 +24,38 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../../components/alert-dialog"
-import { WebhookLogsDialog } from "./webhook-logs-dialog"
+} from '../../components/alert-dialog';
+import { WebhookLogsDialog } from './webhook-logs-dialog';
 
 export function WebhooksPanel() {
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
-  const [deleteWebhookId, setDeleteWebhookId] = React.useState<string | null>(null)
-  const [logsWebhookId, setLogsWebhookId] = React.useState<string | null>(null)
-  
-  const { data: webhooks, isLoading } = useWebhooks()
-  const deleteMutation = useDeleteWebhook()
-  const updateMutation = useUpdateWebhook()
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+  const [deleteWebhookId, setDeleteWebhookId] = React.useState<string | null>(null);
+  const [logsWebhookId, setLogsWebhookId] = React.useState<string | null>(null);
+
+  const { data: webhooks, isLoading } = useWebhooks();
+  const deleteMutation = useDeleteWebhook();
+  const updateMutation = useUpdateWebhook();
 
   const handleDelete = async () => {
-    if (!deleteWebhookId) return
-    
+    if (!deleteWebhookId) return;
+
     try {
-      await deleteMutation.mutateAsync(deleteWebhookId)
-      toast.success("Webhook deleted successfully")
-      setDeleteWebhookId(null)
+      await deleteMutation.mutateAsync(deleteWebhookId);
+      toast.success('Webhook deleted successfully');
+      setDeleteWebhookId(null);
     } catch (error) {
-      toast.error("Failed to delete webhook")
+      toast.error('Failed to delete webhook');
     }
-  }
+  };
 
   const toggleWebhookStatus = async (webhookId: string, isActive: boolean) => {
     try {
-      await updateMutation.mutateAsync({ webhookId, isActive: !isActive })
-      toast.success(isActive ? "Webhook disabled" : "Webhook enabled")
+      await updateMutation.mutateAsync({ webhookId, isActive: !isActive });
+      toast.success(isActive ? 'Webhook disabled' : 'Webhook enabled');
     } catch (error) {
-      toast.error("Failed to update webhook")
+      toast.error('Failed to update webhook');
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -95,35 +95,29 @@ export function WebhooksPanel() {
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">
                       <h3 className="font-semibold text-lg">{webhook.name}</h3>
-                      <Badge variant={webhook.isActive ? "default" : "secondary"}>
+                      <Badge variant={webhook.isActive ? 'default' : 'secondary'}>
                         {webhook.isActive ? (
                           <>
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Active
                           </>
                         ) : (
-                          "Inactive"
+                          'Inactive'
                         )}
                       </Badge>
                     </div>
 
-                    <div className="text-sm font-mono bg-muted p-3 rounded break-all">
-                      {webhook.url}
-                    </div>
+                    <div className="text-sm font-mono bg-muted p-3 rounded break-all">{webhook.url}</div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Created:</span>{" "}
-                        <span className="font-medium">
-                          {format(new Date(webhook.createdAt), "MMM d, yyyy")}
-                        </span>
+                        <span className="text-muted-foreground">Created:</span>{' '}
+                        <span className="font-medium">{format(new Date(webhook.createdAt), 'MMM d, yyyy')}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Last fired:</span>{" "}
+                        <span className="text-muted-foreground">Last fired:</span>{' '}
                         <span className="font-medium">
-                          {webhook.lastFiredAt
-                            ? format(new Date(webhook.lastFiredAt), "MMM d, yyyy HH:mm")
-                            : "Never"}
+                          {webhook.lastFiredAt ? format(new Date(webhook.lastFiredAt), 'MMM d, yyyy HH:mm') : 'Never'}
                         </span>
                       </div>
                     </div>
@@ -151,15 +145,10 @@ export function WebhooksPanel() {
                         <Activity className="h-4 w-4 mr-2" />
                         View Logs
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => toggleWebhookStatus(webhook.id, webhook.isActive)}
-                      >
-                        {webhook.isActive ? "Disable" : "Enable"}
+                      <DropdownMenuItem onClick={() => toggleWebhookStatus(webhook.id, webhook.isActive)}>
+                        {webhook.isActive ? 'Disable' : 'Enable'}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => setDeleteWebhookId(webhook.id)}
-                      >
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteWebhookId(webhook.id)}>
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
@@ -173,7 +162,7 @@ export function WebhooksPanel() {
       )}
 
       <CreateWebhookDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
-      
+
       {logsWebhookId && (
         <WebhookLogsDialog
           webhookId={logsWebhookId}
@@ -187,8 +176,7 @@ export function WebhooksPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Webhook</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this webhook? You will stop receiving events at
-              this endpoint.
+              Are you sure you want to delete this webhook? You will stop receiving events at this endpoint.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -200,5 +188,5 @@ export function WebhooksPanel() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

@@ -10,11 +10,7 @@ export class V10EnterpriseController {
 
   @Post('departments/:id/announcements')
   @HttpCode(HttpStatus.CREATED)
-  async createAnnouncement(
-    @CurrentBot() bot: any,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async createAnnouncement(@CurrentBot() bot: any, @Param('id') id: string, @Body() body: any) {
     return this.enterpriseService.createAnnouncement(bot, id, body);
   }
 }

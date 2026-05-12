@@ -13,16 +13,19 @@ Webhooks allow your application to receive real-time notifications about events 
 ## Managing Webhooks
 
 ### List Webhooks
+
 **Endpoint:** `GET /v2/workspaces/:slug/webhooks`
 
 ---
 
 ### Create Webhook
+
 Register a new destination for events.
 
 **Endpoint:** `POST /v2/workspaces/:slug/webhooks`
 
 **Body:**
+
 ```json
 {
   "name": "My Integration",
@@ -39,11 +42,11 @@ Returns the webhook configuration, including a `secret`. **Save this secret**, a
 
 ## Supported Events
 
-| Event | Description |
-| :--- | :--- |
-| `message.sent` | A new message was posted to a channel or DM. |
-| `channel.created` | A new channel was created in the workspace. |
-| `member.added` | A new member joined the workspace. |
+| Event             | Description                                  |
+| :---------------- | :------------------------------------------- |
+| `message.sent`    | A new message was posted to a channel or DM. |
+| `channel.created` | A new channel was created in the workspace.  |
+| `member.added`    | A new member joined the workspace.           |
 
 ---
 
@@ -52,6 +55,7 @@ Returns the webhook configuration, including a `secret`. **Save this secret**, a
 Skyrme Chat signs every webhook request with your secret. The signature is included in the `X-Skyrme-Signature` header.
 
 **Verification Example (Node.js):**
+
 ```javascript
 const crypto = require('crypto');
 

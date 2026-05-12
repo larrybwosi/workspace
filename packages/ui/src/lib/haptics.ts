@@ -23,5 +23,5 @@ export const haptic = {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate([50, 100, 50]);
     }
-  }
+  },
 };

@@ -18,19 +18,19 @@ export function CommentRequestMessage({ message, metadata }: any) {
           </View>
         </View>
 
-        <Text className="text-discord-header text-sm mb-4 leading-5">
-          {message.content}
-        </Text>
+        <Text className="text-discord-header text-sm mb-4 leading-5">{message.content}</Text>
 
         {resourceMetadata.url && (
           <View className="bg-discord-secondary p-2 rounded-md border border-black/10 mb-4">
-             <Text className="text-blue-400 text-xs" numberOfLines={1}>{resourceMetadata.url}</Text>
+            <Text className="text-blue-400 text-xs" numberOfLines={1}>
+              {resourceMetadata.url}
+            </Text>
           </View>
         )}
 
         <TouchableOpacity className="bg-discord-secondary py-2 rounded-md items-center flex-row justify-center border border-black/20">
-           <MaterialIcons name="chat-bubble-outline" size={18} color="#949BA4" />
-           <Text className="text-discord-header font-bold ml-2">Add Comment</Text>
+          <MaterialIcons name="chat-bubble-outline" size={18} color="#949BA4" />
+          <Text className="text-discord-header font-bold ml-2">Add Comment</Text>
         </TouchableOpacity>
       </View>
     </View>

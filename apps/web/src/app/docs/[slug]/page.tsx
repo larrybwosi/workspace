@@ -1,25 +1,25 @@
-"use client"
+'use client';
 
-import { useParams, useRouter } from "next/navigation"
-import { docs } from "@/lib/docs-data"
-import { MDXRemote } from "next-mdx-remote/rsc"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { notFound } from "next/navigation"
+import { useParams, useRouter } from 'next/navigation';
+import { docs } from '@/lib/docs-data';
+import { MDXRemote } from 'next-mdx-remote/rsc';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { notFound } from 'next/navigation';
 
 export default function DocPage() {
-  const params = useParams()
-  const slug = params.slug as string
-  const router = useRouter()
+  const params = useParams();
+  const slug = params.slug as string;
+  const router = useRouter();
 
-  const currentDoc = docs.find((doc) => doc.slug === slug)
-  const currentIndex = docs.findIndex((doc) => doc.slug === slug)
-  const prevDoc = currentIndex > 0 ? docs[currentIndex - 1] : null
-  const nextDoc = currentIndex < docs.length - 1 ? docs[currentIndex + 1] : null
+  const currentDoc = docs.find(doc => doc.slug === slug);
+  const currentIndex = docs.findIndex(doc => doc.slug === slug);
+  const prevDoc = currentIndex > 0 ? docs[currentIndex - 1] : null;
+  const nextDoc = currentIndex < docs.length - 1 ? docs[currentIndex + 1] : null;
 
   if (!currentDoc) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -68,5 +68,5 @@ export default function DocPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

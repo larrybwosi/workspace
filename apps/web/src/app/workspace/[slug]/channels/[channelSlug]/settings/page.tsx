@@ -1,35 +1,35 @@
-import type { Metadata } from "next"
-import { Hash, UserPlus, Trash2, Edit, MoreVertical, Pin } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Metadata } from 'next';
+import { Hash, UserPlus, Trash2, Edit, MoreVertical, Pin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ChannelWebhooksTab } from "@/components/features/workspace/channel-webhooks-tab"
+} from '@/components/ui/dropdown-menu';
+import { ChannelWebhooksTab } from '@/components/features/workspace/channel-webhooks-tab';
 // import { ChannelWebhooksTab } from "@/components/channel-webhooks-tab"
 
 export const metadata: Metadata = {
-  title: "Channel Settings",
-  description: "Manage channel settings and webhooks",
-}
+  title: 'Channel Settings',
+  description: 'Manage channel settings and webhooks',
+};
 
 export default async function ChannelSettingsPage({
   params,
 }: {
-  params: Promise<{ slug: string; channelId: string }>
+  params: Promise<{ slug: string; channelId: string }>;
 }) {
-  const { slug, channelId } = await params
+  const { slug, channelId } = await params;
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -140,7 +140,7 @@ export default async function ChannelSettingsPage({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
+                  {[1, 2, 3].map(i => (
                     <div key={i} className="flex gap-4 rounded-lg border p-3">
                       <Avatar className="size-8">
                         <AvatarFallback>U{i}</AvatarFallback>
@@ -319,5 +319,5 @@ export default async function ChannelSettingsPage({
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

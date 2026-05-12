@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { MessageRenderer } from "../message-renderer";
-import type { Message, MessageMetadata } from "../../../lib/types";
+import { MessageRenderer } from '../message-renderer';
+import type { Message, MessageMetadata } from '../../../lib/types';
 
 interface StandardMessageProps {
   message: any;
@@ -9,10 +9,5 @@ interface StandardMessageProps {
 }
 
 export function StandardMessage({ message, metadata }: StandardMessageProps) {
-  return (
-    <MessageRenderer
-      content={message.content}
-      metadata={metadata}
-    />
-  );
+  return <MessageRenderer content={message.content} metadata={metadata} />;
 }

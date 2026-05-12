@@ -1,56 +1,57 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Check, Loader2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
-import { Label } from "../../../components/label"
-import { Switch } from "../../../components/switch"
-import { Button } from "../../../components/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
-import { Separator } from "../../../components/separator"
-import { toast } from "sonner"
-import { RadioGroup, RadioGroupItem } from "../../../components/radio-group"
-import { apiClient } from "@repo/api-client"
+import { useState, useEffect } from 'react';
+import { Check, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/card';
+import { Label } from '../../../components/label';
+import { Switch } from '../../../components/switch';
+import { Button } from '../../../components/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
+import { Separator } from '../../../components/separator';
+import { toast } from 'sonner';
+import { RadioGroup, RadioGroupItem } from '../../../components/radio-group';
+import { apiClient } from '@repo/api-client';
 
 export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: string }) {
-  const [preference, setPreference] = useState<string>("all")
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false); const [settings, setSettings] = useState({ emailFrequency: "realtime", weeklyDigest: true, securityAlerts: true })
+  const [preference, setPreference] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState({ emailFrequency: 'realtime', weeklyDigest: true, securityAlerts: true });
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const { data } = await apiClient.get(`/notifications/settings/workspace`, {
-          params: { workspaceSlug }
-        })
-        setPreference(data.notificationPreference || "all")
+          params: { workspaceSlug },
+        });
+        setPreference(data.notificationPreference || 'all');
       } catch (error) {
-        console.error("Failed to fetch notification settings:", error)
+        console.error('Failed to fetch notification settings:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchSettings()
-  }, [workspaceSlug])
+    };
+    fetchSettings();
+  }, [workspaceSlug]);
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving(true);
     try {
-      await apiClient.patch("/notifications/settings/workspace", { workspaceSlug, preference })
-      toast.success("Notification preferences saved")
+      await apiClient.patch('/notifications/settings/workspace', { workspaceSlug, preference });
+      toast.success('Notification preferences saved');
     } catch (error) {
-      toast.error("Failed to save notification preferences")
+      toast.error('Failed to save notification preferences');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -70,18 +71,22 @@ export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: 
             <div className="flex items-start space-x-3 space-y-0">
               <RadioGroupItem value="all" id="all" className="mt-1" />
               <div className="grid gap-1.5 leading-none">
-                <Label htmlFor="all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                <Label
+                  htmlFor="all"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
                   All Messages
                 </Label>
-                <p className="text-xs text-muted-foreground">
-                  Get notified for every message sent in this workspace.
-                </p>
+                <p className="text-xs text-muted-foreground">Get notified for every message sent in this workspace.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3 space-y-0">
               <RadioGroupItem value="mentions" id="mentions" className="mt-1" />
               <div className="grid gap-1.5 leading-none">
-                <Label htmlFor="mentions" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                <Label
+                  htmlFor="mentions"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
                   Only @mentions
                 </Label>
                 <p className="text-xs text-muted-foreground">
@@ -92,7 +97,10 @@ export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: 
             <div className="flex items-start space-x-3 space-y-0">
               <RadioGroupItem value="nothing" id="nothing" className="mt-1" />
               <div className="grid gap-1.5 leading-none">
-                <Label htmlFor="nothing" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                <Label
+                  htmlFor="nothing"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
                   Nothing
                 </Label>
                 <p className="text-xs text-muted-foreground">
@@ -114,7 +122,7 @@ export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: 
             <Label>Email Frequency</Label>
             <Select
               value={settings.emailFrequency}
-              onValueChange={(v) => setSettings({ ...settings, emailFrequency: v })}
+              onValueChange={v => setSettings({ ...settings, emailFrequency: v })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -138,7 +146,7 @@ export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: 
             </div>
             <Switch
               checked={settings.weeklyDigest}
-              onCheckedChange={(checked) => setSettings({ ...settings, weeklyDigest: checked })}
+              onCheckedChange={checked => setSettings({ ...settings, weeklyDigest: checked })}
             />
           </div>
 
@@ -161,5 +169,5 @@ export function NotificationsTab({ workspaceId: workspaceSlug }: { workspaceId: 
         </Button>
       </div>
     </div>
-  )
+  );
 }

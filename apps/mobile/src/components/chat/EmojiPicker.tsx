@@ -4,9 +4,107 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const EMOJI_DATA = [
   { category: 'Recent', emojis: ['👍', '❤️', '😂', '😮', '😢', '🔥', '✅', '🚀', '✨', '🙏'] },
-  { category: 'Smileys', emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔'] },
-  { category: 'Gestures', emojis: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏'] },
-  { category: 'Activities', emojis: ['⚽️', '🏀', '🏈', '⚾️', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳️', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹'] },
+  {
+    category: 'Smileys',
+    emojis: [
+      '😀',
+      '😃',
+      '😄',
+      '😁',
+      '😆',
+      '😅',
+      '🤣',
+      '😂',
+      '🙂',
+      '🙃',
+      '😉',
+      '😊',
+      '😇',
+      '🥰',
+      '😍',
+      '🤩',
+      '😘',
+      '😗',
+      '😚',
+      '😋',
+      '😛',
+      '😜',
+      '🤪',
+      '😝',
+      '🤑',
+      '🤗',
+      '🤭',
+      '🤫',
+      '🤔',
+    ],
+  },
+  {
+    category: 'Gestures',
+    emojis: [
+      '👋',
+      '🤚',
+      '🖐',
+      '✋',
+      '🖖',
+      '👌',
+      '🤏',
+      '✌️',
+      '🤞',
+      '🤟',
+      '🤘',
+      '🤙',
+      '👈',
+      '👉',
+      '👆',
+      '🖕',
+      '👇',
+      '☝️',
+      '👍',
+      '👎',
+      '✊',
+      '👊',
+      '🤛',
+      '🤜',
+      '👏',
+      '🙌',
+      '👐',
+      '🤲',
+      '🤝',
+      '🙏',
+    ],
+  },
+  {
+    category: 'Activities',
+    emojis: [
+      '⚽️',
+      '🏀',
+      '🏈',
+      '⚾️',
+      '🥎',
+      '🎾',
+      '🏐',
+      '🏉',
+      '🥏',
+      '🎱',
+      '🪀',
+      '🏓',
+      '🏸',
+      '🏒',
+      '🏑',
+      '🥍',
+      '🏏',
+      '🥅',
+      '⛳️',
+      '🪁',
+      '🏹',
+      '🎣',
+      '🤿',
+      '🥊',
+      '🥋',
+      '🎽',
+      '🛹',
+    ],
+  },
 ];
 
 interface EmojiPickerProps {
@@ -39,12 +137,7 @@ export function EmojiPicker({ isVisible, onClose, onSelect }: EmojiPickerProps) 
   );
 
   return (
-    <Modal
-      visible={isVisible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
+    <Modal visible={isVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View className="flex-1 bg-discord-base">
         <View className="h-14 flex-row items-center px-4 border-b border-discord-tertiary">
           <Text className="flex-1 text-discord-header font-bold text-lg">Pick an Emoji</Text>

@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Delete, Param, UseGuards, Body, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  UseGuards,
+  Body,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -222,8 +232,8 @@ export class UsersController {
         avatar,
         banner,
         statusText,
-        statusEmoji
-      }
+        statusEmoji,
+      },
     });
   }
 }

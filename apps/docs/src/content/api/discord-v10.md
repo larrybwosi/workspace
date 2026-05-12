@@ -10,12 +10,12 @@ Connect your Discord library to the following WebSocket endpoint:
 
 ## Supported Opcodes
 
-| Opcode | Name | Description |
-| :--- | :--- | :--- |
-| `0` | Dispatch | An event was dispatched. |
-| `1` | Heartbeat | Used for client-side heartbeat. |
-| `2` | Identify | Used for client-side handshake. |
-| `10` | Hello | Sent by the server immediately after connecting. |
+| Opcode | Name      | Description                                      |
+| :----- | :-------- | :----------------------------------------------- |
+| `0`    | Dispatch  | An event was dispatched.                         |
+| `1`    | Heartbeat | Used for client-side heartbeat.                  |
+| `2`    | Identify  | Used for client-side handshake.                  |
+| `10`   | Hello     | Sent by the server immediately after connecting. |
 
 ## Supported Dispatch Events
 
@@ -40,7 +40,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   // Override the base API and Gateway URLs
   rest: { api: 'https://api.skyrme.chat/v10' },
-  ws: { gateway: 'ws://api.skyrme.chat/v10/gateway' }
+  ws: { gateway: 'ws://api.skyrme.chat/v10/gateway' },
 });
 
 client.on('ready', () => {
@@ -63,6 +63,7 @@ client.login('your_bot_token');
 - **Snowflakes**: Skyrme Chat uses standard UUIDs, but for compatibility, some fields are translated to Discord-style snowflakes.
 
 ### Role Snowflakes
+
 - Owner: `100000000000000001`
 - Admin: `100000000000000002`
 - Member: `100000000000000003`

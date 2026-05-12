@@ -1,57 +1,60 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "../../components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
-import { Copy, Loader2, Plus, Trash2 } from "lucide-react"
-import { useWorkspaceInviteLinks, useCreateWorkspaceInviteLink, useDeleteWorkspaceInviteLink } from "@repo/api-client"
-import { useToast } from "../../hooks/use-toast"
-import { format } from "date-fns"
+import { useState } from 'react';
+import { Button } from '../../components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table';
+import { Copy, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useWorkspaceInviteLinks, useCreateWorkspaceInviteLink, useDeleteWorkspaceInviteLink } from '@repo/api-client';
+import { useToast } from '../../hooks/use-toast';
+import { format } from 'date-fns';
 
 interface WorkspaceInviteLinksProps {
-  workspaceId: string
+  workspaceId: string;
 }
 
 export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceInviteLinksProps) {
-  const { data: inviteLinks, isLoading } = useWorkspaceInviteLinks(workspaceSlug)
-  const createLinkMutation = useCreateWorkspaceInviteLink(workspaceSlug)
-  const deleteLinkMutation = useDeleteWorkspaceInviteLink(workspaceSlug)
-  const { toast } = useToast()
+  const { data: inviteLinks, isLoading } = useWorkspaceInviteLinks(workspaceSlug);
+  const createLinkMutation = useCreateWorkspaceInviteLink(workspaceSlug);
+  const deleteLinkMutation = useDeleteWorkspaceInviteLink(workspaceSlug);
+  const { toast } = useToast();
 
-  const [maxUses, setMaxUses] = useState("0")
-  const [expiration, setExpiration] = useState("never")
+  const [maxUses, setMaxUses] = useState('0');
+  const [expiration, setExpiration] = useState('never');
 
   const handleCreateLink = async () => {
     try {
-      const expiresAt = expiration === "never" ? undefined : new Date(Date.now() + parseInt(expiration) * 24 * 60 * 60 * 1000).toISOString()
+      const expiresAt =
+        expiration === 'never'
+          ? undefined
+          : new Date(Date.now() + parseInt(expiration) * 24 * 60 * 60 * 1000).toISOString();
       await createLinkMutation.mutateAsync({
         maxUses: parseInt(maxUses),
         expiresAt,
-      })
-      toast({ title: "Invite link created" })
+      });
+      toast({ title: 'Invite link created' });
     } catch (error) {
-      toast({ title: "Failed to create link", variant: "destructive" })
+      toast({ title: 'Failed to create link', variant: 'destructive' });
     }
-  }
+  };
 
   const handleCopy = (code: string) => {
-    const url = `${window.location.origin}/invite/${code}`
-    navigator.clipboard.writeText(url)
-    toast({ title: "Link copied to clipboard" })
-  }
+    const url = `${window.location.origin}/invite/${code}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Link copied to clipboard' });
+  };
 
   const handleDelete = async (linkId: string) => {
     try {
-      await deleteLinkMutation.mutateAsync(linkId)
-      toast({ title: "Invite link deleted" })
+      await deleteLinkMutation.mutateAsync(linkId);
+      toast({ title: 'Invite link deleted' });
     } catch (error) {
-      toast({ title: "Failed to delete link", variant: "destructive" })
+      toast({ title: 'Failed to delete link', variant: 'destructive' });
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -93,7 +96,11 @@ export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceIn
               </Select>
             </div>
             <Button onClick={handleCreateLink} disabled={createLinkMutation.isPending}>
-              {createLinkMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+              {createLinkMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
               Create Link
             </Button>
           </div>
@@ -110,9 +117,7 @@ export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceIn
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : !inviteLinks || inviteLinks.length === 0 ? (
-            <div className="text-center p-8 text-muted-foreground">
-              No active invite links. Create one above!
-            </div>
+            <div className="text-center p-8 text-muted-foreground">No active invite links. Create one above!</div>
           ) : (
             <Table>
               <TableHeader>
@@ -129,10 +134,10 @@ export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceIn
                   <TableRow key={link.id}>
                     <TableCell className="font-mono text-xs">{link.code}</TableCell>
                     <TableCell>
-                      {link.uses} / {link.maxUses === 0 ? "∞" : link.maxUses}
+                      {link.uses} / {link.maxUses === 0 ? '∞' : link.maxUses}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {link.expiresAt ? format(new Date(link.expiresAt), "MMM d, yyyy") : "Never"}
+                      {link.expiresAt ? format(new Date(link.expiresAt), 'MMM d, yyyy') : 'Never'}
                     </TableCell>
                     <TableCell className="text-sm">{link.createdBy.name}</TableCell>
                     <TableCell className="text-right">
@@ -140,7 +145,12 @@ export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceIn
                         <Button variant="ghost" size="icon" onClick={() => handleCopy(link.code)}>
                           <Copy className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(link.id)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleDelete(link.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -153,5 +163,5 @@ export function WorkspaceInviteLinks({ workspaceId: workspaceSlug }: WorkspaceIn
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

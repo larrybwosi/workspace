@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * GraphQL-inspired Custom Message Schema
@@ -49,7 +49,7 @@ export const MessageNodeSchema: z.ZodType<MessageNode> = z.lazy(() =>
  */
 export const CustomMessageSchema = z.object({
   /** Schema Version (e.g., "v1") */
-  version: z.string().default("v1"),
+  version: z.string().default('v1'),
   /** The human-readable title for the message schema/template */
   templateId: z.string().optional(),
   /** The logical "Type" of the custom message (e.g., 'APPROVAL', 'REPORT') */
@@ -60,7 +60,7 @@ export const CustomMessageSchema = z.object({
     description: z.string().optional(),
     icon: z.string().optional(),
     color: z.string().optional(),
-    priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
+    priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
   }),
   /** The hierarchical UI structure */
   root: MessageNodeSchema,
@@ -70,11 +70,11 @@ export const CustomMessageSchema = z.object({
       z.object({
         id: z.string(),
         label: z.string(),
-        type: z.enum(["PRIMARY", "SECONDARY", "DESTRUCTIVE", "GHOST"]).default("SECONDARY"),
+        type: z.enum(['PRIMARY', 'SECONDARY', 'DESTRUCTIVE', 'GHOST']).default('SECONDARY'),
         icon: z.string().optional(),
         /** Handler defines how the client should respond to this action */
         handler: z.object({
-          type: z.enum(["CALLBACK", "LINK", "MODAL"]),
+          type: z.enum(['CALLBACK', 'LINK', 'MODAL']),
           url: z.string().optional(),
           callbackId: z.string().optional(),
           payload: z.record(z.string(), z.any()).optional(),
@@ -107,22 +107,22 @@ export const createApprovalMessage = (data: {
   fields: { label: string; value: string }[];
   callbackId: string;
 }): CustomMessage => ({
-  version: "v1",
-  type: "APPROVAL",
+  version: 'v1',
+  type: 'APPROVAL',
   context: {
     title: data.title,
     description: data.description,
-    icon: "CheckSquare",
-    priority: "normal",
+    icon: 'CheckSquare',
+    priority: 'normal',
   },
   root: {
-    type: "Layout.Card",
+    type: 'Layout.Card',
     children: [
       {
-        type: "Layout.Grid",
+        type: 'Layout.Grid',
         properties: { columns: 2 },
-        children: data.fields.map((f) => ({
-          type: "Display.Field",
+        children: data.fields.map(f => ({
+          type: 'Display.Field',
           properties: { label: f.label, value: f.value },
         })),
       },
@@ -130,25 +130,25 @@ export const createApprovalMessage = (data: {
   },
   actions: [
     {
-      id: "approve",
-      label: "Approve",
-      type: "PRIMARY",
-      icon: "Check",
+      id: 'approve',
+      label: 'Approve',
+      type: 'PRIMARY',
+      icon: 'Check',
       handler: {
-        type: "CALLBACK",
+        type: 'CALLBACK',
         callbackId: data.callbackId,
-        payload: { action: "approve" },
+        payload: { action: 'approve' },
       },
     },
     {
-      id: "reject",
-      label: "Reject",
-      type: "DESTRUCTIVE",
-      icon: "X",
+      id: 'reject',
+      label: 'Reject',
+      type: 'DESTRUCTIVE',
+      icon: 'X',
       handler: {
-        type: "CALLBACK",
+        type: 'CALLBACK',
         callbackId: data.callbackId,
-        payload: { action: "reject" },
+        payload: { action: 'reject' },
       },
     },
   ],
@@ -163,24 +163,24 @@ export const createReportMessage = (data: {
   summary: string;
   metrics: { label: string; value: string | number }[];
 }): CustomMessage => ({
-  version: "v1",
-  type: "REPORT",
+  version: 'v1',
+  type: 'REPORT',
   context: {
     title: data.title,
-    icon: "BarChart",
-    priority: "normal",
+    icon: 'BarChart',
+    priority: 'normal',
   },
   root: {
-    type: "Layout.Stack",
+    type: 'Layout.Stack',
     children: [
       {
-        type: "Text.Paragraph",
+        type: 'Text.Paragraph',
         properties: { content: data.summary },
       },
       {
-        type: "Data.StatsGrid",
-        children: data.metrics.map((m) => ({
-          type: "Data.Stat",
+        type: 'Data.StatsGrid',
+        children: data.metrics.map(m => ({
+          type: 'Data.Stat',
           properties: { label: m.label, value: m.value },
         })),
       },
@@ -188,12 +188,12 @@ export const createReportMessage = (data: {
   },
   actions: [
     {
-      id: "view_details",
-      label: "View Full Report",
-      type: "SECONDARY",
-      icon: "ExternalLink",
+      id: 'view_details',
+      label: 'View Full Report',
+      type: 'SECONDARY',
+      icon: 'ExternalLink',
       handler: {
-        type: "LINK",
+        type: 'LINK',
         url: `/reports/${data.reportId}`,
       },
     },

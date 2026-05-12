@@ -1,23 +1,23 @@
-import { useMutation } from "@tanstack/react-query"
-import { apiClient } from "../client"
+import { useMutation } from '@tanstack/react-query';
+import { apiClient } from '../client';
 
 export function useStorageUpload() {
   return useMutation({
     mutationFn: async (file: { uri: string; name: string; type: string }) => {
-      const formData = new FormData()
+      const formData = new FormData();
       // @ts-expect-error - Expo FormData requires object for file upload
-      formData.append("file", {
+      formData.append('file', {
         uri: file.uri,
         name: file.name,
         type: file.type,
-      })
+      });
 
-      const { data } = await apiClient.post("/storage/upload", formData, {
+      const { data } = await apiClient.post('/storage/upload', formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          'Content-Type': 'multipart/form-data',
         },
-      })
-      return data
+      });
+      return data;
     },
-  })
+  });
 }

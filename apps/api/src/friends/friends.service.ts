@@ -10,10 +10,10 @@ export class FriendsService {
         userId: userId,
         ...(search && {
           OR: [
-            { friend: { name: { contains: search, mode: "insensitive" } } },
-            { friend: { email: { contains: search, mode: "insensitive" } } },
-            { friend: { username: { contains: search, mode: "insensitive" } } },
-            { nickname: { contains: search, mode: "insensitive" } },
+            { friend: { name: { contains: search, mode: 'insensitive' } } },
+            { friend: { email: { contains: search, mode: 'insensitive' } } },
+            { friend: { username: { contains: search, mode: 'insensitive' } } },
+            { nickname: { contains: search, mode: 'insensitive' } },
           ],
         }),
       },
@@ -31,7 +31,7 @@ export class FriendsService {
         },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
   }
@@ -41,9 +41,9 @@ export class FriendsService {
       ...(status && { status }),
     };
 
-    if (type === "sent") {
+    if (type === 'sent') {
       where.senderId = userId;
-    } else if (type === "received") {
+    } else if (type === 'received') {
       where.receiverId = userId;
     } else {
       where.OR = [{ senderId: userId }, { receiverId: userId }];
@@ -76,7 +76,7 @@ export class FriendsService {
         },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
   }
@@ -84,10 +84,7 @@ export class FriendsService {
   async sendFriendRequest(senderId: string, senderName: string, receiverEmailOrUsername: string, message?: string) {
     const receiver = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: receiverEmailOrUsername },
-          { username: receiverEmailOrUsername },
-        ],
+        OR: [{ email: receiverEmailOrUsername }, { username: receiverEmailOrUsername }],
       },
     });
 
@@ -117,8 +114,8 @@ export class FriendsService {
     const existingRequest = await prisma.friendRequest.findFirst({
       where: {
         OR: [
-          { senderId: senderId, receiverId: receiverId, status: "pending" },
-          { senderId: receiverId, receiverId: senderId, status: "pending" },
+          { senderId: senderId, receiverId: receiverId, status: 'pending' },
+          { senderId: receiverId, receiverId: senderId, status: 'pending' },
         ],
       },
     });
@@ -146,10 +143,10 @@ export class FriendsService {
     await prisma.notification.create({
       data: {
         userId: receiverId,
-        type: "friend_request",
-        title: "New Friend Request",
+        type: 'friend_request',
+        title: 'New Friend Request',
         message: `${senderName} sent you a friend request`,
-        entityType: "friend_request",
+        entityType: 'friend_request',
         entityId: friendRequest.id,
         linkUrl: `/friends/requests`,
         metadata: {
@@ -160,11 +157,11 @@ export class FriendsService {
       },
     });
 
-    await publishToAbly(`user:${receiverId}`, "NOTIFICATION", {
-      type: "friend_request",
-      title: "New Friend Request",
+    await publishToAbly(`user:${receiverId}`, 'NOTIFICATION', {
+      type: 'friend_request',
+      title: 'New Friend Request',
       message: `${senderName} sent you a friend request`,
-      entityType: "friend_request",
+      entityType: 'friend_request',
       entityId: friendRequest.id,
       linkUrl: `/friends/requests`,
     });
@@ -185,27 +182,27 @@ export class FriendsService {
       throw new NotFoundException('Friend request not found');
     }
 
-    if (action === "cancel" && friendRequest.senderId !== userId) {
+    if (action === 'cancel' && friendRequest.senderId !== userId) {
       throw new ForbiddenException('Only sender can cancel the request');
     }
 
-    if ((action === "accept" || action === "decline") && friendRequest.receiverId !== userId) {
+    if ((action === 'accept' || action === 'decline') && friendRequest.receiverId !== userId) {
       throw new ForbiddenException('Only receiver can accept or decline the request');
     }
 
-    if (friendRequest.status !== "pending") {
+    if (friendRequest.status !== 'pending') {
       throw new BadRequestException('Request has already been processed');
     }
 
     const updatedRequest = await prisma.friendRequest.update({
       where: { id: requestId },
       data: {
-        status: action === "accept" ? "accepted" : action === "decline" ? "declined" : "cancelled",
-        respondedAt: action !== "cancel" ? new Date() : undefined,
+        status: action === 'accept' ? 'accepted' : action === 'decline' ? 'declined' : 'cancelled',
+        respondedAt: action !== 'cancel' ? new Date() : undefined,
       },
     });
 
-    if (action === "accept") {
+    if (action === 'accept') {
       await prisma.$transaction([
         prisma.friend.create({
           data: {
@@ -224,38 +221,38 @@ export class FriendsService {
       await prisma.notification.create({
         data: {
           userId: friendRequest.senderId,
-          type: "friend_request_accepted",
-          title: "Friend Request Accepted",
+          type: 'friend_request_accepted',
+          title: 'Friend Request Accepted',
           message: `${friendRequest.receiver.name} accepted your friend request`,
-          entityType: "friend",
+          entityType: 'friend',
           entityId: friendRequest.receiverId,
           linkUrl: `/friends`,
         },
       });
 
-      await publishToAbly(`user:${friendRequest.senderId}`, "NOTIFICATION", {
-        type: "friend_request_accepted",
-        title: "Friend Request Accepted",
+      await publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
+        type: 'friend_request_accepted',
+        title: 'Friend Request Accepted',
         message: `${friendRequest.receiver.name} accepted your friend request`,
-        entityType: "friend",
+        entityType: 'friend',
         entityId: friendRequest.receiverId,
         linkUrl: `/friends`,
       });
-    } else if (action === "decline") {
+    } else if (action === 'decline') {
       await prisma.notification.create({
         data: {
           userId: friendRequest.senderId,
-          type: "friend_request_declined",
-          title: "Friend Request Declined",
+          type: 'friend_request_declined',
+          title: 'Friend Request Declined',
           message: `${friendRequest.receiver.name} declined your friend request`,
-          entityType: "friend_request",
+          entityType: 'friend_request',
           entityId: requestId,
         },
       });
 
-      await publishToAbly(`user:${friendRequest.senderId}`, "NOTIFICATION", {
-        type: "friend_request_declined",
-        title: "Friend Request Declined",
+      await publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
+        type: 'friend_request_declined',
+        title: 'Friend Request Declined',
         message: `${friendRequest.receiver.name} declined your friend request`,
       });
     }

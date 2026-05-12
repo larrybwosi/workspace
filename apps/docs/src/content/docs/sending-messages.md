@@ -29,7 +29,7 @@ For one-on-one conversations, use Direct Messages.
 
 ## Message Features
 
-- **Formatting**: Use Markdown to add **bold**, *italics*, or `code blocks`.
+- **Formatting**: Use Markdown to add **bold**, _italics_, or `code blocks`.
 - **Reactions**: Hover over a message and click the emoji icon to react.
 - **Threads**: Click "Reply to Thread" to keep related discussions organized and out of the main channel view.
 - **Attachments**: Drag and drop files or click the **+** icon to share images, documents, and more.

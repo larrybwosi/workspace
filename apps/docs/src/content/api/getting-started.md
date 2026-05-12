@@ -11,7 +11,7 @@ The Skyrme Chat API is a RESTful API that uses JSON for requests and responses. 
 - **Workspaces**: Everything happens inside a workspace. You'll need the workspace `slug` for most API calls.
 - **Bots & Applications**: To use the API, you first create a Bot Application in the Skyrme Chat Developer Portal. This gives you the credentials needed for authentication.
 - **Scoping**: Our API uses granular scopes (e.g., `messages:send`) so you can grant your apps only the permissions they need.
-- **Real-time**: While you use REST to *do* things, you can use **Webhooks** or connect to our **Ably** integration to *listen* to things happening in real-time.
+- **Real-time**: While you use REST to _do_ things, you can use **Webhooks** or connect to our **Ably** integration to _listen_ to things happening in real-time.
 
 ## Quick Start
 

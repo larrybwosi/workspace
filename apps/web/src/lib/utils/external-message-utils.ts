@@ -1,45 +1,45 @@
-import { prisma } from "@/lib/db/prisma"
-import { getAblyRest, AblyChannels, AblyEvents } from "@repo/shared/server"
-import crypto from "crypto"
+import { prisma } from '@/lib/db/prisma';
+import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
+import crypto from 'crypto';
 
 export interface ExternalMessage {
-  content: string
-  messageType?: "standard" | "system" | "bot" | "integration" | "alert" | "announcement"
-  metadata?: Record<string, any>
+  content: string;
+  messageType?: 'standard' | 'system' | 'bot' | 'integration' | 'alert' | 'announcement';
+  metadata?: Record<string, any>;
   attachments?: Array<{
-    name: string
-    type: string
-    url: string
-    size?: number
-  }>
+    name: string;
+    type: string;
+    url: string;
+    size?: number;
+  }>;
   embeds?: Array<{
-    title?: string
-    description?: string
-    url?: string
-    color?: string
-    thumbnail?: string
-    fields?: Array<{ name: string; value: string; inline?: boolean }>
-    footer?: string
-    timestamp?: string
-  }>
+    title?: string;
+    description?: string;
+    url?: string;
+    color?: string;
+    thumbnail?: string;
+    fields?: Array<{ name: string; value: string; inline?: boolean }>;
+    footer?: string;
+    timestamp?: string;
+  }>;
   source?: {
-    name: string
-    icon?: string
-    url?: string
-  }
-  priority?: "low" | "normal" | "high" | "urgent"
-  expiresAt?: string
-  silent?: boolean
+    name: string;
+    icon?: string;
+    url?: string;
+  };
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  expiresAt?: string;
+  silent?: boolean;
 }
 
 export interface ExternalMessageResult {
-  id: string
-  channelId: string
-  threadId: string
-  content: string
-  messageType: string
-  timestamp: string
-  metadata: any
+  id: string;
+  channelId: string;
+  threadId: string;
+  content: string;
+  messageType: string;
+  timestamp: string;
+  metadata: any;
 }
 
 /**
@@ -49,15 +49,15 @@ export async function createExternalMessage(
   channelId: string,
   userId: string,
   message: ExternalMessage,
-  apiKeyId: string,
+  apiKeyId: string
 ): Promise<ExternalMessageResult> {
   // Find or create the general thread for the channel
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-  })
+  });
 
   if (!channel) {
-    throw new Error("Channel not found")
+    throw new Error('Channel not found');
   }
 
   let thread = await prisma.thread.findFirst({
@@ -65,7 +65,7 @@ export async function createExternalMessage(
       channelId,
       title: `${channel.name} General`,
     },
-  })
+  });
 
   if (!thread) {
     thread = await prisma.thread.create({
@@ -73,9 +73,9 @@ export async function createExternalMessage(
         channelId,
         title: `${channel.name} General`,
         creatorId: userId,
-        status: "Active",
+        status: 'Active',
       },
-    })
+    });
   }
 
   // Build message metadata with external source info
@@ -85,9 +85,9 @@ export async function createExternalMessage(
     apiKeyId,
     source: message.source,
     embeds: message.embeds,
-    priority: message.priority || "normal",
+    priority: message.priority || 'normal',
     expiresAt: message.expiresAt,
-  }
+  };
 
   // Create the message
   const newMessage = await prisma.message.create({
@@ -96,11 +96,11 @@ export async function createExternalMessage(
       threadId: thread.id,
       userId,
       content: message.content,
-      messageType: message.messageType || "integration",
+      messageType: message.messageType || 'integration',
       metadata,
       attachments: message.attachments
         ? {
-            create: message.attachments.map((att) => ({
+            create: message.attachments.map(att => ({
               name: att.name,
               type: att.type,
               url: att.url,
@@ -113,24 +113,25 @@ export async function createExternalMessage(
       user: true,
       attachments: true,
     },
-  })
+  });
 
   // Publish to Ably for real-time updates (unless silent)
   if (!message.silent) {
-    const ably = getAblyRest(); if (!ably) throw new Error("Ably not configured");
-    const ablyChannel = ably.channels.get(AblyChannels.channel(channelId))
+    const ably = getAblyRest();
+    if (!ably) throw new Error('Ably not configured');
+    const ablyChannel = ably.channels.get(AblyChannels.channel(channelId));
     await ablyChannel.publish(AblyEvents.MESSAGE_SENT, {
       ...newMessage,
       isExternal: true,
       source: message.source,
-    })
+    });
   }
 
   // Log the API usage
   await prisma.apiKey.update({
     where: { id: apiKeyId },
     data: { lastUsedAt: new Date() },
-  })
+  });
 
   return {
     id: newMessage.id,
@@ -140,7 +141,7 @@ export async function createExternalMessage(
     messageType: newMessage.messageType,
     timestamp: newMessage.timestamp.toISOString(),
     metadata: newMessage.metadata,
-  }
+  };
 }
 
 /**
@@ -148,7 +149,7 @@ export async function createExternalMessage(
  */
 export async function validateChannelAccess(
   channelId: string,
-  userId: string,
+  userId: string
 ): Promise<{ valid: boolean; error?: string }> {
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
@@ -157,25 +158,25 @@ export async function validateChannelAccess(
         where: { userId },
       },
     },
-  })
+  });
 
   if (!channel) {
-    return { valid: false, error: "Channel not found" }
+    return { valid: false, error: 'Channel not found' };
   }
 
   // Check if private channel and user is member
   if (channel.isPrivate && channel.members.length === 0) {
-    return { valid: false, error: "Access denied to private channel" }
+    return { valid: false, error: 'Access denied to private channel' };
   }
 
-  return { valid: true }
+  return { valid: true };
 }
 
 /**
  * Generate idempotency key
  */
 export function generateIdempotencyKey(content: string, channelId: string): string {
-  return crypto.createHash("sha256").update(`${content}:${channelId}:${Date.now()}`).digest("hex").slice(0, 32)
+  return crypto.createHash('sha256').update(`${content}:${channelId}:${Date.now()}`).digest('hex').slice(0, 32);
 }
 
 /**
@@ -187,24 +188,24 @@ export async function fireMessageWebhooks(userId: string, event: string, payload
       userId,
       isActive: true,
     },
-  })
+  });
 
   for (const webhook of webhooks) {
     try {
-      const events = webhook.events as any[]
-      if (!events.includes(event)) continue
+      const events = webhook.events as any[];
+      if (!events.includes(event)) continue;
 
-      const signature = crypto.createHmac("sha256", webhook.secret).update(JSON.stringify(payload)).digest("hex")
+      const signature = crypto.createHmac('sha256', webhook.secret).update(JSON.stringify(payload)).digest('hex');
 
       const response = await fetch(webhook.url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "X-Webhook-Signature": signature,
-          "X-Webhook-Event": event,
+          'Content-Type': 'application/json',
+          'X-Webhook-Signature': signature,
+          'X-Webhook-Event': event,
         },
         body: JSON.stringify(payload),
-      })
+      });
 
       await prisma.webhookLog.create({
         data: {
@@ -215,12 +216,12 @@ export async function fireMessageWebhooks(userId: string, event: string, payload
           statusCode: response.status,
           success: response.ok,
         },
-      })
+      });
 
       await prisma.webhook.update({
         where: { id: webhook.id },
         data: { lastFiredAt: new Date() },
-      })
+      });
     } catch (error: any) {
       await prisma.webhookLog.create({
         data: {
@@ -230,7 +231,7 @@ export async function fireMessageWebhooks(userId: string, event: string, payload
           success: false,
           error: error.message,
         },
-      })
+      });
     }
   }
 }

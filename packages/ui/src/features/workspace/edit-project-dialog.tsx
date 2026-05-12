@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import {
   Dialog,
   DialogContent,
@@ -6,18 +6,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Button } from "../../components/button"
-import { Label } from "../../components/label"
-import { Input } from "../../components/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
+} from '../../components/dialog';
+import { Button } from '../../components/button';
+import { Label } from '../../components/label';
+import { Input } from '../../components/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
 
 interface EditProjectDialogProps {
-  editProjectOpen: boolean
-  setEditProjectOpen: (open: boolean) => void
-  projectForm: { name: string; description: string; status: string }
-  setProjectForm: (form: any) => void
-  handleEditProject: () => void
+  editProjectOpen: boolean;
+  setEditProjectOpen: (open: boolean) => void;
+  projectForm: { name: string; description: string; status: string };
+  setProjectForm: (form: any) => void;
+  handleEditProject: () => void;
 }
 
 export function EditProjectDialog({
@@ -37,14 +37,11 @@ export function EditProjectDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Project Name</Label>
-            <Input
-              value={projectForm.name}
-              onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-            />
+            <Input value={projectForm.name} onChange={e => setProjectForm({ ...projectForm, name: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={projectForm.status} onValueChange={(v) => setProjectForm({ ...projectForm, status: v })}>
+            <Select value={projectForm.status} onValueChange={v => setProjectForm({ ...projectForm, status: v })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -60,7 +57,7 @@ export function EditProjectDialog({
             <Label>Description</Label>
             <Input
               value={projectForm.description}
-              onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+              onChange={e => setProjectForm({ ...projectForm, description: e.target.value })}
             />
           </div>
         </div>
@@ -72,5 +69,5 @@ export function EditProjectDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Button } from "../../components/button"
-import { Card } from "../../components/card"
-import { Badge } from "../../components/badge"
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '../../components/button';
+import { Card } from '../../components/card';
+import { Badge } from '../../components/badge';
 import {
   Dialog,
   DialogContent,
@@ -12,119 +12,119 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Textarea } from "../../components/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
-import { Bell, Calendar, Clock, Plus, Pause, Play, Trash2, Repeat } from 'lucide-react'
-import { format } from "date-fns"
+} from '../../components/dialog';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Textarea } from '../../components/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import { Bell, Calendar, Clock, Plus, Pause, Play, Trash2, Repeat } from 'lucide-react';
+import { format } from 'date-fns';
 
 export function ScheduledNotificationsPanel() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: "",
-    message: "",
-    scheduleType: "once",
-    scheduledFor: "",
+    title: '',
+    message: '',
+    scheduleType: 'once',
+    scheduledFor: '',
     recurrence: {
       frequency: 1,
       daysOfWeek: [],
       daysOfMonth: [],
     },
-  })
+  });
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ["scheduled-notifications"],
+    queryKey: ['scheduled-notifications'],
     queryFn: async () => {
-      const res = await fetch("/api/scheduled-notifications")
-      if (!res.ok) throw new Error("Failed to fetch notifications")
-      return res.json()
+      const res = await fetch('/api/scheduled-notifications');
+      if (!res.ok) throw new Error('Failed to fetch notifications');
+      return res.json();
     },
-  })
+  });
 
   const { data: stats } = useQuery({
-    queryKey: ["scheduled-notifications-stats"],
+    queryKey: ['scheduled-notifications-stats'],
     queryFn: async () => {
-      const res = await fetch("/api/scheduled-notifications?stats=true")
-      if (!res.ok) throw new Error("Failed to fetch stats")
-      return res.json()
+      const res = await fetch('/api/scheduled-notifications?stats=true');
+      if (!res.ok) throw new Error('Failed to fetch stats');
+      return res.json();
     },
-  })
+  });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch("/api/scheduled-notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/scheduled-notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error("Failed to create notification")
-      return res.json()
+      });
+      if (!res.ok) throw new Error('Failed to create notification');
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-notifications"] })
-      queryClient.invalidateQueries({ queryKey: ["scheduled-notifications-stats"] })
-      setIsCreateOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['scheduled-notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduled-notifications-stats'] });
+      setIsCreateOpen(false);
       setFormData({
-        title: "",
-        message: "",
-        scheduleType: "once",
-        scheduledFor: "",
+        title: '',
+        message: '',
+        scheduleType: 'once',
+        scheduledFor: '',
         recurrence: { frequency: 1, daysOfWeek: [], daysOfMonth: [] },
-      })
+      });
     },
-  })
+  });
 
   const pauseMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/scheduled-notifications/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "pause" }),
-      })
-      if (!res.ok) throw new Error("Failed to pause notification")
-      return res.json()
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pause' }),
+      });
+      if (!res.ok) throw new Error('Failed to pause notification');
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-notifications"] })
+      queryClient.invalidateQueries({ queryKey: ['scheduled-notifications'] });
     },
-  })
+  });
 
   const resumeMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/scheduled-notifications/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "resume" }),
-      })
-      if (!res.ok) throw new Error("Failed to resume notification")
-      return res.json()
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resume' }),
+      });
+      if (!res.ok) throw new Error('Failed to resume notification');
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-notifications"] })
+      queryClient.invalidateQueries({ queryKey: ['scheduled-notifications'] });
     },
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/scheduled-notifications/${id}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete notification")
-      return res.json()
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to delete notification');
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-notifications"] })
-      queryClient.invalidateQueries({ queryKey: ["scheduled-notifications-stats"] })
+      queryClient.invalidateQueries({ queryKey: ['scheduled-notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduled-notifications-stats'] });
     },
-  })
+  });
 
   const handleCreate = () => {
-    createMutation.mutate(formData)
-  }
+    createMutation.mutate(formData);
+  };
 
   return (
     <div className="space-y-6">
@@ -194,14 +194,14 @@ export function ScheduledNotificationsPanel() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold">{notification.title}</h3>
-                    {notification.scheduleType !== "once" && (
+                    {notification.scheduleType !== 'once' && (
                       <Badge variant="secondary">
                         <Repeat className="h-3 w-3 mr-1" />
                         {notification.scheduleType}
                       </Badge>
                     )}
-                    <Badge variant={notification.isActive ? "default" : "secondary"}>
-                      {notification.isActive ? "Active" : "Paused"}
+                    <Badge variant={notification.isActive ? 'default' : 'secondary'}>
+                      {notification.isActive ? 'Active' : 'Paused'}
                     </Badge>
                     {notification.isSent && <Badge variant="outline">Sent</Badge>}
                   </div>
@@ -209,11 +209,11 @@ export function ScheduledNotificationsPanel() {
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(notification.scheduledFor), "MMM dd, yyyy")}
+                      {format(new Date(notification.scheduledFor), 'MMM dd, yyyy')}
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {format(new Date(notification.scheduledFor), "hh:mm a")}
+                      {format(new Date(notification.scheduledFor), 'hh:mm a')}
                     </div>
                   </div>
                 </div>
@@ -221,29 +221,17 @@ export function ScheduledNotificationsPanel() {
                   {!notification.isSent && (
                     <>
                       {notification.isActive ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => pauseMutation.mutate(notification.id)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => pauseMutation.mutate(notification.id)}>
                           <Pause className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => resumeMutation.mutate(notification.id)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => resumeMutation.mutate(notification.id)}>
                           <Play className="h-4 w-4" />
                         </Button>
                       )}
                     </>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteMutation.mutate(notification.id)}
-                  >
+                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(notification.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -265,7 +253,7 @@ export function ScheduledNotificationsPanel() {
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Task deadline reminder"
               />
             </div>
@@ -274,7 +262,7 @@ export function ScheduledNotificationsPanel() {
               <Textarea
                 id="message"
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={e => setFormData({ ...formData, message: e.target.value })}
                 placeholder="Don't forget to complete your task"
                 rows={3}
               />
@@ -283,7 +271,7 @@ export function ScheduledNotificationsPanel() {
               <Label htmlFor="scheduleType">Schedule Type</Label>
               <Select
                 value={formData.scheduleType}
-                onValueChange={(value) => setFormData({ ...formData, scheduleType: value })}
+                onValueChange={value => setFormData({ ...formData, scheduleType: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -302,7 +290,7 @@ export function ScheduledNotificationsPanel() {
                 id="scheduledFor"
                 type="datetime-local"
                 value={formData.scheduledFor}
-                onChange={(e) => setFormData({ ...formData, scheduledFor: e.target.value })}
+                onChange={e => setFormData({ ...formData, scheduledFor: e.target.value })}
               />
             </div>
           </div>
@@ -311,11 +299,11 @@ export function ScheduledNotificationsPanel() {
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating..." : "Create"}
+              {createMutation.isPending ? 'Creating...' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

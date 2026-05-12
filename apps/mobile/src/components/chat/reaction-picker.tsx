@@ -16,20 +16,12 @@ export function ReactionPicker({ isVisible, onClose, onSelect }: ReactionPickerP
 
   return (
     <>
-      <Modal
-        transparent
-        visible={isVisible && !showFullPicker}
-        animationType="fade"
-        onRequestClose={onClose}
-      >
-        <Pressable
-          className="flex-1 bg-black/40 items-center justify-center px-4"
-          onPress={onClose}
-        >
+      <Modal transparent visible={isVisible && !showFullPicker} animationType="fade" onRequestClose={onClose}>
+        <Pressable className="flex-1 bg-black/40 items-center justify-center px-4" onPress={onClose}>
           <View className="bg-discord-secondary p-4 rounded-2xl shadow-xl w-full border border-black/20">
             <Text className="text-discord-muted text-xs font-bold uppercase mb-3 px-1">Quick Reactions</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
-              {QUICK_EMOJIS.map((emoji) => (
+              {QUICK_EMOJIS.map(emoji => (
                 <TouchableOpacity
                   key={emoji}
                   onPress={() => {
@@ -50,22 +42,22 @@ export function ReactionPicker({ isVisible, onClose, onSelect }: ReactionPickerP
             </View>
 
             <View className="border-t border-discord-tertiary pt-2">
-               <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
-                  <MaterialIcons name="reply" size={20} color="#B5BAC1" />
-                  <Text className="text-discord-header ml-3 font-medium">Reply</Text>
-               </TouchableOpacity>
-               <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
-                  <MaterialIcons name="edit" size={20} color="#B5BAC1" />
-                  <Text className="text-discord-header ml-3 font-medium">Edit Message</Text>
-               </TouchableOpacity>
-               <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
-                  <MaterialIcons name="content-copy" size={20} color="#B5BAC1" />
-                  <Text className="text-discord-header ml-3 font-medium">Copy Text</Text>
-               </TouchableOpacity>
-               <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
-                  <MaterialIcons name="delete" size={20} color="#F23F42" />
-                  <Text className="text-red-400 ml-3 font-medium">Delete Message</Text>
-               </TouchableOpacity>
+              <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
+                <MaterialIcons name="reply" size={20} color="#B5BAC1" />
+                <Text className="text-discord-header ml-3 font-medium">Reply</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
+                <MaterialIcons name="edit" size={20} color="#B5BAC1" />
+                <Text className="text-discord-header ml-3 font-medium">Edit Message</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
+                <MaterialIcons name="content-copy" size={20} color="#B5BAC1" />
+                <Text className="text-discord-header ml-3 font-medium">Copy Text</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="flex-row items-center p-3 rounded-lg active:bg-discord-tertiary">
+                <MaterialIcons name="delete" size={20} color="#F23F42" />
+                <Text className="text-red-400 ml-3 font-medium">Delete Message</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Pressable>
