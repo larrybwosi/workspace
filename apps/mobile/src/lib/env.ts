@@ -1,4 +1,4 @@
-export const getEnv = (name: string) => {
+const getEnv = (name: string) => {
     const g = globalThis as any;
 
     // Try various common locations for env variables

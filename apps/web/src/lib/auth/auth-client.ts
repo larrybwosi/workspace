@@ -34,4 +34,4 @@ export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
 });
 
-export const { signIn, signOut, signUp, useSession } = authClient;
+export const { signIn, signUp } = authClient;

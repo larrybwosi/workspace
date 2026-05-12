@@ -31,4 +31,4 @@ apiClient.interceptors.request.use(async (config) => {
     return config;
 });
 
-export const { signIn, signUp, useSession, signOut } = authClient;
+export const { signUp, useSession, signOut } = authClient;
