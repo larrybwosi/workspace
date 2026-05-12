@@ -5,6 +5,11 @@ services:
     restart: always
     expose:
       - '3001'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       api:
         condition: service_started
@@ -26,6 +31,11 @@ services:
     restart: always
     expose:
       - '3000'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,7 +59,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
       - POSTGRES_DB=${DB_NAME:-main}
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 10s
       timeout: 5s
       retries: 5

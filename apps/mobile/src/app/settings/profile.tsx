@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEligibleAssets } from '@repo/api-client';
 import axios from 'axios';
+import { getBaseURL } from '../../lib/env';
 
 export default function ProfileSettings() {
   const { data: session } = (useSession as any)();
@@ -18,7 +19,7 @@ export default function ProfileSettings() {
   const handleSave = async () => {
     setIsUpdating(true);
     try {
-      const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+      const baseURL = getBaseURL();
       await axios.post(`${baseURL}/api/users/me`, {
         avatar,
         banner
