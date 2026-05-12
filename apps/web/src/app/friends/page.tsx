@@ -209,7 +209,7 @@ export default function FriendsPage() {
                 <DialogTitle>User not found</DialogTitle>
                 <DialogDescription>
                   We couldn't find a user with the email <strong>{inviteEmail}</strong>.
-                  Would you like to invite them to join Dealio?
+                  Would you like to invite them to join Scrymechat?
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -472,7 +472,7 @@ export default function FriendsPage() {
           <div className="pt-6 border-t">
             <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
               <h4 className="text-sm font-bold mb-1">Invite your friends</h4>
-              <p className="text-xs text-muted-foreground mb-3">Expand your network on Dealio by inviting your colleagues.</p>
+              <p className="text-xs text-muted-foreground mb-3">Expand your network on Scrymechat by inviting your colleagues.</p>
               <Button size="sm" className="w-full" onClick={() => setAddFriendOpen(true)}>Send Invite</Button>
             </div>
           </div>

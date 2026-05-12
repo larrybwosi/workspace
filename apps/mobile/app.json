@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Skyrme",
-    "slug": "skyrme-mobile",
-    "version": "0.0.1.999",
+    "name": "Scrymechat",
+    "slug": "scrymechat-mobile",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.skryme.com"
+      "bundleIdentifier": "app.scrymechat.com"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.skryme.com",
+      "package": "app.scrymechat.com",
       "versionCode": 999
     },
     "web": {
@@ -48,6 +48,6 @@
     "experiments": {
       "typedRoutes": true
     },
-    "scheme": "skryme-auth"
+    "scheme": "scrymechat-auth"
   }
 }
