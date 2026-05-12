@@ -53,6 +53,7 @@ COPY --from=installer --chown=nestjs:nodejs /app/packages/shared/dist ./packages
 COPY --from=installer --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/package.json ./package.json
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma ./prisma
+COPY --from=builder --chown=nestjs:nodejs /app/packages/database/prisma.config.ts ./
 COPY --from=builder --chown=nestjs:nodejs /app/docker-entrypoint.sh ./
 
 RUN chmod +x ./docker-entrypoint.sh

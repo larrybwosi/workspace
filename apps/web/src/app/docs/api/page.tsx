@@ -9,7 +9,7 @@ export default function ApiDocsPage() {
       <div className="space-y-4 mb-10">
         <h1 className="text-4xl font-bold tracking-tight">API Documentation V1</h1>
         <p className="text-xl text-muted-foreground">
-          Integrate Dealio's messaging capabilities into your organization's workflow.
+          Integrate Scrymechat's messaging capabilities into your organization's workflow.
         </p>
       </div>
 
@@ -138,7 +138,7 @@ export default function ApiDocsPage() {
             <CardHeader>
               <CardTitle>Outgoing Webhooks</CardTitle>
               <CardDescription>
-                Receive real-time notifications when events occur in Dealio.
+                Receive real-time notifications when events occur in Scrymechat.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -165,14 +165,14 @@ export default function ApiDocsPage() {
             <CardHeader>
               <CardTitle>n8n Integration Guide</CardTitle>
               <CardDescription>
-                Connect Dealio to n8n to automate your messaging workflows.
+                Connect Scrymechat to n8n to automate your messaging workflows.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">1. Sending Messages via HTTP Request Node</h3>
                 <p className="text-sm text-muted-foreground">
-                  Use the <strong>HTTP Request</strong> node in n8n to send messages to Dealio channels.
+                  Use the <strong>HTTP Request</strong> node in n8n to send messages to Scrymechat channels.
                 </p>
                 <div className="bg-muted p-4 rounded-md space-y-2">
                   <p className="text-xs font-mono"><strong>Method:</strong> POST</p>

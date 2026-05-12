@@ -1,7 +1,7 @@
 services:
   web:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-dealio}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
-    container_name: dealio-web
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
+    container_name: scrymechat-web
     restart: always
     expose:
       - '3001'
@@ -18,11 +18,11 @@ services:
       - NEXT_PUBLIC_API_URL=http://api:3000
       - NODE_ENV=production
     networks:
-      - dealio-network
+      - scrymechat-network
 
   api:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-dealio}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
-    container_name: dealio-api
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
+    container_name: scrymechat-api
     restart: always
     expose:
       - '3000'
@@ -36,11 +36,11 @@ services:
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
     networks:
-      - dealio-network
+      - scrymechat-network
 
   postgres:
     image: postgres:17-alpine
-    container_name: dealio-postgres
+    container_name: scrymechat-postgres
     restart: always
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -54,11 +54,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dealio-network
+      - scrymechat-network
 
   redis:
     image: redis:7-alpine
-    container_name: dealio-redis
+    container_name: scrymechat-redis
     restart: always
     volumes:
       - redis_data:/data
@@ -68,12 +68,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dealio-network
+      - scrymechat-network
 
 volumes:
   db_data:
   redis_data:
 
 networks:
-  dealio-network:
+  scrymechat-network:
     driver: bridge
