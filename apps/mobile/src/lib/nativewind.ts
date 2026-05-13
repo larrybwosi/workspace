@@ -34,17 +34,6 @@ if (Platform.OS === 'web') {
   }
 }
 
-if (Platform.OS !== 'web') {
-  try {
-    const MapView = require('react-native-maps').default;
-    cssInterop(MapView, {
-      className: 'style',
-    });
-  } catch (e) {
-    console.warn('NativeWind: Failed to interop MapView', e);
-  }
-}
-
 cssInterop(SafeAreaView, {
   className: 'style',
 });

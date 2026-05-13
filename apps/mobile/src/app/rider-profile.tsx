@@ -1,33 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
-import { Menu, Star, MessageSquare, Phone } from 'lucide-react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../lib/nativewind';
-
-const MapView = Platform.OS === 'web' ? View : require('react-native-maps').default;
 
 export default function RiderProfileScreen() {
   return (
     <View className="flex-1 bg-background">
-      {/* Map Background */}
-      <MapView
-        className="flex-1 bg-surface-container-highest"
-        initialRegion={
-          Platform.OS === 'web'
-            ? undefined
-            : {
-                latitude: 37.78825,
-                longitude: -122.4324,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }
-        }
-      />
+      {/* Map Background Placeholder */}
+      <View className="flex-1 bg-surface-container-highest">
+        <Image
+          source={{ uri: 'https://maps.googleapis.com/maps/api/staticmap?center=37.78825,-122.4324&zoom=13&size=600x600&key=STATIC_MAP_PLACEHOLDER' }}
+          className="flex-1"
+          resizeMode="cover"
+        />
+      </View>
 
       {/* Top Controls */}
       <SafeAreaView className="absolute top-0 left-0 p-4">
         <TouchableOpacity className="w-12 h-12 bg-surface-container-low rounded-full items-center justify-center shadow-md">
-          <Menu size={24} color="#323235" />
+          <MaterialIcons name="menu" size={24} color="#323235" />
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -41,17 +33,17 @@ export default function RiderProfileScreen() {
               <View>
                 <Text className="font-headline text-xl text-on-surface">Michael</Text>
                 <View className="flex-row items-center gap-1">
-                  <Star size={16} color="#ec6337" fill="#ec6337" />
+                  <MaterialIcons name="star" size={16} color="#ec6337" />
                   <Text className="font-body text-on-surface-variant">4.8</Text>
                 </View>
               </View>
             </View>
             <View className="flex-row gap-3">
               <TouchableOpacity className="w-11 h-11 bg-primary-container rounded-full items-center justify-center">
-                <MessageSquare size={20} color="#5a5e6c" />
+                <MaterialIcons name="chat" size={20} color="#5a5e6c" />
               </TouchableOpacity>
               <TouchableOpacity className="w-11 h-11 bg-primary-container rounded-full items-center justify-center">
-                <Phone size={20} color="#5a5e6c" />
+                <MaterialIcons name="phone" size={20} color="#5a5e6c" />
               </TouchableOpacity>
             </View>
           </View>
