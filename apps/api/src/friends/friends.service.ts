@@ -82,9 +82,37 @@ export class FriendsService {
   }
 
   async sendFriendRequest(senderId: string, senderName: string, receiverEmailOrUsername: string, message?: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates 3 sequential database queries into a single 'prisma.user.findFirst' call.
+     * 2. Uses nested 'select' and 'where' filters to verify receiver existence, friendship status,
+     *    and pending requests in one database round-trip.
+     * Expected impact: Reduces database round-trips from 3 down to 1 for friend request operations.
+     */
     const receiver = await prisma.user.findFirst({
       where: {
         OR: [{ email: receiverEmailOrUsername }, { username: receiverEmailOrUsername }],
+      },
+      select: {
+        id: true,
+        // Check if already friends (checking both directions for robustness)
+        friendOf: {
+          where: { userId: senderId },
+          select: { id: true },
+        },
+        friends: {
+          where: { friendId: senderId },
+          select: { id: true },
+        },
+        // Check if request is already pending (either way)
+        receivedFriendRequests: {
+          where: { senderId, status: 'pending' },
+          select: { id: true },
+        },
+        sentFriendRequests: {
+          where: { receiverId: senderId, status: 'pending' },
+          select: { id: true },
+        },
       },
     });
 
@@ -98,29 +126,11 @@ export class FriendsService {
       throw new BadRequestException('Cannot send friend request to yourself');
     }
 
-    const existingFriend = await prisma.friend.findFirst({
-      where: {
-        OR: [
-          { userId: senderId, friendId: receiverId },
-          { userId: receiverId, friendId: senderId },
-        ],
-      },
-    });
-
-    if (existingFriend) {
+    if (receiver.friendOf.length > 0 || receiver.friends.length > 0) {
       throw new BadRequestException('Already friends with this user');
     }
 
-    const existingRequest = await prisma.friendRequest.findFirst({
-      where: {
-        OR: [
-          { senderId: senderId, receiverId: receiverId, status: 'pending' },
-          { senderId: receiverId, receiverId: senderId, status: 'pending' },
-        ],
-      },
-    });
-
-    if (existingRequest) {
+    if (receiver.receivedFriendRequests.length > 0 || receiver.sentFriendRequests.length > 0) {
       throw new BadRequestException('Friend request already pending');
     }
 
