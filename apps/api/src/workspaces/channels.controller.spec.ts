@@ -345,18 +345,18 @@ describe('ChannelsController - NestJS module', () => {
 
   it('should return channels when successful', async () => {
     const mockPrisma = prisma as any;
-    // Updated mock to match optimized select structure
+    // Updated mock to match optimized select structure with nested channels
     mockPrisma.workspace.findUnique.mockResolvedValue({
       id: 'ws-1',
       members: [{ role: 'member' }],
+      channels: [
+        {
+          id: 'ch-1',
+          name: 'general',
+          _count: { messages: 5 },
+        },
+      ],
     });
-    mockPrisma.channel.findMany.mockResolvedValue([
-      {
-        id: 'ch-1',
-        name: 'general',
-        _count: { messages: 5 },
-      },
-    ]);
 
     const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
     const result = await controller.getWorkspaceChannels(user, 'my-workspace');

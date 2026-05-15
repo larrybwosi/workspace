@@ -77,9 +77,10 @@ export class ChannelsController {
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace lookup, membership verification, and channel retrieval into a single database query.
+     * 2. Uses nested 'select' and filtered relations to reduce database round-trips from 2 down to 1.
+     * 3. Maintains secure access by filtering private channels within the same query.
+     * Expected impact: Reduces database latency and overall API response time.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -88,6 +89,27 @@ export class ChannelsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        channels: {
+          where: {
+            OR: [
+              { isPrivate: false },
+              {
+                isPrivate: true,
+                members: {
+                  some: {
+                    userId: user.id,
+                  },
+                },
+              },
+            ],
+          },
+          include: {
+            _count: { select: { messages: true } },
+          },
+          orderBy: {
+            name: 'asc',
+          },
         },
       },
     });
@@ -102,30 +124,7 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channels = await prisma.channel.findMany({
-      where: {
-        workspaceId: workspace.id,
-        OR: [
-          { isPrivate: false },
-          {
-            isPrivate: true,
-            members: {
-              some: {
-                userId: user.id,
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        _count: { select: { messages: true } },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
-    return channels;
+    return workspace.channels;
   }
 
   @Post()

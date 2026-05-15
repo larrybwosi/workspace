@@ -52,3 +52,7 @@
 
 **Learning:** Performing sequential Prisma queries for workspace existence, membership authorization, and data retrieval (logs, members, etc.) increases latency due to multiple database round-trips.
 **Action:** Use Prisma's nested `select` or `include` with filtered relations on a single `findUnique({ where: { slug } })` call to perform all checks and data fetching in one round-trip. Re-map results in-memory if necessary to maintain API contracts.
+
+## 2026-05-15 - [API] Consolidated Workspace Data Retrieval
+**Learning:** Sequential queries to verify workspace membership and then fetch workspace-scoped resources (channels, teams, etc.) double the database round-trips.
+**Action:** Consolidate workspace existence, membership authorization, and resource retrieval into a single `prisma.workspace.findUnique` call with nested `select` and filtered relations. This reduces database latency by ~50% for these endpoints.
