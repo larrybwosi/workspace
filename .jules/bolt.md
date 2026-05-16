@@ -52,3 +52,8 @@
 
 **Learning:** Performing sequential Prisma queries for workspace existence, membership authorization, and data retrieval (logs, members, etc.) increases latency due to multiple database round-trips.
 **Action:** Use Prisma's nested `select` or `include` with filtered relations on a single `findUnique({ where: { slug } })` call to perform all checks and data fetching in one round-trip. Re-map results in-memory if necessary to maintain API contracts.
+
+## 2025-05-16 - [Database] Consolidated Friend Request Validation
+
+**Learning:** Sequential queries for user lookup, friendship verification, and pending request status in friend operations create multiple database round-trips. Prisma's nested 'select' with 'take: 1' filters allows these existence checks to be performed in a single efficient 'findFirst' call.
+**Action:** Consolidate multi-step validation logic into a single Prisma query using nested relations and targeted filters to minimize RTT.
