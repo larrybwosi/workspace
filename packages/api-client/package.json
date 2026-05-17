@@ -1,6 +1,6 @@
 {
   "name": "@repo/api-client",
-  "version": "0.0.1.332",
+  "version": "0.0.1.346",
   "private": true,
   "main": "./src/index.ts",
   "module": "./src/index.ts",
