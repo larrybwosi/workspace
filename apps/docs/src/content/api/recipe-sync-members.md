@@ -1,10 +1,10 @@
 # Recipe: Syncing Members
 
-Large organizations often need to keep their Skyrme Chat workspace membership in sync with an external HR system or an Identity Provider (IdP).
+Large organizations often need to keep their Scrymechat workspace membership in sync with an external HR system or an Identity Provider (IdP).
 
 ## The Workflow
 
-1. **Fetch current members** from Skyrme Chat.
+1. **Fetch current members** from Scrymechat.
 2. **Compare** with your source of truth.
 3. **Add** new employees who are missing.
 4. **Remove** former employees or those who no longer need access.
@@ -28,7 +28,7 @@ const currentMembers = response.data.members;
 
 ### 3. Identify Changes
 
-Map your HR system data to Skyrme Chat users by email address.
+Map your HR system data to Scrymechat users by email address.
 
 ```javascript
 const hrUsers = await getHRSystemUsers(); // Your internal logic
@@ -71,4 +71,4 @@ for (const member of toRemove) {
 
 - **Dry Run**: Always implement a "dry run" mode in your sync script that logs intended changes without applying them.
 - **Rate Limiting**: Be mindful of API rate limits when syncing thousands of users.
-- **Error Handling**: Log failures for specific users (e.g., if a user doesn't exist in Skyrme Chat yet) without stopping the entire sync process.
+- **Error Handling**: Log failures for specific users (e.g., if a user doesn't exist in Scrymechat yet) without stopping the entire sync process.

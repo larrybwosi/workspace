@@ -1,10 +1,10 @@
 # How to Build a Bot
 
-Building a bot for Skyrme Chat is simple and powerful. You can choose between using our native **V2 REST API** with Webhooks/Ably, or our **Discord V10 Compatibility Layer**.
+Building a bot for Scrymechat is simple and powerful. You can choose between using our native **V2 REST API** with Webhooks/Ably, or our **Discord V10 Compatibility Layer**.
 
 ## Native V2 API (Recommended)
 
-The V2 API is designed specifically for Skyrme Chat features like Workspaces, Teams, and Departments.
+The V2 API is designed specifically for Scrymechat features like Workspaces, Teams, and Departments.
 
 ### 1. Create a Bot Application
 
@@ -48,7 +48,7 @@ If you already have a Discord bot or prefer using Discord libraries like `discor
 
 ## Bot Capabilities
 
-Bots in Skyrme Chat can do more than just chat:
+Bots in Scrymechat can do more than just chat:
 
 - **Infrastructure Management**: Bots can be configured with `channelDefinitions` to automatically create the necessary teams and channels when they are installed in a workspace.
 - **Slash Commands**: Register custom commands that appear in the chat input (e.g., `/jira create`).

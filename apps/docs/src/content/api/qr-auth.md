@@ -1,6 +1,6 @@
 # QR Code Authentication
 
-Skyrme Chat supports a secure, cross-device authentication flow using QR codes. This allows users to quickly log in to the desktop or web application by scanning a code with their authenticated mobile app.
+Scrymechat supports a secure, cross-device authentication flow using QR codes. This allows users to quickly log in to the desktop or web application by scanning a code with their authenticated mobile app.
 
 ## How it works
 
@@ -8,9 +8,9 @@ The QR code authentication flow involves several steps to ensure a secure sessio
 
 1. **Session Generation**: The client requesting login (e.g., Desktop App) generates a unique `sessionId`.
 2. **QR Code Display**: The client displays a QR code containing this `sessionId`.
-3. **Scanning**: The user scans the QR code with the Skyrme Chat mobile app.
+3. **Scanning**: The user scans the QR code with the Scrymechat mobile app.
 4. **Verification**: The mobile app prompts the user for confirmation.
-5. **Authorization**: Upon confirmation, the mobile app sends the `sessionId` and the user's active session token to the Skyrme Chat API.
+5. **Authorization**: Upon confirmation, the mobile app sends the `sessionId` and the user's active session token to the Scrymechat API.
 6. **Session Transfer**: The API verifies the request and creates a new session for the requesting client.
 7. **Completion**: The requesting client polls (or listens via Ably) for the session status and retrieves the new authentication token.
 
