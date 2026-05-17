@@ -1,12 +1,12 @@
 # Webhooks
 
-Webhooks allow your application to receive real-time notifications about events happening in Skyrme Chat.
+Webhooks allow your application to receive real-time notifications about events happening in Scrymechat.
 
 ## Lifecycle
 
 1. **Register**: Provide a URL and a list of events you want to subscribe to.
-2. **Receive**: Skyrme Chat sends an HTTP POST request to your URL when an event occurs.
-3. **Verify**: Use the webhook secret to verify that the request came from Skyrme Chat.
+2. **Receive**: Scrymechat sends an HTTP POST request to your URL when an event occurs.
+3. **Verify**: Use the webhook secret to verify that the request came from Scrymechat.
 
 ---
 
@@ -52,7 +52,7 @@ Returns the webhook configuration, including a `secret`. **Save this secret**, a
 
 ## Security & Verification
 
-Skyrme Chat signs every webhook request with your secret. The signature is included in the `X-Skyrme-Signature` header.
+Scrymechat signs every webhook request with your secret. The signature is included in the `X-Webhook-Signature` header.
 
 **Verification Example (Node.js):**
 

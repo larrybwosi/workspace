@@ -1,6 +1,6 @@
 # Errors
 
-Skyrme Chat API uses standard HTTP response codes to indicate the success or failure of an API request. In general: codes in the `2xx` range indicate success, codes in the `4xx` range indicate an error that failed given the information provided (e.g., a required parameter was omitted, a charge failed, etc.), and codes in the `5xx` range indicate an error with Skyrme Chat's servers.
+Scrymechat API uses standard HTTP response codes to indicate the success or failure of an API request. In general: codes in the `2xx` range indicate success, codes in the `4xx` range indicate an error that failed given the information provided (e.g., a required parameter was omitted, a charge failed, etc.), and codes in the `5xx` range indicate an error with Scrymechat's servers.
 
 ## Error Response Format
 
@@ -33,13 +33,13 @@ When an error occurs, the API returns a JSON response containing an error object
 | `403`                | Forbidden         | The API key doesn't have permissions to perform the request or the resource is restricted.       |
 | `404`                | Not Found         | The requested resource doesn't exist.                                                            |
 | `429`                | Too Many Requests | Too many requests hit the API too quickly. We recommend an exponential backoff of your requests. |
-| `500, 502, 503, 504` | Server Errors     | Something went wrong on Skyrme Chat's end.                                                       |
+| `500, 502, 503, 504` | Server Errors     | Something went wrong on Scrymechat's end.                                                       |
 
 ---
 
 ## Rate Limits
 
-To ensure the stability and performance of our services, Skyrme Chat enforces rate limits on API requests. When you exceed the rate limit, the API returns a `429 Too Many Requests` response.
+To ensure the stability and performance of our services, Scrymechat enforces rate limits on API requests. When you exceed the rate limit, the API returns a `429 Too Many Requests` response.
 
 ### Rate Limit Headers
 

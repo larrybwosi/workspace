@@ -1,10 +1,10 @@
 # Applications and Bots
 
-Skryme's developer platform allows you to build powerful integrations and automated bots that live directly within your workspaces. This guide covers how to create, configure, and manage your applications.
+Scrymechat's developer platform allows you to build powerful integrations and automated bots that live directly within your workspaces. This guide covers how to create, configure, and manage your applications.
 
 ## Creating an Application
 
-To start building on Skryme, you first need to create an application in the [Developer Portal](/developer).
+To start building on Scrymechat, you first need to create an application in the [Developer Portal](/developer).
 
 1. Navigate to the **Dashboard** in the Developer Portal.
 2. Click on **New Application**.
@@ -24,7 +24,7 @@ Every application is associated with a **Bot User**. You can customize your bot'
 
 ### Bot Token
 
-Your **Bot Token** is the primary way your application authenticates with the Skryme API.
+Your **Bot Token** is the primary way your application authenticates with the Scrymechat API.
 
 :::warning
 **Keep your Bot Token secret.** Never share it on client-side code, public repositories (like GitHub), or in insecure environments. If you suspect your token has been compromised, use the **Revoke Bot Token** button in the configuration page immediately.

@@ -7186,8 +7186,8 @@
     }
   },
   "info": {
-    "title": "Skyrme Chat API",
-    "description": "Comprehensive API documentation for Skyrme Chat V2. This documentation is used by developers and for Bot API integration.",
+    "title": "Scrymechat API",
+    "description": "Comprehensive API documentation for Scrymechat V2. This documentation is used by developers and for Bot API integration.",
     "version": "2.0",
     "contact": {}
   },
