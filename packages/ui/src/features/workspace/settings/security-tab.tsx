@@ -1,68 +1,68 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
-import { Label } from "../../../components/label"
-import { Input } from "../../../components/input"
-import { Switch } from "../../../components/switch"
-import { Button } from "../../../components/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
-import { Textarea } from "../../../components/textarea"
-import { Badge } from "../../../components/badge"
-import { toast } from "sonner"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@repo/api-client"
+import { useState, useEffect } from 'react';
+import { Check } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/card';
+import { Label } from '../../../components/label';
+import { Input } from '../../../components/input';
+import { Switch } from '../../../components/switch';
+import { Button } from '../../../components/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
+import { Textarea } from '../../../components/textarea';
+import { Badge } from '../../../components/badge';
+import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@repo/api-client';
 
 export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: string }) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { data: securitySettings, isLoading } = useQuery({
-    queryKey: ["workspace-security", workspaceSlug],
+    queryKey: ['workspace-security', workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/security`)
-      return data
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/security`);
+      return data;
     },
-  })
+  });
 
   const [settings, setSettings] = useState({
     requireMfa: false,
     allowGuestAccess: true,
-    sessionTimeout: "24",
-    ipWhitelist: "",
-    domainRestriction: "",
+    sessionTimeout: '24',
+    ipWhitelist: '',
+    domainRestriction: '',
     ssoEnabled: false,
-    passwordMinLength: "8",
+    passwordMinLength: '8',
     passwordRequireSpecialChar: true,
-    passwordExpiry: "90",
-  })
+    passwordExpiry: '90',
+  });
 
   useEffect(() => {
     if (securitySettings) {
-      setSettings(securitySettings)
+      setSettings(securitySettings);
     }
-  }, [securitySettings])
+  }, [securitySettings]);
 
   const updateSettings = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiClient.patch(`/workspaces/${workspaceSlug}/security`, data)
-      return response.data
+      const response = await apiClient.patch(`/workspaces/${workspaceSlug}/security`, data);
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-security", workspaceSlug] })
-      toast.success("Security settings saved")
+      queryClient.invalidateQueries({ queryKey: ['workspace-security', workspaceSlug] });
+      toast.success('Security settings saved');
     },
     onError: () => {
-      toast.error("Failed to save settings")
+      toast.error('Failed to save settings');
     },
-  })
+  });
 
   const handleSave = () => {
-    updateSettings.mutate(settings)
-  }
+    updateSettings.mutate(settings);
+  };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading security settings...</div>
+    return <div className="text-center py-8">Loading security settings...</div>;
   }
 
   return (
@@ -85,7 +85,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             </div>
             <Switch
               checked={settings.requireMfa}
-              onCheckedChange={(checked) => setSettings({ ...settings, requireMfa: checked })}
+              onCheckedChange={checked => setSettings({ ...settings, requireMfa: checked })}
             />
           </div>
 
@@ -101,7 +101,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             </div>
             <Switch
               checked={settings.ssoEnabled}
-              onCheckedChange={(checked) => setSettings({ ...settings, ssoEnabled: checked })}
+              onCheckedChange={checked => setSettings({ ...settings, ssoEnabled: checked })}
             />
           </div>
 
@@ -109,7 +109,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             <Label>Session Timeout (hours)</Label>
             <Select
               value={settings.sessionTimeout}
-              onValueChange={(v) => setSettings({ ...settings, sessionTimeout: v })}
+              onValueChange={v => setSettings({ ...settings, sessionTimeout: v })}
             >
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -141,7 +141,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             </div>
             <Switch
               checked={settings.allowGuestAccess}
-              onCheckedChange={(checked) => setSettings({ ...settings, allowGuestAccess: checked })}
+              onCheckedChange={checked => setSettings({ ...settings, allowGuestAccess: checked })}
             />
           </div>
 
@@ -150,7 +150,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             <Textarea
               placeholder="192.168.1.0/24&#10;10.0.0.1"
               value={settings.ipWhitelist}
-              onChange={(e) => setSettings({ ...settings, ipWhitelist: e.target.value })}
+              onChange={e => setSettings({ ...settings, ipWhitelist: e.target.value })}
               rows={4}
             />
             <p className="text-xs text-muted-foreground">
@@ -163,7 +163,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             <Input
               placeholder="@company.com"
               value={settings.domainRestriction}
-              onChange={(e) => setSettings({ ...settings, domainRestriction: e.target.value })}
+              onChange={e => setSettings({ ...settings, domainRestriction: e.target.value })}
             />
             <p className="text-xs text-muted-foreground">Only allow email addresses from specific domains</p>
           </div>
@@ -180,7 +180,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             <Label>Minimum Password Length</Label>
             <Select
               value={settings.passwordMinLength}
-              onValueChange={(v) => setSettings({ ...settings, passwordMinLength: v })}
+              onValueChange={v => setSettings({ ...settings, passwordMinLength: v })}
             >
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -201,7 +201,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             </div>
             <Switch
               checked={settings.passwordRequireSpecialChar}
-              onCheckedChange={(checked) => setSettings({ ...settings, passwordRequireSpecialChar: checked })}
+              onCheckedChange={checked => setSettings({ ...settings, passwordRequireSpecialChar: checked })}
             />
           </div>
 
@@ -209,7 +209,7 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
             <Label>Password Expiration (days)</Label>
             <Select
               value={settings.passwordExpiry}
-              onValueChange={(v) => setSettings({ ...settings, passwordExpiry: v })}
+              onValueChange={v => setSettings({ ...settings, passwordExpiry: v })}
             >
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -229,9 +229,9 @@ export function SecurityTab({ workspaceId: workspaceSlug }: { workspaceId: strin
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={updateSettings.isPending}>
           <Check className="h-4 w-4 mr-2" />
-          {updateSettings.isPending ? "Saving..." : "Save Security Settings"}
+          {updateSettings.isPending ? 'Saving...' : 'Save Security Settings'}
         </Button>
       </div>
     </div>
-  )
+  );
 }

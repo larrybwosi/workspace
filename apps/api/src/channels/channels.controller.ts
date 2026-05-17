@@ -10,15 +10,7 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
@@ -137,10 +129,7 @@ export class ChannelsController {
 
   @Post(':channelId/share')
   @ApiOperation({ summary: 'Share a channel with another workspace' })
-  async shareChannel(
-    @Param('channelId') channelId: string,
-    @Body('workspaceId') workspaceId: string
-  ) {
+  async shareChannel(@Param('channelId') channelId: string, @Body('workspaceId') workspaceId: string) {
     return this.channelsService.inviteWorkspaceToChannel(channelId, workspaceId);
   }
 

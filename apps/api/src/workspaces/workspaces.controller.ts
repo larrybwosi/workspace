@@ -11,15 +11,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -375,7 +367,11 @@ export class WorkspacesController {
   @ApiBody({ type: UpdateWorkspaceDto })
   @ApiResponse({ status: 200, description: 'Workspace updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden: Not an owner or admin' })
-  async updateWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: UpdateWorkspaceDto) {
+  async updateWorkspaceBySlug(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Body() body: UpdateWorkspaceDto
+  ) {
     /**
      * ⚡ Performance Optimization:
      * 1. Consolidates workspace lookup and membership verification into a single database query.

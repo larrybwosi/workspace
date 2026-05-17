@@ -1,76 +1,76 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "../client"
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../client';
 
 export function useSupportTickets(workspaceId: string) {
   return useQuery({
-    queryKey: ["support-tickets", workspaceId],
+    queryKey: ['support-tickets', workspaceId],
     queryFn: async () => {
-      const { data } = await apiClient.get("/support/tickets", { params: { workspaceId } })
-      return data
+      const { data } = await apiClient.get('/support/tickets', { params: { workspaceId } });
+      return data;
     },
     enabled: !!workspaceId,
-  })
+  });
 }
 
 export function useCreateSupportTicket() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: { workspaceId: string; subject: string; initialMessage?: string }) => {
-      const { data: response } = await apiClient.post("/support/tickets", data)
-      return response
+      const { data: response } = await apiClient.post('/support/tickets', data);
+      return response;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["support-tickets", variables.workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ['support-tickets', variables.workspaceId] });
     },
-  })
+  });
 }
 
 export function useAssignTicket() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ ticketId, assigneeId }: { ticketId: string; assigneeId: string | null }) => {
-      const { data } = await apiClient.patch(`/support/tickets/${ticketId}/assign`, { assigneeId })
-      return data
+      const { data } = await apiClient.patch(`/support/tickets/${ticketId}/assign`, { assigneeId });
+      return data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["support-tickets", data.workspaceId] })
+    onSuccess: data => {
+      queryClient.invalidateQueries({ queryKey: ['support-tickets', data.workspaceId] });
     },
-  })
+  });
 }
 
 export function useUpdateTicketStatus() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ ticketId, status }: { ticketId: string; status: string }) => {
-      const { data } = await apiClient.patch(`/support/tickets/${ticketId}/status`, { status })
-      return data
+      const { data } = await apiClient.patch(`/support/tickets/${ticketId}/status`, { status });
+      return data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["support-tickets", data.workspaceId] })
+    onSuccess: data => {
+      queryClient.invalidateQueries({ queryKey: ['support-tickets', data.workspaceId] });
     },
-  })
+  });
 }
 
 export function useCustomerProfiles(workspaceId: string) {
   return useQuery({
-    queryKey: ["customer-profiles", workspaceId],
+    queryKey: ['customer-profiles', workspaceId],
     queryFn: async () => {
-      const { data } = await apiClient.get("/support/customers", { params: { workspaceId } })
-      return data
+      const { data } = await apiClient.get('/support/customers', { params: { workspaceId } });
+      return data;
     },
     enabled: !!workspaceId,
-  })
+  });
 }
 
 export function useUpdateCustomerProfile() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: any) => {
-      const { data: response } = await apiClient.post("/support/customers", data)
-      return response
+      const { data: response } = await apiClient.post('/support/customers', data);
+      return response;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["customer-profiles", variables.workspaceId] })
+      queryClient.invalidateQueries({ queryKey: ['customer-profiles', variables.workspaceId] });
     },
-  })
+  });
 }

@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import { useRouter } from "next/navigation"
-import { docs } from "@/lib/docs-data"
-import { ChevronRight, BookOpen } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from 'next/navigation';
+import { docs } from '@/lib/docs-data';
+import { ChevronRight, BookOpen } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DocsPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-background">
@@ -19,7 +19,7 @@ export default function DocsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {docs.map((doc) => (
+          {docs.map(doc => (
             <Link
               key={doc.slug}
               href={`/docs/${doc.slug}`}
@@ -38,5 +38,5 @@ export default function DocsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

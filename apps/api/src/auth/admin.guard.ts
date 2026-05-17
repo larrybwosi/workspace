@@ -5,7 +5,7 @@ import { auth } from './better-auth';
 export class AdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    
+
     // Use the new better-auth system from the dev branch
     const session = await auth.api.getSession({
       headers: request.headers,

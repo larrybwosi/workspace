@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Button } from "../../components/button"
+} from '../../components/dialog';
+import { Button } from '../../components/button';
 
 interface Project {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface DeleteProjectDialogProps {
-  deleteProjectOpen: boolean
-  setDeleteProjectOpen: (open: boolean) => void
-  selectedProject: Project | null
-  handleDeleteProject: () => void
+  deleteProjectOpen: boolean;
+  setDeleteProjectOpen: (open: boolean) => void;
+  selectedProject: Project | null;
+  handleDeleteProject: () => void;
 }
 
 export function DeleteProjectDialog({
@@ -46,5 +46,5 @@ export function DeleteProjectDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

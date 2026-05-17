@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "../client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../client';
 
 export interface BotData {
   id: string;
@@ -20,9 +20,9 @@ export interface Application {
 
 export function useApplications() {
   return useQuery<Application[]>({
-    queryKey: ["applications"],
+    queryKey: ['applications'],
     queryFn: async () => {
-      const { data } = await apiClient.get("/v2/applications");
+      const { data } = await apiClient.get('/v2/applications');
       return data;
     },
   });
@@ -30,7 +30,7 @@ export function useApplications() {
 
 export function useApplication(id: string | undefined) {
   return useQuery<Application>({
-    queryKey: ["application", id],
+    queryKey: ['application', id],
     queryFn: async () => {
       const { data } = await apiClient.get(`/v2/applications/${id}`);
       return data;
@@ -44,11 +44,11 @@ export function useCreateApplication() {
 
   return useMutation({
     mutationFn: async (payload: { name: string; description?: string }) => {
-      const { data } = await apiClient.post("/v2/applications", payload);
+      const { data } = await apiClient.post('/v2/applications', payload);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
     },
   });
 }
@@ -62,8 +62,8 @@ export function useUpdateApplication() {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
-      queryClient.invalidateQueries({ queryKey: ["application", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      queryClient.invalidateQueries({ queryKey: ['application', variables.id] });
     },
   });
 }
@@ -77,7 +77,7 @@ export function useDeleteApplication() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
     },
   });
 }
@@ -91,8 +91,8 @@ export function useResetBotToken() {
       return data;
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["application", id] });
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ['application', id] });
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
     },
   });
 }

@@ -158,9 +158,7 @@ export async function notifyMentions(
 
   // 1. Resolve preferences for all mentioned users
   const memberIdsInChannel = new Set(channel.members.map(m => m.userId));
-  const memberIdsWithoutChannelPref = channel.members
-    .filter(m => !m.notificationPreference)
-    .map(m => m.userId);
+  const memberIdsWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
 
   const workspaceMembers =
     workspaceId && memberIdsWithoutChannelPref.length > 0
@@ -187,7 +185,7 @@ export async function notifyMentions(
     if (!preference) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { notificationPreferences: true }
+        select: { notificationPreferences: true },
       });
       const userPrefs = (user?.notificationPreferences as any) || {};
       preference = userPrefs.mentions || 'all';
@@ -250,9 +248,7 @@ export async function notifyChannel(
   const channelSlug = channel.slug || channelId;
 
   // 2. Fetch workspace-level preferences for members missing channel-level ones
-  const membersWithoutChannelPref = channel.members
-    .filter(m => !m.notificationPreference)
-    .map(m => m.userId);
+  const membersWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
 
   const workspaceMembers =
     workspaceId && membersWithoutChannelPref.length > 0
@@ -362,7 +358,7 @@ export async function notifyDM(
       dmId,
       senderId,
       messageId,
-      type: 'direct_message'
+      type: 'direct_message',
     },
   });
 }
@@ -397,9 +393,7 @@ export async function notifyNewMessage(
   const workspaceSlug = channel.workspace?.slug || 'default';
   const channelSlug = channel.slug || channelId;
 
-  const membersWithoutChannelPref = channel.members
-    .filter(m => !m.notificationPreference)
-    .map(m => m.userId);
+  const membersWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
 
   const workspaceMembers =
     workspaceId && membersWithoutChannelPref.length > 0
@@ -415,14 +409,17 @@ export async function notifyNewMessage(
     .filter(m => !m.notificationPreference && (!workspaceId || !workspacePrefMap.has(m.userId)))
     .map(m => m.userId);
 
-  const usersWithGlobalPrefs = membersWithoutAnyPref.length > 0
-    ? await prisma.user.findMany({
-        where: { id: { in: membersWithoutAnyPref } },
-        select: { id: true, notificationPreferences: true }
-      })
-    : [];
+  const usersWithGlobalPrefs =
+    membersWithoutAnyPref.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: membersWithoutAnyPref } },
+          select: { id: true, notificationPreferences: true },
+        })
+      : [];
 
-  const globalPrefMap = new Map(usersWithGlobalPrefs.map(u => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all']));
+  const globalPrefMap = new Map(
+    usersWithGlobalPrefs.map(u => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all'])
+  );
 
   const payloads: NotificationPayload[] = [];
   const excludedSet = new Set(excludedUserIds);
@@ -451,7 +448,7 @@ export async function notifyNewMessage(
       metadata: {
         messageId,
         senderId,
-        type: 'channel_alert'
+        type: 'channel_alert',
       },
     });
   }

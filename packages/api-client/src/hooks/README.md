@@ -81,6 +81,7 @@ localStorage.setItem('auth_token', 'your-jwt-token')
 ### Other Entities
 
 See `instructions.md` for hooks related to:
+
 - Channels
 - Messages
 - Tasks
@@ -98,29 +99,29 @@ See `instructions.md` for hooks related to:
 import { useCreateProject } from '@/hooks/api/use-projects'
 
 function CreateProjectButton() {
-  const createProject = useCreateProject()
+const createProject = useCreateProject()
 
-  const handleCreate = async () => {
-    try {
-      await createProject.mutateAsync({
-        name: 'New Project',
-        description: 'Project description',
-        status: 'active',
-        tasks: [],
-        members: [],
-        startDate: new Date(),
-        icon: '📋'
-      })
-    } catch (error) {
-      console.error('Failed to create project:', error)
-    }
-  }
+const handleCreate = async () => {
+try {
+await createProject.mutateAsync({
+name: 'New Project',
+description: 'Project description',
+status: 'active',
+tasks: [],
+members: [],
+startDate: new Date(),
+icon: '📋'
+})
+} catch (error) {
+console.error('Failed to create project:', error)
+}
+}
 
-  return (
-    <button onClick={handleCreate} disabled={createProject.isPending}>
-      {createProject.isPending ? 'Creating...' : 'Create Project'}
-    </button>
-  )
+return (
+<button onClick={handleCreate} disabled={createProject.isPending}>
+{createProject.isPending ? 'Creating...' : 'Create Project'}
+</button>
+)
 }
 \`\`\`
 
@@ -130,25 +131,25 @@ function CreateProjectButton() {
 import { useUpdateNote } from '@/hooks/api/use-notes'
 
 function NoteEditor({ noteId }: { noteId: string }) {
-  const updateNote = useUpdateNote()
+const updateNote = useUpdateNote()
 
-  const handleSave = async (content: string) => {
-    // UI updates immediately, rolls back on error
-    await updateNote.mutateAsync({
-      noteId,
-      data: {
-        content,
-        lastModified: new Date()
-      }
-    })
-  }
+const handleSave = async (content: string) => {
+// UI updates immediately, rolls back on error
+await updateNote.mutateAsync({
+noteId,
+data: {
+content,
+lastModified: new Date()
+}
+})
+}
 
-  return (
-    <textarea
-      onChange={(e) => handleSave(e.target.value)}
-      placeholder="Start typing..."
-    />
-  )
+return (
+<textarea
+onChange={(e) => handleSave(e.target.value)}
+placeholder="Start typing..."
+/>
+)
 }
 \`\`\`
 
@@ -159,22 +160,22 @@ import { useSearchNotes } from '@/hooks/api/use-notes'
 import { useState } from 'react'
 
 function NoteSearch() {
-  const [query, setQuery] = useState('')
-  const { data: results, isLoading } = useSearchNotes(query)
+const [query, setQuery] = useState('')
+const { data: results, isLoading } = useSearchNotes(query)
 
-  return (
-    <div>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search notes..."
-      />
-      {isLoading && <div>Searching...</div>}
-      {results?.map(note => (
-        <div key={note.id}>{note.title}</div>
-      ))}
-    </div>
-  )
+return (
+<div>
+<input
+value={query}
+onChange={(e) => setQuery(e.target.value)}
+placeholder="Search notes..."
+/>
+{isLoading && <div>Searching...</div>}
+{results?.map(note => (
+<div key={note.id}>{note.title}</div>
+))}
+</div>
+)
 }
 \`\`\`
 
@@ -259,8 +260,8 @@ All hooks handle errors automatically. Access error states:
 const { data, error, isError } = useNotes()
 
 if (isError) {
-  console.error('Error fetching notes:', error.message)
-  return <ErrorDisplay error={error} />
+console.error('Error fetching notes:', error.message)
+return <ErrorDisplay error={error} />
 }
 \`\`\`
 
@@ -279,13 +280,13 @@ TanStack Query caches data automatically with sensible defaults:
 import { useQueryClient } from '@tanstack/react-query'
 
 function RefreshButton() {
-  const queryClient = useQueryClient()
+const queryClient = useQueryClient()
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['notes'] })
-  }
+const handleRefresh = () => {
+queryClient.invalidateQueries({ queryKey: ['notes'] })
+}
 
-  return <button onClick={handleRefresh}>Refresh</button>
+return <button onClick={handleRefresh}>Refresh</button>
 }
 \`\`\`
 
@@ -293,15 +294,15 @@ function RefreshButton() {
 
 \`\`\`typescript
 // Projects
-projectKeys.all          // ['projects']
-projectKeys.lists()      // ['projects', 'list']
-projectKeys.detail(id)   // ['projects', 'detail', id]
+projectKeys.all // ['projects']
+projectKeys.lists() // ['projects', 'list']
+projectKeys.detail(id) // ['projects', 'detail', id]
 
 // Notes
-['notes']                // All notes
-['notes', folderId]      // Notes in folder
-['notes', noteId]        // Single note
-['note-folders']         // All folders
+['notes'] // All notes
+['notes', folderId] // Notes in folder
+['notes', noteId] // Single note
+['note-folders'] // All folders
 \`\`\`
 
 ## Development Tools
@@ -311,6 +312,7 @@ React Query Devtools are enabled in development mode. Access them via the floati
 ## Support
 
 For issues or questions:
+
 1. Check the TanStack Query documentation
 2. Review existing hook implementations
 3. Contact the development team

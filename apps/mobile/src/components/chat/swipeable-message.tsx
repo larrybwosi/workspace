@@ -37,12 +37,7 @@ export function SwipeableMessage({ children, onReply, onReact }: SwipeableMessag
   };
 
   return (
-    <Swipeable
-      renderRightActions={renderRightActions}
-      friction={2}
-      leftThreshold={30}
-      rightThreshold={40}
-    >
+    <Swipeable renderRightActions={renderRightActions} friction={2} leftThreshold={30} rightThreshold={40}>
       {children}
     </Swipeable>
   );

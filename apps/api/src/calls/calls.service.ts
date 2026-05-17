@@ -21,10 +21,7 @@ export class CallsService {
   private async resolveWorkspaceId(workspaceIdOrSlug: string): Promise<string> {
     const workspace = await prisma.workspace.findFirst({
       where: {
-        OR: [
-          { id: workspaceIdOrSlug },
-          { slug: workspaceIdOrSlug },
-        ],
+        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
       },
     });
 
@@ -33,7 +30,15 @@ export class CallsService {
   }
 
   async startCall(user: User, body: any) {
-    const { type, channelId, workspaceId: incomingWorkspaceId, workspaceSlug, recipientId, callId: incomingCallId, notifyAll } = body;
+    const {
+      type,
+      channelId,
+      workspaceId: incomingWorkspaceId,
+      workspaceSlug,
+      recipientId,
+      callId: incomingCallId,
+      notifyAll,
+    } = body;
 
     if (!type || (!incomingWorkspaceId && !workspaceSlug)) {
       throw new BadRequestException('Type and workspaceId are required');

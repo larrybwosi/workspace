@@ -1,24 +1,40 @@
-'use client'
+'use client';
 
-import { toast as sonnerToast } from "sonner"
+import { toast as sonnerToast } from 'sonner';
 
 export function useToast() {
   return {
-    toast: ({ title, description, variant }: { title?: string, description?: string, variant?: 'default' | 'destructive' }) => {
+    toast: ({
+      title,
+      description,
+      variant,
+    }: {
+      title?: string;
+      description?: string;
+      variant?: 'default' | 'destructive';
+    }) => {
       if (variant === 'destructive') {
-        sonnerToast.error(title, { description })
+        sonnerToast.error(title, { description });
       } else {
-        sonnerToast.success(title, { description })
+        sonnerToast.success(title, { description });
       }
     },
-    dismiss: () => {}
-  }
+    dismiss: () => {},
+  };
 }
 
-export const toast = ({ title, description, variant }: { title?: string, description?: string, variant?: 'default' | 'destructive' }) => {
+export const toast = ({
+  title,
+  description,
+  variant,
+}: {
+  title?: string;
+  description?: string;
+  variant?: 'default' | 'destructive';
+}) => {
   if (variant === 'destructive') {
-    sonnerToast.error(title, { description })
+    sonnerToast.error(title, { description });
   } else {
-    sonnerToast.success(title, { description })
+    sonnerToast.success(title, { description });
   }
-}
+};

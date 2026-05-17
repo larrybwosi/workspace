@@ -5,12 +5,7 @@ import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import {
-  useApplication,
-  useUpdateApplication,
-  useDeleteApplication,
-  useResetBotToken,
-} from '@repo/api-client';
+import { useApplication, useUpdateApplication, useDeleteApplication, useResetBotToken } from '@repo/api-client';
 import {
   Info,
   Bolt,
@@ -163,7 +158,7 @@ export function AppConfig() {
                   <Input
                     className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={e => setName(e.target.value)}
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1">
@@ -232,7 +227,7 @@ export function AppConfig() {
                   <Textarea
                     className="bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 h-auto min-h-[100px]"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={e => setDescription(e.target.value)}
                   />
                 </div>
               </div>
@@ -435,15 +430,13 @@ export function AppConfig() {
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-xl bg-primary-container flex items-center justify-center border-2 border-primary/40 shadow-xl">
-                       <span className="material-symbols-outlined text-4xl text-on-primary-container">smart_toy</span>
+                      <span className="material-symbols-outlined text-4xl text-on-primary-container">smart_toy</span>
                     </div>
                   )}
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-on-surface rounded-full"></div>
                 </div>
                 <h4 className="text-xl font-bold">{app?.name || 'SupportBot'}</h4>
-                <p className="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-bold">
-                  ACTIVE
-                </p>
+                <p className="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-bold">ACTIVE</p>
                 <div className="w-full mt-8 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-[10px] text-outline-variant uppercase mb-1">Guilds</p>

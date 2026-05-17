@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity, Alert, ScrollView } from "react-native";
-import { signUp } from "../lib/auth";
-import { useRouter, Link } from "expo-router";
+import { useState } from 'react';
+import { Text, View, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { signUp } from '../lib/auth';
+import { useRouter, Link } from 'expo-router';
 
 export default function SignUp() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
@@ -25,12 +25,12 @@ export default function SignUp() {
       });
 
       if (error) {
-        Alert.alert("Sign Up Failed", error.message || "An unknown error occurred");
+        Alert.alert('Sign Up Failed', error.message || 'An unknown error occurred');
       } else {
-        router.replace("/");
+        router.replace('/');
       }
     } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -72,9 +72,7 @@ export default function SignUp() {
           onPress={handleSignUp}
           disabled={loading}
         >
-          <Text className="text-white font-semibold text-lg">
-            {loading ? "Creating account..." : "Sign Up"}
-          </Text>
+          <Text className="text-white font-semibold text-lg">{loading ? 'Creating account...' : 'Sign Up'}</Text>
         </TouchableOpacity>
 
         <View className="flex-row mt-6">

@@ -1,91 +1,91 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Download, Search, ExternalLink } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
-import { Input } from "../../../components/input"
-import { Button } from "../../../components/button"
-import { Badge } from "../../../components/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
-import { useWorkspaceAuditLogs } from "@repo/api-client"
+import { useState } from 'react';
+import { Download, Search, ExternalLink } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/card';
+import { Input } from '../../../components/input';
+import { Button } from '../../../components/button';
+import { Badge } from '../../../components/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
+import { useWorkspaceAuditLogs } from '@repo/api-client';
 
 // Mock data
 const mockAuditLogs = [
   {
-    id: "1",
-    action: "member.invited",
-    actor: "John Doe",
-    actorEmail: "john@example.com",
-    target: "sarah@example.com",
-    timestamp: "2024-06-01T10:30:00Z",
-    ip: "192.168.1.1",
-    userAgent: "Mozilla/5.0...",
-    status: "success",
+    id: '1',
+    action: 'member.invited',
+    actor: 'John Doe',
+    actorEmail: 'john@example.com',
+    target: 'sarah@example.com',
+    timestamp: '2024-06-01T10:30:00Z',
+    ip: '192.168.1.1',
+    userAgent: 'Mozilla/5.0...',
+    status: 'success',
   },
   {
-    id: "2",
-    action: "settings.updated",
-    actor: "Jane Smith",
-    actorEmail: "jane@example.com",
-    target: "Security settings",
-    timestamp: "2024-05-28T14:20:00Z",
-    ip: "192.168.1.2",
-    userAgent: "Mozilla/5.0...",
-    status: "success",
+    id: '2',
+    action: 'settings.updated',
+    actor: 'Jane Smith',
+    actorEmail: 'jane@example.com',
+    target: 'Security settings',
+    timestamp: '2024-05-28T14:20:00Z',
+    ip: '192.168.1.2',
+    userAgent: 'Mozilla/5.0...',
+    status: 'success',
   },
   {
-    id: "3",
-    action: "project.created",
-    actor: "Mike Johnson",
-    actorEmail: "mike@example.com",
-    target: "Q3 Marketing",
-    timestamp: "2024-05-25T09:15:00Z",
-    ip: "192.168.1.3",
-    userAgent: "Mozilla/5.0...",
-    status: "success",
+    id: '3',
+    action: 'project.created',
+    actor: 'Mike Johnson',
+    actorEmail: 'mike@example.com',
+    target: 'Q3 Marketing',
+    timestamp: '2024-05-25T09:15:00Z',
+    ip: '192.168.1.3',
+    userAgent: 'Mozilla/5.0...',
+    status: 'success',
   },
   {
-    id: "4",
-    action: "api_key.created",
-    actor: "John Doe",
-    actorEmail: "john@example.com",
-    target: "Production API Key",
-    timestamp: "2024-05-20T11:45:00Z",
-    ip: "192.168.1.1",
-    userAgent: "Mozilla/5.0...",
-    status: "success",
+    id: '4',
+    action: 'api_key.created',
+    actor: 'John Doe',
+    actorEmail: 'john@example.com',
+    target: 'Production API Key',
+    timestamp: '2024-05-20T11:45:00Z',
+    ip: '192.168.1.1',
+    userAgent: 'Mozilla/5.0...',
+    status: 'success',
   },
   {
-    id: "5",
-    action: "login.failed",
-    actor: "Unknown",
-    actorEmail: "attacker@example.com",
-    target: "Workspace login",
-    timestamp: "2024-05-18T03:30:00Z",
-    ip: "185.220.100.240",
-    userAgent: "curl/7.64.1",
-    status: "failed",
+    id: '5',
+    action: 'login.failed',
+    actor: 'Unknown',
+    actorEmail: 'attacker@example.com',
+    target: 'Workspace login',
+    timestamp: '2024-05-18T03:30:00Z',
+    ip: '185.220.100.240',
+    userAgent: 'curl/7.64.1',
+    status: 'failed',
   },
-]
+];
 
 export function AuditLogsTab({ workspaceId: workspaceSlug }: { workspaceId: string }) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [actionFilter, setActionFilter] = useState("all")
-  const [dateRange, setDateRange] = useState("30")
+  const [searchQuery, setSearchQuery] = useState('');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [dateRange, setDateRange] = useState('30');
 
-  const { data: auditLogs, isLoading } = useWorkspaceAuditLogs(workspaceSlug)
+  const { data: auditLogs, isLoading } = useWorkspaceAuditLogs(workspaceSlug);
 
   const getActionBadgeColor = (action: string) => {
-    if (action.includes("delete")) return "destructive"
-    if (action.includes("create")) return "default"
-    if (action.includes("update")) return "secondary"
-    return "outline"
-  }
+    if (action.includes('delete')) return 'destructive';
+    if (action.includes('create')) return 'default';
+    if (action.includes('update')) return 'secondary';
+    return 'outline';
+  };
 
   const getStatusBadgeColor = (status: string) => {
-    return status === "success" ? "default" : "destructive"
-  }
+    return status === 'success' ? 'default' : 'destructive';
+  };
 
   return (
     <div className="space-y-6">
@@ -115,7 +115,7 @@ export function AuditLogsTab({ workspaceId: workspaceSlug }: { workspaceId: stri
                 placeholder="Search logs..."
                 className="pl-9"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
             <Select value={actionFilter} onValueChange={setActionFilter}>
@@ -160,18 +160,18 @@ export function AuditLogsTab({ workspaceId: workspaceSlug }: { workspaceId: stri
                 <TableRow key={log.id}>
                   <TableCell className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Badge variant={getActionBadgeColor(log.action)}>{log.action.replace(/\./g, " ")}</Badge>
+                    <Badge variant={getActionBadgeColor(log.action)}>{log.action.replace(/\./g, ' ')}</Badge>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{log.user?.name || "System"}</div>
+                      <div className="font-medium">{log.user?.name || 'System'}</div>
                       <div className="text-xs text-muted-foreground">{log.user?.email}</div>
                     </div>
                   </TableCell>
                   <TableCell>{log.resourceId || log.resource}</TableCell>
-                  <TableCell className="font-mono text-xs">{log.ipAddress || "N/A"}</TableCell>
+                  <TableCell className="font-mono text-xs">{log.ipAddress || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeColor("success")}>success</Badge>
+                    <Badge variant={getStatusBadgeColor('success')}>success</Badge>
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -221,5 +221,5 @@ export function AuditLogsTab({ workspaceId: workspaceSlug }: { workspaceId: stri
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

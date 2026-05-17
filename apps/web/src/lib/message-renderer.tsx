@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import type { Message, MessageMetadata, MessageType } from "./types";
-import { ApprovalMessage } from "@repo/ui/features/chat/message-types/approval-message";
-import { CommentRequestMessage } from "@repo/ui/features/chat/message-types/comment-request-message";
-import { CodeMessage } from "@repo/ui/features/chat/message-types/code-message";
-import { CustomMessage } from "@repo/ui/features/chat/message-types/custom-message";
-import { ReportMessage } from "@repo/ui/features/chat/message-types/report-message";
-import { StandardMessage } from "@repo/ui/features/chat/message-types/standard-message";
+import type { Message, MessageMetadata, MessageType } from './types';
+import { ApprovalMessage } from '@repo/ui/features/chat/message-types/approval-message';
+import { CommentRequestMessage } from '@repo/ui/features/chat/message-types/comment-request-message';
+import { CodeMessage } from '@repo/ui/features/chat/message-types/code-message';
+import { CustomMessage } from '@repo/ui/features/chat/message-types/custom-message';
+import { ReportMessage } from '@repo/ui/features/chat/message-types/report-message';
+import { StandardMessage } from '@repo/ui/features/chat/message-types/standard-message';
 
 // Revised Regex:
 // 1. ^\s*``` : Starts with optional whitespace and backticks
@@ -14,8 +14,7 @@ import { StandardMessage } from "@repo/ui/features/chat/message-types/standard-m
 // 3. \s+ : Required whitespace/newline after the language tag
 // 4. ([\s\S]+?) : Capture Group 2 (The Code). Lazy match of any character including newlines.
 // 5. ```\s*$ : Ends with backticks and optional whitespace
-export const CODE_BLOCK_REGEX =
-  /^\s*```([a-zA-Z0-9+#\-.]+)?\s+([\s\S]+?)```\s*$/;
+export const CODE_BLOCK_REGEX = /^\s*```([a-zA-Z0-9+#\-.]+)?\s+([\s\S]+?)```\s*$/;
 
 /**
  * Parses a markdown code block to extract the language and the raw code.
@@ -25,7 +24,7 @@ export function extractCodeInfo(content: string) {
   if (!match) return { language: null, code: content };
 
   return {
-    language: match[1]?.toLowerCase() || "text", // Default to text if no language provided
+    language: match[1]?.toLowerCase() || 'text', // Default to text if no language provided
     code: match[2], // The inner code content without backticks
   };
 }
@@ -38,7 +37,7 @@ export class MessageRendererFactory {
   }
 
   static render(message: Message, metadata: MessageMetadata = {}) {
-    const type = message.messageType || "standard";
+    const type = message.messageType || 'standard';
     const Renderer = this.renderers.get(type);
 
     if (!Renderer) {
@@ -54,12 +53,12 @@ export class MessageRendererFactory {
 }
 
 // Register built-in message types
-MessageRendererFactory.register("standard", StandardMessage);
-MessageRendererFactory.register("approval", CustomMessage);
-MessageRendererFactory.register("comment-request", CommentRequestMessage);
-MessageRendererFactory.register("code", CodeMessage);
-MessageRendererFactory.register("custom" as MessageType, CustomMessage);
-MessageRendererFactory.register("report", CustomMessage);
+MessageRendererFactory.register('standard', StandardMessage);
+MessageRendererFactory.register('approval', CustomMessage);
+MessageRendererFactory.register('comment-request', CommentRequestMessage);
+MessageRendererFactory.register('code', CodeMessage);
+MessageRendererFactory.register('custom' as MessageType, CustomMessage);
+MessageRendererFactory.register('report', CustomMessage);
 
 export function renderCustomMessage(message: Message) {
   return MessageRendererFactory.render(message, message.metadata || {});

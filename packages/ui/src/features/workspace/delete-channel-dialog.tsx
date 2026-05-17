@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/dialog"
-import { Button } from "../../components/button"
+} from '../../components/dialog';
+import { Button } from '../../components/button';
 
 interface Channel {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface DeleteChannelDialogProps {
-  deleteChannelOpen: boolean
-  setDeleteChannelOpen: (open: boolean) => void
-  selectedChannel: Channel | null
-  handleDeleteChannel: () => void
+  deleteChannelOpen: boolean;
+  setDeleteChannelOpen: (open: boolean) => void;
+  selectedChannel: Channel | null;
+  handleDeleteChannel: () => void;
 }
 
 export function DeleteChannelDialog({
@@ -46,5 +46,5 @@ export function DeleteChannelDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -82,7 +82,7 @@ export class DmsController {
     @Param('conversationId') conversationId: string,
     @CurrentUser() user: User,
     @Query('cursor') cursor?: string,
-    @Query('limit') limitNum = '50',
+    @Query('limit') limitNum = '50'
   ) {
     return this.dmsService.getMessages(conversationId, user.id, cursor, parseInt(limitNum));
   }
@@ -91,11 +91,7 @@ export class DmsController {
   @ApiOperation({ summary: 'Send a message in a DM' })
   @ApiParam({ name: 'conversationId', description: 'The conversation ID' })
   @ApiResponse({ status: 201, description: 'Message sent' })
-  async createMessage(
-    @Param('conversationId') conversationId: string,
-    @CurrentUser() user: User,
-    @Body() body: any,
-  ) {
+  async createMessage(@Param('conversationId') conversationId: string, @CurrentUser() user: User, @Body() body: any) {
     return this.dmsService.createMessage(conversationId, user.id, body);
   }
 
@@ -109,7 +105,7 @@ export class DmsController {
     @Param('conversationId') conversationId: string,
     @Param('messageId') messageId: string,
     @CurrentUser() user: User,
-    @Body() body: UpdateDmMessageDto,
+    @Body() body: UpdateDmMessageDto
   ) {
     return this.dmsService.updateMessage(conversationId, messageId, user.id, body.content);
   }
@@ -119,10 +115,7 @@ export class DmsController {
   @ApiParam({ name: 'conversationId', description: 'The conversation ID' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
   @ApiResponse({ status: 200, description: 'Message deleted' })
-  async deleteMessage(
-    @Param('conversationId') conversationId: string,
-    @Param('messageId') messageId: string,
-  ) {
+  async deleteMessage(@Param('conversationId') conversationId: string, @Param('messageId') messageId: string) {
     return this.dmsService.deleteMessage(conversationId, messageId);
   }
 
@@ -134,7 +127,7 @@ export class DmsController {
   async markAsRead(
     @Param('conversationId') conversationId: string,
     @CurrentUser() user: User,
-    @Body() body: MarkAsReadDto,
+    @Body() body: MarkAsReadDto
   ) {
     return this.dmsService.markAsRead(user.id, body.messageIds, conversationId);
   }
@@ -149,7 +142,7 @@ export class DmsController {
     @Param('conversationId') conversationId: string,
     @Param('messageId') messageId: string,
     @CurrentUser() user: User,
-    @Body() body: { emoji: string },
+    @Body() body: { emoji: string }
   ) {
     return this.dmsService.addReaction(conversationId, messageId, user.id, body.emoji);
   }
@@ -164,7 +157,7 @@ export class DmsController {
     @Param('conversationId') conversationId: string,
     @Param('messageId') messageId: string,
     @Param('emoji') emoji: string,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.dmsService.removeReaction(conversationId, messageId, user.id, emoji);
   }

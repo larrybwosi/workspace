@@ -7,13 +7,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import { z } from 'zod';
@@ -43,7 +37,10 @@ const tokenRequestSchema = z.object({
 @Controller('v2/oauth')
 export class V2OAuthController {
   @Post('token')
-  @ApiOperation({ summary: 'Exchange client credentials for an access token', description: 'Used for bot, integration, and M2M authentication.' })
+  @ApiOperation({
+    summary: 'Exchange client credentials for an access token',
+    description: 'Used for bot, integration, and M2M authentication.',
+  })
   @ApiBody({ type: TokenRequestDto })
   @ApiResponse({ status: 200, description: 'Access token returned successfully.' })
   @ApiResponse({ status: 401, description: 'Invalid client credentials.' })

@@ -1,20 +1,20 @@
-import { load } from "@tauri-apps/plugin-store";
+import { load } from '@tauri-apps/plugin-store';
 
 export async function getSecureStore() {
-  return await load("auth.json", { autoSave: true, defaults: {} });
+  return await load('auth.json', { autoSave: true, defaults: {} });
 }
 
 export async function saveAuthToken(token: string) {
   const store = await getSecureStore();
-  await store.set("token", token);
+  await store.set('token', token);
 }
 
 export async function getAuthToken() {
   const store = await getSecureStore();
-  return await store.get<string>("token");
+  return await store.get<string>('token');
 }
 
 export async function clearAuthToken() {
   const store = await getSecureStore();
-  await store.delete("token");
+  await store.delete('token');
 }

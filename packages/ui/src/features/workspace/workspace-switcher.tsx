@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Check, ChevronsUpDown, Plus, Settings, Users, Building2, User } from "lucide-react"
-import { useRouter } from "../../hooks/use-universal-router"
-import { Button } from "../../components/button"
+import * as React from 'react';
+import { Check, ChevronsUpDown, Plus, Settings, Users, Building2, User } from 'lucide-react';
+import { useRouter } from '../../hooks/use-universal-router';
+import { Button } from '../../components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,36 +12,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup,
-} from "../../components/dropdown-menu"
-import { useWorkspaces } from "@repo/api-client"
-import { CreateWorkspaceDialog } from "./create-workspace-dialog"
-import { Badge } from "../../components/badge"
-import { cn } from "../../lib/utils"
+} from '../../components/dropdown-menu';
+import { useWorkspaces } from '@repo/api-client';
+import { CreateWorkspaceDialog } from './create-workspace-dialog';
+import { Badge } from '../../components/badge';
+import { cn } from '../../lib/utils';
 
 interface WorkspaceSwitcherProps {
-  currentWorkspaceId?: string
-  onWorkspaceChange?: (workspaceId: string) => void
+  currentWorkspaceId?: string;
+  onWorkspaceChange?: (workspaceId: string) => void;
 }
 
 export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: WorkspaceSwitcherProps) {
-  const router = useRouter()
-  const { data: workspaces, isLoading } = useWorkspaces()
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
+  const router = useRouter();
+  const { data: workspaces, isLoading } = useWorkspaces();
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
 
-  const currentWorkspace = workspaces?.find((w: any) => w.id === currentWorkspaceId || w.slug === currentWorkspaceId)
+  const currentWorkspace = workspaces?.find((w: any) => w.id === currentWorkspaceId || w.slug === currentWorkspaceId);
 
   // Define fallback values for the "Personal" view
-  const displayName = currentWorkspace?.name || "Personal"
-  const displayIcon = currentWorkspace?.icon
-  const displayInitials = displayName.charAt(0).toUpperCase()
+  const displayName = currentWorkspace?.name || 'Personal';
+  const displayIcon = currentWorkspace?.icon;
+  const displayInitials = displayName.charAt(0).toUpperCase();
 
   const handleWorkspaceChange = (workspaceSlug: string) => {
-    const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug)
+    const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug);
     if (workspace) {
-      router.push(`/workspace/${workspace.slug}`)
+      router.push(`/workspace/${workspace.slug}`);
     }
-    onWorkspaceChange?.(workspaceSlug)
-  }
+    onWorkspaceChange?.(workspaceSlug);
+  };
 
   return (
     <>
@@ -54,13 +54,13 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                   {displayIcon}
                 </div>
               ) : (
-                <div className={cn(
-                  "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-                  currentWorkspace 
-                    ? "bg-gradient-to-br from-blue-500 to-purple-600" 
-                    : "bg-muted border border-border" // Neutral look for Personal if preferred
-                )}>
-                  <span className={cn("font-bold text-sm", currentWorkspace ? "text-white" : "text-muted-foreground")}>
+                <div
+                  className={cn(
+                    'h-9 w-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm',
+                    currentWorkspace ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-muted border border-border' // Neutral look for Personal if preferred
+                  )}
+                >
+                  <span className={cn('font-bold text-sm', currentWorkspace ? 'text-white' : 'text-muted-foreground')}>
                     {displayInitials}
                   </span>
                 </div>
@@ -68,26 +68,26 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
               <div className="text-left min-w-0">
                 <div className="font-semibold text-sm truncate flex items-center gap-2">
                   {displayName}
-                  {currentWorkspace?.plan === "pro" && (
+                  {currentWorkspace?.plan === 'pro' && (
                     <Badge variant="secondary" className="text-[10px] px-1 py-0">
                       PRO
                     </Badge>
                   )}
-                  {currentWorkspace?.plan === "enterprise" && (
+                  {currentWorkspace?.plan === 'enterprise' && (
                     <Badge className="text-[10px] px-1 py-0 bg-gradient-to-r from-amber-500 to-orange-500">ENT</Badge>
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {currentWorkspace 
+                  {currentWorkspace
                     ? `${currentWorkspace?._count?.members || 0} members · ${currentWorkspace?._count?.projects || 0} projects`
-                    : "Individual Workspace"}
+                    : 'Individual Workspace'}
                 </div>
               </div>
             </div>
             <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
           </Button>
         </DropdownMenuTrigger>
-        
+
         {/* ... Rest of the DropdownMenuContent remains the same ... */}
         <DropdownMenuContent align="start" className="w-72">
           <DropdownMenuLabel className="flex items-center justify-between">
@@ -117,7 +117,10 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                 <DropdownMenuItem
                   key={workspace.id}
                   onClick={() => handleWorkspaceChange(workspace.slug)}
-                  className={cn("cursor-pointer py-2", (currentWorkspaceId === workspace.id || currentWorkspaceId === workspace.slug) && "bg-muted")}
+                  className={cn(
+                    'cursor-pointer py-2',
+                    (currentWorkspaceId === workspace.id || currentWorkspaceId === workspace.slug) && 'bg-muted'
+                  )}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     {workspace.icon ? (
@@ -132,7 +135,7 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate flex items-center gap-1.5">
                         {workspace.name}
-                        {workspace.plan === "pro" && (
+                        {workspace.plan === 'pro' && (
                           <Badge variant="secondary" className="text-[9px] px-1 py-0">
                             PRO
                           </Badge>
@@ -180,5 +183,5 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
 
       <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </>
-  )
+  );
 }

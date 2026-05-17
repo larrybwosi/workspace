@@ -78,7 +78,7 @@ export class V10ChannelsService {
       },
     });
 
-    return messages.map((m) => ({
+    return messages.map(m => ({
       id: m.id,
       type: 0,
       content: m.content,
@@ -193,37 +193,37 @@ export class V10ChannelsService {
 
     // Bot can delete its own messages, or if it has MANAGE_MESSAGES permission
     if (message.userId !== bot.id) {
-        // Check permissions (simplified for now)
-        /**
-         * ⚡ Performance Optimization:
-         * Uses targeted 'select' to fetch only permissions for membership verification.
-         * Reduces JSON payload size and memory overhead.
-         */
-        const channel = await prisma.channel.findUnique({
-            where: { id: channelId },
+      // Check permissions (simplified for now)
+      /**
+       * ⚡ Performance Optimization:
+       * Uses targeted 'select' to fetch only permissions for membership verification.
+       * Reduces JSON payload size and memory overhead.
+       */
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelId },
+        select: {
+          members: {
+            where: { userId: bot.id },
+            select: { permissions: true },
+          },
+          workspace: {
             select: {
               members: {
                 where: { userId: bot.id },
                 select: { permissions: true },
               },
-              workspace: {
-                select: {
-                  members: {
-                    where: { userId: bot.id },
-                    select: { permissions: true },
-                  },
-                },
-              },
             },
-        });
+          },
+        },
+      });
 
-        const workspaceMember = channel?.workspace?.members[0];
-        const channelMember = channel?.members[0];
-        const perms = BigInt(workspaceMember?.permissions || 0) | BigInt(channelMember?.permissions || 0);
+      const workspaceMember = channel?.workspace?.members[0];
+      const channelMember = channel?.members[0];
+      const perms = BigInt(workspaceMember?.permissions || 0) | BigInt(channelMember?.permissions || 0);
 
-        if (!hasPermission(perms, Permissions.MANAGE_MESSAGES)) {
-            throw new ForbiddenException('Missing Permissions');
-        }
+      if (!hasPermission(perms, Permissions.MANAGE_MESSAGES)) {
+        throw new ForbiddenException('Missing Permissions');
+      }
     }
 
     await prisma.message.delete({
@@ -313,7 +313,8 @@ export class V10ChannelsService {
         channelId,
         exclusive_notification.title || `New announcement from ${bot.name}`,
         exclusive_notification.message || content || 'Click to view details',
-        exclusive_notification.linkUrl || `/workspace/${channel.workspace?.slug || 'default'}/channels/${channel.slug || channelId}?messageId=${message.id}`,
+        exclusive_notification.linkUrl ||
+          `/workspace/${channel.workspace?.slug || 'default'}/channels/${channel.slug || channelId}?messageId=${message.id}`,
         { botId: bot.id, appId: channel.appId }
       );
     }

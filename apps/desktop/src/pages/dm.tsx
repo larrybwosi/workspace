@@ -105,13 +105,17 @@ export function DMPage() {
             isOpen={infoPanelOpen}
             onClose={() => setInfoPanelOpen(false)}
             id={channelId}
-            dmUser={dmUser ? {
-              id: dmUser.id,
-              name: dmUser.name,
-              avatar: dmUser.avatar || dmUser.image || '',
-              role: 'User',
-              status: 'online' // Presence is handled inside InfoPanel if needed or just shown
-            } : undefined}
+            dmUser={
+              dmUser
+                ? {
+                    id: dmUser.id,
+                    name: dmUser.name,
+                    avatar: dmUser.avatar || dmUser.image || '',
+                    role: 'User',
+                    status: 'online', // Presence is handled inside InfoPanel if needed or just shown
+                  }
+                : undefined
+            }
             activeTab={infoPanelTab}
             onTabChange={setInfoPanelTab}
           />

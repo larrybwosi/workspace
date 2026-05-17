@@ -1,6 +1,6 @@
 # Inviting Members
 
-Build your team by inviting new members to your Skyrme Chat workspace.
+Build your team by inviting new members to your Scrymechat workspace.
 
 ## How to Invite
 

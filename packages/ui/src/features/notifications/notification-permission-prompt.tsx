@@ -1,68 +1,68 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Bell, X } from 'lucide-react'
-import { Button } from "../../components/button"
-import { Card } from "../../components/card"
-import { getFirebaseToken } from "../../lib/integrations/firebase-config"
+import { useState, useEffect } from 'react';
+import { Bell, X } from 'lucide-react';
+import { Button } from '../../components/button';
+import { Card } from '../../components/card';
+import { getFirebaseToken } from '../../lib/integrations/firebase-config';
 
 export function NotificationPermissionPrompt() {
-  const [show, setShow] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if we should show the prompt
     const checkPermission = async () => {
-      if (!("Notification" in window)) return
+      if (!('Notification' in window)) return;
 
-      const permission = Notification.permission
-      const hasAsked = localStorage.getItem("notification-permission-asked")
+      const permission = Notification.permission;
+      const hasAsked = localStorage.getItem('notification-permission-asked');
 
-      if (permission === "default" && !hasAsked) {
+      if (permission === 'default' && !hasAsked) {
         // Show prompt after a delay
-        setTimeout(() => setShow(true), 3000)
+        setTimeout(() => setShow(true), 3000);
       }
-    }
+    };
 
-    checkPermission()
-  }, [])
+    checkPermission();
+  }, []);
 
   const handleEnable = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const token = await getFirebaseToken()
+      const token = await getFirebaseToken();
 
       if (token) {
         // Register token with backend
-        await fetch("/api/device-tokens", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        await fetch('/api/device-tokens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             token,
-            platform: "web",
+            platform: 'web',
             deviceInfo: {
               browser: navigator.userAgent,
               timestamp: new Date().toISOString(),
             },
           }),
-        })
+        });
 
-        localStorage.setItem("notification-permission-asked", "true")
-        setShow(false)
+        localStorage.setItem('notification-permission-asked', 'true');
+        setShow(false);
       }
     } catch (error) {
-      console.error(" Failed to enable notifications:", error)
+      console.error(' Failed to enable notifications:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDismiss = () => {
-    localStorage.setItem("notification-permission-asked", "true")
-    setShow(false)
-  }
+    localStorage.setItem('notification-permission-asked', 'true');
+    setShow(false);
+  };
 
-  if (!show) return null
+  if (!show) return null;
 
   return (
     <Card className="fixed bottom-4 right-4 z-50 w-96 p-4 shadow-lg">
@@ -77,7 +77,7 @@ export function NotificationPermissionPrompt() {
           </p>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={handleEnable} disabled={loading}>
-              {loading ? "Enabling..." : "Enable"}
+              {loading ? 'Enabling...' : 'Enable'}
             </Button>
             <Button size="sm" variant="ghost" onClick={handleDismiss}>
               Not now
@@ -89,5 +89,5 @@ export function NotificationPermissionPrompt() {
         </Button>
       </div>
     </Card>
-  )
+  );
 }

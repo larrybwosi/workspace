@@ -96,8 +96,13 @@ export function VideoCallContent({
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(micOn) as any;
   const { localCameraTrack } = useLocalCameraTrack(cameraOn) as any;
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const { screenTrack, error: screenError } = useLocalScreenTrack(screenSharing, {
-    encoderConfig: '1080p_1'}, "disable") as any;
+  const { screenTrack, error: screenError } = useLocalScreenTrack(
+    screenSharing,
+    {
+      encoderConfig: '1080p_1',
+    },
+    'disable'
+  ) as any;
   const remoteUsers = useRemoteUsers();
 
   const currentParticipant = participants.find(p => (p as any).userId === (session?.user?.id as any));

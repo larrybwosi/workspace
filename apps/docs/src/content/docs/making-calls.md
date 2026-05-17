@@ -1,6 +1,6 @@
 # Making Calls
 
-Skyrme Chat provides built-in high-quality voice and video calling.
+Scrymechat provides built-in high-quality voice and video calling.
 
 ## Voice & Video Calls
 

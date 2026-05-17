@@ -23,7 +23,7 @@ module.exports = function (options) {
             decoratorMetadata: true,
           },
           target: 'esnext',
-          externalHelpers: true,
+          externalHelpers: false,
           keepClassNames: true,
         },
         module: {
@@ -83,7 +83,7 @@ module.exports = function (options) {
                   decoratorMetadata: true,
                 },
                 target: 'esnext',
-                externalHelpers: true,
+                externalHelpers: false,
                 keepClassNames: true,
               },
               module: {

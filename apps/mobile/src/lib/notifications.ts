@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import axios from 'axios';
+import { getBaseURL } from './env';
 
 export async function setupNotifications() {
   if (Platform.OS === 'web') return;
@@ -50,7 +51,7 @@ export async function handleNotificationResponse(response: Notifications.Notific
     const userText = (response as any).userText;
     if (userText && entityId) {
       try {
-        const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseURL = getBaseURL();
         if (type === 'direct_message') {
           await axios.post(`${baseURL}/api/dms/${entityId}/messages`, { content: userText });
         } else {

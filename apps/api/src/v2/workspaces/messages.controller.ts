@@ -322,7 +322,11 @@ export class V2MessagesController {
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
   @ApiBody({ type: UpdateChannelDto })
   @ApiResponse({ status: 200, description: 'Channel updated successfully.' })
-  async updateChannel(@V2Context() context: ApiV2Context, @Param('channelId') channelId: string, @Body() body: UpdateChannelDto) {
+  async updateChannel(
+    @V2Context() context: ApiV2Context,
+    @Param('channelId') channelId: string,
+    @Body() body: UpdateChannelDto
+  ) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
     }
@@ -448,7 +452,10 @@ export class V2MessagesController {
   }
 
   @Post('messages')
-  @ApiOperation({ summary: 'Send a message', description: 'Requires messages:send scope. Supports multipart/form-data for file uploads.' })
+  @ApiOperation({
+    summary: 'Send a message',
+    description: 'Requires messages:send scope. Supports multipart/form-data for file uploads.',
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: SendMessageDto })
   @ApiResponse({ status: 201, description: 'Message sent successfully.' })

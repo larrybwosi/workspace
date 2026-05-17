@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Settings, Globe, Bell, Mail, Database } from 'lucide-react'
-import { Card } from "../../components/card"
-import { Label } from "../../components/label"
-import { Input } from "../../components/input"
-import { Button } from "../../components/button"
-import { Switch } from "../../components/switch"
-import { Textarea } from "../../components/textarea"
+import * as React from 'react';
+import { Settings, Globe, Bell, Mail, Database } from 'lucide-react';
+import { Card } from '../../components/card';
+import { Label } from '../../components/label';
+import { Input } from '../../components/input';
+import { Button } from '../../components/button';
+import { Switch } from '../../components/switch';
+import { Textarea } from '../../components/textarea';
 
 export function AdminSettings() {
   return (
@@ -50,5 +50,5 @@ export function AdminSettings() {
         <Button size="lg">Save Changes</Button>
       </div>
     </div>
-  )
+  );
 }

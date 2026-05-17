@@ -6,17 +6,13 @@ const getEnv = (name: string) => {
 
   // Try various common locations for env variables
   // Avoid explicit import.meta to prevent TS1470
-  const env = g.process?.env ||
-              (g.import?.meta?.env) ||
-              g.__env__;
+  const env = g.process?.env || g.import?.meta?.env || g.__env__;
 
   if (!env) return undefined;
 
-  return env[name] ||
-         env[`VITE_${name}`] ||
-         env[`NEXT_PUBLIC_${name}`] ||
-         env[`EXPO_PUBLIC_${name}`] ||
-         env[`TAURI_${name}`];
+  return (
+    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`]
+  );
 };
 
 const getBaseURL = () => {

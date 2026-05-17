@@ -11,15 +11,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -91,11 +83,7 @@ export class WebhooksController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateWorkspaceWebhookDto })
   @ApiResponse({ status: 201, description: 'Webhook created successfully' })
-  async createWebhook(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: CreateWorkspaceWebhookDto,
-  ) {
+  async createWebhook(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceWebhookDto) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });
@@ -135,7 +123,7 @@ export class WebhooksController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('webhookId') webhookId: string,
-    @Body() body: UpdateWorkspaceWebhookDto,
+    @Body() body: UpdateWorkspaceWebhookDto
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -172,11 +160,7 @@ export class WebhooksController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
   @ApiResponse({ status: 200, description: 'Webhook deleted' })
-  async deleteWebhook(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('webhookId') webhookId: string,
-  ) {
+  async deleteWebhook(@CurrentUser() user: User, @Param('slug') slug: string, @Param('webhookId') webhookId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });

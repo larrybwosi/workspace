@@ -147,7 +147,11 @@ export function CreateProjectDialog({
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })} disabled={createProject.isPending}>
+            <Select
+              value={form.status}
+              onValueChange={v => setForm({ ...form, status: v })}
+              disabled={createProject.isPending}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
