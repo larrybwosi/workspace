@@ -1,6 +1,6 @@
 # Sending Messages
 
-Communication is the heart of Skyrme Chat. Here's how to stay connected with your team.
+Communication is the heart of Scrymechat. Here's how to stay connected with your team.
 
 > INFO: You can also use keyboard shortcuts to navigate even faster. Press `Ctrl + K` (or `Cmd + K`) to open the quick switcher.
 

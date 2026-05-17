@@ -1,12 +1,12 @@
 # Real-time Events with Ably
 
-Skyrme Chat uses [Ably](https://ably.com) to deliver messages and events in real-time. While you can use Webhooks for server-to-server notifications, connecting directly to Ably is recommended for building interactive clients or bots that need low-latency updates.
+Scrymechat uses [Ably](https://ably.com) to deliver messages and events in real-time. While you can use Webhooks for server-to-server notifications, connecting directly to Ably is recommended for building interactive clients or bots that need low-latency updates.
 
 ## Connection Overview
 
 To receive real-time events, your application must:
 
-1. **Authenticate**: Get an Ably Token Request from the Skyrme Chat API.
+1. **Authenticate**: Get an Ably Token Request from the Scrymechat API.
 2. **Connect**: Initialize the Ably SDK using the token request.
 3. **Subscribe**: Listen to specific channels for events.
 
@@ -14,7 +14,7 @@ To receive real-time events, your application must:
 
 ## 1. Authentication
 
-Skyrme Chat provides an endpoint to exchange your API access token for an Ably Token Request.
+Scrymechat provides an endpoint to exchange your API access token for an Ably Token Request.
 
 **Endpoint:** `POST /api/ably/token` (Note: In V2, use your Bearer token in the Authorization header)
 
@@ -66,7 +66,7 @@ async function connectToAbly(accessToken: string) {
   });
 
   realtime.connection.on('connected', () => {
-    console.log('Connected to Skyrme Chat Real-time!');
+    console.log('Connected to Scrymechat Real-time!');
   });
 
   return realtime;
@@ -98,7 +98,7 @@ def connect_to_ably(access_token):
 
 ## 3. Channels & Events
 
-Skyrme Chat organizes events into channels. You must subscribe to the correct channel to receive the events you're interested in.
+Scrymechat organizes events into channels. You must subscribe to the correct channel to receive the events you're interested in.
 
 ### Channel Naming Conventions
 

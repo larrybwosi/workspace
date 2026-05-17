@@ -1,6 +1,6 @@
 # Discord V10 Gateway
 
-Skyrme Chat provides a compatibility layer for the Discord V10 Gateway protocol. This allows you to use standard Discord libraries (like `discord.js` or `discord.py`) to build bots for Skyrme Chat.
+Scrymechat provides a compatibility layer for the Discord V10 Gateway protocol. This allows you to use standard Discord libraries (like `discord.js` or `discord.py`) to build bots for Scrymechat.
 
 ## Gateway URL
 
@@ -19,7 +19,7 @@ Connect your Discord library to the following WebSocket endpoint:
 
 ## Supported Dispatch Events
 
-Skyrme Chat currently supports the following gateway events:
+Scrymechat currently supports the following gateway events:
 
 - `READY`: Dispatched when the handshake is successful.
 - `MESSAGE_CREATE`: Dispatched when a message is sent in a channel.
@@ -58,9 +58,9 @@ client.login('your_bot_token');
 
 ## Mapping Concepts
 
-- **Guilds** in Discord map to **Workspaces** in Skyrme Chat.
-- **Roles** map to Skyrme Chat roles (Owner, Admin, Member).
-- **Snowflakes**: Skyrme Chat uses standard UUIDs, but for compatibility, some fields are translated to Discord-style snowflakes.
+- **Guilds** in Discord map to **Workspaces** in Scrymechat.
+- **Roles** map to Scrymechat roles (Owner, Admin, Member).
+- **Snowflakes**: Scrymechat uses standard UUIDs, but for compatibility, some fields are translated to Discord-style snowflakes.
 
 ### Role Snowflakes
 

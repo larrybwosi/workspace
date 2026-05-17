@@ -1,6 +1,6 @@
 # Messages & Channels
 
-Communication in Skyrme Chat happens through channels or direct messages. The API allows you to automate these interactions, from simple notifications to complex interactive bots.
+Communication in Scrymechat happens through channels or direct messages. The API allows you to automate these interactions, from simple notifications to complex interactive bots.
 
 ## Channels
 
@@ -75,7 +75,7 @@ Send a message to a channel or a specific user.
 
 Interactive actions allow users to trigger webhooks in your application by clicking buttons on a message.
 
-1. **User clicks a button**: Skyrme Chat sends an `action.triggered` webhook to your app.
+1. **User clicks a button**: Scrymechat sends an `action.triggered` webhook to your app.
 2. **Payload**: The payload includes the `actionId`, `value`, `messageId`, and the user who clicked it.
 3. **Response**: Your server should respond with a `200 OK`. You can also optionally update the original message to reflect the new state.
 
@@ -114,4 +114,4 @@ The `metadata` field allows you to store structured JSON data with your message.
 
 ## Real-time Events
 
-Skyrme Chat uses Ably for real-time delivery. When you send a message via the API, it is automatically broadcast to all connected clients in the workspace.
+Scrymechat uses Ably for real-time delivery. When you send a message via the API, it is automatically broadcast to all connected clients in the workspace.
