@@ -82,9 +82,31 @@ export class FriendsService {
   }
 
   async sendFriendRequest(senderId: string, senderName: string, receiverEmailOrUsername: string, message?: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates receiver lookup, friendship check, and pending request check into a single database query.
+     * Reduces database round-trips from 3 down to 1.
+     */
     const receiver = await prisma.user.findFirst({
       where: {
         OR: [{ email: receiverEmailOrUsername }, { username: receiverEmailOrUsername }],
+      },
+      select: {
+        id: true,
+        // Check if already friends (reciprocal records)
+        friendOf: {
+          where: { userId: senderId },
+          select: { id: true },
+        },
+        // Check if there's a pending request in either direction
+        receivedFriendRequests: {
+          where: { senderId: senderId, status: 'pending' },
+          select: { id: true },
+        },
+        sentFriendRequests: {
+          where: { receiverId: senderId, status: 'pending' },
+          select: { id: true },
+        },
       },
     });
 
@@ -92,42 +114,22 @@ export class FriendsService {
       throw new NotFoundException('User not found');
     }
 
-    const receiverId = receiver.id;
-
-    if (receiverId === senderId) {
+    if (receiver.id === senderId) {
       throw new BadRequestException('Cannot send friend request to yourself');
     }
 
-    const existingFriend = await prisma.friend.findFirst({
-      where: {
-        OR: [
-          { userId: senderId, friendId: receiverId },
-          { userId: receiverId, friendId: senderId },
-        ],
-      },
-    });
-
-    if (existingFriend) {
+    if (receiver.friendOf.length > 0) {
       throw new BadRequestException('Already friends with this user');
     }
 
-    const existingRequest = await prisma.friendRequest.findFirst({
-      where: {
-        OR: [
-          { senderId: senderId, receiverId: receiverId, status: 'pending' },
-          { senderId: receiverId, receiverId: senderId, status: 'pending' },
-        ],
-      },
-    });
-
-    if (existingRequest) {
+    if (receiver.receivedFriendRequests.length > 0 || receiver.sentFriendRequests.length > 0) {
       throw new BadRequestException('Friend request already pending');
     }
 
     const friendRequest = await prisma.friendRequest.create({
       data: {
         senderId,
-        receiverId,
+        receiverId: receiver.id,
         message,
       },
       include: {
@@ -140,31 +142,33 @@ export class FriendsService {
       },
     });
 
-    await prisma.notification.create({
-      data: {
-        userId: receiverId,
+    // ⚡ Optimization: Parallelize database notification and Ably broadcast
+    await Promise.all([
+      prisma.notification.create({
+        data: {
+          userId: receiver.id,
+          type: 'friend_request',
+          title: 'New Friend Request',
+          message: `${senderName} sent you a friend request`,
+          entityType: 'friend_request',
+          entityId: friendRequest.id,
+          linkUrl: `/friends/requests`,
+          metadata: {
+            senderId,
+            senderName,
+            message,
+          },
+        },
+      }),
+      publishToAbly(`user:${receiver.id}`, 'NOTIFICATION', {
         type: 'friend_request',
         title: 'New Friend Request',
         message: `${senderName} sent you a friend request`,
         entityType: 'friend_request',
         entityId: friendRequest.id,
         linkUrl: `/friends/requests`,
-        metadata: {
-          senderId,
-          senderName,
-          message,
-        },
-      },
-    });
-
-    await publishToAbly(`user:${receiverId}`, 'NOTIFICATION', {
-      type: 'friend_request',
-      title: 'New Friend Request',
-      message: `${senderName} sent you a friend request`,
-      entityType: 'friend_request',
-      entityId: friendRequest.id,
-      linkUrl: `/friends/requests`,
-    });
+      }),
+    ]);
 
     return friendRequest;
   }
@@ -203,58 +207,60 @@ export class FriendsService {
     });
 
     if (action === 'accept') {
-      await prisma.$transaction([
-        prisma.friend.create({
+      /**
+       * ⚡ Performance Optimization:
+       * 1. Uses 'createMany' to insert reciprocal friendship records in a single database operation.
+       * 2. Parallelizes notification creation and Ably broadcast.
+       * Expected impact: Reduces database round-trips and speeds up request processing.
+       */
+      await prisma.friend.createMany({
+        data: [
+          { userId: friendRequest.senderId, friendId: friendRequest.receiverId },
+          { userId: friendRequest.receiverId, friendId: friendRequest.senderId },
+        ],
+        skipDuplicates: true,
+      });
+
+      await Promise.all([
+        prisma.notification.create({
           data: {
             userId: friendRequest.senderId,
-            friendId: friendRequest.receiverId,
+            type: 'friend_request_accepted',
+            title: 'Friend Request Accepted',
+            message: `${friendRequest.receiver.name} accepted your friend request`,
+            entityType: 'friend',
+            entityId: friendRequest.receiverId,
+            linkUrl: `/friends`,
           },
         }),
-        prisma.friend.create({
-          data: {
-            userId: friendRequest.receiverId,
-            friendId: friendRequest.senderId,
-          },
-        }),
-      ]);
-
-      await prisma.notification.create({
-        data: {
-          userId: friendRequest.senderId,
+        publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
           type: 'friend_request_accepted',
           title: 'Friend Request Accepted',
           message: `${friendRequest.receiver.name} accepted your friend request`,
           entityType: 'friend',
           entityId: friendRequest.receiverId,
           linkUrl: `/friends`,
-        },
-      });
-
-      await publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
-        type: 'friend_request_accepted',
-        title: 'Friend Request Accepted',
-        message: `${friendRequest.receiver.name} accepted your friend request`,
-        entityType: 'friend',
-        entityId: friendRequest.receiverId,
-        linkUrl: `/friends`,
-      });
+        }),
+      ]);
     } else if (action === 'decline') {
-      await prisma.notification.create({
-        data: {
-          userId: friendRequest.senderId,
+      // ⚡ Optimization: Parallelize notification and Ably broadcast
+      await Promise.all([
+        prisma.notification.create({
+          data: {
+            userId: friendRequest.senderId,
+            type: 'friend_request_declined',
+            title: 'Friend Request Declined',
+            message: `${friendRequest.receiver.name} declined your friend request`,
+            entityType: 'friend_request',
+            entityId: requestId,
+          },
+        }),
+        publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
           type: 'friend_request_declined',
           title: 'Friend Request Declined',
           message: `${friendRequest.receiver.name} declined your friend request`,
-          entityType: 'friend_request',
-          entityId: requestId,
-        },
-      });
-
-      await publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
-        type: 'friend_request_declined',
-        title: 'Friend Request Declined',
-        message: `${friendRequest.receiver.name} declined your friend request`,
-      });
+        }),
+      ]);
     }
 
     return updatedRequest;
