@@ -26,7 +26,7 @@ export function usePushNotifications() {
           updateUserDeviceToken.mutate({
             token: fcmToken,
             platform: 'web',
-            ["deviceName" as any]: navigator.userAgent
+            ['deviceName' as any]: navigator.userAgent,
           });
         }
       } catch (error) {
@@ -46,7 +46,7 @@ export function usePushNotifications() {
           description: payload.notification?.body,
         });
       })
-      .catch((err) => console.log('failed: ', err));
+      .catch(err => console.log('failed: ', err));
 
     return () => {
       // FCM onMessage doesn't return an unsubscribe function in the way we've wrapped it,

@@ -5,24 +5,24 @@ import { Check } from 'lucide-react';
 export function Pricing() {
   const tiers = [
     {
-      name: "Starter",
-      price: "$0",
-      description: "Perfect for small teams getting started.",
-      features: ["Unlimited Messages", "5 Team Members", "Basic Integrations", "10GB Storage"]
+      name: 'Starter',
+      price: '$0',
+      description: 'Perfect for small teams getting started.',
+      features: ['Unlimited Messages', '5 Team Members', 'Basic Integrations', '10GB Storage'],
     },
     {
-      name: "Pro",
-      price: "$12",
-      description: "Advanced features for growing companies.",
-      features: ["Unlimited Members", "Custom Emojis", "Advanced Bots", "100GB Storage", "Priority Support"],
-      highlight: true
+      name: 'Pro',
+      price: '$12',
+      description: 'Advanced features for growing companies.',
+      features: ['Unlimited Members', 'Custom Emojis', 'Advanced Bots', '100GB Storage', 'Priority Support'],
+      highlight: true,
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      description: "Scale with confidence and control.",
-      features: ["SAML SSO", "Audit Logs", "Unlimited Storage", "Dedicated Success Manager", "Custom SLA"]
-    }
+      name: 'Enterprise',
+      price: 'Custom',
+      description: 'Scale with confidence and control.',
+      features: ['SAML SSO', 'Audit Logs', 'Unlimited Storage', 'Dedicated Success Manager', 'Custom SLA'],
+    },
   ];
 
   return (
@@ -39,7 +39,10 @@ export function Pricing() {
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {tiers.map((tier, i) => (
-              <div key={i} className={`p-8 rounded-2xl border ${tier.highlight ? 'border-blue-600 ring-4 ring-blue-50' : 'border-slate-200'} flex flex-col`}>
+              <div
+                key={i}
+                className={`p-8 rounded-2xl border ${tier.highlight ? 'border-blue-600 ring-4 ring-blue-50' : 'border-slate-200'} flex flex-col`}
+              >
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{tier.name}</h3>
                 <div className="mb-4">
                   <span className="text-4xl font-bold text-slate-900">{tier.price}</span>

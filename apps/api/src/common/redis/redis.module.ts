@@ -15,7 +15,7 @@ import Redis from 'ioredis';
           connectTimeout: 5000,
         });
 
-        client.on('error', (error) => {
+        client.on('error', error => {
           console.warn('[Redis] Connection error:', error.message);
         });
 

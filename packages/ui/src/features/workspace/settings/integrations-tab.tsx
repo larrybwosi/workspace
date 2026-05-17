@@ -1,12 +1,12 @@
-"use client"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/tabs"
-import { ApiKeysManagement } from "./api-keys"
-import { WebhooksManagement } from "./webhooks-management"
-import { ExternalIntegrations } from "./external-intergrtions"
-import { ChannelConfigurations } from "./channel-configuration"
+'use client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/tabs';
+import { ApiKeysManagement } from './api-keys';
+import { WebhooksManagement } from './webhooks-management';
+import { ExternalIntegrations } from './external-intergrtions';
+import { ChannelConfigurations } from './channel-configuration';
 
 interface IntegrationsTabProps {
-  workspaceId: string
+  workspaceId: string;
 }
 
 export function IntegrationsTab({ workspaceId }: IntegrationsTabProps) {
@@ -44,5 +44,5 @@ export function IntegrationsTab({ workspaceId }: IntegrationsTabProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

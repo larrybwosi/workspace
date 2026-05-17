@@ -1,22 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -69,11 +52,7 @@ export class EmojisController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateEmojiDto })
   @ApiResponse({ status: 201, description: 'Emoji created successfully' })
-  async createEmoji(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: CreateEmojiDto,
-  ) {
+  async createEmoji(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateEmojiDto) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
     });

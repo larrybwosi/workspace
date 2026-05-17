@@ -4,9 +4,7 @@ import { Menu, Star, MessageSquare, Phone } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../lib/nativewind';
 
-const MapView = Platform.OS === 'web'
-  ? View
-  : require('react-native-maps').default;
+const MapView = Platform.OS === 'web' ? View : require('react-native-maps').default;
 
 export default function RiderProfileScreen() {
   return (
@@ -14,12 +12,16 @@ export default function RiderProfileScreen() {
       {/* Map Background */}
       <MapView
         className="flex-1 bg-surface-container-highest"
-        initialRegion={Platform.OS === 'web' ? undefined : {
-          latitude: 37.78825,
-          longitude: -122.4324,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        initialRegion={
+          Platform.OS === 'web'
+            ? undefined
+            : {
+                latitude: 37.78825,
+                longitude: -122.4324,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }
+        }
       />
 
       {/* Top Controls */}
@@ -35,10 +37,7 @@ export default function RiderProfileScreen() {
           {/* Driver Info */}
           <View className="flex-row items-center justify-between mb-6">
             <View className="flex-row items-center gap-4">
-              <Image
-                source={{ uri: 'https://i.pravatar.cc/150?u=michael' }}
-                className="w-16 h-16 rounded-full"
-              />
+              <Image source={{ uri: 'https://i.pravatar.cc/150?u=michael' }} className="w-16 h-16 rounded-full" />
               <View>
                 <Text className="font-headline text-xl text-on-surface">Michael</Text>
                 <View className="flex-row items-center gap-1">
@@ -60,11 +59,15 @@ export default function RiderProfileScreen() {
           {/* Car Info */}
           <View className="flex-row items-center justify-between mb-8">
             <View>
-              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">CAR MODEL</Text>
+              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">
+                CAR MODEL
+              </Text>
               <Text className="font-headline text-lg text-on-surface">Toyota Camry</Text>
             </View>
             <View className="items-end">
-              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">PLATE NUMBER</Text>
+              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">
+                PLATE NUMBER
+              </Text>
               <Text className="font-headline text-lg text-on-surface">ABC 123</Text>
             </View>
           </View>

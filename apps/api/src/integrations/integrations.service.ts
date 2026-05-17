@@ -6,95 +6,95 @@ import { SystemMessagesService } from '../common/system-messages.service';
 
 export const INTEGRATION_METADATA = {
   slack: {
-    name: "Slack",
-    icon: "slack",
-    color: "#4A154B",
-    events: ["message.created", "task.created", "task.completed", "project.created", "member.joined"],
-    scopes: ["chat:write", "channels:read", "users:read"],
+    name: 'Slack',
+    icon: 'slack',
+    color: '#4A154B',
+    events: ['message.created', 'task.created', 'task.completed', 'project.created', 'member.joined'],
+    scopes: ['chat:write', 'channels:read', 'users:read'],
   },
   github: {
-    name: "GitHub",
-    icon: "github",
-    color: "#24292E",
-    events: ["commit.pushed", "pr.created", "pr.merged", "issue.created", "release.published"],
-    scopes: ["repo", "read:user", "workflow"],
+    name: 'GitHub',
+    icon: 'github',
+    color: '#24292E',
+    events: ['commit.pushed', 'pr.created', 'pr.merged', 'issue.created', 'release.published'],
+    scopes: ['repo', 'read:user', 'workflow'],
   },
   gitlab: {
-    name: "GitLab",
-    icon: "gitlab",
-    color: "#FC6D26",
-    events: ["commit.pushed", "mr.created", "mr.merged", "issue.created", "pipeline.completed"],
-    scopes: ["api", "read_user", "read_repository"],
+    name: 'GitLab',
+    icon: 'gitlab',
+    color: '#FC6D26',
+    events: ['commit.pushed', 'mr.created', 'mr.merged', 'issue.created', 'pipeline.completed'],
+    scopes: ['api', 'read_user', 'read_repository'],
   },
   jira: {
-    name: "Jira",
-    icon: "jira",
-    color: "#0052CC",
-    events: ["issue.created", "issue.updated", "issue.resolved", "sprint.started", "sprint.completed"],
-    scopes: ["read:jira-work", "write:jira-work"],
+    name: 'Jira',
+    icon: 'jira',
+    color: '#0052CC',
+    events: ['issue.created', 'issue.updated', 'issue.resolved', 'sprint.started', 'sprint.completed'],
+    scopes: ['read:jira-work', 'write:jira-work'],
   },
   linear: {
-    name: "Linear",
-    icon: "linear",
-    color: "#5E6AD2",
-    events: ["issue.created", "issue.updated", "issue.completed", "cycle.started", "cycle.completed"],
-    scopes: ["read", "write", "issues:create"],
+    name: 'Linear',
+    icon: 'linear',
+    color: '#5E6AD2',
+    events: ['issue.created', 'issue.updated', 'issue.completed', 'cycle.started', 'cycle.completed'],
+    scopes: ['read', 'write', 'issues:create'],
   },
   notion: {
-    name: "Notion",
-    icon: "notion",
-    color: "#000000",
-    events: ["page.created", "page.updated", "database.updated"],
-    scopes: ["read_content", "update_content", "insert_content"],
+    name: 'Notion',
+    icon: 'notion',
+    color: '#000000',
+    events: ['page.created', 'page.updated', 'database.updated'],
+    scopes: ['read_content', 'update_content', 'insert_content'],
   },
   figma: {
-    name: "Figma",
-    icon: "figma",
-    color: "#F24E1E",
-    events: ["file.updated", "comment.created", "version.published"],
-    scopes: ["file_read", "file_comments:write"],
+    name: 'Figma',
+    icon: 'figma',
+    color: '#F24E1E',
+    events: ['file.updated', 'comment.created', 'version.published'],
+    scopes: ['file_read', 'file_comments:write'],
   },
   discord: {
-    name: "Discord",
-    icon: "discord",
-    color: "#5865F2",
-    events: ["message.created", "task.created", "task.completed", "alert.triggered"],
-    scopes: ["bot", "applications.commands"],
+    name: 'Discord',
+    icon: 'discord',
+    color: '#5865F2',
+    events: ['message.created', 'task.created', 'task.completed', 'alert.triggered'],
+    scopes: ['bot', 'applications.commands'],
   },
   teams: {
-    name: "Microsoft Teams",
-    icon: "teams",
-    color: "#6264A7",
-    events: ["message.created", "task.created", "meeting.scheduled", "alert.triggered"],
-    scopes: ["ChannelMessage.Send", "Chat.ReadWrite"],
+    name: 'Microsoft Teams',
+    icon: 'teams',
+    color: '#6264A7',
+    events: ['message.created', 'task.created', 'meeting.scheduled', 'alert.triggered'],
+    scopes: ['ChannelMessage.Send', 'Chat.ReadWrite'],
   },
   zapier: {
-    name: "Zapier",
-    icon: "zapier",
-    color: "#FF4A00",
-    events: ["*"],
+    name: 'Zapier',
+    icon: 'zapier',
+    color: '#FF4A00',
+    events: ['*'],
     scopes: [],
   },
   make: {
-    name: "Make (Integromat)",
-    icon: "make",
-    color: "#6D00CC",
-    events: ["*"],
+    name: 'Make (Integromat)',
+    icon: 'make',
+    color: '#6D00CC',
+    events: ['*'],
     scopes: [],
   },
   custom: {
-    name: "Custom Webhook",
-    icon: "webhook",
-    color: "#6366F1",
-    events: ["*"],
+    name: 'Custom Webhook',
+    icon: 'webhook',
+    color: '#6366F1',
+    events: ['*'],
     scopes: [],
   },
   huly: {
-    name: "Huly",
-    icon: "huly",
-    color: "#00A3FF",
-    events: ["task.created", "task.updated", "issue.created", "issue.updated"],
-    scopes: ["api"],
+    name: 'Huly',
+    icon: 'huly',
+    color: '#00A3FF',
+    events: ['task.created', 'task.updated', 'issue.created', 'issue.updated'],
+    scopes: ['api'],
   },
 };
 
@@ -152,7 +152,7 @@ export class IntegrationsService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
         title: data.title,
@@ -237,9 +237,8 @@ export class IntegrationsService {
       },
     });
 
-    const successRate = recentLogs.length > 0
-      ? Math.round((recentLogs.filter(log => log.success).length / recentLogs.length) * 100)
-      : 0;
+    const successRate =
+      recentLogs.length > 0 ? Math.round((recentLogs.filter(log => log.success).length / recentLogs.length) * 100) : 0;
 
     return {
       activeKeys,
@@ -299,10 +298,10 @@ export class IntegrationsService {
   }
 
   async getApiKeys(userId: string) {
-     return prisma.apiKey.findMany({
-       where: { userId },
-       orderBy: { createdAt: 'desc' },
-     });
+    return prisma.apiKey.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async updateApiKey(userId: string, keyId: string, data: any) {
@@ -337,7 +336,7 @@ export class IntegrationsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const enrichedIntegrations = integrations.map((integration) => {
+    const enrichedIntegrations = integrations.map(integration => {
       const config = integration.config as Record<string, any>;
       const metadata = INTEGRATION_METADATA[integration.service as keyof typeof INTEGRATION_METADATA];
 
@@ -347,7 +346,7 @@ export class IntegrationsService {
         config: {
           ...config,
           apiKey: config.apiKey ? `${config.apiKey.slice(0, 8)}...` : undefined,
-          accessToken: config.accessToken ? "••••••••" : undefined,
+          accessToken: config.accessToken ? '••••••••' : undefined,
           refreshToken: undefined,
         },
       };
@@ -643,7 +642,11 @@ export class IntegrationsService {
     });
   }
 
-  async createWorkspaceWebhook(userId: string, workspaceSlug: string, data: { name: string; url: string; events: string[] }) {
+  async createWorkspaceWebhook(
+    userId: string,
+    workspaceSlug: string,
+    data: { name: string; url: string; events: string[] }
+  ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
     });
@@ -674,7 +677,7 @@ export class IntegrationsService {
   async getGithubAuthUrl(userId: string, workspaceSlug: string) {
     const clientId = process.env.GITHUB_CLIENT_ID;
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/github/callback`;
-    const scope = "repo,read:user,workflow";
+    const scope = 'repo,read:user,workflow';
 
     // In a real production app, 'state' should be a secure random nonce
     // stored in a session/db and verified on callback.
@@ -697,7 +700,7 @@ export class IntegrationsService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         client_id: process.env.GITHUB_CLIENT_ID,
@@ -714,8 +717,8 @@ export class IntegrationsService {
 
     const userResponse = await fetch('https://api.github.com/user', {
       headers: {
-        'Authorization': `token ${tokenData.access_token}`,
-        'Accept': 'application/json',
+        Authorization: `token ${tokenData.access_token}`,
+        Accept: 'application/json',
         'User-Agent': 'Skyrme-API',
       },
     });

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import type { Message, MessageMetadata, MessageType } from "./types";
-import { ApprovalMessage } from "../features/chat/message-types/approval-message";
-import { CommentRequestMessage } from "../features/chat/message-types/comment-request-message";
-import { CodeMessage } from "../features/chat/message-types/code-message";
-import { CustomMessage } from "../features/chat/message-types/custom-message";
-import { ReportMessage } from "../features/chat/message-types/report-message";
+import type { Message, MessageMetadata, MessageType } from './types';
+import { ApprovalMessage } from '../features/chat/message-types/approval-message';
+import { CommentRequestMessage } from '../features/chat/message-types/comment-request-message';
+import { CodeMessage } from '../features/chat/message-types/code-message';
+import { CustomMessage } from '../features/chat/message-types/custom-message';
+import { ReportMessage } from '../features/chat/message-types/report-message';
 
 // Revised Regex:
 // 1. ^\s*``` : Starts with optional whitespace and backticks
@@ -13,8 +13,7 @@ import { ReportMessage } from "../features/chat/message-types/report-message";
 // 3. \s+ : Required whitespace/newline after the language tag
 // 4. ([\s\S]+?) : Capture Group 2 (The Code). Lazy match of any character including newlines.
 // 5. ```\s*$ : Ends with backticks and optional whitespace
-export const CODE_BLOCK_REGEX =
-  /^\s*```([a-zA-Z0-9+#\-\.]+)?\s+([\s\S]+?)```\s*$/;
+export const CODE_BLOCK_REGEX = /^\s*```([a-zA-Z0-9+#\-\.]+)?\s+([\s\S]+?)```\s*$/;
 
 /**
  * Parses a markdown code block to extract the language and the raw code.
@@ -24,7 +23,7 @@ export function extractCodeInfo(content: string) {
   if (!match) return { language: null, code: content };
 
   return {
-    language: match[1]?.toLowerCase() || "text", // Default to text if no language provided
+    language: match[1]?.toLowerCase() || 'text', // Default to text if no language provided
     code: match[2], // The inner code content without backticks
   };
 }
@@ -37,7 +36,7 @@ export class MessageRendererFactory {
   }
 
   static render(message: any, metadata: MessageMetadata = {}) {
-    const type = message.messageType || "standard";
+    const type = message.messageType || 'standard';
     const Renderer = this.renderers.get(type);
 
     if (!Renderer) {
@@ -53,14 +52,14 @@ export class MessageRendererFactory {
 }
 
 // Register built-in message types
-MessageRendererFactory.register("approval", ApprovalMessage);
-MessageRendererFactory.register("comment-request", CommentRequestMessage);
-MessageRendererFactory.register("code", CodeMessage);
-MessageRendererFactory.register("custom" as MessageType, CustomMessage);
-MessageRendererFactory.register("report", ReportMessage);
+MessageRendererFactory.register('approval', ApprovalMessage);
+MessageRendererFactory.register('comment-request', CommentRequestMessage);
+MessageRendererFactory.register('code', CodeMessage);
+MessageRendererFactory.register('custom' as MessageType, CustomMessage);
+MessageRendererFactory.register('report', ReportMessage);
 
 export function renderCustomMessage(message: any) {
-  if (!message.messageType || message.messageType === "standard") {
+  if (!message.messageType || message.messageType === 'standard') {
     return null;
   }
 

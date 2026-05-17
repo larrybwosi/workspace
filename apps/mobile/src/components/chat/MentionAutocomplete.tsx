@@ -28,7 +28,7 @@ export function MentionAutocomplete({ isVisible, users, onSelect }: MentionAutoc
                 <Image source={{ uri: item.image }} className="w-full h-full" />
               ) : (
                 <View className="w-full h-full items-center justify-center">
-                   <Text className="text-white text-xs font-bold">{item.name?.charAt(0)}</Text>
+                  <Text className="text-white text-xs font-bold">{item.name?.charAt(0)}</Text>
                 </View>
               )}
             </View>

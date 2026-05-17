@@ -1,6 +1,6 @@
 # Recipe: Building Slash Commands
 
-Slash commands are a powerful way for users to interact with your application directly from the Skyrme Chat message box. While Skyrme Chat doesn't yet have a native "Slash Command" registry, you can easily simulate this functionality using Webhooks and pattern matching.
+Slash commands are a powerful way for users to interact with your application directly from the Scrymechat message box. While Scrymechat doesn't yet have a native "Slash Command" registry, you can easily simulate this functionality using Webhooks and pattern matching.
 
 ## How it Works
 
@@ -49,12 +49,16 @@ app.post('/webhook', async (req, res) => {
 });
 
 async function sendReply(channelId: string, text: string) {
-  await axios.post(`https://api.skyrme.chat/v2/workspaces/my-workspace/messages`, {
-    channelId,
-    content: text
-  }, {
-    headers: { 'Authorization': `Bearer ${process.env.SKYRME_TOKEN}` }
-  });
+  await axios.post(
+    `https://api.skyrme.chat/v2/workspaces/my-workspace/messages`,
+    {
+      channelId,
+      content: text,
+    },
+    {
+      headers: { Authorization: `Bearer ${process.env.SKYRME_TOKEN}` },
+    }
+  );
 }
 ```
 
@@ -102,12 +106,12 @@ Instead of just plain text, you can respond with **Interactive Actions** or **Cu
 const MESSAGES_URL = `https://api.skyrme.chat/v2/workspaces/my-workspace/messages`;
 await axios.post(MESSAGES_URL, {
   channelId,
-  content: "Select an option:",
-  messageType: "custom",
+  content: 'Select an option:',
+  messageType: 'custom',
   actions: [
-    { actionId: "opt_1", label: "Option 1", style: "primary" },
-    { actionId: "opt_2", label: "Option 2", style: "secondary" }
-  ]
+    { actionId: 'opt_1', label: 'Option 1', style: 'primary' },
+    { actionId: 'opt_2', label: 'Option 2', style: 'secondary' },
+  ],
 });
 ```
 

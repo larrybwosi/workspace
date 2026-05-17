@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/card"
-import { Key, Webhook, Activity, TrendingUp } from 'lucide-react'
-import { useIntegrationStats } from "@repo/api-client"
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/card';
+import { Key, Webhook, Activity, TrendingUp } from 'lucide-react';
+import { useIntegrationStats } from '@repo/api-client';
 
 export function IntegrationStats() {
-  const { data: stats, isLoading } = useIntegrationStats()
+  const { data: stats, isLoading } = useIntegrationStats();
 
   if (isLoading) {
     return (
@@ -21,7 +21,7 @@ export function IntegrationStats() {
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -33,9 +33,7 @@ export function IntegrationStats() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats?.activeKeys || 0}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {stats?.totalKeys || 0} total keys
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{stats?.totalKeys || 0} total keys</p>
         </CardContent>
       </Card>
 
@@ -46,9 +44,7 @@ export function IntegrationStats() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats?.activeWebhooks || 0}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {stats?.totalWebhooks || 0} total webhooks
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{stats?.totalWebhooks || 0} total webhooks</p>
         </CardContent>
       </Card>
 
@@ -59,9 +55,7 @@ export function IntegrationStats() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats?.apiCalls24h || 0}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {stats?.rateLimitUsage || 0}% rate limit used
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{stats?.rateLimitUsage || 0}% rate limit used</p>
         </CardContent>
       </Card>
 
@@ -72,11 +66,9 @@ export function IntegrationStats() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats?.webhookSuccessRate || 0}%</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Last 100 deliveries
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Last 100 deliveries</p>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

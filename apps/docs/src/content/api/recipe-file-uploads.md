@@ -1,6 +1,6 @@
 # Recipe: Handling File Uploads
 
-Skyrme Chat API supports uploading files to channels and direct messages. Files can be sent as standalone messages or as part of a text message.
+Scrymechat API supports uploading files to channels and direct messages. Files can be sent as standalone messages or as part of a text message.
 
 ## Overview
 
@@ -25,16 +25,12 @@ async function uploadFile(workspaceSlug: string, channelId: string, filePath: st
   form.append('content', 'Here is the file you requested!');
   form.append('file', fs.createReadStream(filePath));
 
-  const response = await axios.post(
-    `https://api.skyrme.chat/v2/workspaces/${workspaceSlug}/messages`,
-    form,
-    {
-      headers: {
-        ...form.getHeaders(),
-        'Authorization': `Bearer ${YOUR_ACCESS_TOKEN}`
-      }
-    }
-  );
+  const response = await axios.post(`https://api.skyrme.chat/v2/workspaces/${workspaceSlug}/messages`, form, {
+    headers: {
+      ...form.getHeaders(),
+      Authorization: `Bearer ${YOUR_ACCESS_TOKEN}`,
+    },
+  });
 
   return response.data;
 }

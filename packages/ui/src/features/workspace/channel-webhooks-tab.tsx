@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Webhook, Copy, Check, Trash2, Plus, ExternalLink } from "lucide-react"
-import { Button } from "../../components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Badge } from "../../components/badge"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Textarea } from "../../components/textarea"
+import { useState } from 'react';
+import { Webhook, Copy, Check, Trash2, Plus, ExternalLink } from 'lucide-react';
+import { Button } from '../../components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Badge } from '../../components/badge';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Textarea } from '../../components/textarea';
 import {
   Dialog,
   DialogContent,
@@ -16,55 +16,55 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/table"
-import { toast } from "sonner"
+} from '../../components/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table';
+import { toast } from 'sonner';
 
 interface ChannelWebhooksTabProps {
-  channelId: string
+  channelId: string;
 }
 
 export function ChannelWebhooksTab({ channelId }: ChannelWebhooksTabProps) {
-  const [copiedToken, setCopiedToken] = useState(false)
-  const [copiedSecret, setCopiedSecret] = useState(false)
-  const [isCreatingWebhook, setIsCreatingWebhook] = useState(false)
-  const [webhookName, setWebhookName] = useState("")
-  const [webhookDescription, setWebhookDescription] = useState("")
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedSecret, setCopiedSecret] = useState(false);
+  const [isCreatingWebhook, setIsCreatingWebhook] = useState(false);
+  const [webhookName, setWebhookName] = useState('');
+  const [webhookDescription, setWebhookDescription] = useState('');
 
-  const copyToClipboard = async (text: string, type: "token" | "secret") => {
-    await navigator.clipboard.writeText(text)
-    if (type === "token") {
-      setCopiedToken(true)
-      setTimeout(() => setCopiedToken(false), 2000)
+  const copyToClipboard = async (text: string, type: 'token' | 'secret') => {
+    await navigator.clipboard.writeText(text);
+    if (type === 'token') {
+      setCopiedToken(true);
+      setTimeout(() => setCopiedToken(false), 2000);
     } else {
-      setCopiedSecret(true)
-      setTimeout(() => setCopiedSecret(false), 2000)
+      setCopiedSecret(true);
+      setTimeout(() => setCopiedSecret(false), 2000);
     }
-    toast.success("Copied to clipboard")
-  }
+    toast.success('Copied to clipboard');
+  };
 
   const handleCreateWebhook = async () => {
-    setIsCreatingWebhook(true)
+    setIsCreatingWebhook(true);
     try {
       const res = await fetch(`/api/channels/${channelId}/webhooks/incoming-config`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: webhookName, description: webhookDescription }),
-      })
+      });
 
       if (res.ok) {
-        toast.success("Webhook created successfully")
-        setWebhookName("")
-        setWebhookDescription("")
+        toast.success('Webhook created successfully');
+        setWebhookName('');
+        setWebhookDescription('');
       } else {
-        toast.error("Failed to create webhook")
+        toast.error('Failed to create webhook');
       }
     } catch (error) {
-      toast.error("An error occurred")
+      toast.error('An error occurred');
     } finally {
-      setIsCreatingWebhook(false)
+      setIsCreatingWebhook(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -95,7 +95,7 @@ export function ChannelWebhooksTab({ channelId }: ChannelWebhooksTabProps) {
                       id="webhook-name"
                       placeholder="GitHub Notifications"
                       value={webhookName}
-                      onChange={(e) => setWebhookName(e.target.value)}
+                      onChange={e => setWebhookName(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -104,7 +104,7 @@ export function ChannelWebhooksTab({ channelId }: ChannelWebhooksTabProps) {
                       id="webhook-description"
                       placeholder="Receives push notifications from GitHub"
                       value={webhookDescription}
-                      onChange={(e) => setWebhookDescription(e.target.value)}
+                      onChange={e => setWebhookDescription(e.target.value)}
                     />
                   </div>
                 </div>
@@ -132,7 +132,7 @@ export function ChannelWebhooksTab({ channelId }: ChannelWebhooksTabProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() =>
-                  copyToClipboard(`https://api.example.com/channels/${channelId}/webhooks/incoming`, "token")
+                  copyToClipboard(`https://api.example.com/channels/${channelId}/webhooks/incoming`, 'token')
                 }
               >
                 {copiedToken ? <Check className="size-4" /> : <Copy className="size-4" />}
@@ -227,5 +227,5 @@ export function ChannelWebhooksTab({ channelId }: ChannelWebhooksTabProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -9,29 +9,18 @@ export class V10ApplicationsController {
   constructor(private readonly applicationsService: V10ApplicationsService) {}
 
   @Get(':id/commands')
-  async getCommands(
-    @CurrentBot() bot: any,
-    @Param('id') id: string,
-  ) {
+  async getCommands(@CurrentBot() bot: any, @Param('id') id: string) {
     return this.applicationsService.getCommands(bot, id);
   }
 
   @Post(':id/commands')
   @HttpCode(HttpStatus.CREATED)
-  async createCommand(
-    @CurrentBot() bot: any,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async createCommand(@CurrentBot() bot: any, @Param('id') id: string, @Body() body: any) {
     return this.applicationsService.createCommand(bot, id, body);
   }
 
   @Get(':id/guilds/:guildId/commands')
-  async getGuildCommands(
-    @CurrentBot() bot: any,
-    @Param('id') id: string,
-    @Param('guildId') guildId: string,
-  ) {
+  async getGuildCommands(@CurrentBot() bot: any, @Param('id') id: string, @Param('guildId') guildId: string) {
     return this.applicationsService.getGuildCommands(bot, id, guildId);
   }
 
@@ -41,7 +30,7 @@ export class V10ApplicationsController {
     @CurrentBot() bot: any,
     @Param('id') id: string,
     @Param('guildId') guildId: string,
-    @Body() body: any,
+    @Body() body: any
   ) {
     return this.applicationsService.createGuildCommand(bot, id, guildId, body);
   }

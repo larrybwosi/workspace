@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Button } from "../../components/button"
-import { Input } from "../../components/input"
-import { Label } from "../../components/label"
-import { Textarea } from "../../components/textarea"
-import { Badge } from "../../components/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/card"
+import * as React from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '../../components/button';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { Textarea } from '../../components/textarea';
+import { Badge } from '../../components/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/card';
 import {
   Dialog,
   DialogContent,
@@ -17,19 +17,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/dialog"
+} from '../../components/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { ScrollArea } from "../../components/scroll-area"
-import { toast } from "sonner"
-import { useWorkspaceDepartments, useCreateDepartment, apiClient } from "@repo/api-client"
+} from '../../components/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { ScrollArea } from '../../components/scroll-area';
+import { toast } from 'sonner';
+import { useWorkspaceDepartments, useCreateDepartment, apiClient } from '@repo/api-client';
 import {
   Building2,
   Users,
@@ -46,86 +46,86 @@ import {
   Search,
   Crown,
   Shield,
-} from "lucide-react"
+} from 'lucide-react';
 
 interface Department {
-  id: string
-  name: string
-  slug: string
-  description?: string
-  icon?: string
-  color?: string
-  parentId?: string
-  managerId?: string
-  children?: Department[]
-  members?: any[]
-  teams?: any[]
-  _count?: { members: number; teams: number; announcements: number }
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  parentId?: string;
+  managerId?: string;
+  children?: Department[];
+  members?: any[];
+  teams?: any[];
+  _count?: { members: number; teams: number; announcements: number };
 }
 
 interface WorkspaceDepartmentsPanelProps {
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceId: string; // This is now treated as workspaceSlug
 }
 
 export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: WorkspaceDepartmentsPanelProps) {
-  const queryClient = useQueryClient()
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [selectedDepartment, setSelectedDepartment] = React.useState<Department | null>(null)
-  const [isCreateOpen, setIsCreateOpen] = React.useState(false)
-  const [expandedDepts, setExpandedDepts] = React.useState<Set<string>>(new Set())
+  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedDepartment, setSelectedDepartment] = React.useState<Department | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [expandedDepts, setExpandedDepts] = React.useState<Set<string>>(new Set());
 
-  const { data: departmentsData, isLoading } = useWorkspaceDepartments(workspaceSlug)
+  const { data: departmentsData, isLoading } = useWorkspaceDepartments(workspaceSlug);
 
-  const createDepartment = useCreateDepartment(workspaceSlug)
+  const createDepartment = useCreateDepartment(workspaceSlug);
 
   const deleteDepartment = useMutation({
     mutationFn: async (departmentId: string) => {
-      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/departments/${departmentId}`)
-      return data
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/departments/${departmentId}`);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-departments", workspaceSlug] })
-      setSelectedDepartment(null)
-      toast.success("Department deleted")
+      queryClient.invalidateQueries({ queryKey: ['workspace-departments', workspaceSlug] });
+      setSelectedDepartment(null);
+      toast.success('Department deleted');
     },
-  })
+  });
 
-  const departments: Department[] = departmentsData?.departments || []
+  const departments: Department[] = departmentsData?.departments || [];
 
   // Build hierarchy
-  const rootDepartments = departments.filter((d) => !d.parentId)
+  const rootDepartments = departments.filter(d => !d.parentId);
 
   const toggleExpanded = (id: string) => {
-    const newExpanded = new Set(expandedDepts)
+    const newExpanded = new Set(expandedDepts);
     if (newExpanded.has(id)) {
-      newExpanded.delete(id)
+      newExpanded.delete(id);
     } else {
-      newExpanded.add(id)
+      newExpanded.add(id);
     }
-    setExpandedDepts(newExpanded)
-  }
+    setExpandedDepts(newExpanded);
+  };
 
   const filteredDepartments = searchQuery
-    ? departments.filter((d) => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : rootDepartments
+    ? departments.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : rootDepartments;
 
   const renderDepartmentTree = (dept: Department, level = 0) => {
-    const hasChildren = dept.children && dept.children.length > 0
-    const isExpanded = expandedDepts.has(dept.id)
+    const hasChildren = dept.children && dept.children.length > 0;
+    const isExpanded = expandedDepts.has(dept.id);
 
     return (
       <div key={dept.id} style={{ marginLeft: level * 16 }}>
         <div
           className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-accent ${
-            selectedDepartment?.id === dept.id ? "bg-accent" : ""
+            selectedDepartment?.id === dept.id ? 'bg-accent' : ''
           }`}
           onClick={() => setSelectedDepartment(dept)}
         >
           {hasChildren ? (
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleExpanded(dept.id)
+              onClick={e => {
+                e.stopPropagation();
+                toggleExpanded(dept.id);
               }}
               className="p-0.5 hover:bg-muted rounded"
             >
@@ -136,7 +136,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
           )}
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
-            style={{ backgroundColor: dept.color || "#6366f1" }}
+            style={{ backgroundColor: dept.color || '#6366f1' }}
           >
             <Building2 className="h-4 w-4" />
           </div>
@@ -146,7 +146,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => e.stopPropagation()}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -173,15 +173,15 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
         </div>
         {hasChildren && isExpanded && (
           <div className="mt-1">
-            {dept.children!.map((child) => {
-              const fullChild = departments.find((d) => d.id === child.id) || child
-              return renderDepartmentTree(fullChild as Department, level + 1)
+            {dept.children!.map(child => {
+              const fullChild = departments.find(d => d.id === child.id) || child;
+              return renderDepartmentTree(fullChild as Department, level + 1);
             })}
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex h-full">
@@ -206,16 +206,16 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                   <DialogDescription>Add a new department to your organization structure.</DialogDescription>
                 </DialogHeader>
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    const formData = new FormData(e.currentTarget)
+                  onSubmit={e => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
                     createDepartment.mutate({
-                      name: formData.get("name") as string,
-                      slug: formData.get("slug") as string,
-                      description: formData.get("description") as string | undefined,
-                      color: formData.get("color") as string | undefined,
-                      parentId: (formData.get("parentId") as string | null) || undefined,
-                    })
+                      name: formData.get('name') as string,
+                      slug: formData.get('slug') as string,
+                      description: formData.get('description') as string | undefined,
+                      color: formData.get('color') as string | undefined,
+                      parentId: (formData.get('parentId') as string | null) || undefined,
+                    });
                   }}
                   className="space-y-4"
                 >
@@ -244,7 +244,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="root">None (Root)</SelectItem>
-                          {departments.map((d) => (
+                          {departments.map(d => (
                             <SelectItem key={d.id} value={d.id}>
                               {d.name}
                             </SelectItem>
@@ -255,7 +255,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={createDepartment.isPending}>
-                      {createDepartment.isPending ? "Creating..." : "Create Department"}
+                      {createDepartment.isPending ? 'Creating...' : 'Create Department'}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -268,7 +268,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
               placeholder="Search departments..."
               className="pl-9"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
@@ -278,7 +278,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
           ) : filteredDepartments.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">No departments found</div>
           ) : (
-            filteredDepartments.map((dept) => renderDepartmentTree(dept))
+            filteredDepartments.map(dept => renderDepartmentTree(dept))
           )}
         </ScrollArea>
       </div>
@@ -291,13 +291,13 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
               <div className="flex items-center gap-4">
                 <div
                   className="w-16 h-16 rounded-xl flex items-center justify-center text-white"
-                  style={{ backgroundColor: selectedDepartment.color || "#6366f1" }}
+                  style={{ backgroundColor: selectedDepartment.color || '#6366f1' }}
                 >
                   <Building2 className="h-8 w-8" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">{selectedDepartment.name}</h2>
-                  <p className="text-muted-foreground">{selectedDepartment.description || "No description"}</p>
+                  <p className="text-muted-foreground">{selectedDepartment.description || 'No description'}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -372,7 +372,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                             <div className="flex items-center gap-3">
                               <Avatar>
                                 <AvatarImage src={member.user?.avatar} />
-                                <AvatarFallback>{member.user?.name?.[0] || "U"}</AvatarFallback>
+                                <AvatarFallback>{member.user?.name?.[0] || 'U'}</AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium">{member.user?.name}</p>
@@ -380,13 +380,13 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              {member.role === "owner" && (
+                              {member.role === 'owner' && (
                                 <Badge variant="secondary">
                                   <Crown className="h-3 w-3 mr-1" />
                                   Owner
                                 </Badge>
                               )}
-                              {member.role === "admin" && (
+                              {member.role === 'admin' && (
                                 <Badge variant="outline">
                                   <Shield className="h-3 w-3 mr-1" />
                                   Admin
@@ -422,7 +422,7 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
                               <div className="flex items-center gap-3">
                                 <div
                                   className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                                  style={{ backgroundColor: team.color || "#10b981" }}
+                                  style={{ backgroundColor: team.color || '#10b981' }}
                                 >
                                   <Users className="h-5 w-5" />
                                 </div>
@@ -469,5 +469,5 @@ export function WorkspaceDepartmentsPanel({ workspaceId: workspaceSlug }: Worksp
         )}
       </div>
     </div>
-  )
+  );
 }

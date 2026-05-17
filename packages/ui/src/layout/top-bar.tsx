@@ -1,21 +1,16 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Menu, Search, Bell, HelpCircle, Settings } from 'lucide-react'
-import { Button } from "../components/button"
-import { Input } from "../components/input"
-import { Badge } from "../components/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/dropdown-menu"
+import * as React from 'react';
+import { Menu, Search, Bell, HelpCircle, Settings } from 'lucide-react';
+import { Button } from '../components/button';
+import { Input } from '../components/input';
+import { Badge } from '../components/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/dropdown-menu';
 
 interface TopBarProps {
-  onMenuClick: () => void
-  channelName: string
-  channelDescription?: string
+  onMenuClick: () => void;
+  channelName: string;
+  channelDescription?: string;
 }
 
 export function TopBar({ onMenuClick, channelName, channelDescription }: TopBarProps) {
@@ -23,19 +18,12 @@ export function TopBar({ onMenuClick, channelName, channelDescription }: TopBarP
     <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card shrink-0">
       {/* Left section */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="lg:hidden h-9 w-9 shrink-0"
-          onClick={onMenuClick}
-        >
+        <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 shrink-0" onClick={onMenuClick}>
           <Menu className="h-5 w-5" />
         </Button>
         <div className="min-w-0 flex-1">
           <h2 className="font-semibold text-lg truncate">{channelName}</h2>
-          {channelDescription && (
-            <p className="text-xs text-muted-foreground truncate">{channelDescription}</p>
-          )}
+          {channelDescription && <p className="text-xs text-muted-foreground truncate">{channelDescription}</p>}
         </div>
       </div>
 
@@ -44,10 +32,7 @@ export function TopBar({ onMenuClick, channelName, channelDescription }: TopBarP
         <div className="hidden md:flex items-center gap-2">
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="pl-9 h-9"
-            />
+            <Input placeholder="Search..." className="pl-9 h-9" />
           </div>
         </div>
 
@@ -70,5 +55,5 @@ export function TopBar({ onMenuClick, channelName, channelDescription }: TopBarP
         </Button>
       </div>
     </header>
-  )
+  );
 }

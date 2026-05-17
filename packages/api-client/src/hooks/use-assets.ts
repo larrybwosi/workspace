@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { useQuery } from "@tanstack/react-query"
-import { apiClient } from "../client"
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../client';
 
 export function useEligibleAssets() {
   return useQuery({
-    queryKey: ["assets", "eligible"],
+    queryKey: ['assets', 'eligible'],
     queryFn: async () => {
-      const { data } = await apiClient.get("/assets/eligible")
-      return data
+      const { data } = await apiClient.get('/assets/eligible');
+      return data;
     },
-  })
+  });
 }

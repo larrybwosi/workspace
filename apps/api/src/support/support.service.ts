@@ -116,16 +116,14 @@ export class SupportService {
         type: 'live_chat',
         workspaceId,
         isPrivate: true,
-        members: customerUserId
-          ? { create: { userId: customerUserId, role: 'member' } }
-          : undefined,
+        members: customerUserId ? { create: { userId: customerUserId, role: 'member' } } : undefined,
       },
     });
 
     let customerProfileId: string | undefined;
     if (customerUserId) {
-        const profile = await prisma.customerProfile.findUnique({ where: { userId: customerUserId } });
-        customerProfileId = profile?.id;
+      const profile = await prisma.customerProfile.findUnique({ where: { userId: customerUserId } });
+      customerProfileId = profile?.id;
     }
 
     const session = await prisma.liveChatSession.create({

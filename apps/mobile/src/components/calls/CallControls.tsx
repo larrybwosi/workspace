@@ -21,7 +21,7 @@ export function CallControls({
   isMuted,
   isVideoOff,
   isSpeaker,
-  type
+  type,
 }: Props) {
   return (
     <View className="flex-row justify-around items-center w-full px-6 py-8">
@@ -29,7 +29,7 @@ export function CallControls({
         onPress={onToggleSpeaker}
         className={`w-14 h-14 rounded-full items-center justify-center ${isSpeaker ? 'bg-white' : 'bg-discord-sidebar'}`}
       >
-        <MaterialIcons name={isSpeaker ? "volume-up" : "volume-down"} size={28} color={isSpeaker ? "black" : "white"} />
+        <MaterialIcons name={isSpeaker ? 'volume-up' : 'volume-down'} size={28} color={isSpeaker ? 'black' : 'white'} />
       </TouchableOpacity>
 
       {type === 'video' && (
@@ -37,7 +37,7 @@ export function CallControls({
           onPress={onToggleVideo}
           className={`w-14 h-14 rounded-full items-center justify-center ${isVideoOff ? 'bg-red-500' : 'bg-discord-sidebar'}`}
         >
-          <MaterialIcons name={isVideoOff ? "videocam-off" : "videocam"} size={28} color="white" />
+          <MaterialIcons name={isVideoOff ? 'videocam-off' : 'videocam'} size={28} color="white" />
         </TouchableOpacity>
       )}
 
@@ -45,13 +45,10 @@ export function CallControls({
         onPress={onToggleMute}
         className={`w-14 h-14 rounded-full items-center justify-center ${isMuted ? 'bg-white' : 'bg-discord-sidebar'}`}
       >
-        <MaterialIcons name={isMuted ? "mic-off" : "mic"} size={28} color={isMuted ? "black" : "white"} />
+        <MaterialIcons name={isMuted ? 'mic-off' : 'mic'} size={28} color={isMuted ? 'black' : 'white'} />
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={onEndCall}
-        className="w-16 h-16 bg-red-500 rounded-full items-center justify-center"
-      >
+      <TouchableOpacity onPress={onEndCall} className="w-16 h-16 bg-red-500 rounded-full items-center justify-center">
         <MaterialIcons name="call-end" size={32} color="white" />
       </TouchableOpacity>
     </View>

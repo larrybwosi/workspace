@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React from "react";
-import { FileText, ExternalLink, Download, Clock } from "lucide-react";
-import { Card } from "../../../components/card";
-import { Button } from "../../../components/button";
-import { Badge } from "../../../components/badge";
-import { cn } from "../../../lib/utils";
-import type { Message } from "../../../lib/types";
+import React from 'react';
+import { FileText, ExternalLink, Download, Clock } from 'lucide-react';
+import { Card } from '../../../components/card';
+import { Button } from '../../../components/button';
+import { Badge } from '../../../components/badge';
+import { cn } from '../../../lib/utils';
+import type { Message } from '../../../lib/types';
 
 export interface DocumentEmbedProps {
   message: any;
@@ -15,13 +15,13 @@ export interface DocumentEmbedProps {
 export function DocumentEmbed({ message }: DocumentEmbedProps) {
   const { metadata, content } = message;
 
-  if (message.messageType !== "document" && !metadata?.documentTitle) {
+  if (message.messageType !== 'document' && !metadata?.documentTitle) {
     return null;
   }
 
-  const docTitle = (metadata as any)?.documentTitle || "Document";
-  const docType = (metadata as any)?.documentType || "PDF";
-  const docUrl = (metadata as any)?.documentUrl || "#";
+  const docTitle = (metadata as any)?.documentTitle || 'Document';
+  const docType = (metadata as any)?.documentType || 'PDF';
+  const docUrl = (metadata as any)?.documentUrl || '#';
   const docStatus = (metadata as any)?.documentStatus;
   const docId = (metadata as any)?.documentId;
   const docAmount = (metadata as any)?.documentAmount;
@@ -41,11 +41,7 @@ export function DocumentEmbed({ message }: DocumentEmbedProps) {
             </Badge>
           </div>
 
-          {content && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {content}
-            </p>
-          )}
+          {content && <p className="text-xs text-muted-foreground line-clamp-2">{content}</p>}
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
             {docId && (
@@ -60,12 +56,19 @@ export function DocumentEmbed({ message }: DocumentEmbedProps) {
             )}
             {docStatus && (
               <span className="flex items-center gap-1">
-                Status: <span className={cn(
-                  "px-1 rounded",
-                  docStatus === "Approved" ? "bg-green-500/10 text-green-500" :
-                  docStatus === "Pending" ? "bg-yellow-500/10 text-yellow-500" :
-                  "bg-muted text-foreground"
-                )}>{docStatus}</span>
+                Status:{' '}
+                <span
+                  className={cn(
+                    'px-1 rounded',
+                    docStatus === 'Approved'
+                      ? 'bg-green-500/10 text-green-500'
+                      : docStatus === 'Pending'
+                        ? 'bg-yellow-500/10 text-yellow-500'
+                        : 'bg-muted text-foreground'
+                  )}
+                >
+                  {docStatus}
+                </span>
               </span>
             )}
           </div>
@@ -80,7 +83,7 @@ export function DocumentEmbed({ message }: DocumentEmbedProps) {
           </a>
         </Button>
         <Button variant="outline" size="sm" className="h-8 text-xs px-3" asChild title="Download">
-           <a href={docUrl} download>
+          <a href={docUrl} download>
             <Download className="h-3 w-3" />
           </a>
         </Button>

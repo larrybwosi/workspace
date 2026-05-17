@@ -1,26 +1,26 @@
-import { headers } from "next/headers";
-import { type NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/db/prisma"
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db/prisma';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() } as any)
+    const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json()
-    const { token, platform, deviceInfo } = body
+    const body = await request.json();
+    const { token, platform, deviceInfo } = body;
 
     if (!token || !platform) {
-      return NextResponse.json({ error: "Token and platform are required" }, { status: 400 })
+      return NextResponse.json({ error: 'Token and platform are required' }, { status: 400 });
     }
 
     // Check if token already exists
     const existing = await prisma.deviceToken.findUnique({
       where: { token },
-    })
+    });
 
     if (existing) {
       // Update existing token
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
           isActive: true,
           lastUsedAt: new Date(),
         },
-      })
-      return NextResponse.json(updated)
+      });
+      return NextResponse.json(updated);
     }
 
     // Create new token
@@ -45,20 +45,20 @@ export async function POST(request: NextRequest) {
         platform,
         deviceInfo,
       },
-    })
+    });
 
-    return NextResponse.json(deviceToken)
+    return NextResponse.json(deviceToken);
   } catch (error) {
-    console.error(" Device token registration error:", error)
-    return NextResponse.json({ error: "Failed to register device token" }, { status: 500 })
+    console.error(' Device token registration error:', error);
+    return NextResponse.json({ error: 'Failed to register device token' }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() } as any)
+    const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const deviceTokens = await prisma.deviceToken.findMany({
@@ -67,29 +67,29 @@ export async function GET(request: NextRequest) {
         isActive: true,
       },
       orderBy: {
-        lastUsedAt: "desc",
+        lastUsedAt: 'desc',
       },
-    })
+    });
 
-    return NextResponse.json(deviceTokens)
+    return NextResponse.json(deviceTokens);
   } catch (error) {
-    console.error(" Device tokens fetch error:", error)
-    return NextResponse.json({ error: "Failed to fetch device tokens" }, { status: 500 })
+    console.error(' Device tokens fetch error:', error);
+    return NextResponse.json({ error: 'Failed to fetch device tokens' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() } as any)
+    const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const token = searchParams.get("token")
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get('token');
 
     if (!token) {
-      return NextResponse.json({ error: "Token is required" }, { status: 400 })
+      return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
     await prisma.deviceToken.updateMany({
@@ -100,11 +100,11 @@ export async function DELETE(request: NextRequest) {
       data: {
         isActive: false,
       },
-    })
+    });
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(" Device token deletion error:", error)
-    return NextResponse.json({ error: "Failed to delete device token" }, { status: 500 })
+    console.error(' Device token deletion error:', error);
+    return NextResponse.json({ error: 'Failed to delete device token' }, { status: 500 });
   }
 }

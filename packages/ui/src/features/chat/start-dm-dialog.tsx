@@ -1,91 +1,88 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Search, UserPlus, MessageSquare, Loader2, Users, Link as LinkIcon, Copy } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/dialog"
-import { Button } from "../../components/button"
-import { Input } from "../../components/input"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
-import { Badge } from "../../components/badge"
-import { ScrollArea } from "../../components/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/tabs"
-import { useUserSearch } from "@repo/api-client"
-import { useFriends } from "@repo/api-client"
-import { useCreateDM as useCreateDMConversation } from "@repo/api-client"
-import { useSendFriendRequest } from "@repo/api-client"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { cn } from "../../lib/utils"
+import * as React from 'react';
+import { Search, UserPlus, MessageSquare, Loader2, Users, Link as LinkIcon, Copy } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/dialog';
+import { Button } from '../../components/button';
+import { Input } from '../../components/input';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import { Badge } from '../../components/badge';
+import { ScrollArea } from '../../components/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/tabs';
+import { useUserSearch } from '@repo/api-client';
+import { useFriends } from '@repo/api-client';
+import { useCreateDM as useCreateDMConversation } from '@repo/api-client';
+import { useSendFriendRequest } from '@repo/api-client';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { cn } from '../../lib/utils';
 
 interface StartDMDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
-  const router = useRouter()
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [debouncedQuery, setDebouncedQuery] = React.useState("")
-  const [searchTab, setSearchTab] = React.useState<"friends" | "all" | "invite">("friends")
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [debouncedQuery, setDebouncedQuery] = React.useState('');
+  const [searchTab, setSearchTab] = React.useState<'friends' | 'all' | 'invite'>('friends');
 
   // Debounce search
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
+      setDebouncedQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch friends
-  const { data: friends = [], isLoading: friendsLoading } = useFriends()
+  const { data: friends = [], isLoading: friendsLoading } = useFriends();
 
   // Search users
-  const { data: searchResults, isLoading: searchLoading } = useUserSearch(
-    debouncedQuery,
-    searchTab === "friends",
-  )
+  const { data: searchResults, isLoading: searchLoading } = useUserSearch(debouncedQuery, searchTab === 'friends');
 
   // Mutations
-  const createDM = useCreateDMConversation()
-  const sendFriendRequest = useSendFriendRequest()
+  const createDM = useCreateDMConversation();
+  const sendFriendRequest = useSendFriendRequest();
 
   const handleStartDM = async (userId: string, userName: string) => {
     try {
-      const conversation = await createDM.mutateAsync(userId)
-      toast.success(`Started conversation with ${userName}`)
-      onOpenChange(false)
-      setSearchQuery("")
+      const conversation = await createDM.mutateAsync(userId);
+      toast.success(`Started conversation with ${userName}`);
+      onOpenChange(false);
+      setSearchQuery('');
       // Navigate to DM
-      router.push(`/dm/${userId}`)
+      router.push(`/dm/${userId}`);
     } catch (error) {
-      toast.error("Failed to start conversation")
-      console.error("Error starting DM:", error)
+      toast.error('Failed to start conversation');
+      console.error('Error starting DM:', error);
     }
-  }
+  };
 
   const handleSendFriendRequest = async (userId: string, userName: string) => {
     try {
-      await sendFriendRequest.mutateAsync({ receiverId: userId })
-      toast.success(`Friend request sent to ${userName}`)
+      await sendFriendRequest.mutateAsync({ receiverId: userId });
+      toast.success(`Friend request sent to ${userName}`);
     } catch (error) {
-      toast.error("Failed to send friend request")
-      console.error("Error sending friend request:", error)
+      toast.error('Failed to send friend request');
+      console.error('Error sending friend request:', error);
     }
-  }
+  };
 
   // Filter friends based on search
   const filteredFriends = React.useMemo(() => {
-    if (!searchQuery.trim()) return friends
-    const query = searchQuery.toLowerCase()
+    if (!searchQuery.trim()) return friends;
+    const query = searchQuery.toLowerCase();
     return friends.filter(
       (friend: any) =>
-        friend.friend.name.toLowerCase().includes(query) || friend.friend.email.toLowerCase().includes(query),
-    )
-  }, [friends, searchQuery])
+        friend.friend.name.toLowerCase().includes(query) || friend.friend.email.toLowerCase().includes(query)
+    );
+  }, [friends, searchQuery]);
 
-  const displayUsers = searchTab === "friends" ? filteredFriends : searchResults?.users || []
+  const displayUsers = searchTab === 'friends' ? filteredFriends : searchResults?.users || [];
 
-  const isLoading = searchTab === "friends" ? friendsLoading : searchLoading
+  const isLoading = searchTab === 'friends' ? friendsLoading : searchLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,14 +98,14 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
             <Input
               placeholder="Search by name or email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-9"
               autoFocus
             />
           </div>
         </div>
 
-        <Tabs value={searchTab} onValueChange={(v) => setSearchTab(v as any)} className="flex-1">
+        <Tabs value={searchTab} onValueChange={v => setSearchTab(v as any)} className="flex-1">
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="friends" className="gap-2">
@@ -135,9 +132,9 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
               ) : filteredFriends.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 px-6 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mb-3" />
-                  <p className="text-sm font-medium">{searchQuery ? "No friends found" : "No friends yet"}</p>
+                  <p className="text-sm font-medium">{searchQuery ? 'No friends found' : 'No friends yet'}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {searchQuery ? "Try a different search term" : "Add friends to start conversations"}
+                    {searchQuery ? 'Try a different search term' : 'Add friends to start conversations'}
                   </p>
                 </div>
               ) : (
@@ -161,9 +158,9 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                         <Badge
                           variant="secondary"
                           className={cn(
-                            "text-xs",
-                            friendship.friend.status === "online" &&
-                              "bg-green-500/10 text-green-700 dark:text-green-400",
+                            'text-xs',
+                            friendship.friend.status === 'online' &&
+                              'bg-green-500/10 text-green-700 dark:text-green-400'
                           )}
                         >
                           {friendship.friend.status}
@@ -206,8 +203,8 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                   <Button
                     variant="secondary"
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/invite/link/generic-invite-token`)
-                      toast.success("Invitation link copied to clipboard")
+                      navigator.clipboard.writeText(`${window.location.origin}/invite/link/generic-invite-token`);
+                      toast.success('Invitation link copied to clipboard');
                     }}
                   >
                     <Copy className="h-4 w-4" />
@@ -218,7 +215,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                 </p>
               </div>
 
-              <Button className="w-full" variant="outline" onClick={() => toast.info("Email invitations coming soon")}>
+              <Button className="w-full" variant="outline" onClick={() => toast.info('Email invitations coming soon')}>
                 Send Email Invitation
               </Button>
             </div>
@@ -310,5 +307,5 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

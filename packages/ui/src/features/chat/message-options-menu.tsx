@@ -1,24 +1,24 @@
-"use client"
-import { MoreVertical, Reply, Edit, Trash2, Pin, Copy, Forward, Flag, Bookmark, LinkIcon } from "lucide-react"
-import { Button } from "../../components/button"
+'use client';
+import { MoreVertical, Reply, Edit, Trash2, Pin, Copy, Forward, Flag, Bookmark, LinkIcon } from 'lucide-react';
+import { Button } from '../../components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/dropdown-menu"
+} from '../../components/dropdown-menu';
 
 interface MessageOptionsMenuProps {
-  onReply?: () => void
-  onEdit?: () => void
-  onDelete?: () => void
-  onPin?: () => void
-  onCopy?: () => void
-  onForward?: () => void
-  onFlag?: () => void
-  onBookmark?: () => void
-  onCopyLink?: () => void
+  onReply?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onPin?: () => void;
+  onCopy?: () => void;
+  onForward?: () => void;
+  onFlag?: () => void;
+  onBookmark?: () => void;
+  onCopyLink?: () => void;
 }
 
 export function MessageOptionsMenu({
@@ -80,5 +80,5 @@ export function MessageOptionsMenu({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

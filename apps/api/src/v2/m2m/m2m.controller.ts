@@ -10,15 +10,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../../auth/auth.guard';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -77,7 +69,7 @@ export class M2mController {
   async createM2mApplication(
     @CurrentUser() user: User,
     @Param('orgSlug') orgSlug: string,
-    @Body() body: CreateM2mApplicationDto,
+    @Body() body: CreateM2mApplicationDto
   ) {
     const organization = await this.verifyOrgAdmin(user.id, orgSlug);
 
@@ -112,11 +104,7 @@ export class M2mController {
   @ApiOperation({ summary: 'Delete an M2M application' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
   @ApiParam({ name: 'id', description: 'The application ID' })
-  async deleteM2mApplication(
-    @CurrentUser() user: User,
-    @Param('orgSlug') orgSlug: string,
-    @Param('id') id: string,
-  ) {
+  async deleteM2mApplication(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string, @Param('id') id: string) {
     const organization = await this.verifyOrgAdmin(user.id, orgSlug);
 
     await prisma.m2mApplication.delete({

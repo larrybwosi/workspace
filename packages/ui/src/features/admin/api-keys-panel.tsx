@@ -1,20 +1,20 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Key, Plus, Copy, Trash2, Eye, EyeOff, MoreVertical, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/card"
-import { Button } from "../../components/button"
-import { Badge } from "../../components/badge"
-import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from "@repo/api-client"
-import { CreateApiKeyDialog } from "../settings/create-api-key-dialog"
-import { toast } from "sonner"
-import { format } from "date-fns"
+import * as React from 'react';
+import { Key, Plus, Copy, Trash2, Eye, EyeOff, MoreVertical, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
+import { Button } from '../../components/button';
+import { Badge } from '../../components/badge';
+import { useApiKeys, useCreateApiKey, useDeleteApiKey, useUpdateApiKey } from '@repo/api-client';
+import { CreateApiKeyDialog } from '../settings/create-api-key-dialog';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../components/dropdown-menu"
+} from '../../components/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,58 +24,58 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../../components/alert-dialog"
+} from '../../components/alert-dialog';
 
 export function ApiKeysPanel() {
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
-  const [deleteKeyId, setDeleteKeyId] = React.useState<string | null>(null)
-  const [visibleKeys, setVisibleKeys] = React.useState<Set<string>>(new Set())
-  
-  const { data: keys, isLoading } = useApiKeys()
-  const deleteMutation = useDeleteApiKey()
-  const updateMutation = useUpdateApiKey()
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+  const [deleteKeyId, setDeleteKeyId] = React.useState<string | null>(null);
+  const [visibleKeys, setVisibleKeys] = React.useState<Set<string>>(new Set());
+
+  const { data: keys, isLoading } = useApiKeys();
+  const deleteMutation = useDeleteApiKey();
+  const updateMutation = useUpdateApiKey();
 
   const handleCopyKey = (key: string) => {
-    navigator.clipboard.writeText(key)
-    toast.success("API key copied to clipboard")
-  }
+    navigator.clipboard.writeText(key);
+    toast.success('API key copied to clipboard');
+  };
 
   const toggleKeyVisibility = (keyId: string) => {
     setVisibleKeys(prev => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev);
       if (newSet.has(keyId)) {
-        newSet.delete(keyId)
+        newSet.delete(keyId);
       } else {
-        newSet.add(keyId)
+        newSet.add(keyId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const handleDelete = async () => {
-    if (!deleteKeyId) return
-    
+    if (!deleteKeyId) return;
+
     try {
-      await deleteMutation.mutateAsync(deleteKeyId)
-      toast.success("API key deleted successfully")
-      setDeleteKeyId(null)
+      await deleteMutation.mutateAsync(deleteKeyId);
+      toast.success('API key deleted successfully');
+      setDeleteKeyId(null);
     } catch (error) {
-      toast.error("Failed to delete API key")
+      toast.error('Failed to delete API key');
     }
-  }
+  };
 
   const toggleKeyStatus = async (keyId: string, isActive: boolean) => {
     try {
-      await updateMutation.mutateAsync({ keyId, isActive: !isActive })
-      toast.success(isActive ? "API key deactivated" : "API key activated")
+      await updateMutation.mutateAsync({ keyId, isActive: !isActive });
+      toast.success(isActive ? 'API key deactivated' : 'API key activated');
     } catch (error) {
-      toast.error("Failed to update API key")
+      toast.error('Failed to update API key');
     }
-  }
+  };
 
   const maskKey = (key: string) => {
-    return `${key.slice(0, 8)}${"•".repeat(20)}${key.slice(-4)}`
-  }
+    return `${key.slice(0, 8)}${'•'.repeat(20)}${key.slice(-4)}`;
+  };
 
   return (
     <div className="space-y-4">
@@ -102,9 +102,7 @@ export function ApiKeysPanel() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>Include your API key in the request header:</p>
-          <code className="block bg-muted p-2 rounded text-xs">
-            X-API-Key: your_api_key_here
-          </code>
+          <code className="block bg-muted p-2 rounded text-xs">X-API-Key: your_api_key_here</code>
           <p className="text-xs">
             Keep your keys secure and never share them publicly. Keys can be revoked at any time.
           </p>
@@ -134,14 +132,14 @@ export function ApiKeysPanel() {
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">
                       <h3 className="font-semibold text-lg">{apiKey.name}</h3>
-                      <Badge variant={apiKey.isActive ? "default" : "secondary"}>
+                      <Badge variant={apiKey.isActive ? 'default' : 'secondary'}>
                         {apiKey.isActive ? (
                           <>
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Active
                           </>
                         ) : (
-                          "Inactive"
+                          'Inactive'
                         )}
                       </Badge>
                       {apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date() && (
@@ -150,54 +148,34 @@ export function ApiKeysPanel() {
                     </div>
 
                     <div className="flex items-center gap-2 font-mono text-sm bg-muted p-3 rounded">
-                      <span className="flex-1">
-                        {visibleKeys.has(apiKey.id) ? apiKey.key : maskKey(apiKey.key)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => toggleKeyVisibility(apiKey.id)}
-                      >
-                        {visibleKeys.has(apiKey.id) ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                      <span className="flex-1">{visibleKeys.has(apiKey.id) ? apiKey.key : maskKey(apiKey.key)}</span>
+                      <Button size="sm" variant="ghost" onClick={() => toggleKeyVisibility(apiKey.id)}>
+                        {visibleKeys.has(apiKey.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleCopyKey(apiKey.key)}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => handleCopyKey(apiKey.key)}>
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Created:</span>{" "}
+                        <span className="text-muted-foreground">Created:</span>{' '}
+                        <span className="font-medium">{format(new Date(apiKey.createdAt), 'MMM d, yyyy')}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Last used:</span>{' '}
                         <span className="font-medium">
-                          {format(new Date(apiKey.createdAt), "MMM d, yyyy")}
+                          {apiKey.lastUsedAt ? format(new Date(apiKey.lastUsedAt), 'MMM d, yyyy') : 'Never'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Last used:</span>{" "}
-                        <span className="font-medium">
-                          {apiKey.lastUsedAt
-                            ? format(new Date(apiKey.lastUsedAt), "MMM d, yyyy")
-                            : "Never"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Rate limit:</span>{" "}
+                        <span className="text-muted-foreground">Rate limit:</span>{' '}
                         <span className="font-medium">{apiKey.rateLimit} req/hour</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Expires:</span>{" "}
+                        <span className="text-muted-foreground">Expires:</span>{' '}
                         <span className="font-medium">
-                          {apiKey.expiresAt
-                            ? format(new Date(apiKey.expiresAt), "MMM d, yyyy")
-                            : "Never"}
+                          {apiKey.expiresAt ? format(new Date(apiKey.expiresAt), 'MMM d, yyyy') : 'Never'}
                         </span>
                       </div>
                     </div>
@@ -221,15 +199,10 @@ export function ApiKeysPanel() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => toggleKeyStatus(apiKey.id, apiKey.isActive)}
-                      >
-                        {apiKey.isActive ? "Deactivate" : "Activate"}
+                      <DropdownMenuItem onClick={() => toggleKeyStatus(apiKey.id, apiKey.isActive)}>
+                        {apiKey.isActive ? 'Deactivate' : 'Activate'}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => setDeleteKeyId(apiKey.id)}
-                      >
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteKeyId(apiKey.id)}>
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
@@ -249,8 +222,8 @@ export function ApiKeysPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete API Key</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this API key? This action cannot be undone and any
-              applications using this key will immediately lose access.
+              Are you sure you want to delete this API key? This action cannot be undone and any applications using this
+              key will immediately lose access.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -262,5 +235,5 @@ export function ApiKeysPanel() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

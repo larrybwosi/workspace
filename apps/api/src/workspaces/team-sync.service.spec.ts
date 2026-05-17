@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Test, TestingModule } from "@nestjs/testing";
-import { TeamSyncService } from "./team-sync.service";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Test, TestingModule } from '@nestjs/testing';
+import { TeamSyncService } from './team-sync.service';
 
 // Mock @repo/database
-vi.mock("@repo/database", () => ({
+vi.mock('@repo/database', () => ({
   prisma: {
     workspaceTeam: {
       findUnique: vi.fn(),
@@ -15,9 +15,9 @@ vi.mock("@repo/database", () => ({
   },
 }));
 
-import { prisma } from "@repo/database";
+import { prisma } from '@repo/database';
 
-describe("TeamSyncService", () => {
+describe('TeamSyncService', () => {
   let service: TeamSyncService;
   const mockPrisma = prisma as any;
 
@@ -31,33 +31,37 @@ describe("TeamSyncService", () => {
     service = module.get<TeamSyncService>(TeamSyncService);
   });
 
-  describe("syncTeamMemberToChannel", () => {
+  describe('syncTeamMemberToChannel', () => {
     it("should add member to channel when action is 'add'", async () => {
-      const teamId = "team-1";
-      const userId = "user-1";
-      const channelId = "chan-1";
+      const teamId = 'team-1';
+      const userId = 'user-1';
+      const channelId = 'chan-1';
 
       mockPrisma.workspaceTeam.findUnique.mockResolvedValue({ id: teamId, channelId });
 
-      await service.syncTeamMemberToChannel(teamId, userId, "add");
+      await service.syncTeamMemberToChannel(teamId, userId, 'add');
 
-      expect(mockPrisma.channelMember.upsert).toHaveBeenCalledWith(expect.objectContaining({
-        where: { channelId_userId: { channelId, userId } }
-      }));
+      expect(mockPrisma.channelMember.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { channelId_userId: { channelId, userId } },
+        })
+      );
     });
 
     it("should remove member from channel when action is 'remove'", async () => {
-      const teamId = "team-1";
-      const userId = "user-1";
-      const channelId = "chan-1";
+      const teamId = 'team-1';
+      const userId = 'user-1';
+      const channelId = 'chan-1';
 
       mockPrisma.workspaceTeam.findUnique.mockResolvedValue({ id: teamId, channelId });
 
-      await service.syncTeamMemberToChannel(teamId, userId, "remove");
+      await service.syncTeamMemberToChannel(teamId, userId, 'remove');
 
-      expect(mockPrisma.channelMember.deleteMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: { channelId, userId }
-      }));
+      expect(mockPrisma.channelMember.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { channelId, userId },
+        })
+      );
     });
   });
 });

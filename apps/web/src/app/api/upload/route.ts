@@ -1,68 +1,66 @@
-import { createClient } from "@sanity/client"
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
+import { createClient } from '@sanity/client';
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 function getSanityClient() {
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
   if (!projectId) {
-    return null
+    return null;
   }
   return createClient({
     projectId,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-    apiVersion: "2024-01-01",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+    apiVersion: '2024-01-01',
     token: process.env.SANITY_WRITE_TOKEN!,
     useCdn: false,
-  })
+  });
 }
 
 export async function POST(request: NextRequest) {
-  const client = getSanityClient()
+  const client = getSanityClient();
   if (!client) {
-    return NextResponse.json({ error: "Sanity not configured" }, { status: 503 })
+    return NextResponse.json({ error: 'Sanity not configured' }, { status: 503 });
   }
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
-    })
+    });
 
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData()
-    const file = formData.get("file") as File
-    
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const maxSize = 50 * 1024 * 1024 // 50MB
+    const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: "File size exceeds 50MB limit" }, { status: 400 })
+      return NextResponse.json({ error: 'File size exceeds 50MB limit' }, { status: 400 });
     }
 
-    const isImage = file.type.startsWith("image/")
-    const assetType = isImage ? "image" : "file"
+    const isImage = file.type.startsWith('image/');
+    const assetType = isImage ? 'image' : 'file';
 
-    const buffer = await file.arrayBuffer()
-    const blob = new Blob([buffer], { type: file.type })
+    const buffer = await file.arrayBuffer();
+    const blob = new Blob([buffer], { type: file.type });
 
     const asset = await client.assets.upload(assetType, blob, {
       filename: file.name,
       contentType: file.type,
-    })
+    });
 
     // Format size as a string for Prisma validation (Expected String or Null, provided Int)
     const formatSize = (bytes: number) => {
-      if (bytes === 0) return "0 Bytes";
+      if (bytes === 0) return '0 Bytes';
       const k = 1024;
-      const sizes = ["Bytes", "KB", "MB", "GB"];
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return (
-        parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-      );
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     return NextResponse.json({
@@ -76,45 +74,45 @@ export async function POST(request: NextRequest) {
         dimensions: isImage ? asset.metadata?.dimensions : undefined,
         duration: asset.metadata?.duration,
       },
-    })
+    });
   } catch (error) {
-    console.error(" Upload error:", error)
+    console.error(' Upload error:', error);
     return NextResponse.json(
-      { error: "Failed to upload file", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: 'Failed to upload file', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function DELETE(request: NextRequest) {
-  const client = getSanityClient()
+  const client = getSanityClient();
   if (!client) {
-    return NextResponse.json({ error: "Sanity not configured" }, { status: 503 })
+    return NextResponse.json({ error: 'Sanity not configured' }, { status: 503 });
   }
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
-    })
+    });
 
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const assetId = searchParams.get("assetId")
+    const { searchParams } = new URL(request.url);
+    const assetId = searchParams.get('assetId');
 
     if (!assetId) {
-      return NextResponse.json({ error: "Asset ID required" }, { status: 400 })
+      return NextResponse.json({ error: 'Asset ID required' }, { status: 400 });
     }
 
-    await client.delete(assetId)
+    await client.delete(assetId);
 
-    return NextResponse.json({ success: true, message: "Asset deleted successfully" })
+    return NextResponse.json({ success: true, message: 'Asset deleted successfully' });
   } catch (error) {
-    console.error(" Delete error:", error)
+    console.error(' Delete error:', error);
     return NextResponse.json(
-      { error: "Failed to delete asset", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: 'Failed to delete asset', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
-    )
+    );
   }
 }

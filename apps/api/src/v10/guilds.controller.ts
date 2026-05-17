@@ -9,18 +9,12 @@ export class V10GuildsController {
   constructor(private readonly guildsService: V10GuildsService) {}
 
   @Get(':guildId')
-  async getGuild(
-    @CurrentBot() bot: any,
-    @Param('guildId') guildId: string,
-  ) {
+  async getGuild(@CurrentBot() bot: any, @Param('guildId') guildId: string) {
     return this.guildsService.getGuild(bot, guildId);
   }
 
   @Get(':guildId/channels')
-  async getChannels(
-    @CurrentBot() bot: any,
-    @Param('guildId') guildId: string,
-  ) {
+  async getChannels(@CurrentBot() bot: any, @Param('guildId') guildId: string) {
     return this.guildsService.getChannels(bot, guildId);
   }
 
@@ -29,16 +23,13 @@ export class V10GuildsController {
     @CurrentBot() bot: any,
     @Param('guildId') guildId: string,
     @Param('limit') limit?: number,
-    @Param('after') after?: string,
+    @Param('after') after?: string
   ) {
     return this.guildsService.getMembers(bot, guildId, { limit, after });
   }
 
   @Get(':guildId/roles')
-  async getRoles(
-    @CurrentBot() bot: any,
-    @Param('guildId') guildId: string,
-  ) {
+  async getRoles(@CurrentBot() bot: any, @Param('guildId') guildId: string) {
     return this.guildsService.getRoles(bot, guildId);
   }
 
@@ -48,7 +39,7 @@ export class V10GuildsController {
     @CurrentBot() bot: any,
     @Param('guildId') guildId: string,
     @Param('userId') userId: string,
-    @Param('roleId') roleId: string,
+    @Param('roleId') roleId: string
   ) {
     return this.guildsService.addMemberRole(bot, guildId, userId, roleId);
   }
@@ -59,7 +50,7 @@ export class V10GuildsController {
     @CurrentBot() bot: any,
     @Param('guildId') guildId: string,
     @Param('userId') userId: string,
-    @Param('roleId') roleId: string,
+    @Param('roleId') roleId: string
   ) {
     return this.guildsService.removeMemberRole(bot, guildId, userId, roleId);
   }
