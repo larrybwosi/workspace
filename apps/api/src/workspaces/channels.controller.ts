@@ -77,9 +77,9 @@ export class ChannelsController {
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace resolution, membership verification, and channel retrieval into a single database query.
+     * 2. Uses a nested 'select' with filters for both membership and private channel access.
+     * 3. Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -88,6 +88,27 @@ export class ChannelsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        channels: {
+          where: {
+            OR: [
+              { isPrivate: false },
+              {
+                isPrivate: true,
+                members: {
+                  some: {
+                    userId: user.id,
+                  },
+                },
+              },
+            ],
+          },
+          include: {
+            _count: { select: { messages: true } },
+          },
+          orderBy: {
+            name: 'asc',
+          },
         },
       },
     });
@@ -102,30 +123,7 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channels = await prisma.channel.findMany({
-      where: {
-        workspaceId: workspace.id,
-        OR: [
-          { isPrivate: false },
-          {
-            isPrivate: true,
-            members: {
-              some: {
-                userId: user.id,
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        _count: { select: { messages: true } },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
-    return channels;
+    return workspace.channels;
   }
 
   @Post()
@@ -219,9 +217,9 @@ export class ChannelsController {
   async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace resolution, membership verification, and channel retrieval into a single database query.
+     * 2. Uses a nested 'select' with filtered 'channels' relation to fetch both workspace and specific channel data.
+     * 3. Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -230,6 +228,17 @@ export class ChannelsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        channels: {
+          where: { id: channelId },
+          include: {
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true, threads: true } },
+          },
         },
       },
     });
@@ -244,17 +253,7 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId, workspaceId: workspace.id },
-      include: {
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatar: true } },
-          },
-        },
-        _count: { select: { members: true, threads: true } },
-      },
-    });
+    const channel = workspace.channels[0];
 
     if (!channel) {
       throw new NotFoundException('Channel not found');
