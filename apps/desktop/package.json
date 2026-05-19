@@ -1,6 +1,6 @@
 {
   "name": "desktop",
-  "version": "workspace:*",
+  "version": "0.0.1.346",
   "private": true,
   "type": "module",
   "scripts": {

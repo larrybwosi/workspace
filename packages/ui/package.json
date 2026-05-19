@@ -1,6 +1,6 @@
 {
   "name": "@repo/ui",
-  "version": "workspace:*",
+  "version": "0.0.1.346",
   "private": true,
   "main": "./src/index.ts",
   "scripts": {

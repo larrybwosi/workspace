@@ -1,5 +1,4 @@
 interface CustomUser { avatar?: string; banner?: string; name: string; image?: string; id: string; }
-interface CustomUser { avatar?: string; banner?: string; name: string; image?: string; id: string; }
 import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useSession, signOut } from '../../lib/auth';
 import { useRouter } from 'expo-router';
