@@ -1,5 +1,5 @@
 {
   "name": "@repo/typescript-config",
-  "version": "0.0.1.346",
+  "version": "workspace:*",
   "private": true
 }

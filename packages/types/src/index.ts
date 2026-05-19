@@ -183,3 +183,14 @@ export interface SocialProfile {
   mutualWorkspaces: Array<{ id: string; name: string; icon?: string }>;
   mutualFriends: Array<User>;
 }
+
+export interface SocialProfile {
+  id: string;
+  userId: string;
+  isFriend: boolean;
+  friendRequestStatus?: 'pending' | 'accepted' | 'declined';
+  friendRequestSide?: 'sender' | 'receiver';
+  isBlockedByMe: boolean;
+  mutualWorkspaces: Array<{ id: string; name: string; icon?: string }>;
+  mutualFriends: Array<User>;
+}
