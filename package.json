@@ -19,8 +19,8 @@
     "version:ci": "changeset version && pnpm install --no-frozen-lockfile"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "0.0.1.346",
+    "@repo/typescript-config": "0.0.1.346",
     "@changesets/cli": "^2.30.0",
     "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",

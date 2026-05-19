@@ -19,7 +19,7 @@ export function IncomingCallOverlay() {
         workspaceId: incomingCallData.workspaceId || '',
         workspaceSlug: incomingCallData.workspaceSlug || '',
       },
-    } as any);
+    });
   };
 
   return (

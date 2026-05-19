@@ -11,8 +11,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/api-client": "workspace:*",
-    "@repo/ui": "workspace:*",
+    "@repo/api-client": "0.0.1.346",
+    "@repo/ui": "0.0.1.346",
     "better-auth": "1.6.0",
     "lucide-react": "^1.7.0",
     "react": "19.2.4",
@@ -21,8 +21,8 @@
     "sonner": "latest"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "0.0.1.346",
+    "@repo/typescript-config": "0.0.1.346",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22.19.15",
     "@types/react": "^19.2.14",

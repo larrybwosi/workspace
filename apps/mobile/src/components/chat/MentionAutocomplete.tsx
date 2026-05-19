@@ -1,10 +1,11 @@
+import { User } from "@repo/types";
 import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image } from 'react-native';
 
 interface MentionAutocompleteProps {
   isVisible: boolean;
-  users: any[];
-  onSelect: (user: any) => void;
+  users: User[];
+  onSelect: (user: User) => void;
 }
 
 export function MentionAutocomplete({ isVisible, users, onSelect }: MentionAutocompleteProps) {

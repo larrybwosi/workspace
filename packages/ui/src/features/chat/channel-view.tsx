@@ -157,6 +157,7 @@ export function ChannelView({
 
   const { data: dmUser } = useUser(dmUserId || '');
   const { data: socialProfile } = useUserSocialProfile(dmUserId || '');
+
   const sendFriendRequestMutation = useSendFriendRequest();
   const respondToFriendRequestMutation = useRespondToFriendRequest();
   const { data: friendRequests } = useFriendRequests('received', 'pending');

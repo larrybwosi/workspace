@@ -30,7 +30,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function ThreadScreen() {
   const { id, threadId, workspaceId } = useLocalSearchParams<{ id: string; threadId: string; workspaceId?: string }>();
   const router = useRouter();
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession();
   const [messageText, setMessageText] = useState('');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
 

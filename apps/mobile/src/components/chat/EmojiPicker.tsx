@@ -116,7 +116,7 @@ interface EmojiPickerProps {
 export function EmojiPicker({ isVisible, onClose, onSelect }: EmojiPickerProps) {
   const [search, setSearch] = useState('');
 
-  const renderCategory = ({ item }: any) => (
+  const renderCategory = ({ item }: { item: (typeof EMOJI_DATA)[0] }) => (
     <View className="mb-4">
       <Text className="text-discord-muted text-xs font-bold uppercase mb-2 px-4">{item.category}</Text>
       <View className="flex-row flex-wrap px-2">

@@ -12,9 +12,9 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@repo/api-client": "workspace:*",
-    "@repo/types": "workspace:*",
-    "@repo/ui": "workspace:*",
+    "@repo/api-client": "0.0.1.346",
+    "@repo/types": "0.0.1.346",
+    "@repo/ui": "0.0.1.346",
     "@tanstack/react-query": "5.96.2",
     "@tauri-apps/api": "^2.1.1",
     "@tauri-apps/plugin-deep-link": "latest",
@@ -36,8 +36,8 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "0.0.1.346",
+    "@repo/typescript-config": "0.0.1.346",
     "@tailwindcss/vite": "^4.2.2",
     "@tauri-apps/cli": "^2.1.0",
     "@types/node": "^22.19.15",
