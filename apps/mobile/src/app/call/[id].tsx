@@ -47,7 +47,7 @@ export default function CallScreen() {
     const init = async () => {
       try {
         const baseURL = getBaseURL();
-        const body: any = {
+        const body: Record<string, unknown> = {
           type: type || 'voice',
           workspaceId,
           workspaceSlug,

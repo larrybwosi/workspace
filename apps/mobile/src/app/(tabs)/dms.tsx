@@ -5,8 +5,8 @@ import { useSession } from '../../lib/auth';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function DMs() {
-  const { data: conversations, isLoading } = useDMConversations();
-  const { data: session } = (useSession as any)();
+  const { data: conversations } = useDMConversations();
+  const { data: session } = useSession();
   const router = useRouter();
 
   return (
@@ -16,11 +16,11 @@ export default function DMs() {
       </View>
 
       <FlatList
-        data={conversations as any[]}
+        data={conversations as unknown[]}
         keyExtractor={(item: any) => item.id}
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }: { item: any }) => {
-          const otherUser = item.participants?.find((p: any) => p.user.id !== session?.user?.id)?.user;
+          const otherUser = (item.participants as any[])?.find((p: any) => p.user.id !== session?.user?.id)?.user;
 
           return (
             <TouchableOpacity

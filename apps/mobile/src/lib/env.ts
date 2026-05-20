@@ -1,5 +1,5 @@
 const getEnv = (name: string) => {
-  const g = globalThis as any;
+  const g = globalThis as typeof globalThis & { process?: { env?: Record<string, string> }; import?: { meta?: { env?: Record<string, string> } }; __env__?: Record<string, string>; };
 
   // Try various common locations for env variables
   // Avoid explicit import.meta to prevent TS1470

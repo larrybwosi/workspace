@@ -3,7 +3,7 @@ import { useSession } from '../lib/auth';
 import { View, ActivityIndicator } from 'react-native';
 
 export default function Index() {
-  const { data: session, isPending } = (useSession as any)();
+  const { data: session, isPending } = useSession();
 
   if (isPending) {
     return (

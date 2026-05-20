@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type { User } from '@repo/types';
+import type { User, SocialProfile } from '@repo/types';
 
 export const userKeys = {
   all: ['users'] as const,
@@ -52,7 +52,7 @@ export function useUserSocialProfile(id: string) {
   return useQuery({
     queryKey: userKeys.socialProfile(id),
     queryFn: async () => {
-      const { data } = await apiClient.get<any>(`/users/${id}/social-profile`);
+      const { data } = await apiClient.get<SocialProfile>(`/users/${id}/social-profile`);
       return data;
     },
     enabled: !!id,
@@ -96,7 +96,7 @@ export function useBlockUser() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<any>(`/users/${id}/block`);
+      const { data } = await apiClient.post<Record<string, unknown>>(`/users/${id}/block`);
       return data;
     },
     onSuccess: (_, id) => {
@@ -111,7 +111,7 @@ export function useUnblockUser() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.delete<any>(`/users/${id}/block`);
+      const { data } = await apiClient.delete<Record<string, unknown>>(`/users/${id}/block`);
       return data;
     },
     onSuccess: (_, id) => {

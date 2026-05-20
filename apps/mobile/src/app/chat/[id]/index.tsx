@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   useMessages,
   useSendMessage,
-  useWorkspaces,
   useChannels,
   useDMConversations,
   useAddReaction,
@@ -41,7 +40,7 @@ export default function ChatScreen() {
 
   const isDM = isDMParam === 'true';
   const router = useRouter();
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession();
 
   const { data: messagesData, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(id as string);
   const messages = messagesData?.pages.flatMap(page => page.messages) || [];
@@ -59,7 +58,6 @@ export default function ChatScreen() {
   const [mentionSearch, setMentionSearch] = useState<string | null>(null);
 
   const { data: members } = useWorkspaceMembers(workspaceId || '');
-  const { data: workspaces } = useWorkspaces();
   const { data: channels } = useChannels();
   const { data: dms } = useDMConversations();
 
@@ -148,7 +146,7 @@ export default function ChatScreen() {
             uri: asset.uri,
             name: asset.name,
             type: asset.mimeType || 'application/octet-stream',
-          } as any);
+          });
           newAttachments.push({ url: uploaded.url, name: asset.name, type: asset.mimeType });
         }
         setAttachments(newAttachments);
@@ -172,7 +170,7 @@ export default function ChatScreen() {
         recipientId: otherUser?.id || '',
         channelId: isDM ? '' : id,
       },
-    } as any);
+    });
   };
 
   const renderMessage = ({ item, index }: { item: any; index: number }) => {
