@@ -22,7 +22,7 @@ export default function DiscoverWorkspaces() {
         </View>
       ) : (
         <FlatList
-          data={workspaces as any[]}
+          data={workspaces as { id: string; name: string; slug: string }[]}
           keyExtractor={(item: any) => item.id}
           contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }: { item: any }) => (

@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 export function useCallSignaling() {
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession();
   const { setIncoming, endCall, rejectCall, activeCall } = useCallStore();
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function useCallSignaling() {
 
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      const { actionIdentifier, notification } = response;
+      const { actionIdentifier,  } = response;
       // const data = notification.request.content.data;
 
       if (actionIdentifier === 'ACCEPT_CALL') {

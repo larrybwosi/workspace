@@ -23,7 +23,7 @@ export function useMessages(
 ) {
   return useInfiniteQuery({
     queryKey: messageKeys.list(channelId, workspaceSlug, threadId || contextId),
-    queryFn: async ({ pageParam }: { pageParam: any }) => {
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? '/v2' : '';
 
@@ -143,14 +143,22 @@ export function useReplyToMessage(workspaceSlug?: string) {
 // Mark messages as read mutation (Batch)
 // We use a simple debounce/buffer mechanism to avoid excessive API calls
 const readBuffer: { [channelId: string]: Set<string> } = {};
-const readTimeout: { [channelId: string]: any } = {};
-const readResolvers: { [channelId: string]: { resolve: (value: any) => void; reject: (reason: any) => void }[] } = {};
+const readTimeout: { [channelId: string]: NodeJS.Timeout | undefined } = {};
+const readResolvers: {
+  [channelId: string]: { resolve: (value: unknown) => void; reject: (reason: unknown) => void }[];
+} = {};
 
 export function useMarkMessagesAsRead(workspaceSlug?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ messageIds, channelId }: { messageIds: string[]; channelId: string }) => {
+    mutationFn: async ({
+      messageIds,
+      channelId,
+    }: {
+      messageIds: string[];
+      channelId: string;
+    }): Promise<Record<string, unknown>> => {
       // Buffer messages to be marked as read
       if (!readBuffer[channelId]) readBuffer[channelId] = new Set();
       messageIds.forEach(id => readBuffer[channelId].add(id));
@@ -158,7 +166,10 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
       if (!readResolvers[channelId]) readResolvers[channelId] = [];
 
       return new Promise((resolve, reject) => {
-        readResolvers[channelId].push({ resolve, reject });
+        readResolvers[channelId].push({
+          resolve: resolve as (value: unknown) => void,
+          reject: reject as (reason: unknown) => void,
+        });
 
         if (readTimeout[channelId]) clearTimeout(readTimeout[channelId]);
 
@@ -182,22 +193,21 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
         }, 1000); // 1 second buffer
       });
     },
-    onSuccess: (data: any) => {
+    onSuccess: data => {
       // Optimistically update query data to mark messages as read in the UI
-      const { channelId, messageIds } = data;
+      const { channelId, messageIds } = data as { channelId: string; messageIds: string[] };
       const queryKey = workspaceSlug
         ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
         : messageKeys.list(channelId);
 
-      queryClient.setQueriesData({ queryKey }, (oldData: any) => {
-        if (!oldData?.pages) return oldData;
+      queryClient.setQueriesData({ queryKey }, (oldData: unknown) => {
+        if (!oldData || typeof oldData !== 'object' || !('pages' in oldData)) return oldData;
+        const dataObj = oldData as { pages: { messages: Message[] }[] };
         return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
+          ...dataObj,
+          pages: dataObj.pages.map(page => ({
             ...page,
-            messages: page.messages.map((m: any) =>
-              messageIds.includes(m.id) ? { ...m, readByCurrentUser: true } : m
-            ),
+            messages: page.messages.map(m => (messageIds.includes(m.id) ? { ...m, readByCurrentUser: true } : m)),
           })),
         };
       });
@@ -242,7 +252,7 @@ export function useCreateDM() {
 export function useDMMessages(dmId: string) {
   return useInfiniteQuery({
     queryKey: dmKeys.list(dmId),
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
       const { data } = await apiClient.get(`/dms/${dmId}/messages`, {
         params: { cursor: pageParam, limit: 50 },
       });
@@ -268,7 +278,7 @@ export function useSendDMMessage() {
       dmId: string;
       content: string;
       replyToId?: string;
-      attachments?: any[];
+      attachments?: unknown[];
     }) => {
       const { data } = await apiClient.post(`/dms/${dmId}/messages`, {
         content,

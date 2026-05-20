@@ -65,7 +65,7 @@ export function useCustomerProfiles(workspaceId: string) {
 export function useUpdateCustomerProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Record<string, unknown> & { workspaceId: string }) => {
       const { data: response } = await apiClient.post('/support/customers', data);
       return response;
     },

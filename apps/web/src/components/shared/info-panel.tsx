@@ -76,7 +76,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
   const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
   const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
-  const { data: socialProfile, isLoading: isSocialLoading } = useUserSocialProfile(dmUser?.id || '');
+  const { data: socialProfileData, isLoading: isSocialLoading } = useUserSocialProfile(dmUser?.id || '');
+  const socialProfile = socialProfileData as any;
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];

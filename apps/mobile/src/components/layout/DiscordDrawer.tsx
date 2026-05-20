@@ -29,7 +29,7 @@ export function DiscordSidebar() {
         <View className="w-8 h-[2px] bg-discord-sidebar/50 mb-2 rounded-full" />
 
         <ScrollView showsVerticalScrollIndicator={false} className="w-full">
-          {workspaces?.map((w: any) => (
+          {(workspaces as any[])?.map(w => (
             <TouchableOpacity
               key={w.id}
               className={`w-12 h-12 mb-2 items-center justify-center self-center ${workspaceId === w.id ? 'rounded-xl bg-discord-blurple' : 'rounded-3xl bg-discord-sidebar'}`}
@@ -58,7 +58,7 @@ export function DiscordSidebar() {
           <>
             <View className="flex-row items-center justify-between px-2 mb-4">
               <Text className="text-discord-header font-bold text-lg flex-1" numberOfLines={1}>
-                {workspaces?.find((w: any) => w.id === workspaceId)?.name}
+                {(workspaces as any[])?.find(w => w.id === workspaceId)?.name}
               </Text>
               <TouchableOpacity onPress={() => setChannelModalVisible(true)}>
                 <MaterialIcons name="add" size={20} color="#949BA4" />
@@ -88,11 +88,11 @@ function ChannelList({ workspaceId }: { workspaceId: string }) {
 
   return (
     <ScrollView>
-      {channels?.map((c: any) => (
+      {(channels as any[])?.map(c => (
         <TouchableOpacity
           key={c.id}
           className={`flex-row items-center p-2 rounded-md mb-1 ${activeChannelId === c.id ? 'bg-discord-bg/50' : ''}`}
-          onPress={() => router.push({ pathname: '/chat/[id]', params: { id: c.id, workspaceId } } as any)}
+          onPress={() => router.push({ pathname: '/chat/[id]', params: { id: c.id, workspaceId } })}
         >
           <MaterialIcons
             name={c.type === 'PUBLIC' ? 'tag' : 'lock'}
