@@ -26,7 +26,12 @@ import { Badge } from '@repo/ui/components/badge';
 import { Separator } from '@repo/ui/components/separator';
 import { cn } from '@repo/ui/lib/utils';
 import { MessageSearchPanel } from '@repo/ui/features/chat/message-search-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@repo/ui/components/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
 
 import {
   useWorkspace,
@@ -657,7 +662,10 @@ export function InfoPanel({
                     <h3 className="text-sm font-semibold mb-3">Thread activity</h3>
                     <div className="flex items-end gap-1 h-12">
                       {Array.from({ length: 24 }).map((_, i) => {
-                        const height = [40, 60, 30, 80, 20, 90, 50, 70, 40, 60, 80, 30, 50, 70, 90, 40, 60, 30, 80, 20, 90, 50, 70, 40][i];
+                        const height = [
+                          40, 60, 30, 80, 20, 90, 50, 70, 40, 60, 80, 30, 50, 70, 90, 40, 60, 30, 80, 20, 90, 50, 70,
+                          40,
+                        ][i];
                         return (
                           <div
                             key={i}
@@ -770,14 +778,19 @@ export function InfoPanel({
             {activeTab === 'files' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Shared Files</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Shared Files
+                  </h3>
                   <Button variant="ghost" size="icon" className="h-6 w-6">
                     <Plus className="h-3 w-3" />
                   </Button>
                 </div>
                 <div className="space-y-3">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border/50 transition-all">
+                  {[1, 2].map(i => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border/50 transition-all"
+                    >
                       <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
                         <FileText className="h-5 w-5" />
                       </div>
@@ -796,7 +809,9 @@ export function InfoPanel({
             {activeTab === 'pins' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Pinned Messages</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Pinned Messages
+                  </h3>
                 </div>
                 <div className="space-y-4">
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
@@ -807,7 +822,9 @@ export function InfoPanel({
                       <span className="text-[10px] font-bold">John Doe</span>
                       <span className="text-[10px] text-muted-foreground ml-auto">Jun 12</span>
                     </div>
-                    <p className="text-xs line-clamp-3">Welcome to the new workspace! Please check the onboarding guide in the files tab.</p>
+                    <p className="text-xs line-clamp-3">
+                      Welcome to the new workspace! Please check the onboarding guide in the files tab.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -817,7 +834,9 @@ export function InfoPanel({
             {activeTab === 'links' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Shared Links</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Shared Links
+                  </h3>
                 </div>
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl border border-border/50 hover:bg-muted/30 transition-all cursor-pointer">

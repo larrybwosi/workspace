@@ -1,24 +1,24 @@
-import { headers } from "next/headers";
-import { type NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db/prisma";
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db/prisma';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get("query")?.trim() || "";
-    const friendsOnly = searchParams.get("friendsOnly") === "true";
+    const query = searchParams.get('query')?.trim() || '';
+    const friendsOnly = searchParams.get('friendsOnly') === 'true';
 
     if (!query) {
       return NextResponse.json({ users: [] });
     }
 
-    const isEmail = query.includes("@");
+    const isEmail = query.includes('@');
 
     let users;
 
@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
         where: {
           userId: session.user.id,
           friend: isEmail
-            ? { email: { equals: query, mode: "insensitive" } }
+            ? { email: { equals: query, mode: 'insensitive' } }
             : {
                 OR: [
-                  { name: { contains: query, mode: "insensitive" } },
-                  { username: { contains: query, mode: "insensitive" } },
+                  { name: { contains: query, mode: 'insensitive' } },
+                  { username: { contains: query, mode: 'insensitive' } },
                 ],
               },
         },
@@ -50,16 +50,16 @@ export async function GET(request: NextRequest) {
           },
         },
       });
-      users = friendships.map((f) => ({ ...f.friend, isFriend: true }));
+      users = friendships.map(f => ({ ...f.friend, isFriend: true }));
     } else {
       // Global user search
       users = await prisma.user.findMany({
         where: isEmail
-          ? { email: { equals: query, mode: "insensitive" } }
+          ? { email: { equals: query, mode: 'insensitive' } }
           : {
               OR: [
-                { name: { contains: query, mode: "insensitive" } },
-                { username: { contains: query, mode: "insensitive" } },
+                { name: { contains: query, mode: 'insensitive' } },
+                { username: { contains: query, mode: 'insensitive' } },
               ],
             },
         select: {
@@ -80,9 +80,9 @@ export async function GET(request: NextRequest) {
           where: { userId: session.user.id },
           select: { friendId: true },
         })
-      ).map((f) => f.friendId);
+      ).map(f => f.friendId);
 
-      users = users.map((u) => ({
+      users = users.map(u => ({
         ...u,
         isFriend: friendIds.includes(u.id),
         avatar: u.avatar || u.image,
@@ -90,11 +90,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter out current user
-    users = users.filter((u) => u.id !== session.user.id);
+    users = users.filter(u => u.id !== session.user.id);
 
     return NextResponse.json({ users });
   } catch (error) {
-    console.error(" Error searching users:", error);
-    return NextResponse.json({ error: "Failed to search users" }, { status: 500 });
+    console.error(' Error searching users:', error);
+    return NextResponse.json({ error: 'Failed to search users' }, { status: 500 });
   }
 }

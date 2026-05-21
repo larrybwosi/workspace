@@ -44,7 +44,9 @@ export function Contact() {
             <div className="bg-green-50 border border-green-200 text-green-800 p-8 rounded-2xl text-center">
               <h2 className="text-2xl font-bold mb-2">Message Sent!</h2>
               <p>Thank you for reaching out. Our team will contact you shortly.</p>
-              <Button className="mt-6" onClick={() => setSubmitted(false)}>Send another message</Button>
+              <Button className="mt-6" onClick={() => setSubmitted(false)}>
+                Send another message
+              </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -66,7 +68,9 @@ export function Contact() {
                 <label className="text-sm font-medium">Message</label>
                 <Textarea name="message" placeholder="How can we help you?" className="min-h-[150px]" required />
               </div>
-              <Button type="submit" className="w-full h-12 text-lg">Send Message</Button>
+              <Button type="submit" className="w-full h-12 text-lg">
+                Send Message
+              </Button>
             </form>
           )}
         </div>

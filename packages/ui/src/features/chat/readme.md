@@ -24,14 +24,14 @@ x-workspace-api-key: <YOUR_WORKSPACE_API_KEY>
 
 ## Request Schema
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| channelId | string | Yes | Unique identifier of the target channel |
-| content | string | Yes | Fallback text content (max 10,000 characters) |
-| messageType | string | No | Message type. Default: `custom`<br/>Options: `text`, `custom`, `code`, `report`, `approval-request`, `comment-request`, `system` |
-| metadata | object | No | Type-specific message data |
-| actions | array | No | Interactive buttons (see [Actions](#actions)) |
-| attachments | array | No | File attachments (see [Attachments](#attachments)) |
+| Field       | Type   | Required | Description                                                                                                                      |
+| ----------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| channelId   | string | Yes      | Unique identifier of the target channel                                                                                          |
+| content     | string | Yes      | Fallback text content (max 10,000 characters)                                                                                    |
+| messageType | string | No       | Message type. Default: `custom`<br/>Options: `text`, `custom`, `code`, `report`, `approval-request`, `comment-request`, `system` |
+| metadata    | object | No       | Type-specific message data                                                                                                       |
+| actions     | array  | No       | Interactive buttons (see [Actions](#actions))                                                                                    |
+| attachments | array  | No       | File attachments (see [Attachments](#attachments))                                                                               |
 
 ## Message Types
 
@@ -53,13 +53,13 @@ Build complex layouts with headers, fields, grids, and lists.
 
 **Metadata Schema:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| layout | string | `card`, `inline`, `modal`, or `banner` |
-| title | string | Message title |
-| description | string | Subtitle or description |
-| theme | object | `{ variant: "default" \| "info" \| "warning" \| "destructive" \| "success" }` |
-| sections | array | UI sections (grid, field, divider, list) |
+| Field       | Type   | Description                                                                   |
+| ----------- | ------ | ----------------------------------------------------------------------------- |
+| layout      | string | `card`, `inline`, `modal`, or `banner`                                        |
+| title       | string | Message title                                                                 |
+| description | string | Subtitle or description                                                       |
+| theme       | object | `{ variant: "default" \| "info" \| "warning" \| "destructive" \| "success" }` |
+| sections    | array  | UI sections (grid, field, divider, list)                                      |
 
 **Example:**
 
@@ -85,9 +85,7 @@ Build complex layouts with headers, fields, grids, and lists.
       { "type": "divider" },
       {
         "type": "field",
-        "fields": [
-          { "name": "email", "label": "Contact Email", "type": "text", "value": "admin@acme.com" }
-        ]
+        "fields": [{ "name": "email", "label": "Contact Email", "type": "text", "value": "admin@acme.com" }]
       }
     ]
   }
@@ -100,15 +98,15 @@ Financial summaries, analytics, status reports, or audits.
 
 **Metadata Schema:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| title | string | Report title |
-| type | string | `financial`, `analytics`, `status`, or `audit` |
-| status | string | `draft`, `final`, `review`, or `archived` |
-| date | string | Report date (ISO 8601) |
-| summary | string | Main summary text |
-| kpis | array | Key Performance Indicators |
-| sections | array | Tables or text content sections |
+| Field    | Type   | Description                                    |
+| -------- | ------ | ---------------------------------------------- |
+| title    | string | Report title                                   |
+| type     | string | `financial`, `analytics`, `status`, or `audit` |
+| status   | string | `draft`, `final`, `review`, or `archived`      |
+| date     | string | Report date (ISO 8601)                         |
+| summary  | string | Main summary text                              |
+| kpis     | array  | Key Performance Indicators                     |
+| sections | array  | Tables or text content sections                |
 
 **Example:**
 
@@ -161,10 +159,10 @@ Display syntax-highlighted code snippets.
 
 **Metadata Schema:**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field    | Type   | Description                                                 |
+| -------- | ------ | ----------------------------------------------------------- |
 | language | string | Programming language (e.g., `typescript`, `python`, `json`) |
-| fileName | string | Optional file name |
+| fileName | string | Optional file name                                          |
 
 **Example:**
 
@@ -186,8 +184,8 @@ Initiate an approval workflow.
 
 **Metadata Schema:**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field          | Type   | Description                                               |
+| -------------- | ------ | --------------------------------------------------------- |
 | approvalStatus | string | `pending`, `approved`, or `rejected` (default: `pending`) |
 
 **Example:**
@@ -213,19 +211,19 @@ Solicit feedback on a resource (document, design, code).
 
 **Metadata Schema:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| status | string | `open`, `resolved`, or `closed` |
-| resource | object | Resource details (see below) |
+| Field    | Type   | Description                     |
+| -------- | ------ | ------------------------------- |
+| status   | string | `open`, `resolved`, or `closed` |
+| resource | object | Resource details (see below)    |
 
 **Resource Object:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| title | string | Resource title |
-| type | string | `document`, `image`, `code`, or `link` |
-| url | string | Resource URL |
-| fileSize | string | Optional file size |
+| Field    | Type   | Description                            |
+| -------- | ------ | -------------------------------------- |
+| title    | string | Resource title                         |
+| type     | string | `document`, `image`, `code`, or `link` |
+| url      | string | Resource URL                           |
+| fileSize | string | Optional file size                     |
 
 **Example:**
 
@@ -252,13 +250,13 @@ Solicit feedback on a resource (document, design, code).
 
 Add interactive buttons to any message type.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| actionId | string | Unique action identifier |
-| label | string | Button text |
-| style | string | `default`, `primary`, or `danger` |
-| value | string | Optional value returned when clicked |
-| disabled | boolean | Whether the button is disabled |
+| Field    | Type    | Description                          |
+| -------- | ------- | ------------------------------------ |
+| actionId | string  | Unique action identifier             |
+| label    | string  | Button text                          |
+| style    | string  | `default`, `primary`, or `danger`    |
+| value    | string  | Optional value returned when clicked |
+| disabled | boolean | Whether the button is disabled       |
 
 **Example:**
 
@@ -273,12 +271,12 @@ Add interactive buttons to any message type.
 
 Attach files to any message.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| name | string | File name |
-| type | string | MIME type |
-| url | string | File URL |
-| size | number | File size in bytes |
+| Field | Type   | Description        |
+| ----- | ------ | ------------------ |
+| name  | string | File name          |
+| type  | string | MIME type          |
+| url   | string | File URL           |
+| size  | number | File size in bytes |
 
 **Example:**
 
@@ -340,9 +338,7 @@ Respond with `200 OK` to acknowledge receipt. Optionally return JSON to update t
 {
   "error": "Invalid request body",
   "code": "INVALID_REQUEST_BODY",
-  "details": [
-    { "path": ["channelId"], "message": "Required" }
-  ]
+  "details": [{ "path": ["channelId"], "message": "Required" }]
 }
 ```
 
@@ -354,19 +350,19 @@ The custom message type is a powerful form engine. Beyond simple layouts, it sup
 
 The fields array supports specific input types for capturing user data.
 
-| Type | Description |
-|------|-------------|
-| text | Single-line text input |
-| number | Numeric input |
-| textarea | Multi-line text input |
-| password | Masked text input |
-| date | Date picker |
-| switch | Toggle switch (boolean) |
-| checkbox | Checkbox (boolean) |
-| select | Dropdown menu (requires options map) |
-| progress | Visual progress bar (0-100) |
-| image | Image display (requires value as URL) |
-| code | Code block with syntax highlighting |
+| Type     | Description                           |
+| -------- | ------------------------------------- |
+| text     | Single-line text input                |
+| number   | Numeric input                         |
+| textarea | Multi-line text input                 |
+| password | Masked text input                     |
+| date     | Date picker                           |
+| switch   | Toggle switch (boolean)               |
+| checkbox | Checkbox (boolean)                    |
+| select   | Dropdown menu (requires options map)  |
+| progress | Visual progress bar (0-100)           |
+| image    | Image display (requires value as URL) |
+| code     | Code block with syntax highlighting   |
 
 **Example: Dropdown & Date Picker**
 

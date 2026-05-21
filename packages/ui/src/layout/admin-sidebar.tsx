@@ -80,7 +80,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         </nav>
 
         <div className="p-4 border-t border-sidebar-border">
-          <p className="text-xs text-muted-foreground text-center">Dealio v0.1.0 Admin</p>
+          <p className="text-xs text-muted-foreground text-center">Scrymechat v0.1.0 Admin</p>
         </div>
       </aside>
     </>

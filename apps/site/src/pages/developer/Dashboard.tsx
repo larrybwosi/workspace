@@ -217,16 +217,14 @@ export function DeveloperDashboard() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create New Application</DialogTitle>
-            <DialogDescription>
-              Give your application a name and description to get started.
-            </DialogDescription>
+            <DialogDescription>Give your application a name and description to get started.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Application Name</label>
               <Input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="e.g. My Custom Bot"
                 className="h-11 rounded-xl"
               />
@@ -235,23 +233,17 @@ export function DeveloperDashboard() {
               <label className="text-sm font-semibold text-slate-700">Description (Optional)</label>
               <Input
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 placeholder="What does this application do?"
                 className="h-11 rounded-xl"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsCreateModalOpen(false)}
-            >
+            <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              disabled={!name || createMutation.isPending}
-              onClick={handleCreateApp}
-            >
+            <Button disabled={!name || createMutation.isPending} onClick={handleCreateApp}>
               {createMutation.isPending ? 'Creating...' : 'Create Application'}
             </Button>
           </DialogFooter>

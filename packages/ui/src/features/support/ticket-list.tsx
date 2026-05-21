@@ -19,10 +19,11 @@ export function TicketList({ workspaceId, onTicketSelect, activeTicketId }: Tick
 
   const filteredTickets = React.useMemo(() => {
     if (!tickets) return [];
-    return tickets.filter((ticket: any) =>
-      ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.customer?.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.customer?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    return tickets.filter(
+      (ticket: any) =>
+        ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ticket.customer?.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ticket.customer?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [tickets, searchQuery]);
 
@@ -57,7 +58,7 @@ export function TicketList({ workspaceId, onTicketSelect, activeTicketId }: Tick
             placeholder="Search tickets..."
             className="pl-9 h-10 bg-muted/30 border-none rounded-xl"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
       </div>

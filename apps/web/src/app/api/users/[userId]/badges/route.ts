@@ -1,16 +1,16 @@
-import { headers } from "next/headers";
-import { type NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/db/prisma"
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db/prisma';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() } as any)
+    const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await params
+    const { userId } = await params;
 
     const badges = await prisma.userBadgeAssignment.findMany({
       where: {
@@ -20,12 +20,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       include: {
         badge: true,
       },
-      orderBy: [{ isPrimary: "desc" }, { earnedAt: "desc" }],
-    })
+      orderBy: [{ isPrimary: 'desc' }, { earnedAt: 'desc' }],
+    });
 
-    return NextResponse.json(badges)
+    return NextResponse.json(badges);
   } catch (error) {
-    console.error("Get user badges error:", error)
-    return NextResponse.json({ error: "Failed to fetch user badges" }, { status: 500 })
+    console.error('Get user badges error:', error);
+    return NextResponse.json({ error: 'Failed to fetch user badges' }, { status: 500 });
   }
 }

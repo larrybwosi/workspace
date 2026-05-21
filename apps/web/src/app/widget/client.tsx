@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
-import { ChannelView } from "@/components/features/chat/channel-view";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import axios from "axios";
-import { apiClient } from "@repo/api-client";
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, useMemo } from 'react';
+import { ChannelView } from '@/components/features/chat/channel-view';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
+import axios from 'axios';
+import { apiClient } from '@repo/api-client';
 
 // Create a specialized query client for the widget
 const queryClient = new QueryClient({
@@ -20,12 +20,12 @@ const queryClient = new QueryClient({
 
 export default function WidgetClient() {
   const searchParams = useSearchParams();
-  const workspaceSlug = searchParams.get("workspace");
-  const channelSlug = searchParams.get("channel");
-  const contextId = searchParams.get("contextId");
-  const token = searchParams.get("token");
-  const theme = searchParams.get("theme"); // 'light', 'dark', or 'system'
-  const primaryColor = searchParams.get("primaryColor"); // e.g., #007bff
+  const workspaceSlug = searchParams.get('workspace');
+  const channelSlug = searchParams.get('channel');
+  const contextId = searchParams.get('contextId');
+  const token = searchParams.get('token');
+  const theme = searchParams.get('theme'); // 'light', 'dark', or 'system'
+  const primaryColor = searchParams.get('primaryColor'); // e.g., #007bff
 
   const [resolvedChannelId, setResolvedChannelId] = useState<string | null>(null);
   const [resolvedWorkspaceId, setResolvedWorkspaceId] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function WidgetClient() {
   // Configure API Client with token and V2 prefix
   useEffect(() => {
     if (token) {
-      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
 
     // In the widget, we want to force API V2 for all requests
@@ -53,14 +53,14 @@ export default function WidgetClient() {
     if (primaryColor) {
       // In this app, --primary is oklch. We'll try to set it as a hex for simplicity if the theme engine allows
       // or just use it as is if it's a valid CSS color.
-      document.documentElement.style.setProperty("--primary", primaryColor);
-      document.documentElement.style.setProperty("--ring", primaryColor);
+      document.documentElement.style.setProperty('--primary', primaryColor);
+      document.documentElement.style.setProperty('--ring', primaryColor);
     }
 
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (theme === "light") {
-      document.documentElement.classList.remove("dark");
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
     }
   }, [theme, primaryColor]);
 
@@ -68,7 +68,7 @@ export default function WidgetClient() {
   useEffect(() => {
     async function resolveSlugs() {
       if (!workspaceSlug || !token) {
-        setError("Missing required parameters: workspace and token");
+        setError('Missing required parameters: workspace and token');
         setIsLoading(false);
         return;
       }
@@ -78,8 +78,8 @@ export default function WidgetClient() {
 
         // 1. Get Workspace Info
         const workspaceRes = await axios.get(`/api/v2/workspaces/${workspaceSlug}/members`, {
-            headers: authHeader,
-            params: { limit: 1 }
+          headers: authHeader,
+          params: { limit: 1 },
         });
 
         // In this app, the workspaceId is derived from the context by the backend
@@ -89,7 +89,7 @@ export default function WidgetClient() {
 
         // Let's call an endpoint that returns workspace details
         const channelsRes = await axios.get(`/api/v2/workspaces/${workspaceSlug}/channels`, {
-          headers: authHeader
+          headers: authHeader,
         });
 
         const channels = channelsRes.data.channels || [];
@@ -98,7 +98,7 @@ export default function WidgetClient() {
         setResolvedWorkspaceId(workspaceId);
 
         // 2. Resolve Channel
-        let targetChannelId = "";
+        let targetChannelId = '';
         if (channelSlug) {
           const channel = channels.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
           if (channel) {
@@ -119,23 +119,22 @@ export default function WidgetClient() {
         if (contextId && targetChannelId) {
           try {
             const threadRes = await axios.get(`/api/v2/workspaces/${workspaceSlug}/threads/context/${contextId}`, {
-              headers: authHeader
+              headers: authHeader,
             });
             if (threadRes.data.thread) {
               setResolvedThreadId(threadRes.data.thread.id);
             }
           } catch (threadErr: any) {
             if (threadErr.response?.status !== 404) {
-              console.warn("Thread resolution failed", threadErr);
+              console.warn('Thread resolution failed', threadErr);
             }
             // If 404, it's fine, it will be created on first message
           }
         }
         // (The ChannelView handles threadId, but we might need to pass it down)
-
       } catch (err: any) {
-        console.error("Resolution Error:", err);
-        setError(err.response?.data?.error || "Failed to initialize chat");
+        console.error('Resolution Error:', err);
+        setError(err.response?.data?.error || 'Failed to initialize chat');
       } finally {
         setIsLoading(false);
       }

@@ -3,18 +3,21 @@ import { View, Text, Modal, TextInput, TouchableOpacity, SafeAreaView, ActivityI
 import { MaterialIcons } from '@expo/vector-icons';
 import { useCreateWorkspace } from '@repo/api-client';
 
-export function CreateWorkspaceModal({ isVisible, onClose }: { isVisible: boolean, onClose: () => void }) {
+export function CreateWorkspaceModal({ isVisible, onClose }: { isVisible: boolean; onClose: () => void }) {
   const [name, setName] = useState('');
   const { mutate: createWorkspace, isPending } = useCreateWorkspace();
 
   const handleCreate = () => {
     if (!name.trim()) return;
-    createWorkspace({ name, slug: name.toLowerCase().replace(/\s+/g, '-') }, {
-      onSuccess: () => {
-        setName('');
-        onClose();
+    createWorkspace(
+      { name, slug: name.toLowerCase().replace(/\s+/g, '-') },
+      {
+        onSuccess: () => {
+          setName('');
+          onClose();
+        },
       }
-    });
+    );
   };
 
   return (

@@ -9,6 +9,12 @@ export class AppController {
 
   @Get('health')
   @ApiOperation({ summary: 'Check health' })
+  getHealth() {
+    return { status: 'ok', timestamp: new Date().toISOString() };
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Hello' })
   getHello(): string {
     return this.appService.getHello();
   }

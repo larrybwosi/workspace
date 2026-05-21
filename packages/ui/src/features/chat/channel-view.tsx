@@ -125,7 +125,6 @@ export function ChannelView({
 
   const { data: channelData } = useChannel(activeChannelId, workspaceSlug);
 
-
   // API Mutations
   const sendMessageMutation = useSendMessage(workspaceSlug, isWidget);
   const replyToMessageMutation = useReplyToMessage(workspaceSlug);
@@ -158,6 +157,7 @@ export function ChannelView({
 
   const { data: dmUser } = useUser(dmUserId || '');
   const { data: socialProfile } = useUserSocialProfile(dmUserId || '');
+
   const sendFriendRequestMutation = useSendFriendRequest();
   const respondToFriendRequestMutation = useRespondToFriendRequest();
   const { data: friendRequests } = useFriendRequests('received', 'pending');
@@ -171,26 +171,32 @@ export function ChannelView({
       // Find the request ID
       const request = friendRequests?.find((r: any) => r.senderId === dmUserId);
       if (request) {
-        respondToFriendRequestMutation.mutate({ requestId: request.id, action: 'accept' }, {
-          onSuccess: () => {
-            toast.success('Friend request accepted!');
-            queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
-            queryClient.invalidateQueries({ queryKey: ['friend-requests'] });
+        respondToFriendRequestMutation.mutate(
+          { requestId: request.id, action: 'accept' },
+          {
+            onSuccess: () => {
+              toast.success('Friend request accepted!');
+              queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
+              queryClient.invalidateQueries({ queryKey: ['friend-requests'] });
+            },
           }
-        });
+        );
         return;
       }
     }
 
-    sendFriendRequestMutation.mutate({ receiverId: dmUserId }, {
-      onSuccess: () => {
-        toast.success('Friend request sent!');
-        queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
-      },
-      onError: (error: any) => {
-        toast.error(error?.response?.data?.message || 'Failed to send friend request');
+    sendFriendRequestMutation.mutate(
+      { receiverId: dmUserId },
+      {
+        onSuccess: () => {
+          toast.success('Friend request sent!');
+          queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
+        },
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.message || 'Failed to send friend request');
+        },
       }
-    });
+    );
   };
 
   const handleBlockUser = () => {
@@ -200,13 +206,13 @@ export function ChannelView({
       unblockUserMutation.mutate(dmUserId, {
         onSuccess: () => {
           toast.success('User unblocked');
-        }
+        },
       });
     } else {
       blockUserMutation.mutate(dmUserId, {
         onSuccess: () => {
           toast.success('User blocked');
-        }
+        },
       });
     }
   };
@@ -283,7 +289,15 @@ export function ChannelView({
         viewedChannels.add(activeChannelId);
       }
     }
-  }, [isLoading, messages.length, firstUnreadMessageId, initialUnreadId, hasInitialScrolled, activeChannelId, viewedChannels]);
+  }, [
+    isLoading,
+    messages.length,
+    firstUnreadMessageId,
+    initialUnreadId,
+    hasInitialScrolled,
+    activeChannelId,
+    viewedChannels,
+  ]);
 
   // Clear unread line on new message or user interaction
   useEffect(() => {
@@ -529,7 +543,9 @@ export function ChannelView({
       const message = messagesRef.current.find(m => m.id === messageId);
       if (!message) return;
 
-      const hasReacted = message.reactions.find(r => r.emoji === emoji)?.users.includes(currentUserRef.current?.id || '');
+      const hasReacted = message.reactions
+        .find(r => r.emoji === emoji)
+        ?.users.includes(currentUserRef.current?.id || '');
 
       if (hasReacted) {
         removeReactionMutation.mutate({
@@ -553,7 +569,9 @@ export function ChannelView({
   );
 
   return (
-    <div className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
+    <div
+      className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}
+    >
       {/* Header */}
       {!isWidget && (
         <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
@@ -564,9 +582,7 @@ export function ChannelView({
               <span className="text-sm font-medium">v3.0</span>
               <span className="text-sm">/</span>
             </div>
-            <h2 className="font-bold text-lg truncate">
-              {channelData?.name || activeChannelId || 'general'}
-            </h2>
+            <h2 className="font-bold text-lg truncate">{channelData?.name || activeChannelId || 'general'}</h2>
           </div>
 
           <div className="flex items-center gap-3">
@@ -605,9 +621,7 @@ export function ChannelView({
               <UserPlus className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-bold">
-                {dmUser?.name || 'This user'} is not in your friend list
-              </p>
+              <p className="text-sm font-bold">{dmUser?.name || 'This user'} is not in your friend list</p>
               <div className="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1.5">
                 {socialProfile.mutualWorkspaces?.length > 0 && (
                   <div className="flex items-center gap-2">
@@ -622,7 +636,8 @@ export function ChannelView({
                       ))}
                     </div>
                     <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-                      {socialProfile.mutualWorkspaces.length} mutual workspace{socialProfile.mutualWorkspaces.length !== 1 ? 's' : ''}
+                      {socialProfile.mutualWorkspaces.length} mutual workspace
+                      {socialProfile.mutualWorkspaces.length !== 1 ? 's' : ''}
                     </span>
                   </div>
                 )}
@@ -639,14 +654,13 @@ export function ChannelView({
                       ))}
                     </div>
                     <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-                      {socialProfile.mutualFriends.length} mutual friend{socialProfile.mutualFriends.length !== 1 ? 's' : ''}
+                      {socialProfile.mutualFriends.length} mutual friend
+                      {socialProfile.mutualFriends.length !== 1 ? 's' : ''}
                     </span>
                   </div>
                 )}
                 {socialProfile.mutualWorkspaces?.length === 0 && socialProfile.mutualFriends?.length === 0 && (
-                  <span className="text-[11px] font-medium text-muted-foreground">
-                    No mutual workspaces or friends
-                  </span>
+                  <span className="text-[11px] font-medium text-muted-foreground">No mutual workspaces or friends</span>
                 )}
               </div>
             </div>
@@ -656,8 +670,8 @@ export function ChannelView({
               variant="outline"
               size="sm"
               className={cn(
-                "h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20",
-                socialProfile.isBlockedByMe && "bg-destructive/10 text-destructive border-destructive/20"
+                'h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20',
+                socialProfile.isBlockedByMe && 'bg-destructive/10 text-destructive border-destructive/20'
               )}
               onClick={handleBlockUser}
               disabled={blockUserMutation.isPending || unblockUserMutation.isPending}
@@ -669,7 +683,10 @@ export function ChannelView({
               size="sm"
               className="h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none shadow-sm"
               onClick={handleSendFriendRequest}
-              disabled={sendFriendRequestMutation.isPending || (socialProfile.friendRequestStatus === 'pending' && socialProfile.friendRequestSide === 'sender')}
+              disabled={
+                sendFriendRequestMutation.isPending ||
+                (socialProfile.friendRequestStatus === 'pending' && socialProfile.friendRequestSide === 'sender')
+              }
             >
               {socialProfile.friendRequestStatus === 'pending' ? (
                 socialProfile.friendRequestSide === 'sender' ? (
@@ -762,7 +779,7 @@ export function ChannelView({
                   return (
                     <div
                       key={message.id}
-                      ref={(el) => {
+                      ref={el => {
                         if (isHighlighted) highlightedMessageRef.current = el;
                         if (isInitialUnread) firstUnreadRef.current = el;
                       }}

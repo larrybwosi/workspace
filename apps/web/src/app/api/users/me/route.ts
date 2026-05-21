@@ -1,13 +1,13 @@
-import { headers } from "next/headers";
-import { type NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db/prisma";
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db/prisma';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: await headers() } as any);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("Error fetching current user:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Error fetching current user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -16,11 +16,7 @@ export function EmojiPickerButton({ onSelect }: EmojiPickerButtonProps) {
         <MaterialIcons name="sentiment-satisfied" size={24} color="#949BA4" />
       </TouchableOpacity>
 
-      <EmojiPicker
-        isVisible={isVisible}
-        onClose={() => setIsVisible(false)}
-        onSelect={onSelect}
-      />
+      <EmojiPicker isVisible={isVisible} onClose={() => setIsVisible(false)} onSelect={onSelect} />
     </>
   );
 }

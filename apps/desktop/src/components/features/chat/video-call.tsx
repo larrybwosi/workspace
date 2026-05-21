@@ -1,8 +1,6 @@
 import { useEffect, useState, useMemo, Suspense, lazy } from 'react';
 
-const VideoCallContent = lazy(
-  () => import('./video-call-content').then(mod => ({ default: mod.VideoCallContent })),
-);
+const VideoCallContent = lazy(() => import('./video-call-content').then(mod => ({ default: mod.VideoCallContent })));
 
 interface VideoCallProps {
   callId: string;

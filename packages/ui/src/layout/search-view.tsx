@@ -1,76 +1,76 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Search, FileText, MessageSquare, Hash, X, Clock } from "lucide-react"
-import { Input } from "../components/input"
-import { Button } from "../components/button"
-import { ScrollArea } from "../components/scroll-area"
-import { Avatar, AvatarFallback } from "../components/avatar"
-import { Badge } from "../components/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/select"
-import { mockSearchResults, mockRecentSearches } from "../lib/mock-data"
-import type { SearchResult } from "../lib/types"
+import * as React from 'react';
+import { Search, FileText, MessageSquare, Hash, X, Clock } from 'lucide-react';
+import { Input } from '../components/input';
+import { Button } from '../components/button';
+import { ScrollArea } from '../components/scroll-area';
+import { Avatar, AvatarFallback } from '../components/avatar';
+import { Badge } from '../components/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/select';
+import { mockSearchResults, mockRecentSearches } from '../lib/mock-data';
+import type { SearchResult } from '../lib/types';
 
 interface SearchViewProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 export function SearchView({ onClose }: SearchViewProps) {
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [sortBy, setSortBy] = React.useState("type")
-  const [activeTab, setActiveTab] = React.useState("all")
-  const [results, setResults] = React.useState<SearchResult[]>(mockSearchResults)
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [sortBy, setSortBy] = React.useState('type');
+  const [activeTab, setActiveTab] = React.useState('all');
+  const [results, setResults] = React.useState<SearchResult[]>(mockSearchResults);
 
   const filterResults = (type?: string) => {
-    if (!type || type === "all") {
-      return results
+    if (!type || type === 'all') {
+      return results;
     }
-    return results.filter((r) => r.type === type)
-  }
+    return results.filter(r => r.type === type);
+  };
 
   const getResultIcon = (type: string) => {
     switch (type) {
-      case "file":
-        return <FileText className="h-4 w-4" />
-      case "message":
-        return <MessageSquare className="h-4 w-4" />
-      case "thread":
-        return <Hash className="h-4 w-4" />
+      case 'file':
+        return <FileText className="h-4 w-4" />;
+      case 'message':
+        return <MessageSquare className="h-4 w-4" />;
+      case 'thread':
+        return <Hash className="h-4 w-4" />;
       default:
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
     }
-  }
+  };
 
   const formatDate = (date: Date) => {
-    const now = new Date()
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Today"
-    if (diffDays === 1) return "Yesterday"
-    if (diffDays < 30) return `${diffDays} days ago`
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 30) return `${diffDays} days ago`;
 
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query)
+    setSearchQuery(query);
     // In a real app, this would filter results based on the query
     if (query.trim()) {
       const filtered = mockSearchResults.filter(
-        (r) =>
-          r.title.toLowerCase().includes(query.toLowerCase()) || r.content.toLowerCase().includes(query.toLowerCase()),
-      )
-      setResults(filtered)
+        r =>
+          r.title.toLowerCase().includes(query.toLowerCase()) || r.content.toLowerCase().includes(query.toLowerCase())
+      );
+      setResults(filtered);
     } else {
-      setResults(mockSearchResults)
+      setResults(mockSearchResults);
     }
-  }
+  };
 
-  const allResults = filterResults("all")
-  const threadResults = filterResults("thread")
-  const fileResults = filterResults("file")
-  const messageResults = filterResults("message")
+  const allResults = filterResults('all');
+  const threadResults = filterResults('thread');
+  const fileResults = filterResults('file');
+  const messageResults = filterResults('message');
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -81,8 +81,8 @@ export function SearchView({ onClose }: SearchViewProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search in Dealio..."
+              onChange={e => handleSearch(e.target.value)}
+              placeholder="Search in Scrymechat..."
               className="pl-9 pr-9"
               autoFocus
             />
@@ -91,7 +91,7 @@ export function SearchView({ onClose }: SearchViewProps) {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                onClick={() => handleSearch("")}
+                onClick={() => handleSearch('')}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -198,35 +198,35 @@ export function SearchView({ onClose }: SearchViewProps) {
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }
 
 function SearchResultsList({ results }: { results: SearchResult[] }) {
   const getResultIcon = (type: string) => {
     switch (type) {
-      case "file":
-        return <FileText className="h-4 w-4 text-muted-foreground" />
-      case "message":
-        return <MessageSquare className="h-4 w-4 text-muted-foreground" />
-      case "thread":
-        return <Hash className="h-4 w-4 text-muted-foreground" />
+      case 'file':
+        return <FileText className="h-4 w-4 text-muted-foreground" />;
+      case 'message':
+        return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
+      case 'thread':
+        return <Hash className="h-4 w-4 text-muted-foreground" />;
       default:
-        return <FileText className="h-4 w-4 text-muted-foreground" />
+        return <FileText className="h-4 w-4 text-muted-foreground" />;
     }
-  }
+  };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   const getAuthorAvatar = (authorName: string) => {
     return authorName
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
+      .split(' ')
+      .map(n => n[0])
+      .join('')
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   if (results.length === 0) {
     return (
@@ -235,12 +235,12 @@ function SearchResultsList({ results }: { results: SearchResult[] }) {
         <h3 className="text-lg font-semibold mb-2">No results found</h3>
         <p className="text-sm text-muted-foreground">Try adjusting your search terms or filters</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-2">
-      {results.map((result) => (
+      {results.map(result => (
         <button
           key={result.id}
           className="w-full p-3 rounded-lg border border-border bg-card hover:bg-accent transition-colors text-left"
@@ -250,9 +250,9 @@ function SearchResultsList({ results }: { results: SearchResult[] }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-medium text-sm truncate">{result.title}</h4>
-                {result.type === "file" && (
+                {result.type === 'file' && (
                   <Badge variant="secondary" className="text-xs">
-                    {result.title.split(".").pop()?.toUpperCase()}
+                    {result.title.split('.').pop()?.toUpperCase()}
                   </Badge>
                 )}
               </div>
@@ -283,5 +283,5 @@ function SearchResultsList({ results }: { results: SearchResult[] }) {
         </button>
       ))}
     </div>
-  )
+  );
 }

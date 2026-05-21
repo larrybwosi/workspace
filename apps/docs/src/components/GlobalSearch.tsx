@@ -19,13 +19,48 @@ export function GlobalSearch() {
 
   // Mock search data - in a real app this would come from a search index (e.g. Algolia or local Lunr)
   const allContent: SearchResult[] = [
-    { title: 'Joining a Workspace', slug: 'joining-workspace', type: 'user-guide', excerpt: 'Learn how to accept an invite and join your first workspace.' },
-    { title: 'Sending Messages', slug: 'sending-messages', type: 'user-guide', excerpt: 'Master the art of communication with channels, DMs, and formatting.' },
-    { title: 'Authentication', slug: 'authentication', type: 'api-reference', excerpt: 'How to use OAuth2 client credentials to authenticate your bot.' },
-    { title: 'QR Authentication', slug: 'qr-auth', type: 'api-reference', excerpt: 'Secure cross-device login using mobile QR code scanning.' },
-    { title: 'Discord V10 Gateway', slug: 'discord-v10', type: 'api-reference', excerpt: 'Compatibility layer for discord.js and other Discord libraries.' },
-    { title: 'How to Build a Bot', slug: 'recipe-bot', type: 'api-reference', excerpt: 'A step-by-step guide to creating your first Skyrme Chat bot.' },
-    { title: 'API Explorer', slug: 'explorer', type: 'api-reference', excerpt: 'Interactive documentation for all Skyrme Chat API endpoints.' },
+    {
+      title: 'Joining a Workspace',
+      slug: 'joining-workspace',
+      type: 'user-guide',
+      excerpt: 'Learn how to accept an invite and join your first workspace.',
+    },
+    {
+      title: 'Sending Messages',
+      slug: 'sending-messages',
+      type: 'user-guide',
+      excerpt: 'Master the art of communication with channels, DMs, and formatting.',
+    },
+    {
+      title: 'Authentication',
+      slug: 'authentication',
+      type: 'api-reference',
+      excerpt: 'How to use OAuth2 client credentials to authenticate your bot.',
+    },
+    {
+      title: 'QR Authentication',
+      slug: 'qr-auth',
+      type: 'api-reference',
+      excerpt: 'Secure cross-device login using mobile QR code scanning.',
+    },
+    {
+      title: 'Discord V10 Gateway',
+      slug: 'discord-v10',
+      type: 'api-reference',
+      excerpt: 'Compatibility layer for discord.js and other Discord libraries.',
+    },
+    {
+      title: 'How to Build a Bot',
+      slug: 'recipe-bot',
+      type: 'api-reference',
+      excerpt: 'A step-by-step guide to creating your first Skyrme Chat bot.',
+    },
+    {
+      title: 'API Explorer',
+      slug: 'explorer',
+      type: 'api-reference',
+      excerpt: 'Interactive documentation for all Skyrme Chat API endpoints.',
+    },
   ];
 
   useEffect(() => {
@@ -49,9 +84,10 @@ export function GlobalSearch() {
       return;
     }
 
-    const filtered = allContent.filter(item =>
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.excerpt.toLowerCase().includes(query.toLowerCase())
+    const filtered = allContent.filter(
+      item =>
+        item.title.toLowerCase().includes(query.toLowerCase()) ||
+        item.excerpt.toLowerCase().includes(query.toLowerCase())
     );
     setResults(filtered);
   }, [query]);
@@ -70,7 +106,7 @@ export function GlobalSearch() {
           placeholder="Search docs..."
           className="pl-9 h-8 w-full md:w-[240px] lg:w-[320px] bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/30 text-sm"
           value={query}
-          onChange={(e) => {
+          onChange={e => {
             setQuery(e.target.value);
             setOpen(true);
           }}
@@ -88,7 +124,7 @@ export function GlobalSearch() {
           <div className="p-2 max-h-[400px] overflow-y-auto">
             {results.length > 0 ? (
               <div className="space-y-1">
-                {results.map((result) => (
+                {results.map(result => (
                   <button
                     key={`${result.type}-${result.slug}`}
                     onClick={() => handleSelect(result)}
@@ -100,7 +136,9 @@ export function GlobalSearch() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-semibold text-sm truncate">{result.title}</span>
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground shrink-0">{result.type.replace('-', ' ')}</span>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground shrink-0">
+                          {result.type.replace('-', ' ')}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{result.excerpt}</p>
                     </div>
@@ -118,7 +156,9 @@ export function GlobalSearch() {
           <div className="p-3 bg-muted/30 border-t border-border flex justify-between items-center text-[10px] text-muted-foreground">
             <span>{results.length} results found</span>
             <div className="flex items-center gap-2">
-              <span>Press <kbd className="bg-background px-1 rounded border">Esc</kbd> to close</span>
+              <span>
+                Press <kbd className="bg-background px-1 rounded border">Esc</kbd> to close
+              </span>
             </div>
           </div>
         </div>

@@ -1,55 +1,55 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useRef } from "react"
-import { Send } from "lucide-react"
-import { Button } from "@repo/ui/components/button"
-import { Input } from "@repo/ui/components/input"
-import { ScrollArea } from "@repo/ui/components/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar"
-import { realtime } from "@repo/shared"
-import { useSession } from "@repo/shared"
+import { useState, useEffect, useRef } from 'react';
+import { Send } from 'lucide-react';
+import { Button } from '@repo/ui/components/button';
+import { Input } from '@repo/ui/components/input';
+import { ScrollArea } from '@repo/ui/components/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar';
+import { realtime } from '@repo/shared';
+import { useSession } from '@repo/shared';
 
 interface Message {
-  id: string
-  userId: string
-  userName: string
-  userImage?: string
-  content: string
-  timestamp: number
+  id: string;
+  userId: string;
+  userName: string;
+  userImage?: string;
+  content: string;
+  timestamp: number;
 }
 
 interface CallChatProps {
-  callId: string
+  callId: string;
 }
 
 export function CallChat({ callId }: CallChatProps) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState("")
-  const { data: session } = useSession()
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const { data: session } = useSession();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const channelName = `call-chat:${callId}`
+  const channelName = `call-chat:${callId}`;
 
   useEffect(() => {
     const handleMessage = (data: any) => {
-      setMessages((prev) => [...prev, data])
-    }
+      setMessages(prev => [...prev, data]);
+    };
 
-    realtime.subscribe(channelName, "message", handleMessage)
+    realtime.subscribe(channelName, 'message', handleMessage);
 
     return () => {
-      realtime.unsubscribe(channelName, "message", handleMessage)
-    }
-  }, [callId, channelName])
+      realtime.unsubscribe(channelName, 'message', handleMessage);
+    };
+  }, [callId, channelName]);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" })
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages])
+  }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || !session?.user) return
+    if (!inputValue.trim() || !session?.user) return;
 
     const messageData: Message = {
       id: Math.random().toString(36).substring(7),
@@ -58,11 +58,11 @@ export function CallChat({ callId }: CallChatProps) {
       userImage: session.user.image || undefined,
       content: inputValue,
       timestamp: Date.now(),
-    }
+    };
 
-    await realtime.publish(channelName, "message", messageData)
-    setInputValue("")
-  }
+    await realtime.publish(channelName, 'message', messageData);
+    setInputValue('');
+  };
 
   return (
     <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800 w-80">
@@ -72,7 +72,7 @@ export function CallChat({ callId }: CallChatProps) {
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((msg) => (
+          {messages.map(msg => (
             <div key={msg.id} className="flex gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={msg.userImage} />
@@ -82,16 +82,12 @@ export function CallChat({ callId }: CallChatProps) {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white truncate">
-                    {msg.userName}
-                  </span>
+                  <span className="text-xs font-bold text-white truncate">{msg.userName}</span>
                   <span className="text-[10px] text-zinc-500">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p className="text-sm text-zinc-300 break-words">
-                  {msg.content}
-                </p>
+                <p className="text-sm text-zinc-300 break-words">{msg.content}</p>
               </div>
             </div>
           ))}
@@ -101,15 +97,15 @@ export function CallChat({ callId }: CallChatProps) {
 
       <div className="p-4 border-t border-zinc-800">
         <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleSendMessage()
+          onSubmit={e => {
+            e.preventDefault();
+            handleSendMessage();
           }}
           className="flex gap-2"
         >
           <Input
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={e => setInputValue(e.target.value)}
             placeholder="Send a message..."
             className="bg-zinc-800 border-none text-white text-sm focus-visible:ring-1 focus-visible:ring-primary"
           />
@@ -119,5 +115,5 @@ export function CallChat({ callId }: CallChatProps) {
         </form>
       </div>
     </div>
-  )
+  );
 }

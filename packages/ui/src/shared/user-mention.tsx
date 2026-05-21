@@ -1,22 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../components/hover-card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../components/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/avatar";
-import { Button } from "../components/button";
-import { CalendarDays, Mail, Shield, Loader2 } from "lucide-react";
-import { useUsers } from "@repo/api-client";
-import { cn } from "../lib/utils";
-import { format } from "date-fns";
+import React, { useState } from 'react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '../components/hover-card';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/popover';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
+import { Button } from '../components/button';
+import { CalendarDays, Mail, Shield, Loader2 } from 'lucide-react';
+import { useUsers } from '@repo/api-client';
+import { cn } from '../lib/utils';
+import { format } from 'date-fns';
 
 interface UserMentionProps {
   username: string;
@@ -25,7 +17,9 @@ interface UserMentionProps {
 
 export function UserMention({ username, isSpecial }: UserMentionProps) {
   const { data: users, isLoading } = useUsers();
-  const user = users?.find((u: any) => u.username?.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase());
+  const user = users?.find(
+    (u: any) => u.username?.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase()
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   if (isSpecial) {
@@ -39,18 +33,13 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
   if (isLoading) {
     return (
       <span className="bg-primary/10 text-primary px-1 rounded font-medium inline-flex items-center gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        @{username}
+        <Loader2 className="h-3 w-3 animate-spin" />@{username}
       </span>
     );
   }
 
   if (!user) {
-    return (
-      <span className="bg-primary/10 text-primary px-1 rounded font-medium">
-        @{username}
-      </span>
-    );
+    return <span className="bg-primary/10 text-primary px-1 rounded font-medium">@{username}</span>;
   }
 
   const UserCard = () => (
@@ -61,14 +50,16 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
           <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex gap-2">
-           <Button size="sm" variant="outline">Profile</Button>
-           <Button size="sm">Message</Button>
+          <Button size="sm" variant="outline">
+            Profile
+          </Button>
+          <Button size="sm">Message</Button>
         </div>
       </div>
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-           <h4 className="text-xl font-bold">{user.name}</h4>
-           {user.username && <span className="text-muted-foreground text-sm">@{user.username}</span>}
+          <h4 className="text-xl font-bold">{user.name}</h4>
+          {user.username && <span className="text-muted-foreground text-sm">@{user.username}</span>}
         </div>
         <p className="text-sm text-muted-foreground capitalize">
           {user.role} • {user.status}
@@ -86,7 +77,7 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
         <div className="flex items-center gap-2 text-sm">
           <CalendarDays className="h-4 w-4 opacity-70" />
           <span className="text-muted-foreground">
-            Joined {user.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : "December 2023"}
+            Joined {user.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : 'December 2023'}
           </span>
         </div>
       </div>
@@ -100,7 +91,7 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
           <PopoverTrigger asChild>
             <span
               className="bg-primary/10 text-primary px-1 rounded font-medium cursor-pointer hover:bg-primary/20 transition-colors"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault();
                 setIsOpen(true);
               }}

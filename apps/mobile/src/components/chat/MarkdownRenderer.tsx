@@ -24,9 +24,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 <View className="flex-row justify-between mb-2">
                   <Text className="text-discord-muted text-xs font-bold uppercase">{language}</Text>
                 </View>
-                <Text className="text-discord-header font-mono text-sm leading-5">
-                  {code.trim()}
-                </Text>
+                <Text className="text-discord-header font-mono text-sm leading-5">{code.trim()}</Text>
               </View>
             );
           }
@@ -72,11 +70,7 @@ function RichText({ text }: { text: string }) {
         const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
         if (linkMatch) {
           return (
-            <Text
-              key={index}
-              className="text-blue-400 underline"
-              onPress={() => Linking.openURL(linkMatch[2])}
-            >
+            <Text key={index} className="text-blue-400 underline" onPress={() => Linking.openURL(linkMatch[2])}>
               {linkMatch[1]}
             </Text>
           );

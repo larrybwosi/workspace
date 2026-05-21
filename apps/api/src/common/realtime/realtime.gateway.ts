@@ -18,9 +18,7 @@ import { setSocketioProvider, RealtimeProvider } from '@repo/shared/server';
     credentials: true,
   },
 })
-export class RealtimeGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, RealtimeProvider
-{
+export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, RealtimeProvider {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('RealtimeGateway');
   private presenceMap: Map<string, Map<string, any>> = new Map(); // channel -> userId -> data

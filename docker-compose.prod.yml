@@ -1,10 +1,15 @@
 services:
   web:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-dealio}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
-    container_name: dealio-web
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
+    container_name: scrymechat-web
     restart: always
     expose:
       - '3001'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       api:
         condition: service_started
@@ -18,14 +23,19 @@ services:
       - NEXT_PUBLIC_API_URL=http://api:3000
       - NODE_ENV=production
     networks:
-      - dealio-network
+      - scrymechat-network
 
   api:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-dealio}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
-    container_name: dealio-api
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
+    container_name: scrymechat-api
     restart: always
     expose:
       - '3000'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,11 +46,11 @@ services:
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
     networks:
-      - dealio-network
+      - scrymechat-network
 
   postgres:
     image: postgres:17-alpine
-    container_name: dealio-postgres
+    container_name: scrymechat-postgres
     restart: always
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -49,16 +59,16 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
       - POSTGRES_DB=${DB_NAME:-main}
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - dealio-network
+      - scrymechat-network
 
   redis:
     image: redis:7-alpine
-    container_name: dealio-redis
+    container_name: scrymechat-redis
     restart: always
     volumes:
       - redis_data:/data
@@ -68,12 +78,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dealio-network
+      - scrymechat-network
 
 volumes:
   db_data:
   redis_data:
 
 networks:
-  dealio-network:
+  scrymechat-network:
     driver: bridge

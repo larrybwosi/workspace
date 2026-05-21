@@ -1,13 +1,5 @@
 import { Controller, Post, Get, Body, Param, UseGuards } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard, ApiV2Context } from '../auth/api-v2.guard';
 import { V2Context } from '../auth/v2-context.decorator';
 import { V2ApplicationsService } from './applications.service';
@@ -66,7 +58,7 @@ export class V2ApplicationsController {
   async updateApplication(
     @V2Context() context: ApiV2Context,
     @Param('id') id: string,
-    @Body() body: UpdateApplicationDto,
+    @Body() body: UpdateApplicationDto
   ) {
     return this.applicationsService.updateApplication(context.userId, id, body);
   }
@@ -99,11 +91,7 @@ export class V2ApplicationsController {
     },
   })
   @ApiResponse({ status: 200, description: 'Bot installed successfully.' })
-  async installBot(
-    @V2Context() context: ApiV2Context,
-    @Param('id') id: string,
-    @Body() body: { workspaceId: string },
-  ) {
+  async installBot(@V2Context() context: ApiV2Context, @Param('id') id: string, @Body() body: { workspaceId: string }) {
     return this.applicationsService.installBot(context.userId, id, body.workspaceId);
   }
 }

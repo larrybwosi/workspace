@@ -33,7 +33,9 @@ export class SanityStorageProvider implements StorageProvider {
     // Maximum file size of 30MB
     const MAX_FILE_SIZE = 30 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      throw new PayloadTooLargeException(`File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`);
+      throw new PayloadTooLargeException(
+        `File too large. Maximum size is 30MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`
+      );
     }
 
     if (this.sanityClient) {

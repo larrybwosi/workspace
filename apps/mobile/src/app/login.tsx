@@ -12,12 +12,12 @@ export default function Login() {
     try {
       await authClient.signIn.social({
         provider,
-        callbackURL: 'skryme-auth://',
+        callbackURL: 'scrymechat-auth://',
       });
 
       // If the social login returns to the app successfully
       router.replace('/');
-    } catch (err) {
+    } catch {
       Alert.alert('Error', `Unable to login with ${provider}. Please try again.`);
     } finally {
       setLoading(false);

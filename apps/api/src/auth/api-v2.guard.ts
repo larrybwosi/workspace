@@ -151,9 +151,9 @@ export class ApiV2Guard implements CanActivate {
 
         // Fallback to OauthAccessToken (better-auth)
         if (!oauthToken) {
-           oauthToken = await (prisma as any).oauthAccessToken.findUnique({
-             where: { token: hashedToken },
-           });
+          oauthToken = await (prisma as any).oauthAccessToken.findUnique({
+            where: { token: hashedToken },
+          });
         }
 
         if (!oauthToken || (oauthToken.expiresAt && oauthToken.expiresAt < new Date())) {
@@ -183,16 +183,16 @@ export class ApiV2Guard implements CanActivate {
 
           // If M2M, check if it belongs to the organization that owns the workspace
           if (context.organizationId) {
-             const isAuthorized = await prisma.member.findFirst({
-               where: {
-                 organizationId: context.organizationId,
-                 userId: workspace.ownerId,
-               }
-             });
+            const isAuthorized = await prisma.member.findFirst({
+              where: {
+                organizationId: context.organizationId,
+                userId: workspace.ownerId,
+              },
+            });
 
-             if (!isAuthorized) {
-               throw new ForbiddenException('M2M application is not authorized to access this workspace');
-             }
+            if (!isAuthorized) {
+              throw new ForbiddenException('M2M application is not authorized to access this workspace');
+            }
           } else {
             const member = await prisma.workspaceMember.findFirst({
               where: {

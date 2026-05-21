@@ -1,12 +1,5 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
@@ -30,11 +23,7 @@ export class CallsController {
   @ApiOperation({ summary: 'Update call state' })
   @ApiParam({ name: 'callId', description: 'The call ID' })
   @ApiResponse({ status: 200, description: 'Call updated' })
-  async updateCall(
-    @CurrentUser() user: User,
-    @Param('callId') callId: string,
-    @Body() body: any,
-  ) {
+  async updateCall(@CurrentUser() user: User, @Param('callId') callId: string, @Body() body: any) {
     return this.callsService.updateCall(user, callId, body);
   }
 
@@ -42,11 +31,7 @@ export class CallsController {
   @ApiOperation({ summary: 'Invite a user to a call' })
   @ApiParam({ name: 'callId', description: 'The call ID' })
   @ApiResponse({ status: 201, description: 'User invited' })
-  async inviteToCall(
-    @CurrentUser() user: User,
-    @Param('callId') callId: string,
-    @Body('userId') userId: string,
-  ) {
+  async inviteToCall(@CurrentUser() user: User, @Param('callId') callId: string, @Body('userId') userId: string) {
     return this.callsService.inviteToCall(user, callId, userId);
   }
 
@@ -62,10 +47,7 @@ export class CallsController {
   @ApiOperation({ summary: 'Get scheduled calls for a workspace' })
   @ApiQuery({ name: 'workspaceId', description: 'The workspace ID' })
   @ApiResponse({ status: 200, description: 'List of scheduled calls' })
-  async getScheduledCalls(
-    @CurrentUser() user: User,
-    @Query('workspaceId') workspaceId: string,
-  ) {
+  async getScheduledCalls(@CurrentUser() user: User, @Query('workspaceId') workspaceId: string) {
     return this.callsService.getScheduledCalls(user, workspaceId);
   }
 

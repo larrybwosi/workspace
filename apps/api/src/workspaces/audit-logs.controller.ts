@@ -1,21 +1,5 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards,
-  NotFoundException,
-  ForbiddenException,
-  Res,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Param, Query, UseGuards, NotFoundException, ForbiddenException, Res } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -37,7 +21,7 @@ export class AuditLogsController {
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Query('page') pageNum = '1',
-    @Query('limit') limitNum = '50',
+    @Query('limit') limitNum = '50'
   ) {
     const page = parseInt(pageNum);
     const limit = parseInt(limitNum);
@@ -82,7 +66,7 @@ export class AuditLogsController {
     }
 
     // Attach workspace metadata to logs to maintain API compatibility
-    const logs = workspace.auditLogs.map((log) => ({
+    const logs = workspace.auditLogs.map(log => ({
       ...log,
       workspace: {
         name: workspace.name,
@@ -91,7 +75,7 @@ export class AuditLogsController {
     }));
     const total = workspace._count.auditLogs;
 
-    const userIds = [...new Set(logs.map((log) => log.userId))];
+    const userIds = [...new Set(logs.map(log => log.userId))];
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
       select: {
@@ -107,10 +91,10 @@ export class AuditLogsController {
         acc[u.id] = u;
         return acc;
       },
-      {} as Record<string, (typeof users)[0]>,
+      {} as Record<string, (typeof users)[0]>
     );
 
-    const enrichedLogs = logs.map((log) => ({
+    const enrichedLogs = logs.map(log => ({
       ...log,
       workspace: {
         name: workspace.name,
@@ -132,11 +116,7 @@ export class AuditLogsController {
   @ApiOperation({ summary: 'Export audit logs as CSV' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'CSV file' })
-  async exportAuditLogs(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Res() res: FastifyReply,
-  ) {
+  async exportAuditLogs(@CurrentUser() user: User, @Param('slug') slug: string, @Res() res: FastifyReply) {
     /**
      * ⚡ Performance Optimization:
      * Consolidates workspace lookup, membership verification, and audit log retrieval
@@ -171,7 +151,7 @@ export class AuditLogsController {
 
     const logs = workspace.auditLogs;
 
-    const userIds = [...new Set(logs.map((log) => log.userId))];
+    const userIds = [...new Set(logs.map(log => log.userId))];
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
       select: { id: true, name: true, email: true },
@@ -182,12 +162,12 @@ export class AuditLogsController {
         acc[u.id] = u;
         return acc;
       },
-      {} as Record<string, (typeof users)[0]>,
+      {} as Record<string, (typeof users)[0]>
     );
 
     const csvHeader = 'Timestamp,Action,Actor Name,Actor Email,Resource,Resource ID,Metadata\n';
     const csvRows = logs
-      .map((log) => {
+      .map(log => {
         const u = userMap[log.userId];
         return [
           new Date(log.createdAt).toISOString(),
@@ -198,7 +178,7 @@ export class AuditLogsController {
           log.resourceId || 'N/A',
           JSON.stringify(log.metadata || {}),
         ]
-          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .map(cell => `"${String(cell).replace(/"/g, '""')}"`)
           .join(',');
       })
       .join('\n');
@@ -206,10 +186,7 @@ export class AuditLogsController {
     const csv = csvHeader + csvRows;
 
     res.header('Content-Type', 'text/csv');
-    res.header(
-      'Content-Disposition',
-      `attachment; filename="audit-logs-${workspace.id}-${Date.now()}.csv"`,
-    );
+    res.header('Content-Disposition', `attachment; filename="audit-logs-${workspace.id}-${Date.now()}.csv"`);
     res.send(csv);
   }
 }

@@ -11,15 +11,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -119,13 +111,7 @@ export class V2WebhooksController {
       },
     });
 
-    await this.auditService.log(
-      context,
-      'webhooks.create',
-      'webhook',
-      webhook.id,
-      { name: data.name, url: data.url },
-    );
+    await this.auditService.log(context, 'webhooks.create', 'webhook', webhook.id, { name: data.name, url: data.url });
 
     return { webhook, secret };
   }
@@ -135,10 +121,7 @@ export class V2WebhooksController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
   @ApiResponse({ status: 200, description: 'Webhook details returned successfully.' })
-  async getWebhook(
-    @V2Context() context: ApiV2Context,
-    @Param('webhookId') webhookId: string,
-  ) {
+  async getWebhook(@V2Context() context: ApiV2Context, @Param('webhookId') webhookId: string) {
     if (!this.hasScope(context, 'webhooks:read')) {
       throw new ForbiddenException('Forbidden: Missing webhooks:read scope');
     }
@@ -166,7 +149,7 @@ export class V2WebhooksController {
   async updateWebhook(
     @V2Context() context: ApiV2Context,
     @Param('webhookId') webhookId: string,
-    @Body() body: UpdateWebhookDto,
+    @Body() body: UpdateWebhookDto
   ) {
     if (!this.hasScope(context, 'webhooks:write')) {
       throw new ForbiddenException('Forbidden: Missing webhooks:write scope');
@@ -184,13 +167,7 @@ export class V2WebhooksController {
       data,
     });
 
-    await this.auditService.log(
-      context,
-      'webhooks.update',
-      'webhook',
-      webhookId,
-      data,
-    );
+    await this.auditService.log(context, 'webhooks.update', 'webhook', webhookId, data);
 
     return { webhook };
   }
@@ -200,10 +177,7 @@ export class V2WebhooksController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
   @ApiResponse({ status: 200, description: 'Webhook deleted successfully.' })
-  async deleteWebhook(
-    @V2Context() context: ApiV2Context,
-    @Param('webhookId') webhookId: string,
-  ) {
+  async deleteWebhook(@V2Context() context: ApiV2Context, @Param('webhookId') webhookId: string) {
     if (!this.hasScope(context, 'webhooks:write')) {
       throw new ForbiddenException('Forbidden: Missing webhooks:write scope');
     }
@@ -220,13 +194,7 @@ export class V2WebhooksController {
       where: { id: webhookId },
     });
 
-    await this.auditService.log(
-      context,
-      'webhooks.delete',
-      'webhook',
-      webhookId,
-      { name: webhook.name },
-    );
+    await this.auditService.log(context, 'webhooks.delete', 'webhook', webhookId, { name: webhook.name });
 
     return { success: true };
   }

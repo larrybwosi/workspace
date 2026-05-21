@@ -1,8 +1,9 @@
+import { Message, MessageMetadata } from "@repo/types";
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export function CodeMessage({ message, metadata }: any) {
+export function CodeMessage({ message, metadata }: { message: Message; metadata: MessageMetadata }) {
   const code = metadata?.code || message.content;
   const language = metadata?.language || 'text';
   const fileName = metadata?.fileName;
@@ -21,9 +22,7 @@ export function CodeMessage({ message, metadata }: any) {
         </TouchableOpacity>
       </View>
       <ScrollView horizontal className="p-3">
-        <Text className="text-discord-header font-mono text-sm leading-5">
-          {code}
-        </Text>
+        <Text className="text-discord-header font-mono text-sm leading-5">{code}</Text>
       </ScrollView>
     </View>
   );

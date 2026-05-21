@@ -1,18 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiBody,
-} from '@nestjs/swagger';
+import { Controller, Post, Body, UseGuards, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { ApiV2Guard, ApiV2Context } from '../auth/api-v2.guard';
 import { V2Context } from '../auth/v2-context.decorator';
 import { ProvisioningService } from './provisioning.service';
@@ -39,10 +26,15 @@ const provisionSchema = z.object({
   icon: z.string().optional().default('building'),
   brandingConfig: z.any().optional(),
   channels: z.array(z.string()).optional().default(['general', 'random']),
-  initialMembers: z.array(z.object({
-    email: z.string().email(),
-    role: z.string().default('member')
-  })).optional().default([]),
+  initialMembers: z
+    .array(
+      z.object({
+        email: z.string().email(),
+        role: z.string().default('member'),
+      })
+    )
+    .optional()
+    .default([]),
 });
 
 @ApiTags('Provisioning')

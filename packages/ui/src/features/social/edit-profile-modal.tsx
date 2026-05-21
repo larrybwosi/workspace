@@ -2,7 +2,18 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { X, Upload, Smile, Loader2, Image as ImageIcon, Bell, AtSign, UserPlus, MessageSquare, Lock } from 'lucide-react';
+import {
+  X,
+  Upload,
+  Smile,
+  Loader2,
+  Image as ImageIcon,
+  Bell,
+  AtSign,
+  UserPlus,
+  MessageSquare,
+  Lock,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/dialog';
 import { Button } from '../../components/button';
 import { Input } from '../../components/input';
@@ -46,14 +57,16 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationPreferences>((user as any).notificationPreferences || {
-    channelMentions: 'mentions',
-    channelMentionsSound: true,
-    invites: 'all',
-    invitesSound: true,
-    directMessages: 'all',
-    directMessagesSound: true,
-  });
+  const [notifications, setNotifications] = useState<NotificationPreferences>(
+    (user as any).notificationPreferences || {
+      channelMentions: 'mentions',
+      channelMentionsSound: true,
+      invites: 'all',
+      invitesSound: true,
+      directMessages: 'all',
+      directMessagesSound: true,
+    }
+  );
 
   const { data: assets } = useEligibleAssets();
 
@@ -165,7 +178,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                     src={banner}
                     alt="Profile Banner"
                     className="w-full h-full object-cover"
-                    onError={(e) => {
+                    onError={e => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
@@ -252,7 +265,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                               <img src={a.url} alt="asset" className="h-full w-full object-cover" />
                               {!a.isEligible && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                  {React.createElement(Lock as any, { className: "h-4 w-4 text-white" })}
+                                  {React.createElement(Lock as any, { className: 'h-4 w-4 text-white' })}
                                 </div>
                               )}
                             </button>
@@ -282,7 +295,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                               <img src={a.url} alt="asset" className="h-full w-full object-cover" />
                               {!a.isEligible && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                  {React.createElement(Lock as any, { className: "h-4 w-4 text-white" })}
+                                  {React.createElement(Lock as any, { className: 'h-4 w-4 text-white' })}
                                 </div>
                               )}
                             </button>

@@ -40,7 +40,7 @@ export function useCreateChannel(workspaceSlug?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (newChannel: any) => {
+    mutationFn: async (newChannel: Partial<Channel>) => {
       const url = workspaceSlug ? `/workspaces/${workspaceSlug}/channels` : '/channels';
       const { data } = await apiClient.post<Channel>(url, newChannel);
       return data;
@@ -85,7 +85,7 @@ export function useDeleteChannel(workspaceSlug?: string) {
       await apiClient.delete(url);
       return id;
     },
-    onSuccess: id => {
+    onSuccess: _id => {
       queryClient.invalidateQueries({ queryKey: channelKeys.lists() });
       if (workspaceSlug) {
         queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
@@ -100,7 +100,9 @@ export function useJoinChannel(workspaceSlug?: string) {
 
   return useMutation({
     mutationFn: async (channelId: string) => {
-      const url = workspaceSlug ? `/workspaces/${workspaceSlug}/channels/${channelId}/join` : `/channels/${channelId}/join`;
+      const url = workspaceSlug
+        ? `/workspaces/${workspaceSlug}/channels/${channelId}/join`
+        : `/channels/${channelId}/join`;
       const { data } = await apiClient.post(url);
       return data;
     },

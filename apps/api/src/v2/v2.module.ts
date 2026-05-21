@@ -1,6 +1,6 @@
-import { ProvisioningService } from "./provisioning.service";
-import { ProvisioningController } from "./provisioning.controller";
-import { M2mController } from "./m2m/m2m.controller";
+import { ProvisioningService } from './provisioning.service';
+import { ProvisioningController } from './provisioning.controller';
+import { M2mController } from './m2m/m2m.controller';
 import { Module } from '@nestjs/common';
 import { V2WorkspacesController } from './workspaces/workspaces.controller';
 import { V2MessagesController } from './workspaces/messages.controller';
