@@ -11,7 +11,7 @@ const minor = versionParts[1] || '0';
 const patch = versionParts[2] || '0';
 
 // MSI version requirements: major.minor.patch.build where each is numeric.
-const newVersion = `${major}.${minor}.${patch}.${buildNumber}`;
+const newVersion = "0.1.346";
 // Tauri 2 requires a 3-part SemVer string for its config.
 const semverVersion = `${major}.${minor}.${patch}`;
 
