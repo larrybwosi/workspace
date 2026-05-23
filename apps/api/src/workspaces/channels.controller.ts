@@ -77,9 +77,10 @@ export class ChannelsController {
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace lookup, membership verification, and channel retrieval into a single query.
+     * 2. Uses nested 'select' to fetch only required fields and relations (like message counts).
+     * 3. Reduces database round-trips from 2 down to 1 while maintaining access control.
+     * Expected impact: Faster response times for channel list loading.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -88,6 +89,38 @@ export class ChannelsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        channels: {
+          where: {
+            OR: [
+              { isPrivate: false },
+              {
+                isPrivate: true,
+                members: {
+                  some: {
+                    userId: user.id,
+                  },
+                },
+              },
+            ],
+          },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            icon: true,
+            type: true,
+            description: true,
+            isPrivate: true,
+            workspaceId: true,
+            parentId: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: { select: { messages: true } },
+          },
+          orderBy: {
+            name: 'asc',
+          },
         },
       },
     });
@@ -102,30 +135,7 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channels = await prisma.channel.findMany({
-      where: {
-        workspaceId: workspace.id,
-        OR: [
-          { isPrivate: false },
-          {
-            isPrivate: true,
-            members: {
-              some: {
-                userId: user.id,
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        _count: { select: { messages: true } },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
-    return channels;
+    return workspace.channels;
   }
 
   @Post()
@@ -219,9 +229,10 @@ export class ChannelsController {
   async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace lookup, membership verification, and detailed channel retrieval into a single query.
+     * 2. Uses nested 'select' and 'include' to fetch channel details, members, and counts in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1.
+     * Expected impact: Faster channel detail retrieval and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -230,6 +241,17 @@ export class ChannelsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        channels: {
+          where: { id: channelId },
+          include: {
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true, threads: true } },
+          },
         },
       },
     });
@@ -244,17 +266,7 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId, workspaceId: workspace.id },
-      include: {
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatar: true } },
-          },
-        },
-        _count: { select: { members: true, threads: true } },
-      },
-    });
+    const channel = workspace.channels[0];
 
     if (!channel) {
       throw new NotFoundException('Channel not found');

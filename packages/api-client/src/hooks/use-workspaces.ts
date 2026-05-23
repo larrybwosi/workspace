@@ -83,7 +83,7 @@ export function useUpdateWorkspace(workspaceSlug: string) {
       description?: string;
       isPublic?: boolean;
       customDomain?: string;
-      brandingConfig?: any;
+      brandingConfig?: Record<string, unknown>;
       industry?: string;
     }) => {
       const { data: response } = await apiClient.patch(`/workspaces/${workspaceSlug}`, data);
@@ -270,7 +270,12 @@ export function useWorkspaceIntegrations(workspaceSlug: string) {
 export function useCreateWorkspaceIntegration(workspaceSlug: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { service: string; name: string; config: Record<string, any>; description?: string }) => {
+    mutationFn: async (data: {
+      service: string;
+      name: string;
+      config: Record<string, unknown>;
+      description?: string;
+    }) => {
       const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/integrations`, data);
       return response;
     },
@@ -288,7 +293,7 @@ export function useUpdateWorkspaceIntegration(workspaceSlug: string) {
       data,
     }: {
       integrationId: string;
-      data: { config?: Record<string, any>; active?: boolean };
+      data: { config?: Record<string, unknown>; active?: boolean };
     }) => {
       const { data: response } = await apiClient.patch(
         `/workspaces/${workspaceSlug}/integrations/${integrationId}`,

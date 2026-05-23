@@ -4,7 +4,7 @@ import { apiClient } from '../client';
 export const notificationKeys = {
   all: ['notifications'] as const,
   lists: () => [...notificationKeys.all, 'list'] as const,
-  list: (params: Record<string, any>) => [...notificationKeys.lists(), params] as const,
+  list: (params: Record<string, unknown>) => [...notificationKeys.lists(), params] as const,
 };
 
 export function useNotifications(unreadOnly = false) {
@@ -21,7 +21,7 @@ export function useNotifications(unreadOnly = false) {
 
 export function useUpdateUserDeviceToken() {
   return useMutation({
-    mutationFn: async (data: { token: string; platform: string; deviceInfo?: any }) => {
+    mutationFn: async (data: { token: string; platform: string; deviceInfo?: unknown }) => {
       const response = await apiClient.post('/device-tokens', data);
       return response.data;
     },

@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Message, MessageMetadata } from '@repo/types';
 
-export function ReportMessage({ message, metadata }: any) {
-  const reportData = metadata?.reportData || {};
+export function ReportMessage({ message, metadata }: { message: Message; metadata: MessageMetadata }) {
+  const reportData = (metadata?.reportData as any) || {};
   const status = reportData.status || 'draft';
 
   return (

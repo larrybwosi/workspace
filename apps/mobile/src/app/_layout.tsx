@@ -31,7 +31,7 @@ function AppContent() {
 
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      handleNotificationResponse(response, router);
+      handleNotificationResponse(response, router as any);
     });
 
     return () => subscription.remove();

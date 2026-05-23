@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { messageKeys } from './use-messages';
+import type { Message } from '@repo/types';
 
 // Add reaction to message
 export function useAddReaction() {
@@ -34,19 +35,20 @@ export function useAddReaction() {
 
       const previousMessages = queryClient.getQueryData(messageKeys.list(channelId));
 
-      queryClient.setQueryData(messageKeys.list(channelId), (old: any) => {
+      queryClient.setQueryData(messageKeys.list(channelId), (old: unknown) => {
         if (!old) return old;
+        const oldData = old as { pages: { messages: Message[] }[] };
         return {
-          ...old,
-          pages: old.pages.map((page: any) => ({
+          ...oldData,
+          pages: oldData.pages.map(page => ({
             ...page,
-            messages: page.messages.map((msg: any) => {
+            messages: page.messages.map(msg => {
               if (msg.id === messageId) {
-                const existingReaction = msg.reactions?.find((r: any) => r.emoji === emoji);
+                const existingReaction = msg.reactions?.find(r => r.emoji === emoji);
                 if (existingReaction) {
                   return {
                     ...msg,
-                    reactions: msg.reactions.map((r: any) => (r.emoji === emoji ? { ...r, count: r.count + 1 } : r)),
+                    reactions: msg.reactions.map(r => (r.emoji === emoji ? { ...r, count: r.count + 1 } : r)),
                   };
                 }
                 return {
@@ -62,7 +64,7 @@ export function useAddReaction() {
 
       return { previousMessages };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       if (context?.previousMessages) {
         queryClient.setQueryData(messageKeys.list(variables.channelId), context.previousMessages);
       }

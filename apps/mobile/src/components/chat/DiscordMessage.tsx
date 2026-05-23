@@ -8,6 +8,7 @@ import { CodeMessage } from './message-types/code-message';
 import { ApprovalMessage } from './message-types/approval-message';
 import { CommentRequestMessage } from './message-types/comment-request-message';
 import { ReportMessage } from './message-types/report-message';
+import { Message } from '@repo/types';
 
 const RENDERERS: Record<string, React.ComponentType<any>> = {
   code: CodeMessage,
@@ -17,7 +18,19 @@ const RENDERERS: Record<string, React.ComponentType<any>> = {
   custom: ApprovalMessage, // Fallback
 };
 
-export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onReact }: any) {
+export function DiscordMessage({
+  message,
+  isSameUser,
+  onLongPress,
+  onReply,
+  onReact,
+}: {
+  message: Message;
+  isSameUser: boolean;
+  onLongPress: (id: string) => void;
+  onReply: () => void;
+  onReact: (emoji: string) => void;
+}) {
   const timestamp = new Date(message.timestamp);
   const timeStr = format(timestamp, 'p');
 
@@ -78,7 +91,7 @@ export function DiscordMessage({ message, isSameUser, onLongPress, onReply, onRe
             ))}
 
             {SpecialRenderer ? (
-              <SpecialRenderer message={message} metadata={message.metadata} />
+              <SpecialRenderer message={message} metadata={message.metadata as any} />
             ) : (
               <MarkdownRenderer content={message.content} />
             )}
