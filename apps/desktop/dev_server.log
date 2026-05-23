@@ -1,0 +1,10 @@
+
+> desktop@0.0.2 dev /app/apps/desktop
+> vite
+
+
+  VITE v8.0.12  ready in 554 ms
+
+  ➜  Local:   http://localhost:1420/
+  ➜  Network: http://192.168.0.2:1420/
+3:11:22 PM [vite] (client) [optimizer] bundling dependencies...
