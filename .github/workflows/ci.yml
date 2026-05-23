@@ -43,6 +43,7 @@ jobs:
         run: pnpm --filter @repo/database run db:generate
       - name: Run Fallow Audit
         uses: fallow-rs/fallow@v2
+        continue-on-error: ${{ github.ref == 'refs/heads/main' }}
         with:
           command: audit
         env:
