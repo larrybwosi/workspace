@@ -4,7 +4,7 @@
   "globalEnv": ["DATABASE_URL", "ABLY_API_KEY", "NODE_ENV"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^db:generate"],
       "env": [
         "BETTER_AUTH_SECRET",
         "ABLY_API_KEY",
