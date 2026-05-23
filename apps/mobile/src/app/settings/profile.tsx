@@ -1,3 +1,4 @@
+interface CustomUser { avatar?: string; banner?: string; name: string; image?: string; id: string; }
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { useSession } from '../../lib/auth';
@@ -8,13 +9,13 @@ import axios from 'axios';
 import { getBaseURL } from '../../lib/env';
 
 export default function ProfileSettings() {
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession();
   const { data: assets, isLoading: assetsLoading } = useEligibleAssets();
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const [avatar, setAvatar] = useState(session?.user?.avatar || session?.user?.image);
-  const [banner, setBanner] = useState(session?.user?.banner);
+  const [avatar, setAvatar] = useState((session?.user as CustomUser)?.avatar || session?.user?.image);
+  const [banner, setBanner] = useState((session?.user as CustomUser)?.banner);
 
   const handleSave = async () => {
     setIsUpdating(true);
@@ -26,7 +27,7 @@ export default function ProfileSettings() {
       });
       Alert.alert('Success', 'Profile updated successfully');
       router.back();
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Failed to update profile');
     } finally {
       setIsUpdating(false);

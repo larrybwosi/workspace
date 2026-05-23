@@ -39,17 +39,29 @@ export class MembersController {
   async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace lookup, membership verification, and retrieval of all members into a single query.
+     * 2. Fetches current user's membership for access control and all workspace members in one round-trip.
+     * 3. Uses nested 'select' for users to retrieve only essential profile fields.
+     * Expected impact: Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
         members: {
-          where: { userId: user.id },
-          select: { role: true },
+          // Fetch all members for the response
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                image: true,
+                status: true,
+              },
+            },
+          },
         },
       },
     });
@@ -58,31 +70,14 @@ export class MembersController {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = workspace.members[0];
+    // Verify current user's membership for access control
+    const requesterMember = workspace.members.find(m => m.userId === user.id);
 
-    if (!member) {
+    if (!requesterMember) {
       throw new ForbiddenException('Access denied');
     }
 
-    const members = await prisma.workspaceMember.findMany({
-      where: {
-        workspaceId: workspace.id,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            image: true,
-            status: true,
-          },
-        },
-      },
-    });
-
-    return { members };
+    return { members: workspace.members };
   }
 
   @Patch(':memberId')

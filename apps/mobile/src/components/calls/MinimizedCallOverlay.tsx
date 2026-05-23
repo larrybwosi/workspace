@@ -15,7 +15,7 @@ export function MinimizedCallOverlay() {
     router.push({
       pathname: '/call/[id]',
       params: { id: activeCall.callId },
-    } as any);
+    });
   };
 
   return (

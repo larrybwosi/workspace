@@ -1,3 +1,4 @@
+interface CustomUser { avatar?: string; banner?: string; name: string; image?: string; id: string; }
 import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useSession, signOut } from '../../lib/auth';
 import { useRouter } from 'expo-router';
@@ -5,7 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile() {
-  const { data: session } = (useSession as any)();
+  const { data: session } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -20,15 +21,15 @@ export default function Profile() {
       <ScrollView>
         {/* Banner Section */}
         <View className="h-32 bg-discord-blurple">
-          {session.user.banner && <Image source={{ uri: session.user.banner }} className="w-full h-full" />}
+          {(session.user as CustomUser).banner && <Image source={{ uri: (session.user as CustomUser).banner }} className="w-full h-full" />}
         </View>
 
         {/* Avatar and Identity Section */}
         <View className="px-4 -mt-12 items-start mb-6">
           <View className="w-24 h-24 rounded-full bg-discord-tertiary p-1 overflow-hidden border-4 border-discord-base">
-            {session.user.avatar || session.user.image ? (
+            {(session.user as CustomUser).avatar || session.user.image ? (
               <Image
-                source={{ uri: session.user.avatar || session.user.image }}
+                source={{ uri: ((session.user as CustomUser).avatar || session.user.image) || undefined }}
                 className="w-full h-full rounded-full"
               />
             ) : (
@@ -65,7 +66,7 @@ function ProfileItem({
   onPress,
   color,
 }: {
-  icon: any;
+  icon: keyof typeof MaterialIcons.glyphMap;
   label: string;
   onPress: () => void;
   color?: string;

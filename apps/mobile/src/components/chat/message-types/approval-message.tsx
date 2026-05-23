@@ -1,9 +1,10 @@
+import { Message, MessageMetadata } from "@repo/types";
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export function ApprovalMessage({ message, metadata }: any) {
-  const approvalData = metadata?.approvalData || {};
+export function ApprovalMessage({ message, metadata }: { message: Message; metadata: MessageMetadata }) {
+  const approvalData = (metadata?.approvalData as Record<string, string>) || {};
   const status = approvalData.status || 'pending';
   const title = approvalData.title || 'Approval Request';
 
