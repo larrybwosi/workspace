@@ -138,7 +138,6 @@ export interface SearchResult {
   author: string;
   timestamp: Date;
   channel?: string;
-<<<<<<< HEAD
 }
 
 export interface SocialProfile {
@@ -194,6 +193,4 @@ export interface SocialProfile {
   isBlockedByMe: boolean;
   mutualWorkspaces: Array<{ id: string; name: string; icon?: string }>;
   mutualFriends: Array<User>;
-=======
->>>>>>> 45e661c199c9a2c20877bd3a37b3c674e033c6e3
 }
