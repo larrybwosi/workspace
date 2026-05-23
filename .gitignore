@@ -47,6 +47,7 @@ next-env.d.ts
 
 # Rust / Tauri
 apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
 apps/desktop/src-tauri/Cargo.lock
 
 # PWA service worker artifacts

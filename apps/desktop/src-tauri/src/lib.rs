@@ -34,7 +34,7 @@ pub fn run() {
 
             let icon = app.default_window_icon().cloned().unwrap_or_else(|| {
                 // Fallback or handle missing icon
-                tauri::Icon::from_rgba(vec![0; 16], 2, 2).unwrap()
+                tauri::image::Image::new_owned(vec![0; 16], 2, 2)
             });
 
             let _tray = TrayIconBuilder::new()
