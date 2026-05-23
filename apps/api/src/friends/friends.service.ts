@@ -147,7 +147,6 @@ export class FriendsService {
       },
     });
 
-    // ⚡ Parallelize side effects
     await Promise.all([
       prisma.notification.create({
         data: {
@@ -213,7 +212,7 @@ export class FriendsService {
 
     if (action === 'accept') {
       /**
-       * ⚡ Performance Optimization:
+       *  Performance Optimization:
        * 1. Replaces sequential reciprocal friendship creation with a single 'prisma.friend.createMany' call.
        * 2. Parallelizes database notification creation and Ably real-time event publishing.
        */

@@ -100,12 +100,6 @@ export class WebhooksController {
   @ApiBody({ type: CreateWorkspaceWebhookDto })
   @ApiResponse({ status: 201, description: 'Webhook created successfully' })
   async createWebhook(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceWebhookDto) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -206,11 +200,6 @@ export class WebhooksController {
   @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
   @ApiResponse({ status: 200, description: 'Webhook deleted' })
   async deleteWebhook(@CurrentUser() user: User, @Param('slug') slug: string, @Param('webhookId') webhookId: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {

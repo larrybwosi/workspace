@@ -39,11 +39,15 @@ export default function RiderProfileScreen() {
           </View>
           <View className="flex-row items-center justify-between mb-8">
             <View>
-              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">CAR MODEL</Text>
+              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">
+                CAR MODEL
+              </Text>
               <Text className="font-headline text-lg text-on-surface">Toyota Camry</Text>
             </View>
             <View className="items-end">
-              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">PLATE NUMBER</Text>
+              <Text className="font-label text-on-surface-variant uppercase text-[10px] tracking-widest mb-1">
+                PLATE NUMBER
+              </Text>
               <Text className="font-headline text-lg text-on-surface">ABC 123</Text>
             </View>
           </View>

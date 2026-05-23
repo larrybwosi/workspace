@@ -154,11 +154,6 @@ export class ApiTokensController {
   @ApiBody({ type: CreateApiTokenDto })
   @ApiResponse({ status: 201, description: 'API token created' })
   async createApiToken(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateApiTokenDto) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -223,11 +218,6 @@ export class ApiTokensController {
   @ApiParam({ name: 'tokenId', description: 'The token ID' })
   @ApiResponse({ status: 200, description: 'API token deleted' })
   async deleteApiToken(@CurrentUser() user: User, @Param('slug') slug: string, @Param('tokenId') tokenId: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {

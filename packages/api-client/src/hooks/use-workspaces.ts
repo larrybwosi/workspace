@@ -270,7 +270,12 @@ export function useWorkspaceIntegrations(workspaceSlug: string) {
 export function useCreateWorkspaceIntegration(workspaceSlug: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { service: string; name: string; config: Record<string, unknown>; description?: string }) => {
+    mutationFn: async (data: {
+      service: string;
+      name: string;
+      config: Record<string, unknown>;
+      description?: string;
+    }) => {
       const { data: response } = await apiClient.post(`/workspaces/${workspaceSlug}/integrations`, data);
       return response;
     },

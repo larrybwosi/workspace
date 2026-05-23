@@ -53,7 +53,11 @@ export function useAdminAssets(type: string) {
 export function useCreateAdminAsset() {
   const queryClient = useQueryClient();
   return useMutation({
+<<<<<<< HEAD
     mutationFn: async ({ type, data }: { type: string; data: Record<string, unknown> }) => {
+=======
+    mutationFn: async ({ type, data }: { type: string; data: any }) => {
+>>>>>>> 45e661c199c9a2c20877bd3a37b3c674e033c6e3
       const response = await apiClient.post('/admin/assets', { type, data });
       return response.data;
     },
@@ -67,7 +71,11 @@ export function useCreateAdminAsset() {
 export function useUpdateAdminAsset() {
   const queryClient = useQueryClient();
   return useMutation({
+<<<<<<< HEAD
     mutationFn: async ({ type, id, data }: { type: string; id: string; data: Record<string, unknown> }) => {
+=======
+    mutationFn: async ({ type, id, data }: { type: string; id: string; data: any }) => {
+>>>>>>> 45e661c199c9a2c20877bd3a37b3c674e033c6e3
       const response = await apiClient.patch('/admin/assets', { type, id, data });
       return response.data;
     },
