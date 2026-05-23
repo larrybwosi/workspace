@@ -3,86 +3,85 @@ import { prisma, type User } from '@repo/database';
 import { NotificationsService } from '../notifications/notifications.service';
 import * as crypto from 'crypto';
 
+const INVITATION_USER_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  avatar: true,
+};
+
+const WORKSPACE_INVITATION_SELECT = {
+  id: true,
+  email: true,
+  token: true,
+  role: true,
+  status: true,
+  expiresAt: true,
+  acceptedAt: true,
+  createdAt: true,
+  permissions: true,
+  inviter: { select: INVITATION_USER_SELECT },
+  user: { select: INVITATION_USER_SELECT },
+};
+
+const PLATFORM_INVITATION_SELECT = {
+  id: true,
+  email: true,
+  token: true,
+  role: true,
+  status: true,
+  expiresAt: true,
+  acceptedAt: true,
+  createdAt: true,
+  permissions: true,
+  inviter: { select: INVITATION_USER_SELECT },
+};
+
 @Injectable()
 export class InvitationsService {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   async getInvitations(userId: string, workspaceId?: string) {
     if (workspaceId) {
-      /**
-       * ⚡ Performance Optimization:
-       * 1. Consolidates workspace membership authorization and invitation retrieval into a single query.
-       * 2. Reduces database round-trips from 2 down to 1.
-       * 3. Uses 'select' to explicitly fetch required fields and avoid over-fetching.
-       * Expected impact: Reduces database latency and memory overhead.
-       */
-      const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
-        select: {
-          id: true,
-          members: {
-            where: { userId },
-            select: { role: true },
-          },
-          invitations: {
-            select: {
-              id: true,
-              email: true,
-              token: true,
-              role: true,
-              status: true,
-              expiresAt: true,
-              acceptedAt: true,
-              createdAt: true,
-              permissions: true,
-              inviter: {
-                select: { id: true, name: true, email: true, avatar: true },
-              },
-              user: {
-                select: { id: true, name: true, email: true, avatar: true },
-              },
-            },
-            orderBy: { createdAt: 'desc' },
-          },
-        },
-      });
-
-      if (!workspace) {
-        throw new NotFoundException('Workspace not found');
-      }
-
-      const member = workspace.members[0];
-
-      if (!member || !['owner', 'admin'].includes(member.role)) {
-        throw new ForbiddenException('You do not have permission to view invitations for this workspace');
-      }
-
-      return workspace.invitations;
-    } else {
-      /**
-       * ⚡ Performance Optimization:
-       * 1. Uses 'select' instead of 'include' to explicitly fetch required fields.
-       * 2. Reduces database payload and memory usage.
-       */
-      return prisma.invitation.findMany({
-        where: { invitedBy: userId },
-        select: {
-          id: true,
-          email: true,
-          token: true,
-          role: true,
-          status: true,
-          expiresAt: true,
-          acceptedAt: true,
-          createdAt: true,
-          permissions: true,
-          inviter: {
-            select: { id: true, name: true, email: true, avatar: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      return this.getWorkspaceInvitations(userId, workspaceId);
     }
+
+    return prisma.invitation.findMany({
+      where: { invitedBy: userId },
+      select: PLATFORM_INVITATION_SELECT,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * ⚡ Performance Optimization:
+   * Consolidates workspace membership authorization and invitation retrieval into a single query.
+   * Reduces database round-trips from 2 down to 1.
+   */
+  private async getWorkspaceInvitations(userId: string, workspaceId: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+        invitations: {
+          select: WORKSPACE_INVITATION_SELECT,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    const member = workspace.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to view invitations for this workspace');
+    }
+
+    return workspace.invitations;
   }
 
   async createInvitation(
