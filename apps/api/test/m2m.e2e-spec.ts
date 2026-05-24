@@ -28,8 +28,11 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     if (process.env.DATABASE_URL) {
       try {
         console.log('Pushing database schema...');
-        execSync(`DATABASE_URL="${process.env.DATABASE_URL}" npx prisma db push --accept-data-loss --schema ../../packages/database/prisma/schema.prisma`, {
+        // We use pnpm from the root to ensure all environment variables and paths are handled correctly
+        // We explicitly pass the DATABASE_URL through the command line to ensure prisma picks it up
+        execSync(`DATABASE_URL="${process.env.DATABASE_URL}" pnpm --filter @repo/database db:push`, {
           stdio: 'inherit',
+          env: { ...process.env },
         });
       } catch (e) {
         console.error('Failed to push schema, tests might fail if DB is not initialized:', e);
