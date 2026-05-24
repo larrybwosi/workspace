@@ -86,7 +86,7 @@ Authorization: Bearer oat_...
 
 ## Machine-to-Machine (M2M) Authentication
 
-For enterprise use cases like workspace provisioning, M2M applications provide high-level access controlled by organization-level permissions.
+For enterprise use cases like workspace provisioning, M2M applications provide high-level access controlled by organization-level permissions. These applications are managed at the organization level to allow for multi-tenant management. See [Organization M2M](/api-reference/organization-m2m) for more information.
 
 ### IP Whitelisting
 M2M applications can be restricted to specific IP addresses. If an M2M application has allowed IPs configured, requests from other IP addresses will be rejected with a `403 Forbidden` error.
