@@ -34,20 +34,28 @@ describe('Organization M2M Lifecycle (e2e)', () => {
 
     // Create session for user
     const session = await auth.api.createSession({
-        userId: testUser.id,
+      userId: testUser.id,
     });
     sessionToken = session.token;
 
+    if (!sessionToken) {
+      throw new Error('Failed to create session token');
+    }
+
     // Create organization
     organization = await auth.api.createOrganization({
-        headers: {
-            authorization: `Bearer ${sessionToken}`
-        },
-        body: {
-            name: 'M2M Test Org',
-            slug: `m2m-test-org-${Date.now()}`
-        }
+      headers: {
+        authorization: `Bearer ${sessionToken}`,
+      },
+      body: {
+        name: 'M2M Test Org',
+        slug: `m2m-test-org-${Date.now()}`,
+      },
     });
+
+    if (!organization) {
+      throw new Error('Failed to create organization');
+    }
   });
 
   afterAll(async () => {
