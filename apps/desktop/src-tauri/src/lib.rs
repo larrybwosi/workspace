@@ -32,8 +32,13 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 
+            let icon = app.default_window_icon().cloned().unwrap_or_else(|| {
+                // Fallback or handle missing icon
+                tauri::image::Image::new_owned(vec![0; 16], 2, 2)
+            });
+
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(icon)
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
