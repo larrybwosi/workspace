@@ -50,12 +50,9 @@ export class DeviceAuthController {
     const sessionData = JSON.parse(data);
 
     // Create a new session for the user via Better-Auth
-    // We use the auth.api.createSession which is part of Better-Auth's internal API
-    const newSession = await auth.api.createSession({
-      body: {
-        userId: user.id,
-      },
-    });
+    // We use the internalAdapter.createSession which is part of Better-Auth's internal API
+    const { internalAdapter } = await auth.$context;
+    const newSession = await internalAdapter.createSession(user.id);
 
     if (!newSession) {
       throw new UnauthorizedException('Could not create session');
