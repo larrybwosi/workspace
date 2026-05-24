@@ -49,20 +49,19 @@ describe('Organization M2M Lifecycle (e2e)', () => {
       });
 
       // Create session for user
-      const session = await auth.api.createSession({
-          userId: testUser.id,
-      });
+      const { internalAdapter } = await auth.$context;
+      const session = await internalAdapter.createSession(testUser.id);
       sessionToken = session.token;
 
       // Create organization
       organization = await auth.api.createOrganization({
-          headers: {
-              authorization: `Bearer ${sessionToken}`
-          },
-          body: {
-              name: 'M2M Test Org',
-              slug: `m2m-test-org-${Date.now()}`
-          }
+        body: {
+          name: 'M2M Test Org',
+          slug: `m2m-test-org-${Date.now()}`,
+        },
+        headers: {
+          authorization: `Bearer ${sessionToken}`,
+        },
       });
     } catch (e) {
       console.error('Failed to setup test environment in beforeAll:', e);
