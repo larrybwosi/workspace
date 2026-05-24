@@ -5,6 +5,7 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { prisma } from '@repo/database';
 import { auth } from '../src/auth/better-auth';
+import { execSync } from 'child_process';
 
 describe('Organization M2M Lifecycle (e2e)', () => {
   let app: NestFastifyApplication;
@@ -22,6 +23,19 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
+
+    // Ensure database schema is up to date in CI/test environments
+    if (process.env.DATABASE_URL) {
+      try {
+        console.log('Pushing database schema...');
+        execSync('npx prisma db push --accept-data-loss --schema ../../packages/database/prisma/schema.prisma', {
+          stdio: 'inherit',
+          env: { ...process.env },
+        });
+      } catch (e) {
+        console.error('Failed to push schema, tests might fail if DB is not initialized:', e);
+      }
+    }
 
     // Setup: Create test user
     testUser = await prisma.user.create({
