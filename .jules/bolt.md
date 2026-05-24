@@ -55,3 +55,8 @@
 ## 2026-05-11 - [Database] Consolidated Workspace Data Retrieval
 **Learning:** Sequential Prisma queries for workspace authorization and nested resource retrieval (channels, members) can be consolidated into a single 'findUnique' call using nested 'select' or 'include'.
 **Action:** Always aim to fetch related resources and perform authorization checks in a single database round-trip for high-traffic workspace-scoped endpoints.
+
+## 2025-05-18 - [API/Invitations] Consolidated Workspace Authorization & Invitation Retrieval
+
+**Learning:** Sequential Prisma queries for workspace membership authorization and invitation retrieval (O(2)) can be consolidated into a single 'findUnique' call on the Workspace model using nested 'select'. This reduces database round-trips and allows for targeted field selection to minimize over-fetching.
+**Action:** Always aim to fetch related resources and perform authorization checks in a single database round-trip for high-traffic workspace-scoped endpoints. Use targeted 'select' to minimize payload size and memory overhead.
