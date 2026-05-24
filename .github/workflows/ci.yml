@@ -17,7 +17,64 @@ env:
   RD_PORT: 6379
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      desktop: ${{ steps.filter.outputs.desktop }}
+      any_relevant: ${{ steps.filter.outputs.any_relevant }}
+      publish_apps: ${{ steps.publish_filter.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'package.json'
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'turbo.json'
+              - '.github/workflows/ci.yml'
+              - 'packages/**'
+              - 'scripts/**'
+            api:
+              - 'apps/api/**'
+            web:
+              - 'apps/web/**'
+            mobile:
+              - 'apps/mobile/**'
+            desktop:
+              - 'apps/desktop/**'
+            any_relevant:
+              - 'package.json'
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'turbo.json'
+              - '.github/workflows/ci.yml'
+              - 'packages/**'
+              - 'scripts/**'
+              - 'apps/api/**'
+              - 'apps/web/**'
+              - 'apps/mobile/**'
+              - 'apps/desktop/**'
+      - id: publish_filter
+        run: |
+          APPS='[]'
+          if [ "${{ steps.filter.outputs.api }}" == "true" ] || [ "${{ steps.filter.outputs.core }}" == "true" ]; then
+            APPS=$(echo $APPS | jq '. += ["api"]')
+          fi
+          if [ "${{ steps.filter.outputs.web }}" == "true" ] || [ "${{ steps.filter.outputs.core }}" == "true" ]; then
+            APPS=$(echo $APPS | jq '. += ["web"]')
+          fi
+          echo "apps=$(echo $APPS | jq -c .)" >> $GITHUB_OUTPUT
+
   lint-and-typecheck:
+    needs: changes
+    if: needs.changes.outputs.any_relevant == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +90,8 @@ jobs:
       - run: pnpm run tsc
 
   fallow-audit:
+    needs: changes
+    if: needs.changes.outputs.any_relevant == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +115,8 @@ jobs:
           FALLOW_PRODUCTION: 'true'
 
   unit-tests:
+    needs: changes
+    if: needs.changes.outputs.any_relevant == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -100,6 +161,8 @@ jobs:
         run: pnpm run test
 
   api-e2e:
+    needs: changes
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.core == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -145,6 +208,8 @@ jobs:
         run: pnpm turbo run test:e2e --filter=api
 
   web-e2e:
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.core == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -199,6 +264,8 @@ jobs:
           retention-days: 30
 
   mobile-e2e:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true' || needs.changes.outputs.core == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -253,8 +320,13 @@ jobs:
           retention-days: 30
 
   desktop-verify:
-    if: github.event_name == 'pull_request'
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      (needs.changes.outputs.desktop == 'true' || needs.changes.outputs.core == 'true') &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    needs: [changes, lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
     strategy:
       fail-fast: false
       matrix:
@@ -297,9 +369,15 @@ jobs:
           projectPath: apps/desktop
 
   version:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.any_relevant == 'true' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
+    needs: [changes, lint-and-typecheck, unit-tests, api-e2e, web-e2e, mobile-e2e, fallow-audit]
     permissions:
       contents: write
       pull-requests: write
@@ -329,15 +407,21 @@ jobs:
           git push origin main --tags
 
   docker-publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.publish_apps != '[]' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, version]
+    needs: [changes, lint-and-typecheck, unit-tests, api-e2e, web-e2e, version]
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
-        apps: [api, web]
+        apps: ${{ fromJson(needs.changes.outputs.publish_apps) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -403,8 +487,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   mobile-release:
-    needs: [version, create-release]
-    if: needs.version.outputs.published == 'true'
+    needs: [changes, version, create-release]
+    if: |
+      always() &&
+      needs.version.outputs.published == 'true' &&
+      (needs.changes.outputs.mobile == 'true' || needs.changes.outputs.core == 'true') &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -459,8 +548,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   desktop-release:
-    needs: [version, create-release]
-    if: needs.version.outputs.published == 'true'
+    needs: [changes, version, create-release]
+    if: |
+      always() &&
+      needs.version.outputs.published == 'true' &&
+      (needs.changes.outputs.desktop == 'true' || needs.changes.outputs.core == 'true') &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     strategy:
       fail-fast: false
       matrix:
