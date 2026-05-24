@@ -153,6 +153,10 @@ jobs:
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run db:generate
+      - name: Run Prisma Push
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
+        run: pnpm --filter @repo/database run db:push
       - name: Run Tests
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
@@ -200,6 +204,10 @@ jobs:
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run db:generate
+      - name: Run Prisma Push
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        run: pnpm --filter @repo/database run db:push
       - name: Run API E2E tests
         env:
           DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
@@ -247,6 +255,10 @@ jobs:
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run db:generate
+      - name: Run Prisma Push
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        run: pnpm --filter @repo/database run db:push
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
       - name: Run Web E2E tests
@@ -303,6 +315,10 @@ jobs:
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run db:generate
+      - name: Run Prisma Push
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+        run: pnpm --filter @repo/database run db:push
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
       - name: Run Mobile E2E tests
