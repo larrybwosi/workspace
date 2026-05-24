@@ -13,7 +13,5 @@ export default defineConfig({
       '@repo/database': path.resolve(__dirname, '../../packages/database/index.ts'),
     },
     include: ['test/**/*.e2e-spec.ts'],
-    globalSetup: ['./test/global-setup.ts'],
-    fileParallelism: false,
   },
 });

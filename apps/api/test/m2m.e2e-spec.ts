@@ -32,7 +32,7 @@ describe('Organization M2M Lifecycle (e2e)', () => {
       },
     });
 
-    // Create session for user directly via Prisma to avoid API authentication issues during setup
+    // Create session for user directly via Prisma
     sessionToken = `test-session-${uniqueId}`;
     await prisma.session.create({
       data: {
@@ -42,18 +42,10 @@ describe('Organization M2M Lifecycle (e2e)', () => {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       },
     });
-    sessionToken = session.token;
 
-    if (!sessionToken) {
-      throw new Error('Failed to create session token');
-    }
-
-    // Create organization
-    organization = await auth.api.createOrganization({
-      headers: {
-        authorization: `Bearer ${sessionToken}`,
-      },
-      body: {
+    // Create organization via Prisma
+    organization = await prisma.organization.create({
+      data: {
         name: 'M2M Test Org',
         slug: `m2m-test-org-${uniqueId}`,
         members: {
@@ -64,10 +56,6 @@ describe('Organization M2M Lifecycle (e2e)', () => {
         },
       },
     });
-
-    if (!organization) {
-      throw new Error('Failed to create organization');
-    }
   });
 
   afterAll(async () => {
@@ -110,7 +98,7 @@ describe('Organization M2M Lifecycle (e2e)', () => {
         scope: 'provisioning:workspaces',
       });
 
-    expect(response.status).toBe(201); // Fastify returns 201 for POST by default in Nest
+    expect(response.status).toBe(201);
     expect(response.body.access_token).toBeDefined();
     expect(response.body.token_type).toBe('Bearer');
     m2mAccessToken = response.body.access_token;

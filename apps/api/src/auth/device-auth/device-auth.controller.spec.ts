@@ -15,9 +15,12 @@ const { mockCreateSession } = vi.hoisted(() => ({
 
 vi.mock('../better-auth', () => ({
   auth: {
-    api: {
-      createSession: mockCreateSession,
-    },
+    api: {},
+    $context: Promise.resolve({
+      internalAdapter: {
+        createSession: mockCreateSession,
+      },
+    }),
   },
 }));
 
@@ -202,20 +205,14 @@ describe('DeviceAuthController', () => {
       );
     });
 
-    it("should call auth.api.createSession with the user's id", async () => {
+    it("should call internalAdapter.createSession with the user's id", async () => {
       mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
       mockCreateSession.mockResolvedValue({ token: 'new-token', id: 'sess-1' });
       mockPublishToAbly.mockResolvedValue(undefined);
 
       await controller.authorize({ sessionId: 'valid-session' }, mockUser);
 
-      expect(mockCreateSession).toHaveBeenCalledWith(
-        expect.objectContaining({
-          body: {
-            userId: 'user-1',
-          },
-        })
-      );
+      expect(mockCreateSession).toHaveBeenCalledWith('user-1');
     });
 
     it('should update Redis with authorized status, userId, and token', async () => {
