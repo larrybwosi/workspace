@@ -103,6 +103,37 @@ Once you have an M2M application with the `provisioning:workspaces` scope, you c
 
 ---
 
+## Instance Management
+
+Workspaces provisioned via an M2M application are automatically associated with the organization. Organization members can view and manage these workspaces in the **Organization Settings** dashboard.
+
+### List Organization Workspaces
+
+Returns a list of all workspaces provisioned or associated with the specified organization.
+
+**Endpoint:** `GET /organizations/:orgSlug/workspaces`
+
+**Response:**
+
+```json
+{
+  "workspaces": [
+    {
+      "id": "...",
+      "name": "Tenant A",
+      "slug": "org-tenant-a",
+      "createdAt": "...",
+      "_count": {
+        "members": 5,
+        "channels": 10
+      }
+    }
+  ]
+}
+```
+
+---
+
 ## Multi-Tenant Example
 
 For organizations managing multiple tenants, you can use a single M2M application to provision and configure each tenant's workspace:
