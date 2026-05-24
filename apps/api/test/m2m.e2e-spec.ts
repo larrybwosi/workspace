@@ -24,21 +24,6 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
 
-    // Ensure database schema is up to date in CI/test environments
-    if (process.env.DATABASE_URL) {
-      try {
-        console.log('Pushing database schema...');
-        // We use pnpm from the root to ensure all environment variables and paths are handled correctly
-        // We explicitly pass the DATABASE_URL through the command line to ensure prisma picks it up
-        execSync(`DATABASE_URL="${process.env.DATABASE_URL}" pnpm --filter @repo/database db:push`, {
-          stdio: 'inherit',
-          env: { ...process.env },
-        });
-      } catch (e) {
-        console.error('Failed to push schema, tests might fail if DB is not initialized:', e);
-      }
-    }
-
     // Setup: Create test user
     testUser = await prisma.user.create({
       data: {
@@ -47,30 +32,30 @@ describe('Organization M2M Lifecycle (e2e)', () => {
       },
     });
 
-    // Create session for user directly via Prisma to avoid API authentication issues during setup
-    sessionToken = `test-session-${Date.now()}`;
-    await prisma.session.create({
-      data: {
-        id: `sess-${Date.now()}`,
-        userId: testUser.id,
-        token: sessionToken,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    // Create session for user
+    const session = await auth.api.createSession({
+      userId: testUser.id,
+    });
+    sessionToken = session.token;
+
+    if (!sessionToken) {
+      throw new Error('Failed to create session token');
+    }
+
+    // Create organization
+    organization = await auth.api.createOrganization({
+      headers: {
+        authorization: `Bearer ${sessionToken}`,
+      },
+      body: {
+        name: 'M2M Test Org',
+        slug: `m2m-test-org-${Date.now()}`,
       },
     });
 
-    // Create organization via Prisma to ensure reliable setup
-    organization = await prisma.organization.create({
-      data: {
-        name: 'M2M Test Org',
-        slug: `m2m-test-org-${Date.now()}`,
-        members: {
-          create: {
-            userId: testUser.id,
-            role: 'owner',
-          },
-        },
-      },
-    });
+    if (!organization) {
+      throw new Error('Failed to create organization');
+    }
   });
 
   afterAll(async () => {
