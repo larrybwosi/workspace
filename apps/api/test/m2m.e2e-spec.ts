@@ -28,9 +28,8 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     if (process.env.DATABASE_URL) {
       try {
         console.log('Pushing database schema...');
-        execSync('npx prisma db push --accept-data-loss --schema ../../packages/database/prisma/schema.prisma', {
+        execSync(`DATABASE_URL="${process.env.DATABASE_URL}" npx prisma db push --accept-data-loss --schema ../../packages/database/prisma/schema.prisma`, {
           stdio: 'inherit',
-          env: { ...process.env },
         });
       } catch (e) {
         console.error('Failed to push schema, tests might fail if DB is not initialized:', e);
