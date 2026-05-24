@@ -24,21 +24,6 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
 
-    // Ensure database schema is up to date in CI/test environments
-    if (process.env.DATABASE_URL) {
-      try {
-        console.log('Pushing database schema...');
-        // We use pnpm from the root to ensure all environment variables and paths are handled correctly
-        // We explicitly pass the DATABASE_URL through the command line to ensure prisma picks it up
-        execSync(`DATABASE_URL="${process.env.DATABASE_URL}" pnpm --filter @repo/database db:push`, {
-          stdio: 'inherit',
-          env: { ...process.env },
-        });
-      } catch (e) {
-        console.error('Failed to push schema, tests might fail if DB is not initialized:', e);
-      }
-    }
-
     // Setup: Create test user
     testUser = await prisma.user.create({
       data: {
