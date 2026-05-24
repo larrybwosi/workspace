@@ -144,17 +144,9 @@ export class ApiV2Guard implements CanActivate {
       } else if (accessToken.startsWith('oat_')) {
         const hashedToken = crypto.createHash('sha256').update(accessToken).digest('hex');
 
-        // Try OAuthAccessToken first
-        let oauthToken = await (prisma as any).oAuthAccessToken.findUnique({
+        const oauthToken = await (prisma as any).oAuthAccessToken.findUnique({
           where: { token: hashedToken },
         });
-
-        // Fallback to OauthAccessToken (better-auth)
-        if (!oauthToken) {
-          oauthToken = await (prisma as any).oAuthAccessToken.findUnique({
-            where: { token: hashedToken },
-          });
-        }
 
         if (!oauthToken || (oauthToken.expiresAt && oauthToken.expiresAt < new Date())) {
           throw new UnauthorizedException('Invalid or expired OAuth token');

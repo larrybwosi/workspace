@@ -40,32 +40,37 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     }
 
     // Setup: Create test user
-    try {
-      testUser = await prisma.user.create({
-        data: {
-          name: 'M2M Test User',
-          email: `m2m-test-${Date.now()}@example.com`,
-        },
-      });
+    testUser = await prisma.user.create({
+      data: {
+        name: 'M2M Test User',
+        email: `m2m-test-${Date.now()}@example.com`,
+      },
+    });
 
-      // Create session for user
-      const { internalAdapter } = await auth.$context;
-      const session = await internalAdapter.createSession(testUser.id);
-      sessionToken = session.token;
+    // Create session for user directly via Prisma to avoid API authentication issues during setup
+    sessionToken = `test-session-${Date.now()}`;
+    await prisma.session.create({
+      data: {
+        id: `sess-${Date.now()}`,
+        userId: testUser.id,
+        token: sessionToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      },
+    });
 
-      // Create organization
-      organization = await auth.api.createOrganization({
-        body: {
-          name: 'M2M Test Org',
-          slug: `m2m-test-org-${Date.now()}`,
+    // Create organization via Prisma to ensure reliable setup
+    organization = await prisma.organization.create({
+      data: {
+        name: 'M2M Test Org',
+        slug: `m2m-test-org-${Date.now()}`,
+        members: {
+          create: {
+            userId: testUser.id,
+            role: 'owner',
+          },
         },
-        headers: {
-          authorization: `Bearer ${sessionToken}`,
-        },
-      });
-    } catch (e) {
-      console.error('Failed to setup test environment in beforeAll:', e);
-    }
+      },
+    });
   });
 
   afterAll(async () => {
