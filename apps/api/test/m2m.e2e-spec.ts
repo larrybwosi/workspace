@@ -42,10 +42,18 @@ describe('Organization M2M Lifecycle (e2e)', () => {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       },
     });
+    sessionToken = session.token;
 
-    // Create organization via Prisma to ensure reliable setup
-    organization = await prisma.organization.create({
-      data: {
+    if (!sessionToken) {
+      throw new Error('Failed to create session token');
+    }
+
+    // Create organization
+    organization = await auth.api.createOrganization({
+      headers: {
+        authorization: `Bearer ${sessionToken}`,
+      },
+      body: {
         name: 'M2M Test Org',
         slug: `m2m-test-org-${uniqueId}`,
         members: {
@@ -56,6 +64,10 @@ describe('Organization M2M Lifecycle (e2e)', () => {
         },
       },
     });
+
+    if (!organization) {
+      throw new Error('Failed to create organization');
+    }
   });
 
   afterAll(async () => {

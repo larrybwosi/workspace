@@ -105,7 +105,7 @@ export class V2OAuthController {
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
 
-    const accessToken = await (prisma as any).oAuthAccessToken.create({
+    const accessToken = await (prisma as any).oauthAccessToken.create({
       data: {
         id: crypto.randomBytes(16).toString('hex'),
         token: hashedToken,
