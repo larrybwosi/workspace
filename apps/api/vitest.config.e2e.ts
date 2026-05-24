@@ -15,10 +15,5 @@ export default defineConfig({
     include: ['test/**/*.e2e-spec.ts'],
     globalSetup: ['./test/global-setup.ts'],
     fileParallelism: false,
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
   },
 });
