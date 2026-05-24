@@ -151,7 +151,7 @@ export class ApiV2Guard implements CanActivate {
 
         // Fallback to OauthAccessToken (better-auth)
         if (!oauthToken) {
-          oauthToken = await (prisma as any).oauthAccessToken.findUnique({
+          oauthToken = await (prisma as any).oAuthAccessToken.findUnique({
             where: { token: hashedToken },
           });
         }
