@@ -4,8 +4,6 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { prisma } from '@repo/database';
-import { auth } from '../src/auth/better-auth';
-import { execSync } from 'child_process';
 
 describe('Organization M2M Lifecycle (e2e)', () => {
   let app: NestFastifyApplication;
@@ -24,34 +22,21 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
 
-    // Ensure database schema is up to date in CI/test environments
-    if (process.env.DATABASE_URL) {
-      try {
-        console.log('Pushing database schema...');
-        // We use pnpm from the root to ensure all environment variables and paths are handled correctly
-        // We explicitly pass the DATABASE_URL through the command line to ensure prisma picks it up
-        execSync(`DATABASE_URL="${process.env.DATABASE_URL}" pnpm --filter @repo/database db:push`, {
-          stdio: 'inherit',
-          env: { ...process.env },
-        });
-      } catch (e) {
-        console.error('Failed to push schema, tests might fail if DB is not initialized:', e);
-      }
-    }
-
-    // Setup: Create test user
+    // Setup: Create test user with unique email and username
+    const uniqueId = Date.now();
     testUser = await prisma.user.create({
       data: {
         name: 'M2M Test User',
-        email: `m2m-test-${Date.now()}@example.com`,
+        email: `m2m-test-${uniqueId}@example.com`,
+        username: `m2muser${uniqueId}`,
       },
     });
 
     // Create session for user directly via Prisma to avoid API authentication issues during setup
-    sessionToken = `test-session-${Date.now()}`;
+    sessionToken = `test-session-${uniqueId}`;
     await prisma.session.create({
       data: {
-        id: `sess-${Date.now()}`,
+        id: `sess-${uniqueId}`,
         userId: testUser.id,
         token: sessionToken,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
@@ -62,7 +47,7 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     organization = await prisma.organization.create({
       data: {
         name: 'M2M Test Org',
-        slug: `m2m-test-org-${Date.now()}`,
+        slug: `m2m-test-org-${uniqueId}`,
         members: {
           create: {
             userId: testUser.id,
@@ -75,11 +60,15 @@ describe('Organization M2M Lifecycle (e2e)', () => {
 
   afterAll(async () => {
     // Cleanup
-    if (organization?.id) {
-        await prisma.organization.delete({ where: { id: organization.id } });
-    }
-    if (testUser?.id) {
-        await prisma.user.delete({ where: { id: testUser.id } });
+    try {
+      if (organization?.id) {
+          await prisma.organization.delete({ where: { id: organization.id } });
+      }
+      if (testUser?.id) {
+          await prisma.user.delete({ where: { id: testUser.id } });
+      }
+    } catch (e) {
+      // Ignore cleanup errors
     }
     if (app) await app.close();
   });
