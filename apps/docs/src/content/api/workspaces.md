@@ -11,7 +11,7 @@ Most workspace-related endpoints are prefixed with the workspace slug:
 
 ## Workspace Provisioning
 
-Scrymechat supports two primary ways of creating workspaces: standard user-driven creation and Enterprise M2M provisioning.
+Scrymechat supports two primary ways of creating workspaces: standard user-driven creation and Enterprise M2M provisioning. For multi-tenant organizations, see the [Organization M2M](/api-reference/organization-m2m) guide.
 
 ### Create Workspace (User)
 
@@ -35,7 +35,7 @@ Creates a new workspace where the authenticated user is the owner.
 
 ### Provision Workspace (Enterprise M2M)
 
-For enterprise customers, workspaces can be provisioned programmatically using an M2M application with the `provisioning:workspaces` scope. This allows for automated setup of workspaces, including initial members and channels.
+For enterprise customers, workspaces can be provisioned programmatically using an M2M application with the `provisioning:workspaces` scope. This allows for automated setup of workspaces, including initial members and channels. For more details on managing M2M applications and multi-tenant setups, refer to the [Organization M2M](/api-reference/organization-m2m) documentation.
 
 **Endpoint:** `POST /v2/provisioning/workspaces`
 
