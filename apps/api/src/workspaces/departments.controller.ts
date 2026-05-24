@@ -246,10 +246,8 @@ export class DepartmentsController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and detailed department retrieval into a single query.
-     * 2. Uses nested 'select' to fetch department details, members, teams, and recent announcements in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster department detail retrieval and reduced database load.
+     * Consolidates workspace lookup and membership verification into a single database query.
+     * Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -258,74 +256,6 @@ export class DepartmentsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
-        },
-        departments: {
-          where: { id: departmentId },
-          select: {
-            id: true,
-            workspaceId: true,
-            name: true,
-            slug: true,
-            description: true,
-            icon: true,
-            color: true,
-            parentId: true,
-            managerId: true,
-            channelId: true,
-            settings: true,
-            createdAt: true,
-            updatedAt: true,
-            parent: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-            children: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-            members: {
-              select: {
-                id: true,
-                workspaceId: true,
-                userId: true,
-                departmentId: true,
-                role: true,
-                joinedAt: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    avatar: true,
-                    status: true,
-                  },
-                },
-              },
-            },
-            teams: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                icon: true,
-                color: true,
-                members: {
-                  select: {
-                    user: { select: { id: true, name: true, avatar: true } },
-                  },
-                },
-                _count: { select: { members: true } },
-              },
-            },
-            announcements: {
-              orderBy: { createdAt: 'desc' },
-              take: 10,
-              select: {
-                id: true,
-                title: true,
-                content: true,
-                priority: true,
-                pinned: true,
-                createdAt: true,
-                author: { select: { id: true, name: true, avatar: true } },
-              },
-            },
-            _count: { select: { members: true, teams: true, announcements: true } },
-          },
         },
       },
     });
@@ -426,8 +356,10 @@ export class DepartmentsController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Consolidates workspace lookup, membership verification, and detailed department retrieval into a single query.
+     * 2. Uses nested 'select' to fetch department details, members, teams, and recent announcements in one round-trip.
+     * 3. Reduces database round-trips from 2 down to 1.
+     * Expected impact: Faster department detail retrieval and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -436,6 +368,74 @@ export class DepartmentsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        departments: {
+          where: { id: departmentId },
+          select: {
+            id: true,
+            workspaceId: true,
+            name: true,
+            slug: true,
+            description: true,
+            icon: true,
+            color: true,
+            parentId: true,
+            managerId: true,
+            channelId: true,
+            settings: true,
+            createdAt: true,
+            updatedAt: true,
+            parent: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+            children: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+            members: {
+              select: {
+                id: true,
+                workspaceId: true,
+                userId: true,
+                departmentId: true,
+                role: true,
+                joinedAt: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatar: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+            teams: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                icon: true,
+                color: true,
+                members: {
+                  select: {
+                    user: { select: { id: true, name: true, avatar: true } },
+                  },
+                },
+                _count: { select: { members: true } },
+              },
+            },
+            announcements: {
+              orderBy: { createdAt: 'desc' },
+              take: 10,
+              select: {
+                id: true,
+                title: true,
+                content: true,
+                priority: true,
+                pinned: true,
+                createdAt: true,
+                author: { select: { id: true, name: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true, teams: true, announcements: true } },
+          },
         },
       },
     });
