@@ -1,4 +1,5 @@
 import {
+  // Bolt: Break duplication with OrganizationsController
   Controller,
   Get,
   Param,
@@ -10,7 +11,32 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@ne
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
-import type { User } from '@repo/database';
+import { type User } from '@repo/database';
+
+const CALL_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  channelName: true,
+  type: true,
+  status: true,
+  startedAt: true,
+  metadata: true,
+  initiator: {
+    select: { id: true, name: true, avatar: true, image: true },
+  },
+  participants: {
+    where: { leftAt: null },
+    select: {
+      id: true,
+      userId: true,
+      role: true,
+      joinedAt: true,
+      user: { select: { id: true, name: true, avatar: true, image: true } },
+    },
+  },
+  _count: { select: { participants: true } },
+};
 
 @ApiTags('Calls')
 @ApiBearerAuth()
@@ -24,89 +50,50 @@ export class CallsController {
   async getActiveCalls(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single query.
-     * 2. Eliminates N+1 query problem by batch-fetching all relevant channels in one round-trip.
-     * 3. Uses targeted 'select' to reduce data payload from the database.
-     * Expected impact: Reduces database round-trips from 2+N down to 3, significantly
-     * speeding up retrieval in workspaces with multiple active calls.
+     * Eliminates N+1 queries and consolidates workspace authorization.
+     * Expected impact: Database RTT reduced from 2+N down to 3.
      */
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { userId: true },
-        },
-      },
-    });
+    const workspace = await this.verifyWorkspaceAccess(slug, user.id);
+    const calls = await this.fetchActiveCallsInWorkspace(workspace.id);
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    if (workspace.members.length === 0) {
-      throw new ForbiddenException('Access denied');
-    }
-
-    const calls = await prisma.call.findMany({
-      where: {
-        status: { in: ['pending', 'active'] },
-        metadata: {
-          path: ['workspaceId'],
-          equals: workspace.id,
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        channelName: true,
-        type: true,
-        status: true,
-        startedAt: true,
-        metadata: true,
-        initiator: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            image: true,
-          },
-        },
-        participants: {
-          where: { leftAt: null },
-          select: {
-            id: true,
-            userId: true,
-            role: true,
-            joinedAt: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-                image: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: { participants: true },
-        },
-      },
-      orderBy: { startedAt: 'desc' },
-    });
-
-    const channelIds = calls
-      .map((call) => call.channelName.match(/^channel-(.+)$/)?.[1])
-      .filter(Boolean) as string[];
-
+    const channelIds = this.extractChannelIdsFromCalls(calls);
     const channelMap = await this.getRelevantChannels(channelIds, user.id);
 
     const filteredCalls = calls.filter((call) => this.isCallAccessible(call, user.id, channelMap));
 
     return { calls: filteredCalls };
+  }
+
+  private async verifyWorkspaceAccess(slug: string, userId: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: { where: { userId }, select: { userId: true } },
+      },
+    });
+
+    if (!workspace) throw new NotFoundException('Workspace not found');
+    if (workspace.members.length === 0) throw new ForbiddenException('Access denied');
+
+    return workspace;
+  }
+
+  private async fetchActiveCallsInWorkspace(workspaceId: string) {
+    return prisma.call.findMany({
+      where: {
+        status: { in: ['pending', 'active'] },
+        metadata: { path: ['workspaceId'], equals: workspaceId },
+      },
+      select: CALL_SELECT as any,
+      orderBy: { startedAt: 'desc' },
+    });
+  }
+
+  private extractChannelIdsFromCalls(calls: any[]): string[] {
+    return calls
+      .map((call) => call.channelName.match(/^channel-(.+)$/)?.[1])
+      .filter(Boolean) as string[];
   }
 
   /**
@@ -134,21 +121,20 @@ export class CallsController {
    * ⚡ Optimization: Efficiently checks call accessibility using pre-fetched metadata.
    */
   private isCallAccessible(call: any, userId: string, channelMap: Map<string, any>): boolean {
-    const channelIdMatch = call.channelName.match(/^channel-(.+)$/);
-    if (channelIdMatch) {
-      const channelId = channelIdMatch[1];
-      const channel = channelMap.get(channelId);
-
-      // If channel not found or private and user not a member, deny access
-      if (!channel || (channel.isPrivate && channel.members.length === 0)) {
-        return false;
-      }
+    const name: string = call.channelName;
+    if (name.startsWith('dm-')) {
+      return name.includes(userId);
     }
+    return this.isChannelAccessible(name, channelMap);
+  }
 
-    if (call.channelName.startsWith('dm-')) {
-      return call.channelName.includes(userId);
-    }
+  private isChannelAccessible(name: string, channelMap: Map<string, any>): boolean {
+    if (!name.startsWith('channel-')) return true;
 
-    return true;
+    const channel = channelMap.get(name.slice(8));
+    if (!channel) return false;
+
+    if (!channel.isPrivate) return true;
+    return channel.members.length > 0;
   }
 }
