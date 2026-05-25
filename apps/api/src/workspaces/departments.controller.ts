@@ -356,10 +356,9 @@ export class DepartmentsController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and detailed department retrieval into a single query.
-     * 2. Uses nested 'select' to fetch department details, members, teams, and recent announcements in one round-trip.
+     * 1. Consolidates workspace lookup, membership verification, and department retrieval into a single query.
+     * 2. Uses nested 'select' to fetch only required fields and relations.
      * 3. Reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster department detail retrieval and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

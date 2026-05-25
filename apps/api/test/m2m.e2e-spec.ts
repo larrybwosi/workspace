@@ -32,9 +32,14 @@ describe('Organization M2M Lifecycle (e2e)', () => {
       },
     });
 
-    // Create session for user
-    const session = await auth.api.createSession({
-      userId: testUser.id,
+    // Create session for user directly via Prisma to avoid better-auth API issues in E2E
+    const sessionTokenVal = `test-session-${Date.now()}`;
+    const session = await prisma.session.create({
+      data: {
+        userId: testUser.id,
+        token: sessionTokenVal,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+      },
     });
     sessionToken = session.token;
 
