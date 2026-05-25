@@ -65,3 +65,7 @@
 
 **Learning:** Sequential Prisma queries for workspace membership authorization and invitation retrieval (O(2)) can be consolidated into a single 'findUnique' call on the Workspace model using nested 'select'. This reduces database round-trips and allows for targeted field selection to minimize over-fetching.
 **Action:** Always aim to fetch related resources and perform authorization checks in a single database round-trip for high-traffic workspace-scoped endpoints. Use targeted 'select' to minimize payload size and memory overhead.
+
+## 2025-05-25 - [Prisma/Regressions] Select vs Include Data Contract
+**Learning:** Switching from Prisma `include` to `select` for performance gains is risky because `select` is exclusive. Omitting nested fields (e.g., `role` in members, or metadata in announcements) causes silent API data regressions.
+**Action:** When refactoring to `select`, meticulously map the existing `include` structure to ensure all nested fields are preserved. Use exhaustive unit tests to verify the response shape.

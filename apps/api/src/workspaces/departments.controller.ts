@@ -414,6 +414,11 @@ export class DepartmentsController {
                 color: true,
                 members: {
                   select: {
+                    id: true,
+                    teamId: true,
+                    userId: true,
+                    role: true,
+                    joinedAt: true,
                     user: { select: { id: true, name: true, avatar: true } },
                   },
                 },
@@ -425,11 +430,18 @@ export class DepartmentsController {
               take: 10,
               select: {
                 id: true,
+                departmentId: true,
+                authorId: true,
                 title: true,
                 content: true,
                 priority: true,
                 pinned: true,
+                publishAt: true,
+                expiresAt: true,
+                targetAudience: true,
+                attachments: true,
                 createdAt: true,
+                updatedAt: true,
                 author: { select: { id: true, name: true, avatar: true } },
               },
             },
@@ -472,8 +484,8 @@ export class DepartmentsController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Consolidates workspace lookup, membership verification, and authorization check into a single query.
+     * 2. Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

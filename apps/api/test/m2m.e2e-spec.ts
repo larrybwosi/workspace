@@ -29,6 +29,7 @@ describe('Organization M2M Lifecycle (e2e)', () => {
       data: {
         name: 'M2M Test User',
         email: `m2m-test-${Date.now()}@example.com`,
+        emailVerified: true,
       },
     });
 
@@ -50,7 +51,7 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     // Create organization
     organization = await auth.api.createOrganization({
       headers: {
-        authorization: `Bearer ${sessionToken}`,
+        cookie: `better-auth.session_token=${sessionToken}`,
       },
       body: {
         name: 'M2M Test Org',
