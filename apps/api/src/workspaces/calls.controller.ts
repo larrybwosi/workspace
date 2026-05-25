@@ -98,48 +98,57 @@ export class CallsController {
       orderBy: { startedAt: 'desc' },
     });
 
-    // ⚡ Batch fetch all channels to avoid N+1 queries in the loop
     const channelIds = calls
       .map((call) => call.channelName.match(/^channel-(.+)$/)?.[1])
       .filter(Boolean) as string[];
 
-    const channelData =
-      channelIds.length > 0
-        ? await prisma.channel.findMany({
-            where: { id: { in: channelIds } },
-            select: {
-              id: true,
-              isPrivate: true,
-              members: {
-                where: { userId: user.id },
-                select: { userId: true },
-              },
-            },
-          })
-        : [];
+    const channelMap = await this.getRelevantChannels(channelIds, user.id);
 
-    const channelMap = new Map(channelData.map((c) => [c.id, c]));
-
-    const filteredCalls = calls.filter((call) => {
-      const channelIdMatch = call.channelName.match(/^channel-(.+)$/);
-      if (channelIdMatch) {
-        const channelId = channelIdMatch[1];
-        const channel = channelMap.get(channelId);
-
-        // If channel not found or private and user not a member, skip
-        if (!channel || (channel.isPrivate && channel.members.length === 0)) {
-          return false;
-        }
-      }
-
-      if (call.channelName.startsWith('dm-')) {
-        const isParticipant = call.channelName.includes(user.id);
-        if (!isParticipant) return false;
-      }
-
-      return true;
-    });
+    const filteredCalls = calls.filter((call) => this.isCallAccessible(call, user.id, channelMap));
 
     return { calls: filteredCalls };
+  }
+
+  /**
+   * ⚡ Optimization: Batch fetches channel metadata to avoid N+1 queries.
+   */
+  private async getRelevantChannels(channelIds: string[], userId: string) {
+    if (channelIds.length === 0) return new Map<string, any>();
+
+    const channels = await prisma.channel.findMany({
+      where: { id: { in: channelIds } },
+      select: {
+        id: true,
+        isPrivate: true,
+        members: {
+          where: { userId },
+          select: { userId: true },
+        },
+      },
+    });
+
+    return new Map(channels.map((c) => [c.id, c]));
+  }
+
+  /**
+   * ⚡ Optimization: Efficiently checks call accessibility using pre-fetched metadata.
+   */
+  private isCallAccessible(call: any, userId: string, channelMap: Map<string, any>): boolean {
+    const channelIdMatch = call.channelName.match(/^channel-(.+)$/);
+    if (channelIdMatch) {
+      const channelId = channelIdMatch[1];
+      const channel = channelMap.get(channelId);
+
+      // If channel not found or private and user not a member, deny access
+      if (!channel || (channel.isPrivate && channel.members.length === 0)) {
+        return false;
+      }
+    }
+
+    if (call.channelName.startsWith('dm-')) {
+      return call.channelName.includes(userId);
+    }
+
+    return true;
   }
 }
