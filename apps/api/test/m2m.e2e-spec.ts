@@ -29,12 +29,18 @@ describe('Organization M2M Lifecycle (e2e)', () => {
       data: {
         name: 'M2M Test User',
         email: `m2m-test-${Date.now()}@example.com`,
+        emailVerified: true,
       },
     });
 
-    // Create session for user
-    const session = await auth.api.createSession({
-      userId: testUser.id,
+    // Create session for user directly via Prisma to avoid better-auth API issues in E2E
+    const sessionTokenVal = `test-session-${Date.now()}`;
+    const session = await prisma.session.create({
+      data: {
+        userId: testUser.id,
+        token: sessionTokenVal,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+      },
     });
     sessionToken = session.token;
 
@@ -45,7 +51,7 @@ describe('Organization M2M Lifecycle (e2e)', () => {
     // Create organization
     organization = await auth.api.createOrganization({
       headers: {
-        authorization: `Bearer ${sessionToken}`,
+        cookie: `better-auth.session_token=${sessionToken}`,
       },
       body: {
         name: 'M2M Test Org',
