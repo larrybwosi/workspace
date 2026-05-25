@@ -69,3 +69,18 @@
 ## 2025-05-25 - [Prisma/Regressions] Select vs Include Data Contract
 **Learning:** Switching from Prisma `include` to `select` for performance gains is risky because `select` is exclusive. Omitting nested fields (e.g., `role` in members, or metadata in announcements) causes silent API data regressions.
 **Action:** When refactoring to `select`, meticulously map the existing `include` structure to ensure all nested fields are preserved. Use exhaustive unit tests to verify the response shape.
+
+## 2025-05-28 - [API] Eliminated N+1 Queries in Active Calls Retrieval
+
+**Learning:** Fetching channel access metadata inside a loop for each active call (N+1) in a workspace creates significant latency.
+**Action:** Use batch fetching (Prisma 'in' operator) to retrieve all relevant channel data in a single secondary round-trip, and consolidate the initial workspace membership check to minimize database round-trips (RTT).
+
+## 2025-05-28 - [Desktop/Tauri] Fixed Build Failure Due to Non-RGBA Icons
+
+**Learning:** Tauri's  macro requires all icon assets to be in the RGBA format. Providing RGB-only PNGs causes a panic during the build process.
+**Action:** Ensure all application icons are converted to RGBA using a tool like Pillow or sharp before bundling with Tauri.
+
+## 2025-05-28 - [Desktop/Tauri] Fixed Build Failure Due to Non-RGBA Icons
+
+**Learning:** Tauri's `generate_context!` macro requires all icon assets to be in the RGBA format. Providing RGB-only PNGs causes a panic during the build process.
+**Action:** Ensure all application icons are converted to RGBA using a tool like Pillow or sharp before bundling with Tauri.
