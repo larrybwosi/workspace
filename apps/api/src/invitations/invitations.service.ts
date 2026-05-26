@@ -159,15 +159,39 @@ export class InvitationsService {
     return invitation;
   }
 
+  /**
+   * ⚡ Performance Optimization:
+   * Consolidates 3 sequential database checks for different invitation types into a single
+   * parallelized Promise.all call. This reduces database round-trip latency from O(3) to O(1)
+   * for invalid tokens or platform-wide invitations, and from O(2) to O(1) for workspace invitations.
+   * Expected impact: Up to 66% reduction in database-related latency for invitation resolution.
+   */
   async getInvitationByToken(token: string) {
-    // 1. Check WorkspaceInviteLink (public link)
-    const inviteLink = await prisma.workspaceInviteLink.findUnique({
-      where: { code: token },
-      include: {
-        workspace: true,
-        createdBy: { select: { id: true, name: true, avatar: true } },
-      },
-    });
+    const [inviteLink, workspaceInvite, generalInvite] = await Promise.all([
+      // 1. Check WorkspaceInviteLink (public link)
+      prisma.workspaceInviteLink.findUnique({
+        where: { code: token },
+        include: {
+          workspace: true,
+          createdBy: { select: { id: true, name: true, avatar: true } },
+        },
+      }),
+      // 2. Check WorkspaceInvitation (email-specific)
+      prisma.workspaceInvitation.findUnique({
+        where: { token },
+        include: {
+          workspace: true,
+          inviter: { select: { id: true, name: true, avatar: true } },
+        },
+      }),
+      // 3. Check General Invitation (platform)
+      prisma.invitation.findUnique({
+        where: { token },
+        include: {
+          inviter: { select: { id: true, name: true, avatar: true } },
+        },
+      }),
+    ]);
 
     if (inviteLink) {
       if (inviteLink.expiresAt && inviteLink.expiresAt < new Date()) {
@@ -185,15 +209,6 @@ export class InvitationsService {
       };
     }
 
-    // 2. Check WorkspaceInvitation (email-specific)
-    const workspaceInvite = await prisma.workspaceInvitation.findUnique({
-      where: { token },
-      include: {
-        workspace: true,
-        inviter: { select: { id: true, name: true, avatar: true } },
-      },
-    });
-
     if (workspaceInvite) {
       if (workspaceInvite.expiresAt && workspaceInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
@@ -209,14 +224,6 @@ export class InvitationsService {
         },
       };
     }
-
-    // 3. Check General Invitation (platform)
-    const generalInvite = await prisma.invitation.findUnique({
-      where: { token },
-      include: {
-        inviter: { select: { id: true, name: true, avatar: true } },
-      },
-    });
 
     if (generalInvite) {
       if (generalInvite.expiresAt && generalInvite.expiresAt < new Date()) {
