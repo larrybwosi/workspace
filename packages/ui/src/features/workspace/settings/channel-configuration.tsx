@@ -1,30 +1,30 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Settings, Shield, Lock, Globe } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/card"
-import { Button } from "../../../components/button"
-import { Badge } from "../../../components/badge"
-import { Label } from "../../../components/label"
-import { Switch } from "../../../components/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/select"
-import { useQuery } from "@tanstack/react-query"
-import { useWorkspaceChannels } from "@repo/api-client"
+import { useState } from 'react';
+import { Settings, Shield, Lock, Globe } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/card';
+import { Button } from '../../../components/button';
+import { Badge } from '../../../components/badge';
+import { Label } from '../../../components/label';
+import { Switch } from '../../../components/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
+import { useQuery } from '@tanstack/react-query';
+import { useWorkspaceChannels } from '@repo/api-client';
 
 interface ChannelConfigurationsProps {
-  workspaceId: string // This is now treated as workspaceSlug
+  workspaceId: string; // This is now treated as workspaceSlug
 }
 
 export function ChannelConfigurations({ workspaceId: workspaceSlug }: ChannelConfigurationsProps) {
-  const [selectedProtocol, setSelectedProtocol] = useState("https")
-  const [tlsVersion, setTlsVersion] = useState("1.3")
-  const [encryptionEnabled, setEncryptionEnabled] = useState(true)
+  const [selectedProtocol, setSelectedProtocol] = useState('https');
+  const [tlsVersion, setTlsVersion] = useState('1.3');
+  const [encryptionEnabled, setEncryptionEnabled] = useState(true);
 
   // Fetch channels
-  const { data: channels, isLoading } = useWorkspaceChannels(workspaceSlug)
+  const { data: channels, isLoading } = useWorkspaceChannels(workspaceSlug);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading channels...</div>
+    return <div className="flex items-center justify-center p-8">Loading channels...</div>;
   }
 
   return (
@@ -112,11 +112,11 @@ export function ChannelConfigurations({ workspaceId: workspaceSlug }: ChannelCon
                   <div className="flex items-center gap-2">
                     {channel.private ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
                     <h4 className="font-semibold">{channel.name}</h4>
-                    <Badge variant={channel.private ? "secondary" : "outline"}>
-                      {channel.private ? "Private" : "Public"}
+                    <Badge variant={channel.private ? 'secondary' : 'outline'}>
+                      {channel.private ? 'Private' : 'Public'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{channel.description || "No description"}</p>
+                  <p className="text-sm text-muted-foreground">{channel.description || 'No description'}</p>
                 </div>
                 <Button variant="outline" size="sm">
                   <Settings className="h-4 w-4 mr-2" />
@@ -140,5 +140,5 @@ export function ChannelConfigurations({ workspaceId: workspaceSlug }: ChannelCon
         </Card>
       )}
     </div>
-  )
+  );
 }

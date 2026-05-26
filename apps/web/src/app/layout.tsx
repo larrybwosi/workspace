@@ -7,13 +7,16 @@ import { MobileNav } from '@/components/layout/mobile-nav';
 const geist = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Dealio - Messaging and Team Chat Application',
+  title: 'Scrymechat - Messaging and Team Chat Application',
   description: 'Your personal dashboard to manage your account and settings.',
+  icons: {
+    icon: '/favicon.ico',
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Dealio',
+    title: 'Scrymechat',
   },
   formatDetection: {
     telephone: false,

@@ -1,19 +1,5 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -33,11 +19,7 @@ export class V2SearchController {
   @ApiQuery({ name: 'q', description: 'The search query' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Search results returned successfully.' })
-  async searchMembers(
-    @V2Context() context: ApiV2Context,
-    @Query('q') query: string,
-    @Query('limit') limitStr = '20',
-  ) {
+  async searchMembers(@V2Context() context: ApiV2Context, @Query('q') query: string, @Query('limit') limitStr = '20') {
     if (!this.hasScope(context, 'members:read')) {
       throw new ForbiddenException('Forbidden: Missing members:read scope');
     }
@@ -52,10 +34,7 @@ export class V2SearchController {
       where: {
         workspaceId: context.workspaceId,
         user: {
-          OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { email: { contains: query, mode: 'insensitive' } },
-          ],
+          OR: [{ name: { contains: query, mode: 'insensitive' } }, { email: { contains: query, mode: 'insensitive' } }],
         },
       },
       take: limit,
@@ -77,7 +56,7 @@ export class V2SearchController {
       query,
     });
 
-    return { results: members.map((m) => m.user) };
+    return { results: members.map(m => m.user) };
   }
 
   @Get('messages')
@@ -91,7 +70,7 @@ export class V2SearchController {
     @V2Context() context: ApiV2Context,
     @Query('q') query: string,
     @Query('channelId') channelId?: string,
-    @Query('limit') limitStr = '20',
+    @Query('limit') limitStr = '20'
   ) {
     if (!this.hasScope(context, 'messages:read')) {
       throw new ForbiddenException('Forbidden: Missing messages:read scope');
@@ -122,13 +101,7 @@ export class V2SearchController {
       },
     });
 
-    await this.auditService.log(
-      context,
-      'search.messages',
-      'message',
-      undefined,
-      { query, channelId },
-    );
+    await this.auditService.log(context, 'search.messages', 'message', undefined, { query, channelId });
 
     return { results: messages };
   }

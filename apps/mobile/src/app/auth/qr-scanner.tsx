@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ActivityIndicator, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { apiClient } from '@repo/api-client';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function QRScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -26,7 +27,9 @@ export default function QRScannerScreen() {
       <SafeAreaView className="flex-1 bg-discord-base items-center justify-center p-6">
         <MaterialIcons name="camera-alt" size={64} color="#949BA4" />
         <Text className="text-discord-header text-xl font-bold mt-4 text-center">Camera Access Required</Text>
-        <Text className="text-discord-muted text-center mt-2 mb-8">We need your permission to scan QR codes for desktop login.</Text>
+        <Text className="text-discord-muted text-center mt-2 mb-8">
+          We need your permission to scan QR codes for desktop login.
+        </Text>
         <TouchableOpacity onPress={requestPermission} className="bg-discord-blurple px-8 py-3 rounded-lg">
           <Text className="text-white font-bold">Grant Permission</Text>
         </TouchableOpacity>
@@ -50,7 +53,10 @@ export default function QRScannerScreen() {
       router.back();
     } catch (error: any) {
       console.error('Authorization failed', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to authorize login. The QR code might have expired.');
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to authorize login. The QR code might have expired.'
+      );
       setScanned(false);
       setShowConfirm(false);
     } finally {
@@ -75,26 +81,17 @@ export default function QRScannerScreen() {
       />
 
       <View className="absolute top-12 left-4 z-10">
-        <TouchableOpacity
-          className="bg-black/50 p-2 rounded-full"
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity className="bg-black/50 p-2 rounded-full" onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
       <View className="flex-1 items-center justify-center">
         <View className="w-64 h-64 border-2 border-discord-blurple rounded-3xl" />
-        <Text className="text-white font-bold mt-8 bg-black/50 px-4 py-2 rounded-full">
-           Scan QR code on desktop
-        </Text>
+        <Text className="text-white font-bold mt-8 bg-black/50 px-4 py-2 rounded-full">Scan QR code on desktop</Text>
       </View>
 
-      <Modal
-        visible={showConfirm}
-        transparent={true}
-        animationType="slide"
-      >
+      <Modal visible={showConfirm} transparent={true} animationType="slide">
         <View className="flex-1 bg-black/60 justify-end">
           <View className="bg-discord-base rounded-t-3xl p-8 items-center">
             <View className="w-20 h-20 rounded-full bg-discord-blurple/10 items-center justify-center mb-4">

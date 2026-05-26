@@ -19,12 +19,7 @@ import {
   UserPlus,
   Search,
 } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@repo/ui/components/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@repo/ui/components/tooltip';
 import { Button } from '@repo/ui/components/button';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar';
@@ -32,7 +27,12 @@ import { Badge } from '@repo/ui/components/badge';
 import { Separator } from '@repo/ui/components/separator';
 import { cn } from '@repo/ui/lib/utils';
 import { MessageSearchPanel } from '@repo/ui/features/chat/message-search-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@repo/ui/components/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/components/dropdown-menu';
 
 import {
   useWorkspace,
@@ -76,7 +76,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
   const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
   const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
-  const { data: socialProfile, isLoading: isSocialLoading } = useUserSocialProfile(dmUser?.id || '');
+  const { data: socialProfileData, isLoading: isSocialLoading } = useUserSocialProfile(dmUser?.id || '');
+  const socialProfile = socialProfileData as any;
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
@@ -253,7 +254,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                 </div>
                 {isSocialLoading ? (
                   <div className="flex gap-2">
-                    {[1, 2, 3].map((i) => (
+                    {[1, 2, 3].map(i => (
                       <div key={i} className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
                     ))}
                   </div>
@@ -292,7 +293,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                 </div>
                 {isSocialLoading ? (
                   <div className="flex gap-2">
-                    {[1, 2, 3].map((i) => (
+                    {[1, 2, 3].map(i => (
                       <div key={i} className="h-8 w-8 rounded-full bg-muted animate-pulse" />
                     ))}
                   </div>
@@ -742,7 +743,10 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                     <h3 className="text-sm font-semibold mb-3">Thread activity</h3>
                     <div className="flex items-end gap-1 h-12">
                       {Array.from({ length: 24 }).map((_, i) => {
-                        const height = [40, 60, 30, 80, 20, 90, 50, 70, 40, 60, 80, 30, 50, 70, 90, 40, 60, 30, 80, 20, 90, 50, 70, 40][i];
+                        const height = [
+                          40, 60, 30, 80, 20, 90, 50, 70, 40, 60, 80, 30, 50, 70, 90, 40, 60, 30, 80, 20, 90, 50, 70,
+                          40,
+                        ][i];
                         return (
                           <div
                             key={i}
@@ -855,14 +859,19 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             {activeTab === 'files' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Shared Files</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Shared Files
+                  </h3>
                   <Button variant="ghost" size="icon" className="h-6 w-6">
                     <Plus className="h-3 w-3" />
                   </Button>
                 </div>
                 <div className="space-y-3">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border/50 transition-all">
+                  {[1, 2].map(i => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border/50 transition-all"
+                    >
                       <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
                         <FileText className="h-5 w-5" />
                       </div>
@@ -881,7 +890,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             {activeTab === 'pins' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Pinned Messages</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Pinned Messages
+                  </h3>
                 </div>
                 <div className="space-y-4">
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
@@ -892,7 +903,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                       <span className="text-[10px] font-bold">John Doe</span>
                       <span className="text-[10px] text-muted-foreground ml-auto">Jun 12</span>
                     </div>
-                    <p className="text-xs line-clamp-3">Welcome to the new workspace! Please check the onboarding guide in the files tab.</p>
+                    <p className="text-xs line-clamp-3">
+                      Welcome to the new workspace! Please check the onboarding guide in the files tab.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -902,7 +915,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             {activeTab === 'links' && (
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Shared Links</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                    Shared Links
+                  </h3>
                 </div>
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl border border-border/50 hover:bg-muted/30 transition-all cursor-pointer">

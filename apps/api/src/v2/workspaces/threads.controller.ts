@@ -1,20 +1,5 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Param,
-  UseGuards,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Query, Param, UseGuards, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -37,7 +22,7 @@ export class V2ThreadsController {
   async getThreads(
     @V2Context() context: ApiV2Context,
     @Query('channelId') channelId?: string,
-    @Query('limit') limitStr = '20',
+    @Query('limit') limitStr = '20'
   ) {
     if (!this.hasScope(context, 'threads:read')) {
       throw new ForbiddenException('Forbidden: Missing threads:read scope');
@@ -69,7 +54,10 @@ export class V2ThreadsController {
   }
 
   @Get(':threadId/messages')
-  @ApiOperation({ summary: 'List messages in a thread', description: 'Requires threads:read and messages:read scopes.' })
+  @ApiOperation({
+    summary: 'List messages in a thread',
+    description: 'Requires threads:read and messages:read scopes.',
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'threadId', description: 'The thread ID' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -79,15 +67,10 @@ export class V2ThreadsController {
     @V2Context() context: ApiV2Context,
     @Param('threadId') threadId: string,
     @Query('limit') limitStr = '50',
-    @Query('cursor') cursor?: string,
+    @Query('cursor') cursor?: string
   ) {
-    if (
-      !this.hasScope(context, 'messages:read') ||
-      !this.hasScope(context, 'threads:read')
-    ) {
-      throw new ForbiddenException(
-        'Forbidden: Missing messages:read or threads:read scope',
-      );
+    if (!this.hasScope(context, 'messages:read') || !this.hasScope(context, 'threads:read')) {
+      throw new ForbiddenException('Forbidden: Missing messages:read or threads:read scope');
     }
 
     const limit = parseInt(limitStr);
@@ -109,8 +92,7 @@ export class V2ThreadsController {
       },
     });
 
-    const nextCursor =
-      messages.length === limit ? messages[messages.length - 1].id : null;
+    const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
 
     await this.auditService.log(context, 'threads.messages', 'thread', threadId, {
       limit,
@@ -125,10 +107,7 @@ export class V2ThreadsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'contextId', description: 'The custom context ID' })
   @ApiResponse({ status: 200, description: 'Thread details returned successfully.' })
-  async getThreadByContext(
-    @V2Context() context: ApiV2Context,
-    @Param('contextId') contextId: string,
-  ) {
+  async getThreadByContext(@V2Context() context: ApiV2Context, @Param('contextId') contextId: string) {
     if (!this.hasScope(context, 'threads:read')) {
       throw new ForbiddenException('Forbidden: Missing threads:read scope');
     }
@@ -150,13 +129,7 @@ export class V2ThreadsController {
       throw new NotFoundException('Thread not found for this context');
     }
 
-    await this.auditService.log(
-      context,
-      'threads.get_by_context',
-      'thread',
-      thread.id,
-      { contextId },
-    );
+    await this.auditService.log(context, 'threads.get_by_context', 'thread', thread.id, { contextId });
 
     return { thread };
   }

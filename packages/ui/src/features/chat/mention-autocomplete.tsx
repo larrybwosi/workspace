@@ -1,18 +1,18 @@
-"use client"
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "../../components/command"
-import { Avatar, AvatarFallback } from "../../components/avatar"
-import { mockUsers } from "../../lib/mock-data"
+'use client';
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '../../components/command';
+import { Avatar, AvatarFallback } from '../../components/avatar';
+import { mockUsers } from '../../lib/mock-data';
 
 interface MentionAutocompleteProps {
-  query: string
-  onSelect: (userId: string, userName: string) => void
-  position: { top: number; left: number }
+  query: string;
+  onSelect: (userId: string, userName: string) => void;
+  position: { top: number; left: number };
 }
 
 export function MentionAutocomplete({ query, onSelect, position }: MentionAutocompleteProps) {
-  const filteredUsers = mockUsers.filter((user) => user.name.toLowerCase().includes(query.toLowerCase()))
+  const filteredUsers = mockUsers.filter(user => user.name.toLowerCase().includes(query.toLowerCase()));
 
-  if (filteredUsers.length === 0) return null
+  if (filteredUsers.length === 0) return null;
 
   return (
     <div
@@ -23,7 +23,7 @@ export function MentionAutocomplete({ query, onSelect, position }: MentionAutoco
         <CommandList>
           <CommandEmpty>No users found.</CommandEmpty>
           <CommandGroup heading="Mention user">
-            {filteredUsers.map((user) => (
+            {filteredUsers.map(user => (
               <CommandItem
                 key={user.id}
                 onSelect={() => onSelect(user.id, user.name)}
@@ -42,5 +42,5 @@ export function MentionAutocomplete({ query, onSelect, position }: MentionAutoco
         </CommandList>
       </Command>
     </div>
-  )
+  );
 }

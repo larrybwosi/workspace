@@ -14,10 +14,7 @@ export class DmsService {
   async getDms(userId: string) {
     const dms = await prisma.directMessage.findMany({
       where: {
-        OR: [
-          { participant1Id: userId },
-          { participant2Id: userId },
-        ],
+        OR: [{ participant1Id: userId }, { participant2Id: userId }],
       },
       select: {
         id: true,
@@ -43,7 +40,7 @@ export class DmsService {
           },
         },
         messages: {
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
           take: 1,
           select: {
             content: true,
@@ -58,32 +55,29 @@ export class DmsService {
                 readBy: {
                   none: {
                     userId: userId,
-                  }
-                }
-              }
-            }
-          }
-        }
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        lastMessageAt: "desc",
+        lastMessageAt: 'desc',
       },
     });
 
-    return dms.map((dm) => {
+    return dms.map(dm => {
       const participant1 = {
         ...dm.participant1,
-        avatar: dm.participant1.avatar || dm.participant1.image
+        avatar: dm.participant1.avatar || dm.participant1.image,
       };
       const participant2 = {
         ...dm.participant2,
-        avatar: dm.participant2.avatar || dm.participant2.image
+        avatar: dm.participant2.avatar || dm.participant2.image,
       };
 
-      const otherUser =
-        dm.participant1Id === userId
-          ? participant2
-          : participant1;
+      const otherUser = dm.participant1Id === userId ? participant2 : participant1;
 
       const lastMessage = dm.messages[0];
 
@@ -216,11 +210,11 @@ export class DmsService {
 
     const participant1 = {
       ...dm.participant1,
-      avatar: dm.participant1.avatar || dm.participant1.image
+      avatar: dm.participant1.avatar || dm.participant1.image,
     };
     const participant2 = {
       ...dm.participant2,
-      avatar: dm.participant2.avatar || dm.participant2.image
+      avatar: dm.participant2.avatar || dm.participant2.image,
     };
 
     const formattedDm = {

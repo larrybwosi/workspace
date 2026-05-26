@@ -10,15 +10,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
@@ -87,7 +79,7 @@ const createTokenSchema = z.object({
         'read:channels',
         'write:channels',
         'send:messages',
-      ]),
+      ])
     ),
   }),
   rateLimit: z.number().min(100).max(100000).optional().default(1000),
@@ -104,40 +96,51 @@ export class ApiTokensController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of API tokens' })
   async getApiTokens(@CurrentUser() user: User, @Param('slug') slug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup, membership verification, and API token retrieval into a single query.
+     * 2. Uses nested 'select' to fetch only required fields and relations.
+     * 3. Reduces database round-trips from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+        apiTokens: {
+          select: {
+            id: true,
+            name: true,
+            token: true,
+            permissions: true,
+            rateLimit: true,
+            expiresAt: true,
+            lastUsedAt: true,
+            usageCount: true,
+            createdAt: true,
+            createdBy: { select: { id: true, name: true, avatar: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const tokens = await prisma.workspaceApiToken.findMany({
-      where: { workspaceId: workspace.id },
-      select: {
-        id: true,
-        name: true,
-        token: true,
-        permissions: true,
-        rateLimit: true,
-        expiresAt: true,
-        lastUsedAt: true,
-        usageCount: true,
-        createdAt: true,
-        createdBy: { select: { id: true, name: true, avatar: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const tokens = workspace.apiTokens;
 
-    const maskedTokens = tokens.map((t) => ({
+    const maskedTokens = tokens.map(t => ({
       ...t,
       token: `wst_${'*'.repeat(24)}${t.token.slice(-8)}`,
     }));
@@ -150,22 +153,23 @@ export class ApiTokensController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateApiTokenDto })
   @ApiResponse({ status: 201, description: 'API token created' })
-  async createApiToken(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Body() body: CreateApiTokenDto,
-  ) {
+  async createApiToken(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateApiTokenDto) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
@@ -213,22 +217,23 @@ export class ApiTokensController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'tokenId', description: 'The token ID' })
   @ApiResponse({ status: 200, description: 'API token deleted' })
-  async deleteApiToken(
-    @CurrentUser() user: User,
-    @Param('slug') slug: string,
-    @Param('tokenId') tokenId: string,
-  ) {
+  async deleteApiToken(@CurrentUser() user: User, @Param('slug') slug: string, @Param('tokenId') tokenId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
-    });
+    const member = workspace.members[0];
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');

@@ -61,7 +61,7 @@ export function QRCodeLoginPage() {
       if (data.token) {
         // Better-Auth uses localStorage or cookies.
         // We set the token and refresh the session.
-        localStorage.setItem("better-auth.session-token", data.token);
+        localStorage.setItem('better-auth.session-token', data.token);
         await authClient.getSession();
       }
 

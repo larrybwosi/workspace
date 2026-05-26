@@ -13,9 +13,9 @@ export function MinimizedCallOverlay() {
   const handleReturn = () => {
     setMinimized(false);
     router.push({
-      pathname: "/call/[id]",
-      params: { id: activeCall.callId }
-    } as any);
+      pathname: '/call/[id]',
+      params: { id: activeCall.callId },
+    });
   };
 
   return (

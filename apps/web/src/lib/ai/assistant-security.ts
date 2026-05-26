@@ -1,117 +1,122 @@
-import { z } from "zod"
-import { prisma } from "@/lib/db/prisma"
-import { headers } from "next/headers"
-
+import { z } from 'zod';
+import { prisma } from '@/lib/db/prisma';
+import { headers } from 'next/headers';
 
 export interface SecurityContext {
-  userId: string
-  ipAddress: string
-  userAgent: string
-  permissions: string[]
+  userId: string;
+  ipAddress: string;
+  userAgent: string;
+  permissions: string[];
 }
 
 export async function getSecurityContext(userId: string): Promise<SecurityContext> {
-  const headersList = await headers()
-  const ipAddress = (headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown").split(",")[0].trim()
-  const userAgent = headersList.get("user-agent") || "unknown"
+  const headersList = await headers();
+  const ipAddress = (headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown')
+    .split(',')[0]
+    .trim();
+  const userAgent = headersList.get('user-agent') || 'unknown';
 
   // Get user's role-based permissions
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { role: true },
-  })
+  });
 
-  const permissions = getRolePermissions(user?.role || "Development")
+  const permissions = getRolePermissions(user?.role || 'Development');
 
   return {
     userId,
     ipAddress,
     userAgent,
     permissions,
-  }
+  };
 }
 
 function getRolePermissions(role: string): string[] {
   const permissionMap: Record<string, string[]> = {
-    Admin: ["read:all", "write:all", "delete:all", "manage:users"],
-    Management: ["read:all", "read:analytics", "manage:teams"],
+    Admin: ['read:all', 'write:all', 'delete:all', 'manage:users'],
+    Management: ['read:all', 'read:analytics', 'manage:teams'],
     Development: [],
     Design: [],
-  }
+  };
 
-  return permissionMap[role] || permissionMap.Development
+  return permissionMap[role] || permissionMap.Development;
 }
 
-export async function checkPermission(context: SecurityContext, action: string, resourceType?: string): Promise<boolean> {
+export async function checkPermission(
+  context: SecurityContext,
+  action: string,
+  resourceType?: string
+): Promise<boolean> {
   // Check if user has global permission
   if (context.permissions.includes(`${action}:all`)) {
-    return true
+    return true;
   }
 
   // Check resource-specific permission
   if (resourceType && context.permissions.includes(`${action}:${resourceType}`)) {
-    return true
+    return true;
   }
 
-  return false
+  return false;
 }
 
 export async function logAssistantActivity(data: {
-  userId: string
-  action: string
-  resourceType?: string
-  resourceId?: string
-  query?: string
-  response?: string
-  metadata?: any
-  ipAddress?: string
-  userAgent?: string
+  userId: string;
+  action: string;
+  resourceType?: string;
+  resourceId?: string;
+  query?: string;
+  response?: string;
+  metadata?: any;
+  ipAddress?: string;
+  userAgent?: string;
 }) {
   await prisma.assistantAuditLog.create({
     data: data as any,
-  })
+  });
 }
 
 // Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export async function checkRateLimit(userId: string, limit: number = 50, windowMs: number = 60000): Promise<boolean> {
-  const now = Date.now()
-  const userLimit = rateLimitMap.get(userId)
+  const now = Date.now();
+  const userLimit = rateLimitMap.get(userId);
 
   if (!userLimit || now > userLimit.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + windowMs })
-    return true
+    rateLimitMap.set(userId, { count: 1, resetAt: now + windowMs });
+    return true;
   }
 
   if (userLimit.count >= limit) {
-    return false
+    return false;
   }
 
-  userLimit.count++
-  return true
+  userLimit.count++;
+  return true;
 }
 
 // Data sanitization
 export function sanitizeOutput(data: any, userId: string): any {
   // Remove sensitive fields
-  const removeFields = ["password", "secret", "token", "apiKey"]
+  const removeFields = ['password', 'secret', 'token', 'apiKey'];
 
   if (Array.isArray(data)) {
-    return data.map((item) => sanitizeOutput(item, userId))
+    return data.map(item => sanitizeOutput(item, userId));
   }
 
-  if (typeof data === "object" && data !== null) {
-    const sanitized: any = {}
+  if (typeof data === 'object' && data !== null) {
+    const sanitized: any = {};
     for (const [key, value] of Object.entries(data)) {
       if (!removeFields.includes(key)) {
-        sanitized[key] = sanitizeOutput(value, userId)
+        sanitized[key] = sanitizeOutput(value, userId);
       }
     }
-    return sanitized
+    return sanitized;
   }
 
-  return data
+  return data;
 }
 
 // Input validation
@@ -119,9 +124,9 @@ export const conversationSchema = z.object({
   message: z.string().min(1).max(4000),
   conversationId: z.string().optional(),
   context: z.any().optional(),
-})
+});
 
 export const toolCallSchema = z.object({
   toolName: z.string(),
   parameters: z.any(),
-})
+});

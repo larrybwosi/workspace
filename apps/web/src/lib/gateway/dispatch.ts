@@ -1,4 +1,4 @@
-import { GatewayOpcode } from "./types";
+import { GatewayOpcode } from './types';
 
 /**
  * Dispatches a MESSAGE_CREATE event to a bot via WebSocket.
@@ -8,7 +8,7 @@ export function dispatchMessageCreate(ws: any, message: any, sequence: number) {
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "MESSAGE_CREATE",
+    t: 'MESSAGE_CREATE',
     d: {
       id: message.id,
       channel_id: message.channelId,
@@ -18,7 +18,7 @@ export function dispatchMessageCreate(ws: any, message: any, sequence: number) {
         username: message.user.name,
         avatar: message.user.avatar,
         bot: message.user.isBot || false,
-        discriminator: "0000",
+        discriminator: '0000',
         public_flags: 0,
         flags: 0,
         banner: null,
@@ -45,11 +45,13 @@ export function dispatchMessageCreate(ws: any, message: any, sequence: number) {
       activity: null,
       application: null,
       application_id: null,
-      message_reference: message.metadata?.referencedMessage ? {
-        message_id: message.metadata.referencedMessage,
-        channel_id: message.channelId,
-        guild_id: message.channel?.workspaceId
-      } : null,
+      message_reference: message.metadata?.referencedMessage
+        ? {
+            message_id: message.metadata.referencedMessage,
+            channel_id: message.channelId,
+            guild_id: message.channel?.workspaceId,
+          }
+        : null,
       flags: 0,
       referenced_message: null,
       interaction_metadata: null,
@@ -61,7 +63,7 @@ export function dispatchMessageCreate(ws: any, message: any, sequence: number) {
       position: 0,
       role_subscription_data: null,
       resolved: null,
-    }
+    },
   };
 
   ws.send(JSON.stringify(payload));
@@ -74,7 +76,7 @@ export function dispatchInteractionCreate(ws: any, interaction: any, sequence: n
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "INTERACTION_CREATE",
+    t: 'INTERACTION_CREATE',
     d: {
       id: interaction.id,
       application_id: interaction.applicationId,
@@ -85,8 +87,8 @@ export function dispatchInteractionCreate(ws: any, interaction: any, sequence: n
       member: interaction.member,
       user: interaction.user,
       token: interaction.token,
-      version: 1
-    }
+      version: 1,
+    },
   };
 
   ws.send(JSON.stringify(payload));
@@ -99,21 +101,21 @@ export function dispatchGuildMemberAdd(ws: any, member: any, sequence: number) {
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "GUILD_MEMBER_ADD",
+    t: 'GUILD_MEMBER_ADD',
     d: {
       guild_id: member.workspaceId,
       user: {
         id: member.user.id,
         username: member.user.name,
         avatar: member.user.avatar,
-        bot: member.user.isBot
+        bot: member.user.isBot,
       },
       roles: [],
       joined_at: member.joinedAt.toISOString(),
       premium_since: null,
       pending: false,
-      permissions: member.permissions.toString()
-    }
+      permissions: member.permissions.toString(),
+    },
   };
 
   ws.send(JSON.stringify(payload));
@@ -126,7 +128,7 @@ export function dispatchMessageReactionAdd(ws: any, reaction: any, sequence: num
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "MESSAGE_REACTION_ADD",
+    t: 'MESSAGE_REACTION_ADD',
     d: {
       user_id: reaction.userId,
       channel_id: reaction.message.channelId,
@@ -135,9 +137,9 @@ export function dispatchMessageReactionAdd(ws: any, reaction: any, sequence: num
       emoji: {
         name: reaction.emoji,
         id: reaction.customEmojiId || null,
-        animated: false
-      }
-    }
+        animated: false,
+      },
+    },
   };
 
   ws.send(JSON.stringify(payload));
@@ -150,14 +152,14 @@ export function dispatchMessageUpdate(ws: any, message: any, sequence: number) {
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "MESSAGE_UPDATE",
+    t: 'MESSAGE_UPDATE',
     d: {
       id: message.id,
       channel_id: message.channelId,
       content: message.content,
       edited_timestamp: message.updatedAt.toISOString(),
       // ... only changed fields ...
-    }
+    },
   };
   ws.send(JSON.stringify(payload));
 }
@@ -165,16 +167,22 @@ export function dispatchMessageUpdate(ws: any, message: any, sequence: number) {
 /**
  * Dispatches a MESSAGE_DELETE event.
  */
-export function dispatchMessageDelete(ws: any, messageId: string, channelId: string, guildId: string | null, sequence: number) {
+export function dispatchMessageDelete(
+  ws: any,
+  messageId: string,
+  channelId: string,
+  guildId: string | null,
+  sequence: number
+) {
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "MESSAGE_DELETE",
+    t: 'MESSAGE_DELETE',
     d: {
       id: messageId,
       channel_id: channelId,
-      guild_id: guildId
-    }
+      guild_id: guildId,
+    },
   };
   ws.send(JSON.stringify(payload));
 }
@@ -186,7 +194,7 @@ export function dispatchGuildCreate(ws: any, workspace: any, sequence: number) {
   const payload = {
     op: GatewayOpcode.Dispatch,
     s: sequence,
-    t: "GUILD_CREATE",
+    t: 'GUILD_CREATE',
     d: {
       id: workspace.id,
       name: workspace.name,
@@ -196,11 +204,11 @@ export function dispatchGuildCreate(ws: any, workspace: any, sequence: number) {
       channels: workspace.channels.map((c: any) => ({
         id: c.id,
         name: c.name,
-        type: c.type === "channel" ? 0 : 4 // Simplified mapping
+        type: c.type === 'channel' ? 0 : 4, // Simplified mapping
       })),
       members: [],
-      roles: []
-    }
+      roles: [],
+    },
   };
 
   ws.send(JSON.stringify(payload));

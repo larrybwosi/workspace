@@ -1,6 +1,6 @@
 {
   "name": "docs",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,6 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
     "@repo/ui": "workspace:*",
-    "@vitejs/plugin-react-oxc": "^0.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.479.0",
@@ -24,6 +23,7 @@
     "tailwind-merge": "^2.6.1"
   },
   "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22.19.17",
@@ -34,7 +34,6 @@
     "postcss": "^8.5.9",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
-    "vite": "^8.0.8",
-    "@repo/eslint-config": "workspace:*"
+    "vite": "^8.0.8"
   }
 }

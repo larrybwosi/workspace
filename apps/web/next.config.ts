@@ -15,10 +15,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  turbopack: {},
   webpack: (config: any) => {
     return config;
   },
-  output: 'standalone' as any,
+  output: (process.env.NEXT_STANDALONE === 'true' ? 'standalone' : undefined) as any,
   async rewrites() {
     return [
       {
@@ -89,8 +90,8 @@ const nextConfig = {
         source: '/api/v2/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v2/:path*`,
       },
-    ]
+    ];
   },
-}
+};
 
-export default withPWA(nextConfig)
+export default withPWA(nextConfig);

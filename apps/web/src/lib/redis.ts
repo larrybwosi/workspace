@@ -1,34 +1,34 @@
-import "server-only"
-import Redis, { RedisOptions } from "ioredis"
+import 'server-only';
+import Redis, { RedisOptions } from 'ioredis';
 
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379"
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const redisOptions: RedisOptions = {
   lazyConnect: true,
   maxRetriesPerRequest: 0,
   connectTimeout: 5000,
-  reconnectOnError: (err) => {
-    const targetError = "READONLY"
+  reconnectOnError: err => {
+    const targetError = 'READONLY';
     if (err.message.includes(targetError)) {
-      return true
+      return true;
     }
-    return false
+    return false;
   },
-}
+};
 
 const createRedisClient = () => {
-  const client = new Redis(redisUrl, redisOptions)
+  const client = new Redis(redisUrl, redisOptions);
 
-  client.on("error", (error) => {
+  client.on('error', error => {
     // Catching error event prevents "Unhandled error event" which crashes the process
-    console.warn("[Redis] Connection error:", error.message)
-  })
+    console.warn('[Redis] Connection error:', error.message);
+  });
 
-  return client
-}
+  return client;
+};
 
-const globalForRedis = global as unknown as { redis: Redis | undefined }
+const globalForRedis = global as unknown as { redis: Redis | undefined };
 
-export const redis = globalForRedis.redis || createRedisClient()
+export const redis = globalForRedis.redis || createRedisClient();
 
-if (process.env.NODE_ENV !== "production") globalForRedis.redis = redis
+if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis;

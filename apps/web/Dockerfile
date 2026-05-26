@@ -31,7 +31,8 @@ COPY turbo.json turbo.json
 # Generate Prisma Client
 RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo run db:generate
 
-RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo build --filter=web... -- --webpack
+ENV NEXT_STANDALONE=true
+RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo build --filter=web...
 
 FROM base AS runner
 WORKDIR /app
@@ -44,7 +45,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Install Prisma globally for migrations
-RUN pnpm add -g prisma@7.6.0
+RUN pnpm add -g prisma@7.8.0
 
 # Set up pnpm and prisma engines (as seen in original Dockerfile)
 RUN chown -R nextjs:nodejs /pnpm
@@ -53,6 +54,7 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/publ
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/packages/database/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/packages/database/prisma.config.ts ./
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./
 
 RUN chmod +x ./docker-entrypoint.sh

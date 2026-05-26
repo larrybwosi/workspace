@@ -68,25 +68,61 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">Product</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><a href="https://skyrme.chat" className="hover:text-primary transition-colors">Website</a></li>
-                  <li><a href="https://app.skyrme.chat" className="hover:text-primary transition-colors">Open App</a></li>
-                  <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
+                  <li>
+                    <a href="https://skyrme.chat" className="hover:text-primary transition-colors">
+                      Website
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://app.skyrme.chat" className="hover:text-primary transition-colors">
+                      Open App
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-primary transition-colors">
+                      Pricing
+                    </a>
+                  </li>
                 </ul>
               </div>
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">Resources</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><Link to="/user-guide" className="hover:text-primary transition-colors">User Guide</Link></li>
-                  <li><Link to="/api-reference" className="hover:text-primary transition-colors">API Reference</Link></li>
-                  <li><a href="#" className="hover:text-primary transition-colors">Support</a></li>
+                  <li>
+                    <Link to="/user-guide" className="hover:text-primary transition-colors">
+                      User Guide
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/api-reference" className="hover:text-primary transition-colors">
+                      API Reference
+                    </Link>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-primary transition-colors">
+                      Support
+                    </a>
+                  </li>
                 </ul>
               </div>
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">Company</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
-                  <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
-                  <li><a href="#" className="hover:text-primary transition-colors">Privacy</a></li>
+                  <li>
+                    <a href="#" className="hover:text-primary transition-colors">
+                      About
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-primary transition-colors">
+                      Blog
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-primary transition-colors">
+                      Privacy
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>

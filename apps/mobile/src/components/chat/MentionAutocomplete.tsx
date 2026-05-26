@@ -1,10 +1,11 @@
+import { User } from "@repo/types";
 import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image } from 'react-native';
 
 interface MentionAutocompleteProps {
   isVisible: boolean;
-  users: any[];
-  onSelect: (user: any) => void;
+  users: User[];
+  onSelect: (user: User) => void;
 }
 
 export function MentionAutocomplete({ isVisible, users, onSelect }: MentionAutocompleteProps) {
@@ -28,7 +29,7 @@ export function MentionAutocomplete({ isVisible, users, onSelect }: MentionAutoc
                 <Image source={{ uri: item.image }} className="w-full h-full" />
               ) : (
                 <View className="w-full h-full items-center justify-center">
-                   <Text className="text-white text-xs font-bold">{item.name?.charAt(0)}</Text>
+                  <Text className="text-white text-xs font-bold">{item.name?.charAt(0)}</Text>
                 </View>
               )}
             </View>

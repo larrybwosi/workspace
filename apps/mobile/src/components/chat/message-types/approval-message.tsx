@@ -1,17 +1,21 @@
+import { Message, MessageMetadata } from "@repo/types";
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export function ApprovalMessage({ message, metadata }: any) {
-  const approvalData = metadata?.approvalData || {};
+export function ApprovalMessage({ message, metadata }: { message: Message; metadata: MessageMetadata }) {
+  const approvalData = (metadata?.approvalData as Record<string, string>) || {};
   const status = approvalData.status || 'pending';
   const title = approvalData.title || 'Approval Request';
 
   const getStatusColor = () => {
     switch (status) {
-      case 'approved': return 'bg-green-500/20 text-green-400';
-      case 'rejected': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-amber-500/20 text-amber-400';
+      case 'approved':
+        return 'bg-green-500/20 text-green-400';
+      case 'rejected':
+        return 'bg-red-500/20 text-red-400';
+      default:
+        return 'bg-amber-500/20 text-amber-400';
     }
   };
 
@@ -25,24 +29,20 @@ export function ApprovalMessage({ message, metadata }: any) {
             <Text className="text-discord-header font-bold ml-2">{title}</Text>
           </View>
           <View className={`px-2 py-0.5 rounded-md ${getStatusColor().split(' ')[0]}`}>
-            <Text className={`text-[10px] font-bold uppercase ${getStatusColor().split(' ')[1]}`}>
-              {status}
-            </Text>
+            <Text className={`text-[10px] font-bold uppercase ${getStatusColor().split(' ')[1]}`}>{status}</Text>
           </View>
         </View>
 
-        <Text className="text-discord-header text-sm mb-4 leading-5">
-          {message.content}
-        </Text>
+        <Text className="text-discord-header text-sm mb-4 leading-5">{message.content}</Text>
 
         <View className="flex-row gap-2">
           <TouchableOpacity className="bg-green-600 px-4 py-2 rounded-md flex-1 items-center flex-row justify-center">
-             <MaterialIcons name="check" size={18} color="white" />
-             <Text className="text-white font-bold ml-2">Approve</Text>
+            <MaterialIcons name="check" size={18} color="white" />
+            <Text className="text-white font-bold ml-2">Approve</Text>
           </TouchableOpacity>
           <TouchableOpacity className="bg-discord-secondary px-4 py-2 rounded-md flex-1 items-center flex-row justify-center border border-black/20">
-             <MaterialIcons name="close" size={18} color="#F23F42" />
-             <Text className="text-red-400 font-bold ml-2">Reject</Text>
+            <MaterialIcons name="close" size={18} color="#F23F42" />
+            <Text className="text-red-400 font-bold ml-2">Reject</Text>
           </TouchableOpacity>
         </View>
       </View>

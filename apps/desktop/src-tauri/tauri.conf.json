@@ -1,7 +1,7 @@
 {
-  "productName": "Workspace",
-  "version": "0.1.0",
-  "identifier": "com.workspace.desktop",
+  "productName": "Scrymechat",
+  "version": "0.0.2",
+  "identifier": "com.scrymechat.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -11,7 +11,8 @@
   "app": {
     "windows": [
       {
-        "title": "Workspace",
+        "label": "main",
+        "title": "Scrymechat",
         "width": 1200,
         "height": 800,
         "decorations": false
@@ -31,7 +32,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "Workspace",
+    "publisher": "Scrymechat",
     "createUpdaterArtifacts": false
   },
   "plugins": {
@@ -41,7 +42,7 @@
     "notification": {},
     "deep-link": {
       "schemes": [
-        "workspace"
+        "scrymechat"
       ]
     },
     "sql": {

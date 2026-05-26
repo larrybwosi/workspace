@@ -2,21 +2,17 @@ import axios from 'axios';
 
 // Helper to safely access env variables across Vite, Next.js and React Native
 const getEnv = (name: string) => {
-  const g = globalThis as any;
+  const g = globalThis as typeof globalThis & { process?: { env?: Record<string, string> }; import?: { meta?: { env?: Record<string, string> } }; __env__?: Record<string, string>; };
 
   // Try various common locations for env variables
   // Avoid explicit import.meta to prevent TS1470
-  const env = g.process?.env ||
-              (g.import?.meta?.env) ||
-              g.__env__;
+  const env = g.process?.env || g.import?.meta?.env || g.__env__;
 
   if (!env) return undefined;
 
-  return env[name] ||
-         env[`VITE_${name}`] ||
-         env[`NEXT_PUBLIC_${name}`] ||
-         env[`EXPO_PUBLIC_${name}`] ||
-         env[`TAURI_${name}`];
+  return (
+    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`]
+  );
 };
 
 const getBaseURL = () => {

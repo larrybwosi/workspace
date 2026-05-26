@@ -1,22 +1,32 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Users, MessageSquare, FolderKanban, CheckCircle2, TrendingUp, TrendingDown, Activity, Clock, Loader2 } from 'lucide-react'
-import { Card } from "../../components/card"
-import { Progress } from "../../components/progress"
-import { Badge } from "../../components/badge"
-import { useAdminStats } from "@repo/api-client"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
+import * as React from 'react';
+import {
+  Users,
+  MessageSquare,
+  FolderKanban,
+  CheckCircle2,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Clock,
+  Loader2,
+} from 'lucide-react';
+import { Card } from '../../components/card';
+import { Progress } from '../../components/progress';
+import { Badge } from '../../components/badge';
+import { useAdminStats } from '@repo/api-client';
+import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export function AdminOverview() {
-  const { data: stats, isLoading } = useAdminStats()
+  const { data: stats, isLoading } = useAdminStats();
 
   if (isLoading) {
-      return (
-          <div className="flex items-center justify-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-      )
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const mockStats = {
@@ -30,19 +40,19 @@ export function AdminOverview() {
     storageTotal: 100,
     userGrowth: 0,
     activityGrowth: 0,
-  }
+  };
 
   const activityData = [
-    { name: "Mon", users: 680, messages: 1240 },
-    { name: "Tue", users: 720, messages: 1380 },
-    { name: "Wed", users: 650, messages: 1150 },
-    { name: "Thu", users: 780, messages: 1520 },
-    { name: "Fri", users: 820, messages: 1680 },
-    { name: "Sat", users: 520, messages: 840 },
-    { name: "Sun", users: 480, messages: 720 },
-  ]
+    { name: 'Mon', users: 680, messages: 1240 },
+    { name: 'Tue', users: 720, messages: 1380 },
+    { name: 'Wed', users: 650, messages: 1150 },
+    { name: 'Thu', users: 780, messages: 1520 },
+    { name: 'Fri', users: 820, messages: 1680 },
+    { name: 'Sat', users: 520, messages: 840 },
+    { name: 'Sun', users: 480, messages: 720 },
+  ];
 
-  const data = stats || mockStats
+  const data = stats || mockStats;
 
   return (
     <div className="space-y-6">
@@ -55,8 +65,7 @@ export function AdminOverview() {
               <p className="text-3xl font-bold">{data.totalUsers}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="text-green-600 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  +{data.userGrowth}% from last month
+                  <TrendingUp className="h-3 w-3" />+{data.userGrowth}% from last month
                 </span>
               </p>
             </div>
@@ -99,9 +108,7 @@ export function AdminOverview() {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Activity Growth</p>
               <p className="text-3xl font-bold">+{data.activityGrowth}%</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Trending up this week
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Trending up this week</p>
             </div>
             <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-950 flex items-center justify-center">
               <CheckCircle2 className="h-6 w-6 text-orange-600" />
@@ -200,5 +207,5 @@ export function AdminOverview() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

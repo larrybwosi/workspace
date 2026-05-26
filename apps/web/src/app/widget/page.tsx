@@ -1,6 +1,6 @@
-import { Suspense } from "react";
-import WidgetClient from "./client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Suspense } from 'react';
+import WidgetClient from './client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function WidgetPage() {
   return (
@@ -21,7 +21,7 @@ function WidgetSkeleton() {
         </div>
       </div>
       <div className="flex-1 space-y-4 overflow-hidden">
-        {[1, 2, 3, 4].map((i) => (
+        {[1, 2, 3, 4].map(i => (
           <div key={i} className="flex items-start space-x-3">
             <Skeleton className="h-8 w-8 rounded-full" />
             <div className="flex-1 space-y-2">

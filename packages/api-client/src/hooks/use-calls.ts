@@ -1,141 +1,137 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "../client"
-import { useEffect } from "react"
-import { getAblyClient, AblyChannels } from "@repo/shared"
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../client';
+import { useEffect } from 'react';
+import { getAblyClient, AblyChannels } from '@repo/shared';
 
 export function useActiveCalls(workspaceSlug: string, workspaceId?: string) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!workspaceId) return
+    if (!workspaceId) return;
 
-    const ably = getAblyClient()
-    if (!ably) return
+    const ably = getAblyClient();
+    if (!ably) return;
 
-    const channel = ably.channels.get(AblyChannels.workspace(workspaceId))
+    const channel = ably.channels.get(AblyChannels.workspace(workspaceId));
 
     const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ["active-calls", workspaceSlug] })
-    }
+      queryClient.invalidateQueries({ queryKey: ['active-calls', workspaceSlug] });
+    };
 
-    channel.subscribe("call-started", handleUpdate)
-    channel.subscribe("call-ended", handleUpdate)
-    channel.subscribe("call-joined", handleUpdate)
-    channel.subscribe("call-left", handleUpdate)
+    channel.subscribe('call-started', handleUpdate);
+    channel.subscribe('call-ended', handleUpdate);
+    channel.subscribe('call-joined', handleUpdate);
+    channel.subscribe('call-left', handleUpdate);
 
     return () => {
-      channel.unsubscribe("call-started", handleUpdate)
-      channel.unsubscribe("call-ended", handleUpdate)
-      channel.unsubscribe("call-joined", handleUpdate)
-      channel.unsubscribe("call-left", handleUpdate)
-    }
-  }, [workspaceId, workspaceSlug, queryClient])
+      channel.unsubscribe('call-started', handleUpdate);
+      channel.unsubscribe('call-ended', handleUpdate);
+      channel.unsubscribe('call-joined', handleUpdate);
+      channel.unsubscribe('call-left', handleUpdate);
+    };
+  }, [workspaceId, workspaceSlug, queryClient]);
 
   return useQuery({
-    queryKey: ["active-calls", workspaceSlug],
+    queryKey: ['active-calls', workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/calls/active`)
-      return data.calls || []
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/calls/active`);
+      return data.calls || [];
     },
     enabled: !!workspaceSlug,
-  })
+  });
 }
 
 export function useScheduledCalls(workspaceSlug: string, workspaceId?: string) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!workspaceId) return
+    if (!workspaceId) return;
 
-    const ably = getAblyClient()
-    if (!ably) return
+    const ably = getAblyClient();
+    if (!ably) return;
 
-    const channel = ably.channels.get(AblyChannels.workspace(workspaceId))
+    const channel = ably.channels.get(AblyChannels.workspace(workspaceId));
 
     const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", workspaceSlug] })
-    }
+      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', workspaceSlug] });
+    };
 
-    channel.subscribe("call-scheduled", handleUpdate)
+    channel.subscribe('call-scheduled', handleUpdate);
 
     return () => {
-      channel.unsubscribe("call-scheduled", handleUpdate)
-    }
-  }, [workspaceId, workspaceSlug, queryClient])
+      channel.unsubscribe('call-scheduled', handleUpdate);
+    };
+  }, [workspaceId, workspaceSlug, queryClient]);
 
   return useQuery({
-    queryKey: ["scheduled-calls", workspaceSlug],
+    queryKey: ['scheduled-calls', workspaceSlug],
     queryFn: async () => {
       const { data } = await apiClient.get(`/calls/scheduled`, {
-        params: { workspaceSlug }
-      })
-      return data || []
+        params: { workspaceSlug },
+      });
+      return data || [];
     },
     enabled: !!workspaceSlug,
-  })
+  });
 }
 
 export function useStartCall() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: {
-      type: "voice" | "video"
-      workspaceSlug: string
-      channelId?: string
-      recipientId?: string
-      notifyAll?: boolean
+      type: 'voice' | 'video';
+      workspaceSlug: string;
+      channelId?: string;
+      recipientId?: string;
+      notifyAll?: boolean;
     }) => {
-      const { data } = await apiClient.post("/calls", params)
-      return data
+      const { data } = await apiClient.post('/calls', params);
+      return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["active-calls", variables.workspaceSlug] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ['active-calls', variables.workspaceSlug] });
+    },
+  });
 }
 
 export function useJoinCall() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: {
-      type: string
-      callId: string
-      workspaceSlug: string
-    }) => {
-      const { data } = await apiClient.post("/calls", params)
+    mutationFn: async (params: { type: string; callId: string; workspaceSlug: string }) => {
+      const { data } = await apiClient.post('/calls', params);
 
       if (!data.token) {
-        const { data: tokenData } = await apiClient.post("/agora/token", {
+        const { data: tokenData } = await apiClient.post('/agora/token', {
           channelName: data.channelName,
           uid: data.uid,
-        })
-        data.token = tokenData.token
+        });
+        data.token = tokenData.token;
       }
 
-      return data
+      return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["active-calls", variables.workspaceSlug] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ['active-calls', variables.workspaceSlug] });
+    },
+  });
 }
 
 export function useScheduleCall() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: {
-      title: string
-      description?: string
-      type: string
-      scheduledFor: string
-      workspaceSlug: string
-      channelId?: string
+      title: string;
+      description?: string;
+      type: string;
+      scheduledFor: string;
+      workspaceSlug: string;
+      channelId?: string;
     }) => {
-      const { data } = await apiClient.post("/calls/scheduled", params)
-      return data
+      const { data } = await apiClient.post('/calls/scheduled', params);
+      return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-calls", variables.workspaceSlug] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ['scheduled-calls', variables.workspaceSlug] });
+    },
+  });
 }

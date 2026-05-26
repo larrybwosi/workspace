@@ -10,15 +10,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -92,7 +84,7 @@ const createTokenSchema = z.object({
         'write:webhooks',
         'read:tokens',
         'write:tokens',
-      ]),
+      ])
     ),
   }),
   rateLimit: z.number().min(100).max(100000).optional().default(1000),
@@ -153,10 +145,7 @@ export class V2ApiTokensController {
 
     const data = validatedData.data;
     const rawToken = `wst_${crypto.randomBytes(32).toString('hex')}`;
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(rawToken)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     const apiToken = await prisma.workspaceApiToken.create({
       data: {
@@ -170,13 +159,7 @@ export class V2ApiTokensController {
       },
     });
 
-    await this.auditService.log(
-      context,
-      'tokens.create',
-      'api_token',
-      apiToken.id,
-      { name: data.name },
-    );
+    await this.auditService.log(context, 'tokens.create', 'api_token', apiToken.id, { name: data.name });
 
     return { ...apiToken, token: rawToken };
   }
@@ -186,10 +169,7 @@ export class V2ApiTokensController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'tokenId', description: 'The token ID' })
   @ApiResponse({ status: 200, description: 'Token deleted successfully.' })
-  async deleteToken(
-    @V2Context() context: ApiV2Context,
-    @Param('tokenId') tokenId: string,
-  ) {
+  async deleteToken(@V2Context() context: ApiV2Context, @Param('tokenId') tokenId: string) {
     if (!this.hasScope(context, 'tokens:write')) {
       throw new ForbiddenException('Forbidden: Missing tokens:write scope');
     }
@@ -206,26 +186,20 @@ export class V2ApiTokensController {
       where: { id: tokenId },
     });
 
-    await this.auditService.log(
-      context,
-      'tokens.delete',
-      'api_token',
-      tokenId,
-      { name: token.name },
-    );
+    await this.auditService.log(context, 'tokens.delete', 'api_token', tokenId, { name: token.name });
 
     return { success: true };
   }
 
   @Post(':tokenId/rotate')
-  @ApiOperation({ summary: 'Rotate an API token (generate new token value)', description: 'Requires tokens:write scope.' })
+  @ApiOperation({
+    summary: 'Rotate an API token (generate new token value)',
+    description: 'Requires tokens:write scope.',
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'tokenId', description: 'The token ID' })
   @ApiResponse({ status: 201, description: 'Token rotated successfully.' })
-  async rotateToken(
-    @V2Context() context: ApiV2Context,
-    @Param('tokenId') tokenId: string,
-  ) {
+  async rotateToken(@V2Context() context: ApiV2Context, @Param('tokenId') tokenId: string) {
     if (!this.hasScope(context, 'tokens:write')) {
       throw new ForbiddenException('Forbidden: Missing tokens:write scope');
     }
@@ -239,10 +213,7 @@ export class V2ApiTokensController {
     }
 
     const rawToken = `wst_${crypto.randomBytes(32).toString('hex')}`;
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(rawToken)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     const updatedToken = await prisma.workspaceApiToken.update({
       where: { id: tokenId },
@@ -252,13 +223,7 @@ export class V2ApiTokensController {
       },
     });
 
-    await this.auditService.log(
-      context,
-      'tokens.rotate',
-      'api_token',
-      tokenId,
-      { name: existingToken.name },
-    );
+    await this.auditService.log(context, 'tokens.rotate', 'api_token', tokenId, { name: existingToken.name });
 
     return { ...updatedToken, token: rawToken };
   }

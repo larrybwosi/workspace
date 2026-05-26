@@ -2,7 +2,10 @@
 
 import * as React from 'react';
 import {
-  Plus, Search, Lock, ChevronDown,
+  Plus,
+  Search,
+  Lock,
+  ChevronDown,
   LayoutDashboard,
   MessageSquare,
   Users,
@@ -244,7 +247,9 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
                         key={item.href}
                         item={item}
                         isActive={pathname === item.href}
-                        onClick={() => (item.onClick ? item.onClick() : handleNavigate(item.href, item.label.toLowerCase()))}
+                        onClick={() =>
+                          item.onClick ? item.onClick() : handleNavigate(item.href, item.label.toLowerCase())
+                        }
                       />
                     ))}
                   </div>
@@ -369,17 +374,10 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
         onCreateChannel={handleCreateChannel}
       />
 
-      <CreateWorkspaceDialog
-        open={createWorkspaceOpen}
-        onOpenChange={setCreateWorkspaceOpen}
-      />
+      <CreateWorkspaceDialog open={createWorkspaceOpen} onOpenChange={setCreateWorkspaceOpen} />
 
       {workspace && (
-        <CreateTicketDialog
-          open={createTicketOpen}
-          onOpenChange={setCreateTicketOpen}
-          workspaceId={workspace.id}
-        />
+        <CreateTicketDialog open={createTicketOpen} onOpenChange={setCreateTicketOpen} workspaceId={workspace.id} />
       )}
     </>
   );

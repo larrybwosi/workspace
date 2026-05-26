@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   FileText,
   Download,
@@ -15,25 +15,25 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-} from "lucide-react";
-import { Card } from "../../../components/card";
-import { Button } from "../../../components/button";
-import { Badge } from "../../../components/badge";
-import { cn } from "../../../lib/utils";
-import type { Message, MessageMetadata } from "../../../lib/types";
+} from 'lucide-react';
+import { Card } from '../../../components/card';
+import { Button } from '../../../components/button';
+import { Badge } from '../../../components/badge';
+import { cn } from '../../../lib/utils';
+import type { Message, MessageMetadata } from '../../../lib/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/dropdown-menu";
+} from '../../../components/dropdown-menu';
 
 // --- Types ---
 
 interface ReportData {
   title: string;
-  type: "financial" | "analytics" | "status" | "audit";
-  status: "draft" | "final" | "archived" | "review";
+  type: 'financial' | 'analytics' | 'status' | 'audit';
+  status: 'draft' | 'final' | 'archived' | 'review';
   date: string;
   summary: string;
   kpis?: KPI[];
@@ -46,8 +46,8 @@ interface KPI {
   value: string | number;
   unit?: string;
   change?: number; // percentage
-  trend?: "up" | "down" | "neutral";
-  intent?: "positive" | "negative" | "neutral"; // e.g. costs going down is positive intent, trend down
+  trend?: 'up' | 'down' | 'neutral';
+  intent?: 'positive' | 'negative' | 'neutral'; // e.g. costs going down is positive intent, trend down
 }
 
 interface ReportSection {
@@ -68,16 +68,15 @@ interface ReportMessageProps {
 
 // --- Sub-Components ---
 
-const StatusBadge = ({ status }: { status: ReportData["status"] }) => {
+const StatusBadge = ({ status }: { status: ReportData['status'] }) => {
   const styles = {
     draft:
-      "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800",
+      'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800',
     final:
-      "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+      'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
     archived:
-      "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
-    review:
-      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+      'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    review: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
   };
 
   const icons = {
@@ -90,10 +89,7 @@ const StatusBadge = ({ status }: { status: ReportData["status"] }) => {
   const Icon = icons[status];
 
   return (
-    <Badge
-      variant="outline"
-      className={cn("capitalize gap-1.5 pr-2.5", styles[status])}
-    >
+    <Badge variant="outline" className={cn('capitalize gap-1.5 pr-2.5', styles[status])}>
       <Icon className="w-3 h-3" />
       {status}
     </Badge>
@@ -105,37 +101,22 @@ const KPICard = ({ kpi }: { kpi: KPI }) => {
   const isNegative = kpi.change && kpi.change < 0;
 
   // Determine color based on intent and trend
-  let trendColor = "text-muted-foreground";
-  if (kpi.intent === "positive") {
-    trendColor = isPositive
-      ? "text-green-600 dark:text-green-400"
-      : "text-red-600 dark:text-red-400";
-  } else if (kpi.intent === "negative") {
-    trendColor = isNegative
-      ? "text-green-600 dark:text-green-400"
-      : "text-red-600 dark:text-red-400";
+  let trendColor = 'text-muted-foreground';
+  if (kpi.intent === 'positive') {
+    trendColor = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  } else if (kpi.intent === 'negative') {
+    trendColor = isNegative ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   }
 
   return (
     <div className="p-4 rounded-lg border bg-card/50 hover:bg-card transition-colors">
-      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-        {kpi.label}
-      </div>
+      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{kpi.label}</div>
       <div className="text-2xl font-bold tracking-tight text-foreground flex items-baseline gap-1">
         {kpi.value}
-        {kpi.unit && (
-          <span className="text-sm font-normal text-muted-foreground">
-            {kpi.unit}
-          </span>
-        )}
+        {kpi.unit && <span className="text-sm font-normal text-muted-foreground">{kpi.unit}</span>}
       </div>
       {kpi.change !== undefined && (
-        <div
-          className={cn(
-            "flex items-center gap-1 mt-2 text-xs font-medium",
-            trendColor
-          )}
-        >
+        <div className={cn('flex items-center gap-1 mt-2 text-xs font-medium', trendColor)}>
           {kpi.change > 0 ? (
             <TrendingUp className="w-3 h-3" />
           ) : kpi.change < 0 ? (
@@ -144,9 +125,7 @@ const KPICard = ({ kpi }: { kpi: KPI }) => {
             <Minus className="w-3 h-3" />
           )}
           <span>{Math.abs(kpi.change)}%</span>
-          <span className="text-muted-foreground opacity-70 font-normal ml-1">
-            vs last period
-          </span>
+          <span className="text-muted-foreground opacity-70 font-normal ml-1">vs last period</span>
         </div>
       )}
     </div>
@@ -161,15 +140,13 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
     try {
       if (metadata?.reportData) return metadata.reportData as ReportData;
       // Attempt to find JSON block in content
-      const jsonMatch =
-        message.content.match(/```json\n([\s\S]*?)\n```/) ||
-        message.content.match(/{[\s\S]*}/);
+      const jsonMatch = message.content.match(/```json\n([\s\S]*?)\n```/) || message.content.match(/{[\s\S]*}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1] || jsonMatch[0]);
       }
       return null;
     } catch (e) {
-      console.error("Failed to parse report data", e);
+      console.error('Failed to parse report data', e);
       return null;
     }
   }, [message.content, metadata]);
@@ -178,16 +155,16 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
 
   const handleDownload = () => {
     // Mock download functionality
-    console.log("Downloading report:", reportData.title);
+    console.log('Downloading report:', reportData.title);
   };
 
-  const getHeaderIcon = (type: ReportData["type"]) => {
+  const getHeaderIcon = (type: ReportData['type']) => {
     switch (type) {
-      case "financial":
+      case 'financial':
         return BarChart3;
-      case "analytics":
+      case 'analytics':
         return PieChart;
-      case "audit":
+      case 'audit':
         return CheckCircle2;
       default:
         return FileText;
@@ -206,9 +183,7 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-1.5">
-              <h3 className="font-semibold text-lg leading-none">
-                {reportData.title}
-              </h3>
+              <h3 className="font-semibold text-lg leading-none">{reportData.title}</h3>
               <StatusBadge status={reportData.status} />
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -221,12 +196,7 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="hidden sm:flex"
-            onClick={handleDownload}
-          >
+          <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleDownload}>
             <Download className="w-4 h-4 mr-2" />
             PDF
           </Button>
@@ -237,13 +207,9 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleDownload}>
-                Download PDF
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDownload}>Download PDF</DropdownMenuItem>
               <DropdownMenuItem>Share Report</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
-                Archive
-              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Archive</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -252,12 +218,8 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
       <div className="p-6 space-y-8">
         {/* Executive Summary */}
         <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-          <h4 className="text-sm font-semibold text-foreground mb-2">
-            Executive Summary
-          </h4>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {reportData.summary}
-          </p>
+          <h4 className="text-sm font-semibold text-foreground mb-2">Executive Summary</h4>
+          <p className="text-sm text-muted-foreground leading-relaxed">{reportData.summary}</p>
         </div>
 
         {/* KPIs Grid */}
@@ -278,19 +240,14 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
 
             {/* Text Content */}
             {section.content && (
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {section.content}
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{section.content}</p>
             )}
 
             {/* List Content */}
             {section.items && (
               <ul className="grid sm:grid-cols-2 gap-3">
                 {section.items.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 text-sm text-muted-foreground"
-                  >
+                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                     {item}
                   </li>
@@ -314,17 +271,14 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
                     </thead>
                     <tbody className="divide-y">
                       {section.table.rows.map((row, rIdx) => (
-                        <tr
-                          key={rIdx}
-                          className="bg-background hover:bg-muted/20 transition-colors"
-                        >
+                        <tr key={rIdx} className="bg-background hover:bg-muted/20 transition-colors">
                           {row.map((cell, cIdx) => (
                             <td
                               key={cIdx}
                               className={cn(
-                                "px-4 py-3",
-                                cIdx === 0 && "font-medium text-foreground",
-                                typeof cell === "number" && "font-mono"
+                                'px-4 py-3',
+                                cIdx === 0 && 'font-medium text-foreground',
+                                typeof cell === 'number' && 'font-mono'
                               )}
                             >
                               {cell}
@@ -344,9 +298,7 @@ export function ReportMessage({ message, metadata }: ReportMessageProps) {
       {/* Footer */}
       {(reportData.footer || message.metadata?.footer) && (
         <div className="bg-muted/20 p-4 border-t text-xs text-center text-muted-foreground flex justify-center items-center gap-2">
-          <span>
-            {reportData.footer || "Generated automatically by AI Assistant"}
-          </span>
+          <span>{reportData.footer || 'Generated automatically by AI Assistant'}</span>
           <ArrowRight className="w-3 h-3" />
         </div>
       )}

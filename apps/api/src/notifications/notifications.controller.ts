@@ -50,7 +50,7 @@ export class NotificationsController {
   async getNotifications(
     @CurrentUser() user: User,
     @Query('unreadOnly') unreadOnly?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     const isUnreadOnly = unreadOnly === 'true';
     const limitNum = limit ? parseInt(limit, 10) : 50;
@@ -68,10 +68,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get notification settings for a workspace' })
   @ApiQuery({ name: 'workspaceId', description: 'The workspace ID' })
   @ApiResponse({ status: 200, description: 'Workspace notification settings' })
-  async getWorkspaceSettings(
-    @CurrentUser() user: User,
-    @Query('workspaceId') workspaceId: string,
-  ) {
+  async getWorkspaceSettings(@CurrentUser() user: User, @Query('workspaceId') workspaceId: string) {
     return this.notificationsService.getWorkspaceSettings(user.id, workspaceId);
   }
 
@@ -79,10 +76,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Update notification settings for a workspace' })
   @ApiBody({ type: WorkspaceSettingsDto })
   @ApiResponse({ status: 200, description: 'Workspace notification settings updated' })
-  async updateWorkspaceSettings(
-    @CurrentUser() user: User,
-    @Body() body: WorkspaceSettingsDto,
-  ) {
+  async updateWorkspaceSettings(@CurrentUser() user: User, @Body() body: WorkspaceSettingsDto) {
     return this.notificationsService.updateWorkspaceSettings(user.id, body.workspaceId, body.preference);
   }
 
@@ -90,10 +84,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get notification settings for a channel' })
   @ApiQuery({ name: 'channelId', description: 'The channel ID' })
   @ApiResponse({ status: 200, description: 'Channel notification settings' })
-  async getChannelSettings(
-    @CurrentUser() user: User,
-    @Query('channelId') channelId: string,
-  ) {
+  async getChannelSettings(@CurrentUser() user: User, @Query('channelId') channelId: string) {
     return this.notificationsService.getChannelSettings(user.id, channelId);
   }
 
@@ -101,10 +92,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Update notification settings for a channel' })
   @ApiBody({ type: ChannelSettingsDto })
   @ApiResponse({ status: 200, description: 'Channel notification settings updated' })
-  async updateChannelSettings(
-    @CurrentUser() user: User,
-    @Body() body: ChannelSettingsDto,
-  ) {
+  async updateChannelSettings(@CurrentUser() user: User, @Body() body: ChannelSettingsDto) {
     return this.notificationsService.updateChannelSettings(user.id, body.channelId, body.preference);
   }
 
@@ -116,7 +104,7 @@ export class NotificationsController {
   async updateNotification(
     @CurrentUser() user: User,
     @Param('notificationId') notificationId: string,
-    @Body() body: UpdateNotificationDto,
+    @Body() body: UpdateNotificationDto
   ) {
     return this.notificationsService.updateNotification(user.id, notificationId, body.isRead);
   }
@@ -125,10 +113,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Delete a notification' })
   @ApiParam({ name: 'notificationId', description: 'The notification ID' })
   @ApiResponse({ status: 200, description: 'Notification deleted' })
-  async deleteNotification(
-    @CurrentUser() user: User,
-    @Param('notificationId') notificationId: string,
-  ) {
+  async deleteNotification(@CurrentUser() user: User, @Param('notificationId') notificationId: string) {
     return this.notificationsService.deleteNotification(user.id, notificationId);
   }
 }

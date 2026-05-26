@@ -1,14 +1,14 @@
-"use client"
-import { Menu, Search, MoreVertical, ChevronLeft, Headphones } from "lucide-react"
-import { Button } from "../components/button"
-import { Input } from "../components/input"
-import { mockChannels } from "../lib/mock-data"
-import { ThemeToggle } from "./theme-toggle"
-import { Huddle } from "../features/chat/huddle"
-import { useCurrentUser } from "@repo/api-client"
-import { useWorkspace, useWorkspaceChannels } from "@repo/api-client";
-import { useParams } from "next/navigation";
-import { Skeleton } from "../components/skeleton";
+'use client';
+import { Menu, Search, MoreVertical, ChevronLeft, Headphones } from 'lucide-react';
+import { Button } from '../components/button';
+import { Input } from '../components/input';
+import { mockChannels } from '../lib/mock-data';
+import { ThemeToggle } from './theme-toggle';
+import { Huddle } from '../features/chat/huddle';
+import { useCurrentUser } from '@repo/api-client';
+import { useWorkspace, useWorkspaceChannels } from '@repo/api-client';
+import { useParams } from 'next/navigation';
+import { Skeleton } from '../components/skeleton';
 
 interface DynamicHeaderProps {
   activeView: string;
@@ -18,56 +18,63 @@ interface DynamicHeaderProps {
   onInfoClick?: () => void;
 }
 
-export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
-  const { data: currentUser } = useCurrentUser()
+export function DynamicHeader({
+  activeView,
+  onMenuClick,
+  onSearchClick,
+  onBackClick,
+  onInfoClick,
+}: DynamicHeaderProps) {
+  const { data: currentUser } = useCurrentUser();
   const { slug } = useParams();
   const { data: workspace } = useWorkspace(slug as string);
   const { data: channels, isLoading } = useWorkspaceChannels(slug as string);
 
   const getBreadcrumb = () => {
     if (isLoading) {
-      return <Skeleton className="h-4 w-24" />
+      return <Skeleton className="h-4 w-24" />;
     }
 
-    if (activeView.startsWith("dm-")) {
+    if (activeView.startsWith('dm-')) {
       return (
         <>
           <span className="text-muted-foreground">Direct Messages</span>
           <span className="text-muted-foreground">›</span>
           <span className="font-semibold">Conversation</span>
         </>
-      )
+      );
     }
 
     // Channel view
     const findChannel = (channels: any[], id: string): any => {
       if (!channels) return null;
       for (const channel of channels) {
-        if (channel.id === id || channel.slug === id) return channel
+        if (channel.id === id || channel.slug === id) return channel;
         if (channel.children) {
-          const found = findChannel(channel.children, id)
-          if (found) return found
+          const found = findChannel(channel.children, id);
+          if (found) return found;
         }
       }
-      return null
-    }
+      return null;
+    };
 
-    const channel = findChannel(channels, activeView)
+    const channel = findChannel(channels, activeView);
     if (channel) {
       return (
         <>
           <span className="text-sm text-muted-foreground">#</span>
           <span className="font-semibold">{channel.name}</span>
         </>
-      )
+      );
     }
 
-    return <span className="font-semibold">Dealio</span>
-  }
+    return <span className="font-semibold">Scrymechat</span>;
+  };
 
-  const channel = activeView && !activeView.startsWith("dm-")
-    ? channels?.find((c: any) => c.id === activeView || c.slug === activeView)
-    : null
+  const channel =
+    activeView && !activeView.startsWith('dm-')
+      ? channels?.find((c: any) => c.id === activeView || c.slug === activeView)
+      : null;
 
   return (
     <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-background">
@@ -84,12 +91,7 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
       </div>
       <div className="flex items-center gap-2">
         {channel && currentUser && (
-          <Huddle
-            channelId={channel.id}
-            channelName={channel.name}
-            user={currentUser}
-            onClose={() => {}}
-          />
+          <Huddle channelId={channel.id} channelName={channel.name} user={currentUser} onClose={() => {}} />
         )}
         <div className="relative hidden md:block">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -104,5 +106,5 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
         </Button>
       </div>
     </header>
-  )
+  );
 }

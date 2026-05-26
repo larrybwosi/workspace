@@ -1,7 +1,7 @@
 [package]
 name = "desktop"
-version = "0.1.0"
-description = "Workspace Desktop Application"
+version = "0.0.2"
+description = "Scrymechat Desktop Application"
 authors = ["you"]
 edition = "2021"
 
@@ -13,7 +13,7 @@ name = "desktop_lib"
 path = "src/lib.rs"
 
 [dependencies]
-tauri = { version = "2.1", features = ["tray-icon", "macos-private-api"] }
+tauri = { version = "2.1", features = ["tray-icon", "image"] }
 tauri-plugin-shell = "2.1"
 tauri-plugin-notification = "2.1"
 tauri-plugin-deep-link = "2.1"

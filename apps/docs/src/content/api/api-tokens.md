@@ -7,6 +7,7 @@ Workspace API Tokens are long-lived credentials used for server-side automations
 When creating a token, you must specify granular permissions.
 
 **Available Scopes:**
+
 - `read:members` / `write:members`
 - `read:departments` / `write:departments`
 - `read:teams` / `write:teams`
@@ -20,9 +21,11 @@ When creating a token, you must specify granular permissions.
 ## Token Management
 
 ### Create Token
+
 **Endpoint:** `POST /v2/workspaces/:slug/api-tokens`
 
 **Request:**
+
 ```json
 {
   "name": "GitHub CI Token",
@@ -34,6 +37,7 @@ When creating a token, you must specify granular permissions.
 ```
 
 ### Token Rotation
+
 If a token is compromised, you can rotate it to generate a new value while keeping the same permissions and ID.
 
 **Endpoint:** `POST /v2/workspaces/:slug/api-tokens/:tokenId/rotate`

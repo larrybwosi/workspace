@@ -108,7 +108,9 @@ export function ChatPage() {
                     <span className="text-3xl">🚀</span>
                   </div>
                   <h3 className="text-lg font-bold mb-2">Welcome to your Workspace</h3>
-                  <p className="text-sm text-muted-foreground">Select a channel from the sidebar to start collaborating with your team.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Select a channel from the sidebar to start collaborating with your team.
+                  </p>
                 </div>
               </div>
             )}

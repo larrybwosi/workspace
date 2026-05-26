@@ -238,17 +238,18 @@ export class ChannelsService {
     const mentionsHere = hasSpecialMention(content, 'here');
 
     // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
-    const mentionedUsers = userMentions.length > 0
-      ? await prisma.user.findMany({
-          where: {
-            name: {
-              in: userMentions,
-              mode: 'insensitive',
+    const mentionedUsers =
+      userMentions.length > 0
+        ? await prisma.user.findMany({
+            where: {
+              name: {
+                in: userMentions,
+                mode: 'insensitive',
+              },
             },
-          },
-          select: { id: true, name: true },
-        })
-      : [];
+            select: { id: true, name: true },
+          })
+        : [];
     const mentionedUserIds = extractUserIds(userMentions, mentionedUsers);
 
     // Eligibility check for stickers
