@@ -84,3 +84,8 @@
 
 **Learning:** Tauri's `generate_context!` macro requires all icon assets to be in the RGBA format. Providing RGB-only PNGs causes a panic during the build process.
 **Action:** Ensure all application icons are converted to RGBA using a tool like Pillow or sharp before bundling with Tauri.
+
+## 2025-05-30 - [API/Invitations] Parallelized Multi-Model Token Resolution
+
+**Learning:** Sequential database lookups across different models (WorkspaceInviteLink, WorkspaceInvitation, Invitation) to resolve a single token create unnecessary latency (O(3) RTT).
+**Action:** Use 'Promise.all' to fetch potential matches from all relevant models in parallel, then handle the results in priority order. This reduces database RTT from O(N) to O(1).

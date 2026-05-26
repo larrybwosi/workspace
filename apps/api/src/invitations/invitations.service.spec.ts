@@ -157,4 +157,61 @@ describe('InvitationsService', () => {
       await expect(service.getInvitations(userId, workspaceId)).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('getInvitationByToken', () => {
+    const token = 'test-token';
+
+    it('should return workspace_link if found', async () => {
+      const mockInviteLink = {
+        id: 'link-1',
+        code: token,
+        workspace: { id: 'w-1', name: 'W1' },
+        createdBy: { id: 'u-1', name: 'User 1' },
+      };
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(mockInviteLink);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue(null);
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+
+      const result = await service.getInvitationByToken(token);
+
+      expect(result).toEqual({
+        type: 'workspace_link',
+        invitation: {
+          ...mockInviteLink,
+          inviter: mockInviteLink.createdBy,
+        },
+      });
+    });
+
+    it('should return workspace_invitation if found and link is not', async () => {
+      const mockWorkspaceInvite = {
+        id: 'winv-1',
+        token,
+        status: 'pending',
+        workspace: { id: 'w-1', name: 'W1' },
+        inviter: { id: 'u-1', name: 'User 1' },
+      };
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue(mockWorkspaceInvite);
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+
+      const result = await service.getInvitationByToken(token);
+
+      expect(result).toEqual({
+        type: 'workspace_invitation',
+        invitation: {
+          ...mockWorkspaceInvite,
+          inviter: mockWorkspaceInvite.inviter,
+        },
+      });
+    });
+
+    it('should throw NotFoundException if none match', async () => {
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue(null);
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+
+      await expect(service.getInvitationByToken(token)).rejects.toThrow(NotFoundException);
+    });
+  });
 });
