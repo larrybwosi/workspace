@@ -7,10 +7,11 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
 
   const links = isUserGuide
     ? [
-        { href: '/user-guide/joining-workspace', label: 'Joining a Workspace' },
-        { href: '/user-guide/sending-messages', label: 'Sending Messages' },
-        { href: '/user-guide/making-calls', label: 'Making Calls' },
-        { href: '/user-guide/inviting-members', label: 'Inviting Members' },
+        { href: '/user-guide/joining-workspace', label: 'Joining a Workspace', category: 'Basics' },
+        { href: '/user-guide/sending-messages', label: 'Sending Messages', category: 'Basics' },
+        { href: '/user-guide/making-calls', label: 'Making Calls', category: 'Advanced' },
+        { href: '/user-guide/inviting-members', label: 'Inviting Members', category: 'Advanced' },
+        { href: '/user-guide/mcp', label: 'Model Context Protocol', category: 'Integrations' },
       ]
     : [
         { href: '/api-reference/getting-started', label: 'Getting Started', category: 'General' },
@@ -54,9 +55,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         <div className="flex flex-col gap-8">
           {Object.entries(groupedLinks).map(([category, items]) => (
             <div key={category} className="space-y-3">
-              {!isUserGuide && (
-                <h5 className="px-3 text-[11px] font-bold text-foreground/70 uppercase tracking-widest">{category}</h5>
-              )}
+              <h5 className="px-3 text-[11px] font-bold text-foreground/70 uppercase tracking-widest">{category}</h5>
               <div className="flex flex-col space-y-0.5">
                 {items.map(link => {
                   const isActive = location.pathname === link.href;

@@ -212,6 +212,9 @@ model Workspace {
   brandingConfig Json? // { colors: { primary, accent }, logoUrl, customCss }
   industry       String?
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
   owner User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
 
   members          WorkspaceMember[]
@@ -1575,6 +1578,7 @@ model LiveChatSession {
 
 model Organization {
   m2mApplications M2mApplication[]
+  workspaces      Workspace[]
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique

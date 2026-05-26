@@ -97,8 +97,10 @@ export class TeamsController {
   async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Consolidates workspace lookup, membership verification, and team retrieval into a single query.
+     * 2. Uses nested 'select' to fetch only required fields and relations (like departments and members).
+     * 3. Reduces database round-trips from 2 down to 1.
+     * Expected impact: Faster response times for team list loading and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -107,6 +109,36 @@ export class TeamsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        teams: {
+          where: departmentId ? { departmentId } : {},
+          select: {
+            id: true,
+            workspaceId: true,
+            departmentId: true,
+            name: true,
+            slug: true,
+            description: true,
+            icon: true,
+            color: true,
+            leadId: true,
+            channelId: true,
+            createdAt: true,
+            updatedAt: true,
+            department: { select: { id: true, name: true, icon: true, color: true } },
+            members: {
+              select: {
+                id: true,
+                teamId: true,
+                userId: true,
+                role: true,
+                joinedAt: true,
+                user: { select: { id: true, name: true, email: true, avatar: true, status: true } },
+              },
+            },
+            _count: { select: { members: true } },
+          },
+          orderBy: { name: 'asc' },
         },
       },
     });
@@ -121,43 +153,7 @@ export class TeamsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const where: any = { workspaceId: workspace.id };
-    if (departmentId) {
-      where.departmentId = departmentId;
-    }
-
-    const teams = await prisma.workspaceTeam.findMany({
-      where,
-      select: {
-        id: true,
-        workspaceId: true,
-        departmentId: true,
-        name: true,
-        slug: true,
-        description: true,
-        icon: true,
-        color: true,
-        leadId: true,
-        channelId: true,
-        createdAt: true,
-        updatedAt: true,
-        department: { select: { id: true, name: true, icon: true, color: true } },
-        members: {
-          select: {
-            id: true,
-            teamId: true,
-            userId: true,
-            role: true,
-            joinedAt: true,
-            user: { select: { id: true, name: true, email: true, avatar: true, status: true } },
-          },
-        },
-        _count: { select: { members: true } },
-      },
-      orderBy: { name: 'asc' },
-    });
-
-    return { teams };
+    return { teams: workspace.teams };
   }
 
   @Post()

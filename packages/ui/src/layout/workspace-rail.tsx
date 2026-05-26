@@ -1,14 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Home, Search, Settings, HelpCircle, LogOut, Moon, Sun } from 'lucide-react';
+import { Plus, Home, Search, Settings, HelpCircle, LogOut, Moon, Sun, Building2 } from 'lucide-react';
 import { useWorkspaces } from '@repo/api-client';
 import { useParams, useRouter } from '../hooks/use-universal-router';
 import { cn } from '../lib/utils';
 import { Button } from '../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
-import { useSession } from '@repo/shared';
+import { useSession, authClient } from '@repo/shared';
 import { useTheme } from 'next-themes';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 
@@ -98,6 +98,29 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">Add Workspace</TooltipContent>
+          </Tooltip>
+        </div>
+
+        <div className="flex flex-col items-center gap-3 mb-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+                onClick={async () => {
+                  const { data: orgs } = await authClient.organization.list();
+                  if (orgs && orgs.length > 0) {
+                    router.push(`/organization/${orgs[0].slug}/settings`);
+                  } else {
+                    router.push('/organization/new');
+                  }
+                }}
+              >
+                <Building2 className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Organization Settings</TooltipContent>
           </Tooltip>
         </div>
 
