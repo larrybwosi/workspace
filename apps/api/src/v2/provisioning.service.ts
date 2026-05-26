@@ -37,6 +37,7 @@ export class ProvisioningService {
             name: data.name,
             slug: data.slug,
             ownerId: owner.id,
+            organizationId: context.organizationId,
             industry: data.industry,
             description: data.description,
             icon: data.icon || 'building',
