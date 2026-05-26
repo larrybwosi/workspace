@@ -3,12 +3,22 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = function (options) {
   // 1. Filter out the default NestJS ts-loader rule
-  const rules = options.module?.rules?.filter(rule => !rule.use || (rule.use && rule.use.loader !== 'ts-loader')) || [];
+  const rules = options.module?.rules?.filter(rule => {
+    if (typeof rule === 'string') return true;
+    const use = rule.use;
+    if (Array.isArray(use)) {
+      return !use.some(u => (typeof u === 'object' && u.loader === 'ts-loader') || u === 'ts-loader');
+    }
+    if (typeof use === 'object') {
+      return use.loader !== 'ts-loader';
+    }
+    return use !== 'ts-loader';
+  }) || [];
 
   // 2. Add your custom SWC loader rule
   rules.push({
     test: /\.ts$/,
-    exclude: /node_modules/,
+    exclude: [/node_modules/, /\.spec\.ts$/],
     use: {
       loader: 'swc-loader',
       options: {
@@ -39,7 +49,8 @@ module.exports = function (options) {
       nodeExternals({
         importType: 'module',
         // CRITICAL FOR MONOREPOS: Tell Webpack TO bundle your internal packages
-        allowlist: [/^@repo\//],
+        // Also bundle @fastify/multipart to avoid resolution errors in some environments
+        allowlist: [/^@repo\//, '@fastify/multipart'],
       }),
     ],
     experiments: {
@@ -65,34 +76,8 @@ module.exports = function (options) {
       ],
     },
     module: {
-      rules: [
-        {
-          test: /\.ts$/,
-          exclude: [/node_modules/, /\.spec\.ts$/],
-          use: {
-            loader: 'swc-loader',
-            options: {
-              jsc: {
-                parser: {
-                  syntax: 'typescript',
-                  decorators: true,
-                  dynamicImport: true,
-                },
-                transform: {
-                  legacyDecorator: true,
-                  decoratorMetadata: true,
-                },
-                target: 'esnext',
-                externalHelpers: false,
-                keepClassNames: true,
-              },
-              module: {
-                type: 'es6',
-              },
-            },
-          },
-        },
-      ],
+      ...options.module,
+      rules,
     },
   };
 };
