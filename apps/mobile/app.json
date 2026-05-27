@@ -2,7 +2,7 @@
   "expo": {
     "name": "Scrymechat",
     "slug": "scrymechat-mobile",
-    "version": "0.0.467",
+    "version": "0.0.468",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.scrymechat.com",
-      "versionCode": 467
+      "versionCode": 468
     },
     "web": {
       "favicon": "./assets/favicon.png",
