@@ -15,7 +15,7 @@ path = "src/lib.rs"
 [dependencies]
 tauri = { version = "2.1", features = ["tray-icon", "image"] }
 tauri-plugin-shell = "2.1"
-tauri-plugin-notification = "2.1"
+tauri-plugin-notification = "2"
 tauri-plugin-deep-link = "2.1"
 tauri-plugin-sql = { version = "2.1", features = ["sqlite"] }
 tauri-plugin-updater = "2.1"
