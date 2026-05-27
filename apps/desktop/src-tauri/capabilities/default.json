@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/capability.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "shell:default",
     "shell:allow-open",
@@ -14,7 +16,12 @@
     "fs:default",
     {
       "identifier": "fs:scope",
-      "allow": ["$APPDATA/**/*", "$DOCUMENT/**/*"]
-    }
+      "allow": [
+        "$APPDATA/**/*",
+        "$DOCUMENT/**/*"
+      ]
+    },
+    "store:default",
+    "process:default"
   ]
 }
