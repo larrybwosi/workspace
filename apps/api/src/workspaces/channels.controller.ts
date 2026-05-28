@@ -76,11 +76,7 @@ export class ChannelsController {
   @ApiResponse({ status: 200, description: 'List of channels' })
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and channel retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations (like message counts).
-     * 3. Reduces database round-trips from 2 down to 1 while maintaining access control.
-     * Expected impact: Faster response times for channel list loading.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -144,13 +140,7 @@ export class ChannelsController {
   @ApiBody({ type: CreateWorkspaceChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created successfully' })
   async createChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceChannelDto) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
@@ -228,11 +218,7 @@ export class ChannelsController {
   @ApiResponse({ status: 404, description: 'Channel not found' })
   async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and detailed channel retrieval into a single query.
      * 2. Uses nested 'select' and 'include' to fetch channel details, members, and counts in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster channel detail retrieval and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -287,13 +273,7 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Body() body: UpdateWorkspaceChannelDto
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
@@ -357,13 +337,7 @@ export class ChannelsController {
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
   @ApiResponse({ status: 200, description: 'Channel deleted successfully' })
   async deleteChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,

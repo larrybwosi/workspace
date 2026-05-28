@@ -48,12 +48,7 @@ export class CallsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of active calls' })
   async getActiveCalls(@CurrentUser() user: User, @Param('slug') slug: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * Eliminates N+1 queries and consolidates workspace authorization.
-     * Expected impact: Database RTT reduced from 2+N down to 3.
-     */
-    const workspace = await this.verifyWorkspaceAccess(slug, user.id);
+        const workspace = await this.verifyWorkspaceAccess(slug, user.id);
     const calls = await this.fetchActiveCallsInWorkspace(workspace.id);
 
     const channelIds = this.extractChannelIdsFromCalls(calls);
@@ -96,10 +91,7 @@ export class CallsController {
       .filter(Boolean) as string[];
   }
 
-  /**
-   * ⚡ Optimization: Batch fetches channel metadata to avoid N+1 queries.
-   */
-  private async getRelevantChannels(channelIds: string[], userId: string) {
+    private async getRelevantChannels(channelIds: string[], userId: string) {
     if (channelIds.length === 0) return new Map<string, any>();
 
     const channels = await prisma.channel.findMany({
@@ -117,10 +109,7 @@ export class CallsController {
     return new Map(channels.map((c) => [c.id, c]));
   }
 
-  /**
-   * ⚡ Optimization: Efficiently checks call accessibility using pre-fetched metadata.
-   */
-  private isCallAccessible(call: any, userId: string, channelMap: Map<string, any>): boolean {
+    private isCallAccessible(call: any, userId: string, channelMap: Map<string, any>): boolean {
     const name: string = call.channelName;
     if (name.startsWith('dm-')) {
       return name.includes(userId);

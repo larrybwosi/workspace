@@ -54,9 +54,7 @@ export class InvitationsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
    * Consolidates workspace membership authorization and invitation retrieval into a single query.
-   * Reduces database round-trips from 2 down to 1.
    */
   private async getWorkspaceInvitations(userId: string, workspaceId: string) {
     const workspace = await prisma.workspace.findUnique({
@@ -160,11 +158,9 @@ export class InvitationsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
    * Consolidates 3 sequential database checks for different invitation types into a single
    * parallelized Promise.all call. This reduces database round-trip latency from O(3) to O(1)
    * for invalid tokens or platform-wide invitations, and from O(2) to O(1) for workspace invitations.
-   * Expected impact: Up to 66% reduction in database-related latency for invitation resolution.
    */
   async getInvitationByToken(token: string) {
     const [inviteLink, workspaceInvite, generalInvite] = await Promise.all([

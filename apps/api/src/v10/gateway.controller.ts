@@ -56,16 +56,39 @@ export class V10GatewayController {
         throw new InternalServerErrorException('ABLY_API_KEY is not defined');
       }
 
+      // Fetch bot's workspaces and channels for granular capabilities
+      const [workspaces, channelMemberships] = await Promise.all([
+        prisma.workspaceMember.findMany({
+          where: { userId: bot.id },
+          select: { workspaceId: true },
+        }),
+        prisma.channelMember.findMany({
+          where: { userId: bot.id },
+          select: { channelId: true },
+        }),
+      ]);
+
+      const workspaceIds = workspaces.map(w => w.workspaceId);
+      const channelIds = channelMemberships.map(cm => cm.channelId);
+
+      const capability: Record<string, string[]> = {
+        [`user:${bot.id}:*`]: ['subscribe', 'publish', 'history', 'presence'],
+        [`notifications:${bot.id}:*`]: ['subscribe', 'publish', 'history', 'presence'],
+        'presence:*': ['subscribe', 'publish', 'history', 'presence'],
+      };
+
+      for (const workspaceId of workspaceIds) {
+        capability[`workspace:${workspaceId}:*`] = ['subscribe', 'publish', 'history', 'presence'];
+      }
+
+      for (const channelId of channelIds) {
+        capability[`channel:${channelId}:*`] = ['subscribe', 'publish', 'history', 'presence'];
+      }
+
       const ably = new Ably.Rest({ key: ablyKey });
       const tokenRequest = await ably.auth.requestToken({
         clientId: bot.id,
-        capability: JSON.stringify({
-          'channel:*': ['subscribe', 'publish', 'history', 'presence'],
-          'workspace:*': ['subscribe', 'publish', 'history', 'presence'],
-          'user:*': ['subscribe', 'publish', 'history', 'presence'],
-          'notifications:*': ['subscribe', 'publish', 'history', 'presence'],
-          'presence:*': ['subscribe', 'publish', 'history', 'presence'],
-        }),
+        capability: JSON.stringify(capability),
         ttl: 3600 * 1000,
       });
       return tokenRequest;

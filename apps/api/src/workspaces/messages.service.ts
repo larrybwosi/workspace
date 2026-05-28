@@ -23,13 +23,7 @@ import {
 export class MessagesService {
   // --- Core Validations ---
   async verifyWorkspaceAccess(userId: string, slug: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for every workspace-scoped message operation.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
@@ -53,12 +47,9 @@ export class MessagesService {
 
   // --- Message Operations ---
   /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
    * 2. Only fetches the current user's read status instead of all read receipts.
    * 3. Removed redundant 'replies' include as the frontend reconstructs threads from flat list.
    * 4. Groups reactions in-memory to match frontend optimized format.
-   * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
    */
   async getMessages(channelId: string, userId: string, cursor?: string, limit = 50) {
     if (!channelId) {
@@ -147,7 +138,6 @@ export class MessagesService {
     const nextCursor = hasMore ? rawData[rawData.length - 1].timestamp.toISOString() : null;
 
     /**
-     * ⚡ Performance Optimization:
      * Returns messages in the order they were fetched (newest first).
      * The mobile app uses 'inverted' FlatList which expects this order.
      * The web app sorts them oldest-first in-memory anyway.
@@ -199,7 +189,6 @@ export class MessagesService {
     const mentionsAll = hasSpecialMention(content || '', 'all');
     const mentionsHere = hasSpecialMention(content || '', 'here');
 
-    // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
     const mentionedUsers =
       userMentions.length > 0
         ? await prisma.user.findMany({
@@ -280,7 +269,6 @@ export class MessagesService {
 
     const sender = message.user;
 
-    // ⚡ Optimization: Notify mentioned users in batch
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
     if (recipientIds.length > 0) {
       await notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content);
@@ -433,7 +421,6 @@ export class MessagesService {
 
     const messages = await prisma.message.findMany({
       where: whereClause,
-      // ⚡ Optimization: Select only required fields to reduce DB load and memory usage.
       // Avoids over-fetching content-heavy fields like metadata and large attachments.
       // This is safe because the service maps results to a custom search result object.
       select: {
@@ -497,8 +484,6 @@ export class MessagesService {
   async batchMarkAsRead(userId: string, messageIds: string[], channelId?: string) {
     if (!messageIds.length) return { success: true };
 
-    // ⚡ Performance Optimization:
-    // Replaces sequential upsert calls with a single batch 'createMany' operation.
     // This reduces O(N) database round-trips to O(1).
     // We use skipDuplicates to avoid errors for already read messages.
     await prisma.messageRead.createMany({
@@ -510,7 +495,6 @@ export class MessagesService {
       skipDuplicates: true,
     });
 
-    // ⚡ Optimization: channelId is passed from the controller, avoiding a redundant database lookup.
     let targetChannelId = channelId;
     if (!targetChannelId) {
       const firstMessage = await prisma.message.findUnique({
@@ -557,10 +541,8 @@ export class MessagesService {
     }
 
     /**
-     * ⚡ Performance Optimization:
      * Consolidates reaction creation and channel lookup into a single database round-trip.
      * Uses 'include' to retrieve the message's channelId during the upsert.
-     * Expected impact: Reduces database queries from 2 down to 1.
      */
     const reaction = await prisma.reaction.upsert({
       where: {
@@ -598,10 +580,7 @@ export class MessagesService {
 
   async removeReaction(userId: string, messageId: string, emoji: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Replaces sequential lookup, delete, and secondary lookup with a single atomic 'delete'.
      * Uses the compound unique index and 'include' to fetch channelId in one operation.
-     * Expected impact: Reduces database queries from 3 down to 1.
      */
     try {
       const reaction = await prisma.reaction.delete({

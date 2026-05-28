@@ -97,10 +97,7 @@ export class ApiTokensController {
   @ApiResponse({ status: 200, description: 'List of API tokens' })
   async getApiTokens(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and API token retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations.
-     * 3. Reduces database round-trips from 3 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

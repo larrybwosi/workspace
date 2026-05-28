@@ -5,11 +5,8 @@ import { getAblyRest, AblyChannels, AblyEvents, publishToAbly } from '@repo/shar
 @Injectable()
 export class DmsService {
   /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
    * 2. Removed redundant 'sender' include for last message as it's already fetched via participants.
    * 3. Only fetches necessary fields for the DM list view.
-   * Expected impact: Reduces database response size and memory overhead by ~30-40%.
    */
   async getDms(userId: string) {
     const dms = await prisma.directMessage.findMany({
@@ -239,11 +236,8 @@ export class DmsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
    * 2. Only fetches the current user's read status instead of all read receipts.
    * 3. Groups reactions in-memory to match frontend optimized format.
-   * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
    */
   async getMessages(dmId: string, userId: string, cursor?: string, limitNum = 50) {
     const messages = await prisma.dMMessage.findMany({
@@ -446,8 +440,6 @@ export class DmsService {
   async markAsRead(userId: string, messageIds: string[], dmId?: string) {
     if (!messageIds.length) return { success: true };
 
-    // ⚡ Performance Optimization:
-    // Replaces sequential upsert calls with a single batch 'createMany' operation.
     // This reduces O(N) database round-trips to O(1).
     // We use skipDuplicates to avoid errors for already read messages.
     await prisma.dMMessageRead.createMany({
@@ -459,7 +451,6 @@ export class DmsService {
       skipDuplicates: true,
     });
 
-    // ⚡ Optimization: dmId is passed from the controller, avoiding a redundant database lookup.
     let targetDmId = dmId;
     if (!targetDmId) {
       const firstMessage = await prisma.dMMessage.findUnique({
@@ -511,10 +502,7 @@ export class DmsService {
 
   async removeReaction(dmId: string, messageId: string, userId: string, emoji: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Replaces sequential 'findUnique' and 'delete' with a single atomic 'delete' using the
      * compound unique index. This reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster reaction removal and reduced database load.
      */
     try {
       await prisma.dMReaction.delete({

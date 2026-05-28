@@ -31,11 +31,8 @@ export class V2SearchController {
     const limit = parseInt(limitStr);
 
     /**
-     * ⚡ Performance Optimization:
      * 1. Queries the User model directly using a relation filter on workspaceMemberships.
-     * 2. Uses targeted 'select' to retrieve only required user fields, avoiding over-fetching from WorkspaceMember.
      * 3. Eliminates O(N) in-memory mapping by returning the users directly.
-     * Expected impact: Reduces database payload size and CPU overhead.
      */
     const users = await prisma.user.findMany({
       where: {

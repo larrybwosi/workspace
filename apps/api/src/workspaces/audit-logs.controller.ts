@@ -28,11 +28,8 @@ export class AuditLogsController {
     const skip = (page - 1) * limit;
 
     /**
-     * ⚡ Performance Optimization:
      * Consolidates workspace lookup, membership verification, audit log retrieval,
      * and total count into a single database query.
-     * Reduces database round-trips from 3 down to 1.
-     * Expected impact: Faster response times and significantly reduced DB load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -118,11 +115,8 @@ export class AuditLogsController {
   @ApiResponse({ status: 200, description: 'CSV file' })
   async exportAuditLogs(@CurrentUser() user: User, @Param('slug') slug: string, @Res() res: FastifyReply) {
     /**
-     * ⚡ Performance Optimization:
      * Consolidates workspace lookup, membership verification, and audit log retrieval
      * into a single database query.
-     * Reduces database round-trips from 3 down to 1.
-     * Expected impact: Faster export initialization and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

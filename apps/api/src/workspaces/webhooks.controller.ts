@@ -56,11 +56,7 @@ export class WebhooksController {
   @ApiResponse({ status: 200, description: 'List of webhooks' })
   async getWebhooks(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and webhook retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations (like log counts).
-     * 3. Reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster response times and improved security with explicit membership check.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -154,12 +150,7 @@ export class WebhooksController {
     @Param('webhookId') webhookId: string,
     @Body() body: UpdateWorkspaceWebhookDto
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Reduces database round-trips from 2 down to 1.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,

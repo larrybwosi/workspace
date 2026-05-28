@@ -14,10 +14,7 @@ export class ChannelsService {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   /**
-   * ⚡ Performance Optimization:
-   * 1. Replaces full 'members' list with a simple count to avoid massive JSON payloads.
    * 2. This is safe as the 'Channel' type in '@repo/types' does not include the members array.
-   * Expected impact: Reduces JSON payload size by ~80-90% for instances with many users.
    */
   async getGlobalChannels() {
     return prisma.channel.findMany({
@@ -69,16 +66,12 @@ export class ChannelsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
    * 2. Only fetches the current user's read status instead of all read receipts.
    * 3. Removed redundant 'replies' include as the frontend reconstructs threads from flat list.
    * 4. Groups reactions in-memory to match frontend optimized format.
-   * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
    */
   async getMessages(channelId: string, userId: string, cursor?: string, limitNum = 50) {
     /**
-     * ⚡ Performance Optimization:
      * Check access using existence checks (findFirst) instead of deep joins (include).
      * This avoids massive DB result sets when channels have many members or are shared extensively.
      */
@@ -237,7 +230,6 @@ export class ChannelsService {
     const mentionsAll = hasSpecialMention(content, 'all');
     const mentionsHere = hasSpecialMention(content, 'here');
 
-    // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
     const mentionedUsers =
       userMentions.length > 0
         ? await prisma.user.findMany({
@@ -270,7 +262,6 @@ export class ChannelsService {
     }
 
     const message = await prisma.$transaction(async tx => {
-      // Optimization: Only check for support ticket if channel type suggests it
       const channel = await tx.channel.findUnique({
         where: { id: channelId },
         select: { type: true },
@@ -335,7 +326,6 @@ export class ChannelsService {
 
     const sender = message.user;
 
-    // ⚡ Optimization: Notify mentioned users in batch
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
     if (recipientIds.length > 0) {
       await this.notificationsService.notifyMentions(
@@ -411,8 +401,6 @@ export class ChannelsService {
   async markAsRead(userId: string, messageIds: string[], channelId?: string) {
     if (!messageIds.length) return { success: true };
 
-    // ⚡ Performance Optimization:
-    // Replaces sequential upsert calls with a single batch 'createMany' operation.
     // This reduces O(N) database round-trips to O(1).
     // We use skipDuplicates to avoid errors for already read messages.
     await prisma.messageRead.createMany({
@@ -424,7 +412,6 @@ export class ChannelsService {
       skipDuplicates: true,
     });
 
-    // ⚡ Optimization: Publish read status if channelId is provided
     if (channelId) {
       const ably = getAblyRest();
       if (ably) {
@@ -467,10 +454,7 @@ export class ChannelsService {
 
   async removeReaction(channelId: string, messageId: string, userId: string, emoji: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Replaces sequential 'findUnique' and 'delete' with a single atomic 'delete' using the
      * compound unique index. This reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster reaction removal and reduced database load.
      */
     try {
       await prisma.reaction.delete({

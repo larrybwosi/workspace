@@ -96,11 +96,7 @@ export class TeamsController {
   @ApiResponse({ status: 200, description: 'List of teams' })
   async getTeams(@CurrentUser() user: User, @Param('slug') slug: string, @Query('departmentId') departmentId: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and team retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations (like departments and members).
-     * 3. Reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster response times for team list loading and reduced database load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -163,9 +159,7 @@ export class TeamsController {
   @ApiResponse({ status: 201, description: 'Team created successfully' })
   async createTeam(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceTeamDto) {
     /**
-     * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -339,9 +333,7 @@ export class TeamsController {
     @Param('userId') userId: string
   ) {
     /**
-     * ⚡ Performance Optimization:
      * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

@@ -50,12 +50,8 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async getSocialProfile(@CurrentUser() currentUser: User, @Param('id') targetId: string): Promise<any> {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates 8 separate database queries into a single 'prisma.user.findUnique' call.
      * 2. Uses nested 'select' and 'where' filters to fetch friendship, blocks, mutual workspaces,
      *    and mutual friends in one database round-trip.
-     * 3. Replaces O(N) in-memory intersection for mutual friends with an efficient database-level filter.
-     * Expected impact: Reduces database latency by ~85% and significantly lowers API memory overhead.
      */
     const targetUser = await prisma.user.findUnique({
       where: { id: targetId },

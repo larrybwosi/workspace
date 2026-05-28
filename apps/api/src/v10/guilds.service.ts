@@ -5,12 +5,7 @@ import { hasPermission, Permissions } from '../common/permissions';
 @Injectable()
 export class V10GuildsService {
   async getChannels(bot: any, guildId: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * Uses 'select' to fetch only required fields for Discord channel objects.
-     * Reduces database payload and memory usage for guild channel listings.
-     */
-    const channels = await prisma.channel.findMany({
+        const channels = await prisma.channel.findMany({
       where: { workspaceId: guildId },
       select: {
         id: true,
@@ -41,13 +36,7 @@ export class V10GuildsService {
   async getMembers(bot: any, guildId: string, query: { limit?: number; after?: string }) {
     const { limit = 50, after } = query;
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces 'include: { user: true }' with a targeted 'select' for required user fields.
-     * 2. Reduces database response size and API memory usage by avoiding fetching large user fields like statusEmoji or notificationPreferences.
-     * Expected impact: Faster database retrieval and ~30-40% smaller JSON payload.
-     */
-    const members = await prisma.workspaceMember.findMany({
+        const members = await prisma.workspaceMember.findMany({
       where: {
         workspaceId: guildId,
         ...(after && { id: { gt: after } }),
@@ -153,14 +142,7 @@ export class V10GuildsService {
   }
 
   async getGuild(bot: any, guildId: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Uses 'select' and '_count' to retrieve essential workspace fields and total member count.
-     * 2. Replaces full 'members' include with a targeted check for the current bot's membership.
-     * 3. Uses a separate optimized count query for online members.
-     * Expected impact: Reduces database response size and memory overhead by ~95% for large guilds.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { id: guildId },
       select: {
         id: true,

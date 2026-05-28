@@ -83,11 +83,7 @@ export class FriendsService {
 
   async sendFriendRequest(senderId: string, senderName: string, receiverEmailOrUsername: string, message?: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates 3 database queries (user lookup, friendship check, and pending request check)
      *    into a single 'prisma.user.findFirst' call using nested 'select' and 'where' filters.
-     * 2. Parallelizes database notification creation and Ably real-time event publishing using 'Promise.all'.
-     * Expected impact: Reduces database round-trips from 3 down to 1 and speeds up request processing by ~50%.
      */
     const receiver = await prisma.user.findFirst({
       where: {
@@ -211,12 +207,7 @@ export class FriendsService {
     });
 
     if (action === 'accept') {
-      /**
-       *  Performance Optimization:
-       * 1. Replaces sequential reciprocal friendship creation with a single 'prisma.friend.createMany' call.
-       * 2. Parallelizes database notification creation and Ably real-time event publishing.
-       */
-      await prisma.friend.createMany({
+            await prisma.friend.createMany({
         data: [
           { userId: friendRequest.senderId, friendId: friendRequest.receiverId },
           { userId: friendRequest.receiverId, friendId: friendRequest.senderId },
@@ -245,7 +236,6 @@ export class FriendsService {
         }),
       ]);
     } else if (action === 'decline') {
-      // ⚡ Parallelize side effects
       await Promise.all([
         prisma.notification.create({
           data: {

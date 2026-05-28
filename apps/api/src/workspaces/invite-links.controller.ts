@@ -25,11 +25,7 @@ export class InviteLinksController {
   @ApiResponse({ status: 200, description: 'List of invite links' })
   async getInviteLinks(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and invite link retrieval into a single query.
-     * 2. Uses 'select' to fetch only essential fields for the 'createdBy' relation.
      * 3. Adds authorization: ensures the user is a member of the workspace before returning links.
-     * Expected impact: Reduces database round-trips from 2 to 1 and reduces payload size.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -79,14 +75,7 @@ export class InviteLinksController {
   @ApiBody({ type: CreateInviteLinkDto })
   @ApiResponse({ status: 201, description: 'Invite link created' })
   async createInviteLink(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateInviteLinkDto) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single query.
-     * 2. Reduces database round-trips from 2 to 1 for initial verification.
-     * 3. Uses 'select' to retrieve only required fields.
-     * Expected impact: Faster validation and reduced database load.
-     */
-    const workspace = await prisma.workspace.findUnique({
+        const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,

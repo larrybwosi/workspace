@@ -37,7 +37,6 @@ export class NotificationsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
    * Deliver real-time and push notifications.
    * This is used for individual ad-hoc notifications.
    * For batch delivery, prefer using the optimized shared functions.
@@ -91,9 +90,7 @@ export class NotificationsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
    * Delegates mention notifications to the optimized shared implementation.
-   * This ensures O(1) database round-trips for preference resolution and batch delivery.
    */
   async notifyMention(
     messageId: string,
@@ -106,9 +103,7 @@ export class NotificationsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
    * Delegates batch mention notifications to the optimized shared implementation.
-   * Reduces database round-trips from O(N) to O(1).
    */
   async notifyMentions(
     messageId: string,
@@ -121,7 +116,6 @@ export class NotificationsService {
   }
 
   /**
-   * ⚡ Performance Optimization:
    * Delegates channel-wide notifications to the optimized shared implementation.
    * Eliminates expensive nested 'include' and enables batch notification creation.
    */

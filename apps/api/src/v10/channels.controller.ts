@@ -32,12 +32,13 @@ export class V10ChannelsController {
   @ApiQuery({ name: 'before', required: false })
   @ApiQuery({ name: 'after', required: false })
   async getMessages(
+    @CurrentBot() bot: any,
     @Param('id') id: string,
     @Query('limit') limit?: number,
     @Query('before') before?: string,
     @Query('after') after?: string
   ) {
-    return this.channelsService.getMessages(id, { limit, before, after });
+    return this.channelsService.getMessages(bot.id, id, { limit, before, after });
   }
 
   @Patch(':id/messages/:messageId')

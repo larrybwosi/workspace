@@ -97,11 +97,7 @@ export class WorkspacesController {
   @ApiResponse({ status: 200, description: 'List of workspaces' })
   async getWorkspaces(@CurrentUser() user: User): Promise<any> {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Uses 'select' to fetch only essential Workspace fields.
-     * 2. Replaces full 'members' list with a count to avoid massive JSON payloads.
      * 3. Only fetches the current user's membership for role/access verification.
-     * Expected impact: Reduces JSON payload size by 90-95% for large workspaces.
      */
     return prisma.workspace.findMany({
       where: {
@@ -216,11 +212,7 @@ export class WorkspacesController {
   }
 
   /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
    * 2. Optimized membership check using a direct findUnique on WorkspaceMember.
-   * 3. Replaces full 'members' list with a simple count.
-   * Expected impact: Significantly reduces response time and memory overhead for large workspaces.
    */
   @Get('discover')
   @ApiOperation({ summary: 'Discover public workspaces' })
@@ -259,10 +251,7 @@ export class WorkspacesController {
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async joinWorkspace(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
      * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1 while maintaining API response contracts.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -300,11 +289,7 @@ export class WorkspacesController {
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async getWorkspaceBySlug(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Uses 'select' to fetch only essential Workspace fields.
-     * 2. Replaces full 'members' and 'channels' lists with counts to avoid massive payloads.
      * 3. Retains minimal membership data for the current user for role verification.
-     * Expected impact: Reduces memory overhead and JSON payload size significantly.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -373,10 +358,7 @@ export class WorkspacesController {
     @Body() body: UpdateWorkspaceDto
   ) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
      * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },

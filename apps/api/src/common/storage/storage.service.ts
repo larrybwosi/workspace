@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FileData, StorageProvider, UploadResult } from './storage.interface';
 import { SanityStorageProvider } from './providers/sanity.provider';
 import { MinioStorageProvider } from './providers/minio.provider';
+import { RustFsStorageProvider } from './providers/rustfs.provider';
 import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
@@ -13,16 +14,17 @@ export class StorageService {
 
   constructor(
     private readonly sanityProvider: SanityStorageProvider,
-    private readonly minioProvider: MinioStorageProvider
+    private readonly minioProvider: MinioStorageProvider,
+    private readonly rustFsProvider: RustFsStorageProvider
   ) {
     const storageType = env.STORAGE_PROVIDER.toLowerCase();
 
     if (storageType === 'minio') {
       this.provider = this.minioProvider;
-      this.logger.log('Storage service initialized with Minio provider');
+    } else if (storageType === 'rustfs') {
+      this.provider = this.rustFsProvider;
     } else {
       this.provider = this.sanityProvider;
-      this.logger.log('Storage service initialized with Sanity provider');
     }
   }
 

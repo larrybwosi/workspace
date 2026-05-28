@@ -6,12 +6,7 @@ import { hasPermission, Permissions } from '../common/permissions';
 @Injectable()
 export class V10ChannelsService {
   async getChannel(id: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * Uses 'select' to fetch only required fields for Discord channel objects.
-     * Reduces database payload and memory usage.
-     */
-    const channel = await prisma.channel.findUnique({
+        const channel = await prisma.channel.findUnique({
       where: { id },
       select: {
         id: true,
@@ -41,16 +36,10 @@ export class V10ChannelsService {
     };
   }
 
-  async getMessages(channelId: string, query: { limit?: number; before?: string; after?: string }) {
+  async getMessages(userId: string, channelId: string, query: { limit?: number; before?: string; after?: string }) {
     const { limit = 50, before, after } = query;
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces 'include: { user: true }' with targeted 'select' for message and user fields.
-     * 2. Reduces database payload and memory usage by avoiding fetching full user objects.
-     * Expected impact: ~40-60% reduction in database response size.
-     */
-    const messages = await prisma.message.findMany({
+        const messages = await prisma.message.findMany({
       where: {
         channelId,
         ...(before && { id: { lt: before } }),
@@ -75,32 +64,82 @@ export class V10ChannelsService {
             isBot: true,
           },
         },
+        attachments: {
+          select: {
+            id: true,
+            name: true,
+            url: true,
+            size: true,
+            type: true,
+          },
+        },
+        reactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+        mentions: {
+          select: {
+            mention: true,
+          },
+        },
       },
     });
 
-    return messages.map(m => ({
-      id: m.id,
-      type: 0,
-      content: m.content,
-      channel_id: m.channelId,
-      author: {
-        id: m.user.id,
-        username: m.user.name,
-        avatar: m.user.avatar,
-        bot: m.user.isBot,
-      },
-      attachments: [],
-      embeds: (m.metadata as any)?.embeds || [],
-      mentions: [],
-      mention_roles: [],
-      pinned: false,
-      mention_everyone: false,
-      tts: false,
-      timestamp: m.timestamp.toISOString(),
-      edited_timestamp: m.isEdited ? m.updatedAt.toISOString() : null,
-      flags: m.flags,
-      components: (m.metadata as any)?.components || [],
-    }));
+    return messages.map(m => {
+      // Group reactions by emoji
+      const reactionCounts = m.reactions.reduce((acc, r) => {
+        const existing = acc.find(a => a.emoji.name === r.emoji);
+        if (existing) {
+          existing.count++;
+          if (r.userId === userId) existing.me = true;
+        } else {
+          acc.push({
+            count: 1,
+            me: r.userId === userId,
+            emoji: { name: r.emoji },
+          });
+        }
+        return acc;
+      }, [] as any[]);
+
+      return {
+        id: m.id,
+        type: 0,
+        content: m.content,
+        channel_id: m.channelId,
+        author: {
+          id: m.user.id,
+          username: m.user.name,
+          avatar: m.user.avatar,
+          bot: m.user.isBot,
+        },
+        attachments: m.attachments.map(a => ({
+          id: a.id,
+          filename: a.name,
+          url: a.url,
+          size: parseInt(a.size || '0'),
+          content_type: a.type,
+        })),
+        embeds: (m.metadata as any)?.embeds || [],
+        mentions: m.mentions.map(men => ({
+          id: men.mention,
+          username: 'User', // Simplified as Discord expects user object
+          avatar: null,
+          bot: false,
+        })),
+        mention_roles: [],
+        pinned: false,
+        mention_everyone: false,
+        tts: false,
+        timestamp: m.timestamp.toISOString(),
+        edited_timestamp: m.isEdited ? m.updatedAt.toISOString() : null,
+        flags: m.flags,
+        components: (m.metadata as any)?.components || [],
+        reactions: reactionCounts,
+      };
+    });
   }
 
   async updateMessage(bot: any, channelId: string, messageId: string, data: any) {
@@ -113,11 +152,7 @@ export class V10ChannelsService {
     if (!message) throw new NotFoundException('Unknown Message');
     if (message.userId !== bot.id) throw new ForbiddenException('You can only edit your own messages');
 
-    /**
-     * ⚡ Performance Optimization:
-     * Uses 'select' to retrieve only essential fields for the updated message.
-     */
-    const updatedMessage = await prisma.message.update({
+        const updatedMessage = await prisma.message.update({
       where: { id: messageId },
       data: {
         content: content || message.content,
@@ -194,12 +229,7 @@ export class V10ChannelsService {
     // Bot can delete its own messages, or if it has MANAGE_MESSAGES permission
     if (message.userId !== bot.id) {
       // Check permissions (simplified for now)
-      /**
-       * ⚡ Performance Optimization:
-       * Uses targeted 'select' to fetch only permissions for membership verification.
-       * Reduces JSON payload size and memory overhead.
-       */
-      const channel = await prisma.channel.findUnique({
+            const channel = await prisma.channel.findUnique({
         where: { id: channelId },
         select: {
           members: {
@@ -241,13 +271,7 @@ export class V10ChannelsService {
   async createMessage(bot: any, channelId: string, data: any) {
     const { content, embeds, components, message_reference, exclusive_notification } = data;
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces broad 'include' with targeted 'select' for required channel/workspace fields.
-     * 2. Fetches only membership permissions, slugs, and IDs needed for processing.
-     * Expected impact: ~80-90% reduction in database response size for membership lookups.
-     */
-    const channel = await prisma.channel.findUnique({
+        const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: {
         slug: true,
