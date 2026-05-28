@@ -40,10 +40,15 @@ export function DesktopTitleBar() {
   return (
     <div
       data-tauri-drag-region
-      className="flex h-8 w-full select-none items-center justify-between bg-muted/50 px-2 text-muted-foreground transition-colors hover:bg-muted"
+      className="flex h-8 w-full select-none items-center justify-between border-b bg-background px-2 text-muted-foreground"
     >
-      <div className="flex items-center gap-2 pointer-events-none">
-        <span className="text-xs font-medium px-2">Workspace</span>
+      <div className="flex items-center gap-2 pointer-events-none h-full">
+        <div className="flex items-center gap-1.5 px-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          </div>
+          <span className="text-[11px] font-bold tracking-tight uppercase">Scrymechat</span>
+        </div>
       </div>
 
       <div className="flex items-center h-full">
