@@ -8,6 +8,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
 import multipart from '@fastify/multipart';
+import type { Server as _Server } from '@modelcontextprotocol/sdk/server/index.js';
 
 // Polyfill for BigInt serialization
 (BigInt.prototype as any).toJSON = function () {
