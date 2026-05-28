@@ -30,25 +30,28 @@ export class V2SearchController {
 
     const limit = parseInt(limitStr);
 
-    const members = await prisma.workspaceMember.findMany({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Queries the User model directly using a relation filter on workspaceMemberships.
+     * 2. Uses targeted 'select' to retrieve only required user fields, avoiding over-fetching from WorkspaceMember.
+     * 3. Eliminates O(N) in-memory mapping by returning the users directly.
+     * Expected impact: Reduces database payload size and CPU overhead.
+     */
+    const users = await prisma.user.findMany({
       where: {
-        workspaceId: context.workspaceId,
-        user: {
-          OR: [{ name: { contains: query, mode: 'insensitive' } }, { email: { contains: query, mode: 'insensitive' } }],
+        workspaceMemberships: {
+          some: { workspaceId: context.workspaceId },
         },
+        OR: [{ name: { contains: query, mode: 'insensitive' } }, { email: { contains: query, mode: 'insensitive' } }],
       },
       take: limit,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            status: true,
-            role: true,
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        status: true,
+        role: true,
       },
     });
 
@@ -56,7 +59,7 @@ export class V2SearchController {
       query,
     });
 
-    return { results: members.map(m => m.user) };
+    return { results: users };
   }
 
   @Get('messages')
