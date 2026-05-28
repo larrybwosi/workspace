@@ -13,14 +13,26 @@ import {
   Separator,
 } from '@repo/ui';
 import { signIn } from '../lib/auth/auth-client';
-import { Loader2, Mail, Lock, QrCode } from 'lucide-react';
+import { Loader2, Mail, Lock, QrCode, Settings2, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import { setCustomApiUrl, getCustomApiUrl } from '@repo/shared';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showApiSettings, setShowApiSettings] = useState(false);
+  const [apiUrl, setApiUrl] = useState(getCustomApiUrl() || '');
+
+  const handleSaveApiUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCustomApiUrl(apiUrl);
+    toast.success('API URL updated. Reloading...');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +62,48 @@ export function LoginPage() {
 
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Sign in</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">Sign in</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={() => setShowApiSettings(!showApiSettings)}
+              >
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </div>
             <CardDescription>Enter your email to sign in</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {showApiSettings && (
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/30 mb-4">
+                <form onSubmit={handleSaveApiUrl} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="apiUrl" className="text-xs uppercase font-bold text-muted-foreground">
+                      Custom API URL
+                    </Label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="apiUrl"
+                        type="url"
+                        placeholder="https://api.example.com"
+                        value={apiUrl}
+                        onChange={e => setApiUrl(e.target.value)}
+                        className="pl-10 h-9"
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Leave empty to use default Scrymechat API.</p>
+                  </div>
+                  <Button type="submit" size="sm" className="w-full h-8">
+                    Save and Reload
+                  </Button>
+                </form>
+                <Separator />
+              </div>
+            )}
+
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

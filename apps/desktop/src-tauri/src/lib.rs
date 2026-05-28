@@ -24,6 +24,13 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_process::init())
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                window.hide().unwrap();
+                api.prevent_close();
+            }
+            _ => {}
+        })
         .setup(|app| {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             app.deep_link().on_open_url(|event| {
@@ -44,7 +51,7 @@ pub fn run() {
                 tauri::image::Image::new_owned(vec![0; 16], 2, 2)
             });
 
-            let _tray = TrayIconBuilder::new()
+            let tray = TrayIconBuilder::new()
                 .icon(icon)
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -73,6 +80,8 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            app.manage(tray);
 
             Ok(())
         })

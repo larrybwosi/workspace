@@ -18,16 +18,46 @@ const getEnv = (name: string) => {
 };
 
 const getBaseURL = () => {
-  const url =
-    getEnv('API_URL') ||
-    getEnv('NEXT_PUBLIC_API_URL') ||
-    getEnv('VITE_API_URL') ||
-    getEnv('EXPO_PUBLIC_API_URL') ||
-    'http://localhost:3000';
+  let url = '';
+
+  // Check localStorage for a custom API URL (used for self-hosted options in desktop app)
+  if (typeof window !== 'undefined') {
+    const customUrl = window.localStorage.getItem('CUSTOM_API_URL');
+    if (customUrl) {
+      url = customUrl;
+    }
+  }
+
+  if (!url) {
+    url =
+      getEnv('API_URL') ||
+      getEnv('NEXT_PUBLIC_API_URL') ||
+      getEnv('VITE_API_URL') ||
+      getEnv('EXPO_PUBLIC_API_URL') ||
+      'http://localhost:3000';
+  }
+
   if (url.includes('/api/auth')) {
     return url;
   }
   return url.replace(/\/$/, '') + '/api/auth';
+};
+
+export const setCustomApiUrl = (url: string) => {
+  if (typeof window !== 'undefined') {
+    if (url) {
+      window.localStorage.setItem('CUSTOM_API_URL', url);
+    } else {
+      window.localStorage.removeItem('CUSTOM_API_URL');
+    }
+  }
+};
+
+export const getCustomApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.localStorage.getItem('CUSTOM_API_URL');
+  }
+  return null;
 };
 
 export const authClient: any = createAuthClient({
