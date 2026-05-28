@@ -2,7 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": [
     "src/index.{ts,tsx,js,jsx,mjs}",
-    "src/main.{ts,tsx,js,jsx,mjs}"
+    "src/main.{ts,tsx,js,jsx,mjs}",
+    "src/mcp-main.{ts,tsx,js,jsx,mjs}"
   ],
   "workspaces": {
     "packages": [
