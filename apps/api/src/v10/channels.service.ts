@@ -144,15 +144,12 @@ export class V10ChannelsService {
 
   async updateMessage(bot: any, channelId: string, messageId: string, data: any) {
     const { content, embeds, components } = data;
-
-    const message = await prisma.message.findUnique({
-      where: { id: messageId },
-    });
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
 
     if (!message) throw new NotFoundException('Unknown Message');
     if (message.userId !== bot.id) throw new ForbiddenException('You can only edit your own messages');
 
-        const updatedMessage = await prisma.message.update({
+    const updatedMessage = await prisma.message.update({
       where: { id: messageId },
       data: {
         content: content || message.content,
@@ -164,47 +161,33 @@ export class V10ChannelsService {
         },
       },
       select: {
-        id: true,
-        content: true,
-        channelId: true,
-        timestamp: true,
-        updatedAt: true,
-        flags: true,
-        metadata: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            isBot: true,
-          },
-        },
+        id: true, content: true, channelId: true, timestamp: true, updatedAt: true,
+        flags: true, metadata: true,
+        user: { select: { id: true, name: true, avatar: true, isBot: true } },
       },
     });
 
+    await this.notifyMessageUpdate(channelId, updatedMessage, bot);
+
+    return this.mapUpdatedMessageToDiscord(updatedMessage, bot);
+  }
+
+  private async notifyMessageUpdate(channelId: string, updatedMessage: any, bot: any) {
     await publishToAbly(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, {
       message: {
         ...updatedMessage,
-        user: {
-          id: bot.id,
-          name: bot.name,
-          avatar: bot.avatar,
-          isBot: true,
-        },
+        user: { id: bot.id, name: bot.name, avatar: bot.avatar, isBot: true },
       },
     });
+  }
 
+  private mapUpdatedMessageToDiscord(updatedMessage: any, bot: any) {
     return {
       id: updatedMessage.id,
       type: 0,
       content: updatedMessage.content,
       channel_id: updatedMessage.channelId,
-      author: {
-        id: bot.id,
-        username: bot.name,
-        avatar: bot.avatar,
-        bot: true,
-      },
+      author: { id: bot.id, username: bot.name, avatar: bot.avatar, bot: true },
       attachments: [],
       embeds: (updatedMessage.metadata as any)?.embeds || [],
       mentions: [],
@@ -228,32 +211,7 @@ export class V10ChannelsService {
 
     // Bot can delete its own messages, or if it has MANAGE_MESSAGES permission
     if (message.userId !== bot.id) {
-      // Check permissions (simplified for now)
-            const channel = await prisma.channel.findUnique({
-        where: { id: channelId },
-        select: {
-          members: {
-            where: { userId: bot.id },
-            select: { permissions: true },
-          },
-          workspace: {
-            select: {
-              members: {
-                where: { userId: bot.id },
-                select: { permissions: true },
-              },
-            },
-          },
-        },
-      });
-
-      const workspaceMember = channel?.workspace?.members[0];
-      const channelMember = channel?.members[0];
-      const perms = BigInt(workspaceMember?.permissions || 0) | BigInt(channelMember?.permissions || 0);
-
-      if (!hasPermission(perms, Permissions.MANAGE_MESSAGES)) {
-        throw new ForbiddenException('Missing Permissions');
-      }
+      await this.getChannelAndCheckPermissions(bot.id, channelId, Permissions.MANAGE_MESSAGES);
     }
 
     await prisma.message.delete({
@@ -268,26 +226,18 @@ export class V10ChannelsService {
     return null;
   }
 
-  async createMessage(bot: any, channelId: string, data: any) {
-    const { content, embeds, components, message_reference, exclusive_notification } = data;
-
-        const channel = await prisma.channel.findUnique({
+  private async getChannelAndCheckPermissions(botId: string, channelId: string, permission: bigint) {
+    const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: {
         slug: true,
         workspaceId: true,
         appId: true,
-        members: {
-          where: { userId: bot.id },
-          select: { permissions: true },
-        },
+        members: { where: { userId: botId }, select: { permissions: true } },
         workspace: {
           select: {
             slug: true,
-            members: {
-              where: { userId: bot.id },
-              select: { permissions: true },
-            },
+            members: { where: { userId: botId }, select: { permissions: true } },
           },
         },
       },
@@ -295,15 +245,21 @@ export class V10ChannelsService {
 
     if (!channel) throw new NotFoundException('Unknown Channel');
 
-    // Enterprise Logic: Permission Check
     const workspaceMember = channel.workspace?.members[0];
     const channelMember = channel.members[0];
-
     const perms = BigInt(workspaceMember?.permissions || 0) | BigInt(channelMember?.permissions || 0);
 
-    if (!hasPermission(perms, Permissions.SEND_MESSAGES)) {
+    if (!hasPermission(perms, permission)) {
       throw new ForbiddenException('Missing Permissions');
     }
+
+    return channel;
+  }
+
+  async createMessage(bot: any, channelId: string, data: any) {
+    const { content, embeds, components, message_reference, exclusive_notification } = data;
+
+    const channel = await this.getChannelAndCheckPermissions(bot.id, channelId, Permissions.SEND_MESSAGES);
 
     const message = await prisma.message.create({
       data: {

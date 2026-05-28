@@ -207,52 +207,9 @@ export class FriendsService {
     });
 
     if (action === 'accept') {
-            await prisma.friend.createMany({
-        data: [
-          { userId: friendRequest.senderId, friendId: friendRequest.receiverId },
-          { userId: friendRequest.receiverId, friendId: friendRequest.senderId },
-        ],
-      });
-
-      await Promise.all([
-        prisma.notification.create({
-          data: {
-            userId: friendRequest.senderId,
-            type: 'friend_request_accepted',
-            title: 'Friend Request Accepted',
-            message: `${friendRequest.receiver.name} accepted your friend request`,
-            entityType: 'friend',
-            entityId: friendRequest.receiverId,
-            linkUrl: `/friends`,
-          },
-        }),
-        publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
-          type: 'friend_request_accepted',
-          title: 'Friend Request Accepted',
-          message: `${friendRequest.receiver.name} accepted your friend request`,
-          entityType: 'friend',
-          entityId: friendRequest.receiverId,
-          linkUrl: `/friends`,
-        }),
-      ]);
+      await this.handleFriendRequestAccept(friendRequest);
     } else if (action === 'decline') {
-      await Promise.all([
-        prisma.notification.create({
-          data: {
-            userId: friendRequest.senderId,
-            type: 'friend_request_declined',
-            title: 'Friend Request Declined',
-            message: `${friendRequest.receiver.name} declined your friend request`,
-            entityType: 'friend_request',
-            entityId: requestId,
-          },
-        }),
-        publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
-          type: 'friend_request_declined',
-          title: 'Friend Request Declined',
-          message: `${friendRequest.receiver.name} declined your friend request`,
-        }),
-      ]);
+      await this.handleFriendRequestDecline(friendRequest, requestId);
     }
 
     return updatedRequest;
@@ -276,5 +233,56 @@ export class FriendsService {
     });
 
     return { success: true };
+  }
+
+  private async handleFriendRequestAccept(friendRequest: any) {
+    await prisma.friend.createMany({
+      data: [
+        { userId: friendRequest.senderId, friendId: friendRequest.receiverId },
+        { userId: friendRequest.receiverId, friendId: friendRequest.senderId },
+      ],
+    });
+
+    await Promise.all([
+      prisma.notification.create({
+        data: {
+          userId: friendRequest.senderId,
+          type: 'friend_request_accepted',
+          title: 'Friend Request Accepted',
+          message: `${friendRequest.receiver.name} accepted your friend request`,
+          entityType: 'friend',
+          entityId: friendRequest.receiverId,
+          linkUrl: `/friends`,
+        },
+      }),
+      publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
+        type: 'friend_request_accepted',
+        title: 'Friend Request Accepted',
+        message: `${friendRequest.receiver.name} accepted your friend request`,
+        entityType: 'friend',
+        entityId: friendRequest.receiverId,
+        linkUrl: `/friends`,
+      }),
+    ]);
+  }
+
+  private async handleFriendRequestDecline(friendRequest: any, requestId: string) {
+    await Promise.all([
+      prisma.notification.create({
+        data: {
+          userId: friendRequest.senderId,
+          type: 'friend_request_declined',
+          title: 'Friend Request Declined',
+          message: `${friendRequest.receiver.name} declined your friend request`,
+          entityType: 'friend_request',
+          entityId: requestId,
+        },
+      }),
+      publishToAbly(`user:${friendRequest.senderId}`, 'NOTIFICATION', {
+        type: 'friend_request_declined',
+        title: 'Friend Request Declined',
+        message: `${friendRequest.receiver.name} declined your friend request`,
+      }),
+    ]);
   }
 }

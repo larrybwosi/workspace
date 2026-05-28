@@ -3,7 +3,10 @@
   "entry": [
     "src/index.{ts,tsx,js,jsx,mjs}",
     "src/main.{ts,tsx,js,jsx,mjs}",
-    "src/mcp-main.{ts,tsx,js,jsx,mjs}"
+    "src/mcp-main.{ts,tsx,js,jsx,mjs}",
+    "src/app/**/page.{ts,tsx,js,jsx,mjs}",
+    "src/app/**/route.{ts,tsx,js,jsx,mjs}",
+    "src/app/**/layout.{ts,tsx,js,jsx,mjs}"
   ],
   "workspaces": {
     "packages": [

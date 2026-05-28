@@ -70,66 +70,52 @@ const updateChannelSchema = z.object({
 @Controller('workspaces/:slug/channels')
 @UseGuards(AuthGuard)
 export class ChannelsController {
+  private async getWorkspaceAndVerifyMember(slug: string, userId: string, roles: string[] = []) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: { where: { userId }, select: { role: true } },
+      },
+    });
+
+    if (!workspace) throw new NotFoundException('Workspace not found');
+    const member = workspace.members[0];
+    if (!member) throw new ForbiddenException('Forbidden');
+    if (roles.length > 0 && !roles.includes(member.role)) throw new ForbiddenException('Forbidden');
+
+    return workspace;
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all channels in a workspace' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of channels' })
   async getWorkspaceChannels(@CurrentUser() user: User, @Param('slug') slug: string) {
-    /**
-     * 2. Uses nested 'select' to fetch only required fields and relations (like message counts).
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
+        members: { where: { userId: user.id }, select: { role: true } },
         channels: {
           where: {
             OR: [
               { isPrivate: false },
-              {
-                isPrivate: true,
-                members: {
-                  some: {
-                    userId: user.id,
-                  },
-                },
-              },
+              { isPrivate: true, members: { some: { userId: user.id } } },
             ],
           },
           select: {
-            id: true,
-            name: true,
-            slug: true,
-            icon: true,
-            type: true,
-            description: true,
-            isPrivate: true,
-            workspaceId: true,
-            parentId: true,
-            createdAt: true,
-            updatedAt: true,
+            id: true, name: true, slug: true, icon: true, type: true,
+            description: true, isPrivate: true, workspaceId: true, parentId: true,
+            createdAt: true, updatedAt: true,
             _count: { select: { messages: true } },
           },
-          orderBy: {
-            name: 'asc',
-          },
+          orderBy: { name: 'asc' },
         },
       },
     });
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    const member = workspace.members[0];
-
-    if (!member) {
-      throw new ForbiddenException('Forbidden');
-    }
+    if (!workspace) throw new NotFoundException('Workspace not found');
+    if (workspace.members.length === 0) throw new ForbiddenException('Forbidden');
 
     return workspace.channels;
   }
@@ -140,26 +126,7 @@ export class ChannelsController {
   @ApiBody({ type: CreateWorkspaceChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created successfully' })
   async createChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceChannelDto) {
-        const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
-      },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    const member = workspace.members[0];
-
-    if (!member || !['owner', 'admin', 'member'].includes(member.role)) {
-      throw new ForbiddenException('Forbidden');
-    }
+    const workspace = await this.getWorkspaceAndVerifyMember(slug, user.id, ['owner', 'admin', 'member']);
 
     const validatedData = createChannelSchema.safeParse(body);
     if (!validatedData.success) {
@@ -273,26 +240,7 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Body() body: UpdateWorkspaceChannelDto
   ) {
-        const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
-      },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    const member = workspace.members[0];
-
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      throw new ForbiddenException('Forbidden');
-    }
+    const workspace = await this.getWorkspaceAndVerifyMember(slug, user.id, ['owner', 'admin']);
 
     const validatedData = updateChannelSchema.safeParse(body);
     if (!validatedData.success) {
@@ -337,26 +285,7 @@ export class ChannelsController {
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
   @ApiResponse({ status: 200, description: 'Channel deleted successfully' })
   async deleteChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
-        const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
-      },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    const member = workspace.members[0];
-
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      throw new ForbiddenException('Forbidden');
-    }
+    const workspace = await this.getWorkspaceAndVerifyMember(slug, user.id, ['owner', 'admin']);
 
     await prisma.channel.delete({ where: { id: channelId, workspaceId: workspace.id } });
 
