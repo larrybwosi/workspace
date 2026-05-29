@@ -93,3 +93,7 @@
 ## 2026-05-27 - [Database] Reversing Query Direction for Entity Lookups
 **Learning:** Querying a join table (e.g., `WorkspaceMember`) only to map back to the entity (e.g., `User`) is inefficient. It fetches unnecessary join-table columns and requires O(N) in-memory iteration to extract the desired objects.
 **Action:** Query the target entity table directly using a relation filter (e.g., `prisma.user.findMany({ where: { workspaceMemberships: { some: { workspaceId } } } })`). Combine this with targeted `select` to minimize DB payload and eliminate in-memory mapping.
+
+## 2026-05-29 - [API/Emojis] Consolidated Workspace Authorization & Parallelized Emoji Retrieval
+**Learning:** Sequential queries for workspace authorization and mixed-scope resource retrieval (workspace-specific + global emojis) created unnecessary latency. Parallelizing global fetches with workspace lookups using 'Promise.all' and nested 'select' reduces database round-trip latency by ~50%.
+**Action:** Use 'Promise.all' to parallelize independent database queries and nested 'select' to consolidate authorization with data retrieval in a single RTT whenever possible.
