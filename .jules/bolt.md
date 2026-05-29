@@ -89,3 +89,7 @@
 
 **Learning:** Sequential database lookups across different models (WorkspaceInviteLink, WorkspaceInvitation, Invitation) to resolve a single token create unnecessary latency (O(3) RTT).
 **Action:** Use 'Promise.all' to fetch potential matches from all relevant models in parallel, then handle the results in priority order. This reduces database RTT from O(N) to O(1).
+
+## 2026-05-27 - [Database] Reversing Query Direction for Entity Lookups
+**Learning:** Querying a join table (e.g., `WorkspaceMember`) only to map back to the entity (e.g., `User`) is inefficient. It fetches unnecessary join-table columns and requires O(N) in-memory iteration to extract the desired objects.
+**Action:** Query the target entity table directly using a relation filter (e.g., `prisma.user.findMany({ where: { workspaceMemberships: { some: { workspaceId } } } })`). Combine this with targeted `select` to minimize DB payload and eliminate in-memory mapping.
