@@ -288,6 +288,9 @@ jobs:
           pnpm --filter @repo/api-client build || true
       - name: Update Version
         run: node scripts/update-version.js
+      - name: Disable Updater for Verification
+        run: |
+          node -e "const fs = require('node:fs'); const path = './apps/desktop/src-tauri/tauri.conf.json'; const config = JSON.parse(fs.readFileSync(path, 'utf8')); config.bundle.createUpdaterArtifacts = false; fs.writeFileSync(path, JSON.stringify(config, null, 2));"
       - name: Verify Compilation
         uses: tauri-apps/tauri-action@v0
         env:
