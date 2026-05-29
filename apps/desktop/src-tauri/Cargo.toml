@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.0.457"
+version = "0.0.468"
 description = "Scrymechat Desktop Application"
 authors = ["you"]
 edition = "2021"
@@ -15,14 +15,17 @@ path = "src/lib.rs"
 [dependencies]
 tauri = { version = "2.1", features = ["tray-icon", "image"] }
 tauri-plugin-shell = "2.1"
-tauri-plugin-notification = "2.1"
-tauri-plugin-deep-link = "2.1"
-tauri-plugin-sql = { version = "2.1", features = ["sqlite"] }
+tauri-plugin-notification = "2"
+tauri-plugin-deep-link = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-updater = "2.1"
 tauri-plugin-fs = "2.1"
 tauri-plugin-os = "2.1"
-tauri-plugin-store = "2.1"
-tauri-plugin-process = "2.1"
+tauri-plugin-store = "2"
+tauri-plugin-process = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tauri-plugin-single-instance = "2.4.2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-autostart = "2"
