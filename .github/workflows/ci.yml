@@ -293,7 +293,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --debug
+          args: --debug --no-bundle
           projectPath: apps/desktop
 
   version:
