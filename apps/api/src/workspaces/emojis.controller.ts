@@ -38,31 +38,20 @@ export class EmojisController {
   async getEmojis(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and emoji retrieval into parallelized queries.
-     * 2. Uses nested 'select' to fetch workspace-specific emojis and requester membership in one round-trip.
-     * 3. Fetches global emojis in parallel to reduce total latency.
-     * Expected impact: Reduces database round-trip latency by ~50% and improves security with membership check.
+     * 1. Consolidates workspace lookup and membership verification into a single database query.
+     * 2. Uses a secondary optimized query to fetch both workspace-specific and global emojis.
+     * 3. This reduces total database round-trips from 3 down to 2 while ensuring correctness and DB-level sorting.
      */
-    const [workspace, globalEmojis] = await Promise.all([
-      prisma.workspace.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          members: {
-            where: { userId: user.id },
-            select: { role: true },
-          },
-          customEmojis: {
-            where: { isActive: true },
-            orderBy: { usageCount: 'desc' },
-          },
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
         },
-      }),
-      prisma.customEmoji.findMany({
-        where: { isGlobal: true, isActive: true },
-        orderBy: { usageCount: 'desc' },
-      }),
-    ]);
+      },
+    });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
@@ -72,10 +61,17 @@ export class EmojisController {
       throw new ForbiddenException('You do not have access to this workspace');
     }
 
-    // Merge and sort results
-    const allEmojis = [...workspace.customEmojis, ...globalEmojis].sort((a, b) => b.usageCount - a.usageCount);
+    const emojis = await prisma.customEmoji.findMany({
+      where: {
+        OR: [{ workspaceId: workspace.id }, { isGlobal: true }],
+        isActive: true,
+      },
+      orderBy: {
+        usageCount: 'desc',
+      },
+    });
 
-    return allEmojis;
+    return emojis;
   }
 
   @Post()
