@@ -94,10 +94,6 @@
 **Learning:** Querying a join table (e.g., `WorkspaceMember`) only to map back to the entity (e.g., `User`) is inefficient. It fetches unnecessary join-table columns and requires O(N) in-memory iteration to extract the desired objects.
 **Action:** Query the target entity table directly using a relation filter (e.g., `prisma.user.findMany({ where: { workspaceMemberships: { some: { workspaceId } } } })`). Combine this with targeted `select` to minimize DB payload and eliminate in-memory mapping.
 
-## 2026-05-29 - [API/Emojis] Consolidated Workspace Authorization & Efficient Emoji Retrieval
-**Learning:** Sequential queries for workspace authorization and mixed-scope resource retrieval (workspace-specific + global emojis) created unnecessary latency. Using nested 'select' for authorization and a single 'OR' query for combined results preserves DB-level sorting while reducing round-trips from 3 down to 2.
-**Action:** Consolidate authorization with initial workspace resolution using nested 'select'. Prefer single 'OR' queries over 'Promise.all' for mixed-scope retrieval to maintain data integrity (prevent duplicates) and leverage database indexing.
-
 ## 2026-05-30 - [API/Shared] Consolidated Notification Preference Retrieval
 **Learning:** Sequential database queries for hierarchical notification preferences (Channel -> Workspace -> User) and N+1 lookups for global user preferences create significant latency and CPU overhead.
 **Action:** Consolidate hierarchical preference lookups using parallelized queries with 'Promise.all' and eliminate N+1 patterns by pre-fetching all required User preferences in a single batch query.
