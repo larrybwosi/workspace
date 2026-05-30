@@ -97,3 +97,7 @@
 ## 2026-05-29 - [API/Emojis] Consolidated Workspace Authorization & Efficient Emoji Retrieval
 **Learning:** Sequential queries for workspace authorization and mixed-scope resource retrieval (workspace-specific + global emojis) created unnecessary latency. Using nested 'select' for authorization and a single 'OR' query for combined results preserves DB-level sorting while reducing round-trips from 3 down to 2.
 **Action:** Consolidate authorization with initial workspace resolution using nested 'select'. Prefer single 'OR' queries over 'Promise.all' for mixed-scope retrieval to maintain data integrity (prevent duplicates) and leverage database indexing.
+
+## 2026-05-30 - [API/Shared] Consolidated Notification Preference Retrieval
+**Learning:** Sequential database queries for hierarchical notification preferences (Channel -> Workspace -> User) and N+1 lookups for global user preferences create significant latency and CPU overhead.
+**Action:** Consolidate hierarchical preference lookups using parallelized queries with 'Promise.all' and eliminate N+1 patterns by pre-fetching all required User preferences in a single batch query.
