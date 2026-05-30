@@ -184,7 +184,7 @@ export async function notifyMentions(
     if (!memberIdsInChannel.has(userId)) continue; // Original behavior: only notify channel members
 
     const channelMember = channel.members.find(m => m.userId === userId);
-    let preference = channelMember?.notificationPreference;
+    let preference: string | null | undefined = channelMember?.notificationPreference;
 
     if (!preference && workspaceId) {
       preference = workspacePrefMap.get(userId);
@@ -274,7 +274,7 @@ export async function notifyChannel(
   // 3. Build payloads
   const payloads: NotificationPayload[] = [];
   for (const cm of channel.members) {
-    let preference = cm.notificationPreference;
+    let preference: string | null | undefined = cm.notificationPreference;
     if (!preference && workspaceId) {
       preference = workspacePrefMap.get(cm.userId);
     }
