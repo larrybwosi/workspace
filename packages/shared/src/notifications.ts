@@ -160,15 +160,23 @@ export async function notifyMentions(
   const memberIdsInChannel = new Set(channel.members.map(m => m.userId));
   const memberIdsWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
 
-  const workspaceMembers =
+  const [workspaceMembers, users] = await Promise.all([
     workspaceId && memberIdsWithoutChannelPref.length > 0
-      ? await prisma.workspaceMember.findMany({
+      ? prisma.workspaceMember.findMany({
           where: { workspaceId, userId: { in: memberIdsWithoutChannelPref } },
           select: { userId: true, notificationPreference: true },
         })
-      : [];
+      : Promise.resolve([]),
+    memberIdsWithoutChannelPref.length > 0
+      ? prisma.user.findMany({
+          where: { id: { in: memberIdsWithoutChannelPref } },
+          select: { id: true, notificationPreferences: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
+  const userPrefMap = new Map(users.map(u => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
 
   // 2. Build notification payloads
   const payloads: NotificationPayload[] = [];
@@ -176,19 +184,14 @@ export async function notifyMentions(
     if (!memberIdsInChannel.has(userId)) continue; // Original behavior: only notify channel members
 
     const channelMember = channel.members.find(m => m.userId === userId);
-    let preference = channelMember?.notificationPreference;
+    let preference: string | null | undefined = channelMember?.notificationPreference;
 
     if (!preference && workspaceId) {
       preference = workspacePrefMap.get(userId);
     }
 
     if (!preference) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { notificationPreferences: true },
-      });
-      const userPrefs = (user?.notificationPreferences as any) || {};
-      preference = userPrefs.mentions || 'all';
+      preference = userPrefMap.get(userId) || 'all';
     }
 
     if (preference === 'nothing') continue;
@@ -247,25 +250,37 @@ export async function notifyChannel(
   const workspaceSlug = channel.workspace?.slug || 'default';
   const channelSlug = channel.slug || channelId;
 
-  // 2. Fetch workspace-level preferences for members missing channel-level ones
+  // 2. Fetch workspace-level and global preferences for members missing channel-level ones
   const membersWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
 
-  const workspaceMembers =
+  const [workspaceMembers, users] = await Promise.all([
     workspaceId && membersWithoutChannelPref.length > 0
-      ? await prisma.workspaceMember.findMany({
+      ? prisma.workspaceMember.findMany({
           where: { workspaceId, userId: { in: membersWithoutChannelPref } },
           select: { userId: true, notificationPreference: true },
         })
-      : [];
+      : Promise.resolve([]),
+    membersWithoutChannelPref.length > 0
+      ? prisma.user.findMany({
+          where: { id: { in: membersWithoutChannelPref } },
+          select: { id: true, notificationPreferences: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
+  const userPrefMap = new Map(users.map(u => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
 
   // 3. Build payloads
   const payloads: NotificationPayload[] = [];
   for (const cm of channel.members) {
-    let preference = cm.notificationPreference;
+    let preference: string | null | undefined = cm.notificationPreference;
     if (!preference && workspaceId) {
-      preference = workspacePrefMap.get(cm.userId) || 'all';
+      preference = workspacePrefMap.get(cm.userId);
+    }
+
+    if (!preference) {
+      preference = userPrefMap.get(cm.userId) || 'all';
     }
 
     if (preference === 'nothing') continue;
@@ -395,28 +410,22 @@ export async function notifyNewMessage(
 
   const membersWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
 
-  const workspaceMembers =
+  const [workspaceMembers, usersWithGlobalPrefs] = await Promise.all([
     workspaceId && membersWithoutChannelPref.length > 0
-      ? await prisma.workspaceMember.findMany({
+      ? prisma.workspaceMember.findMany({
           where: { workspaceId, userId: { in: membersWithoutChannelPref } },
           select: { userId: true, notificationPreference: true },
         })
-      : [];
-
-  const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
-
-  const membersWithoutAnyPref = channel.members
-    .filter(m => !m.notificationPreference && (!workspaceId || !workspacePrefMap.has(m.userId)))
-    .map(m => m.userId);
-
-  const usersWithGlobalPrefs =
-    membersWithoutAnyPref.length > 0
-      ? await prisma.user.findMany({
-          where: { id: { in: membersWithoutAnyPref } },
+      : Promise.resolve([]),
+    membersWithoutChannelPref.length > 0
+      ? prisma.user.findMany({
+          where: { id: { in: membersWithoutChannelPref } },
           select: { id: true, notificationPreferences: true },
         })
-      : [];
+      : Promise.resolve([]),
+  ]);
 
+  const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
   const globalPrefMap = new Map(
     usersWithGlobalPrefs.map(u => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all'])
   );
