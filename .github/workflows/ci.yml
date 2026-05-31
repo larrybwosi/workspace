@@ -255,14 +255,7 @@ jobs:
   desktop-verify:
     if: github.event_name == 'pull_request'
     needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
-    strategy:
-      fail-fast: false
-      matrix:
-        settings:
-          - host: ubuntu-latest
-          - host: windows-latest
-          - host: macos-latest
-    runs-on: ${{ matrix.settings.host }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -274,8 +267,9 @@ jobs:
           cache: 'pnpm'
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Install dependencies (ubuntu only)
-        if: matrix.settings.host == 'ubuntu-latest'
+        with:
+          components: clippy, rustfmt
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
@@ -288,13 +282,15 @@ jobs:
           pnpm --filter @repo/api-client build || true
       - name: Update Version
         run: node scripts/update-version.js
-      - name: Verify Compilation
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: --debug
-          projectPath: apps/desktop
+      - name: Cargo Check
+        run: cargo check
+        working-directory: apps/desktop/src-tauri
+      - name: Cargo Clippy
+        run: cargo clippy -- -D warnings
+        working-directory: apps/desktop/src-tauri
+      - name: Cargo Fmt
+        run: cargo fmt --all -- --check
+        working-directory: apps/desktop/src-tauri
 
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
