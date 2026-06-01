@@ -1,6 +1,6 @@
 # Recipe: Building Slash Commands
 
-Slash commands are a powerful way for users to interact with your application directly from the Skyrme Chat message box. While Skyrme Chat doesn't yet have a native "Slash Command" registry, you can easily simulate this functionality using Webhooks and pattern matching.
+Slash commands are a powerful way for users to interact with your application directly from the Scrymechat message box. While Scrymechat doesn't yet have a native "Slash Command" registry, you can easily simulate this functionality using Webhooks and pattern matching.
 
 ## How it Works
 

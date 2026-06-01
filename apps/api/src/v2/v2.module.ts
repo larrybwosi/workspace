@@ -1,6 +1,7 @@
 import { ProvisioningService } from './provisioning.service';
 import { ProvisioningController } from './provisioning.controller';
 import { M2mController } from './m2m/m2m.controller';
+import { OrganizationsController } from './organizations.controller';
 import { Module } from '@nestjs/common';
 import { V2WorkspacesController } from './workspaces/workspaces.controller';
 import { V2MessagesController } from './workspaces/messages.controller';
@@ -39,6 +40,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     V2ContactController,
     M2mController,
     ProvisioningController,
+    OrganizationsController,
   ],
   providers: [ApiV2Guard, V2AuditService, V2WebhooksService, V2ApplicationsService, ProvisioningService],
 })

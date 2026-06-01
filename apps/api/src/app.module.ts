@@ -67,7 +67,10 @@ import { auth } from './auth/better-auth';
               limit: config.get<number>('THROTTLE_LIMIT', 100),
             },
           ],
-          storage: redisUrl ? new ThrottlerStorageRedisService(redisUrl) : undefined,
+          storage: redisUrl ? new ThrottlerStorageRedisService(redisUrl, {
+            maxRetriesPerRequest: null,
+            retryStrategy: (times) => Math.min(times * 50, 2000),
+          }) : undefined,
         };
       },
     }),

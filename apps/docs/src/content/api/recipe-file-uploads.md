@@ -1,6 +1,6 @@
 # Recipe: Handling File Uploads
 
-Skyrme Chat API supports uploading files to channels and direct messages. Files can be sent as standalone messages or as part of a text message.
+Scrymechat API supports uploading files to channels and direct messages. Files can be sent as standalone messages or as part of a text message.
 
 ## Overview
 

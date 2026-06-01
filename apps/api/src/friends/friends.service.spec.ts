@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FriendsService } from './friends.service';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 
 // Mock @repo/database
 vi.mock('@repo/database', () => ({
@@ -10,6 +10,7 @@ vi.mock('@repo/database', () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
     },
     friendRequest: {
       findMany: vi.fn(),
@@ -129,11 +130,15 @@ describe('FriendsService', () => {
   });
 
   describe('sendFriendRequest - accepts email OR username (PR change)', () => {
-    it('should use findFirst with OR [email, username] to find receiver', async () => {
-      const receiver = { id: 'user-2', name: 'Bob' };
+    it('should use findFirst with OR [email, username] to find receiver with consolidated checks', async () => {
+      const receiver = {
+        id: 'user-2',
+        name: 'Bob',
+        friendOf: [],
+        receivedFriendRequests: [],
+        sentFriendRequests: [],
+      };
       mockPrisma.user.findFirst.mockResolvedValue(receiver);
-      mockPrisma.friend.findFirst.mockResolvedValue(null);
-      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue({
         id: 'req-1',
         senderId: 'user-1',
@@ -150,15 +155,25 @@ describe('FriendsService', () => {
           where: {
             OR: [{ email: 'bob@example.com' }, { username: 'bob@example.com' }],
           },
+          select: expect.objectContaining({
+            id: true,
+            friendOf: expect.any(Object),
+            receivedFriendRequests: expect.any(Object),
+            sentFriendRequests: expect.any(Object),
+          }),
         })
       );
     });
 
     it('should find receiver by username (PR change: username lookup support)', async () => {
-      const receiver = { id: 'user-2', name: 'Bob' };
+      const receiver = {
+        id: 'user-2',
+        name: 'Bob',
+        friendOf: [],
+        receivedFriendRequests: [],
+        sentFriendRequests: [],
+      };
       mockPrisma.user.findFirst.mockResolvedValue(receiver);
-      mockPrisma.friend.findFirst.mockResolvedValue(null);
-      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue({
         id: 'req-1',
         senderId: 'user-1',
@@ -208,8 +223,13 @@ describe('FriendsService', () => {
     });
 
     it('should throw BadRequestException when already friends', async () => {
-      mockPrisma.user.findFirst.mockResolvedValue({ id: 'user-2', name: 'Bob' });
-      mockPrisma.friend.findFirst.mockResolvedValue({ id: 'friendship-1' });
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 'user-2',
+        name: 'Bob',
+        friendOf: [{ id: 'f1' }],
+        receivedFriendRequests: [],
+        sentFriendRequests: [],
+      });
 
       await expect(service.sendFriendRequest('user-1', 'Alice', 'bob@example.com')).rejects.toThrow(
         'Already friends with this user'
@@ -217,9 +237,13 @@ describe('FriendsService', () => {
     });
 
     it('should throw BadRequestException when pending request already exists', async () => {
-      mockPrisma.user.findFirst.mockResolvedValue({ id: 'user-2', name: 'Bob' });
-      mockPrisma.friend.findFirst.mockResolvedValue(null);
-      mockPrisma.friendRequest.findFirst.mockResolvedValue({ id: 'req-1', status: 'pending' });
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 'user-2',
+        name: 'Bob',
+        friendOf: [],
+        receivedFriendRequests: [{ id: 'req1' }],
+        sentFriendRequests: [],
+      });
 
       await expect(service.sendFriendRequest('user-1', 'Alice', 'bob@example.com')).rejects.toThrow(
         'Friend request already pending'
@@ -227,7 +251,13 @@ describe('FriendsService', () => {
     });
 
     it('should successfully create friend request and notification', async () => {
-      const receiver = { id: 'user-2', name: 'Bob' };
+      const receiver = {
+        id: 'user-2',
+        name: 'Bob',
+        friendOf: [],
+        receivedFriendRequests: [],
+        sentFriendRequests: [],
+      };
       const createdRequest = {
         id: 'req-1',
         senderId: 'user-1',
@@ -237,8 +267,6 @@ describe('FriendsService', () => {
       };
 
       mockPrisma.user.findFirst.mockResolvedValue(receiver);
-      mockPrisma.friend.findFirst.mockResolvedValue(null);
-      mockPrisma.friendRequest.findFirst.mockResolvedValue(null);
       mockPrisma.friendRequest.create.mockResolvedValue(createdRequest);
       mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' });
 
@@ -276,7 +304,13 @@ describe('FriendsService', () => {
 
     it('should send Ably notification to receiver on success', async () => {
       const { publishToAbly } = await import('@repo/shared/server');
-      const receiver = { id: 'user-2', name: 'Bob' };
+      const receiver = {
+        id: 'user-2',
+        name: 'Bob',
+        friendOf: [],
+        receivedFriendRequests: [],
+        sentFriendRequests: [],
+      };
       const createdRequest = {
         id: 'req-1',
         senderId: 'user-1',
@@ -297,6 +331,77 @@ describe('FriendsService', () => {
         'user:user-2',
         'NOTIFICATION',
         expect.objectContaining({ type: 'friend_request' })
+      );
+    });
+  });
+
+  describe('updateFriendRequest', () => {
+    const sender = { id: 'user-1', name: 'Alice' };
+    const receiver = { id: 'user-2', name: 'Bob' };
+    const mockRequest = {
+      id: 'req-1',
+      senderId: 'user-1',
+      receiverId: 'user-2',
+      status: 'pending',
+      sender,
+      receiver,
+    };
+
+    it('should throw NotFoundException if request not found', async () => {
+      mockPrisma.friendRequest.findUnique.mockResolvedValue(null);
+      await expect(service.updateFriendRequest('user-2', 'req-1', 'accept')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if wrong user tries to accept', async () => {
+      mockPrisma.friendRequest.findUnique.mockResolvedValue(mockRequest);
+      await expect(service.updateFriendRequest('user-3', 'req-1', 'accept')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException if request is not pending', async () => {
+      mockPrisma.friendRequest.findUnique.mockResolvedValue({ ...mockRequest, status: 'accepted' });
+      await expect(service.updateFriendRequest('user-2', 'req-1', 'accept')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should successfully accept a friend request', async () => {
+      mockPrisma.friendRequest.findUnique.mockResolvedValue(mockRequest);
+      mockPrisma.friendRequest.update.mockResolvedValue({ ...mockRequest, status: 'accepted' });
+      mockPrisma.friend.createMany.mockResolvedValue({ count: 2 });
+      mockPrisma.notification.create.mockResolvedValue({});
+
+      const result = await service.updateFriendRequest('user-2', 'req-1', 'accept');
+
+      expect(result.status).toBe('accepted');
+      expect(mockPrisma.friend.createMany).toHaveBeenCalledWith({
+        data: [
+          { userId: 'user-1', friendId: 'user-2' },
+          { userId: 'user-2', friendId: 'user-1' },
+        ],
+      });
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: 'user-1',
+            type: 'friend_request_accepted',
+          }),
+        })
+      );
+    });
+
+    it('should successfully decline a friend request', async () => {
+      mockPrisma.friendRequest.findUnique.mockResolvedValue(mockRequest);
+      mockPrisma.friendRequest.update.mockResolvedValue({ ...mockRequest, status: 'declined' });
+      mockPrisma.notification.create.mockResolvedValue({});
+
+      const result = await service.updateFriendRequest('user-2', 'req-1', 'decline');
+
+      expect(result.status).toBe('declined');
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: 'user-1',
+            type: 'friend_request_declined',
+          }),
+        })
       );
     });
   });

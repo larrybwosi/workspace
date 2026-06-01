@@ -16,6 +16,7 @@ export * from './hooks/use-users';
 export * from './hooks/use-workspace-invites';
 export * from './hooks/use-assets';
 export * from './hooks/use-workspaces';
+export * from './hooks/use-organizations';
 export * from './hooks/use-applications';
 export * from './hooks/use-calls';
 export * from './hooks/use-storage';

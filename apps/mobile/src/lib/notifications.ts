@@ -42,13 +42,13 @@ export async function setupNotifications() {
   });
 }
 
-export async function handleNotificationResponse(response: Notifications.NotificationResponse, router: any) {
-  const data = response.notification.request.content.data as any;
+export async function handleNotificationResponse(response: Notifications.NotificationResponse, router: { push: (url: string | { pathname: string; params?: Record<string, string> }) => void }) {
+  const data = response.notification.request.content.data as Record<string, string>;
   const { type, entityId, linkUrl } = data || {};
 
   // Handle Reply Action
   if (response.actionIdentifier === 'REPLY_ACTION') {
-    const userText = (response as any).userText;
+    const userText = (response as { userText?: string }).userText;
     if (userText && entityId) {
       try {
         const baseURL = getBaseURL();

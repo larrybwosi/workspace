@@ -1,22 +1,38 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Emitter, Manager,
 };
 use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_sql::Builder::new().build())
+        .plugin(tauri_plugin_autostart::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            let _ = app.emit("deep-link://new-url", args);
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::default().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_process::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                window.hide().unwrap();
+                api.prevent_close();
+            }
+        })
         .setup(|app| {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             app.deep_link().on_open_url(|event| {
@@ -32,8 +48,13 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 
-            let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+            let icon = app.default_window_icon().cloned().unwrap_or_else(|| {
+                // Fallback or handle missing icon
+                tauri::image::Image::new_owned(vec![0; 16], 2, 2)
+            });
+
+            let tray = TrayIconBuilder::new()
+                .icon(icon)
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
@@ -61,6 +82,8 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            app.manage(tray);
 
             Ok(())
         })

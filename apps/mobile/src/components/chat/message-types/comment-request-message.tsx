@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Message, MessageMetadata } from '@repo/types';
 
-export function CommentRequestMessage({ message, metadata }: any) {
-  const resourceMetadata = metadata?.resourceMetadata || {};
+export function CommentRequestMessage({ message, metadata }: { message: Message; metadata: MessageMetadata }) {
+  const resourceMetadata = (metadata?.resourceMetadata as Record<string, string>) || {};
 
   return (
     <View className="bg-discord-tertiary rounded-lg border border-black/20 my-2 overflow-hidden">

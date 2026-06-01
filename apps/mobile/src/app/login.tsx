@@ -17,7 +17,7 @@ export default function Login() {
 
       // If the social login returns to the app successfully
       router.replace('/');
-    } catch (err) {
+    } catch {
       Alert.alert('Error', `Unable to login with ${provider}. Please try again.`);
     } finally {
       setLoading(false);

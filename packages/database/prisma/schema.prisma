@@ -115,10 +115,6 @@ model User {
   members     Member[]
   invitations OrganizationInvitation[]
 
-  oauthclients       OauthClient[]
-  oauthrefreshtokens OauthRefreshToken[]
-  oauthaccesstokens  OauthAccessToken[]
-  oauthconsents      OauthConsent[]
 
   customerProfile CustomerProfile?
 
@@ -169,9 +165,6 @@ model Session {
 
   activeOrganizationId String?
 
-  oauthrefreshtokens OauthRefreshToken[]
-  oauthaccesstokens  OauthAccessToken[]
-
   @@index([userId])
   @@map("sessions")
 }
@@ -218,6 +211,9 @@ model Workspace {
   customDomain   String? @unique
   brandingConfig Json? // { colors: { primary, accent }, logoUrl, customCss }
   industry       String?
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   owner User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
 
@@ -1582,6 +1578,7 @@ model LiveChatSession {
 
 model Organization {
   m2mApplications M2mApplication[]
+  workspaces      Workspace[]
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
@@ -1634,100 +1631,6 @@ model Jwks {
   expiresAt  DateTime?
 
   @@map("jwks")
-}
-
-model OauthClient {
-  id                      String              @id
-  clientId                String
-  clientSecret            String?
-  disabled                Boolean?            @default(false)
-  skipConsent             Boolean?
-  enableEndSession        Boolean?
-  subjectType             String?
-  scopes                  String[]
-  userId                  String?
-  user                    User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt               DateTime?
-  updatedAt               DateTime?
-  name                    String?
-  uri                     String?
-  icon                    String?
-  contacts                String[]
-  tos                     String?
-  policy                  String?
-  softwareId              String?
-  softwareVersion         String?
-  softwareStatement       String?
-  redirectUris            String[]
-  postLogoutRedirectUris  String[]
-  tokenEndpointAuthMethod String?
-  grantTypes              String[]
-  responseTypes           String[]
-  public                  Boolean?
-  type                    String?
-  requirePKCE             Boolean?
-  referenceId             String?
-  metadata                Json?
-  oauthrefreshtokens      OauthRefreshToken[]
-  oauthaccesstokens       OauthAccessToken[]
-  oauthconsents           OauthConsent[]
-
-  @@unique([clientId])
-  @@map("oauthClient")
-}
-
-model OauthRefreshToken {
-  id                String             @id
-  token             String
-  clientId          String
-  oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  sessionId         String?
-  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referenceId       String?
-  expiresAt         DateTime?
-  createdAt         DateTime?
-  revoked           DateTime?
-  authTime          DateTime?
-  scopes            String[]
-  oauthaccesstokens OauthAccessToken[]
-
-  @@map("oauthRefreshToken")
-}
-
-model OauthAccessToken {
-  id                String             @id
-  token             String?
-  clientId          String
-  oauthclient       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  sessionId         String?
-  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  userId            String?
-  user              User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referenceId       String?
-  refreshId         String?
-  oauthrefreshtoken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
-  expiresAt         DateTime?
-  createdAt         DateTime?
-  scopes            String[]
-
-  @@unique([token])
-  @@map("oauthAccessToken")
-}
-
-model OauthConsent {
-  id          String      @id
-  clientId    String
-  oauthclient OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  userId      String?
-  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referenceId String?
-  scopes      String[]
-  createdAt   DateTime?
-  updatedAt   DateTime?
-
-  @@map("oauthConsent")
 }
 
 model ProfileAsset {

@@ -3,44 +3,85 @@ import { prisma, type User } from '@repo/database';
 import { NotificationsService } from '../notifications/notifications.service';
 import * as crypto from 'crypto';
 
+const INVITATION_USER_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  avatar: true,
+};
+
+const WORKSPACE_INVITATION_SELECT = {
+  id: true,
+  email: true,
+  token: true,
+  role: true,
+  status: true,
+  expiresAt: true,
+  acceptedAt: true,
+  createdAt: true,
+  permissions: true,
+  inviter: { select: INVITATION_USER_SELECT },
+  user: { select: INVITATION_USER_SELECT },
+};
+
+const PLATFORM_INVITATION_SELECT = {
+  id: true,
+  email: true,
+  token: true,
+  role: true,
+  status: true,
+  expiresAt: true,
+  acceptedAt: true,
+  createdAt: true,
+  permissions: true,
+  inviter: { select: INVITATION_USER_SELECT },
+};
+
 @Injectable()
 export class InvitationsService {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   async getInvitations(userId: string, workspaceId?: string) {
     if (workspaceId) {
-      // Check if user is admin or owner
-      const member = await prisma.workspaceMember.findUnique({
-        where: {
-          workspaceId_userId: {
-            workspaceId,
-            userId,
-          },
-        },
-      });
-
-      if (!member || !['owner', 'admin'].includes(member.role)) {
-        throw new ForbiddenException('You do not have permission to view invitations for this workspace');
-      }
-
-      return prisma.workspaceInvitation.findMany({
-        where: { workspaceId },
-        include: {
-          inviter: { select: { id: true, name: true, email: true, avatar: true } },
-          user: { select: { id: true, name: true, email: true, avatar: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-    } else {
-      // Fetch platform-wide invitations sent by the user
-      return prisma.invitation.findMany({
-        where: { invitedBy: userId },
-        include: {
-          inviter: { select: { id: true, name: true, email: true, avatar: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      return this.getWorkspaceInvitations(userId, workspaceId);
     }
+
+    return prisma.invitation.findMany({
+      where: { invitedBy: userId },
+      select: PLATFORM_INVITATION_SELECT,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * ⚡ Performance Optimization:
+   * Consolidates workspace membership authorization and invitation retrieval into a single query.
+   * Reduces database round-trips from 2 down to 1.
+   */
+  private async getWorkspaceInvitations(userId: string, workspaceId: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+        invitations: {
+          select: WORKSPACE_INVITATION_SELECT,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    const member = workspace.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to view invitations for this workspace');
+    }
+
+    return workspace.invitations;
   }
 
   async createInvitation(
@@ -118,15 +159,39 @@ export class InvitationsService {
     return invitation;
   }
 
+  /**
+   * ⚡ Performance Optimization:
+   * Consolidates 3 sequential database checks for different invitation types into a single
+   * parallelized Promise.all call. This reduces database round-trip latency from O(3) to O(1)
+   * for invalid tokens or platform-wide invitations, and from O(2) to O(1) for workspace invitations.
+   * Expected impact: Up to 66% reduction in database-related latency for invitation resolution.
+   */
   async getInvitationByToken(token: string) {
-    // 1. Check WorkspaceInviteLink (public link)
-    const inviteLink = await prisma.workspaceInviteLink.findUnique({
-      where: { code: token },
-      include: {
-        workspace: true,
-        createdBy: { select: { id: true, name: true, avatar: true } },
-      },
-    });
+    const [inviteLink, workspaceInvite, generalInvite] = await Promise.all([
+      // 1. Check WorkspaceInviteLink (public link)
+      prisma.workspaceInviteLink.findUnique({
+        where: { code: token },
+        include: {
+          workspace: true,
+          createdBy: { select: { id: true, name: true, avatar: true } },
+        },
+      }),
+      // 2. Check WorkspaceInvitation (email-specific)
+      prisma.workspaceInvitation.findUnique({
+        where: { token },
+        include: {
+          workspace: true,
+          inviter: { select: { id: true, name: true, avatar: true } },
+        },
+      }),
+      // 3. Check General Invitation (platform)
+      prisma.invitation.findUnique({
+        where: { token },
+        include: {
+          inviter: { select: { id: true, name: true, avatar: true } },
+        },
+      }),
+    ]);
 
     if (inviteLink) {
       if (inviteLink.expiresAt && inviteLink.expiresAt < new Date()) {
@@ -144,15 +209,6 @@ export class InvitationsService {
       };
     }
 
-    // 2. Check WorkspaceInvitation (email-specific)
-    const workspaceInvite = await prisma.workspaceInvitation.findUnique({
-      where: { token },
-      include: {
-        workspace: true,
-        inviter: { select: { id: true, name: true, avatar: true } },
-      },
-    });
-
     if (workspaceInvite) {
       if (workspaceInvite.expiresAt && workspaceInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
@@ -168,14 +224,6 @@ export class InvitationsService {
         },
       };
     }
-
-    // 3. Check General Invitation (platform)
-    const generalInvite = await prisma.invitation.findUnique({
-      where: { token },
-      include: {
-        inviter: { select: { id: true, name: true, avatar: true } },
-      },
-    });
 
     if (generalInvite) {
       if (generalInvite.expiresAt && generalInvite.expiresAt < new Date()) {

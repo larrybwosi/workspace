@@ -1,6 +1,6 @@
 # Teams & Departments
 
-Skyrme Chat supports hierarchical organization of workspace members through Departments and Teams.
+Scrymechat supports hierarchical organization of workspace members through Departments and Teams.
 
 ## Departments
 

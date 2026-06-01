@@ -52,3 +52,48 @@
 
 **Learning:** Performing sequential Prisma queries for workspace existence, membership authorization, and data retrieval (logs, members, etc.) increases latency due to multiple database round-trips.
 **Action:** Use Prisma's nested `select` or `include` with filtered relations on a single `findUnique({ where: { slug } })` call to perform all checks and data fetching in one round-trip. Re-map results in-memory if necessary to maintain API contracts.
+## 2026-05-11 - [Database] Consolidated Workspace Data Retrieval
+**Learning:** Sequential Prisma queries for workspace authorization and nested resource retrieval (channels, members) can be consolidated into a single 'findUnique' call using nested 'select' or 'include'.
+**Action:** Always aim to fetch related resources and perform authorization checks in a single database round-trip for high-traffic workspace-scoped endpoints.
+
+## 2025-05-20 - [Database] Optimized Team & Department Listing
+
+**Learning:** Consolidated workspace lookup, membership authorization, and resource retrieval (teams/departments) into a single Prisma `findUnique` call using nested `select`. This pattern reduces database round-trips from 2 down to 1.
+**Action:** For workspace-scoped listings, use nested relations in the initial workspace resolution query to avoid O(2) database RTT.
+
+## 2025-05-18 - [API/Invitations] Consolidated Workspace Authorization & Invitation Retrieval
+
+**Learning:** Sequential Prisma queries for workspace membership authorization and invitation retrieval (O(2)) can be consolidated into a single 'findUnique' call on the Workspace model using nested 'select'. This reduces database round-trips and allows for targeted field selection to minimize over-fetching.
+**Action:** Always aim to fetch related resources and perform authorization checks in a single database round-trip for high-traffic workspace-scoped endpoints. Use targeted 'select' to minimize payload size and memory overhead.
+
+## 2025-05-25 - [Prisma/Regressions] Select vs Include Data Contract
+**Learning:** Switching from Prisma `include` to `select` for performance gains is risky because `select` is exclusive. Omitting nested fields (e.g., `role` in members, or metadata in announcements) causes silent API data regressions.
+**Action:** When refactoring to `select`, meticulously map the existing `include` structure to ensure all nested fields are preserved. Use exhaustive unit tests to verify the response shape.
+
+## 2025-05-28 - [API] Eliminated N+1 Queries in Active Calls Retrieval
+
+**Learning:** Fetching channel access metadata inside a loop for each active call (N+1) in a workspace creates significant latency.
+**Action:** Use batch fetching (Prisma 'in' operator) to retrieve all relevant channel data in a single secondary round-trip, and consolidate the initial workspace membership check to minimize database round-trips (RTT).
+
+## 2025-05-28 - [Desktop/Tauri] Fixed Build Failure Due to Non-RGBA Icons
+
+**Learning:** Tauri's  macro requires all icon assets to be in the RGBA format. Providing RGB-only PNGs causes a panic during the build process.
+**Action:** Ensure all application icons are converted to RGBA using a tool like Pillow or sharp before bundling with Tauri.
+
+## 2025-05-28 - [Desktop/Tauri] Fixed Build Failure Due to Non-RGBA Icons
+
+**Learning:** Tauri's `generate_context!` macro requires all icon assets to be in the RGBA format. Providing RGB-only PNGs causes a panic during the build process.
+**Action:** Ensure all application icons are converted to RGBA using a tool like Pillow or sharp before bundling with Tauri.
+
+## 2025-05-30 - [API/Invitations] Parallelized Multi-Model Token Resolution
+
+**Learning:** Sequential database lookups across different models (WorkspaceInviteLink, WorkspaceInvitation, Invitation) to resolve a single token create unnecessary latency (O(3) RTT).
+**Action:** Use 'Promise.all' to fetch potential matches from all relevant models in parallel, then handle the results in priority order. This reduces database RTT from O(N) to O(1).
+
+## 2026-05-27 - [Database] Reversing Query Direction for Entity Lookups
+**Learning:** Querying a join table (e.g., `WorkspaceMember`) only to map back to the entity (e.g., `User`) is inefficient. It fetches unnecessary join-table columns and requires O(N) in-memory iteration to extract the desired objects.
+**Action:** Query the target entity table directly using a relation filter (e.g., `prisma.user.findMany({ where: { workspaceMemberships: { some: { workspaceId } } } })`). Combine this with targeted `select` to minimize DB payload and eliminate in-memory mapping.
+
+## 2026-05-30 - [API/Shared] Consolidated Notification Preference Retrieval
+**Learning:** Sequential database queries for hierarchical notification preferences (Channel -> Workspace -> User) and N+1 lookups for global user preferences create significant latency and CPU overhead.
+**Action:** Consolidate hierarchical preference lookups using parallelized queries with 'Promise.all' and eliminate N+1 patterns by pre-fetching all required User preferences in a single batch query.
