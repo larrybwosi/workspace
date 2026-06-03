@@ -245,11 +245,24 @@ export class InvitationsService {
   }
 
   async acceptInvitation(user: User, token: string) {
-    // 1. Check WorkspaceInviteLink (public link)
-    const inviteLink = await prisma.workspaceInviteLink.findUnique({
-      where: { code: token },
-      include: { workspace: true },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Parallelizes 3 sequential database checks for different invitation types into a single
+     * Promise.all call. This reduces lookup latency from O(3) down to O(1) round-trips.
+     */
+    const [inviteLink, workspaceInvite, generalInvite] = await Promise.all([
+      prisma.workspaceInviteLink.findUnique({
+        where: { code: token },
+        include: { workspace: true },
+      }),
+      prisma.workspaceInvitation.findUnique({
+        where: { token },
+        include: { workspace: true },
+      }),
+      prisma.invitation.findUnique({
+        where: { token },
+      }),
+    ]);
 
     if (inviteLink) {
       if (inviteLink.expiresAt && inviteLink.expiresAt < new Date()) {
@@ -290,12 +303,6 @@ export class InvitationsService {
       return { success: true, workspace: inviteLink.workspace };
     }
 
-    // 2. Check WorkspaceInvitation (email-specific)
-    const workspaceInvite = await prisma.workspaceInvitation.findUnique({
-      where: { token },
-      include: { workspace: true },
-    });
-
     if (workspaceInvite) {
       if (workspaceInvite.expiresAt && workspaceInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
@@ -334,11 +341,6 @@ export class InvitationsService {
 
       return { success: true, workspace: workspaceInvite.workspace };
     }
-
-    // 3. Check General Invitation (platform)
-    const generalInvite = await prisma.invitation.findUnique({
-      where: { token },
-    });
 
     if (generalInvite) {
       if (generalInvite.expiresAt && generalInvite.expiresAt < new Date()) {

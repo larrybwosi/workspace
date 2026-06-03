@@ -97,3 +97,8 @@
 ## 2026-05-30 - [API/Shared] Consolidated Notification Preference Retrieval
 **Learning:** Sequential database queries for hierarchical notification preferences (Channel -> Workspace -> User) and N+1 lookups for global user preferences create significant latency and CPU overhead.
 **Action:** Consolidate hierarchical preference lookups using parallelized queries with 'Promise.all' and eliminate N+1 patterns by pre-fetching all required User preferences in a single batch query.
+
+## 2026-06-01 - [Database] Consolidated Multi-Entity Verification
+
+**Learning:** When performing operations on a workspace-scoped entity (like a Department), sequential queries for workspace membership and entity existence can be consolidated into a single `prisma.workspace.findUnique` call using nested `select` with a `where` filter on the relation.
+**Action:** Use nested relation filters in the workspace lookup to verify both membership and target entity existence in one database RTT.

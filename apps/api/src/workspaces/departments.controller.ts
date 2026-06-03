@@ -246,8 +246,9 @@ export class DepartmentsController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * 1. Consolidates workspace lookup, membership verification, and department lookup into a single query.
+     * 2. Reduces database round-trips from 2 down to 1 while ensuring both workspace and department exist.
+     * 3. Enforces authorization check (owner/admin or department manager) in one go.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -697,6 +698,10 @@ export class DepartmentsController {
           where: { userId: user.id },
           select: { role: true },
         },
+        departments: {
+          where: { id: departmentId },
+          select: { managerId: true },
+        },
       },
     });
 
@@ -704,13 +709,13 @@ export class DepartmentsController {
       throw new NotFoundException('Workspace not found');
     }
 
+    const department = workspace.departments[0];
+    if (!department) {
+      throw new NotFoundException('Department not found');
+    }
+
     const member = workspace.members[0];
-
-    const department = await prisma.workspaceDepartment.findUnique({
-      where: { id: departmentId },
-    });
-
-    const isManager = department?.managerId === user.id;
+    const isManager = department.managerId === user.id;
     const isAdmin = member && ['owner', 'admin'].includes(member.role);
 
     if (!isManager && !isAdmin) {
