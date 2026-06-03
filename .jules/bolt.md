@@ -102,3 +102,13 @@
 
 **Learning:** When performing operations on a workspace-scoped entity (like a Department), sequential queries for workspace membership and entity existence can be consolidated into a single `prisma.workspace.findUnique` call using nested `select` with a `where` filter on the relation.
 **Action:** Use nested relation filters in the workspace lookup to verify both membership and target entity existence in one database RTT.
+
+## 2026-06-05 - [API] Consolidating Writes with Nested Operations
+
+**Learning:** Sequential existence checks followed by nested resource creation (e.g., sending a DM or creating a department announcement) can be consolidated using Prisma's `upsert` or `update` with nested `create`. This reduces database round-trips (RTT) and minimizes the window for race conditions.
+**Action:** Use nested Prisma operations to combine verification and creation into a single round-trip. For resource-scoped writes, use `prisma.parent.update` with nested `create` instead of a separate `find` and `create`.
+
+## 2026-06-05 - [Cache] Optimizing Cache Payload with Targeted Selection
+
+**Learning:** Endpoints whose results are cached in Redis (e.g., channel lists) benefit significantly from switching from Prisma `include` to `select`. Broad `include` statements often pull in large relations or internal metadata that inflate the JSON payload, increasing serialization overhead and Redis memory footprint.
+**Action:** Always use targeted `select` for high-traffic or cached endpoints to minimize the response size while strictly preserving the public API contract.
