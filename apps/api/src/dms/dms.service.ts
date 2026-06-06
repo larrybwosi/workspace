@@ -352,34 +352,63 @@ export class DmsService {
   async createMessage(dmId: string, userId: string, body: any) {
     const { content, replyToId, attachments } = body;
 
-    const message = await prisma.dMMessage.create({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates DM message creation and conversation timestamp update into a single Prisma 'update' call.
+     * 2. Uses nested 'create' for the message and 'select' to retrieve only required fields.
+     * 3. Reduces database round-trips from 2 down to 1.
+     * Expected impact: Reduces latency and improves database efficiency for every DM sent.
+     */
+    const dm = await prisma.directMessage.update({
+      where: { id: dmId },
       data: {
-        dmId,
-        senderId: userId,
-        content,
-        replyToId,
-        attachments: attachments
-          ? {
-              create: attachments.map((att: any) => ({
-                name: att.name,
-                type: att.type,
-                url: att.url,
-                size: att.size,
-              })),
-            }
-          : undefined,
+        lastMessageAt: new Date(),
+        messages: {
+          create: {
+            senderId: userId,
+            content,
+            replyToId,
+            attachments: attachments
+              ? {
+                  create: attachments.map((att: any) => ({
+                    name: att.name,
+                    type: att.type,
+                    url: att.url,
+                    size: att.size,
+                  })),
+                }
+              : undefined,
+          },
+        },
       },
-      include: {
-        sender: true,
-        reactions: true,
-        attachments: true,
+      select: {
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            attachments: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                url: true,
+                size: true,
+              },
+            },
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+                image: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    await prisma.directMessage.update({
-      where: { id: dmId },
-      data: { lastMessageAt: new Date() },
-    });
+    const message = dm.messages[0];
 
     const formattedMessage = {
       ...message,
@@ -387,6 +416,7 @@ export class DmsService {
       user: message.sender,
       timestamp: message.createdAt,
       messageType: 'standard',
+      reactions: [],
     };
 
     const ably = getAblyRest();

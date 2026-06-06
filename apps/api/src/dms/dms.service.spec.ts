@@ -10,6 +10,7 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     dMMessage: {
       findMany: vi.fn(),
@@ -260,6 +261,141 @@ describe('DmsService', () => {
 
       const result = await service.markAsRead('user-1', ['msg-1']);
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('createMessage - consolidated update optimization (PR change)', () => {
+    it('should consolidate message creation and DM update into a single prisma.directMessage.update call', async () => {
+      const mockDm = {
+        messages: [
+          {
+            id: 'msg-1',
+            dmId: 'dm-1',
+            senderId: 'user-1',
+            content: 'Hello',
+            createdAt: new Date(),
+            sender: { id: 'user-1', name: 'User 1', avatar: 'avatar.png' },
+            attachments: [],
+            replyToId: 'reply-1',
+          },
+        ],
+      };
+      mockPrisma.directMessage.update.mockResolvedValue(mockDm);
+      mockGetAblyRest.mockReturnValue(null);
+
+      const result = await service.createMessage('dm-1', 'user-1', { content: 'Hello' });
+
+      expect(mockPrisma.directMessage.update).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.dMMessage.create).not.toHaveBeenCalled();
+      expect(mockPrisma.directMessage.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'dm-1' },
+          data: expect.objectContaining({
+            lastMessageAt: expect.any(Date),
+            messages: expect.objectContaining({
+              create: expect.objectContaining({
+                content: 'Hello',
+                senderId: 'user-1',
+              }),
+            }),
+          }),
+        })
+      );
+      expect(result.id).toBe('msg-1');
+    });
+
+    it('should correctly format the response from the nested message', async () => {
+      const now = new Date();
+      const mockDm = {
+        messages: [
+          {
+            id: 'msg-1',
+            dmId: 'dm-1',
+            senderId: 'user-1',
+            content: 'Hello',
+            createdAt: now,
+            sender: { id: 'user-1', name: 'User 1', avatar: 'avatar.png' },
+            attachments: [],
+            reactions: [],
+          },
+        ],
+      };
+      mockPrisma.directMessage.update.mockResolvedValue(mockDm);
+      mockGetAblyRest.mockReturnValue(null);
+
+      const result = await service.createMessage('dm-1', 'user-1', { content: 'Hello' });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: 'msg-1',
+          content: 'Hello',
+          userId: 'user-1',
+          user: expect.objectContaining({ id: 'user-1', name: 'User 1' }),
+          timestamp: now,
+          messageType: 'standard',
+        })
+      );
+    });
+
+    it('should preserve replyToId in the nested include', async () => {
+      const mockDm = {
+        messages: [
+          {
+            id: 'msg-1',
+            sender: {},
+            attachments: [],
+            createdAt: new Date(),
+            replyToId: 'parent-msg-id',
+          },
+        ],
+      };
+      mockPrisma.directMessage.update.mockResolvedValue(mockDm);
+      mockGetAblyRest.mockReturnValue(null);
+
+      const result = await service.createMessage('dm-1', 'user-1', {
+        content: 'Hello',
+        replyToId: 'parent-msg-id',
+      });
+
+      expect(result.replyToId).toBe('parent-msg-id');
+      expect(mockPrisma.directMessage.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: expect.objectContaining({
+            messages: expect.objectContaining({
+              include: expect.objectContaining({
+                attachments: expect.any(Object),
+                sender: expect.any(Object),
+              }),
+            }),
+          }),
+        })
+      );
+    });
+
+    it('should handle attachments correctly in the nested create', async () => {
+      mockPrisma.directMessage.update.mockResolvedValue({
+        messages: [{ id: 'msg-1', sender: {}, attachments: [], createdAt: new Date() }],
+      });
+      mockGetAblyRest.mockReturnValue(null);
+
+      const attachments = [{ name: 'file.txt', type: 'text/plain', url: 'http://example.com', size: '123' }];
+      await service.createMessage('dm-1', 'user-1', { content: 'Hello', attachments });
+
+      expect(mockPrisma.directMessage.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            messages: expect.objectContaining({
+              create: expect.objectContaining({
+                attachments: expect.objectContaining({
+                  create: expect.arrayContaining([
+                    expect.objectContaining({ name: 'file.txt', url: 'http://example.com' }),
+                  ]),
+                }),
+              }),
+            }),
+          }),
+        })
+      );
     });
   });
 });
