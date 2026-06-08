@@ -138,6 +138,12 @@ export class DmsService {
   }
 
   async createDm(userId: string, targetUserId: string, userName: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses targeted 'select' to minimize database payload and memory usage.
+     * Note: We maintain the 'findFirst' then 'create' pattern to handle potentially
+     * unsorted existing participant IDs while avoiding data integrity issues.
+     */
     let dm = await prisma.directMessage.findFirst({
       where: {
         OR: [
@@ -352,6 +358,14 @@ export class DmsService {
   async createMessage(dmId: string, userId: string, body: any) {
     const { content, replyToId, attachments } = body;
 
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates message creation and conversation timestamp update into a single query.
+     * 2. Uses nested 'dm.update' within 'dMMessage.create' to ensure the correct record is returned
+     *    and avoid race conditions inherent in nested sub-selections.
+     * 3. Uses targeted 'include' and 'select' to minimize payload size while ensuring UI compatibility.
+     * Expected impact: Reduces database round-trips from 2 down to 1 while maintaining thread safety.
+     */
     const message = await prisma.dMMessage.create({
       data: {
         dmId,
@@ -368,17 +382,38 @@ export class DmsService {
               })),
             }
           : undefined,
+        dm: {
+          update: {
+            lastMessageAt: new Date(),
+          },
+        },
       },
       include: {
-        sender: true,
-        reactions: true,
-        attachments: true,
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            image: true,
+            status: true,
+          },
+        },
+        reactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+        attachments: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            url: true,
+            size: true,
+          },
+        },
       },
-    });
-
-    await prisma.directMessage.update({
-      where: { id: dmId },
-      data: { lastMessageAt: new Date() },
     });
 
     const formattedMessage = {

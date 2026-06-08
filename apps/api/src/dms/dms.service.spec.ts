@@ -10,6 +10,8 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
     },
     dMMessage: {
       findMany: vi.fn(),
@@ -130,6 +132,66 @@ describe('DmsService', () => {
       const callArg = mockPrisma.dMMessageRead.createMany.mock.calls[0][0];
       expect(callArg.data[0]).toHaveProperty('readAt');
       expect(callArg.data[0].readAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('createDm - select optimization (PR change)', () => {
+    it('should use targeted select with OR query', async () => {
+      const mockDm = {
+        id: 'dm-1',
+        participant1Id: 'user-a',
+        participant2Id: 'user-b',
+        participant1: { id: 'user-a', name: 'User A' },
+        participant2: { id: 'user-b', name: 'User B' },
+      };
+      mockPrisma.directMessage.findFirst.mockResolvedValue(mockDm);
+
+      await service.createDm('user-a', 'user-b', 'User A');
+
+      expect(mockPrisma.directMessage.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            OR: [
+              { participant1Id: 'user-a', participant2Id: 'user-b' },
+              { participant1Id: 'user-b', participant2Id: 'user-a' },
+            ],
+          },
+          select: expect.any(Object),
+        })
+      );
+    });
+  });
+
+  describe('createMessage - consolidated create optimization (PR change)', () => {
+    it('should use dMMessage.create with nested dm.update', async () => {
+      const mockMsg = {
+        id: 'msg-1',
+        dmId: 'dm-1',
+        senderId: 'user-1',
+        content: 'hello',
+        createdAt: new Date(),
+        sender: { id: 'user-1', name: 'User 1' },
+      };
+      mockPrisma.dMMessage.create.mockResolvedValue(mockMsg);
+      mockGetAblyRest.mockReturnValue({
+        channels: { get: vi.fn().mockReturnValue({ publish: vi.fn() }) },
+      });
+
+      await service.createMessage('dm-1', 'user-1', { content: 'hello' });
+
+      expect(mockPrisma.dMMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            content: 'hello',
+            senderId: 'user-1',
+            dm: {
+              update: {
+                lastMessageAt: expect.any(Date),
+              },
+            },
+          }),
+        })
+      );
     });
   });
 

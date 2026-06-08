@@ -117,3 +117,11 @@
 
 **Learning:** Endpoints whose results are cached in Redis (e.g., channel lists) benefit significantly from switching from Prisma `include` to `select`. Broad `include` statements often pull in large relations or internal metadata that inflate the JSON payload, increasing serialization overhead and Redis memory footprint.
 **Action:** Always use targeted `select` for high-traffic or cached endpoints to minimize the response size while strictly preserving the public API contract.
+
+## 2026-06-08 - [API/DMs] Consolidated DM Operations
+**Learning:** Sequential existence checks followed by resource creation (e.g., `createDm`) or timestamp updates (e.g., `createMessage`) in DM services doubled the database RTT and increased latency. Consolidating these into single Prisma `upsert` or `update` calls with nested operations ensures atomicity and reduces round-trip overhead.
+**Action:** Use nested Prisma operations and compound unique indexes (with sorted keys if necessary) to consolidate multi-step write operations into a single database round-trip.
+
+## 2026-06-08 - [API/Prisma] Race-Free Nested Writes
+**Learning:** Consolidating multi-step writes into a single Prisma call using `parent.update` with a nested `child.create` (plus a sub-select for the new child) is prone to race conditions in concurrent environments. A safer pattern is to use `child.create` with a nested `parent.update` on the relation. This guarantees that the returned object is the specific record created by the caller, while still reducing database round-trips to one.
+**Action:** Prefer `child.create({ data: { ..., parent: { update: { ... } } } })` over `parent.update({ data: { ..., children: { create: { ... } } } })` when the newly created record must be returned reliably.
