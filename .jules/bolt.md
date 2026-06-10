@@ -117,3 +117,7 @@
 
 **Learning:** Endpoints whose results are cached in Redis (e.g., channel lists) benefit significantly from switching from Prisma `include` to `select`. Broad `include` statements often pull in large relations or internal metadata that inflate the JSON payload, increasing serialization overhead and Redis memory footprint.
 **Action:** Always use targeted `select` for high-traffic or cached endpoints to minimize the response size while strictly preserving the public API contract.
+
+## 2026-06-10 - [API/Caching] Redis Caching & Audit Logging
+**Learning:** Implementing Redis caching for API endpoints must not bypass security or audit logging. Caching operations should be wrapped in try-catch blocks to prevent 500 errors if Redis is unavailable (best-effort enhancement).
+**Action:** Always call `auditService.log` before returning cached data and wrap Redis interactions in error handlers for graceful fallback to DB.
