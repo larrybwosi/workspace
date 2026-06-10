@@ -87,15 +87,11 @@ export class V2DepartmentsController {
     }
 
     const cacheKey = `v2:departments:${context.workspaceId}`;
+    const cached = await this.getFromCache(cacheKey);
 
-    try {
-      const cachedDepartments = await this.redis.get(cacheKey);
-      if (cachedDepartments) {
-        await this.auditService.log(context, 'departments.list', 'department');
-        return { departments: JSON.parse(cachedDepartments) };
-      }
-    } catch (err) {
-      console.warn('[Redis] Failed to get departments from cache:', err);
+    if (cached) {
+      await this.auditService.log(context, 'departments.list', 'department');
+      return { departments: cached };
     }
 
     /**
@@ -125,12 +121,7 @@ export class V2DepartmentsController {
       },
     });
 
-    try {
-      await this.redis.setex(cacheKey, 600, JSON.stringify(departments));
-    } catch (err) {
-      console.warn('[Redis] Failed to cache departments:', err);
-    }
-
+    await this.setCache(cacheKey, departments);
     await this.auditService.log(context, 'departments.list', 'department');
 
     return { departments };
@@ -158,11 +149,7 @@ export class V2DepartmentsController {
       },
     });
 
-    try {
-      await this.redis.del(`v2:departments:${context.workspaceId}`);
-    } catch (err) {
-      console.warn('[Redis] Failed to invalidate departments cache:', err);
-    }
+    await this.clearCache(context.workspaceId!);
 
     await this.auditService.log(context, 'departments.create', 'department', department.id, validatedData.data);
 
@@ -255,11 +242,7 @@ export class V2DepartmentsController {
       data: validatedData.data,
     });
 
-    try {
-      await this.redis.del(`v2:departments:${context.workspaceId}`);
-    } catch (err) {
-      console.warn('[Redis] Failed to invalidate departments cache:', err);
-    }
+    await this.clearCache(context.workspaceId!);
 
     await this.auditService.log(context, 'departments.update', 'department', departmentId, validatedData.data);
 
@@ -280,11 +263,7 @@ export class V2DepartmentsController {
       where: { id: departmentId, workspaceId: context.workspaceId },
     });
 
-    try {
-      await this.redis.del(`v2:departments:${context.workspaceId}`);
-    } catch (err) {
-      console.warn('[Redis] Failed to invalidate departments cache:', err);
-    }
+    await this.clearCache(context.workspaceId!);
 
     await this.auditService.log(context, 'departments.delete', 'department', departmentId);
 
@@ -293,5 +272,31 @@ export class V2DepartmentsController {
 
   private hasScope(context: ApiV2Context, scope: string): boolean {
     return context.scopes.includes(scope) || context.scopes.includes('*');
+  }
+
+  private async getFromCache(key: string): Promise<any[] | null> {
+    try {
+      const cached = await this.redis.get(key);
+      return cached ? JSON.parse(cached) : null;
+    } catch (err) {
+      console.warn('[Redis] Failed to get from cache:', err);
+      return null;
+    }
+  }
+
+  private async setCache(key: string, data: any): Promise<void> {
+    try {
+      await this.redis.setex(key, 600, JSON.stringify(data));
+    } catch (err) {
+      console.warn('[Redis] Failed to set cache:', err);
+    }
+  }
+
+  private async clearCache(workspaceId: string): Promise<void> {
+    try {
+      await this.redis.del(`v2:departments:${workspaceId}`);
+    } catch (err) {
+      console.warn('[Redis] Failed to clear cache:', err);
+    }
   }
 }
