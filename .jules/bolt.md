@@ -121,3 +121,7 @@
 ## 2026-06-10 - [API/Caching] Redis Caching & Audit Logging
 **Learning:** Implementing Redis caching for API endpoints must not bypass security or audit logging. Caching operations should be wrapped in try-catch blocks to prevent 500 errors if Redis is unavailable (best-effort enhancement).
 **Action:** Always call `auditService.log` before returning cached data and wrap Redis interactions in error handlers for graceful fallback to DB.
+
+## 2026-06-11 - [Database/Shared] Parallelized Eligibility Rule Verification
+**Learning:** Sequential database lookups for independent eligibility rules (e.g., checking User stats followed by UserBadgeAssignment) in shared utilities creates unnecessary latency.
+**Action:** Use 'Promise.all' to fetch all required verification data (User profile and specific relation records like Badge assignments) in parallel. Combine this with targeted 'select' to minimize payload size and memory overhead.

@@ -15,14 +15,39 @@ export interface AssetRules {
  */
 export async function isUserEligibleForAsset(userId: string, rules: any): Promise<boolean> {
   if (!rules || Object.keys(rules).length === 0) return true;
+  const typedRules = rules as AssetRules;
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
+  /**
+   * ⚡ Performance Optimization:
+   * 1. Consolidates user lookup and badge verification into parallel database queries.
+   * 2. Uses targeted 'select' to fetch only essential User fields, reducing payload size.
+   * 3. Reduces total database round-trip (RTT) from O(2) to O(1) when a badge is required.
+   */
+  const [user, badgeAssignment] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        plan: true,
+        role: true,
+        messageCount: true,
+        createdAt: true,
+      },
+    }),
+    typedRules.requiredBadgeId
+      ? prisma.userBadgeAssignment.findUnique({
+          where: {
+            userId_badgeId: {
+              userId,
+              badgeId: typedRules.requiredBadgeId,
+            },
+          },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+  ]);
 
   if (!user) return false;
-
-  const typedRules = rules as AssetRules;
 
   // 1. Plan requirement (e.g., 'nitro', 'nitro_basic')
   if (typedRules.requiredPlan) {
@@ -37,16 +62,8 @@ export async function isUserEligibleForAsset(userId: string, rules: any): Promis
   }
 
   // 3. Badge requirement
-  if (typedRules.requiredBadgeId) {
-    const hasBadge = await prisma.userBadgeAssignment.findUnique({
-      where: {
-        userId_badgeId: {
-          userId,
-          badgeId: typedRules.requiredBadgeId,
-        },
-      },
-    });
-    if (!hasBadge) return false;
+  if (typedRules.requiredBadgeId && !badgeAssignment) {
+    return false;
   }
 
   // 4. Account age requirement
