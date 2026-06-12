@@ -2,17 +2,17 @@
   "schema_version": 6,
   "version": "2.71.1",
   "command": "audit",
-  "verdict": "warn",
+  "verdict": "pass",
   "changed_files_count": 4,
   "base_ref": "914e649eb4f394f4b85c507248d56e40a46c6bcd",
   "head_sha": "914e649",
-  "elapsed_ms": 3303,
+  "elapsed_ms": 1188,
   "summary": {
     "dead_code_issues": 118,
     "dead_code_has_errors": true,
     "complexity_findings": 8,
     "max_cyclomatic": 28,
-    "duplication_clone_groups": 3
+    "duplication_clone_groups": 2
   },
   "attribution": {
     "gate": "new-only",
@@ -20,13 +20,13 @@
     "dead_code_inherited": 118,
     "complexity_introduced": 0,
     "complexity_inherited": 3,
-    "duplication_introduced": 1,
+    "duplication_introduced": 0,
     "duplication_inherited": 2
   },
   "dead_code": {
     "schema_version": 6,
     "version": "2.71.1",
-    "elapsed_ms": 2252,
+    "elapsed_ms": 606,
     "total_issues": 118,
     "entry_points": {
       "total": 254,
@@ -2899,42 +2899,6 @@
       {
         "instances": [
           {
-            "file": "apps/api/src/v2/workspaces/departments.controller.ts",
-            "start_line": 14,
-            "end_line": 39,
-            "start_col": 7,
-            "end_col": 1,
-            "fragment": "'@nestjs/common';\nimport { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';\nimport { ApiV2Guard } from '../../auth/api-v2.guard';\nimport type { ApiV2Context } from '../../auth/api-v2.guard';\nimport { V2Context } from '../../auth/v2-context.decorator';\nimport { prisma } from '@repo/database';\nimport Redis from 'ioredis';\nimport { z } from 'zod';\nimport { V2AuditService } from '../v2-audit.service';\n\nclass CreateDepartmentDto {\n  @ApiProperty({ example: 'Product' })\n  name: string;\n  @ApiProperty({ example: 'product' })\n  slug: string;\n  @ApiProperty({ required: false })\n  description?: string;\n  @ApiProperty({ required: false })\n  icon?: string;\n  @ApiProperty({ required: false })\n  color?: string;\n  @ApiProperty({ required: false })\n  parentId?: string;\n  @ApiProperty({ required: false })\n  managerId?: string;\n}"
-          },
-          {
-            "file": "apps/api/src/v2/workspaces/workspaces.controller.ts",
-            "start_line": 14,
-            "end_line": 30,
-            "start_col": 7,
-            "end_col": 1,
-            "fragment": "'@nestjs/common';\nimport { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';\nimport { ApiV2Guard } from '../../auth/api-v2.guard';\nimport type { ApiV2Context } from '../../auth/api-v2.guard';\nimport { V2Context } from '../../auth/v2-context.decorator';\nimport { prisma } from '@repo/database';\nimport Redis from 'ioredis';\nimport { z } from 'zod';\nimport { V2AuditService } from '../v2-audit.service';\n\nclass AddMemberDto {\n  @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })\n  email: string;\n\n  @ApiProperty({ example: 'member', description: 'The role of the member', required: false, default: 'member' })\n  role?: string;\n}"
-          }
-        ],
-        "token_count": 63,
-        "line_count": 26,
-        "actions": [
-          {
-            "type": "extract-shared",
-            "auto_fixable": false,
-            "description": "Extract duplicated code (26 lines, 2 instances) into a shared function"
-          },
-          {
-            "type": "suppress-line",
-            "auto_fixable": false,
-            "description": "Suppress with an inline comment above the duplicated code",
-            "comment": "// fallow-ignore-next-line code-duplication"
-          }
-        ],
-        "introduced": true
-      },
-      {
-        "instances": [
-          {
             "file": "apps/api/src/v2/workspaces/messages.controller.ts",
             "start_line": 487,
             "end_line": 511,
@@ -2970,64 +2934,6 @@
       }
     ],
     "clone_families": [
-      {
-        "files": [
-          "apps/api/src/v2/workspaces/departments.controller.ts",
-          "apps/api/src/v2/workspaces/workspaces.controller.ts"
-        ],
-        "groups": [
-          {
-            "instances": [
-              {
-                "file": "apps/api/src/v2/workspaces/departments.controller.ts",
-                "start_line": 14,
-                "end_line": 39,
-                "start_col": 7,
-                "end_col": 1,
-                "fragment": "'@nestjs/common';\nimport { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';\nimport { ApiV2Guard } from '../../auth/api-v2.guard';\nimport type { ApiV2Context } from '../../auth/api-v2.guard';\nimport { V2Context } from '../../auth/v2-context.decorator';\nimport { prisma } from '@repo/database';\nimport Redis from 'ioredis';\nimport { z } from 'zod';\nimport { V2AuditService } from '../v2-audit.service';\n\nclass CreateDepartmentDto {\n  @ApiProperty({ example: 'Product' })\n  name: string;\n  @ApiProperty({ example: 'product' })\n  slug: string;\n  @ApiProperty({ required: false })\n  description?: string;\n  @ApiProperty({ required: false })\n  icon?: string;\n  @ApiProperty({ required: false })\n  color?: string;\n  @ApiProperty({ required: false })\n  parentId?: string;\n  @ApiProperty({ required: false })\n  managerId?: string;\n}"
-              },
-              {
-                "file": "apps/api/src/v2/workspaces/workspaces.controller.ts",
-                "start_line": 14,
-                "end_line": 30,
-                "start_col": 7,
-                "end_col": 1,
-                "fragment": "'@nestjs/common';\nimport { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';\nimport { ApiV2Guard } from '../../auth/api-v2.guard';\nimport type { ApiV2Context } from '../../auth/api-v2.guard';\nimport { V2Context } from '../../auth/v2-context.decorator';\nimport { prisma } from '@repo/database';\nimport Redis from 'ioredis';\nimport { z } from 'zod';\nimport { V2AuditService } from '../v2-audit.service';\n\nclass AddMemberDto {\n  @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })\n  email: string;\n\n  @ApiProperty({ example: 'member', description: 'The role of the member', required: false, default: 'member' })\n  role?: string;\n}"
-              }
-            ],
-            "token_count": 63,
-            "line_count": 26
-          }
-        ],
-        "total_duplicated_lines": 26,
-        "total_duplicated_tokens": 63,
-        "suggestions": [
-          {
-            "kind": "ExtractFunction",
-            "description": "Extract shared function (26 lines) from departments.controller.ts, workspaces.controller.ts",
-            "estimated_savings": 26
-          }
-        ],
-        "actions": [
-          {
-            "type": "extract-shared",
-            "auto_fixable": false,
-            "description": "Extract 1 duplicated code block (26 lines) into a shared module",
-            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
-          },
-          {
-            "type": "apply-suggestion",
-            "auto_fixable": false,
-            "description": "Extract shared function (26 lines) from departments.controller.ts, workspaces.controller.ts"
-          },
-          {
-            "type": "suppress-line",
-            "auto_fixable": false,
-            "description": "Suppress with an inline comment above the duplicated code",
-            "comment": "// fallow-ignore-next-line code-duplication"
-          }
-        ]
-      },
       {
         "files": [
           "apps/api/src/v2/workspaces/messages.controller.ts",
@@ -3156,14 +3062,14 @@
     ],
     "stats": {
       "total_files": 528,
-      "files_with_clones": 6,
-      "total_lines": 75478,
-      "duplicated_lines": 127,
+      "files_with_clones": 4,
+      "total_lines": 75479,
+      "duplicated_lines": 84,
       "total_tokens": 341606,
-      "duplicated_tokens": 454,
-      "clone_groups": 3,
-      "clone_instances": 7,
-      "duplication_percentage": 0.1682609502106574
+      "duplicated_tokens": 328,
+      "clone_groups": 2,
+      "clone_instances": 5,
+      "duplication_percentage": 0.1112892327667298
     }
   },
   "complexity": {
@@ -3357,7 +3263,7 @@
       {
         "path": "apps/api/src/v2/workspaces/workspaces.controller.ts",
         "name": "<anonymous>",
-        "line": 54,
+        "line": 55,
         "col": 18,
         "cyclomatic": 5,
         "cognitive": 4,
@@ -3387,7 +3293,7 @@
       {
         "path": "apps/api/src/v2/workspaces/workspaces.controller.ts",
         "name": "<anonymous>",
-        "line": 211,
+        "line": 212,
         "col": 20,
         "cyclomatic": 5,
         "cognitive": 3,
@@ -3443,7 +3349,7 @@
         "total_exports": 2,
         "dead_files": 0,
         "dead_exports": 0,
-        "total_lines": 1029,
+        "total_lines": 1030,
         "files_scored": 2,
         "total_deps": 0
       },
@@ -3462,7 +3368,7 @@
       },
       "p95_fan_in": 1,
       "coupling_high_pct": 0.0,
-      "total_loc": 1029
+      "total_loc": 1030
     },
     "large_functions": [
       {

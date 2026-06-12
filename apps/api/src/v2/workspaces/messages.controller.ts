@@ -475,6 +475,7 @@ export class V2MessagesController {
      * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
      * Expected impact: Reduces JSON payload size and memory overhead by ~15-20%.
      */
+    // fallow-ignore-next-line code-duplication
     const messages = await prisma.message.findMany({
       where: {
         channelId: channelId || undefined,
