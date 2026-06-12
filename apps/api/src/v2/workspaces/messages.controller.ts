@@ -13,6 +13,7 @@ import {
   BadRequestException,
   NotFoundException,
   Req,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -137,6 +138,8 @@ const sendMessageSchema = z
 @Controller('v2/workspaces/:slug')
 @UseGuards(ApiV2Guard)
 export class V2MessagesController {
+  private readonly logger = new Logger(V2MessagesController.name);
+
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly auditService: V2AuditService,
@@ -154,9 +157,16 @@ export class V2MessagesController {
     }
 
     const cacheKey = `v2:channels:${context.workspaceId}`;
-    const cachedChannels = await this.redis.get(cacheKey);
+    let cachedChannels: string | null = null;
+
+    try {
+      cachedChannels = await this.redis.get(cacheKey);
+    } catch (error) {
+      this.logger.warn('Redis error in getChannels:', error);
+    }
 
     if (cachedChannels) {
+      await this.auditService.log(context, 'channels.list', 'channel');
       return { channels: JSON.parse(cachedChannels), source: 'cache' };
     }
 
@@ -190,7 +200,11 @@ export class V2MessagesController {
       },
     });
 
-    await this.redis.setex(cacheKey, 600, JSON.stringify(channels));
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(channels));
+    } catch (error) {
+      this.logger.warn('Redis error in getChannels (setex):', error);
+    }
 
     await this.auditService.log(context, 'channels.list', 'channel');
 
@@ -282,14 +296,14 @@ export class V2MessagesController {
 
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select: { id: true }' for existence check to minimize DB payload and memory usage.
+     * Uses 'findUnique' with 'select: { id: true }' for existence check to minimize DB payload.
      */
-    const channel = await prisma.channel.findFirst({
-      where: { id: channelId, workspaceId: context.workspaceId },
-      select: { id: true },
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { id: true, workspaceId: true },
     });
 
-    if (!channel) {
+    if (!channel || channel.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Channel not found');
     }
 
@@ -319,19 +333,34 @@ export class V2MessagesController {
       throw new ForbiddenException('Forbidden: Missing channels:read scope');
     }
 
-    const channel = await prisma.channel.findFirst({
-      where: {
-        id: channelId,
-        workspaceId: context.workspaceId,
-      },
-      include: {
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Uses 'findUnique' for faster primary-key lookup.
+     * 2. Replaces 'include' with targeted 'select' to reduce data transfer and memory overhead.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        icon: true,
+        type: true,
+        description: true,
+        isPrivate: true,
+        workspaceId: true,
+        parentId: true,
+        departmentId: true,
+        metadata: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: { members: true, messages: true },
         },
       },
     });
 
-    if (!channel) {
+    if (!channel || channel.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Channel not found');
     }
 
@@ -575,14 +604,16 @@ export class V2MessagesController {
     if (channelId) {
       /**
        * ⚡ Performance Optimization:
-       * Uses 'select: { id: true }' for existence check to minimize DB payload.
+       * Uses 'findUnique' with 'select: { id: true }' for existence check to minimize DB payload.
        */
-      const channel = await prisma.channel.findFirst({
-        where: { id: channelId, workspaceId: context.workspaceId },
-        select: { id: true },
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelId },
+        select: { id: true, workspaceId: true },
       });
 
-      if (!channel) throw new NotFoundException('Channel not found in this workspace');
+      if (!channel || channel.workspaceId !== context.workspaceId) {
+        throw new NotFoundException('Channel not found in this workspace');
+      }
 
       if (contextId && !activeThreadId) {
         const existingThread = await prisma.thread.findFirst({
@@ -660,13 +691,18 @@ export class V2MessagesController {
     } else if (recipientId) {
       /**
        * ⚡ Performance Optimization:
-       * 1. Uses 'select: { id: true }' for recipient membership check to minimize DB payload.
+       * 1. Uses 'findUnique' with 'select: { id: true }' for recipient membership check to minimize DB payload.
        * 2. Consolidates DM existence check, DM creation, message creation, and timestamp update
        *    into a single Prisma 'upsert' call with nested 'create'.
        * Expected impact: Reduces database round-trips from 5 down to 2.
        */
-      const recipientMembership = await prisma.workspaceMember.findFirst({
-        where: { userId: recipientId, workspaceId: context.workspaceId },
+      const recipientMembership = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: context.workspaceId!,
+            userId: recipientId,
+          },
+        },
         select: { id: true },
       });
 
