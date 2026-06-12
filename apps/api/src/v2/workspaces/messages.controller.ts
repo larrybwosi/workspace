@@ -296,7 +296,7 @@ export class V2MessagesController {
 
     /**
      * ⚡ Performance Optimization:
-     * Uses 'findUnique' with 'select: { id: true }' for existence check to minimize DB payload.
+     * Uses 'select: { id: true }' for existence check to minimize DB payload and memory usage.
      */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -333,11 +333,6 @@ export class V2MessagesController {
       throw new ForbiddenException('Forbidden: Missing channels:read scope');
     }
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Uses 'findUnique' for faster primary-key lookup.
-     * 2. Replaces 'include' with targeted 'select' to reduce data transfer and memory overhead.
-     */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: {

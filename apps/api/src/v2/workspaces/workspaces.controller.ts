@@ -20,7 +20,6 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
-import { auth } from '../../auth/better-auth';
 
 class AddMemberDto {
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
