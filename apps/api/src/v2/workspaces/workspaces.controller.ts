@@ -21,6 +21,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 
+// fallow-ignore-next-line code-duplication
 class AddMemberDto {
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
   email: string;
