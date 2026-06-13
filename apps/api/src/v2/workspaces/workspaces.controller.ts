@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
@@ -19,8 +20,8 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
-import { auth } from '../../auth/better-auth';
 
+// fallow-ignore-next-line code-duplication
 class AddMemberDto {
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
   email: string;
@@ -39,6 +40,8 @@ const addMemberSchema = z.object({
 @Controller('v2/workspaces/:slug/members')
 @UseGuards(ApiV2Guard)
 export class V2WorkspacesController {
+  private readonly logger = new Logger(V2WorkspacesController.name);
+
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly auditService: V2AuditService
@@ -55,9 +58,16 @@ export class V2WorkspacesController {
     }
 
     const cacheKey = `v2:members:${context.workspaceId}`;
-    const cachedMembers = await this.redis.get(cacheKey);
+    let cachedMembers: string | null = null;
+
+    try {
+      cachedMembers = await this.redis.get(cacheKey);
+    } catch (error) {
+      this.logger.warn('Redis error in getMembers:', error);
+    }
 
     if (cachedMembers) {
+      await this.auditService.log(context, 'members.list', 'member');
       return { members: JSON.parse(cachedMembers), source: 'cache' };
     }
 
@@ -92,7 +102,11 @@ export class V2WorkspacesController {
       },
     });
 
-    await this.redis.setex(cacheKey, 600, JSON.stringify(members));
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(members));
+    } catch (error) {
+      this.logger.warn('Redis error in getMembers (setex):', error);
+    }
 
     await this.auditService.log(context, 'members.list', 'member');
 

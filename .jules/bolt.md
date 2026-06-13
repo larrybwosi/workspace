@@ -121,3 +121,7 @@
 ## 2026-06-10 - [API/Caching] Redis Caching & Audit Logging
 **Learning:** Implementing Redis caching for API endpoints must not bypass security or audit logging. Caching operations should be wrapped in try-catch blocks to prevent 500 errors if Redis is unavailable (best-effort enhancement).
 **Action:** Always call `auditService.log` before returning cached data and wrap Redis interactions in error handlers for graceful fallback to DB.
+
+## 2026-06-12 - [Prisma/Performance] Prefer findUnique over findFirst
+**Learning:** Using `prisma.model.findUnique` instead of `findFirst` when querying by primary keys (e.g., `id`) or compound unique indices (e.g., `workspaceId_userId` in `workspaceMember`) leverages direct database indexing for O(1) lookup performance. This reduces database CPU overhead and minimizes query execution time.
+**Action:** Always prefer `findUnique` for lookup operations involving unique constraints to maximize performance.
