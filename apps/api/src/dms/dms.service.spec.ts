@@ -5,11 +5,13 @@ import { DmsService } from './dms.service';
 // Mock @repo/database
 vi.mock('@repo/database', () => ({
   prisma: {
+    $transaction: vi.fn((args) => Promise.all(args)),
     directMessage: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     dMMessage: {
       findMany: vi.fn(),
@@ -70,6 +72,40 @@ describe('DmsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('createMessage - single round-trip optimization', () => {
+    it('should consolidate message creation and DM update into a single transaction', async () => {
+      const mockMsg = {
+        id: 'msg-1',
+        senderId: 'user-1',
+        content: 'hello',
+        createdAt: new Date(),
+        sender: { id: 'user-1', name: 'User 1' },
+      };
+
+      mockPrisma.dMMessage.create.mockResolvedValue(mockMsg);
+      mockPrisma.directMessage.update.mockResolvedValue({ id: 'dm-1' });
+      mockGetAblyRest.mockReturnValue(null);
+
+      await service.createMessage('dm-1', 'user-1', { content: 'hello' });
+
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(mockPrisma.dMMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            dmId: 'dm-1',
+            content: 'hello',
+          }),
+        })
+      );
+      expect(mockPrisma.directMessage.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'dm-1' },
+          data: { lastMessageAt: expect.any(Date) },
+        })
+      );
+    });
   });
 
   describe('markAsRead - batch createMany optimization (PR change)', () => {

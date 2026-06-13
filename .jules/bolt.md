@@ -125,3 +125,7 @@
 ## 2026-06-12 - [Prisma/Performance] Prefer findUnique over findFirst
 **Learning:** Using `prisma.model.findUnique` instead of `findFirst` when querying by primary keys (e.g., `id`) or compound unique indices (e.g., `workspaceId_userId` in `workspaceMember`) leverages direct database indexing for O(1) lookup performance. This reduces database CPU overhead and minimizes query execution time.
 **Action:** Always prefer `findUnique` for lookup operations involving unique constraints to maximize performance.
+
+## 2026-06-15 - [Prisma] Nested Update Limitations in Create
+**Learning:** Prisma's 'create' method does not support nested 'update' operations within the 'data' block for relations. Attempting to use 'update' inside 'create' results in a runtime validation error.
+**Action:** Use an array-based 'prisma.$transaction([ ... ])' to consolidate a record creation and a related resource update into a single database round-trip while maintaining atomicity.

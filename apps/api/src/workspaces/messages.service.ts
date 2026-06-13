@@ -231,9 +231,14 @@ export class MessagesService {
       });
     }
 
-    const message = await prisma.$transaction(async tx => {
-      // 1. Create the message
-      const msg = await tx.message.create({
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates message creation and user message count increment into a single
+     * database round-trip using an array-based Prisma transaction.
+     * Expected impact: Reduces database round-trips from ~4 (interactive transaction) to 1.
+     */
+    const [message] = await prisma.$transaction([
+      prisma.message.create({
         data: {
           channelId,
           userId: userId,
@@ -267,16 +272,12 @@ export class MessagesService {
           attachments: true,
           mentions: true,
         },
-      });
-
-      // 2. Increment user's message count
-      await tx.user.update({
+      }),
+      prisma.user.update({
         where: { id: userId },
         data: { messageCount: { increment: 1 } },
-      });
-
-      return msg;
-    });
+      }),
+    ]);
 
     const sender = message.user;
 
