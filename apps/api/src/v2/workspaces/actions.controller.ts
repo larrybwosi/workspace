@@ -7,6 +7,7 @@ import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
+import { PrismaService } from '../../prisma.service';
 
 @ApiTags('Message Actions')
 @ApiBearerAuth()
@@ -16,7 +17,8 @@ export class V2MessageActionsController {
   constructor(
     private readonly auditService: V2AuditService,
     private readonly webhooksService: V2WebhooksService,
-    private readonly integrationsService: IntegrationsService
+    private readonly integrationsService: IntegrationsService,
+    private readonly prisma: PrismaService
   ) {}
 
   @Post()
@@ -71,13 +73,28 @@ export class V2MessageActionsController {
     }
 
     // Dispatch webhook
-    await this.webhooksService.dispatch(message.channel.workspaceId!, 'message.action', {
+    const eventData = {
       messageId,
       actionId,
       actionValue: action.value || action.label,
       userId: context.userId,
       responseId: response.id,
-    });
+      metadata: message.metadata,
+    };
+
+    await this.webhooksService.dispatch(message.channel.workspaceId!, 'message.action', eventData);
+
+    // M2M Callback logic
+    const m2mClientId = (message.metadata as any)?.m2mClientId;
+    if (m2mClientId) {
+      const m2mApp = await this.prisma.m2mApplication.findUnique({
+        where: { clientId: m2mClientId },
+      });
+
+      if (m2mApp) {
+        await this.webhooksService.dispatchM2mCallback(m2mApp, 'message.action', eventData, context.workspaceId!);
+      }
+    }
 
     return { success: true, responseId: response.id };
   }

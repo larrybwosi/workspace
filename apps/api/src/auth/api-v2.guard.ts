@@ -22,6 +22,7 @@ export interface ApiV2Context {
   isBot?: boolean;
   tokenId?: string;
   organizationId?: string;
+  m2mClientId?: string;
 }
 
 @Injectable()
@@ -176,6 +177,7 @@ export class ApiV2Guard implements CanActivate {
 
         if (context.userId.startsWith('m2m:')) {
           context.organizationId = context.userId.split(':')[1];
+          context.m2mClientId = context.clientId;
         }
 
         /**
@@ -191,6 +193,7 @@ export class ApiV2Guard implements CanActivate {
               id: true,
               slug: true,
               ownerId: true,
+              organizationId: true,
               members: context.organizationId
                 ? undefined
                 : {
@@ -215,9 +218,12 @@ export class ApiV2Guard implements CanActivate {
           }
 
           if (context.organizationId) {
+            // Widen Scope: M2M is authorized if workspace belongs to organization OR if organization has member access to the owner
+            const isDirectOrgWorkspace = workspace.organizationId === context.organizationId;
             const owner = workspace.owner as { members: { id: string }[] } | null;
-            const isAuthorized = (owner?.members?.length ?? 0) > 0;
-            if (!isAuthorized) {
+            const hasOwnerAccess = (owner?.members?.length ?? 0) > 0;
+
+            if (!isDirectOrgWorkspace && !hasOwnerAccess) {
               throw new ForbiddenException('M2M application is not authorized to access this workspace');
             }
           } else {

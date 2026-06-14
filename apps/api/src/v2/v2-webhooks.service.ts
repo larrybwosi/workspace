@@ -87,4 +87,35 @@ export class V2WebhooksService {
       console.error('Webhook Dispatch Error:', error);
     }
   }
+
+  /**
+   * Dispatch a callback to an M2M application's webhook endpoint
+   */
+  async dispatchM2mCallback(m2mApp: any, eventType: string, data: any, workspaceId: string) {
+    if (!m2mApp.webhookUrl || !m2mApp.webhookSecret) return;
+
+    const event: WebhookEvent = {
+      id: `evt_${crypto.randomBytes(12).toString('hex')}`,
+      type: eventType,
+      data,
+      workspaceId,
+      createdAt: new Date().toISOString(),
+    };
+
+    const payload = JSON.stringify(event);
+    const signature = crypto.createHmac('sha256', m2mApp.webhookSecret).update(payload).digest('hex');
+
+    try {
+      await axios.post(m2mApp.webhookUrl, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Signature': `sha256=${signature}`,
+          'X-Webhook-Event': eventType,
+        },
+        timeout: 5000,
+      });
+    } catch (error) {
+      console.error('M2M Webhook Callback Error:', error);
+    }
+  }
 }
