@@ -644,6 +644,7 @@ export class V2MessagesController {
             ...((metadata as any) || {}),
             isBot: context.isBot || false,
             tokenId: context.tokenId || null,
+            m2mClientId: context.m2mClientId || null,
           },
           actions: actions
             ? {
