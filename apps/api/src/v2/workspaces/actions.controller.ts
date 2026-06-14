@@ -3,7 +3,6 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@ne
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
-import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
@@ -31,7 +30,7 @@ export class V2MessageActionsController {
     @Param('messageId') messageId: string,
     @Param('actionId') actionId: string
   ) {
-    const message = await prisma.message.findFirst({
+    const message = await this.prisma.client.message.findFirst({
       where: {
         id: messageId,
         channel: { workspaceId: context.workspaceId },
@@ -49,7 +48,7 @@ export class V2MessageActionsController {
     }
 
     // Log the response
-    const response = await prisma.messageActionResponse.create({
+    const response = await this.prisma.client.messageActionResponse.create({
       data: {
         messageId,
         actionId: action.id,
@@ -87,12 +86,17 @@ export class V2MessageActionsController {
     // M2M Callback logic
     const m2mClientId = (message.metadata as any)?.m2mClientId;
     if (m2mClientId) {
-      const m2mApp = await this.prisma.m2mApplication.findUnique({
+      const m2mApp = await this.prisma.client.m2mApplication.findUnique({
         where: { clientId: m2mClientId },
       });
 
       if (m2mApp) {
-        await this.webhooksService.dispatchM2mCallback(m2mApp, 'message.action', eventData, context.workspaceId!);
+        await this.webhooksService.dispatchM2mCallback(
+          m2mApp,
+          'message.action',
+          eventData,
+          message.channel.workspaceId!
+        );
       }
     }
 

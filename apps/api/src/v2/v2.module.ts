@@ -21,6 +21,7 @@ import { ApiV2Guard } from '../auth/api-v2.guard';
 import { V2AuditService } from './v2-audit.service';
 import { V2WebhooksService } from './v2-webhooks.service';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { PrismaService } from '../prisma.service';
 
 @Module({
   imports: [IntegrationsModule],
@@ -42,7 +43,14 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     ProvisioningController,
     OrganizationsController,
   ],
-  providers: [ApiV2Guard, V2AuditService, V2WebhooksService, V2ApplicationsService, ProvisioningService],
+  providers: [
+    ApiV2Guard,
+    V2AuditService,
+    V2WebhooksService,
+    V2ApplicationsService,
+    ProvisioningService,
+    PrismaService,
+  ],
 })
 export class V2Module {}
 // To be cleaned up if it was a real file but I'll use sed to insert it properly.
