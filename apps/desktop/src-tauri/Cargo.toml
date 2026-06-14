@@ -28,6 +28,8 @@ serde_json = "1.0"
 tauri-plugin-single-instance = "2.4.2"
 alloc-no-stdlib = "=2.0.4"
 alloc-stdlib = "=0.2.2"
+brotli = "=8.0.1"
+brotli-decompressor = "=5.0.1"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
