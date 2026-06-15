@@ -125,3 +125,7 @@
 ## 2026-06-12 - [Prisma/Performance] Prefer findUnique over findFirst
 **Learning:** Using `prisma.model.findUnique` instead of `findFirst` when querying by primary keys (e.g., `id`) or compound unique indices (e.g., `workspaceId_userId` in `workspaceMember`) leverages direct database indexing for O(1) lookup performance. This reduces database CPU overhead and minimizes query execution time.
 **Action:** Always prefer `findUnique` for lookup operations involving unique constraints to maximize performance.
+
+## 2026-06-15 - [Database] Missing User-to-Badge Relations
+**Learning:** The 'User' model lacks a direct back-relation to 'UserBadgeAssignment', preventing consolidated nested queries for eligibility checks.
+**Action:** Use 'Promise.all' to parallelize independent user profile and badge assignment lookups to maintain O(1) RTT when models lack direct relations.

@@ -280,22 +280,32 @@ export class MessagesService {
 
     const sender = message.user;
 
-    // ⚡ Optimization: Notify mentioned users in batch
+    /**
+     * ⚡ Performance Optimization:
+     * Parallelizes independent side-effects (notifications and real-time events) to reduce tail latency.
+     * Expected impact: Significantly reduces the total time spent on the "create message" operation.
+     */
+    const sideEffects: Promise<any>[] = [];
+
+    // 1. Notify mentioned users in batch
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
     if (recipientIds.length > 0) {
-      await notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content);
+      sideEffects.push(notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content));
     }
 
-    // Notify @all / @here
+    // 2. Notify @all / @here
     if (mentionsAll || mentionsHere) {
-      await notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere);
+      sideEffects.push(notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere));
     }
 
+    // 3. Publish to Ably
     const ably = getAblyRest();
     if (ably) {
       const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-      await channel.publish(AblyEvents.MESSAGE_SENT, message);
+      sideEffects.push(channel.publish(AblyEvents.MESSAGE_SENT, message));
     }
+
+    await Promise.all(sideEffects);
 
     return message;
   }
