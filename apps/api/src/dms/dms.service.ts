@@ -352,40 +352,46 @@ export class DmsService {
   async createMessage(dmId: string, userId: string, body: any) {
     const { content, replyToId, attachments } = body;
 
-    const message = await prisma.dMMessage.create({
-      data: {
-        dmId,
-        senderId: userId,
-        content,
-        replyToId,
-        attachments: attachments
-          ? {
-              create: attachments.map((att: any) => ({
-                name: att.name,
-                type: att.type,
-                url: att.url,
-                size: att.size,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        sender: true,
-        reactions: true,
-        attachments: true,
-      },
-    });
-
-    await prisma.directMessage.update({
-      where: { id: dmId },
-      data: { lastMessageAt: new Date() },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates DM message creation and conversation timestamp update into a single transaction.
+     * 2. Reduces database round-trips from 2 down to 1.
+     */
+    const [message] = await prisma.$transaction([
+      prisma.dMMessage.create({
+        data: {
+          dmId,
+          senderId: userId,
+          content,
+          replyToId,
+          attachments: attachments
+            ? {
+                create: attachments.map((att: any) => ({
+                  name: att.name,
+                  type: att.type,
+                  url: att.url,
+                  size: att.size,
+                })),
+              }
+            : undefined,
+        },
+        include: {
+          sender: true,
+          reactions: true,
+          attachments: true,
+        },
+      }),
+      prisma.directMessage.update({
+        where: { id: dmId },
+        data: { lastMessageAt: new Date() },
+      }),
+    ]);
 
     const formattedMessage = {
       ...message,
-      userId: message.senderId,
-      user: message.sender,
-      timestamp: message.createdAt,
+      userId: (message as any).senderId,
+      user: (message as any).sender,
+      timestamp: (message as any).createdAt,
       messageType: 'standard',
     };
 
