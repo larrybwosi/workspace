@@ -199,25 +199,26 @@ export class MessagesService {
     const mentionsAll = hasSpecialMention(content || '', 'all');
     const mentionsHere = hasSpecialMention(content || '', 'here');
 
-    // Optimization: Fetch only mentioned users instead of all users (avoid full table scan)
-    const mentionedUsers =
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Parallelizes initial lookups for mentioned users and sticker details.
+     * 2. Reduces database RTT by fetching non-dependent metadata concurrently.
+     */
+    const [mentionedUsers, sticker] = await Promise.all([
       userMentions.length > 0
-        ? await prisma.user.findMany({
-            where: {
-              name: {
-                in: userMentions,
-                mode: 'insensitive',
-              },
-            },
+        ? prisma.user.findMany({
+            where: { name: { in: userMentions, mode: 'insensitive' } },
             select: { id: true, name: true },
           })
-        : [];
+        : Promise.resolve([]),
+      stickerId ? prisma.sticker.findUnique({ where: { id: stickerId } }) : Promise.resolve(null),
+    ]);
+
     const mentionedUserIds = extractUserIds(userMentions, mentionedUsers);
 
     // Eligibility check for stickers
-    if (stickerId) {
-      const sticker = await prisma.sticker.findUnique({ where: { id: stickerId } });
-      if (sticker && sticker.rules) {
+    if (stickerId && sticker) {
+      if (sticker.rules) {
         const isEligible = await isUserEligibleForAsset(userId, sticker.rules);
         if (!isEligible) {
           throw new ForbiddenException('Not eligible to use this sticker');
@@ -227,13 +228,18 @@ export class MessagesService {
         assetId: stickerId,
         assetType: 'sticker',
         userId: userId,
-        workspaceId: sticker?.workspaceId || undefined,
+        workspaceId: sticker.workspaceId || undefined,
       });
     }
 
-    const message = await prisma.$transaction(async tx => {
-      // 1. Create the message
-      const msg = await tx.message.create({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Uses an array-based $transaction instead of an interactive one.
+     * 2. Consolidates message creation and user message count increment into a single round-trip.
+     * 3. Reduces transaction overhead and minimizes lock duration.
+     */
+    const [message] = await prisma.$transaction([
+      prisma.message.create({
         data: {
           channelId,
           userId: userId,
@@ -267,35 +273,34 @@ export class MessagesService {
           attachments: true,
           mentions: true,
         },
-      });
-
-      // 2. Increment user's message count
-      await tx.user.update({
+      }),
+      prisma.user.update({
         where: { id: userId },
         data: { messageCount: { increment: 1 } },
-      });
+      }),
+    ]);
 
-      return msg;
-    });
-
-    const sender = message.user;
-
-    // ⚡ Optimization: Notify mentioned users in batch
+    const sender = (message as any).user;
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
-    if (recipientIds.length > 0) {
-      await notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content);
-    }
-
-    // Notify @all / @here
-    if (mentionsAll || mentionsHere) {
-      await notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere);
-    }
-
     const ably = getAblyRest();
-    if (ably) {
-      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-      await channel.publish(AblyEvents.MESSAGE_SENT, message);
-    }
+
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Parallelizes side effects (Ably publishing and notifications) using Promise.all.
+     * 2. Prevents sequential accumulation of external service latency.
+     * 3. Significantly reduces total request tail latency.
+     */
+    await Promise.all([
+      recipientIds.length > 0
+        ? notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content)
+        : Promise.resolve(),
+      mentionsAll || mentionsHere
+        ? notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere)
+        : Promise.resolve(),
+      ably
+        ? (ably as any).channels.get(AblyChannels.channel(channelId)).publish(AblyEvents.MESSAGE_SENT, message)
+        : Promise.resolve(),
+    ]);
 
     return message;
   }
