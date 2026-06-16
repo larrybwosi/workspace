@@ -23,7 +23,20 @@ interface AuthApi {
     suspend fun updateMe(
         @Body request: Map<String, Any>
     ): Response<Unit>
+
+    @POST("auth/device/qr/authorize")
+    suspend fun authorizeQR(
+        @Body request: QRAuthorizeRequest
+    ): Response<QRAuthorizeResponse>
 }
+
+data class QRAuthorizeRequest(
+    val sessionId: String
+)
+
+data class QRAuthorizeResponse(
+    val success: Boolean
+)
 
 data class UserResponse(
     val id: String,
