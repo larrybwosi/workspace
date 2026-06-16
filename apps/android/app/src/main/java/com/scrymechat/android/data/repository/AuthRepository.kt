@@ -5,6 +5,7 @@ import com.scrymechat.android.data.local.entities.SessionEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceMemberEntity
 import com.scrymechat.android.data.remote.AuthApi
+import com.scrymechat.android.data.remote.DeviceTokenRequest
 import com.scrymechat.android.data.remote.LoginRequest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -72,5 +73,18 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout() {
         sessionManager.clearSession()
+    }
+
+    suspend fun registerDeviceToken(token: String, platform: String): Result<Unit> {
+        return try {
+            val response = authApi.registerDeviceToken(DeviceTokenRequest(token, platform))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Token registration failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

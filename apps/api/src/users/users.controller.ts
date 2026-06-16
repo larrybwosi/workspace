@@ -9,11 +9,20 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
+import { Query } from '@nestjs/common';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -223,7 +232,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated' })
   async updateMe(@CurrentUser() user: User, @Body() body: any) {
-    const { name, avatar, banner, statusText, statusEmoji } = body;
+    const { name, avatar, banner, statusText, statusEmoji, notificationPreferences } = body;
 
     return prisma.user.update({
       where: { id: user.id },
@@ -233,7 +242,96 @@ export class UsersController {
         banner,
         statusText,
         statusEmoji,
+        notificationPreferences: notificationPreferences !== undefined ? notificationPreferences : undefined,
       },
     });
+  }
+
+  @Post('me/device-tokens')
+  @ApiOperation({ summary: 'Register a device token for push notifications' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['token', 'platform'],
+      properties: {
+        token: { type: 'string' },
+        platform: { type: 'string', enum: ['web', 'ios', 'android', 'desktop'] },
+        deviceInfo: { type: 'object' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Device token registered' })
+  async registerDeviceToken(@CurrentUser() user: User, @Body() body: any) {
+    const { token, platform, deviceInfo } = body;
+
+    if (!token || !platform) {
+      throw new BadRequestException('Token and platform are required');
+    }
+
+    const existing = await prisma.deviceToken.findUnique({
+      where: { token },
+    });
+
+    if (existing) {
+      return prisma.deviceToken.update({
+        where: { token },
+        data: {
+          userId: user.id,
+          platform,
+          deviceInfo,
+          isActive: true,
+          lastUsedAt: new Date(),
+        },
+      });
+    }
+
+    return prisma.deviceToken.create({
+      data: {
+        userId: user.id,
+        token,
+        platform,
+        deviceInfo,
+      },
+    });
+  }
+
+  @Get('me/device-tokens')
+  @ApiOperation({ summary: 'Get active device tokens for the current user' })
+  @ApiResponse({ status: 200, description: 'List of active device tokens' })
+  async getDeviceTokens(@CurrentUser() user: User) {
+    return prisma.deviceToken.findMany({
+      where: {
+        userId: user.id,
+        isActive: true,
+      },
+      orderBy: {
+        lastUsedAt: 'desc',
+      },
+    });
+  }
+
+  @Delete('me/device-tokens')
+  @ApiOperation({ summary: 'Deactivate a device token' })
+  @ApiQuery({ name: 'token', required: true })
+  @ApiResponse({ status: 200, description: 'Device token deactivated' })
+  async deleteDeviceToken(@CurrentUser() user: User, @Query('token') tokenQuery: string, @Body() body: any) {
+    // Check both query param and body for flexibility
+    const token = tokenQuery || body?.token;
+
+    if (!token) {
+      throw new BadRequestException('Token is required');
+    }
+
+    await prisma.deviceToken.updateMany({
+      where: {
+        token,
+        userId: user.id,
+      },
+      data: {
+        isActive: false,
+      },
+    });
+
+    return { success: true };
   }
 }

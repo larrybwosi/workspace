@@ -1,7 +1,10 @@
 package com.scrymechat.android.ui.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
+import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -41,9 +45,31 @@ class LoginViewModel @Inject constructor(
             val result = authRepository.login(email, password)
             _uiState.update { state ->
                 result.fold(
-                    onSuccess = { state.copy(isLoading = false, isLoginSuccess = true) },
+                    onSuccess = {
+                        registerFcmToken()
+                        state.copy(isLoading = false, isLoginSuccess = true)
+                    },
                     onFailure = { error -> state.copy(isLoading = false, error = error.message) }
                 )
+            }
+        }
+    }
+
+    private fun registerFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                sessionManager.saveFcmToken(token)
+                viewModelScope.launch {
+                    try {
+                        authRepository.registerDeviceToken(token, "android")
+                        Log.d("LoginViewModel", "FCM Token registered successfully")
+                    } catch (e: Exception) {
+                        Log.e("LoginViewModel", "Failed to register FCM Token", e)
+                    }
+                }
+            } else {
+                Log.w("LoginViewModel", "Fetching FCM registration token failed", task.exception)
             }
         }
     }
