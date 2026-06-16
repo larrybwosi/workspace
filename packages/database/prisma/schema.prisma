@@ -1787,11 +1787,13 @@ model M2mApplication {
   organizationId String
   scopes         String[]
   allowedIps     String[]
+  webhookUrl     String?
+  webhookSecret  String?
   metadata       Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("m2m_applications")
 }

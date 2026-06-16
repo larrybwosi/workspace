@@ -27,12 +27,20 @@ class CreateM2mApplicationDto {
 
   @ApiProperty({ example: ['127.0.0.1'], required: false })
   allowedIps?: string[];
+
+  @ApiProperty({ example: 'https://api.example.com/webhook', required: false })
+  webhookUrl?: string;
+
+  @ApiProperty({ example: 'your-webhook-secret', required: false })
+  webhookSecret?: string;
 }
 
 const createM2mSchema = z.object({
   name: z.string().min(1).max(100),
   scopes: z.array(z.string()).optional().default(['provisioning:workspaces']),
   allowedIps: z.array(z.string()).optional().default([]),
+  webhookUrl: z.string().url().optional(),
+  webhookSecret: z.string().min(16).optional(),
 });
 
 @ApiTags('M2M Applications')
@@ -77,7 +85,7 @@ export class M2mController {
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
-    const { name, scopes, allowedIps } = validatedData.data;
+    const { name, scopes, allowedIps, webhookUrl, webhookSecret } = validatedData.data;
 
     const clientId = `m2m_${crypto.randomBytes(16).toString('hex')}`;
     const clientSecret = crypto.randomBytes(32).toString('hex');
@@ -91,6 +99,8 @@ export class M2mController {
         organizationId: organization.id,
         scopes,
         allowedIps,
+        webhookUrl,
+        webhookSecret,
       },
     });
 

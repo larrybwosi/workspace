@@ -26,6 +26,7 @@ import { SupportModule } from './support/support.module';
 import { TasksModule } from './common/tasks/tasks.module';
 import { ScheduledNotificationsModule } from './scheduled-notifications/scheduled-notifications.module';
 import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
+import { AndroidAuthModule } from './auth/android-auth/android-auth.module';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { auth } from './auth/better-auth';
 
@@ -52,6 +53,7 @@ import { auth } from './auth/better-auth';
     WorkspacesModule,
     TasksModule,
     DeviceAuthModule,
+    AndroidAuthModule,
     ScheduledNotificationsModule,
     AssetsModule,
     SupportModule,
