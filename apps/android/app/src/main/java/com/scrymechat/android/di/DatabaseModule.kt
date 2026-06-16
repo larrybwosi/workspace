@@ -3,9 +3,7 @@ package com.scrymechat.android.di
 import android.content.Context
 import androidx.room.Room
 import com.scrymechat.android.data.local.ScrymeDatabase
-import com.scrymechat.android.data.local.dao.SessionDao
-import com.scrymechat.android.data.local.dao.UserDao
-import com.scrymechat.android.data.local.dao.WorkspaceMemberDao
+import com.scrymechat.android.data.local.dao.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,7 +22,9 @@ object DatabaseModule {
             context,
             ScrymeDatabase::class.java,
             "scryme_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -35,4 +35,16 @@ object DatabaseModule {
 
     @Provides
     fun provideSessionDao(database: ScrymeDatabase): SessionDao = database.sessionDao()
+
+    @Provides
+    fun provideWorkspaceDao(database: ScrymeDatabase): WorkspaceDao = database.workspaceDao()
+
+    @Provides
+    fun provideChannelDao(database: ScrymeDatabase): ChannelDao = database.channelDao()
+
+    @Provides
+    fun provideDmDao(database: ScrymeDatabase): DmDao = database.dmDao()
+
+    @Provides
+    fun provideMessageDao(database: ScrymeDatabase): MessageDao = database.messageDao()
 }

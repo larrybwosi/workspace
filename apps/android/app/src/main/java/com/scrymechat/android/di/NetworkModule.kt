@@ -2,8 +2,7 @@ package com.scrymechat.android.di
 
 import com.google.gson.Gson
 import com.scrymechat.android.data.local.SessionManager
-import com.scrymechat.android.data.remote.AuthApi
-import com.scrymechat.android.data.remote.StorageApi
+import com.scrymechat.android.data.remote.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,12 +26,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
             .build()
     }
 
@@ -56,6 +56,30 @@ object NetworkModule {
     @Singleton
     fun provideStorageApi(retrofit: Retrofit): StorageApi {
         return retrofit.create(StorageApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkspaceApi(retrofit: Retrofit): WorkspaceApi {
+        return retrofit.create(WorkspaceApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChannelApi(retrofit: Retrofit): ChannelApi {
+        return retrofit.create(ChannelApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDmApi(retrofit: Retrofit): DmApi {
+        return retrofit.create(DmApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMessageApi(retrofit: Retrofit): MessageApi {
+        return retrofit.create(MessageApi::class.java)
     }
 
     @Provides
