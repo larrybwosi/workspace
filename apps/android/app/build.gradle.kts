@@ -81,6 +81,17 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Socket.io
+    implementation("io.socket:socket.io-client:2.0.1") {
+        exclude(group = "org.json", module = "json")
+    }
+
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Lifecycle Service
+    implementation("androidx.lifecycle:lifecycle-service:2.7.0")
+
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
