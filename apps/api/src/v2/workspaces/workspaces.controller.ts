@@ -173,12 +173,28 @@ export class V2WorkspacesController {
       throw new ForbiddenException('Forbidden: Missing members:read scope');
     }
 
-    const member = await prisma.workspaceMember.findFirst({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Replaces 'findFirst' with 'findUnique' using the compound unique index for O(1) lookup.
+     * 2. Uses 'select' instead of 'include' to reduce DB payload and explicitly exclude 'permissions' (BigInt).
+     * Expected impact: Faster lookup performance and reduced JSON serialization overhead.
+     */
+    const member = await prisma.workspaceMember.findUnique({
       where: {
-        userId,
-        workspaceId: context.workspaceId,
+        workspaceId_userId: {
+          workspaceId: context.workspaceId!,
+          userId,
+        },
       },
-      include: {
+      select: {
+        id: true,
+        workspaceId: true,
+        userId: true,
+        departmentId: true,
+        role: true,
+        memberType: true,
+        joinedAt: true,
+        notificationPreference: true,
         user: {
           select: {
             id: true,
@@ -214,28 +230,41 @@ export class V2WorkspacesController {
       throw new ForbiddenException('Forbidden: Missing members:write scope');
     }
 
-    const member = await prisma.workspaceMember.findFirst({
-      where: {
-        userId,
-        workspaceId: context.workspaceId,
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace ownership verification and membership existence check into a single query.
+     * 2. Uses 'workspaceMember.delete' with compound unique index to avoid fetching member ID first.
+     * Expected impact: Reduces database round-trips from 3 down to 2.
+     */
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: context.workspaceId },
+      select: {
+        ownerId: true,
+        members: {
+          where: { userId },
+          select: { id: true },
+        },
       },
     });
 
-    if (!member) {
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
       throw new NotFoundException('Member not found in this workspace');
     }
 
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: context.workspaceId },
-    });
-
-    if (workspace?.ownerId === userId) {
+    if (workspace.ownerId === userId) {
       throw new BadRequestException('Cannot remove workspace owner');
     }
 
     await prisma.workspaceMember.delete({
       where: {
-        id: member.id,
+        workspaceId_userId: {
+          workspaceId: context.workspaceId!,
+          userId,
+        },
       },
     });
 
