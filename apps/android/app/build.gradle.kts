@@ -78,6 +78,12 @@ dependencies {
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // Room
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")

@@ -1,6 +1,9 @@
 package com.scrymechat.android.data.repository
 
 import com.scrymechat.android.data.local.SessionManager
+import com.scrymechat.android.data.local.entities.SessionEntity
+import com.scrymechat.android.data.local.entities.UserEntity
+import com.scrymechat.android.data.local.entities.WorkspaceMemberEntity
 import com.scrymechat.android.data.remote.AuthApi
 import com.scrymechat.android.data.remote.LoginRequest
 import javax.inject.Inject
@@ -18,6 +21,39 @@ class AuthRepository @Inject constructor(
                 val body = response.body()
                 if (body != null) {
                     sessionManager.saveToken(body.token)
+
+                    val userEntity = UserEntity(
+                        id = body.user.id,
+                        name = body.user.name,
+                        username = body.user.username,
+                        email = body.user.email,
+                        avatar = body.user.avatar,
+                        banner = body.user.banner,
+                        statusText = body.user.statusText,
+                        statusEmoji = body.user.statusEmoji,
+                        role = body.user.role,
+                        status = body.user.status
+                    )
+
+                    val sessionEntity = SessionEntity(
+                        id = body.session.id,
+                        userId = body.user.id,
+                        expiresAt = body.session.expiresAt
+                    )
+
+                    val membershipEntities = body.memberships.map {
+                        WorkspaceMemberEntity(
+                            id = it.id,
+                            workspaceId = it.workspaceId,
+                            userId = it.userId,
+                            role = it.role,
+                            permissions = it.permissions,
+                            memberType = it.memberType
+                        )
+                    }
+
+                    sessionManager.saveSession(sessionEntity, userEntity, membershipEntities)
+
                     Result.success(Unit)
                 } else {
                     Result.failure(Exception("Empty response body"))
@@ -34,7 +70,7 @@ class AuthRepository @Inject constructor(
         return sessionManager.getToken() != null
     }
 
-    fun logout() {
+    suspend fun logout() {
         sessionManager.clearSession()
     }
 }
