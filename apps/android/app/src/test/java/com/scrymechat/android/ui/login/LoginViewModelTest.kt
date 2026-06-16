@@ -11,16 +11,28 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
+import android.content.Context
+import com.scrymechat.android.data.local.SessionManager
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest : BaseViewModelTest() {
 
     private val authRepository: AuthRepository = mock()
+    private val sessionManager: SessionManager = mock()
+    private val context: Context = mock()
     private lateinit var viewModel: LoginViewModel
 
     @Before
     override fun setUp() {
         super.setUp()
-        viewModel = LoginViewModel(authRepository)
+        viewModel = object : LoginViewModel(authRepository, sessionManager, context) {
+            override fun registerFcmToken() {
+                // Do nothing in tests
+            }
+            override fun startRealtimeService() {
+                // Do nothing in tests
+            }
+        }
     }
 
     @Test

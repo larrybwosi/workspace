@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
+open class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
@@ -48,20 +48,26 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val result = authRepository.login(email, password)
-            _uiState.update { state ->
-                result.fold(
-                    onSuccess = {
-                        registerFcmToken()
-                        startRealtimeService()
-                        state.copy(isLoading = false, isLoginSuccess = true)
-                    },
-                    onFailure = { error -> state.copy(isLoading = false, error = error.message) }
-                )
+            if (result.isSuccess) {
+                try {
+                    registerFcmToken()
+                } catch (e: Exception) {
+                    Log.e("LoginViewModel", "FCM not available", e)
+                }
+                try {
+                    startRealtimeService()
+                } catch (e: Exception) {
+                    Log.e("LoginViewModel", "Service not available", e)
+                }
+                _uiState.update { it.copy(isLoading = false, isLoginSuccess = true) }
+            } else {
+                val error = result.exceptionOrNull()
+                _uiState.update { it.copy(isLoading = false, error = error?.message ?: "Unknown error") }
             }
         }
     }
 
-    private fun startRealtimeService() {
+    protected open fun startRealtimeService() {
         val intent = Intent(context, RealtimeService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)
@@ -70,7 +76,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun registerFcmToken() {
+    protected open fun registerFcmToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
