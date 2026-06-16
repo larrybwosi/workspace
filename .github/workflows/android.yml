@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
