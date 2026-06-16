@@ -41,6 +41,18 @@ class SessionManager @Inject constructor(
         return sharedPreferences.getString("auth_token", null)
     }
 
+    fun saveFcmToken(token: String) {
+        sharedPreferences.edit().putString("fcm_token", token).apply()
+    }
+
+    fun getFcmToken(): String? {
+        return sharedPreferences.getString("fcm_token", null)
+    }
+
+    suspend fun isLoggedIn(): Boolean {
+        return getToken() != null && getActiveSession() != null
+    }
+
     suspend fun saveSession(
         session: SessionEntity,
         user: UserEntity,

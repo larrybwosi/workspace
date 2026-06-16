@@ -72,8 +72,16 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
             userId,
           });
         case 'ios':
-        case 'android':
           return sendExpoPushNotification(device.token, { title, body, data, imageUrl, notificationId, userId });
+        case 'android':
+          return sendAndroidPushNotification(device.token, {
+            title,
+            body,
+            data,
+            imageUrl,
+            notificationId,
+            userId,
+          });
         case 'desktop':
           return sendDesktopPushNotification(device.token, { title, body, data, linkUrl, notificationId, userId });
         default:
@@ -155,6 +163,101 @@ async function sendWebPushNotification(
         userId: payload.userId,
         notificationId: payload.notificationId,
         platform: 'web',
+        deviceToken: token,
+        title: payload.title,
+        body: payload.body,
+        data: payload.data,
+        status: 'failed',
+        error: error.message,
+      },
+    });
+
+    // Deactivate invalid tokens
+    if (
+      error.code === 'messaging/invalid-registration-token' ||
+      error.code === 'messaging/registration-token-not-registered'
+    ) {
+      await prisma.deviceToken.updateMany({
+        where: { token },
+        data: { isActive: false },
+      });
+    }
+
+    throw error;
+  }
+}
+
+async function sendAndroidPushNotification(
+  token: string,
+  payload: {
+    title: string;
+    body: string;
+    data?: Record<string, string>;
+    imageUrl?: string;
+    notificationId?: string;
+    userId: string;
+  }
+) {
+  try {
+    const firebaseAdmin = getFirebaseAdmin();
+    if (!firebaseAdmin) {
+      // Fallback to Expo if Firebase is not configured but token looks like an Expo token
+      if (token.includes('[')) {
+        return sendExpoPushNotification(token, payload);
+      }
+      throw new Error('Firebase Admin not initialized');
+    }
+
+    const message: admin.messaging.Message = {
+      token,
+      notification: {
+        title: payload.title,
+        body: payload.body,
+        ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId:
+            payload.data?.type === 'direct_message' || payload.data?.type === 'mention' ? 'urgent' : 'high',
+          sound: 'default',
+        },
+      },
+      data: {
+        ...payload.data,
+        title: payload.title,
+        body: payload.body,
+        notificationId: payload.notificationId || '',
+        imageUrl: payload.imageUrl || '',
+      },
+    };
+
+    const response = await firebaseAdmin.messaging().send(message);
+
+    // Log successful notification
+    await prisma.pushNotificationLog.create({
+      data: {
+        userId: payload.userId,
+        notificationId: payload.notificationId,
+        platform: 'android',
+        deviceToken: token,
+        title: payload.title,
+        body: payload.body,
+        data: payload.data,
+        status: 'sent',
+      },
+    });
+
+    return { success: true, messageId: response };
+  } catch (error: any) {
+    console.error(' Android push notification error:', error);
+
+    // Log failed notification
+    await prisma.pushNotificationLog.create({
+      data: {
+        userId: payload.userId,
+        notificationId: payload.notificationId,
+        platform: 'android',
         deviceToken: token,
         title: payload.title,
         body: payload.body,
