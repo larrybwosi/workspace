@@ -1,8 +1,12 @@
 package com.scrymechat.android.ui.login
 
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.scrymechat.android.data.remote.RealtimeService
 import com.google.firebase.messaging.FirebaseMessaging
 import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.repository.AuthRepository
@@ -17,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -47,11 +52,21 @@ class LoginViewModel @Inject constructor(
                 result.fold(
                     onSuccess = {
                         registerFcmToken()
+                        startRealtimeService()
                         state.copy(isLoading = false, isLoginSuccess = true)
                     },
                     onFailure = { error -> state.copy(isLoading = false, error = error.message) }
                 )
             }
+        }
+    }
+
+    private fun startRealtimeService() {
+        val intent = Intent(context, RealtimeService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
         }
     }
 

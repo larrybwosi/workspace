@@ -16,6 +16,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import com.scrymechat.android.data.local.SessionManager
+import com.scrymechat.android.data.remote.RealtimeService
 import com.scrymechat.android.ui.navigation.ScrymeNavHost
 import com.scrymechat.android.ui.navigation.Screen
 import com.scrymechat.android.ui.theme.ScrymechatTheme
@@ -23,6 +25,10 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @javax.inject.Inject
+    lateinit var sessionManager: SessionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -55,6 +61,12 @@ class MainActivity : ComponentActivity() {
                     ScrymeNavHost(navController = navController)
                 }
 
+                LaunchedEffect(Unit) {
+                    if (sessionManager.getToken() != null) {
+                        startRealtimeService()
+                    }
+                }
+
                 LaunchedEffect(intent) {
                     handleIntent(intent, { route ->
                         navController.navigate(route)
@@ -67,6 +79,15 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+    }
+
+    private fun startRealtimeService() {
+        val serviceIntent = Intent(this, RealtimeService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
     }
 
     private fun handleIntent(intent: Intent, navigate: (String) -> Unit) {
