@@ -75,8 +75,12 @@ export async function logAssetUsage(params: {
 }) {
   const { assetId, assetType, userId, workspaceId, metadata } = params;
 
-  // Create log entry
-  await prisma.assetUsageLog.create({
+  /**
+   * ⚡ Performance Optimization:
+   * Parallelizes log entry creation and asset usage count increment using Promise.all.
+   * This reduces the total database round-trip latency by running these independent operations in parallel.
+   */
+  const logPromise = prisma.assetUsageLog.create({
     data: {
       assetId,
       assetType,
@@ -87,29 +91,36 @@ export async function logAssetUsage(params: {
   });
 
   // Increment usage count in the respective table
+  let updatePromise: Promise<any> | null = null;
+  if (assetType === 'emoji') {
+    updatePromise = prisma.customEmoji.update({
+      where: { id: assetId },
+      data: { usageCount: { increment: 1 } },
+    });
+  } else if (assetType === 'sticker') {
+    updatePromise = prisma.sticker.update({
+      where: { id: assetId },
+      data: { usageCount: { increment: 1 } },
+    });
+  } else if (assetType === 'sound') {
+    updatePromise = prisma.soundboardSound.update({
+      where: { id: assetId },
+      data: { usageCount: { increment: 1 } },
+    });
+  } else if (assetType === 'profile_asset') {
+    updatePromise = prisma.profileAsset.update({
+      where: { id: assetId },
+      data: { usageCount: { increment: 1 } },
+    });
+  }
+
   try {
-    if (assetType === 'emoji') {
-      await prisma.customEmoji.update({
-        where: { id: assetId },
-        data: { usageCount: { increment: 1 } },
-      });
-    } else if (assetType === 'sticker') {
-      await prisma.sticker.update({
-        where: { id: assetId },
-        data: { usageCount: { increment: 1 } },
-      });
-    } else if (assetType === 'sound') {
-      await prisma.soundboardSound.update({
-        where: { id: assetId },
-        data: { usageCount: { increment: 1 } },
-      });
-    } else if (assetType === 'profile_asset') {
-      await prisma.profileAsset.update({
-        where: { id: assetId },
-        data: { usageCount: { increment: 1 } },
-      });
+    if (updatePromise) {
+      await Promise.all([logPromise, updatePromise]);
+    } else {
+      await logPromise;
     }
   } catch (error) {
-    console.warn(`Could not increment usage count for ${assetType} ${assetId}:`, error);
+    console.warn(`Error logging asset usage for ${assetType} ${assetId}:`, error);
   }
 }

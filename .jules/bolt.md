@@ -97,3 +97,31 @@
 ## 2026-05-30 - [API/Shared] Consolidated Notification Preference Retrieval
 **Learning:** Sequential database queries for hierarchical notification preferences (Channel -> Workspace -> User) and N+1 lookups for global user preferences create significant latency and CPU overhead.
 **Action:** Consolidate hierarchical preference lookups using parallelized queries with 'Promise.all' and eliminate N+1 patterns by pre-fetching all required User preferences in a single batch query.
+
+## 2026-06-01 - [Database] Consolidated Multi-Entity Verification
+
+**Learning:** When performing operations on a workspace-scoped entity (like a Department), sequential queries for workspace membership and entity existence can be consolidated into a single `prisma.workspace.findUnique` call using nested `select` with a `where` filter on the relation.
+**Action:** Use nested relation filters in the workspace lookup to verify both membership and target entity existence in one database RTT.
+
+## 2026-06-10 - [Prisma/Performance] Payload Reduction via Targeted Selection
+
+**Learning:** Using Prisma `select` instead of `include` in high-traffic endpoints (like `getMessages` or `getMembers`) allows for explicit exclusion of `BigInt` fields (like `permissions`) and large internal metadata. This reduces JSON serialization overhead, avoids potential `BigInt` serialization errors when caching in Redis, and significantly shrinks the network payload size.
+**Action:** Always use targeted `select` for endpoints that are cached or return large lists to minimize data transfer and serialization costs.
+
+## 2026-06-05 - [API] Consolidating Writes with Nested Operations
+
+**Learning:** Sequential existence checks followed by nested resource creation (e.g., sending a DM or creating a department announcement) can be consolidated using Prisma's `upsert` or `update` with nested `create`. This reduces database round-trips (RTT) and minimizes the window for race conditions.
+**Action:** Use nested Prisma operations to combine verification and creation into a single round-trip. For resource-scoped writes, use `prisma.parent.update` with nested `create` instead of a separate `find` and `create`.
+
+## 2026-06-05 - [Cache] Optimizing Cache Payload with Targeted Selection
+
+**Learning:** Endpoints whose results are cached in Redis (e.g., channel lists) benefit significantly from switching from Prisma `include` to `select`. Broad `include` statements often pull in large relations or internal metadata that inflate the JSON payload, increasing serialization overhead and Redis memory footprint.
+**Action:** Always use targeted `select` for high-traffic or cached endpoints to minimize the response size while strictly preserving the public API contract.
+
+## 2026-06-10 - [API/Caching] Redis Caching & Audit Logging
+**Learning:** Implementing Redis caching for API endpoints must not bypass security or audit logging. Caching operations should be wrapped in try-catch blocks to prevent 500 errors if Redis is unavailable (best-effort enhancement).
+**Action:** Always call `auditService.log` before returning cached data and wrap Redis interactions in error handlers for graceful fallback to DB.
+
+## 2026-06-12 - [Prisma/Performance] Prefer findUnique over findFirst
+**Learning:** Using `prisma.model.findUnique` instead of `findFirst` when querying by primary keys (e.g., `id`) or compound unique indices (e.g., `workspaceId_userId` in `workspaceMember`) leverages direct database indexing for O(1) lookup performance. This reduces database CPU overhead and minimizes query execution time.
+**Action:** Always prefer `findUnique` for lookup operations involving unique constraints to maximize performance.

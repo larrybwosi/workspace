@@ -1,0 +1,10 @@
+{
+  "name": "@repo/android",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "./gradlew assembleDebug",
+    "lint": "echo skipping lint for android",
+    "test": "echo skipping test for android"
+  }
+}
