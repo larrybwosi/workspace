@@ -40,7 +40,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:3000/api/")
+            .baseUrl("${com.scrymechat.android.BuildConfig.API_URL}/api/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -88,7 +88,6 @@ object NetworkModule {
         val options = IO.Options.builder()
             .setAuth(mapOf("token" to sessionManager.getToken()))
             .build()
-        // Use 10.0.2.2 for Android Emulator to reach localhost
-        return IO.socket(URI.create("http://10.0.2.2:3000"), options)
+        return IO.socket(URI.create(com.scrymechat.android.BuildConfig.API_URL), options)
     }
 }
