@@ -15,9 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.activity.viewModels
 import androidx.navigation.compose.rememberNavController
 import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.remote.RealtimeService
+import com.scrymechat.android.ui.login.LoginViewModel
 import com.scrymechat.android.ui.navigation.ScrymeNavHost
 import com.scrymechat.android.ui.navigation.Screen
 import com.scrymechat.android.ui.theme.ScrymechatTheme
@@ -28,6 +30,8 @@ class MainActivity : ComponentActivity() {
 
     @javax.inject.Inject
     lateinit var sessionManager: SessionManager
+
+    private val loginViewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +95,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent, navigate: (String) -> Unit) {
+        if (intent.action == Intent.ACTION_VIEW) {
+            intent.data?.let { uri ->
+                if (uri.scheme == "scrymechat" && uri.host == "auth") {
+                    loginViewModel.handleGitHubRedirect(uri)
+                }
+            }
+            return
+        }
+
         val type = intent.getStringExtra("type")
         val entityId = intent.getStringExtra("entityId")
 
