@@ -149,10 +149,17 @@ class ChatRepository @Inject constructor(
         channelId = channelId,
         dmId = dmId,
         senderId = senderId ?: authorId ?: userId ?: "",
+        senderName = user?.name ?: author?.name,
+        senderAvatar = user?.avatar ?: author?.avatar,
         createdAt = createdAt,
         updatedAt = updatedAt,
         isEdited = isEdited,
         replyToId = replyToId,
-        readByCurrentUser = readByCurrentUser
+        replyToSenderName = replyTo?.sender?.name,
+        readByCurrentUser = readByCurrentUser,
+        attachments = attachments,
+        metadata = metadata,
+        reactions = reactions,
+        messageType = (metadata?.get("type") as? String) ?: "standard"
     )
 }

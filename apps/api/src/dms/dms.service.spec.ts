@@ -52,17 +52,28 @@ vi.mock('@repo/shared/server', () => ({
 
 import { prisma } from '@repo/database';
 import { getAblyRest } from '@repo/shared/server';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('DmsService', () => {
   let service: DmsService;
   const mockPrisma = prisma as any;
   const mockGetAblyRest = getAblyRest as any;
 
+  const mockNotificationsService = {
+    notifyDM: vi.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DmsService],
+      providers: [
+        DmsService,
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
+        },
+      ],
     }).compile();
 
     service = module.get<DmsService>(DmsService);
