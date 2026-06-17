@@ -8,11 +8,21 @@ import {
   notifyMention as sharedNotifyMention,
   notifyMentions as sharedNotifyMentions,
   notifyChannel as sharedNotifyChannel,
+  notifyDM as sharedNotifyDM,
+  notifyNewMessage as sharedNotifyNewMessage,
+  notifyReply as sharedNotifyReply,
 } from '@repo/shared/server';
 
 export interface NotificationPayload {
   userId: string;
-  type: 'mention' | 'system' | 'channel_alert' | 'workspace_alert' | 'workspace_invitation' | 'platform_invitation';
+  type:
+    | 'mention'
+    | 'system'
+    | 'channel_alert'
+    | 'workspace_alert'
+    | 'workspace_invitation'
+    | 'platform_invitation'
+    | 'direct_message';
   title: string;
   message: string;
   entityType?: 'channel' | 'workspace' | 'direct_message' | 'invitation';
@@ -133,6 +143,55 @@ export class NotificationsService {
     isHere: boolean = false
   ) {
     return sharedNotifyChannel(channelId, sentBy, messageId, messageContent, isHere);
+  }
+
+  /**
+   * Notify all channel members about a new message.
+   */
+  async notifyNewMessage(
+    channelId: string,
+    senderId: string,
+    senderName: string,
+    messageId: string,
+    content: string,
+    excludedUserIds: string[] = []
+  ) {
+    return sharedNotifyNewMessage(channelId, senderId, senderName, messageId, content, excludedUserIds);
+  }
+
+  /**
+   * Notify a recipient about a new direct message.
+   */
+  async notifyDM(
+    dmId: string,
+    senderId: string,
+    senderName: string,
+    recipientId: string,
+    messageId: string,
+    content: string
+  ) {
+    return sharedNotifyDM(dmId, senderId, senderName, recipientId, messageId, content);
+  }
+
+  /**
+   * Notify the author of a message when someone replies to it.
+   */
+  async notifyReply(
+    channelId: string,
+    replyAuthorId: string,
+    replyAuthorName: string,
+    parentMessageId: string,
+    replyMessageId: string,
+    content: string
+  ) {
+    return sharedNotifyReply(
+      channelId,
+      replyAuthorId,
+      replyAuthorName,
+      parentMessageId,
+      replyMessageId,
+      content
+    );
   }
 
   async markAllRead(userId: string) {

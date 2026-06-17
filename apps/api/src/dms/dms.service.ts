@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import { getAblyRest, AblyChannels, AblyEvents, publishToAbly } from '@repo/shared/server';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class DmsService {
+  constructor(private readonly notificationsService: NotificationsService) {}
   /**
    * ⚡ Performance Optimization:
    * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
@@ -357,7 +359,7 @@ export class DmsService {
      * 1. Consolidates DM message creation and conversation timestamp update into a single transaction.
      * 2. Reduces database round-trips from 2 down to 1.
      */
-    const [message] = await prisma.$transaction([
+    const [message, dm] = await prisma.$transaction([
       prisma.dMMessage.create({
         data: {
           dmId,
@@ -384,6 +386,10 @@ export class DmsService {
       prisma.directMessage.update({
         where: { id: dmId },
         data: { lastMessageAt: new Date() },
+        select: {
+          participant1Id: true,
+          participant2Id: true,
+        },
       }),
     ]);
 
@@ -399,6 +405,19 @@ export class DmsService {
     if (ably) {
       const channel = ably.channels.get(AblyChannels.dm(dmId));
       await channel.publish(AblyEvents.MESSAGE_SENT, formattedMessage);
+    }
+
+    // Notify the other participant
+    const recipientId = dm.participant1Id === userId ? dm.participant2Id : dm.participant1Id;
+    if (recipientId) {
+      await this.notificationsService.notifyDM(
+        dmId,
+        userId,
+        formattedMessage.user?.name || 'Someone',
+        recipientId,
+        formattedMessage.id,
+        content
+      );
     }
 
     return formattedMessage;

@@ -335,28 +335,16 @@ export class ChannelsService {
 
     const sender = message.user;
 
-    // ⚡ Optimization: Notify mentioned users in batch
-    const recipientIds = mentionedUserIds.filter(id => id !== userId);
-    if (recipientIds.length > 0) {
-      await this.notificationsService.notifyMentions(
-        message.id,
-        recipientIds,
-        sender?.name || 'Someone',
-        channelId,
-        content
-      );
-    }
-
-    // Notify @all / @here
-    if (mentionsAll || mentionsHere) {
-      await this.notificationsService.notifyChannel(
-        channelId,
-        sender?.name || 'Someone',
-        message.id,
-        content,
-        mentionsHere
-      );
-    }
+    await this.handleMessageNotifications(
+      message.id,
+      channelId,
+      userId,
+      sender?.name || 'Someone',
+      content,
+      mentionedUserIds,
+      mentionsAll,
+      mentionsHere
+    );
 
     const ably = getAblyRest();
     if (ably) {
@@ -368,6 +356,47 @@ export class ChannelsService {
     }
 
     return message;
+  }
+
+  private async handleMessageNotifications(
+    messageId: string,
+    channelId: string,
+    userId: string,
+    senderName: string,
+    content: string,
+    mentionedUserIds: string[],
+    mentionsAll: boolean,
+    mentionsHere: boolean
+  ) {
+    const recipientIds = mentionedUserIds.filter(id => id !== userId);
+    if (recipientIds.length > 0) {
+      await this.notificationsService.notifyMentions(
+        messageId,
+        recipientIds,
+        senderName,
+        channelId,
+        content
+      );
+    }
+
+    if (mentionsAll || mentionsHere) {
+      await this.notificationsService.notifyChannel(
+        channelId,
+        senderName,
+        messageId,
+        content,
+        mentionsHere
+      );
+    }
+
+    await this.notificationsService.notifyNewMessage(
+      channelId,
+      userId,
+      senderName,
+      messageId,
+      content,
+      mentionedUserIds
+    );
   }
 
   async updateMessage(channelId: string, messageId: string, userId: string, content: string) {
@@ -543,6 +572,16 @@ export class ChannelsService {
       const channel = ably.channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_SENT, reply);
     }
+
+    // Notify the author of the parent message about the reply
+    await this.notificationsService.notifyReply(
+      channelId,
+      userId,
+      reply.user?.name || 'Someone',
+      messageId,
+      reply.id,
+      content
+    );
 
     return reply;
   }
