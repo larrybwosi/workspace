@@ -25,6 +25,9 @@ android {
             // Include all common ABIs to ensure compatibility across devices
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
+
+        val apiUrl = System.getenv("API_URL") ?: "http://localhost:3000"
+        buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
 
     buildTypes {
@@ -48,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
@@ -126,6 +130,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.robolectric:robolectric:4.11.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
