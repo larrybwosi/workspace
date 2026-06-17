@@ -335,39 +335,15 @@ export class ChannelsService {
 
     const sender = message.user;
 
-    // ⚡ Optimization: Notify mentioned users in batch
-    const recipientIds = mentionedUserIds.filter(id => id !== userId);
-    if (recipientIds.length > 0) {
-      await this.notificationsService.notifyMentions(
-        message.id,
-        recipientIds,
-        sender?.name || 'Someone',
-        channelId,
-        content
-      );
-    }
-
-    // Notify @all / @here
-    if (mentionsAll || mentionsHere) {
-      await this.notificationsService.notifyChannel(
-        channelId,
-        sender?.name || 'Someone',
-        message.id,
-        content,
-        mentionsHere
-      );
-    }
-
-    // Notify all channel members about the new message (respecting their preferences)
-    // If there were mentions, those users will be excluded from the general notification
-    // to avoid duplicates, as they already received a mention notification.
-    await this.notificationsService.notifyNewMessage(
+    await this.handleMessageNotifications(
+      message.id,
       channelId,
       userId,
       sender?.name || 'Someone',
-      message.id,
       content,
-      mentionedUserIds
+      mentionedUserIds,
+      mentionsAll,
+      mentionsHere
     );
 
     const ably = getAblyRest();
@@ -380,6 +356,47 @@ export class ChannelsService {
     }
 
     return message;
+  }
+
+  private async handleMessageNotifications(
+    messageId: string,
+    channelId: string,
+    userId: string,
+    senderName: string,
+    content: string,
+    mentionedUserIds: string[],
+    mentionsAll: boolean,
+    mentionsHere: boolean
+  ) {
+    const recipientIds = mentionedUserIds.filter(id => id !== userId);
+    if (recipientIds.length > 0) {
+      await this.notificationsService.notifyMentions(
+        messageId,
+        recipientIds,
+        senderName,
+        channelId,
+        content
+      );
+    }
+
+    if (mentionsAll || mentionsHere) {
+      await this.notificationsService.notifyChannel(
+        channelId,
+        senderName,
+        messageId,
+        content,
+        mentionsHere
+      );
+    }
+
+    await this.notificationsService.notifyNewMessage(
+      channelId,
+      userId,
+      senderName,
+      messageId,
+      content,
+      mentionedUserIds
+    );
   }
 
   async updateMessage(channelId: string, messageId: string, userId: string, content: string) {
