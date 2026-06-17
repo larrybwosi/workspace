@@ -19,30 +19,17 @@ export class AndroidAuthController {
 
   @Post('signup')
   async signup(@Body() body: any) {
-    const { email, password, name, username } = body;
-    if (!email || !password || !name || !username) {
-      throw new BadRequestException('Email, password, name, and username are required');
-    }
-
+    this.validateSignupInput(body);
     try {
       const response = await auth.api.signUpEmail({
         body: {
-          email,
-          password,
-          name,
-          username,
+          email: body.email,
+          password: body.password,
+          name: body.name,
+          username: body.username,
         },
       });
-
-      if (!response || !response.session) {
-        throw new BadRequestException('Failed to create account');
-      }
-
-      return {
-        token: response.session.token,
-        user: response.user,
-        session: response.session,
-      };
+      return this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
       this.handleAuthError(error);
     }
@@ -50,63 +37,47 @@ export class AndroidAuthController {
 
   @Post('social/google')
   async googleLogin(@Body() body: any) {
-    const { idToken } = body;
-    if (!idToken) {
+    if (!body.idToken) {
       throw new BadRequestException('Google idToken is required');
     }
+    return this.performSocialLogin('google', { idToken: body.idToken });
+  }
 
+  @Post('social/github')
+  async githubLogin(@Body() body: any) {
+    if (!body.code) {
+      throw new BadRequestException('GitHub authorization code is required');
+    }
+    return this.performSocialLogin('github', { code: body.code });
+  }
+
+  private validateSignupInput(body: any) {
+    const fields = ['email', 'password', 'name', 'username'];
+    if (fields.some((f) => !body[f])) {
+      throw new BadRequestException('Email, password, name, and username are required');
+    }
+  }
+
+  private async performSocialLogin(provider: string, data: any) {
     try {
-      // For Google login via ID Token, we use the signInSocial internal API
-      // Better-Auth handles the verification of the token
       const response = await auth.api.signInSocial({
-        body: {
-          provider: 'google',
-          idToken,
-        },
+        body: { provider, ...data },
       });
-
-      if (!response || !response.session) {
-        throw new UnauthorizedException('Google authentication failed');
-      }
-
-      return {
-        token: response.session.token,
-        user: response.user,
-        session: response.session,
-      };
+      return this.handleAuthResponse(response, `${provider} authentication failed`);
     } catch (error: any) {
       this.handleAuthError(error);
     }
   }
 
-  @Post('social/github')
-  async githubLogin(@Body() body: any) {
-    const { code } = body;
-    if (!code) {
-      throw new BadRequestException('GitHub authorization code is required');
+  private handleAuthResponse(response: any, errorMessage: string) {
+    if (!response || !response.session) {
+      throw new BadRequestException(errorMessage);
     }
-
-    try {
-      // For GitHub, we usually get a code from the web flow
-      const response = await auth.api.signInSocial({
-        body: {
-          provider: 'github',
-          code,
-        },
-      });
-
-      if (!response || !response.session) {
-        throw new UnauthorizedException('GitHub authentication failed');
-      }
-
-      return {
-        token: response.session.token,
-        user: response.user,
-        session: response.session,
-      };
-    } catch (error: any) {
-      this.handleAuthError(error);
-    }
+    return {
+      token: response.session.token,
+      user: response.user,
+      session: response.session,
+    };
   }
 
   private validateLoginInput(email: any, password: any) {
