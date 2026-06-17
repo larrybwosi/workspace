@@ -2,6 +2,8 @@ package com.scrymechat.android.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.scrymechat.android.data.local.converters.DatabaseConverters
 import com.scrymechat.android.data.local.dao.SessionDao
 import com.scrymechat.android.data.local.dao.UserDao
 import com.scrymechat.android.data.local.dao.WorkspaceMemberDao
@@ -22,9 +24,10 @@ import com.scrymechat.android.data.local.entities.*
         DmConversationEntity::class,
         MessageEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
+@TypeConverters(DatabaseConverters::class)
 abstract class ScrymeDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun workspaceMemberDao(): WorkspaceMemberDao

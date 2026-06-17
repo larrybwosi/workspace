@@ -22,8 +22,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Scrymechat"
-        tools:targetApi="31">
+        android:theme="@style/Theme.Scrymechat">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -36,6 +35,14 @@
             <intent-filter>
                 <action android:name="OPEN_CHAT" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="auth"
+                    android:scheme="scrymechat" />
             </intent-filter>
         </activity>
 

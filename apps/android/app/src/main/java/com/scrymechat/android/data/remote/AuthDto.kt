@@ -9,7 +9,22 @@ data class LoginResponse(
     val token: String,
     val user: UserDto,
     val session: SessionDto,
-    val memberships: List<WorkspaceMemberDto>
+    val memberships: List<WorkspaceMemberDto>? = null
+)
+
+data class SignUpRequest(
+    val email: String,
+    val password: String,
+    val name: String,
+    val username: String
+)
+
+data class GoogleLoginRequest(
+    val idToken: String
+)
+
+data class GithubLoginRequest(
+    val code: String
 )
 
 data class UserDto(

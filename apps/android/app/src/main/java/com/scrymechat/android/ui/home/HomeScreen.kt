@@ -14,17 +14,38 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.scrymechat.android.ui.chat.ChatView
+import com.scrymechat.android.ui.chat.ChatViewModel
+import com.scrymechat.android.ui.chat.ForwardMessageDialog
 import com.scrymechat.android.ui.theme.*
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    chatViewModel: ChatViewModel = hiltViewModel(),
     onSettingsClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val chatUiState by chatViewModel.uiState.collectAsState()
+    var forwardingMessage by remember { mutableStateOf<com.scrymechat.android.data.local.entities.MessageEntity?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    if (forwardingMessage != null) {
+        ForwardMessageDialog(
+            message = forwardingMessage!!,
+            channels = uiState.channels,
+            onForward = { channelId ->
+                chatViewModel.sendMessage(
+                    content = "Forwarded message from ${forwardingMessage!!.senderName ?: "User"}:\n\n${forwardingMessage!!.content}",
+                    targetChannelId = channelId
+                )
+                forwardingMessage = null
+            },
+            onDismiss = { forwardingMessage = null }
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -59,6 +80,7 @@ fun HomeScreen(
                         expandedCategories = uiState.expandedCategories,
                         onChannelClick = {
                             viewModel.selectChannel(it)
+                            chatViewModel.setChannel(it.id)
                             scope.launch { drawerState.close() }
                         },
                         onCategoryToggle = { viewModel.toggleCategory(it) },
@@ -73,6 +95,16 @@ fun HomeScreen(
             selectedWorkspace = uiState.selectedWorkspace,
             selectedChannel = uiState.selectedChannel,
             isHomeSelected = uiState.isHomeSelected,
+            chatUiState = chatUiState,
+            currentUser = uiState.currentUser,
+            onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
+            onReply = { /* Handled in ChatView */ },
+            onForward = { forwardingMessage = it },
+            onTyping = {
+                uiState.currentUser?.let { user ->
+                    chatViewModel.sendTyping(user.id, user.name)
+                }
+            },
             onMenuClick = { scope.launch { drawerState.open() } },
             modifier = Modifier.fillMaxSize()
         )
@@ -84,6 +116,12 @@ fun MainContent(
     selectedWorkspace: com.scrymechat.android.data.local.entities.WorkspaceEntity?,
     selectedChannel: com.scrymechat.android.data.local.entities.ChannelEntity?,
     isHomeSelected: Boolean,
+    chatUiState: com.scrymechat.android.ui.chat.ChatUiState,
+    currentUser: com.scrymechat.android.data.local.entities.UserEntity?,
+    onSendMessage: (String, String?) -> Unit,
+    onReply: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
+    onForward: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
+    onTyping: () -> Unit,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -140,15 +178,14 @@ fun MainContent(
                         )
                     }
                 } else if (selectedChannel != null) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Chat messages in #${selectedChannel.name} will appear here.",
-                            color = ScrymeDarkTextSecondary
-                        )
-                    }
+                    ChatView(
+                        messages = chatUiState.messages,
+                        onSendMessage = onSendMessage,
+                        onReply = onReply,
+                        onForward = onForward,
+                        onTyping = onTyping,
+                        typingUsers = chatUiState.typingUsers
+                    )
                 } else if (selectedWorkspace != null) {
                     WelcomeScreen(workspaceName = selectedWorkspace.name)
                 }

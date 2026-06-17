@@ -48,22 +48,51 @@ open class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val result = authRepository.login(email, password)
-            if (result.isSuccess) {
-                try {
-                    registerFcmToken()
-                } catch (e: Exception) {
-                    Log.e("LoginViewModel", "FCM not available", e)
-                }
-                try {
-                    startRealtimeService()
-                } catch (e: Exception) {
-                    Log.e("LoginViewModel", "Service not available", e)
-                }
-                _uiState.update { it.copy(isLoading = false, isLoginSuccess = true) }
-            } else {
-                val error = result.exceptionOrNull()
-                _uiState.update { it.copy(isLoading = false, error = error?.message ?: "Unknown error") }
+            handleAuthResult(result)
+        }
+    }
+
+    fun handleGitHubRedirect(uri: android.net.Uri) {
+        val code = uri.getQueryParameter("code")
+        if (code != null) {
+            loginWithGithub(code)
+        } else {
+            _uiState.update { it.copy(error = "GitHub login failed: No code received") }
+        }
+    }
+
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val result = authRepository.googleLogin(idToken)
+            handleAuthResult(result)
+        }
+    }
+
+    fun loginWithGithub(code: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val result = authRepository.githubLogin(code)
+            handleAuthResult(result)
+        }
+    }
+
+    private fun handleAuthResult(result: Result<Unit>) {
+        if (result.isSuccess) {
+            try {
+                registerFcmToken()
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "FCM not available", e)
             }
+            try {
+                startRealtimeService()
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "Service not available", e)
+            }
+            _uiState.update { it.copy(isLoading = false, isLoginSuccess = true) }
+        } else {
+            val error = result.exceptionOrNull()
+            _uiState.update { it.copy(isLoading = false, error = error?.message ?: "Unknown error") }
         }
     }
 
