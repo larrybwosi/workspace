@@ -64,6 +64,31 @@ class RealtimeRepository @Inject constructor(
         }
     }
 
+    fun observeTyping(): Flow<TypingEvent> = callbackFlow {
+        val listener = Emitter.Listener { args ->
+            try {
+                val data = args[0].toString()
+                val event = gson.fromJson(data, TypingEvent::class.java)
+                trySend(event)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        socket.on("typing", listener)
+        awaitClose {
+            socket.off("typing", listener)
+        }
+    }
+
+    fun sendTyping(room: String, userId: String, userName: String) {
+        val payload = JSONObject().apply {
+            put("room", room)
+            put("userId", userId)
+            put("userName", userName)
+        }
+        socket.emit("typing", payload)
+    }
+
     fun joinRoom(room: String) {
         socket.emit("join-room", room)
     }
@@ -89,3 +114,9 @@ class RealtimeRepository @Inject constructor(
         socket.emit("leave-presence", payload)
     }
 }
+
+data class TypingEvent(
+    val userId: String,
+    val userName: String,
+    val room: String
+)
