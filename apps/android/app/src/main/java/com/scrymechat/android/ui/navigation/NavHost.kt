@@ -30,7 +30,8 @@ fun ScrymeNavHost(
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onSignInClick = { navController.navigate(Screen.Login.route) }
             )
         }
         composable(Screen.Login.route) {
@@ -40,7 +41,8 @@ fun ScrymeNavHost(
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onSignUpClick = { navController.navigate(Screen.SignUp.route) }
             )
         }
         composable(Screen.Home.route) {
