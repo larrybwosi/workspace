@@ -20,11 +20,19 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        ndk {
+            // Include all common ABIs to ensure compatibility across devices
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            // Use debug signing for release builds to ensure they are signed and installable
+            // while avoiding the need for a private keystore in the repository.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
