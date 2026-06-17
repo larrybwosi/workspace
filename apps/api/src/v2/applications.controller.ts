@@ -9,6 +9,8 @@ class CreateApplicationDto {
   name: string;
   @ApiProperty({ required: false })
   description?: string;
+  @ApiProperty({ required: false, description: 'Optional workspace ID to link the bot to' })
+  workspaceId?: string;
 }
 
 class UpdateApplicationDto {
@@ -28,18 +30,18 @@ export class V2ApplicationsController {
   constructor(private readonly applicationsService: V2ApplicationsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new bot application', description: 'Requires an authenticated user.' })
+  @ApiOperation({ summary: 'Create a new bot application', description: 'Requires an authenticated user or M2M app.' })
   @ApiBody({ type: CreateApplicationDto })
   @ApiResponse({ status: 201, description: 'Application created successfully.' })
   async createApplication(@V2Context() context: ApiV2Context, @Body() body: CreateApplicationDto) {
-    return this.applicationsService.createApplication(context.userId, body);
+    return this.applicationsService.createApplication(context.userId, body, context.organizationId);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all bot applications owned by the user' })
+  @ApiOperation({ summary: 'List all bot applications owned by the user or organization' })
   @ApiResponse({ status: 200, description: 'List of applications returned successfully.' })
   async getApplications(@V2Context() context: ApiV2Context) {
-    return this.applicationsService.getApplications(context.userId);
+    return this.applicationsService.getApplications(context.userId, context.organizationId);
   }
 
   @Get(':id')
@@ -47,7 +49,7 @@ export class V2ApplicationsController {
   @ApiParam({ name: 'id', description: 'The application ID' })
   @ApiResponse({ status: 200, description: 'Application details returned successfully.' })
   async getApplication(@V2Context() context: ApiV2Context, @Param('id') id: string) {
-    return this.applicationsService.getApplication(context.userId, id);
+    return this.applicationsService.getApplication(context.userId, id, context.organizationId);
   }
 
   @Post(':id')
@@ -60,7 +62,7 @@ export class V2ApplicationsController {
     @Param('id') id: string,
     @Body() body: UpdateApplicationDto
   ) {
-    return this.applicationsService.updateApplication(context.userId, id, body);
+    return this.applicationsService.updateApplication(context.userId, id, body, context.organizationId);
   }
 
   @Post(':id/delete')
@@ -68,7 +70,7 @@ export class V2ApplicationsController {
   @ApiParam({ name: 'id', description: 'The application ID' })
   @ApiResponse({ status: 200, description: 'Application deleted successfully.' })
   async deleteApplication(@V2Context() context: ApiV2Context, @Param('id') id: string) {
-    return this.applicationsService.deleteApplication(context.userId, id);
+    return this.applicationsService.deleteApplication(context.userId, id, context.organizationId);
   }
 
   @Post(':id/reset-token')

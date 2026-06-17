@@ -236,6 +236,7 @@ model Workspace {
   customerProfiles CustomerProfile[]
   supportTickets   SupportTicket[]
   liveChatSessions LiveChatSession[]
+  botApplications  BotApplication[]
 
   @@map("workspaces")
 }
@@ -1730,6 +1731,9 @@ model BotApplication {
   commands BotCommand[]
   ownedTeams         WorkspaceTeam[] @relation("AppOwnedTeams")
   ownedChannels      Channel[]       @relation("AppOwnedChannels")
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
 
   @@map("bot_applications")
 }

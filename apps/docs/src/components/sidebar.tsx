@@ -11,6 +11,8 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/user-guide/sending-messages', label: 'Sending Messages', category: 'Basics' },
         { href: '/user-guide/making-calls', label: 'Making Calls', category: 'Advanced' },
         { href: '/user-guide/inviting-members', label: 'Inviting Members', category: 'Advanced' },
+        { href: '/user-guide/m2m-integration', label: 'M2M Integration', category: 'Integrations' },
+        { href: '/user-guide/bot-provisioning', label: 'Bot Provisioning', category: 'Integrations' },
         { href: '/user-guide/mcp', label: 'Model Context Protocol', category: 'Integrations' },
       ]
     : [
