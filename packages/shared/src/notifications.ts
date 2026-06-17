@@ -219,6 +219,84 @@ export async function notifyMentions(
 }
 
 /**
+ * Notify the author of a message when someone replies to it.
+ */
+export async function notifyReply(
+  channelId: string,
+  replyAuthorId: string,
+  replyAuthorName: string,
+  parentMessageId: string,
+  replyMessageId: string,
+  content: string
+) {
+  const parentMessage = await prisma.message.findUnique({
+    where: { id: parentMessageId },
+    select: {
+      userId: true,
+      channel: {
+        include: {
+          workspace: {
+            select: { id: true, slug: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!parentMessage || !parentMessage.userId || parentMessage.userId === replyAuthorId) return;
+
+  const recipientId = parentMessage.userId;
+  const channel = parentMessage.channel;
+  const workspaceId = channel.workspaceId;
+  const workspaceSlug = channel.workspace?.slug || 'default';
+  const channelSlug = (channel as any).slug || channelId;
+
+  // Check preferences
+  const [channelMember, workspaceMember, user] = await Promise.all([
+    prisma.channelMember.findUnique({
+      where: { channelId_userId: { channelId, userId: recipientId } },
+      select: { notificationPreference: true },
+    }),
+    workspaceId
+      ? prisma.workspaceMember.findUnique({
+          where: { workspaceId_userId: { workspaceId, userId: recipientId } },
+          select: { notificationPreference: true },
+        })
+      : Promise.resolve(null),
+    prisma.user.findUnique({
+      where: { id: recipientId },
+      select: { notificationPreferences: true },
+    }),
+  ]);
+
+  let preference: string | null | undefined = channelMember?.notificationPreference;
+  if (!preference && workspaceId) {
+    preference = workspaceMember?.notificationPreference;
+  }
+  if (!preference) {
+    preference = (user?.notificationPreferences as any)?.mentions || 'all';
+  }
+
+  if (preference === 'nothing') return;
+
+  await createNotification({
+    userId: recipientId,
+    type: 'mention',
+    title: `${replyAuthorName} replied to your message`,
+    message: content.slice(0, 100),
+    entityType: 'channel',
+    entityId: channelId,
+    linkUrl: `/workspace/${workspaceSlug}/channels/${channelSlug}?messageId=${replyMessageId}`,
+    metadata: {
+      channelId,
+      parentMessageId,
+      replyMessageId,
+      type: 'reply',
+    },
+  });
+}
+
+/**
  * ⚡ Performance Optimization:
  * Batches notification creation and delivery for channel-wide alerts (@all, @here).
  * Replaces expensive nested 'include' with targeted parallel queries.

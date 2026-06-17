@@ -358,6 +358,18 @@ export class ChannelsService {
       );
     }
 
+    // Notify all channel members about the new message (respecting their preferences)
+    // If there were mentions, those users will be excluded from the general notification
+    // to avoid duplicates, as they already received a mention notification.
+    await this.notificationsService.notifyNewMessage(
+      channelId,
+      userId,
+      sender?.name || 'Someone',
+      message.id,
+      content,
+      mentionedUserIds
+    );
+
     const ably = getAblyRest();
     if (ably) {
       const channel = ably.channels.get(AblyChannels.channel(channelId));
@@ -543,6 +555,16 @@ export class ChannelsService {
       const channel = ably.channels.get(AblyChannels.channel(channelId));
       await channel.publish(AblyEvents.MESSAGE_SENT, reply);
     }
+
+    // Notify the author of the parent message about the reply
+    await this.notificationsService.notifyReply(
+      channelId,
+      userId,
+      reply.user?.name || 'Someone',
+      messageId,
+      reply.id,
+      content
+    );
 
     return reply;
   }
