@@ -8,6 +8,8 @@
 /.idea/navEditor.xml
 /.idea/assetWizard.settings.xml
 .DS_Store
+*.keystore
+*.jks
 /build
 /captures
 .externalNativeBuild

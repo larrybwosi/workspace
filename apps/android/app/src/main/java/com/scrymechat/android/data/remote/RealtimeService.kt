@@ -52,6 +52,8 @@ class RealtimeService : LifecycleService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
+            // Foreground service types like 'specialUse' are only required on Android 14 (API 34) and above.
+            // For older versions (including Android 10), we fall back to the standard startForeground call.
             startForeground(1, notification)
         }
     }
