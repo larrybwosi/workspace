@@ -1,7 +1,14 @@
 package com.scrymechat.android.ui.signup
 
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,128 +19,584 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
+
+// ─── Brand accent — consistent with WelcomeScreen ────────────────────────────
+private val Indigo = Color(0xFF6366F1)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
     onBack: () -> Unit,
+    onSignInClick: () -> Unit,
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var passwordVisible by remember { mutableStateOf(false) }
+    val uiState              by viewModel.uiState.collectAsState()
+    val context              = LocalContext.current
+    val scope                = rememberCoroutineScope()
+    var passwordVisible      by remember { mutableStateOf(false) }
+    var confirmVisible       by remember { mutableStateOf(false) }
+    var confirmPassword      by remember { mutableStateOf("") }
+    var agreedToTerms        by remember { mutableStateOf(false) }
+
+    val sheetState           = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showSuccessSheet     by remember { mutableStateOf(false) }
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    val passwordMismatch = confirmPassword.isNotEmpty() && confirmPassword != uiState.password
 
     LaunchedEffect(uiState.isSignUpSuccess) {
-        if (uiState.isSignUpSuccess) {
-            onSignUpSuccess()
-        }
+        if (uiState.isSignUpSuccess) showSuccessSheet = true
     }
 
     Scaffold(
+        containerColor = colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Create Account") },
+                title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(40.dp)
+                            .border(
+                                width = 1.dp,
+                                color = colorScheme.outlineVariant,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                    ) {
+                        Icon(
+                            imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint               = colorScheme.onSurface,
+                            modifier           = Modifier.size(18.dp)
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.background
+                )
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.Start
         ) {
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // ── Header ────────────────────────────────────────────────────────
             Text(
-                text = "Join Scrymechat",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 32.dp)
+                text  = "Create Account",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight    = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp
+                ),
+                color = colorScheme.onBackground
             )
 
-            OutlinedTextField(
-                value = uiState.name,
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text  = "Sign up to get started",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurface.copy(alpha = 0.48f)
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // ── Full Name ─────────────────────────────────────────────────────
+            FieldLabel("Full Name")
+            Spacer(modifier = Modifier.height(6.dp))
+            ProTextField(
+                value         = uiState.name,
                 onValueChange = viewModel::onNameChanged,
-                label = { Text("Full Name") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                placeholder   = "John Doe",
+                keyboardType  = KeyboardType.Text,
+                leadingIcon   = {
+                    Icon(
+                        painter           = painterResource(id = R.drawable.ic_person_outline),
+                        contentDescription = null,
+                        tint              = colorScheme.onSurface.copy(alpha = 0.35f),
+                        modifier          = Modifier.size(18.dp)
+                    )
+                }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            OutlinedTextField(
-                value = uiState.username,
-                onValueChange = viewModel::onUsernameChanged,
-                label = { Text("Username") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = uiState.email,
+            // ── Email ─────────────────────────────────────────────────────────
+            FieldLabel("Email Address")
+            Spacer(modifier = Modifier.height(6.dp))
+            ProTextField(
+                value         = uiState.email,
                 onValueChange = viewModel::onEmailChanged,
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+                placeholder   = "john@example.com",
+                keyboardType  = KeyboardType.Email,
+                leadingIcon   = {
+                    Icon(
+                        painter            = painterResource(id = R.drawable.ic_email_outline),
+                        contentDescription = null,
+                        tint               = colorScheme.onSurface.copy(alpha = 0.35f),
+                        modifier           = Modifier.size(18.dp)
+                    )
+                }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            OutlinedTextField(
-                value = uiState.password,
-                onValueChange = viewModel::onPasswordChanged,
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+            // ── Password ──────────────────────────────────────────────────────
+            FieldLabel("Password")
+            Spacer(modifier = Modifier.height(6.dp))
+            ProTextField(
+                value                = uiState.password,
+                onValueChange        = viewModel::onPasswordChanged,
+                placeholder          = "••••••••",
+                keyboardType         = KeyboardType.Password,
+                visualTransformation = if (passwordVisible) VisualTransformation.None
+                                       else PasswordVisualTransformation(),
+                trailingIcon         = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = null)
+                        Icon(
+                            imageVector        = if (passwordVisible) Icons.Filled.Visibility
+                                                 else Icons.Filled.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Hide" else "Show",
+                            tint               = colorScheme.onSurface.copy(alpha = 0.4f),
+                            modifier           = Modifier.size(18.dp)
+                        )
                     }
-                },
-                singleLine = true
+                }
             )
 
-            if (uiState.error != null) {
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // ── Confirm Password ──────────────────────────────────────────────
+            FieldLabel("Confirm Password")
+            Spacer(modifier = Modifier.height(6.dp))
+            ProTextField(
+                value                = confirmPassword,
+                onValueChange        = { confirmPassword = it },
+                placeholder          = "••••••••",
+                keyboardType         = KeyboardType.Password,
+                isError              = passwordMismatch,
+                visualTransformation = if (confirmVisible) VisualTransformation.None
+                                       else PasswordVisualTransformation(),
+                trailingIcon         = {
+                    IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                        Icon(
+                            imageVector        = if (confirmVisible) Icons.Filled.Visibility
+                                                 else Icons.Filled.VisibilityOff,
+                            contentDescription = if (confirmVisible) "Hide" else "Show",
+                            tint               = colorScheme.onSurface.copy(alpha = 0.4f),
+                            modifier           = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            )
+
+            AnimatedVisibility(visible = passwordMismatch) {
                 Text(
-                    text = uiState.error!!,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
+                    text     = "Passwords do not match",
+                    color    = colorScheme.error,
+                    style    = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // ── Terms checkbox ────────────────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier          = Modifier.fillMaxWidth()
+            ) {
+                Checkbox(
+                    checked         = agreedToTerms,
+                    onCheckedChange = { agreedToTerms = it },
+                    modifier        = Modifier.size(20.dp).padding(0.dp),
+                    colors          = CheckboxDefaults.colors(
+                        checkedColor     = Indigo,
+                        checkmarkColor   = Color.White,
+                        uncheckedColor   = colorScheme.outlineVariant
+                    )
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                val termsText = buildAnnotatedString {
+                    withStyle(SpanStyle(color = colorScheme.onSurface.copy(alpha = 0.55f))) {
+                        append("I agree to the ")
+                    }
+                    withStyle(SpanStyle(color = Indigo, fontWeight = FontWeight.Medium)) {
+                        append("Terms of Service")
+                    }
+                    withStyle(SpanStyle(color = colorScheme.onSurface.copy(alpha = 0.55f))) {
+                        append(" and ")
+                    }
+                    withStyle(SpanStyle(color = Indigo, fontWeight = FontWeight.Medium)) {
+                        append("Privacy Policy")
+                    }
+                }
+                ClickableText(
+                    text    = termsText,
+                    style   = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+                    onClick = { /* open terms */ }
+                )
+            }
+
+            // ── Inline API error ──────────────────────────────────────────────
+            AnimatedVisibility(visible = uiState.error != null) {
+                uiState.error?.let { msg ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(colorScheme.errorContainer.copy(alpha = 0.18f))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text  = msg,
+                            color = colorScheme.error,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ── Primary CTA ───────────────────────────────────────────────────
             Button(
-                onClick = viewModel::signUp,
+                onClick  = viewModel::signUp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                enabled = !uiState.isLoading
+                    .height(52.dp),
+                enabled  = !uiState.isLoading && agreedToTerms &&
+                           confirmPassword == uiState.password && confirmPassword.isNotEmpty(),
+                shape    = RoundedCornerShape(12.dp),
+                colors   = ButtonDefaults.buttonColors(
+                    containerColor         = Indigo,
+                    contentColor           = Color.White,
+                    disabledContainerColor = Indigo.copy(alpha = 0.38f),
+                    disabledContentColor   = Color.White.copy(alpha = 0.5f)
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
+                AnimatedContent(
+                    targetState  = uiState.isLoading,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label        = "cta"
+                ) { loading ->
+                    if (loading) {
+                        CircularProgressIndicator(
+                            modifier    = Modifier.size(20.dp),
+                            color       = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text          = "Create Account",
+                            fontWeight    = FontWeight.SemiBold,
+                            fontSize      = 14.sp,
+                            letterSpacing = 0.3.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ── Or divider ────────────────────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier          = Modifier.fillMaxWidth()
+            ) {
+                HorizontalDivider(
+                    modifier  = Modifier.weight(1f),
+                    thickness = 0.5.dp,
+                    color     = colorScheme.outlineVariant
+                )
+                Text(
+                    text      = "Or",
+                    modifier  = Modifier.padding(horizontal = 14.dp),
+                    style     = MaterialTheme.typography.labelSmall,
+                    color     = colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+                HorizontalDivider(
+                    modifier  = Modifier.weight(1f),
+                    thickness = 0.5.dp,
+                    color     = colorScheme.outlineVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ── Google — full width ───────────────────────────────────────────
+            OutlinedButton(
+                onClick  = { /* Google OAuth */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape  = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp, colorScheme.outlineVariant
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = colorScheme.surface,
+                    contentColor   = colorScheme.onSurface
+                )
+            ) {
+                Icon(
+                    painter            = painterResource(id = R.drawable.ic_google),
+                    contentDescription = "Google",
+                    modifier           = Modifier.size(18.dp),
+                    tint               = Color.Unspecified
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text          = "Continue with Google",
+                    fontWeight    = FontWeight.Medium,
+                    fontSize      = 14.sp,
+                    letterSpacing = 0.1.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── GitHub — full width ───────────────────────────────────────────
+            OutlinedButton(
+                onClick = {
+                    val url = "https://github.com/login/oauth/authorize" +
+                            "?client_id=YOUR_GITHUB_CLIENT_ID" +
+                            "&scope=user:email" +
+                            "&redirect_uri=scrymechat://auth"
+                    CustomTabsIntent.Builder().build()
+                        .launchUrl(context, Uri.parse(url))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape  = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp, colorScheme.outlineVariant
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = colorScheme.surface,
+                    contentColor   = colorScheme.onSurface
+                )
+            ) {
+                Icon(
+                    painter            = painterResource(id = R.drawable.ic_github),
+                    contentDescription = "GitHub",
+                    modifier           = Modifier.size(18.dp),
+                    tint               = colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text          = "Continue with GitHub",
+                    fontWeight    = FontWeight.Medium,
+                    fontSize      = 14.sp,
+                    letterSpacing = 0.1.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // ── Sign-in link ──────────────────────────────────────────────────
+            Row(
+                modifier                = Modifier.fillMaxWidth(),
+                horizontalArrangement   = Arrangement.Center,
+                verticalAlignment       = Alignment.CenterVertically
+            ) {
+                Text(
+                    text  = "Already have an account? ",
+                    color = colorScheme.onSurface.copy(alpha = 0.5f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                ClickableText(
+                    text    = AnnotatedString("Log in"),
+                    onClick = { onSignInClick() },
+                    style   = MaterialTheme.typography.bodySmall.copy(
+                        color      = Indigo,
+                        fontWeight = FontWeight.SemiBold
                     )
-                } else {
-                    Text("Create Account")
+                )
+            }
+
+            Spacer(modifier = Modifier.height(36.dp))
+        }
+    }
+
+    // ── Success bottom sheet ──────────────────────────────────────────────────
+    if (showSuccessSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSuccessSheet = false; onSignUpSuccess() },
+            sheetState       = sheetState,
+            containerColor   = colorScheme.surface,
+            tonalElevation   = 0.dp,
+            shape            = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 28.dp)
+                    .padding(bottom = 36.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Indigo.copy(alpha = 0.10f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector        = Icons.Default.Check,
+                        contentDescription = null,
+                        tint               = Indigo,
+                        modifier           = Modifier.size(28.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text  = "Account created",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight    = FontWeight.Bold,
+                        letterSpacing = (-0.2).sp
+                    ),
+                    color = colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text      = "You're all set. Welcome to Scrymechat.",
+                    style     = MaterialTheme.typography.bodyMedium,
+                    color     = colorScheme.onSurface.copy(alpha = 0.5f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                HorizontalDivider(thickness = 0.5.dp, color = colorScheme.outlineVariant)
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showSuccessSheet = false
+                                onSignUpSuccess()
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape    = RoundedCornerShape(12.dp),
+                    colors   = ButtonDefaults.buttonColors(
+                        containerColor = Indigo,
+                        contentColor   = Color.White
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                ) {
+                    Text(
+                        text          = "Go to Home",
+                        fontWeight    = FontWeight.SemiBold,
+                        fontSize      = 14.sp,
+                        letterSpacing = 0.3.sp
+                    )
                 }
             }
         }
     }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text  = text,
+        style = MaterialTheme.typography.labelMedium.copy(
+            fontWeight    = FontWeight.Medium,
+            letterSpacing = 0.1.sp
+        ),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboardType: KeyboardType,
+    isError: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    OutlinedTextField(
+        value                = value,
+        onValueChange        = onValueChange,
+        isError              = isError,
+        placeholder          = {
+            Text(
+                text  = placeholder,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurface.copy(alpha = 0.28f)
+            )
+        },
+        leadingIcon           = leadingIcon,
+        trailingIcon          = trailingIcon,
+        visualTransformation  = visualTransformation,
+        keyboardOptions       = KeyboardOptions(keyboardType = keyboardType),
+        singleLine            = true,
+        modifier              = Modifier.fillMaxWidth(),
+        shape                 = RoundedCornerShape(12.dp),
+        textStyle             = MaterialTheme.typography.bodyMedium.copy(
+            color = colorScheme.onSurface
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor      = Indigo,
+            unfocusedBorderColor    = colorScheme.outlineVariant,
+            errorBorderColor        = colorScheme.error,
+            focusedContainerColor   = colorScheme.surface,
+            unfocusedContainerColor = colorScheme.surface,
+            errorContainerColor     = colorScheme.errorContainer.copy(alpha = 0.08f),
+            cursorColor             = Indigo
+        )
+    )
 }

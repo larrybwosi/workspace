@@ -2,10 +2,10 @@ package com.scrymechat.android.data.repository
 
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.dao.DmDao
+import com.scrymechat.android.data.local.dao.UserDao
 import com.scrymechat.android.data.local.entities.DmConversationEntity
-import com.scrymechat.android.data.remote.CreateDmRequest
-import com.scrymechat.android.data.remote.DmApi
-import com.scrymechat.android.data.remote.DmConversationDto
+import com.scrymechat.android.data.local.entities.UserEntity
+import com.scrymechat.android.data.remote.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -14,7 +14,8 @@ import javax.inject.Singleton
 @Singleton
 class DmRepository @Inject constructor(
     private val api: DmApi,
-    private val dao: DmDao
+    private val dao: DmDao,
+    private val userDao: UserDao
 ) {
     fun getDms(): Flow<Resource<List<DmConversationEntity>>> = flow {
         emit(Resource.Loading())
@@ -23,6 +24,12 @@ class DmRepository @Inject constructor(
             if (response.isSuccessful) {
                 val dtos = response.body() ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
+
+                // Save user details for DMs
+                dtos.forEach { dto ->
+                    userDao.insertUser(dto.user.toEntity())
+                }
+
                 dao.insertDms(entities)
                 emit(Resource.Success(entities))
             } else {
@@ -67,5 +74,18 @@ class DmRepository @Inject constructor(
         creatorId = creatorId,
         otherUserId = user.id,
         lastMessageAt = lastMessageAt
+    )
+
+    private fun UserDto.toEntity() = UserEntity(
+        id = id,
+        name = name,
+        username = username,
+        email = email,
+        avatar = avatar,
+        banner = banner,
+        statusText = statusText,
+        statusEmoji = statusEmoji,
+        role = role,
+        status = status
     )
 }

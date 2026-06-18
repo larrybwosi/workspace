@@ -19,6 +19,7 @@ class NotificationHelper(private val context: Context) {
         const val CHANNEL_URGENT = "urgent"
         const val CHANNEL_HIGH = "high"
         const val CHANNEL_NORMAL = "normal"
+        const val KEY_TEXT_REPLY = "key_text_reply"
     }
 
     init {
@@ -63,6 +64,7 @@ class NotificationHelper(private val context: Context) {
         val type = data["type"] ?: "system"
         val entityId = data["entityId"] ?: ""
         val entityType = data["entityType"] ?: ""
+        val notificationId = System.currentTimeMillis().toInt()
 
         val channelId = when (type) {
             "direct_message", "mention" -> CHANNEL_URGENT
@@ -79,10 +81,34 @@ class NotificationHelper(private val context: Context) {
 
         val pendingIntent = PendingIntent.getActivity(
             context,
-            System.currentTimeMillis().toInt(),
+            notificationId,
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+
+        // Quick Reply Action
+        val remoteInput = androidx.core.app.RemoteInput.Builder(KEY_TEXT_REPLY)
+            .setLabel("Reply...")
+            .build()
+
+        val replyIntent = Intent(context, ReplyReceiver::class.java).apply {
+            putExtra("entityId", entityId)
+            putExtra("entityType", if (type == "direct_message") "dm" else "channel")
+            putExtra("notificationId", notificationId)
+        }
+
+        val replyPendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId,
+            replyIntent,
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val replyAction = NotificationCompat.Action.Builder(
+            R.mipmap.ic_launcher,
+            "Reply",
+            replyPendingIntent
+        ).addRemoteInput(remoteInput).build()
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -91,8 +117,9 @@ class NotificationHelper(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .addAction(replyAction)
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(notificationId, notification)
     }
 }

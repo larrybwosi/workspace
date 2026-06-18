@@ -4,7 +4,23 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class V2ApplicationsService {
-  async createApplication(ownerId: string, data: { name: string; description?: string }) {
+  async createApplication(
+    ownerId: string,
+    data: { name: string; description?: string; workspaceId?: string },
+    organizationId?: string
+  ) {
+    let finalOwnerId = ownerId;
+
+    if (organizationId && (ownerId.startsWith('m2m:') || !ownerId)) {
+      const org = await prisma.organization.findUnique({
+        where: { id: organizationId },
+        include: { members: { where: { role: 'owner' }, take: 1 } },
+      });
+      if (org?.members[0]) {
+        finalOwnerId = org.members[0].userId;
+      }
+    }
+
     const clientId = crypto.randomBytes(8).toString('hex');
     const clientSecret = crypto.randomBytes(32).toString('hex');
     const verifyKey = crypto.randomBytes(32).toString('hex');
@@ -34,8 +50,9 @@ export class V2ApplicationsService {
         clientId,
         clientSecret,
         verifyKey,
-        ownerId,
+        ownerId: finalOwnerId,
         botId: botUser.id,
+        workspaceId: data.workspaceId,
       },
       include: {
         bot: true,
@@ -51,21 +68,35 @@ export class V2ApplicationsService {
     };
   }
 
-  async getApplications(ownerId: string) {
+  async getApplications(ownerId: string, organizationId?: string) {
+    if (organizationId) {
+      return prisma.botApplication.findMany({
+        where: {
+          OR: [{ ownerId }, { workspace: { organizationId } }],
+        },
+        include: { bot: true },
+      });
+    }
     return prisma.botApplication.findMany({
       where: { ownerId },
       include: { bot: true },
     });
   }
 
-  async getApplication(ownerId: string, id: string) {
+  async getApplication(ownerId: string, id: string, organizationId?: string) {
     const app = await prisma.botApplication.findUnique({
       where: { id },
-      include: { bot: true },
+      include: { bot: true, workspace: true },
     });
 
     if (!app) throw new NotFoundException('Application not found');
-    if (app.ownerId !== ownerId) throw new ForbiddenException('Not your application');
+
+    const isOwner = app.ownerId === ownerId;
+    const isOrgApp = organizationId && app.workspace?.organizationId === organizationId;
+
+    if (!isOwner && !isOrgApp) {
+      throw new ForbiddenException('Not authorized to access this application');
+    }
 
     return app;
   }
@@ -73,9 +104,10 @@ export class V2ApplicationsService {
   async updateApplication(
     ownerId: string,
     id: string,
-    data: { name?: string; description?: string; channelDefinitions?: any }
+    data: { name?: string; description?: string; channelDefinitions?: any },
+    organizationId?: string
   ) {
-    const app = await this.getApplication(ownerId, id);
+    const app = await this.getApplication(ownerId, id, organizationId);
 
     return prisma.botApplication.update({
       where: { id: app.id },
@@ -84,8 +116,8 @@ export class V2ApplicationsService {
     });
   }
 
-  async deleteApplication(ownerId: string, id: string) {
-    const app = await this.getApplication(ownerId, id);
+  async deleteApplication(ownerId: string, id: string, organizationId?: string) {
+    const app = await this.getApplication(ownerId, id, organizationId);
 
     // Delete the bot user if it exists
     if (app.botId) {

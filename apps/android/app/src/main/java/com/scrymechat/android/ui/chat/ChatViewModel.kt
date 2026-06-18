@@ -14,7 +14,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val realtimeRepository: RealtimeRepository
+    private val realtimeRepository: RealtimeRepository,
+    private val dmRepository: com.scrymechat.android.data.repository.DmRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -48,6 +49,17 @@ class ChatViewModel @Inject constructor(
 
         realtimeRepository.joinRoom("dm:$dmId")
         loadMessages()
+    }
+
+    fun setDmByUser(userId: String) {
+        viewModelScope.launch {
+            val result = dmRepository.createDm(userId)
+            if (result is Resource.Success && result.data != null) {
+                setDm(result.data.id)
+            } else if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            }
+        }
     }
 
     private fun loadMessages() {
