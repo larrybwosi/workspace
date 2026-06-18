@@ -20,20 +20,18 @@ fun MyAccountScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Account", color = ScrymeDarkTextPrimary) },
+                title = { Text("My Account") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         LazyColumn(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
             item {
-                Text("ACCOUNT INFORMATION", color = ScrymeDarkTextSecondary, style = MaterialTheme.typography.labelMedium)
+                Text("ACCOUNT INFORMATION", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(16.dp))
                 AccountInfoItem("Username", "scryme_user")
                 AccountInfoItem("Email", "user@example.com")
@@ -41,11 +39,10 @@ fun MyAccountScreen(onBack: () -> Unit) {
             }
             item {
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("PASSWORD AND AUTHENTICATION", color = ScrymeDarkTextSecondary, style = MaterialTheme.typography.labelMedium)
+                Text("PASSWORD AND AUTHENTICATION", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = ScrymeDarkAccent),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Change Password")
@@ -61,27 +58,25 @@ fun VoiceSettingsScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Voice", color = ScrymeDarkTextPrimary) },
+                title = { Text("Voice") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("INPUT MODE", color = ScrymeDarkTextSecondary, style = MaterialTheme.typography.labelMedium)
+            Text("INPUT MODE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = true, onClick = {})
-                Text("Voice Activity", color = ScrymeDarkTextPrimary)
+                Text("Voice Activity", color = MaterialTheme.colorScheme.onSurface)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = false, onClick = {})
-                Text("Push to Talk", color = ScrymeDarkTextPrimary)
+                Text("Push to Talk", color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
@@ -93,20 +88,18 @@ fun LanguageSettingsScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Language", color = ScrymeDarkTextPrimary) },
+                title = { Text("Language") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("English (US)", color = ScrymeDarkTextPrimary, modifier = Modifier.padding(vertical = 8.dp))
-            Text("English (UK)", color = ScrymeDarkTextPrimary, modifier = Modifier.padding(vertical = 8.dp))
+            Text("English (US)", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
+            Text("English (UK)", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
         }
     }
 }
@@ -117,19 +110,17 @@ fun AuthorizedAppsScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Authorized Apps", color = ScrymeDarkTextPrimary) },
+                title = { Text("Authorized Apps") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-            Text("No apps authorized yet.", color = ScrymeDarkTextSecondary)
+            Text("No apps authorized yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -137,8 +128,8 @@ fun AuthorizedAppsScreen(onBack: () -> Unit) {
 @Composable
 fun AccountInfoItem(label: String, value: String) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        Text(label, color = ScrymeDarkTextSecondary, style = MaterialTheme.typography.bodySmall)
-        Text(value, color = ScrymeDarkTextPrimary, style = MaterialTheme.typography.bodyLarge)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text(value, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -148,19 +139,17 @@ fun UserProfileScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("User Profile", color = ScrymeDarkTextPrimary) },
+                title = { Text("User Profile") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("Preview and edit your global profile.", color = ScrymeDarkTextSecondary)
+            Text("Preview and edit your global profile.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(24.dp))
             Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
                 Text("Edit Avatar")
@@ -174,12 +163,7 @@ fun UserProfileScreen(onBack: () -> Unit) {
                 value = "",
                 onValueChange = {},
                 label = { Text("About Me") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = ScrymeDarkTextPrimary,
-                    unfocusedTextColor = ScrymeDarkTextPrimary,
-                    cursorColor = ScrymeDarkAccent
-                )
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -191,22 +175,20 @@ fun PrivacySafetyScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Privacy & Safety", color = ScrymeDarkTextPrimary) },
+                title = { Text("Privacy & Safety") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("DIRECT MESSAGE SAFETY", color = ScrymeDarkTextSecondary, style = MaterialTheme.typography.labelMedium)
+            Text("DIRECT MESSAGE SAFETY", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Allow direct messages from server members", color = ScrymeDarkTextPrimary, modifier = Modifier.weight(1f))
+                Text("Allow direct messages from server members", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                 Switch(checked = true, onCheckedChange = {})
             }
         }
@@ -215,32 +197,43 @@ fun PrivacySafetyScreen(onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppearanceSettingsScreen(onBack: () -> Unit) {
+fun AppearanceSettingsScreen(
+    onBack: () -> Unit,
+    currentTheme: String,
+    onThemeChange: (String) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Appearance", color = ScrymeDarkTextPrimary) },
+                title = { Text("Appearance") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScrymeDarkSurface)
+                }
             )
-        },
-        containerColor = ScrymeDarkBackground
+        }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("THEME", color = ScrymeDarkTextSecondary, style = MaterialTheme.typography.labelMedium)
+            Text("THEME", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
             Spacer(modifier = Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = true, onClick = {})
-                Text("Dark", color = ScrymeDarkTextPrimary)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = false, onClick = {})
-                Text("Light", color = ScrymeDarkTextPrimary)
-            }
+
+            ThemeOption("System Default", "system", currentTheme, onThemeChange)
+            ThemeOption("Dark", "dark", currentTheme, onThemeChange)
+            ThemeOption("Light", "light", currentTheme, onThemeChange)
         }
+    }
+}
+
+@Composable
+fun ThemeOption(label: String, value: String, currentValue: String, onSelect: (String) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        RadioButton(selected = currentValue == value, onClick = { onSelect(value) })
+        Text(label, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(start = 8.dp))
     }
 }

@@ -12,6 +12,7 @@ import com.scrymechat.android.ui.home.HomeScreen
 import com.scrymechat.android.ui.login.LoginScreen
 import com.scrymechat.android.ui.signup.SignUpScreen
 import com.scrymechat.android.ui.welcome.WelcomeScreen
+import com.scrymechat.android.ui.theme.ThemeViewModel
 import com.scrymechat.android.ui.profile.*
 import com.scrymechat.android.ui.settings.NotificationSettingsScreen
 import com.scrymechat.android.ui.friends.FriendsScreen
@@ -19,13 +20,17 @@ import com.scrymechat.android.ui.friends.FriendsScreen
 @Composable
 fun ScrymeNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route
+    startDestination: String = Screen.Welcome.route,
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Welcome.route) {
+            val apiUrl by themeViewModel.apiUrl.collectAsState()
             WelcomeScreen(
                 onLoginClick = { navController.navigate(Screen.Login.route) },
-                onSignUpClick = { navController.navigate(Screen.SignUp.route) }
+                onSignUpClick = { navController.navigate(Screen.SignUp.route) },
+                currentApiUrl = apiUrl,
+                onApiUrlChange = { themeViewModel.updateApiUrl(it) }
             )
         }
         composable(Screen.SignUp.route) {
@@ -124,7 +129,12 @@ fun ScrymeNavHost(
             DevicesScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Appearance.route) {
-            AppearanceSettingsScreen(onBack = { navController.popBackStack() })
+            val themePreference by themeViewModel.themePreference.collectAsState()
+            AppearanceSettingsScreen(
+                onBack = { navController.popBackStack() },
+                currentTheme = themePreference,
+                onThemeChange = { themeViewModel.updateTheme(it) }
+            )
         }
         composable(Screen.Notifications.route) {
             NotificationSettingsScreen(onBack = { navController.popBackStack() })
