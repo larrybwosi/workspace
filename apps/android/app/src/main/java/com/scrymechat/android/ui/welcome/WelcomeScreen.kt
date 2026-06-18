@@ -8,8 +8,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,13 +45,45 @@ val welcomePages = listOf(
     )
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun WelcomeScreen(
     onLoginClick: () -> Unit,
-    onSignUpClick: () -> Unit
+    onSignUpClick: () -> Unit,
+    currentApiUrl: String = com.scrymechat.android.BuildConfig.API_URL,
+    onApiUrlChange: (String) -> Unit = {}
 ) {
     val pagerState = rememberPagerState(pageCount = { welcomePages.size })
+    var showApiDialog by remember { mutableStateOf(false) }
+    var tempApiUrl by remember { mutableStateOf(currentApiUrl) }
+
+    if (showApiDialog) {
+        AlertDialog(
+            onDismissRequest = { showApiDialog = false },
+            title = { Text("Change API URL") },
+            text = {
+                OutlinedTextField(
+                    value = tempApiUrl,
+                    onValueChange = { tempApiUrl = it },
+                    label = { Text("API URL") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onApiUrlChange(tempApiUrl)
+                    showApiDialog = false
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showApiDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
@@ -57,6 +91,19 @@ fun WelcomeScreen(
             modifier = Modifier.fillMaxSize()
         ) { page ->
             WelcomePageView(welcomePages[page])
+        }
+
+        IconButton(
+            onClick = { showApiDialog = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                Icons.Default.Settings,
+                contentDescription = "API Settings",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
         }
 
         Column(
@@ -75,9 +122,9 @@ fun WelcomeScreen(
             ) {
                 repeat(welcomePages.size) { iteration ->
                     val color = if (pagerState.currentPage == iteration)
-                        Color.Black
+                        MaterialTheme.colorScheme.primary
                     else
-                        Color.Gray.copy(alpha = 0.3f)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
@@ -96,12 +143,12 @@ fun WelcomeScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(
                     "Get Started",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
@@ -113,8 +160,8 @@ fun WelcomeScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black),
-                border = BorderStroke(1.dp, Color.LightGray)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Text(
                     "Sign In",
@@ -162,7 +209,7 @@ fun WelcomePageView(page: WelcomePage) {
                 fontSize = 32.sp
             ),
             textAlign = TextAlign.Center,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -171,7 +218,7 @@ fun WelcomePageView(page: WelcomePage) {
             text = page.description,
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
             textAlign = TextAlign.Center,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         // Add padding at the bottom to avoid overlapping with buttons

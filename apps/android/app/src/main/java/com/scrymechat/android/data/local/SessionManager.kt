@@ -49,6 +49,22 @@ class SessionManager @Inject constructor(
         return sharedPreferences.getString("fcm_token", null)
     }
 
+    fun saveThemePreference(theme: String) {
+        sharedPreferences.edit().putString("theme_preference", theme).apply()
+    }
+
+    fun getThemePreference(): String {
+        return sharedPreferences.getString("theme_preference", "system") ?: "system"
+    }
+
+    fun saveApiUrl(url: String) {
+        sharedPreferences.edit().putString("custom_api_url", url).apply()
+    }
+
+    fun getApiUrl(): String? {
+        return sharedPreferences.getString("custom_api_url", null)
+    }
+
     suspend fun isLoggedIn(): Boolean {
         return getToken() != null && getActiveSession() != null
     }
