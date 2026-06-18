@@ -29,6 +29,33 @@ import { Query } from '@nestjs/common';
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
+  @Get('search')
+  @ApiOperation({ summary: 'Search for users by username' })
+  @ApiQuery({ name: 'username', required: true })
+  @ApiResponse({ status: 200, description: 'User details' })
+  async searchUser(@Query('username') username: string) {
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: username,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        avatar: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'User profile details' })
@@ -268,25 +295,22 @@ export class UsersController {
       throw new BadRequestException('Token and platform are required');
     }
 
-    const existing = await prisma.deviceToken.findUnique({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Replaces sequential 'findUnique' and 'update'/'create' with a single atomic 'upsert'.
+     * 2. This reduces database round-trips from 2 down to 1.
+     * Expected impact: Faster device token registration and reduced database load.
+     */
+    return prisma.deviceToken.upsert({
       where: { token },
-    });
-
-    if (existing) {
-      return prisma.deviceToken.update({
-        where: { token },
-        data: {
-          userId: user.id,
-          platform,
-          deviceInfo,
-          isActive: true,
-          lastUsedAt: new Date(),
-        },
-      });
-    }
-
-    return prisma.deviceToken.create({
-      data: {
+      update: {
+        userId: user.id,
+        platform,
+        deviceInfo,
+        isActive: true,
+        lastUsedAt: new Date(),
+      },
+      create: {
         userId: user.id,
         token,
         platform,

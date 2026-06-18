@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { prisma } from '@repo/database';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class ProvisioningService {
@@ -97,7 +98,43 @@ export class ProvisioningService {
           }
         }
 
-        // 4. Audit Log
+        // 4. Create Default Bot
+        const botId = `bot_${crypto.randomBytes(8).toString('hex')}`;
+        const botUser = await tx.user.create({
+          data: {
+            id: botId,
+            name: `${workspace.name} Bot`,
+            email: `${workspace.slug}-bot@system.internal`,
+            isBot: true,
+            status: 'online',
+          },
+        });
+
+        const clientId = `bot_${crypto.randomBytes(16).toString('hex')}`;
+        const clientSecret = crypto.randomBytes(32).toString('hex');
+
+        const botApp = await tx.botApplication.create({
+          data: {
+            name: `${workspace.name} Bot`,
+            description: `Default bot for ${workspace.name}`,
+            clientId,
+            clientSecret,
+            ownerId: owner.id,
+            botId: botUser.id,
+            workspaceId: workspace.id,
+          },
+        });
+
+        // Add bot to workspace members
+        await tx.workspaceMember.create({
+          data: {
+            workspaceId: workspace.id,
+            userId: botUser.id,
+            role: 'bot',
+          },
+        });
+
+        // 5. Audit Log
         await tx.workspaceAuditLog.create({
           data: {
             workspaceId: workspace.id,
@@ -115,6 +152,11 @@ export class ProvisioningService {
             id: workspace.id,
             slug: workspace.slug,
             name: workspace.name,
+          },
+          bot: {
+            id: botApp.id,
+            clientId: botApp.clientId,
+            clientSecret: botApp.clientSecret,
           },
         };
       })

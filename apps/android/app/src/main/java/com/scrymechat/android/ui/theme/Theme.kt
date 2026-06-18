@@ -10,22 +10,38 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = ScrymeDarkAccent,
+    secondary = ScrymeDarkSurfaceVariant,
+    tertiary = Pink80,
+    background = ScrymeDarkBackground,
+    surface = ScrymeDarkSurface,
+    onPrimary = Color.White,
+    onSecondary = ScrymeDarkTextPrimary,
+    onTertiary = Color.White,
+    onBackground = ScrymeDarkTextPrimary,
+    onSurface = ScrymeDarkTextPrimary,
+    surfaceVariant = ScrymeDarkSurfaceVariant,
+    onSurfaceVariant = ScrymeDarkTextSecondary
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = ScrymechatPrimary,
     secondary = ScrymechatSecondary,
     tertiary = Pink40,
-    background = ScrymechatBackground
+    background = ScrymechatBackground,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = Color.Black,
+    onSurface = Color.Black
 
     /* Other default colors to override
     surface = Color(0xFFFFFBFE),
@@ -39,7 +55,12 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun ScrymechatTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themePreference: String = "system",
+    darkTheme: Boolean = when (themePreference) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    },
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit

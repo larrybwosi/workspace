@@ -596,6 +596,19 @@ export class V2MessagesController {
 
     let createdMessage;
     let activeThreadId = threadId;
+    let senderId = context.userId;
+
+    // M2M Support: Use default workspace bot as sender
+    if (context.organizationId && !context.isBot) {
+      const defaultBot = await prisma.botApplication.findFirst({
+        where: { workspaceId: context.workspaceId },
+        select: { botId: true },
+      });
+
+      if (defaultBot?.botId) {
+        senderId = defaultBot.botId;
+      }
+    }
 
     if (channelId) {
       /**
@@ -637,7 +650,7 @@ export class V2MessagesController {
         data: {
           content,
           channelId: channel.id,
-          userId: context.userId,
+          userId: senderId,
           threadId: activeThreadId,
           messageType: messageType || 'standard',
           metadata: {
@@ -707,10 +720,10 @@ export class V2MessagesController {
         throw new ForbiddenException('Recipient is not a member of this workspace');
       }
 
-      const participants = [context.userId, recipientId].sort();
+      const participants = [senderId, recipientId].sort();
       const messageData = {
         content,
-        senderId: context.userId,
+        senderId: senderId,
         attachments: attachments?.length
           ? {
               create: attachments.map(a => ({

@@ -43,6 +43,11 @@ interface AuthApi {
     suspend fun authorizeQR(
         @Body request: QRAuthorizeRequest
     ): Response<QRAuthorizeResponse>
+
+    @GET("users/search")
+    suspend fun searchUser(
+        @retrofit2.http.Query("username") username: String
+    ): Response<UserDto>
 }
 
 data class QRAuthorizeRequest(

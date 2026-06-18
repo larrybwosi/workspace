@@ -54,6 +54,10 @@
             </intent-filter>
         </service>
 
+        <receiver
+            android:name=".notifications.ReplyReceiver"
+            android:exported="false" />
+
         <service
             android:name=".data.remote.RealtimeService"
             android:enabled="true"

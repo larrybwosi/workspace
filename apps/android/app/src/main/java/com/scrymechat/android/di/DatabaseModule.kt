@@ -47,4 +47,7 @@ object DatabaseModule {
 
     @Provides
     fun provideMessageDao(database: ScrymeDatabase): MessageDao = database.messageDao()
+
+    @Provides
+    fun provideFriendsDao(database: ScrymeDatabase): FriendsDao = database.friendsDao()
 }
