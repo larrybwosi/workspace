@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.ChannelEntity
+import com.scrymechat.android.data.local.entities.DmConversationEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
 import com.scrymechat.android.ui.theme.*
@@ -34,9 +35,12 @@ fun ChannelSidebar(
     isHomeSelected: Boolean,
     currentUser: UserEntity?,
     expandedCategories: Set<String>,
+    dms: List<com.scrymechat.android.data.local.dao.DmWithUser> = emptyList(),
     onChannelClick: (ChannelEntity) -> Unit,
+    onDmClick: (DmConversationEntity) -> Unit = {},
     onCategoryToggle: (String) -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onFriendsClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -73,8 +77,8 @@ fun ChannelSidebar(
                     SidebarItem(
                         icon = Icons.Default.Person,
                         label = "Friends",
-                        isSelected = false, // Placeholder
-                        onClick = {}
+                        isSelected = false,
+                        onClick = onFriendsClick
                     )
                 }
                 item {
@@ -87,7 +91,15 @@ fun ChannelSidebar(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-                // DMs placeholders or real DMs if available
+
+                items(dms) { dmWithUser ->
+                    SidebarItem(
+                        icon = Icons.Default.ChatBubble,
+                        label = dmWithUser.otherUserName ?: "Unknown User",
+                        isSelected = false,
+                        onClick = { onDmClick(dmWithUser.dm) }
+                    )
+                }
             } else {
                 val categories = channels.filter { it.parentId == null && it.type == "category" }
                 val uncategorized = channels.filter { it.parentId == null && it.type != "category" }
