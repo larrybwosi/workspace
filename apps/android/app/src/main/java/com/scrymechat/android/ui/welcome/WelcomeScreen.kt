@@ -1,7 +1,10 @@
 package com.scrymechat.android.ui.welcome
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -14,12 +17,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 data class WelcomePage(
     val title: String,
@@ -30,17 +36,17 @@ data class WelcomePage(
 val welcomePages = listOf(
     WelcomePage(
         "Secure Collaboration",
-        "Encrypted messaging and secure file sharing for your enterprise.",
+        "Experience end-to-end encrypted messaging and military-grade file sharing designed for the modern enterprise. Your data stays yours, always.",
         Color(0xFF5865F2)
     ),
     WelcomePage(
         "Seamless Workflow",
-        "Integrate with your favorite tools and keep your team in sync.",
+        "Connect Scrymechat with your existing toolstack. Automate notifications, manage tasks, and keep your entire organization in perfect sync without breaking flow.",
         Color(0xFFF43F5E)
     ),
     WelcomePage(
         "Real-time Channels",
-        "Organize your work into channels and never miss an update.",
+        "Create dedicated spaces for projects, teams, or topics. High-fidelity voice, video, and real-time messaging ensure you're never out of the loop.",
         Color(0xFF10B981)
     )
 )
@@ -54,8 +60,16 @@ fun WelcomeScreen(
     onApiUrlChange: (String) -> Unit = {}
 ) {
     val pagerState = rememberPagerState(pageCount = { welcomePages.size })
+    val scope = rememberCoroutineScope()
     var showApiDialog by remember { mutableStateOf(false) }
     var tempApiUrl by remember { mutableStateOf(currentApiUrl) }
+
+    val currentColor = welcomePages[pagerState.currentPage].color
+    val animatedColor by animateColorAsState(
+        targetValue = currentColor,
+        animationSpec = tween(durationMillis = 1000),
+        label = "backgroundColor"
+    )
 
     if (showApiDialog) {
         AlertDialog(
@@ -86,6 +100,9 @@ fun WelcomeScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Smoky Faded Background
+        SmokyBackground(animatedColor)
+
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -102,7 +119,7 @@ fun WelcomeScreen(
             Icon(
                 Icons.Default.Settings,
                 contentDescription = "API Settings",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = Color.White
             )
         }
 
@@ -122,54 +139,130 @@ fun WelcomeScreen(
             ) {
                 repeat(welcomePages.size) { iteration ->
                     val color = if (pagerState.currentPage == iteration)
-                        MaterialTheme.colorScheme.primary
+                        Color.White
                     else
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        Color.White.copy(alpha = 0.3f)
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
                             .clip(CircleShape)
                             .background(color)
-                            .size(10.dp)
+                            .size(8.dp)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = onSignUpClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text(
-                    "Get Started",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+            val isLastPage = pagerState.currentPage == welcomePages.size - 1
 
-            Spacer(modifier = Modifier.height(12.dp))
+            if (isLastPage) {
+                Button(
+                    onClick = onSignUpClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text(
+                        "Get Started",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
 
-            OutlinedButton(
-                onClick = onLoginClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Text(
-                    "Sign In",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = onLoginClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                ) {
+                    Text(
+                        "Sign In",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+            } else {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.2f),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        "Next",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+
+                // Spacer to keep the layout consistent with the last page's two buttons
+                Spacer(modifier = Modifier.height(68.dp))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun SmokyBackground(color: Color) {
+    val infiniteTransition = rememberInfiniteTransition(label = "smoky")
+    val xOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(20000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "xOffset"
+    )
+    val yOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(25000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "yOffset"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize().blur(80.dp)) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(color.copy(alpha = 0.4f), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(xOffset, yOffset),
+                    radius = 800f
+                )
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(color.copy(alpha = 0.3f), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(size.width - yOffset, size.height - xOffset),
+                    radius = 1000f
+                )
+            )
         }
     }
 }
@@ -179,46 +272,40 @@ fun WelcomePageView(page: WelcomePage) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(page.color.copy(alpha = 0.05f))
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(280.dp)
-                .clip(RoundedCornerShape(32.dp))
-                .background(page.color.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            // Large Placeholder for an illustration
-            Box(
-                modifier = Modifier
-                    .size(140.dp)
-                    .clip(CircleShape)
-                    .background(page.color)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
         Text(
             text = page.title,
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp
+            style = MaterialTheme.typography.displayMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 52.sp
             ),
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
+            textAlign = TextAlign.Start,
+            color = Color.White
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Box(
+            modifier = Modifier
+                .width(60.dp)
+                .height(4.dp)
+                .background(Color.White.copy(alpha = 0.3f))
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = page.description,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 20.sp,
+                lineHeight = 30.sp,
+                letterSpacing = 0.sp
+            ),
+            textAlign = TextAlign.Start,
+            color = Color.White.copy(alpha = 0.8f)
         )
 
         // Add padding at the bottom to avoid overlapping with buttons
