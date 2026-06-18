@@ -17,6 +17,19 @@ env:
   RD_PORT: 6379
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            android:
+              - 'apps/android/**'
+
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -199,6 +212,8 @@ jobs:
           retention-days: 30
 
   native-android-test:
+    needs: [changes]
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -215,9 +230,30 @@ jobs:
           API_URL: http://localhost:3000
         run: cd apps/android && ./gradlew test
 
+  all-tests-passed:
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit, native-android-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          lint="${{ needs.lint-and-typecheck.result }}"
+          unit="${{ needs.unit-tests.result }}"
+          api="${{ needs.api-e2e.result }}"
+          web="${{ needs.web-e2e.result }}"
+          fallow="${{ needs.fallow-audit.result }}"
+          android="${{ needs.native-android-test.result }}"
+
+          if [[ "$lint" != "success" ]]; then exit 1; fi
+          if [[ "$unit" != "success" ]]; then exit 1; fi
+          if [[ "$api" != "success" ]]; then exit 1; fi
+          if [[ "$web" != "success" ]]; then exit 1; fi
+          if [[ "$fallow" != "success" ]]; then exit 1; fi
+          if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
+
   desktop-verify:
     if: github.event_name == 'pull_request'
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit, native-android-test]
+    needs: [all-tests-passed]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -256,9 +292,9 @@ jobs:
         working-directory: apps/desktop/src-tauri
 
   version:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit, native-android-test]
+    needs: [all-tests-passed]
     permissions:
       contents: write
       pull-requests: write
@@ -285,7 +321,7 @@ jobs:
           git add .
           git commit -m "chore: bump version to ${{ steps.update_version.outputs.version }} [skip ci]" || echo "No changes to commit"
           git tag v${{ steps.update_version.outputs.version }}
-          git push origin main --tags
+          git push origin ${{ github.ref_name }} --tags
 
   docker-publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -341,7 +377,7 @@ jobs:
 
   create-release:
     needs: [version]
-    if: needs.version.outputs.published == 'true'
+    if: needs.version.outputs.published == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -357,13 +393,13 @@ jobs:
           tag_name: v${{ needs.version.outputs.version }}
           name: v${{ needs.version.outputs.version }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.ref == 'refs/heads/dev' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   native-android-release:
     needs: [version, create-release]
-    if: needs.version.outputs.published == 'true'
+    if: needs.version.outputs.published == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -393,7 +429,7 @@ jobs:
 
   desktop-release:
     needs: [version, create-release]
-    if: needs.version.outputs.published == 'true'
+    if: needs.version.outputs.published == 'true' && github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
