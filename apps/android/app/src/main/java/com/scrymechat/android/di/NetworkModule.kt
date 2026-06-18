@@ -22,6 +22,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideFriendsApi(retrofit: Retrofit): FriendsApi {
+        return retrofit.create(FriendsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideInvitationsApi(retrofit: Retrofit): InvitationsApi {
+        return retrofit.create(InvitationsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideGson(): Gson = Gson()
 
     @Provides
@@ -38,9 +50,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideRetrofit(okHttpClient: OkHttpClient, sessionManager: SessionManager): Retrofit {
+        val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
         return Retrofit.Builder()
-            .baseUrl("${com.scrymechat.android.BuildConfig.API_URL}/api/")
+            .baseUrl("$baseUrl/api/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -88,6 +101,7 @@ object NetworkModule {
         val options = IO.Options.builder()
             .setAuth(mapOf("token" to sessionManager.getToken()))
             .build()
-        return IO.socket(URI.create(com.scrymechat.android.BuildConfig.API_URL), options)
+        val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
+        return IO.socket(URI.create(baseUrl), options)
     }
 }

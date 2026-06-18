@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.activity.viewModels
 import androidx.navigation.compose.rememberNavController
@@ -23,6 +23,7 @@ import com.scrymechat.android.ui.login.LoginViewModel
 import com.scrymechat.android.ui.navigation.ScrymeNavHost
 import com.scrymechat.android.ui.navigation.Screen
 import com.scrymechat.android.ui.theme.ScrymechatTheme
+import com.scrymechat.android.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,11 +33,14 @@ class MainActivity : ComponentActivity() {
     lateinit var sessionManager: SessionManager
 
     private val loginViewModel: LoginViewModel by viewModels()
+    private val themeViewModel: ThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ScrymechatTheme {
+            val themePreference by themeViewModel.themePreference.collectAsState()
+
+            ScrymechatTheme(themePreference = themePreference) {
                 val navController = rememberNavController()
 
                 // Request notification permission for Android 13+

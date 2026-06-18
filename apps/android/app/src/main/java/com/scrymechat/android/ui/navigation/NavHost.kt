@@ -1,6 +1,10 @@
 package com.scrymechat.android.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -8,19 +12,25 @@ import com.scrymechat.android.ui.home.HomeScreen
 import com.scrymechat.android.ui.login.LoginScreen
 import com.scrymechat.android.ui.signup.SignUpScreen
 import com.scrymechat.android.ui.welcome.WelcomeScreen
+import com.scrymechat.android.ui.theme.ThemeViewModel
 import com.scrymechat.android.ui.profile.*
 import com.scrymechat.android.ui.settings.NotificationSettingsScreen
+import com.scrymechat.android.ui.friends.FriendsScreen
 
 @Composable
 fun ScrymeNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route
+    startDestination: String = Screen.Welcome.route,
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Welcome.route) {
+            val apiUrl by themeViewModel.apiUrl.collectAsState()
             WelcomeScreen(
                 onLoginClick = { navController.navigate(Screen.Login.route) },
-                onSignUpClick = { navController.navigate(Screen.SignUp.route) }
+                onSignUpClick = { navController.navigate(Screen.SignUp.route) },
+                currentApiUrl = apiUrl,
+                onApiUrlChange = { themeViewModel.updateApiUrl(it) }
             )
         }
         composable(Screen.SignUp.route) {
@@ -49,12 +59,38 @@ fun ScrymeNavHost(
             HomeScreen(
                 onSettingsClick = {
                     navController.navigate(Screen.Profile.route)
+                },
+                onFriendsClick = {
+                    navController.navigate(Screen.Friends.route)
+                }
+            )
+        }
+        composable(Screen.Friends.route) {
+            FriendsScreen(
+                onDmClick = { userId ->
+                    // Navigate to Chat with user (which should handle DM creation/selection)
+                    navController.navigate(Screen.Chat.createRoute(userId))
                 }
             )
         }
         composable(Screen.Chat.route) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")
-            // Placeholder for Chat screen
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            val chatViewModel: com.scrymechat.android.ui.chat.ChatViewModel = hiltViewModel()
+
+            LaunchedEffect(userId) {
+                chatViewModel.setDmByUser(userId)
+            }
+
+            val chatUiState by chatViewModel.uiState.collectAsState()
+
+            com.scrymechat.android.ui.chat.ChatView(
+                messages = chatUiState.messages,
+                onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
+                onReply = { /* TODO */ },
+                onForward = { /* TODO */ },
+                onTyping = { /* TODO */ },
+                typingUsers = chatUiState.typingUsers
+            )
         }
         composable(Screen.Channel.route) { backStackEntry ->
             val channelId = backStackEntry.arguments?.getString("channelId")
@@ -93,7 +129,12 @@ fun ScrymeNavHost(
             DevicesScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Appearance.route) {
-            AppearanceSettingsScreen(onBack = { navController.popBackStack() })
+            val themePreference by themeViewModel.themePreference.collectAsState()
+            AppearanceSettingsScreen(
+                onBack = { navController.popBackStack() },
+                currentTheme = themePreference,
+                onThemeChange = { themeViewModel.updateTheme(it) }
+            )
         }
         composable(Screen.Notifications.route) {
             NotificationSettingsScreen(onBack = { navController.popBackStack() })
