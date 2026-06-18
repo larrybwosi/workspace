@@ -22,6 +22,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideFriendsApi(retrofit: Retrofit): FriendsApi {
+        return retrofit.create(FriendsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideInvitationsApi(retrofit: Retrofit): InvitationsApi {
+        return retrofit.create(InvitationsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideGson(): Gson = Gson()
 
     @Provides

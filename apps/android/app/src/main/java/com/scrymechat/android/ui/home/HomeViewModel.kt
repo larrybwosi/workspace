@@ -4,10 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.SessionManager
+import com.scrymechat.android.data.local.dao.DmDao
+import com.scrymechat.android.data.local.dao.DmWithUser
 import com.scrymechat.android.data.local.entities.ChannelEntity
+import com.scrymechat.android.data.local.entities.DmConversationEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
 import com.scrymechat.android.data.repository.ChannelRepository
+import com.scrymechat.android.data.repository.DmRepository
+import com.scrymechat.android.data.repository.RealtimeRepository
 import com.scrymechat.android.data.repository.WorkspaceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -18,7 +23,10 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val workspaceRepository: WorkspaceRepository,
     private val channelRepository: ChannelRepository,
-    private val sessionManager: SessionManager
+    private val dmRepository: DmRepository,
+    private val realtimeRepository: RealtimeRepository,
+    private val sessionManager: SessionManager,
+    private val dmDao: DmDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -26,7 +34,9 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadWorkspaces()
+        loadDms()
         observeCurrentUser()
+        observeRealtimeMessages()
     }
 
     private fun observeCurrentUser() {
@@ -90,6 +100,28 @@ class HomeViewModel @Inject constructor(
 
     fun selectHome() {
         selectWorkspace(null)
+        loadDms()
+    }
+
+    private fun loadDms() {
+        viewModelScope.launch {
+            dmRepository.getDms().collect { /* Just trigger sync */ }
+        }
+        viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().collect { dms ->
+                _uiState.update { it.copy(dms = dms) }
+            }
+        }
+    }
+
+    private fun observeRealtimeMessages() {
+        viewModelScope.launch {
+            realtimeRepository.observeMessages().collect { messageDto ->
+                if (messageDto.dmId != null) {
+                    loadDms() // Refresh DM list to update last message and sorting
+                }
+            }
+        }
     }
 
     fun toggleCategory(categoryId: String) {
@@ -107,6 +139,7 @@ class HomeViewModel @Inject constructor(
 data class HomeUiState(
     val workspaces: List<WorkspaceEntity> = emptyList(),
     val channels: List<ChannelEntity> = emptyList(),
+    val dms: List<DmWithUser> = emptyList(),
     val selectedWorkspace: WorkspaceEntity? = null,
     val selectedChannel: ChannelEntity? = null,
     val isHomeSelected: Boolean = true,

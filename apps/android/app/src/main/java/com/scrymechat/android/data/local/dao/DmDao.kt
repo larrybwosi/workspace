@@ -23,4 +23,19 @@ interface DmDao {
 
     @Query("DELETE FROM dm_conversations")
     suspend fun deleteAll()
+
+    @Transaction
+    @Query("""
+        SELECT dm_conversations.*, users.name as otherUserName, users.avatar as otherUserAvatar
+        FROM dm_conversations
+        JOIN users ON dm_conversations.otherUserId = users.id
+        ORDER BY lastMessageAt DESC
+    """)
+    fun getDmsWithUserInfoFlow(): Flow<List<DmWithUser>>
 }
+
+data class DmWithUser(
+    @Embedded val dm: DmConversationEntity,
+    val otherUserName: String?,
+    val otherUserAvatar: String?
+)

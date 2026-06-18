@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     chatViewModel: ChatViewModel = hiltViewModel(),
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onFriendsClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
@@ -78,13 +79,22 @@ fun HomeScreen(
                         isHomeSelected = uiState.isHomeSelected,
                         currentUser = uiState.currentUser,
                         expandedCategories = uiState.expandedCategories,
+                        dms = uiState.dms,
                         onChannelClick = {
                             viewModel.selectChannel(it)
                             chatViewModel.setChannel(it.id)
                             scope.launch { drawerState.close() }
                         },
+                        onDmClick = {
+                            chatViewModel.setDm(it.id)
+                            scope.launch { drawerState.close() }
+                        },
                         onCategoryToggle = { viewModel.toggleCategory(it) },
-                        onSettingsClick = onSettingsClick
+                        onSettingsClick = onSettingsClick,
+                        onFriendsClick = {
+                            onFriendsClick()
+                            scope.launch { drawerState.close() }
+                        }
                     )
                 }
             }

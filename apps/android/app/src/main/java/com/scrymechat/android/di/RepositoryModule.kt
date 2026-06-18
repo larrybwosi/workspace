@@ -31,8 +31,9 @@ object RepositoryModule {
     @Singleton
     fun provideDmRepository(
         api: DmApi,
-        dao: DmDao
-    ): DmRepository = DmRepository(api, dao)
+        dao: DmDao,
+        userDao: UserDao
+    ): DmRepository = DmRepository(api, dao, userDao)
 
     @Provides
     @Singleton
@@ -40,4 +41,18 @@ object RepositoryModule {
         api: MessageApi,
         dao: MessageDao
     ): ChatRepository = ChatRepository(api, dao)
+
+    @Provides
+    @Singleton
+    fun provideFriendsRepository(
+        api: FriendsApi,
+        friendsDao: FriendsDao,
+        userDao: UserDao
+    ): FriendsRepository = FriendsRepository(api, friendsDao, userDao)
+
+    @Provides
+    @Singleton
+    fun provideInvitationsRepository(
+        api: InvitationsApi
+    ): InvitationsRepository = InvitationsRepository(api)
 }
