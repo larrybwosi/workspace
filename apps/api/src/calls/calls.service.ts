@@ -14,6 +14,7 @@ import {
   AblyEvents,
   isUserEligibleForAsset,
   logAssetUsage,
+  createNotifications,
 } from '@repo/shared/server';
 
 @Injectable()
@@ -130,73 +131,92 @@ export class CallsService {
         },
       });
 
+      /**
+       * ⚡ Performance Optimization:
+       * 1. Parallelizes all Ably event publishing for call initiation.
+       * 2. Avoids O(N) sequential round-trips for multi-user notifications.
+       */
+      const initiationSideEffects: Promise<any>[] = [];
+
       if (recipientId) {
-        await publishToAbly(AblyChannels.user(recipientId), 'incoming-call', {
-          callId: call.id,
-          type,
-          initiator: {
-            id: user.id,
-            name: user.name,
-            image: user.image,
-          },
-          workspaceId: workspaceSlug || workspaceId,
-        });
+        initiationSideEffects.push(
+          publishToAbly(AblyChannels.user(recipientId), 'incoming-call', {
+            callId: call.id,
+            type,
+            initiator: {
+              id: user.id,
+              name: user.name,
+              image: user.image,
+            },
+            workspaceId: workspaceSlug || workspaceId,
+          })
+        );
       } else if (notifyAll) {
         const members = await prisma.workspaceMember.findMany({
           where: { workspaceId },
-          include: { user: true },
+          select: { userId: true },
         });
 
-        for (const member of members) {
-          if (member.userId !== user.id) {
-            await publishToAbly(AblyChannels.user(member.userId), 'incoming-call', {
-              callId: call.id,
-              type,
-              initiator: {
-                id: user.id,
-                name: user.name,
-                image: user.image,
-              },
-              workspaceId,
-            });
-          }
-        }
+        initiationSideEffects.push(
+          ...members
+            .filter(m => m.userId !== user.id)
+            .map(m =>
+              publishToAbly(AblyChannels.user(m.userId), 'incoming-call', {
+                callId: call.id,
+                type,
+                initiator: {
+                  id: user.id,
+                  name: user.name,
+                  image: user.image,
+                },
+                workspaceId,
+              })
+            )
+        );
       } else if (channelId) {
         const members = await prisma.channelMember.findMany({
           where: { channelId },
-          include: { user: true },
+          select: { userId: true },
         });
 
-        for (const member of members) {
-          if (member.userId !== user.id) {
-            await publishToAbly(AblyChannels.user(member.userId), 'incoming-call', {
-              callId: call.id,
-              type,
-              initiator: {
-                id: user.id,
-                name: user.name,
-                image: user.image,
-              },
-              workspaceId,
-            });
-          }
-        }
+        initiationSideEffects.push(
+          ...members
+            .filter(m => m.userId !== user.id)
+            .map(m =>
+              publishToAbly(AblyChannels.user(m.userId), 'incoming-call', {
+                callId: call.id,
+                type,
+                initiator: {
+                  id: user.id,
+                  name: user.name,
+                  image: user.image,
+                },
+                workspaceId,
+              })
+            )
+        );
 
-        await publishToAbly(AblyChannels.channel(channelId), 'channel-call-started', {
-          callId: call.id,
-          type,
-          initiatorId: user.id,
-          workspaceId,
-        });
+        initiationSideEffects.push(
+          publishToAbly(AblyChannels.channel(channelId), 'channel-call-started', {
+            callId: call.id,
+            type,
+            initiatorId: user.id,
+            workspaceId,
+          })
+        );
       }
 
       if (workspaceId) {
-        await publishToAbly(AblyChannels.workspace(workspaceId), 'call-started', {
-          callId: call.id,
-          type,
-          initiatorId: user.id,
-        });
+        initiationSideEffects.push(
+          publishToAbly(AblyChannels.workspace(workspaceId), 'call-started', {
+            callId: call.id,
+            type,
+            initiatorId: user.id,
+          })
+        );
       }
+
+      await Promise.all(initiationSideEffects);
     }
 
     const uid = Math.floor(Math.random() * 1000000);
@@ -272,26 +292,40 @@ export class CallsService {
       }
 
       const workspaceId = (call.metadata as any)?.workspaceId;
+      const joinSideEffects: Promise<any>[] = [];
+
       if (workspaceId) {
-        await publishToAbly(AblyChannels.workspace(workspaceId), 'call-joined', {
-          callId,
-          userId: user.id,
-        });
-      }
-
-      await publishToAbly(AblyChannels.call(callId), 'call-joined', {
-        callId,
-        userId: user.id,
-      });
-
-      for (const participant of call.participants) {
-        if (participant.userId !== user.id && !participant.leftAt) {
-          await publishToAbly(AblyChannels.user(participant.userId), 'call-joined', {
+        joinSideEffects.push(
+          publishToAbly(AblyChannels.workspace(workspaceId), 'call-joined', {
             callId,
             userId: user.id,
-          });
-        }
+          })
+        );
       }
+
+      joinSideEffects.push(
+        publishToAbly(AblyChannels.call(callId), 'call-joined', {
+          callId,
+          userId: user.id,
+        })
+      );
+
+      /**
+       * ⚡ Performance Optimization:
+       * Parallelizes real-time updates to all active call participants.
+       */
+      joinSideEffects.push(
+        ...call.participants
+          .filter(p => p.userId !== user.id && !p.leftAt)
+          .map(p =>
+            publishToAbly(AblyChannels.user(p.userId), 'call-joined', {
+              callId,
+              userId: user.id,
+            })
+          )
+      );
+
+      await Promise.all(joinSideEffects);
     } else if (action === 'leave') {
       await prisma.callParticipant.update({
         where: {
@@ -358,15 +392,21 @@ export class CallsService {
         data,
       });
 
-      for (const participant of call.participants) {
-        if (participant.userId !== user.id && !participant.leftAt) {
-          await publishToAbly(AblyChannels.user(participant.userId), 'participant-state-changed', {
-            callId,
-            userId: user.id,
-            ...data,
-          });
-        }
-      }
+      /**
+       * ⚡ Performance Optimization:
+       * Parallelizes state update broadcasts to all participants.
+       */
+      await Promise.all(
+        call.participants
+          .filter(p => p.userId !== user.id && !p.leftAt)
+          .map(p =>
+            publishToAbly(AblyChannels.user(p.userId), 'participant-state-changed', {
+              callId,
+              userId: user.id,
+              ...data,
+            })
+          )
+      );
     } else if (action === 'promote') {
       if (currentParticipant?.role !== 'host') {
         throw new ForbiddenException('Only hosts can promote others');
@@ -382,13 +422,15 @@ export class CallsService {
         data: { role: 'host' },
       });
 
-      for (const participant of call.participants) {
-        await publishToAbly(AblyChannels.user(participant.userId), 'participant-promoted', {
-          callId,
-          userId: targetParticipant.userId,
-          agoraUid: targetParticipant.agoraUid,
-        });
-      }
+      await Promise.all(
+        call.participants.map(p =>
+          publishToAbly(AblyChannels.user(p.userId), 'participant-promoted', {
+            callId,
+            userId: targetParticipant.userId,
+            agoraUid: targetParticipant.agoraUid,
+          })
+        )
+      );
     } else if (action === 'remove') {
       if (currentParticipant?.role !== 'host') {
         throw new ForbiddenException('Only hosts can remove participants');
@@ -407,13 +449,15 @@ export class CallsService {
         },
       });
 
-      for (const participant of call.participants) {
-        await publishToAbly(AblyChannels.user(participant.userId), 'participant-removed', {
-          callId,
-          userId: targetParticipant.userId,
-          agoraUid: targetParticipant.agoraUid,
-        });
-      }
+      await Promise.all(
+        call.participants.map(p =>
+          publishToAbly(AblyChannels.user(p.userId), 'participant-removed', {
+            callId,
+            userId: targetParticipant.userId,
+            agoraUid: targetParticipant.agoraUid,
+          })
+        )
+      );
     } else if (action === 'endForAll') {
       if (currentParticipant?.role !== 'host') {
         throw new ForbiddenException('Only hosts can end the call for everyone');
@@ -430,21 +474,26 @@ export class CallsService {
         },
       });
 
-      for (const participant of call.participants) {
-        await publishToAbly(AblyChannels.user(participant.userId), 'call-ended', {
-          callId,
-        });
-      }
-    } else if (action === 'screenShareStarted') {
-      for (const participant of call.participants) {
-        if (participant.userId !== user.id && !participant.leftAt) {
-          await publishToAbly(AblyChannels.user(participant.userId), 'screen-share-started', {
+      await Promise.all(
+        call.participants.map(p =>
+          publishToAbly(AblyChannels.user(p.userId), 'call-ended', {
             callId,
-            userId: user.id,
-            agoraUid: call.participants.find(p => p.userId === user.id)?.agoraUid,
-          });
-        }
-      }
+          })
+        )
+      );
+    } else if (action === 'screenShareStarted') {
+      const myAgoraUid = call.participants.find(p => p.userId === user.id)?.agoraUid;
+      await Promise.all(
+        call.participants
+          .filter(p => p.userId !== user.id && !p.leftAt)
+          .map(p =>
+            publishToAbly(AblyChannels.user(p.userId), 'screen-share-started', {
+              callId,
+              userId: user.id,
+              agoraUid: myAgoraUid,
+            })
+          )
+      );
     }
 
     return { success: true };
@@ -601,18 +650,34 @@ export class CallsService {
       throw new BadRequestException('Missing required fields');
     }
 
-    let workspaceId = incomingWorkspaceId;
-    if (workspaceSlug && !workspaceId) {
-      const workspace = await prisma.workspace.findUnique({
-        where: { slug: workspaceSlug },
-      });
-      if (workspace) {
-        workspaceId = workspace.id;
-      } else if (workspaceSlug === 'resolved-slug') {
-        workspaceId = 'resolved-id';
-      } else {
-        workspaceId = workspaceSlug;
-      }
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates workspace lookup, membership verification, and member retrieval into a single query.
+     * 2. Reduces database round-trips from 3 down to 1 for initial setup.
+     */
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        OR: [
+          { id: incomingWorkspaceId || undefined },
+          { slug: workspaceSlug || undefined },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        members: {
+          select: { userId: true, role: true },
+        },
+      },
+    });
+
+    let workspaceId = workspace?.id || incomingWorkspaceId || workspaceSlug;
+    const workspaceName = workspace?.name || 'the workspace';
+    const workspaceSlugValue = workspace?.slug || 'default';
+
+    if (!workspace && workspaceSlug === 'resolved-slug') {
+      workspaceId = 'resolved-id';
     }
 
     let agoraChannelName = '';
@@ -636,61 +701,47 @@ export class CallsService {
       },
     });
 
-    await publishToAbly(AblyChannels.workspace(workspaceId), 'call-scheduled', {
-      callId: call.id,
-      title,
-      type,
-      scheduledFor: call.scheduledFor,
-    });
+    const currentUserMember = workspace?.members.find(m => m.userId === user.id);
+    const isAdminOrOwner = currentUserMember && (currentUserMember.role === 'admin' || currentUserMember.role === 'owner');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId: user.id } },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Parallelizes call announcement and batch notification delivery.
+     * 2. Uses 'createNotifications' for O(1) database inserts and parallelized Ably/Push delivery.
+     * 3. Replaces O(N) sequential notification loop with a single batch operation.
+     */
+    const sideEffects: Promise<any>[] = [
+      publishToAbly(AblyChannels.workspace(workspaceId), 'call-scheduled', {
+        callId: call.id,
+        title,
+        type,
+        scheduledFor: call.scheduledFor,
+      }),
+    ];
 
-    if (member && (member.role === 'admin' || member.role === 'owner')) {
-      const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
-      });
+    if (isAdminOrOwner && workspace?.members) {
+      const payloads = workspace.members
+        .filter(m => m.userId !== user.id)
+        .map(m => ({
+          userId: m.userId,
+          type: 'workspace_alert' as const,
+          title: 'New Scheduled Call',
+          message: `${user.name} scheduled a call: "${title}" in ${workspaceName}`,
+          entityType: 'workspace' as const,
+          entityId: workspaceId,
+          linkUrl: `/workspace/${workspaceSlugValue}`,
+          metadata: {
+            callId: call.id,
+            scheduledFor: call.scheduledFor,
+          },
+        }));
 
-      const members = await prisma.workspaceMember.findMany({
-        where: { workspaceId },
-        select: { userId: true },
-      });
-
-      for (const m of members) {
-        if (m.userId !== user.id) {
-          await prisma.notification.create({
-            data: {
-              userId: m.userId,
-              type: 'workspace_alert',
-              title: 'New Scheduled Call',
-              message: `${user.name} scheduled a call: "${title}" in ${workspace?.name || 'the workspace'}`,
-              entityType: 'workspace',
-              entityId: workspaceId,
-              linkUrl: `/workspace/${workspace?.slug || 'default'}`,
-              metadata: {
-                callId: call.id,
-                scheduledFor: call.scheduledFor,
-              },
-            },
-          });
-
-          await publishToAbly(AblyChannels.notifications(m.userId), AblyEvents.NOTIFICATION, {
-            userId: m.userId,
-            type: 'workspace_alert',
-            title: 'New Scheduled Call',
-            message: `${user.name} scheduled a call: "${title}" in ${workspace?.name || 'the workspace'}`,
-            entityType: 'workspace',
-            entityId: workspaceId,
-            linkUrl: `/workspace/${workspace?.slug || 'default'}`,
-            metadata: {
-              callId: call.id,
-              scheduledFor: call.scheduledFor,
-            },
-          });
-        }
+      if (payloads.length > 0) {
+        sideEffects.push(createNotifications(payloads));
       }
     }
+
+    await Promise.all(sideEffects);
 
     return call;
   }
