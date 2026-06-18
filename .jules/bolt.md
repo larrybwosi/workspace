@@ -125,3 +125,8 @@
 ## 2026-06-12 - [Prisma/Performance] Prefer findUnique over findFirst
 **Learning:** Using `prisma.model.findUnique` instead of `findFirst` when querying by primary keys (e.g., `id`) or compound unique indices (e.g., `workspaceId_userId` in `workspaceMember`) leverages direct database indexing for O(1) lookup performance. This reduces database CPU overhead and minimizes query execution time.
 **Action:** Always prefer `findUnique` for lookup operations involving unique constraints to maximize performance.
+
+## 2026-06-15 - [API/Calls] Optimized Call Initiation & Scheduling
+
+**Learning:** Sequential Ably broadcasts and database lookups during call initiation or scheduling create significant latency, especially as the number of participants or workspace members grows (O(N) bottleneck).
+**Action:** Consolidate workspace and membership resolution into a single Prisma query using nested `select`. Parallelize independent side effects (Ably events, notifications) using `Promise.all` or optimized batch delivery utilities like `createNotifications` to reduce total response time from O(N) to O(1) RTT.
