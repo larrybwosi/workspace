@@ -12,7 +12,9 @@ data class ChannelDto(
     val createdAt: String,
     val updatedAt: String,
     val members: List<ChannelMemberDto>?,
-    val _count: ChannelCountDto?
+    val _count: ChannelCountDto?,
+    val unreadCount: Int = 0,
+    val mentionCount: Int = 0
 )
 
 data class ChannelMemberDto(

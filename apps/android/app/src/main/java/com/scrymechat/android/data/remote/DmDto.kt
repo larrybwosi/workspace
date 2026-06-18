@@ -7,7 +7,8 @@ data class DmConversationDto(
     val user: UserDto, // The other user in the DM
     val lastMessage: DmLastMessageDto?,
     val _count: DmCountDto?,
-    val lastMessageAt: String
+    val lastMessageAt: String,
+    val unreadCount: Int = 0
 )
 
 data class DmLastMessageDto(

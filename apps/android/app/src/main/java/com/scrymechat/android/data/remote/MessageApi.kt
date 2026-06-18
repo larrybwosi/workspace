@@ -85,4 +85,20 @@ interface MessageApi {
         @Path("messageId") messageId: String,
         @Path("emoji") emoji: String
     ): Response<Unit>
+
+    @POST("channels/{channelId}/messages/read")
+    suspend fun markChannelAsRead(
+        @Path("channelId") channelId: String,
+        @Body request: MarkAsReadRequest
+    ): Response<Unit>
+
+    @POST("dms/{conversationId}/messages/read")
+    suspend fun markDmAsRead(
+        @Path("conversationId") conversationId: String,
+        @Body request: MarkAsReadRequest
+    ): Response<Unit>
 }
+
+data class MarkAsReadRequest(
+    val messageIds: List<String>
+)

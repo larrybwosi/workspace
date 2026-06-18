@@ -143,6 +143,25 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun markAsRead(targetId: String, messageIds: List<String>, isChannel: Boolean): Resource<Unit> {
+        return try {
+            val response = if (isChannel) {
+                api.markChannelAsRead(targetId, MarkAsReadRequest(messageIds))
+            } else {
+                api.markDmAsRead(targetId, MarkAsReadRequest(messageIds))
+            }
+            if (response.isSuccessful) {
+                // Update local DB to reflect read status
+                dao.markMessagesAsRead(messageIds)
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     private fun MessageDto.toEntity() = MessageEntity(
         id = id,
         content = content,
