@@ -12,54 +12,48 @@ export class SupportService {
      * Reduces database RTT from 4 down to 1.
      */
     try {
-      const channel = await prisma.channel.create({
+      const ticket = await prisma.supportTicket.create({
         data: {
-          name: `ticket-${Math.random().toString(36).substring(7)}`,
-          icon: '🎫',
-          type: 'support_ticket',
-          workspaceId,
-          isPrivate: true,
-          members: {
+          subject,
+          status: 'OPEN',
+          workspace: { connect: { id: workspaceId } },
+          customer: { connect: { userId: customerUserId } },
+          channel: {
             create: {
-              userId: customerUserId,
-              role: 'member',
-            },
-          },
-          supportTicket: {
-            create: {
-              workspaceId,
-              subject,
-              status: 'OPEN',
-              customer: {
-                connect: { userId: customerUserId },
-              },
-            },
-          },
-          messages: initialMessage
-            ? {
+              name: `ticket-${Math.random().toString(36).substring(7)}`,
+              icon: '🎫',
+              type: 'support_ticket',
+              workspace: { connect: { id: workspaceId } },
+              isPrivate: true,
+              members: {
                 create: {
                   userId: customerUserId,
-                  content: initialMessage,
-                  messageType: 'support_request',
-                },
-              }
-            : undefined,
-        },
-        include: {
-          supportTicket: {
-            include: {
-              customer: {
-                include: {
-                  user: true,
+                  role: 'member',
                 },
               },
-              channel: true,
+              messages: initialMessage
+                ? {
+                    create: {
+                      userId: customerUserId,
+                      content: initialMessage,
+                      messageType: 'support_request',
+                    },
+                  }
+                : undefined,
             },
           },
+        },
+        include: {
+          customer: {
+            include: {
+              user: true,
+            },
+          },
+          channel: true,
         },
       });
 
-      return channel.supportTicket!;
+      return ticket;
     } catch (error) {
       // Prisma error code for 'An operation failed because it depends on one or more records that were required but not found'
       // This happens when 'connect: { userId: customerUserId }' fails because the customer profile doesn't exist.
