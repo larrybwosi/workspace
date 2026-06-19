@@ -41,9 +41,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.scrymechat.android.R
 import kotlinx.coroutines.launch
 
-// ─── Brand accent — consistent with WelcomeScreen ────────────────────────────
-private val Indigo = Color(0xFF6366F1)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
@@ -64,6 +61,7 @@ fun SignUpScreen(
     var showSuccessSheet     by remember { mutableStateOf(false) }
 
     val colorScheme = MaterialTheme.colorScheme
+    val accentColor = colorScheme.primary
 
     val passwordMismatch = confirmPassword.isNotEmpty() && confirmPassword != uiState.password
 
@@ -128,7 +126,7 @@ fun SignUpScreen(
             Text(
                 text  = "Sign up to get started",
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onSurface.copy(alpha = 0.48f)
+                color = colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -145,7 +143,7 @@ fun SignUpScreen(
                     Icon(
                         imageVector        = Icons.Default.Person,
                         contentDescription = null,
-                        tint               = colorScheme.onSurface.copy(alpha = 0.35f),
+                        tint               = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier           = Modifier.size(18.dp)
                     )
                 }
@@ -165,7 +163,7 @@ fun SignUpScreen(
                     Icon(
                         imageVector        = Icons.Default.Email,
                         contentDescription = null,
-                        tint               = colorScheme.onSurface.copy(alpha = 0.35f),
+                        tint               = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier           = Modifier.size(18.dp)
                     )
                 }
@@ -189,7 +187,7 @@ fun SignUpScreen(
                             imageVector        = if (passwordVisible) Icons.Filled.Visibility
                                                  else Icons.Filled.VisibilityOff,
                             contentDescription = if (passwordVisible) "Hide" else "Show",
-                            tint               = colorScheme.onSurface.copy(alpha = 0.4f),
+                            tint               = colorScheme.onSurfaceVariant,
                             modifier           = Modifier.size(18.dp)
                         )
                     }
@@ -215,7 +213,7 @@ fun SignUpScreen(
                             imageVector        = if (confirmVisible) Icons.Filled.Visibility
                                                  else Icons.Filled.VisibilityOff,
                             contentDescription = if (confirmVisible) "Hide" else "Show",
-                            tint               = colorScheme.onSurface.copy(alpha = 0.4f),
+                            tint               = colorScheme.onSurfaceVariant,
                             modifier           = Modifier.size(18.dp)
                         )
                     }
@@ -243,23 +241,23 @@ fun SignUpScreen(
                     onCheckedChange = { agreedToTerms = it },
                     modifier        = Modifier.size(20.dp).padding(0.dp),
                     colors          = CheckboxDefaults.colors(
-                        checkedColor     = Indigo,
-                        checkmarkColor   = Color.White,
+                        checkedColor     = accentColor,
+                        checkmarkColor   = colorScheme.onPrimary,
                         uncheckedColor   = colorScheme.outlineVariant
                     )
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 val termsText = buildAnnotatedString {
-                    withStyle(SpanStyle(color = colorScheme.onSurface.copy(alpha = 0.55f))) {
+                    withStyle(SpanStyle(color = colorScheme.onSurfaceVariant)) {
                         append("I agree to the ")
                     }
-                    withStyle(SpanStyle(color = Indigo, fontWeight = FontWeight.Medium)) {
+                    withStyle(SpanStyle(color = accentColor, fontWeight = FontWeight.Medium)) {
                         append("Terms of Service")
                     }
-                    withStyle(SpanStyle(color = colorScheme.onSurface.copy(alpha = 0.55f))) {
+                    withStyle(SpanStyle(color = colorScheme.onSurfaceVariant)) {
                         append(" and ")
                     }
-                    withStyle(SpanStyle(color = Indigo, fontWeight = FontWeight.Medium)) {
+                    withStyle(SpanStyle(color = accentColor, fontWeight = FontWeight.Medium)) {
                         append("Privacy Policy")
                     }
                 }
@@ -302,10 +300,10 @@ fun SignUpScreen(
                            confirmPassword == uiState.password && confirmPassword.isNotEmpty(),
                 shape    = RoundedCornerShape(12.dp),
                 colors   = ButtonDefaults.buttonColors(
-                    containerColor         = Indigo,
-                    contentColor           = Color.White,
-                    disabledContainerColor = Indigo.copy(alpha = 0.38f),
-                    disabledContentColor   = Color.White.copy(alpha = 0.5f)
+                    containerColor         = accentColor,
+                    contentColor           = colorScheme.onPrimary,
+                    disabledContainerColor = accentColor.copy(alpha = 0.38f),
+                    disabledContentColor   = colorScheme.onPrimary.copy(alpha = 0.5f)
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
@@ -317,7 +315,7 @@ fun SignUpScreen(
                     if (loading) {
                         CircularProgressIndicator(
                             modifier    = Modifier.size(20.dp),
-                            color       = Color.White,
+                            color       = colorScheme.onPrimary,
                             strokeWidth = 2.dp
                         )
                     } else {
@@ -347,7 +345,7 @@ fun SignUpScreen(
                     text      = "Or",
                     modifier  = Modifier.padding(horizontal = 14.dp),
                     style     = MaterialTheme.typography.labelSmall,
-                    color     = colorScheme.onSurface.copy(alpha = 0.4f)
+                    color     = colorScheme.onSurfaceVariant
                 )
                 HorizontalDivider(
                     modifier  = Modifier.weight(1f),
@@ -436,14 +434,14 @@ fun SignUpScreen(
             ) {
                 Text(
                     text  = "Already have an account? ",
-                    color = colorScheme.onSurface.copy(alpha = 0.5f),
+                    color = colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
                 ClickableText(
                     text    = AnnotatedString("Log in"),
                     onClick = { onSignInClick() },
                     style   = MaterialTheme.typography.bodySmall.copy(
-                        color      = Indigo,
+                        color      = accentColor,
                         fontWeight = FontWeight.SemiBold
                     )
                 )
@@ -476,13 +474,13 @@ fun SignUpScreen(
                     modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Indigo.copy(alpha = 0.10f)),
+                        .background(accentColor.copy(alpha = 0.10f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector        = Icons.Default.Check,
                         contentDescription = null,
-                        tint               = Indigo,
+                        tint               = accentColor,
                         modifier           = Modifier.size(28.dp)
                     )
                 }
@@ -503,7 +501,7 @@ fun SignUpScreen(
                 Text(
                     text      = "You're all set. Welcome to Scrymechat.",
                     style     = MaterialTheme.typography.bodyMedium,
-                    color     = colorScheme.onSurface.copy(alpha = 0.5f),
+                    color     = colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
@@ -527,8 +525,8 @@ fun SignUpScreen(
                         .height(52.dp),
                     shape    = RoundedCornerShape(12.dp),
                     colors   = ButtonDefaults.buttonColors(
-                        containerColor = Indigo,
-                        contentColor   = Color.White
+                        containerColor = accentColor,
+                        contentColor   = colorScheme.onPrimary
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
@@ -554,7 +552,7 @@ private fun FieldLabel(text: String) {
             fontWeight    = FontWeight.Medium,
             letterSpacing = 0.1.sp
         ),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
     )
 }
 
@@ -593,13 +591,13 @@ private fun ProTextField(
             color = colorScheme.onSurface
         ),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor      = Indigo,
+            focusedBorderColor      = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor    = colorScheme.outlineVariant,
             errorBorderColor        = colorScheme.error,
             focusedContainerColor   = colorScheme.surface,
             unfocusedContainerColor = colorScheme.surface,
             errorContainerColor     = colorScheme.errorContainer.copy(alpha = 0.08f),
-            cursorColor             = Indigo
+            cursorColor             = MaterialTheme.colorScheme.primary
         )
     )
 }
