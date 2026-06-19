@@ -20,6 +20,7 @@ import {
   Settings,
   Search,
   FileText,
+  HelpCircle,
 } from 'lucide-react';
 import { Button } from '../../../components/button';
 import { Card } from '../../../components/card';
@@ -60,11 +61,12 @@ const IconMap: Record<string, React.ElementType> = {
   Settings,
   Search,
   FileText,
+  HelpCircle,
 };
 
 const getIcon = (name?: string, className?: string) => {
   if (!name) return null;
-  const Icon = IconMap[name] || Info;
+  const Icon = IconMap[name] || HelpCircle;
   return <Icon className={cn('w-4 h-4', className)} />;
 };
 
@@ -106,7 +108,8 @@ const evaluateCondition = (condition: any, values: Record<string, any>, data: Re
 
   const { field, operator, value } = condition;
   const combined = { ...data, ...values };
-  const fieldValue = combined[field];
+  // Resolve nested field if necessary
+  const fieldValue = field.split('.').reduce((obj: any, k: string) => obj?.[k], combined);
 
   switch (operator) {
     case 'EQUALS': return fieldValue === value;
@@ -246,6 +249,8 @@ const ComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> = {
     const error = errors[id || ''];
 
     React.useEffect(() => {
+      const abortController = new AbortController();
+
       const fetchOptions = async () => {
         const ds = properties.dataSource;
         if (!ds) return;
@@ -260,21 +265,29 @@ const ComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> = {
             const res = await fetch(ds.url, {
               method: ds.method || 'GET',
               headers: ds.headers,
+              signal: abortController.signal,
             });
             const json = await res.json();
-            // Simple mapping if defined
-            const items = ds.map
-              ? json.map((item: any) => ({ label: item[ds.map.label], value: item[ds.map.value] }))
-              : json;
-            setOptions(items);
-          } catch (e) {
-            console.error('Failed to fetch dynamic options', e);
+
+            if (Array.isArray(json)) {
+              // Simple mapping if defined
+              const items = ds.map
+                ? json.map((item: any) => ({ label: item[ds.map.label], value: item[ds.map.value] }))
+                : json;
+              setOptions(items);
+            }
+          } catch (e: any) {
+            if (e.name !== 'AbortError') {
+              console.error('Failed to fetch dynamic options', e);
+            }
           } finally {
             setLoading(false);
           }
         }
       };
       fetchOptions();
+
+      return () => abortController.abort();
     }, [properties.dataSource, data]);
 
     if (!id) return null;
