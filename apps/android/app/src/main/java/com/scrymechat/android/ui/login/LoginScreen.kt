@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.draw.scale
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 private val ColorBrand       = Color(0xFF0F172A) // Slate-900
@@ -587,7 +588,3 @@ private fun EnterpriseOAuthButton(
     }
 }
 
-// Simple modifier extension for compact switch sizing
-private fun Modifier.scale(scale: Float): Modifier = this.then(
-    androidx.compose.ui.draw.scale(scale)
-)

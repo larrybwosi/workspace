@@ -41,14 +41,26 @@ class StorageRepository @Inject constructor(
         }
     }
 
-    fun downloadFile(url: String, fileName: String): Long {
+    fun downloadFile(url: String, fileName: String, mimeType: String? = null): Long {
+        val isImage = mimeType?.startsWith("image/") == true
+        val directory = if (isImage) Environment.DIRECTORY_PICTURES else Environment.DIRECTORY_DOWNLOADS
+        val subPath = "ScrymeChat/$fileName"
+
         val request = DownloadManager.Request(Uri.parse(url))
             .setTitle(fileName)
             .setDescription("Downloading file from Scrymechat")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            .setDestinationInExternalPublicDir(directory, subPath)
             .setAllowedOverMetered(true)
             .setAllowedOverRoaming(true)
+            .apply {
+                if (mimeType != null) {
+                    setMimeType(mimeType)
+                }
+            }
+
+        // Make the file scanable by MediaScanner
+        request.allowScanningByMediaScanner()
 
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         return downloadManager.enqueue(request)

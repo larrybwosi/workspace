@@ -1,5 +1,6 @@
 package com.scrymechat.android.ui.chat
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
@@ -21,13 +22,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.MessageEntity
+import com.scrymechat.android.data.remote.AttachmentDto
 import com.scrymechat.android.ui.components.GraphComponent
 import com.scrymechat.android.ui.components.MarkdownText
 import com.scrymechat.android.ui.components.PollComponent
@@ -42,12 +47,16 @@ fun ChatView(
     onSendMessage: (String, String?) -> Unit,
     onReply: (MessageEntity) -> Unit,
     onForward: (MessageEntity) -> Unit,
+    onDownload: (AttachmentDto) -> Unit = {},
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
     modifier: Modifier = Modifier
 ) {
     var textState by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
+    var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
+    var fullScreenImageName by remember { mutableStateOf<String?>(null) }
+    var fullScreenImageMimeType by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(messages.size) {
@@ -71,7 +80,13 @@ fun ChatView(
                         replyingTo = it
                         onReply(it)
                     },
-                    onForward = { onForward(it) }
+                    onForward = { onForward(it) },
+                    onDownload = onDownload,
+                    onImageClick = { attachment ->
+                        fullScreenImageUrl = attachment.url
+                        fullScreenImageName = attachment.name
+                        fullScreenImageMimeType = attachment.type
+                    }
                 )
             }
         }
@@ -165,14 +180,40 @@ fun ChatView(
             }
         }
     }
+
+    // Full screen image viewer
+    if (fullScreenImageUrl != null) {
+        Dialog(
+            onDismissRequest = { fullScreenImageUrl = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            FullScreenImageViewer(
+                url = fullScreenImageUrl!!,
+                onClose = { fullScreenImageUrl = null },
+                onDownload = {
+                    fullScreenImageUrl?.let { url ->
+                        onDownload(AttachmentDto(
+                            id = "",
+                            name = fullScreenImageName ?: "image.jpg",
+                            url = url,
+                            type = fullScreenImageMimeType ?: "image/jpeg",
+                            size = 0
+                        ))
+                    }
+                }
+            )
+        }
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SwipeableMessageItem(
     message: MessageEntity,
     onReply: (MessageEntity) -> Unit,
-    onForward: (MessageEntity) -> Unit
+    onForward: (MessageEntity) -> Unit,
+    onDownload: (AttachmentDto) -> Unit = {},
+    onImageClick: (AttachmentDto) -> Unit = {}
 ) {
     // Basic implementation of swipe-to-action
     // In a real app, use a more sophisticated approach like AnchoredDraggable for better UX
@@ -212,19 +253,76 @@ fun SwipeableMessageItem(
         }
 
         // Message Content
+        var showContextMenu by remember { mutableStateOf(false) }
+
         Surface(
             modifier = Modifier
                 .offset { IntOffset(swipeState.value.roundToInt(), 0) }
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { },
+                    onLongClick = { showContextMenu = true }
+                ),
             color = Color.Transparent
         ) {
-            MessageItem(message = message)
+            MessageItem(
+                message = message,
+                onDownload = onDownload,
+                onImageClick = onImageClick
+            )
+
+            DropdownMenu(
+                expanded = showContextMenu,
+                onDismissRequest = { showContextMenu = false },
+                modifier = Modifier.background(ScrymeDarkSurface)
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Reply", color = ScrymeDarkTextPrimary) },
+                    onClick = {
+                        onReply(message)
+                        showContextMenu = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Reply, contentDescription = null, tint = ScrymeDarkTextSecondary) }
+                )
+                DropdownMenuItem(
+                    text = { Text("Forward", color = ScrymeDarkTextPrimary) },
+                    onClick = {
+                        onForward(message)
+                        showContextMenu = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Forward, contentDescription = null, tint = ScrymeDarkTextSecondary) }
+                )
+                if (message.attachments.isNotEmpty()) {
+                    message.attachments.forEach { attachment ->
+                        DropdownMenuItem(
+                            text = { Text("Download ${attachment.name}", color = ScrymeDarkTextPrimary) },
+                            onClick = {
+                                onDownload(attachment)
+                                showContextMenu = false
+                            },
+                            leadingIcon = { Icon(Icons.Default.Download, contentDescription = null, tint = ScrymeDarkTextSecondary) }
+                        )
+                    }
+                }
+                DropdownMenuItem(
+                    text = { Text("Copy Text", color = ScrymeDarkTextPrimary) },
+                    onClick = {
+                        // TODO: Implement copy to clipboard
+                        showContextMenu = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null, tint = ScrymeDarkTextSecondary) }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun MessageItem(message: MessageEntity) {
+fun MessageItem(
+    message: MessageEntity,
+    onDownload: (AttachmentDto) -> Unit = {},
+    onImageClick: (AttachmentDto) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -299,18 +397,40 @@ fun MessageItem(message: MessageEntity) {
             }
 
             // Attachments
+            val context = LocalContext.current
             message.attachments.forEach { attachment ->
                 if (attachment.type.startsWith("image/")) {
-                    AsyncImage(
-                        model = attachment.url,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Fit
-                    )
+                    Box(modifier = Modifier.padding(top = 8.dp)) {
+                        AsyncImage(
+                            model = attachment.url,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 300.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onImageClick(attachment) },
+                            contentScale = ContentScale.Fit
+                        )
+                        IconButton(
+                            onClick = {
+                                Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
+                                onDownload(attachment)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.5f))
+                        ) {
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = "Download",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 } else {
                     Row(
                         modifier = Modifier
@@ -323,7 +443,18 @@ fun MessageItem(message: MessageEntity) {
                     ) {
                         Icon(Icons.Default.FilePresent, contentDescription = null, tint = ScrymeDarkTextSecondary)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = attachment.name, color = ScrymeDarkTextPrimary, fontSize = 14.sp)
+                        Text(
+                            text = attachment.name,
+                            color = ScrymeDarkTextPrimary,
+                            fontSize = 14.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = {
+                            Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
+                            onDownload(attachment)
+                        }) {
+                            Icon(Icons.Default.Download, contentDescription = "Download", tint = ScrymeDarkTextSecondary)
+                        }
                     }
                 }
             }
