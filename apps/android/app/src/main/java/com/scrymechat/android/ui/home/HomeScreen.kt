@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import com.scrymechat.android.ui.chat.ChatView
 import com.scrymechat.android.ui.chat.ChatViewModel
 import com.scrymechat.android.ui.chat.ForwardMessageDialog
@@ -29,6 +30,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
+    val formStates by chatViewModel.formStates.collectAsState()
     var forwardingMessage by remember { mutableStateOf<com.scrymechat.android.data.local.entities.MessageEntity?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -45,6 +47,20 @@ fun HomeScreen(
                 forwardingMessage = null
             },
             onDismiss = { forwardingMessage = null }
+        )
+    }
+
+    val context = LocalContext.current
+
+    chatUiState.activeModal?.let { modal ->
+        com.scrymechat.android.ui.components.CustomMessageModal(
+            customMessage = modal.customMessage,
+            formState = formStates[modal.messageId] ?: emptyMap(),
+            onUpdateForm = { fieldId, value -> chatViewModel.updateFormState(modal.messageId, fieldId, value) },
+            onActionTriggered = { action ->
+                chatViewModel.handleMessageAction(context, chatUiState.messages.find { it.id == modal.messageId }!!, action, formStates[modal.messageId] ?: emptyMap())
+            },
+            onDismiss = { chatViewModel.dismissModal() }
         )
     }
 
@@ -111,6 +127,9 @@ fun HomeScreen(
             onReply = { /* Handled in ChatView */ },
             onForward = { forwardingMessage = it },
             onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
+            onAction = { message, action, formState -> chatViewModel.handleMessageAction(context, message, action, formState) },
+            onUpdateForm = { messageId, fieldId, value -> chatViewModel.updateFormState(messageId, fieldId, value) },
+            formStates = formStates,
             onTyping = {
                 uiState.currentUser?.let { user ->
                     chatViewModel.sendTyping(user.id, user.name)
@@ -133,6 +152,9 @@ fun MainContent(
     onReply: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
     onForward: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
     onDownload: (com.scrymechat.android.data.remote.AttachmentDto) -> Unit = {},
+    onAction: (com.scrymechat.android.data.local.entities.MessageEntity, com.scrymechat.android.data.remote.MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
+    onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
+    formStates: Map<String, Map<String, Any>> = emptyMap(),
     onTyping: () -> Unit,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -196,6 +218,9 @@ fun MainContent(
                         onReply = onReply,
                         onForward = onForward,
                         onDownload = onDownload,
+                        onAction = onAction,
+                        onUpdateForm = onUpdateForm,
+                        formStates = formStates,
                         onTyping = onTyping,
                         typingUsers = chatUiState.typingUsers
                     )

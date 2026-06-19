@@ -33,10 +33,9 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.AttachmentDto
-import com.scrymechat.android.ui.components.GraphComponent
-import com.scrymechat.android.ui.components.MarkdownText
-import com.scrymechat.android.ui.components.PollComponent
-import com.scrymechat.android.ui.components.PollOption
+import com.scrymechat.android.data.remote.CustomMessageDto
+import com.scrymechat.android.data.remote.MessageActionDto
+import com.scrymechat.android.ui.components.*
 import com.scrymechat.android.ui.theme.*
 import kotlin.math.roundToInt
 
@@ -48,6 +47,9 @@ fun ChatView(
     onReply: (MessageEntity) -> Unit,
     onForward: (MessageEntity) -> Unit,
     onDownload: (AttachmentDto) -> Unit = {},
+    onAction: (MessageEntity, MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
+    onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
+    formStates: Map<String, Map<String, Any>> = emptyMap(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
     modifier: Modifier = Modifier
@@ -82,6 +84,9 @@ fun ChatView(
                     },
                     onForward = { onForward(it) },
                     onDownload = onDownload,
+                    onAction = { action, formState -> onAction(message, action, formState) },
+                    onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
+                    formState = formStates[message.id] ?: emptyMap(),
                     onImageClick = { attachment ->
                         fullScreenImageUrl = attachment.url
                         fullScreenImageName = attachment.name
@@ -213,6 +218,9 @@ fun SwipeableMessageItem(
     onReply: (MessageEntity) -> Unit,
     onForward: (MessageEntity) -> Unit,
     onDownload: (AttachmentDto) -> Unit = {},
+    onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
+    onUpdateForm: (String, Any) -> Unit = { _, _ -> },
+    formState: Map<String, Any> = emptyMap(),
     onImageClick: (AttachmentDto) -> Unit = {}
 ) {
     // Basic implementation of swipe-to-action
@@ -268,6 +276,9 @@ fun SwipeableMessageItem(
             MessageItem(
                 message = message,
                 onDownload = onDownload,
+                onAction = onAction,
+                onUpdateForm = onUpdateForm,
+                formState = formState,
                 onImageClick = onImageClick
             )
 
@@ -321,6 +332,9 @@ fun SwipeableMessageItem(
 fun MessageItem(
     message: MessageEntity,
     onDownload: (AttachmentDto) -> Unit = {},
+    onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
+    onUpdateForm: (String, Any) -> Unit = { _, _ -> },
+    formState: Map<String, Any> = emptyMap(),
     onImageClick: (AttachmentDto) -> Unit = {}
 ) {
     Row(
@@ -368,31 +382,45 @@ fun MessageItem(
             Spacer(modifier = Modifier.height(2.dp))
 
             // Render message content based on type
-            when (message.messageType) {
-                "poll" -> {
-                    val question = message.metadata?.get("question") as? String ?: "Poll"
-                    val optionsMap = message.metadata?.get("options") as? List<Map<String, Any>> ?: emptyList()
-                    val options = optionsMap.map {
-                        PollOption(it["id"] as String, it["text"] as String, (it["votes"] as? Number)?.toInt() ?: 0)
-                    }
-                    val totalVotes = options.sumOf { it.votes }
-                    val selectedOptionId = message.metadata?.get("userVote") as? String
-                    PollComponent(
-                        question = question,
-                        options = options,
-                        totalVotes = totalVotes,
-                        selectedOptionId = selectedOptionId,
-                        onOptionClick = {}
+            if (message.messageType == "custom" || message.messageType == "approval" || message.messageType == "report") {
+                val customMessage = message.customMessage
+                if (customMessage != null) {
+                    CustomMessageRenderer(
+                        customMessage = customMessage,
+                        formState = formState,
+                        onUpdateForm = onUpdateForm,
+                        onActionTriggered = { action -> onAction(action, formState) }
                     )
-                }
-                "graph" -> {
-                    val title = message.metadata?.get("title") as? String ?: "Graph"
-                    val data = (message.metadata?.get("data") as? List<Number>)?.map { it.toFloat() } ?: emptyList()
-                    val labels = message.metadata?.get("labels") as? List<String> ?: emptyList()
-                    GraphComponent(title = title, data = data, labels = labels)
-                }
-                else -> {
+                } else {
                     MarkdownText(content = message.content)
+                }
+            } else {
+                when (message.messageType) {
+                    "poll" -> {
+                        val question = message.metadata?.get("question") as? String ?: "Poll"
+                        val optionsMap = message.metadata?.get("options") as? List<Map<String, Any>> ?: emptyList()
+                        val options = optionsMap.map {
+                            PollOption(it["id"] as String, it["text"] as String, (it["votes"] as? Number)?.toInt() ?: 0)
+                        }
+                        val totalVotes = options.sumOf { it.votes }
+                        val selectedOptionId = message.metadata?.get("userVote") as? String
+                        PollComponent(
+                            question = question,
+                            options = options,
+                            totalVotes = totalVotes,
+                            selectedOptionId = selectedOptionId,
+                            onOptionClick = {}
+                        )
+                    }
+                    "graph" -> {
+                        val title = message.metadata?.get("title") as? String ?: "Graph"
+                        val data = (message.metadata?.get("data") as? List<Number>)?.map { it.toFloat() } ?: emptyList()
+                        val labels = message.metadata?.get("labels") as? List<String> ?: emptyList()
+                        GraphComponent(title = title, data = data, labels = labels)
+                    }
+                    else -> {
+                        MarkdownText(content = message.content)
+                    }
                 }
             }
 
