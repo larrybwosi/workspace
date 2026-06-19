@@ -3,9 +3,7 @@
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
-import type { Message } from '../../lib/types';
-import { mockUsers } from '../../lib/mock-data';
-import { cn, formatTime } from '../../lib/utils';
+import { cn } from '../../lib/utils';
 import { CODE_BLOCK_REGEX, renderCustomMessage, extractCodeInfo } from '../../lib/message-renderer';
 import { SyntaxHighlighter } from '../../shared/syntax-highlighter';
 import { CustomEmojiPicker } from '../../shared/custom-emoji-picker';
@@ -51,10 +49,6 @@ interface MessageItemProps {
   isHighlighted?: boolean;
   highlightRef?: React.RefObject<HTMLDivElement>;
 }
-
-// Discord uses a fixed left column of 72px (16px padding + 40px avatar + 16px gap)
-const AVATAR_COL_WIDTH = 'w-10'; // 40px
-const GAP = 'gap-3'; // 12px → total offset = 16 + 40 + 12 = 68px ≈ Discord's ~72px
 
 /**
  * ⚡ Performance: Memoized to prevent re-renders of the entire message list
@@ -174,12 +168,10 @@ MessageActions.displayName = 'MessageActions';
 
 const MessageReactions = memo(({
   reactions,
-  messageId,
   handleAddReaction,
   handleToggleReaction
 }: {
   reactions: any[],
-  messageId: string,
   handleAddReaction: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
   handleToggleReaction: (emoji: string) => void
 }) => (
@@ -271,6 +263,61 @@ const MessageToolbar = memo(({
 
 MessageToolbar.displayName = 'MessageToolbar';
 
+interface MessageContentProps {
+  message: any;
+  isEditing: boolean;
+  handleSaveEdit: (content: string) => void;
+  setIsEditing: (editing: boolean) => void;
+  renderMessageBody: () => React.ReactNode;
+}
+
+const MessageContent = memo(({
+  message,
+  isEditing,
+  handleSaveEdit,
+  setIsEditing,
+  renderMessageBody
+}: MessageContentProps) => {
+  const detectedLinks = useMemo(() => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return Array.from(new Set(message.content.match(urlRegex) || []));
+  }, [message.content]);
+
+  const linksToPreview = useMemo(() => detectedLinks.slice(0, 3), [detectedLinks]);
+
+  const displayContent = useMemo(() => {
+    let content = message.content;
+    linksToPreview.forEach((link: any) => {
+      const escapedLink = link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      content = content.replace(new RegExp(escapedLink, 'g'), '');
+    });
+    return content.trim();
+  }, [message.content, linksToPreview]);
+
+  const isImplicitCode = useMemo(() =>
+    (!message.messageType || message.messageType === 'standard') &&
+    (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit)
+  , [message.content, message.messageType, message.metadata]);
+
+  if (isEditing) {
+    return <MessageEditor initialContent={message.content} onSave={handleSaveEdit} onCancel={() => setIsEditing(false)} />;
+  }
+
+  return (
+    <>
+      {!isImplicitCode && displayContent && (
+        <div className="text-[15px] leading-[1.375rem] text-foreground break-words">
+          <MarkdownRenderer content={displayContent} className="whitespace-pre-wrap max-w-full overflow-x-hidden" />
+        </div>
+      )}
+      <div className="w-full overflow-x-auto mt-0.5">{renderMessageBody()}</div>
+      {linksToPreview.map((link, idx) => <LinkPreview key={idx} url={link as any} />)}
+    </>
+  );
+});
+
+MessageContent.displayName = 'MessageContent';
+
 export const MessageItem = memo(function MessageItem({
   message,
   showAvatar = true,
@@ -287,12 +334,11 @@ export const MessageItem = memo(function MessageItem({
   const deleteMessageMutation = useDeleteMessage();
   const triggerActionMutation = useTriggerAction(workspaceId);
   const { data: session } = useSession();
-  const currentUser = session?.user;
   const { data: users } = useUsers();
 
   const user = (message as any).user ||
     users?.find((u: any) => u.id === message.userId) || { name: 'Unknown', avatar: '' };
-  const isMentioned = currentUser?.username && message.content.includes(`@${currentUser.username}`);
+  const isMentioned = session?.user?.username && message.content.includes(`@${session.user.username}`);
 
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -300,44 +346,39 @@ export const MessageItem = memo(function MessageItem({
 
   const userBadges = (user as any)?.badges || [];
 
-  const handleAddReaction = (emoji: string, isCustom?: boolean, customEmojiId?: string) => {
+  const handleAddReaction = useCallback((emoji: string, isCustom?: boolean, customEmojiId?: string) => {
     onReaction?.(message.id, emoji, isCustom, customEmojiId);
-  };
+  }, [message.id, onReaction]);
 
-  const handleToggleReaction = (emoji: string) => {
+  const handleToggleReaction = useCallback((emoji: string) => {
     onReaction?.(message.id, emoji);
-  };
+  }, [message.id, onReaction]);
 
-  const handleReply = () => {
+  const handleReply = useCallback(() => {
     onReply?.(message.id);
-  };
+  }, [message.id, onReply]);
 
-  const handleEditMessage = () => setIsEditing(true);
+  const handleEditMessage = useCallback(() => setIsEditing(true), []);
 
-  const handleDeleteMessage = () => {
+  const handleDeleteMessage = useCallback(() => {
     if (!channelId) return;
     if (confirm('Are you sure you want to delete this message?')) {
       deleteMessageMutation.mutate({ id: message.id, channelId });
     }
-  };
+  }, [channelId, message.id, deleteMessageMutation]);
 
-  const handleSaveEdit = (newContent: string) => {
+  const handleSaveEdit = useCallback((newContent: string) => {
     if (!channelId) return;
     updateMessageMutation.mutate({ id: message.id, channelId, content: newContent });
     setIsEditing(false);
-  };
+  }, [channelId, message.id, updateMessageMutation]);
 
-  const handleCopyMessageLink = () => {
+  const handleCopyMessageLink = useCallback(() => {
     const baseUrl = workspaceId ? `/workspace/${workspaceId}/channels` : '/channels';
     const messageUrl = `${window.location.origin}${baseUrl}/${channelId}?messageId=${message.id}`;
     navigator.clipboard.writeText(messageUrl);
     toast.success('Link copied', { description: 'Message link copied to clipboard' });
-  };
-
-  const isImplicitCode = useMemo(() =>
-    (!message.messageType || message.messageType === 'standard') &&
-    (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit)
-  , [message.content, message.messageType, message.metadata]);
+  }, [workspaceId, channelId, message.id]);
 
   const handleCustomAction = useCallback(async (actionId: string, data: any) => {
     try {
@@ -354,6 +395,9 @@ export const MessageItem = memo(function MessageItem({
   }, [message.id, triggerActionMutation]);
 
   const renderMessageBody = useCallback(() => {
+    const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
+      (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
+
     if (isImplicitCode) {
       const { language, code } = extractCodeInfo(message.content);
       return (
@@ -378,26 +422,7 @@ export const MessageItem = memo(function MessageItem({
     }
 
     return renderCustomMessage(message);
-  }, [isImplicitCode, message, handleCustomAction, triggerActionMutation.isPending]);
-
-  // Find unique links to avoid duplicate previews for the same URL
-  const detectedLinks = useMemo(() => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return Array.from(new Set(message.content.match(urlRegex) || []));
-  }, [message.content]);
-
-  const linksToPreview = useMemo(() => detectedLinks.slice(0, 3), [detectedLinks]);
-
-  // Strip the previewed links from the displayed text
-  const displayContent = useMemo(() => {
-    let content = message.content;
-    linksToPreview.forEach((link: any) => {
-      // Escape special characters in the link to safely use it in regex
-      const escapedLink = link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      content = content.replace(new RegExp(escapedLink, 'g'), '');
-    });
-    return content.trim();
-  }, [message.content, linksToPreview]);
+  }, [message, handleCustomAction, triggerActionMutation.isPending]);
 
   const showToolbar = isHovered || isMenuOpen;
 
@@ -407,22 +432,16 @@ export const MessageItem = memo(function MessageItem({
         <div
           ref={highlightRef}
           className={cn(
-            // Discord base: 16px horizontal padding, minimal vertical
             'group relative flex items-start px-4 gap-3 w-full select-text',
-            // Vertical padding: compact for grouped, slightly more for new blocks
             showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
-            // Hover / menu-open background
             'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
             isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
-            // Mention highlight
             isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
-            // Highlighted message (linked)
             isHighlighted && 'bg-primary/10'
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* ── Left column: avatar or compact timestamp ── */}
           <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
             {showAvatar ? (
               <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
@@ -432,13 +451,7 @@ export const MessageItem = memo(function MessageItem({
                 </AvatarFallback>
               </Avatar>
             ) : (
-              // Grouped message: show short timestamp only on hover, exactly like Discord
-              <span
-                className={cn(
-                  'text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap',
-                  showToolbar ? 'opacity-100' : 'opacity-0'
-                )}
-              >
+              <span className={cn('text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap', showToolbar ? 'opacity-100' : 'opacity-0')}>
                 {format(new Date(message.timestamp || new Date()), 'HH:mm')}
               </span>
             )}
@@ -446,28 +459,21 @@ export const MessageItem = memo(function MessageItem({
 
           <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
             {showAvatar && <MessageHeader user={user} message={message} userBadges={userBadges} isReply={isReply} />}
-            {isEditing ? (
-              <MessageEditor initialContent={message.content} onSave={handleSaveEdit} onCancel={() => setIsEditing(false)} />
-            ) : (
-              <>
-                {!isImplicitCode && displayContent && (
-                  <div className="text-[15px] leading-[1.375rem] text-foreground break-words">
-                    <MarkdownRenderer content={displayContent} className="whitespace-pre-wrap max-w-full overflow-x-hidden" />
-                  </div>
-                )}
-                <div className="w-full overflow-x-auto mt-0.5">{renderMessageBody()}</div>
-              </>
-            )}
+            <MessageContent
+              message={message}
+              isEditing={isEditing}
+              handleSaveEdit={handleSaveEdit}
+              setIsEditing={setIsEditing}
+              renderMessageBody={renderMessageBody}
+            />
             <DocumentEmbed message={message} />
             <MessageAttachments attachments={message.attachments} message={message} />
             {message.actions && message.actions.length > 0 && (
               <MessageActions actions={message.actions} messageId={message.id} triggerActionMutation={triggerActionMutation} />
             )}
-            {linksToPreview.map((link, idx) => <LinkPreview key={idx} url={link as any} />)}
             {message.reactions && message.reactions.length > 0 && (
               <MessageReactions
                 reactions={message.reactions}
-                messageId={message.id}
                 handleAddReaction={handleAddReaction}
                 handleToggleReaction={handleToggleReaction}
               />
@@ -488,7 +494,6 @@ export const MessageItem = memo(function MessageItem({
         </div>
       </ContextMenuTrigger>
 
-      {/* Right-click context menu */}
       <ContextMenuContent className="w-52">
         <ContextMenuItem onClick={handleReply}>
           <Reply className="mr-2 h-4 w-4" /> Reply

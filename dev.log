@@ -1011,3 +1011,276 @@ api:dev:     modelName: [32m'ScheduledNotification'[39m
 api:dev:   },
 api:dev:   clientVersion: [32m'7.8.0'[39m
 api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 6:58:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 6:58:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 6:58:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 6:59:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 6:59:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 6:59:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:00:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:00:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:00:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:01:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:01:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:01:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:02:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:02:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:02:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:03:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:03:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:03:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:04:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:04:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:04:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:05:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:05:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:05:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:06:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:06:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:06:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:07:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:07:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:07:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:08:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:08:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:08:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:09:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:09:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:09:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 369157  - [39m06/19/2026, 7:10:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:10:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 369157  - [39m06/19/2026, 7:10:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16397:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16397:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16407:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:228729:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:253233:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.19_class-transformer@0.5.1_class-validator@0_3281b372b872a1544d1438fa86b76670/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
