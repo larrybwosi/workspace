@@ -1,6 +1,6 @@
 'use client';
 
-import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2 } from 'lucide-react';
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
 import type { Message } from '../../lib/types';
@@ -61,6 +61,216 @@ const GAP = 'gap-3'; // 12px → total offset = 16 + 40 + 12 = 68px ≈ Discord'
  * when parent state changes (e.g. typing indicators, scroll events).
  * Expected impact: Reduces re-renders by >90% in active channels.
  */
+interface MessageEditorProps {
+  initialContent: string;
+  onSave: (content: string) => void;
+  onCancel: () => void;
+}
+
+const MessageEditor = memo(({ initialContent, onSave, onCancel }: MessageEditorProps) => (
+  <div className="w-full mt-1">
+    <textarea
+      defaultValue={initialContent}
+      className="text-sm leading-relaxed text-foreground border border-border rounded bg-card p-2 w-full font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+      rows={4}
+      autoFocus
+      onKeyDown={e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          onSave((e.target as HTMLTextAreaElement).value);
+        }
+        if (e.key === 'Escape') onCancel();
+      }}
+    />
+    <p className="text-[11px] text-muted-foreground mt-1">Enter to save · Escape to cancel</p>
+  </div>
+));
+
+MessageEditor.displayName = 'MessageEditor';
+
+const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any, message: any, userBadges: any[], isReply: boolean }) => (
+  <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
+    <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
+      {user?.name}
+    </span>
+    {message.metadata?.isBot && (
+      <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
+        Bot
+      </span>
+    )}
+    {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
+    <span className="text-[12px] text-muted-foreground/70 font-normal">
+      {format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm')}
+    </span>
+    {isReply && (
+      <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
+        <Reply className="h-3 w-3" />
+        replied to {(message as any).replyToUser?.name || 'someone'}
+      </span>
+    )}
+  </div>
+));
+
+MessageHeader.displayName = 'MessageHeader';
+
+const MessageActions = memo(({
+  actions,
+  messageId,
+  triggerActionMutation
+}: {
+  actions: any[],
+  messageId: string,
+  triggerActionMutation: any
+}) => {
+  const variantMap: Record<string, any> = {
+    primary: 'default',
+    danger: 'destructive',
+    destructive: 'destructive',
+    default: 'outline',
+    outline: 'outline',
+    secondary: 'secondary',
+    ghost: 'ghost',
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {actions.map((action: any) => {
+        const variant = variantMap[action.variant || action.style || ''] || 'outline';
+        const isActionLoading = triggerActionMutation.isPending && triggerActionMutation.variables?.actionId === (action.actionId || action.id);
+
+        return (
+          <Button
+            key={action.id || action.actionId}
+            size="sm"
+            variant={variant}
+            className="h-7 text-xs px-3"
+            disabled={triggerActionMutation.isPending}
+            onClick={async () => {
+              if (action.handler && typeof action.handler === 'function') {
+                action.handler(messageId, action.actionId || action.id);
+              } else {
+                try {
+                  await triggerActionMutation.mutateAsync({
+                    messageId: messageId,
+                    actionId: action.actionId || action.id,
+                  });
+                  toast.success('Action recorded');
+                } catch (err) {
+                  toast.error('Failed to record action');
+                }
+              }
+            }}
+          >
+            {isActionLoading && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+            {action.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+});
+
+MessageActions.displayName = 'MessageActions';
+
+const MessageReactions = memo(({
+  reactions,
+  messageId,
+  handleAddReaction,
+  handleToggleReaction
+}: {
+  reactions: any[],
+  messageId: string,
+  handleAddReaction: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
+  handleToggleReaction: (emoji: string) => void
+}) => (
+  <div className="flex flex-wrap gap-1 mt-1.5">
+    {reactions.map((reaction: any, idx: any) => (
+      <button
+        key={idx}
+        className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-xs active:scale-95"
+        onClick={() => handleToggleReaction(reaction.emoji)}
+      >
+        {reaction.emoji.startsWith(':') ? (
+          <img
+            src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
+            alt={reaction.emoji}
+            className="h-4 w-4"
+          />
+        ) : (
+          <span className="text-sm leading-none">{reaction.emoji}</span>
+        )}
+        <span className="font-medium text-muted-foreground">{reaction.count}</span>
+      </button>
+    ))}
+
+    <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
+      <button className="flex items-center justify-center h-6 w-6 rounded border border-dashed border-border hover:bg-muted hover:border-primary/40 transition-colors">
+        <Smile className="h-3.5 w-3.5 text-muted-foreground" />
+      </button>
+    </CustomEmojiPicker>
+  </div>
+));
+
+MessageReactions.displayName = 'MessageReactions';
+
+const MessageToolbar = memo(({
+  handleAddReaction,
+  handleReply,
+  setIsMenuOpen,
+  handleCopyMessageLink,
+  messageContent,
+  handleEditMessage,
+  handleDeleteMessage
+}: {
+  handleAddReaction: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
+  handleReply: () => void,
+  setIsMenuOpen: (open: boolean) => void,
+  handleCopyMessageLink: () => void,
+  messageContent: string,
+  handleEditMessage: () => void,
+  handleDeleteMessage: () => void
+}) => (
+  <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75">
+    <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
+      <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
+        <Smile className="h-4 w-4 text-muted-foreground" />
+      </Button>
+    </CustomEmojiPicker>
+
+    <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted" onClick={handleReply}>
+      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+    </Button>
+
+    <DropdownMenu onOpenChange={setIsMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
+          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
+          <Reply className="mr-2 h-4 w-4" /> Reply
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyMessageLink} className="cursor-pointer">
+          <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(messageContent)} className="cursor-pointer">
+          <Copy className="mr-2 h-4 w-4" /> Copy Text
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleEditMessage} className="cursor-pointer">
+          <Edit className="mr-2 h-4 w-4" /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onClick={handleDeleteMessage}>
+          <Trash2 className="mr-2 h-4 w-4" /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+));
+
+MessageToolbar.displayName = 'MessageToolbar';
+
 export const MessageItem = memo(function MessageItem({
   message,
   showAvatar = true,
@@ -124,12 +334,10 @@ export const MessageItem = memo(function MessageItem({
     toast.success('Link copied', { description: 'Message link copied to clipboard' });
   };
 
-  const isImplicitCode = useMemo(() => {
-    return (
-      (!message.messageType || message.messageType === 'standard') &&
-      (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit)
-    );
-  }, [message.content, message.messageType, message.metadata]);
+  const isImplicitCode = useMemo(() =>
+    (!message.messageType || message.messageType === 'standard') &&
+    (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit)
+  , [message.content, message.messageType, message.metadata]);
 
   const handleCustomAction = useCallback(async (actionId: string, data: any) => {
     try {
@@ -145,7 +353,7 @@ export const MessageItem = memo(function MessageItem({
     }
   }, [message.id, triggerActionMutation]);
 
-  const customComponent = useMemo(() => {
+  const renderMessageBody = useCallback(() => {
     if (isImplicitCode) {
       const { language, code } = extractCodeInfo(message.content);
       return (
@@ -159,7 +367,6 @@ export const MessageItem = memo(function MessageItem({
       );
     }
 
-    // For custom messages, we pass the triggerAction handler
     if (['custom', 'approval', 'report'].includes(message.messageType)) {
       return (
         <CustomMessage
@@ -237,199 +444,46 @@ export const MessageItem = memo(function MessageItem({
             )}
           </div>
 
-          {/* ── Right column: header + content ── */}
           <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
-            {/* Header: only shown on first message in a group */}
-            {showAvatar && (
-              <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
-                <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
-                  {user?.name}
-                </span>
-
-                {message.metadata?.isBot && (
-                  <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
-                    Bot
-                  </span>
-                )}
-
-                {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
-
-                <span className="text-[12px] text-muted-foreground/70 font-normal">
-                  {format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm')}
-                </span>
-
-                {isReply && (
-                  <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
-                    <Reply className="h-3 w-3" />
-                    replied to {(message as any).replyToUser?.name || 'someone'}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Message content */}
+            {showAvatar && <MessageHeader user={user} message={message} userBadges={userBadges} isReply={isReply} />}
             {isEditing ? (
-              <div className="w-full mt-1">
-                <textarea
-                  defaultValue={message.content}
-                  className="text-sm leading-relaxed text-foreground border border-border rounded bg-card p-2 w-full font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
-                  rows={4}
-                  autoFocus
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSaveEdit((e.target as HTMLTextAreaElement).value);
-                    }
-                    if (e.key === 'Escape') setIsEditing(false);
-                  }}
-                />
-                <p className="text-[11px] text-muted-foreground mt-1">Enter to save · Escape to cancel</p>
-              </div>
+              <MessageEditor initialContent={message.content} onSave={handleSaveEdit} onCancel={() => setIsEditing(false)} />
             ) : (
               <>
                 {!isImplicitCode && displayContent && (
                   <div className="text-[15px] leading-[1.375rem] text-foreground break-words">
-                    <MarkdownRenderer
-                      content={displayContent}
-                      className="whitespace-pre-wrap max-w-full overflow-x-hidden"
-                    />
+                    <MarkdownRenderer content={displayContent} className="whitespace-pre-wrap max-w-full overflow-x-hidden" />
                   </div>
                 )}
-                {customComponent && <div className="w-full overflow-x-auto mt-0.5">{customComponent}</div>}
+                <div className="w-full overflow-x-auto mt-0.5">{renderMessageBody()}</div>
               </>
             )}
-
             <DocumentEmbed message={message} />
             <MessageAttachments attachments={message.attachments} message={message} />
-
-            {/* Action buttons */}
             {message.actions && message.actions.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {message.actions.map((action: any) => {
-                  const variantMap: Record<string, any> = {
-                    primary: 'default',
-                    danger: 'destructive',
-                    destructive: 'destructive',
-                    default: 'outline',
-                    outline: 'outline',
-                    secondary: 'secondary',
-                    ghost: 'ghost',
-                  };
-                  const variant = variantMap[action.variant || action.style || ''] || 'outline';
-                  const isActionLoading = triggerActionMutation.isPending && triggerActionMutation.variables?.actionId === (action.actionId || action.id);
-
-                  return (
-                    <Button
-                      key={action.id || action.actionId}
-                      size="sm"
-                      variant={variant}
-                      className="h-7 text-xs px-3"
-                      disabled={triggerActionMutation.isPending}
-                      onClick={async () => {
-                        if (action.handler && typeof action.handler === 'function') {
-                          action.handler(message.id, action.actionId || action.id);
-                        } else {
-                          try {
-                            await triggerActionMutation.mutateAsync({
-                              messageId: message.id,
-                              actionId: action.actionId || action.id,
-                            });
-                            toast.success('Action recorded');
-                          } catch (err) {
-                            toast.error('Failed to record action');
-                          }
-                        }
-                      }}
-                    >
-                      {isActionLoading && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
-                      {action.label}
-                    </Button>
-                  );
-                })}
-              </div>
+              <MessageActions actions={message.actions} messageId={message.id} triggerActionMutation={triggerActionMutation} />
             )}
-
-            {/* Link previews */}
-            {linksToPreview.map((link, idx) => (
-              <LinkPreview key={idx} url={link as any} />
-            ))}
-
-            {/* Reactions */}
+            {linksToPreview.map((link, idx) => <LinkPreview key={idx} url={link as any} />)}
             {message.reactions && message.reactions.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {message.reactions.map((reaction: any, idx: any) => (
-                  <button
-                    key={idx}
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-xs active:scale-95"
-                    onClick={() => handleToggleReaction(reaction.emoji)}
-                  >
-                    {reaction.emoji.startsWith(':') ? (
-                      <img
-                        src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
-                        alt={reaction.emoji}
-                        className="h-4 w-4"
-                      />
-                    ) : (
-                      <span className="text-sm leading-none">{reaction.emoji}</span>
-                    )}
-                    <span className="font-medium text-muted-foreground">{reaction.count}</span>
-                  </button>
-                ))}
-
-                <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-                  <button className="flex items-center justify-center h-6 w-6 rounded border border-dashed border-border hover:bg-muted hover:border-primary/40 transition-colors">
-                    <Smile className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                </CustomEmojiPicker>
-              </div>
+              <MessageReactions
+                reactions={message.reactions}
+                messageId={message.id}
+                handleAddReaction={handleAddReaction}
+                handleToggleReaction={handleToggleReaction}
+              />
             )}
           </div>
 
-          {/* ── Hover toolbar (Discord-style floating action bar) ── */}
           {showToolbar && (
-            <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75">
-              <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
-                  <Smile className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </CustomEmojiPicker>
-
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted" onClick={handleReply}>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </Button>
-
-              <DropdownMenu onOpenChange={setIsMenuOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
-                    <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
-                    <Reply className="mr-2 h-4 w-4" /> Reply
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCopyMessageLink} className="cursor-pointer">
-                    <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigator.clipboard.writeText(message.content)}
-                    className="cursor-pointer"
-                  >
-                    <Copy className="mr-2 h-4 w-4" /> Copy Text
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleEditMessage} className="cursor-pointer">
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive cursor-pointer"
-                    onClick={handleDeleteMessage}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <MessageToolbar
+              handleAddReaction={handleAddReaction}
+              handleReply={handleReply}
+              setIsMenuOpen={setIsMenuOpen}
+              handleCopyMessageLink={handleCopyMessageLink}
+              messageContent={message.content}
+              handleEditMessage={handleEditMessage}
+              handleDeleteMessage={handleDeleteMessage}
+            />
           )}
         </div>
       </ContextMenuTrigger>
