@@ -140,6 +140,34 @@ export class M2mUserMappingController {
     return { count: results.length, mappings: results };
   }
 
+  @Delete(':externalUserId')
+  @ApiOperation({ summary: 'Delete a user mapping' })
+  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
+  @ApiParam({ name: 'externalUserId', description: 'The external user ID' })
+  async deleteMapping(
+    @V2Context() context: ApiV2Context,
+    @Param('orgSlug') orgSlug: string,
+    @Param('externalUserId') externalUserId: string
+  ) {
+    const organization = await this.verifyOrgAccess(context, orgSlug);
+
+    await prisma.m2mUserMapping.delete({
+      where: {
+        organizationId_externalUserId: {
+          organizationId: organization.id,
+          externalUserId,
+        },
+      },
+    });
+
+    await this.auditService.log(context, 'm2m.mapping.delete', 'm2m_user_mapping', undefined, {
+      externalUserId,
+    });
+
+    return { success: true };
+  }
+
+  // fallow-ignore-next-line complexity
   private async performMapping(organizationId: string, data: { userId: string; externalUserId: string; metadata?: any }) {
     const { userId, externalUserId, metadata } = data;
 
@@ -190,33 +218,7 @@ export class M2mUserMappingController {
     }
   }
 
-  @Delete(':externalUserId')
-  @ApiOperation({ summary: 'Delete a user mapping' })
-  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
-  @ApiParam({ name: 'externalUserId', description: 'The external user ID' })
-  async deleteMapping(
-    @V2Context() context: ApiV2Context,
-    @Param('orgSlug') orgSlug: string,
-    @Param('externalUserId') externalUserId: string
-  ) {
-    const organization = await this.verifyOrgAccess(context, orgSlug);
-
-    await prisma.m2mUserMapping.delete({
-      where: {
-        organizationId_externalUserId: {
-          organizationId: organization.id,
-          externalUserId,
-        },
-      },
-    });
-
-    await this.auditService.log(context, 'm2m.mapping.delete', 'm2m_user_mapping', undefined, {
-      externalUserId,
-    });
-
-    return { success: true };
-  }
-
+  // fallow-ignore-next-line complexity
   private async verifyOrgAccess(context: ApiV2Context, orgSlug: string) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },

@@ -17,8 +17,8 @@ datasource db {
 // ============================================
 
 model User {
-  id            String   @id @default(cuid())
   m2mUserMappings M2mUserMapping[]
+  id            String   @id @default(cuid())
   name          String
   username      String?  @unique
   email         String   @unique
@@ -1579,8 +1579,8 @@ model LiveChatSession {
 }
 
 model Organization {
-  m2mApplications M2mApplication[]
   m2mUserMappings M2mUserMapping[]
+  m2mApplications M2mApplication[]
   workspaces      Workspace[]
   id        String   @id @default(cuid())
   name      String
