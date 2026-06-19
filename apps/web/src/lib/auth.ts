@@ -16,7 +16,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
   },
-  baseURL: env.BETTER_AUTH_URL || env.NEXT_PUBLIC_APP_URL,
+  baseURL: env.BETTER_AUTH_URL || 'http://localhost:3000',
   plugins: [
     admin({
       defaultRole: 'Member',
