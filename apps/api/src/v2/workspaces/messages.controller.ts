@@ -68,6 +68,8 @@ class SendMessageDto {
   channelId?: string;
   @ApiProperty({ required: false, description: 'Required if channelId is not provided' })
   recipientId?: string;
+  @ApiProperty({ required: false, description: 'Optional external user ID for mapping' })
+  externalUserId?: string;
   @ApiProperty({ example: 'Hello world!' })
   content: string;
   @ApiProperty({ required: false })
@@ -103,6 +105,7 @@ const sendMessageSchema = z
   .object({
     channelId: z.string().optional(),
     recipientId: z.string().optional(),
+    externalUserId: z.string().optional(),
     content: z.string().min(1),
     threadId: z.string().optional(),
     contextId: z.string().optional(),
@@ -564,6 +567,7 @@ export class V2MessagesController {
     const {
       channelId,
       recipientId,
+      externalUserId,
       content,
       threadId,
       contextId,
@@ -598,8 +602,53 @@ export class V2MessagesController {
     let activeThreadId = threadId;
     let senderId = context.userId;
 
-    // M2M Support: Use default workspace bot as sender
-    if (context.organizationId && !context.isBot) {
+    // Handle external user ID mapping
+    if (externalUserId) {
+      if (!context.organizationId) {
+        throw new ForbiddenException('External user ID mapping is only available for M2M applications');
+      }
+
+      const mapping = await prisma.m2mUserMapping.findUnique({
+        where: {
+          organizationId_externalUserId: {
+            organizationId: context.organizationId,
+            externalUserId,
+          },
+        },
+      });
+
+      if (!mapping) {
+        // Dispatch missing mapping webhook
+        // Targeted optimization: Try to find the specific M2M app that sent the message
+        let m2mApp;
+        if (context.m2mClientId) {
+          m2mApp = await prisma.m2mApplication.findUnique({
+            where: { clientId: context.m2mClientId },
+          });
+        }
+
+        // Fallback to first available M2M app in the organization
+        if (!m2mApp) {
+          m2mApp = await prisma.m2mApplication.findFirst({
+            where: { organizationId: context.organizationId },
+          });
+        }
+
+        if (m2mApp) {
+          await this.webhooksService.dispatchM2mCallback(
+            m2mApp,
+            'm2m.mapping.missing',
+            { externalUserId, workspaceId: context.workspaceId },
+            context.workspaceId!
+          );
+        }
+
+        throw new BadRequestException(`No mapping found for external user ID: ${externalUserId}`);
+      }
+
+      senderId = mapping.userId;
+    } else if (context.organizationId && !context.isBot) {
+      // M2M Support: Use default workspace bot as sender
       const defaultBot = await prisma.botApplication.findFirst({
         where: { workspaceId: context.workspaceId },
         select: { botId: true },

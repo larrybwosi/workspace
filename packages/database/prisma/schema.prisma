@@ -18,6 +18,7 @@ datasource db {
 
 model User {
   id            String   @id @default(cuid())
+  m2mUserMappings M2mUserMapping[]
   name          String
   username      String?  @unique
   email         String   @unique
@@ -1579,6 +1580,7 @@ model LiveChatSession {
 
 model Organization {
   m2mApplications M2mApplication[]
+  m2mUserMappings M2mUserMapping[]
   workspaces      Workspace[]
   id        String   @id @default(cuid())
   name      String
@@ -1800,4 +1802,23 @@ model M2mApplication {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("m2m_applications")
+}
+
+model M2mUserMapping {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  externalUserId String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, externalUserId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([externalUserId])
+  @@map("m2m_user_mappings")
 }
