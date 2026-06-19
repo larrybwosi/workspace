@@ -50,6 +50,7 @@ fun ChatView(
     onAction: (MessageEntity, MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
     formStates: Map<String, Map<String, Any>> = emptyMap(),
+    loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
     modifier: Modifier = Modifier
@@ -87,6 +88,7 @@ fun ChatView(
                     onAction = { action, formState -> onAction(message, action, formState) },
                     onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
                     formState = formStates[message.id] ?: emptyMap(),
+                    isLoading = loadingActions.contains(message.id),
                     onImageClick = { attachment ->
                         fullScreenImageUrl = attachment.url
                         fullScreenImageName = attachment.name
@@ -221,6 +223,7 @@ fun SwipeableMessageItem(
     onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
+    isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {}
 ) {
     // Basic implementation of swipe-to-action
@@ -279,6 +282,7 @@ fun SwipeableMessageItem(
                 onAction = onAction,
                 onUpdateForm = onUpdateForm,
                 formState = formState,
+                isLoading = isLoading,
                 onImageClick = onImageClick
             )
 
@@ -335,6 +339,7 @@ fun MessageItem(
     onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
+    isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {}
 ) {
     Row(
@@ -389,7 +394,8 @@ fun MessageItem(
                         customMessage = customMessage,
                         formState = formState,
                         onUpdateForm = onUpdateForm,
-                        onActionTriggered = { action -> onAction(action, formState) }
+                        onActionTriggered = { action -> onAction(action, formState) },
+                        isLoading = isLoading
                     )
                 } else {
                     MarkdownText(content = message.content)

@@ -1,6 +1,6 @@
 'use client';
 
-import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
 import type { Message } from '../../lib/types';
@@ -32,8 +32,8 @@ import {
   DropdownMenuTrigger,
 } from '../../components/dropdown-menu';
 
-import { useUpdateMessage, useDeleteMessage } from '@repo/api-client';
-import { useMemo, useState, memo } from 'react';
+import { useUpdateMessage, useDeleteMessage, useTriggerAction } from '@repo/api-client';
+import { useMemo, useState, memo, useCallback } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
 import { useSession } from '@repo/shared';
@@ -75,6 +75,7 @@ export const MessageItem = memo(function MessageItem({
 }: MessageItemProps) {
   const updateMessageMutation = useUpdateMessage();
   const deleteMessageMutation = useDeleteMessage();
+  const triggerActionMutation = useTriggerAction(workspaceId);
   const { data: session } = useSession();
   const currentUser = session?.user;
   const { data: users } = useUsers();
@@ -130,6 +131,20 @@ export const MessageItem = memo(function MessageItem({
     );
   }, [message.content, message.messageType, message.metadata]);
 
+  const handleCustomAction = useCallback(async (actionId: string, data: any) => {
+    try {
+      await triggerActionMutation.mutateAsync({
+        messageId: message.id,
+        actionId,
+        payload: data.payload,
+        formState: data.formState,
+      });
+      toast.success('Action sent');
+    } catch (error) {
+      toast.error('Failed to trigger action');
+    }
+  }, [message.id, triggerActionMutation]);
+
   const customComponent = useMemo(() => {
     if (isImplicitCode) {
       const { language, code } = extractCodeInfo(message.content);
@@ -143,8 +158,20 @@ export const MessageItem = memo(function MessageItem({
         </div>
       );
     }
+
+    // For custom messages, we pass the triggerAction handler
+    if (['custom', 'approval', 'report'].includes(message.messageType)) {
+      return (
+        <CustomMessage
+          message={message}
+          onAction={handleCustomAction}
+          isLoading={triggerActionMutation.isPending}
+        />
+      );
+    }
+
     return renderCustomMessage(message);
-  }, [isImplicitCode, message]);
+  }, [isImplicitCode, message, handleCustomAction, triggerActionMutation.isPending]);
 
   // Find unique links to avoid duplicate previews for the same URL
   const detectedLinks = useMemo(() => {
@@ -289,25 +316,32 @@ export const MessageItem = memo(function MessageItem({
                     ghost: 'ghost',
                   };
                   const variant = variantMap[action.variant || action.style || ''] || 'outline';
+                  const isActionLoading = triggerActionMutation.isPending && triggerActionMutation.variables?.actionId === (action.actionId || action.id);
+
                   return (
                     <Button
                       key={action.id || action.actionId}
                       size="sm"
                       variant={variant}
                       className="h-7 text-xs px-3"
+                      disabled={triggerActionMutation.isPending}
                       onClick={async () => {
-                        if (action.handler) {
+                        if (action.handler && typeof action.handler === 'function') {
                           action.handler(message.id, action.actionId || action.id);
                         } else {
-                          const response = await fetch(
-                            `/api/messages/${message.id}/actions/${action.actionId || action.id}`,
-                            { method: 'POST' }
-                          );
-                          if (response.ok) toast.success('Action recorded');
-                          else toast.error('Failed to record action');
+                          try {
+                            await triggerActionMutation.mutateAsync({
+                              messageId: message.id,
+                              actionId: action.actionId || action.id,
+                            });
+                            toast.success('Action recorded');
+                          } catch (err) {
+                            toast.error('Failed to record action');
+                          }
                         }
                       }}
                     >
+                      {isActionLoading && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
                       {action.label}
                     </Button>
                   );

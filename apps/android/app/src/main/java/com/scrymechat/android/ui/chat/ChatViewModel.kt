@@ -29,12 +29,20 @@ class ChatViewModel @Inject constructor(
     private val _formStates = MutableStateFlow<Map<String, Map<String, Any>>>(emptyMap())
     val formStates: StateFlow<Map<String, Map<String, Any>>> = _formStates.asStateFlow()
 
+    private val _loadingActions = MutableStateFlow<Set<String>>(emptySet())
+    val loadingActions: StateFlow<Set<String>> = _loadingActions.asStateFlow()
+
     private var currentChannelId: String? = null
     private var currentDmId: String? = null
+    private var currentWorkspaceSlug: String? = null
 
     init {
         observeRealtimeMessages()
         observeTypingStatus()
+    }
+
+    fun setWorkspaceSlug(slug: String) {
+        currentWorkspaceSlug = slug
     }
 
     fun setChannel(channelId: String) {
@@ -184,15 +192,24 @@ class ChatViewModel @Inject constructor(
             }
             "CALLBACK" -> {
                 viewModelScope.launch {
-                    val payload = mutableMapOf<String, Any>()
-                    action.handler.payload?.let { payload.putAll(it) }
-                    if (action.handler.includeFormState) {
-                        payload.putAll(formState)
-                    }
+                    val workspaceSlug = currentWorkspaceSlug ?: return@launch
+                    _loadingActions.update { it + message.id }
+                    try {
+                        val payload = mutableMapOf<String, Any>()
+                        action.handler.payload?.let { payload.putAll(it) }
 
-                    val result = chatRepository.triggerAction(message.id, action.id, payload)
-                    if (result is Resource.Error) {
-                        _uiState.update { it.copy(error = result.message) }
+                        val requestBody = mutableMapOf<String, Any>()
+                        requestBody["payload"] = payload
+                        if (action.handler.includeFormState) {
+                            requestBody["formState"] = formState
+                        }
+
+                        val result = chatRepository.triggerAction(workspaceSlug, message.id, action.id, requestBody)
+                        if (result is Resource.Error) {
+                            _uiState.update { it.copy(error = result.message) }
+                        }
+                    } finally {
+                        _loadingActions.update { it - message.id }
                     }
                 }
             }

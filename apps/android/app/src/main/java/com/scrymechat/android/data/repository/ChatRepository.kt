@@ -61,9 +61,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun triggerAction(messageId: String, actionId: String, payload: Map<String, Any>): Resource<Map<String, Any>> {
+    suspend fun triggerAction(slug: String, messageId: String, actionId: String, body: Map<String, Any>): Resource<Map<String, Any>> {
         return try {
-            val response = api.triggerMessageAction(messageId, actionId, payload)
+            val response = api.triggerMessageAction(slug, messageId, actionId, body)
             if (response.isSuccessful && response.body() != null) {
                 Resource.Success(response.body()!!)
             } else {

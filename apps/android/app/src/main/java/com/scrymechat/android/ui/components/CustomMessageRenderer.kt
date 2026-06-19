@@ -23,7 +23,8 @@ fun CustomMessageRenderer(
     formState: Map<String, Any>,
     onUpdateForm: (String, Any) -> Unit,
     onActionTriggered: (MessageActionDto) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -81,7 +82,8 @@ fun CustomMessageRenderer(
                 Spacer(modifier = Modifier.height(16.dp))
                 ActionButtonsRenderer(
                     actions = customMessage.actions,
-                    onActionTriggered = onActionTriggered
+                    onActionTriggered = onActionTriggered,
+                    isLoading = isLoading
                 )
             }
         }
@@ -344,7 +346,8 @@ fun MessageNodeRenderer(
 @Composable
 fun ActionButtonsRenderer(
     actions: List<MessageActionDto>,
-    onActionTriggered: (MessageActionDto) -> Unit
+    onActionTriggered: (MessageActionDto) -> Unit,
+    isLoading: Boolean = false
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -360,6 +363,7 @@ fun ActionButtonsRenderer(
 
             Button(
                 onClick = { onActionTriggered(action) },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (action.type == "GHOST") Color.Transparent else color,
                     contentColor = if (action.type == "GHOST") color else Color.White
@@ -368,7 +372,15 @@ fun ActionButtonsRenderer(
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(text = action.label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = if (action.type == "GHOST") color else Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(text = action.label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

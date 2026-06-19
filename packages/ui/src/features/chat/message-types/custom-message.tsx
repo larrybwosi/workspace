@@ -40,6 +40,7 @@ export interface CustomMessageProps {
   message: any;
   onAction?: (actionId: string, data: Record<string, any>) => Promise<void> | void;
   readOnly?: boolean;
+  isLoading?: boolean;
 }
 
 // --- Icons Mapping ---
@@ -394,7 +395,7 @@ const NodeRenderer = ({ node }: { node: MessageNode }) => {
 
 // --- Main Component ---
 
-export function CustomMessage({ message, onAction, readOnly = false }: CustomMessageProps) {
+export function CustomMessage({ message, onAction, readOnly = false, isLoading: externalLoading = false }: CustomMessageProps) {
   const [loadingAction, setLoadingAction] = React.useState<string | null>(null);
   const [formValues, setFormValues] = React.useState<Record<string, any>>({});
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -421,7 +422,7 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
   }, [message.metadata]);
 
   const handleAction = async (action: NonNullable<ICustomMessage['actions']>[number]) => {
-    if (!config) return;
+    if (!config || externalLoading || loadingAction) return;
 
     // Validate all fields in the tree
     const newErrors: Record<string, string> = {};
@@ -540,9 +541,9 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
                     size="sm"
                     className="flex-1 sm:flex-none h-9 gap-2"
                     onClick={() => handleAction(action)}
-                    disabled={loadingAction !== null}
+                    disabled={loadingAction !== null || externalLoading}
                   >
-                    {loadingAction === action.id ? (
+                    {(loadingAction === action.id || (externalLoading && !loadingAction)) ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       getIcon(action.icon, 'w-3.5 h-3.5')

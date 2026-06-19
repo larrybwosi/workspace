@@ -1,5 +1,5 @@
-import { Controller, Post, Param, UseGuards, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { Controller, Post, Param, UseGuards, NotFoundException, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
@@ -7,10 +7,11 @@ import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
 import { PrismaService } from '../../prisma.service';
+import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
 
 @ApiTags('Message Actions')
 @ApiBearerAuth()
-@Controller('v2/messages/:messageId/actions/:actionId')
+@Controller('v2/workspaces/:slug/messages/:messageId/actions/:actionId')
 @UseGuards(ApiV2Guard)
 export class V2MessageActionsController {
   constructor(
@@ -22,13 +23,25 @@ export class V2MessageActionsController {
 
   @Post()
   @ApiOperation({ summary: 'Trigger a message action', description: 'Requires messages:send scope.' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
   @ApiParam({ name: 'actionId', description: 'The custom action ID defined in the message' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        formState: { type: 'object', additionalProperties: true },
+        payload: { type: 'object', additionalProperties: true },
+      },
+    },
+    required: false,
+  })
   @ApiResponse({ status: 200, description: 'Action triggered successfully.' })
   async handleAction(
     @V2Context() context: ApiV2Context,
     @Param('messageId') messageId: string,
-    @Param('actionId') actionId: string
+    @Param('actionId') actionId: string,
+    @Body() body: any
   ) {
     const message = await this.prisma.client.message.findFirst({
       where: {
@@ -79,6 +92,8 @@ export class V2MessageActionsController {
       userId: context.userId,
       responseId: response.id,
       metadata: message.metadata,
+      formState: body?.formState || {},
+      payload: body?.payload || {},
     };
 
     await this.webhooksService.dispatch(message.channel.workspaceId!, 'message.action', eventData);
@@ -91,12 +106,37 @@ export class V2MessageActionsController {
       });
 
       if (m2mApp) {
-        await this.webhooksService.dispatchM2mCallback(
+        const m2mResponse = await this.webhooksService.dispatchM2mCallback(
           m2mApp,
           'message.action',
           eventData,
           message.channel.workspaceId!
         );
+
+        // If M2M returns an update, apply it
+        if (m2mResponse && (m2mResponse.metadata || m2mResponse.content)) {
+          const updatedMessage = await this.prisma.client.message.update({
+            where: { id: messageId },
+            data: {
+              metadata: m2mResponse.metadata ? { ...(message.metadata as any), ...m2mResponse.metadata } : undefined,
+              content: m2mResponse.content || undefined,
+            },
+            include: {
+              attachments: true,
+              actions: true,
+              user: { select: { id: true, name: true, avatar: true } },
+            },
+          });
+
+          // Broadcast the update
+          const ably = getAblyRest();
+          if (ably) {
+            const ablyChannel = ably.channels.get(AblyChannels.channel(message.channelId!));
+            await ablyChannel.publish(AblyEvents.MESSAGE_UPDATED, updatedMessage);
+          }
+
+          return { success: true, responseId: response.id, message: updatedMessage };
+        }
       }
     }
 

@@ -31,6 +31,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
     val formStates by chatViewModel.formStates.collectAsState()
+    val loadingActions by chatViewModel.loadingActions.collectAsState()
     var forwardingMessage by remember { mutableStateOf<com.scrymechat.android.data.local.entities.MessageEntity?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -98,6 +99,9 @@ fun HomeScreen(
                         dms = uiState.dms,
                         onChannelClick = {
                             viewModel.selectChannel(it)
+                            uiState.selectedWorkspace?.slug?.let { slug ->
+                                chatViewModel.setWorkspaceSlug(slug)
+                            }
                             chatViewModel.setChannel(it.id)
                             scope.launch { drawerState.close() }
                         },
@@ -130,6 +134,7 @@ fun HomeScreen(
             onAction = { message, action, formState -> chatViewModel.handleMessageAction(context, message, action, formState) },
             onUpdateForm = { messageId, fieldId, value -> chatViewModel.updateFormState(messageId, fieldId, value) },
             formStates = formStates,
+            loadingActions = loadingActions,
             onTyping = {
                 uiState.currentUser?.let { user ->
                     chatViewModel.sendTyping(user.id, user.name)
@@ -155,6 +160,7 @@ fun MainContent(
     onAction: (com.scrymechat.android.data.local.entities.MessageEntity, com.scrymechat.android.data.remote.MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
     formStates: Map<String, Map<String, Any>> = emptyMap(),
+    loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -221,6 +227,7 @@ fun MainContent(
                         onAction = onAction,
                         onUpdateForm = onUpdateForm,
                         formStates = formStates,
+                        loadingActions = loadingActions,
                         onTyping = onTyping,
                         typingUsers = chatUiState.typingUsers
                     )
