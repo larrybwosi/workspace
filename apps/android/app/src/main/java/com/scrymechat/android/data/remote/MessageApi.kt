@@ -85,4 +85,11 @@ interface MessageApi {
         @Path("messageId") messageId: String,
         @Path("emoji") emoji: String
     ): Response<Unit>
+
+    @POST("v2/messages/{messageId}/actions/{actionId}")
+    suspend fun triggerMessageAction(
+        @Path("messageId") messageId: String,
+        @Path("actionId") actionId: String,
+        @Body payload: Map<String, Any>
+    ): Response<Map<String, Any>>
 }
