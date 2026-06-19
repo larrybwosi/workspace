@@ -1,6 +1,6 @@
 'use client';
 
-import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
 import type { Message } from '../../lib/types';

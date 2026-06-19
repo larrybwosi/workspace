@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { memo } from 'react';
 import {
   Check,
   X,
