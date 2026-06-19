@@ -119,6 +119,32 @@ export function useDeleteMessage(workspaceSlug?: string) {
 }
 
 // Reply to message
+export function useTriggerAction(workspaceSlug?: string) {
+  return useMutation({
+    mutationFn: async ({
+      messageId,
+      actionId,
+      payload,
+      formState,
+    }: {
+      messageId: string;
+      actionId: string;
+      payload?: Record<string, any>;
+      formState?: Record<string, any>;
+    }) => {
+      // Always use V2 endpoint for actions as it supports M2M callbacks
+      const url = `/v2/workspaces/${workspaceSlug}/messages/${messageId}/actions/${actionId}`;
+      const { data } = await apiClient.post(url, { payload, formState });
+      return { data, messageId };
+    },
+    onSuccess: () => {
+      // We don't necessarily know which channel this message belongs to here,
+      // but Ably should handle the real-time update anyway.
+      // If we want to be sure, we'd need to invalidate all message lists or pass channelId.
+    },
+  });
+}
+
 export function useReplyToMessage(workspaceSlug?: string) {
   const queryClient = useQueryClient();
 

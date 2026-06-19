@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { memo } from 'react';
 import {
   Check,
   X,
@@ -40,6 +41,7 @@ export interface CustomMessageProps {
   message: any;
   onAction?: (actionId: string, data: Record<string, any>) => Promise<void> | void;
   readOnly?: boolean;
+  isLoading?: boolean;
 }
 
 // --- Icons Mapping ---
@@ -392,9 +394,92 @@ const NodeRenderer = ({ node }: { node: MessageNode }) => {
   );
 };
 
+// --- Sub-components ---
+
+const CustomMessageHeader = memo(({ context, data, formValues }: { context: any, data: any, formValues: any }) => (
+  <div className="p-4 border-b bg-card/50 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      {context.icon && (
+        <div className="p-2 bg-primary/10 rounded-lg text-primary">{getIcon(context.icon, 'w-5 h-5')}</div>
+      )}
+      <div>
+        <h3 className="font-semibold text-sm leading-none flex items-center gap-2">
+          {resolveVariables(context.title, data, formValues)}
+          {context.priority !== 'normal' && (
+            <Badge
+              variant={context.priority === 'urgent' ? 'destructive' : 'outline'}
+              className="text-[10px] h-4 px-1.5 uppercase"
+            >
+              {context.priority}
+            </Badge>
+          )}
+        </h3>
+        {context.description && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {resolveVariables(context.description, data, formValues)}
+          </p>
+        )}
+      </div>
+    </div>
+    <Button variant="ghost" size="icon" className="h-8 w-8">
+      <MoreVertical className="w-4 h-4" />
+    </Button>
+  </div>
+));
+
+CustomMessageHeader.displayName = 'CustomMessageHeader';
+
+const CustomMessageActions = memo(({
+  actions,
+  formValues,
+  data,
+  handleAction,
+  loadingAction,
+  externalLoading
+}: {
+  actions: any[],
+  formValues: any,
+  data: any,
+  handleAction: (action: any) => void,
+  loadingAction: string | null,
+  externalLoading: boolean
+}) => (
+  <div className="p-4 border-t bg-card/30 flex flex-wrap gap-2">
+    {actions
+      .filter(action => evaluateCondition(action.condition, formValues, data))
+      .map(action => (
+        <Button
+          key={action.id}
+          variant={
+            action.type === 'PRIMARY'
+              ? 'default'
+              : action.type === 'DESTRUCTIVE'
+                ? 'destructive'
+                : action.type === 'GHOST'
+                  ? 'ghost'
+                  : 'outline'
+          }
+          size="sm"
+          className="flex-1 sm:flex-none h-9 gap-2"
+          onClick={() => handleAction(action)}
+          disabled={loadingAction !== null || externalLoading}
+        >
+          {(loadingAction === action.id || (externalLoading && !loadingAction)) ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            getIcon(action.icon, 'w-3.5 h-3.5')
+          )}
+          {resolveVariables(action.label, data, formValues)}
+        </Button>
+      ))}
+  </div>
+));
+
+CustomMessageActions.displayName = 'CustomMessageActions';
+
 // --- Main Component ---
 
-export function CustomMessage({ message, onAction, readOnly = false }: CustomMessageProps) {
+export function CustomMessage({ message, onAction, readOnly = false, isLoading: externalLoading = false }: CustomMessageProps) {
   const [loadingAction, setLoadingAction] = React.useState<string | null>(null);
   const [formValues, setFormValues] = React.useState<Record<string, any>>({});
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -408,26 +493,20 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
     });
   }, []);
 
-  // Parse and validate metadata
   const config = React.useMemo(() => {
     try {
       const result = CustomMessageSchema.safeParse(message.metadata);
-      if (result.success) return result.data;
-      console.error('Custom Message validation failed:', result.error);
-      return null;
+      return result.success ? result.data : null;
     } catch (e) {
       return null;
     }
   }, [message.metadata]);
 
-  const handleAction = async (action: NonNullable<ICustomMessage['actions']>[number]) => {
-    if (!config) return;
-
-    // Validate all fields in the tree
+  const validateForm = React.useCallback(() => {
+    if (!config) return {};
     const newErrors: Record<string, string> = {};
     const validateNode = (node: MessageNode) => {
       if (!evaluateCondition(node.condition, formValues, config.data || {})) return;
-
       if (node.id) {
         const error = validateField(node, formValues[node.id]);
         if (error) newErrors[node.id] = error;
@@ -435,7 +514,13 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
       node.children?.forEach(validateNode);
     };
     validateNode(config.root);
+    return newErrors;
+  }, [config, formValues]);
 
+  const handleAction = React.useCallback(async (action: NonNullable<ICustomMessage['actions']>[number]) => {
+    if (!config || externalLoading || loadingAction) return;
+
+    const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -448,11 +533,7 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
           messageId: message.id,
           ...action.handler.payload,
         };
-
-        if (action.handler.includeFormState) {
-          payload.formState = formValues;
-        }
-
+        if (action.handler.includeFormState) payload.formState = formValues;
         await onAction(action.id, payload);
       }
     } catch (e) {
@@ -460,7 +541,7 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
     } finally {
       setLoadingAction(null);
     }
-  };
+  }, [config, externalLoading, loadingAction, validateForm, onAction, message.id, formValues]);
 
   if (!config) {
     return (
@@ -479,93 +560,27 @@ export function CustomMessage({ message, onAction, readOnly = false }: CustomMes
   return (
     <FormContext.Provider value={{ values: formValues, setValue, errors, data }}>
       <div className="w-full max-w-2xl space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300">
-        <Card
-          className={cn(
-            'overflow-hidden border-border/60 shadow-sm',
-            context.priority === 'urgent' && 'border-red-500/50 shadow-red-500/10'
-          )}
-        >
-          {/* Header */}
-          <div className="p-4 border-b bg-card/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {context.icon && (
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">{getIcon(context.icon, 'w-5 h-5')}</div>
-              )}
-              <div>
-                <h3 className="font-semibold text-sm leading-none flex items-center gap-2">
-                  {resolveVariables(context.title, data, formValues)}
-                  {context.priority !== 'normal' && (
-                    <Badge
-                      variant={context.priority === 'urgent' ? 'destructive' : 'outline'}
-                      className="text-[10px] h-4 px-1.5 uppercase"
-                    >
-                      {context.priority}
-                    </Badge>
-                  )}
-                </h3>
-                {context.description && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {resolveVariables(context.description, data, formValues)}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Content - Recursive Root */}
-          <div className="p-4">
-            <NodeRenderer node={root} />
-          </div>
-
-          {/* Actions */}
+        <Card className={cn('overflow-hidden border-border/60 shadow-sm', context.priority === 'urgent' && 'border-red-500/50 shadow-red-500/10')}>
+          <CustomMessageHeader context={context} data={data} formValues={formValues} />
+          <div className="p-4"><NodeRenderer node={root} /></div>
           {actions.length > 0 && !readOnly && (
-            <div className="p-4 border-t bg-card/30 flex flex-wrap gap-2">
-              {actions
-                .filter(action => evaluateCondition(action.condition, formValues, data))
-                .map(action => (
-                  <Button
-                    key={action.id}
-                    variant={
-                      action.type === 'PRIMARY'
-                        ? 'default'
-                        : action.type === 'DESTRUCTIVE'
-                          ? 'destructive'
-                          : action.type === 'GHOST'
-                            ? 'ghost'
-                            : 'outline'
-                    }
-                    size="sm"
-                    className="flex-1 sm:flex-none h-9 gap-2"
-                    onClick={() => handleAction(action)}
-                    disabled={loadingAction !== null}
-                  >
-                    {loadingAction === action.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      getIcon(action.icon, 'w-3.5 h-3.5')
-                    )}
-                    {resolveVariables(action.label, data, formValues)}
-                  </Button>
-                ))}
-            </div>
+            <CustomMessageActions
+              actions={actions}
+              formValues={formValues}
+              data={data}
+              handleAction={handleAction}
+              loadingAction={loadingAction}
+              externalLoading={externalLoading}
+            />
           )}
-
           {readOnly && (
             <div className="p-2 border-t bg-muted/20 flex justify-center">
-              <Badge
-                variant="outline"
-                className="text-[10px] text-muted-foreground gap-1 border-none uppercase tracking-tighter"
-              >
+              <Badge variant="outline" className="text-[10px] text-muted-foreground gap-1 border-none uppercase tracking-tighter">
                 <Lock className="w-2.5 h-2.5" /> Read Only
               </Badge>
             </div>
           )}
         </Card>
-
-        {/* Footer Text / Status (Optional) */}
         {message.content && !message.content.startsWith('```') && (
           <p className="text-[10px] text-muted-foreground px-1 italic">{message.content}</p>
         )}
