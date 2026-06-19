@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -35,6 +38,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.scrymechat.android.R
 import kotlinx.coroutines.launch
 
 // ─── Brand accent — consistent with WelcomeScreen ────────────────────────────
@@ -139,10 +143,10 @@ fun SignUpScreen(
                 keyboardType  = KeyboardType.Text,
                 leadingIcon   = {
                     Icon(
-                        painter           = painterResource(id = R.drawable.ic_person_outline),
+                        imageVector        = Icons.Default.Person,
                         contentDescription = null,
-                        tint              = colorScheme.onSurface.copy(alpha = 0.35f),
-                        modifier          = Modifier.size(18.dp)
+                        tint               = colorScheme.onSurface.copy(alpha = 0.35f),
+                        modifier           = Modifier.size(18.dp)
                     )
                 }
             )
@@ -159,7 +163,7 @@ fun SignUpScreen(
                 keyboardType  = KeyboardType.Email,
                 leadingIcon   = {
                     Icon(
-                        painter            = painterResource(id = R.drawable.ic_email_outline),
+                        imageVector        = Icons.Default.Email,
                         contentDescription = null,
                         tint               = colorScheme.onSurface.copy(alpha = 0.35f),
                         modifier           = Modifier.size(18.dp)
@@ -369,11 +373,11 @@ fun SignUpScreen(
                     contentColor   = colorScheme.onSurface
                 )
             ) {
-                Icon(
-                    painter            = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google",
-                    modifier           = Modifier.size(18.dp),
-                    tint               = Color.Unspecified
+                Text(
+                    text = "G",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF4285F4)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
@@ -408,11 +412,10 @@ fun SignUpScreen(
                     contentColor   = colorScheme.onSurface
                 )
             ) {
-                Icon(
-                    painter            = painterResource(id = R.drawable.ic_github),
-                    contentDescription = "GitHub",
-                    modifier           = Modifier.size(18.dp),
-                    tint               = colorScheme.onSurface
+                Text(
+                    text = "⌥",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(

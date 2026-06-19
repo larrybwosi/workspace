@@ -110,6 +110,7 @@ fun HomeScreen(
             onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
             onReply = { /* Handled in ChatView */ },
             onForward = { forwardingMessage = it },
+            onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
             onTyping = {
                 uiState.currentUser?.let { user ->
                     chatViewModel.sendTyping(user.id, user.name)
@@ -131,6 +132,7 @@ fun MainContent(
     onSendMessage: (String, String?) -> Unit,
     onReply: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
     onForward: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
+    onDownload: (com.scrymechat.android.data.remote.AttachmentDto) -> Unit = {},
     onTyping: () -> Unit,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -193,6 +195,7 @@ fun MainContent(
                         onSendMessage = onSendMessage,
                         onReply = onReply,
                         onForward = onForward,
+                        onDownload = onDownload,
                         onTyping = onTyping,
                         typingUsers = chatUiState.typingUsers
                     )

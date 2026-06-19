@@ -15,7 +15,8 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val realtimeRepository: RealtimeRepository,
-    private val dmRepository: com.scrymechat.android.data.repository.DmRepository
+    private val dmRepository: com.scrymechat.android.data.repository.DmRepository,
+    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -155,6 +156,10 @@ class ChatViewModel @Inject constructor(
             else -> return
         }
         realtimeRepository.sendTyping(room, userId, userName)
+    }
+
+    fun downloadAttachment(url: String, fileName: String, mimeType: String? = null) {
+        storageRepository.downloadFile(url, fileName, mimeType)
     }
 }
 
