@@ -1,6 +1,7 @@
 import { ProvisioningService } from './provisioning.service';
 import { ProvisioningController } from './provisioning.controller';
 import { M2mController } from './m2m/m2m.controller';
+import { M2mUserMappingController } from "./m2m/m2m-user-mapping.controller";
 import { OrganizationsController } from './organizations.controller';
 import { Module } from '@nestjs/common';
 import { V2WorkspacesController } from './workspaces/workspaces.controller';
@@ -38,6 +39,7 @@ import { PrismaService } from '../prisma.service';
     V2AnnouncementsController,
     V2OAuthController,
     V2ApplicationsController,
+    M2mUserMappingController,
     V2ContactController,
     M2mController,
     ProvisioningController,
