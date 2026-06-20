@@ -47,7 +47,7 @@ import kotlin.math.roundToInt
 // glass surfaces, and distinct light/dark variants rather than a single
 // shared dark-only palette (the original hardcoded ScrymeDark* tokens).
 
-internal data class ChatPalette(
+data class ChatPalette(
     val isDark: Boolean,
     val canvasBg: Color,
     val surface: Color,
@@ -76,7 +76,7 @@ internal data class ChatPalette(
 )
 
 @Composable
-internal fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
+fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     return if (isDark) {
         ChatPalette(
             isDark = true,
