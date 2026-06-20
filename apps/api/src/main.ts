@@ -22,18 +22,9 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, { bodyParser: false });
 
-  const allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || [];
-
   app.enableCors({
     credentials: true,
-    origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps or curl requests)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'), false);
-      }
-    },
+    origin: true,
   });
 
   // Better Auth handles its own body parsing for /api/auth
