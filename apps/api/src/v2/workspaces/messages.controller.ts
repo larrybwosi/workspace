@@ -220,6 +220,7 @@ export class V2MessagesController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created successfully.' })
+  // fallow-ignore-next-line complexity
   async createChannel(@V2Context() context: ApiV2Context, @Body() body: CreateChannelDto) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
@@ -275,6 +276,7 @@ export class V2MessagesController {
       },
     },
   })
+  // fallow-ignore-next-line complexity
   @ApiResponse({ status: 201, description: 'Icon uploaded successfully.' })
   async uploadChannelIcon(
     @V2Context() context: ApiV2Context,

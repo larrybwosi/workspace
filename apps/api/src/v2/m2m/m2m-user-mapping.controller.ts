@@ -167,7 +167,6 @@ export class M2mUserMappingController {
     return { success: true };
   }
 
-  // fallow-ignore-next-line complexity
   private async performMapping(organizationId: string, data: { userId: string; externalUserId: string; metadata?: any }) {
     const { userId, externalUserId, metadata } = data;
 
