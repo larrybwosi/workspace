@@ -26,11 +26,7 @@ interface DmDao {
 
     @Transaction
     @Query("""
-        SELECT dm_conversations.*,
-               users.name as otherUserName,
-               users.avatar as otherUserAvatar,
-               users.status as otherUserStatus,
-               users.statusText as otherUserStatusText
+        SELECT dm_conversations.*, users.name as otherUserName, users.avatar as otherUserAvatar
         FROM dm_conversations
         JOIN users ON dm_conversations.otherUserId = users.id
         ORDER BY lastMessageAt DESC
@@ -41,7 +37,5 @@ interface DmDao {
 data class DmWithUser(
     @Embedded val dm: DmConversationEntity,
     val otherUserName: String?,
-    val otherUserAvatar: String?,
-    val otherUserStatus: String? = null,
-    val otherUserStatusText: String? = null
+    val otherUserAvatar: String?
 )

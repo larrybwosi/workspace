@@ -22,8 +22,6 @@ data class MessageEntity(
     val replyToId: String?,
     val replyToSenderName: String? = null,
     val readByCurrentUser: Boolean,
-    val isDelivered: Boolean = true, // Default to true since it's locally saved
-    val isReadByOthers: Boolean = false,
     val attachments: List<AttachmentDto> = emptyList(),
     val metadata: Map<String, Any>? = null,
     val reactions: List<ReactionGroupDto> = emptyList(),

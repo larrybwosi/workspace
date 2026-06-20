@@ -39,7 +39,6 @@ class ChatViewModel @Inject constructor(
     init {
         observeRealtimeMessages()
         observeTypingStatus()
-        observePresence()
     }
 
     fun setWorkspaceSlug(slug: String) {
@@ -55,7 +54,6 @@ class ChatViewModel @Inject constructor(
 
         realtimeRepository.joinRoom("channel:$channelId")
         loadMessages()
-        markAsRead()
     }
 
     fun setDm(dmId: String) {
@@ -67,18 +65,6 @@ class ChatViewModel @Inject constructor(
 
         realtimeRepository.joinRoom("dm:$dmId")
         loadMessages()
-        markAsRead()
-    }
-
-    private fun markAsRead() {
-        val channelId = currentChannelId
-        val dmId = currentDmId
-        viewModelScope.launch {
-            when {
-                channelId != null -> chatRepository.markMessagesAsRead(channelId, true)
-                dmId != null -> chatRepository.markMessagesAsRead(dmId, false)
-            }
-        }
     }
 
     fun setDmByUser(userId: String) {
@@ -116,20 +102,6 @@ class ChatViewModel @Inject constructor(
 
             flow.collect { messages ->
                 _uiState.update { it.copy(messages = messages, isLoading = false) }
-            }
-        }
-    }
-
-    private fun observePresence() {
-        viewModelScope.launch {
-            realtimeRepository.observePresence().collect { presence ->
-                val dmId = currentDmId
-                if (dmId != null) {
-                    val dm = dmRepository.getDms().first().data?.find { it.id == dmId }
-                    if (dm?.otherUserId == presence.userId) {
-                        _uiState.update { it.copy(otherUserPresence = presence.data?.get("status") as? String ?: "online") }
-                    }
-                }
             }
         }
     }
@@ -186,8 +158,6 @@ class ChatViewModel @Inject constructor(
                 if (messageDto.channelId == channelId || messageDto.dmId == dmId) {
                     // Update local messages
                     loadMessages()
-                    // If we are currently in this chat, mark the new message as read
-                    markAsRead()
                 }
             }
         }
@@ -264,8 +234,7 @@ data class ChatUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val typingUsers: List<String> = emptyList(),
-    val activeModal: ModalState? = null,
-    val otherUserPresence: String? = null
+    val activeModal: ModalState? = null
 )
 
 data class ModalState(

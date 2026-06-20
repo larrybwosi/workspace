@@ -77,10 +77,8 @@ fun ChannelSidebar(
     currentUser: UserEntity?,
     expandedCategories: Set<String>,
     dms: List<com.scrymechat.android.data.local.dao.DmWithUser> = emptyList(),
-    userPresence: Map<String, String> = emptyMap(),
     onChannelClick: (ChannelEntity) -> Unit,
     onDmClick: (DmConversationEntity) -> Unit = {},
-    onDeleteDm: (String) -> Unit = {},
     onCategoryToggle: (String) -> Unit,
     onSettingsClick: () -> Unit,
     onFriendsClick: () -> Unit = {}
@@ -117,11 +115,11 @@ fun ChannelSidebar(
                 }
 
                 items(dms, key = { it.dm.id }) { dmWithUser ->
-                    DmSidebarItem(
-                        dmWithUser = dmWithUser,
-                        presence = userPresence[dmWithUser.dm.otherUserId],
-                        onClick = { onDmClick(dmWithUser.dm) },
-                        onDelete = { onDeleteDm(dmWithUser.dm.id) }
+                    SidebarItem(
+                        icon = Icons.Default.ChatBubble,
+                        label = dmWithUser.otherUserName ?: "Unknown User",
+                        isSelected = false,
+                        onClick = { onDmClick(dmWithUser.dm) }
                     )
                 }
             } else {
@@ -254,8 +252,6 @@ fun ChannelItem(
         icon = icon,
         label = channel.name,
         isSelected = isSelected,
-        unreadCount = channel.unreadCount,
-        mentionCount = channel.mentionCount,
         onClick = onClick
     )
 }
@@ -273,8 +269,6 @@ fun SidebarItem(
     icon: ImageVector,
     label: String,
     isSelected: Boolean,
-    unreadCount: Int = 0,
-    mentionCount: Int = 0,
     onClick: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
@@ -300,7 +294,7 @@ fun SidebarItem(
             .clip(RoundedCornerShape(6.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = androidx.compose.material3.ripple.ripple(color = SidebarTokens.Accent)
             ) { onClick() },
         color = backgroundColor
     ) {
@@ -331,159 +325,11 @@ fun SidebarItem(
                 text = label,
                 color = contentColor,
                 fontSize = 14.sp,
-                fontWeight = if (isSelected || unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-
-            if (mentionCount > 0) {
-                Badge(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ) {
-                    Text(text = mentionCount.toString(), fontSize = 10.sp)
-                }
-            } else if (unreadCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(SidebarTokens.TextPrimary)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DmSidebarItem(
-    dmWithUser: com.scrymechat.android.data.local.dao.DmWithUser,
-    presence: String?,
-    isSelected: Boolean = false,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) SidebarTokens.SurfaceSelected else Color.Transparent,
-        animationSpec = tween(150),
-        label = "sidebarItemBackground"
-    )
-    val contentColor by animateColorAsState(
-        targetValue = if (isSelected) SidebarTokens.TextPrimary else SidebarTokens.TextSecondary,
-        animationSpec = tween(150),
-        label = "sidebarItemContent"
-    )
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-            ) { onClick() },
-        color = backgroundColor
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp)
-        ) {
-            Box(modifier = Modifier.size(32.dp)) {
-                if (dmWithUser.otherUserAvatar != null) {
-                    AsyncImage(
-                        model = dmWithUser.otherUserAvatar,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(SidebarTokens.SurfaceRaised),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = (dmWithUser.otherUserName ?: "?").take(1).uppercase(),
-                            color = SidebarTokens.TextTertiary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                // Presence dot
-                if (presence != null && presence != "offline") {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .align(Alignment.BottomEnd)
-                            .clip(CircleShape)
-                            .background(SidebarTokens.SurfaceBase) // Masking
-                            .padding(1.5.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape)
-                                .background(
-                                    when (presence) {
-                                        "online" -> SidebarTokens.Online
-                                        "idle" -> Color(0xFFFAA61A)
-                                        "dnd" -> Color(0xFFF04747)
-                                        else -> SidebarTokens.TextTertiary
-                                    }
-                                )
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = dmWithUser.otherUserName ?: "Unknown",
-                color = contentColor,
-                fontSize = 14.sp,
-                fontWeight = if (isSelected || dmWithUser.dm.unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-
-            if (dmWithUser.dm.mentionCount > 0) {
-                Badge(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ) {
-                    Text(text = dmWithUser.dm.mentionCount.toString(), fontSize = 10.sp)
-                }
-            } else if (dmWithUser.dm.unreadCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(SidebarTokens.TextPrimary)
-                )
-            }
-
-            IconButton(
-                onClick = { onDelete() },
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Close DM",
-                    tint = SidebarTokens.TextTertiary,
-                    modifier = Modifier.size(14.dp)
-                )
-            }
         }
     }
 }

@@ -14,7 +14,5 @@ data class ChannelEntity(
     val workspaceId: String,
     val parentId: String?,
     val createdAt: String,
-    val updatedAt: String,
-    val unreadCount: Int = 0,
-    val mentionCount: Int = 0
+    val updatedAt: String
 )

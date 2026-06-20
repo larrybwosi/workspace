@@ -1,6 +1,5 @@
-import { Controller, Post, Body, UnauthorizedException, BadRequestException, Logger, Req } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { auth } from '../better-auth';
-import { prisma } from '@repo/database';
 
 @Controller('auth/android')
 export class AndroidAuthController {
@@ -52,23 +51,6 @@ export class AndroidAuthController {
     return this.performSocialLogin('github', { code: body.code });
   }
 
-  @Post('refresh')
-  async refresh(@Req() request: any) {
-    try {
-      const session = await auth.api.getSession({
-        headers: request.headers,
-      });
-
-      if (!session) {
-        throw new UnauthorizedException('Invalid session');
-      }
-
-      return this.handleAuthResponse(session, 'Failed to refresh session');
-    } catch (error: any) {
-      this.handleAuthError(error);
-    }
-  }
-
   private validateSignupInput(body: any) {
     const fields = ['email', 'password', 'name', 'username'];
     if (fields.some((f) => !body[f])) {
@@ -87,20 +69,14 @@ export class AndroidAuthController {
     }
   }
 
-  private async handleAuthResponse(response: any, errorMessage: string) {
+  private handleAuthResponse(response: any, errorMessage: string) {
     if (!response || !response.session) {
       throw new BadRequestException(errorMessage);
     }
-
-    const memberships = await prisma.workspaceMember.findMany({
-      where: { userId: response.user.id }
-    });
-
     return {
       token: response.session.token,
       user: response.user,
       session: response.session,
-      memberships
     };
   }
 
@@ -119,7 +95,11 @@ export class AndroidAuthController {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.handleAuthResponse(response, 'Login failed');
+    return {
+      token: response.session.token,
+      user: response.user,
+      session: response.session,
+    };
   }
 
   private handleAuthError(error: any) {

@@ -90,8 +90,6 @@ class ChannelRepository @Inject constructor(
         workspaceId = workspaceId,
         parentId = parentId,
         createdAt = createdAt,
-        updatedAt = updatedAt,
-        unreadCount = _count?.unreadCount ?: 0,
-        mentionCount = _count?.mentionCount ?: 0
+        updatedAt = updatedAt
     )
 }
