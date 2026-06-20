@@ -227,7 +227,7 @@ fun MainContent(
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                AnimatedVisibility(
+                this@Column.AnimatedVisibility(
                     visible = isHomeSelected,
                     enter = fadeIn(tween(220)),
                     exit = fadeOut(tween(120))

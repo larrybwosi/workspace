@@ -3,7 +3,7 @@ package com.scrymechat.android.notifications
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Person
+import androidx.core.app.Person
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -146,17 +146,22 @@ class NotificationHelper(private val context: Context) {
 
         val messagingStyle = NotificationCompat.MessagingStyle(
             Person.Builder().setName("You").build()
-        ).apply {
-            conversationTitle = if (entityType == "channel") title else null
-            isGroupConversation = entityType == "channel"
-            history.forEach { msg ->
-                addMessage(msg.text, msg.timestamp, person)
-            }
+        )
+        messagingStyle.conversationTitle = if (entityType == "channel") title else null
+        messagingStyle.isGroupConversation = entityType == "channel"
+        history.forEach { msg ->
+            messagingStyle.addMessage(msg.text, msg.timestamp, person)
         }
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(ContextCompat.getColor(context, R.color.brand_primary))
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.brand_primary))
+                } catch (e: Exception) {
+                    // Fallback for tests or missing resource
+                }
+            }
             .setStyle(messagingStyle)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
@@ -185,7 +190,13 @@ class NotificationHelper(private val context: Context) {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(ContextCompat.getColor(context, R.color.brand_primary))
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.brand_primary))
+                } catch (e: Exception) {
+                    // Fallback
+                }
+            }
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -209,7 +220,13 @@ class NotificationHelper(private val context: Context) {
 
         val summary = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(ContextCompat.getColor(context, R.color.brand_primary))
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.brand_primary))
+                } catch (e: Exception) {
+                    // Fallback
+                }
+            }
             .setContentTitle(summaryTitle)
             .setStyle(NotificationCompat.InboxStyle().setSummaryText(summaryTitle))
             .setGroup(groupKey)

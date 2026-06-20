@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,7 +45,7 @@ import com.scrymechat.android.ui.theme.*
  * replacing them, so the rest of the app is unaffected. Centralizing them
  * here makes the "premium" intent legible and easy to re-tune in one place.
  */
-private object SidebarTokens {
+object SidebarTokens {
     // Surfaces — restrained, low-contrast steps so elevation reads as
     // material rather than as a sudden color jump.
     val SurfaceBase = Color(0xFF18191D)
@@ -67,6 +68,7 @@ private object SidebarTokens {
     val TextSecondary = Color(0xFF8E909C)
     val TextTertiary = Color(0xFF6B6D78)
 }
+
 
 @Composable
 fun ChannelSidebar(
@@ -294,7 +296,7 @@ fun SidebarItem(
             .clip(RoundedCornerShape(6.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = androidx.compose.material3.ripple.ripple(color = SidebarTokens.Accent)
+                indication = rememberRipple(color = SidebarTokens.Accent)
             ) { onClick() },
         color = backgroundColor
     ) {
