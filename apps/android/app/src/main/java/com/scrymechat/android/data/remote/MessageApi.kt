@@ -86,6 +86,16 @@ interface MessageApi {
         @Path("emoji") emoji: String
     ): Response<Unit>
 
+    @POST("dms/{conversationId}/read")
+    suspend fun markDmRead(
+        @Path("conversationId") conversationId: String
+    ): Response<Unit>
+
+    @POST("channels/{channelId}/read")
+    suspend fun markChannelRead(
+        @Path("channelId") channelId: String
+    ): Response<Unit>
+
     @POST("v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}")
     suspend fun triggerMessageAction(
         @Path("slug") slug: String,

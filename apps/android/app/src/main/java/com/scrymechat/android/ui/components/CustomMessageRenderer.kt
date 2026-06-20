@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -368,9 +369,9 @@ fun MessageNodeRenderer(
                                 color = if (selectedLabel.isEmpty()) ScrymeDarkTextSecondary else ScrymeDarkTextPrimary
                             )
                             Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.ArrowDropDown,
+                                imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null,
-                                tint = ScrymeDarkTextSecondary
+                                tint = com.scrymechat.android.ui.home.SidebarTokens.TextSecondary
                             )
                         }
                     }

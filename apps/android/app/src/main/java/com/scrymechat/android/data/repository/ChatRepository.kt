@@ -149,6 +149,32 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun markDmRead(dmId: String): Resource<Unit> {
+        return try {
+            val response = api.markDmRead(dmId)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun markChannelRead(channelId: String): Resource<Unit> {
+        return try {
+            val response = api.markChannelRead(channelId)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     suspend fun addReaction(targetId: String, messageId: String, emoji: String, isChannel: Boolean): Resource<Unit> {
         return try {
             val response = if (isChannel) {
