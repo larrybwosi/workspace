@@ -1,6 +1,8 @@
 package com.scrymechat.android.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,10 +14,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.ui.theme.*
+
+/**
+ * Shared visual tokens for dynamic / server-driven UI.
+ *
+ * Server-driven content (custom messages, forms, stats) is the riskiest
+ * place for a chat app to look "AI generated" because every server payload
+ * can bring its own ad-hoc color. These tokens keep the chrome — surfaces,
+ * hairlines, spacing, radii — fixed and enterprise-consistent, while still
+ * letting a payload's accent color (badges, card border) come through in a
+ * single controlled way. Mirrors the tokens used in ChannelSidebar so the
+ * whole app reads as one design language rather than per-screen choices.
+ */
+private object RendererTokens {
+    val SurfaceRaised = Color(0xFF1F2024)
+    val SurfaceSunken = Color(0xFF15161A)
+
+    val Hairline = Color(0x1FFFFFFF)
+    val HairlineStrong = Color(0x33FFFFFF)
+
+    val Accent = Color(0xFF6C8DFF)
+    val AccentMuted = Color(0x1F6C8DFF)
+
+    val Destructive = Color(0xFFE5555F)
+    val DestructiveMuted = Color(0x1FE5555F)
+
+    val Neutral = Color(0xFF8E909C)
+    val NeutralMuted = Color(0x1F8E909C)
+
+    val RadiusOuter = 14.dp
+    val RadiusInner = 10.dp
+    val RadiusChip = 6.dp
+
+    fun parse(hex: String?, fallback: Color): Color =
+        if (hex.isNullOrBlank()) fallback
+        else try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { fallback }
+}
 
 @Composable
 fun CustomMessageRenderer(
@@ -26,48 +65,62 @@ fun CustomMessageRenderer(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false
 ) {
+    val accentColor = RendererTokens.parse(customMessage.context.color, RendererTokens.Accent)
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = ScrymeDarkSurface,
             contentColor = ScrymeDarkTextPrimary
         ),
-        shape = RoundedCornerShape(12.dp),
-        border = customMessage.context.color?.let {
-            val color = try { Color(android.graphics.Color.parseColor(it)) } catch (e: Exception) { ScrymeDarkAccent }
-            ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(color))
-        }
+        shape = RoundedCornerShape(RendererTokens.RadiusOuter),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(
+            1.dp,
+            if (customMessage.context.color != null) accentColor.copy(alpha = 0.4f) else RendererTokens.Hairline
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(18.dp)) {
             // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (customMessage.context.icon != null) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = ScrymeDarkAccent,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(RendererTokens.RadiusChip))
+                            .background(accentColor.copy(alpha = 0.16f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                 }
                 Text(
                     text = customMessage.context.title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = ScrymeDarkTextPrimary
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = ScrymeDarkTextPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
             customMessage.context.description?.let {
                 Text(
                     text = it,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = ScrymeDarkTextSecondary,
-                    modifier = Modifier.padding(top = 4.dp)
+                    lineHeight = 18.sp,
+                    modifier = Modifier.padding(top = 6.dp, start = if (customMessage.context.icon != null) 40.dp else 0.dp)
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray.copy(alpha = 0.2f))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = RendererTokens.Hairline)
 
             // Root Node
             MessageNodeRenderer(
@@ -101,14 +154,14 @@ fun MessageNodeRenderer(
 
     when (node.type) {
         "Layout.Stack" -> {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 node.children?.forEach { child ->
                     MessageNodeRenderer(child, formState, onUpdateForm, data)
                 }
             }
         }
         "Layout.Row" -> {
-             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 node.children?.forEach { child ->
                     Box(modifier = Modifier.weight(1f)) {
                         MessageNodeRenderer(child, formState, onUpdateForm, data)
@@ -119,9 +172,9 @@ fun MessageNodeRenderer(
         "Layout.Grid" -> {
             val columns = (node.properties?.get("columns") as? Number)?.toInt() ?: 2
             val children = node.children ?: emptyList()
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 children.chunked(columns).forEach { rowChildren ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         rowChildren.forEach { child ->
                             Box(modifier = Modifier.weight(1f)) {
                                 MessageNodeRenderer(child, formState, onUpdateForm, data)
@@ -137,10 +190,11 @@ fun MessageNodeRenderer(
         "Layout.Card" -> {
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                color = Color.Gray.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp)
+                color = RendererTokens.SurfaceSunken,
+                shape = RoundedCornerShape(RendererTokens.RadiusInner),
+                border = BorderStroke(1.dp, RendererTokens.Hairline)
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     node.children?.forEach { child ->
                         MessageNodeRenderer(child, formState, onUpdateForm, data)
                     }
@@ -149,7 +203,12 @@ fun MessageNodeRenderer(
         }
         "Text.Paragraph" -> {
             val content = node.properties?.get("content") as? String ?: ""
-            Text(text = interpolate(content, formState, data), color = ScrymeDarkTextPrimary, fontSize = 14.sp)
+            Text(
+                text = interpolate(content, formState, data),
+                color = ScrymeDarkTextPrimary,
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )
         }
         "Text.Heading" -> {
             val content = node.properties?.get("content") as? String ?: ""
@@ -157,31 +216,43 @@ fun MessageNodeRenderer(
             Text(
                 text = interpolate(content, formState, data),
                 color = ScrymeDarkTextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = if (level == 1) 20.sp else if (level == 2) 18.sp else 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = if (level == 1) 19.sp else if (level == 2) 17.sp else 15.sp,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
         }
         "Display.Field" -> {
             val label = node.properties?.get("label") as? String ?: ""
             val value = node.properties?.get("value")?.toString() ?: ""
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                Text(text = label, color = ScrymeDarkTextSecondary, fontSize = 12.sp)
-                Text(text = interpolate(value, formState, data), color = ScrymeDarkTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                Text(
+                    text = label.uppercase(),
+                    color = ScrymeDarkTextSecondary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.4.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = interpolate(value, formState, data),
+                    color = ScrymeDarkTextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
         "Display.Badge" -> {
             val label = node.properties?.get("label") as? String ?: ""
-            val colorStr = node.properties?.get("color") as? String
-            val color = try { Color(android.graphics.Color.parseColor(colorStr)) } catch (e: Exception) { ScrymeDarkAccent }
+            val color = RendererTokens.parse(node.properties?.get("color") as? String, RendererTokens.Accent)
 
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(color.copy(alpha = 0.2f))
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                    .clip(RoundedCornerShape(RendererTokens.RadiusChip))
+                    .background(color.copy(alpha = 0.14f))
+                    .border(BorderStroke(1.dp, color.copy(alpha = 0.3f)), RoundedCornerShape(RendererTokens.RadiusChip))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
-                Text(text = label, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(text = label, color = color, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
         }
         "Input.Text" -> {
@@ -191,18 +262,31 @@ fun MessageNodeRenderer(
             val value = formState[id] as? String ?: ""
 
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                Text(text = label, color = ScrymeDarkTextSecondary, fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
-                TextField(
+                if (label.isNotEmpty()) {
+                    Text(
+                        text = label,
+                        color = ScrymeDarkTextSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                }
+                OutlinedTextField(
                     value = value,
                     onValueChange = { onUpdateForm(id, it) },
-                    placeholder = { Text(placeholder, fontSize = 14.sp) },
+                    placeholder = { Text(placeholder, fontSize = 14.sp, color = ScrymeDarkTextSecondary.copy(alpha = 0.6f)) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = ScrymeDarkBackground,
-                        unfocusedContainerColor = ScrymeDarkBackground,
+                    shape = RoundedCornerShape(RendererTokens.RadiusInner),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = RendererTokens.SurfaceSunken,
+                        unfocusedContainerColor = RendererTokens.SurfaceSunken,
                         focusedTextColor = ScrymeDarkTextPrimary,
-                        unfocusedTextColor = ScrymeDarkTextPrimary
+                        unfocusedTextColor = ScrymeDarkTextPrimary,
+                        focusedBorderColor = RendererTokens.Accent,
+                        unfocusedBorderColor = RendererTokens.Hairline,
+                        cursorColor = RendererTokens.Accent
                     ),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
                     singleLine = true
                 )
             }
@@ -213,14 +297,19 @@ fun MessageNodeRenderer(
             val checked = formState[id] as? Boolean ?: false
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = label, color = ScrymeDarkTextPrimary, fontSize = 14.sp)
+                Text(text = label, color = ScrymeDarkTextPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
                 Switch(
                     checked = checked,
-                    onCheckedChange = { onUpdateForm(id, it) }
+                    onCheckedChange = { onUpdateForm(id, it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = RendererTokens.Accent,
+                        uncheckedBorderColor = RendererTokens.HairlineStrong
+                    )
                 )
             }
         }
@@ -230,13 +319,15 @@ fun MessageNodeRenderer(
             val checked = formState[id] as? Boolean ?: false
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
                     checked = checked,
-                    onCheckedChange = { onUpdateForm(id, it) }
+                    onCheckedChange = { onUpdateForm(id, it) },
+                    colors = CheckboxDefaults.colors(checkedColor = RendererTokens.Accent)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(text = label, color = ScrymeDarkTextPrimary, fontSize = 14.sp)
             }
         }
@@ -249,26 +340,50 @@ fun MessageNodeRenderer(
             val selectedLabel = options.find { it["value"]?.toString() == selectedValue }?.get("label") as? String ?: selectedValue
 
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                Text(text = label, color = ScrymeDarkTextSecondary, fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
+                if (label.isNotEmpty()) {
+                    Text(
+                        text = label,
+                        color = ScrymeDarkTextSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                }
                 Box {
                     OutlinedButton(
                         onClick = { expanded = true },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(RendererTokens.RadiusInner),
+                        border = BorderStroke(1.dp, RendererTokens.Hairline),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = ScrymeDarkTextPrimary)
                     ) {
-                        Text(text = selectedLabel.ifEmpty { "Select an option" })
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selectedLabel.ifEmpty { "Select an option" },
+                                fontSize = 14.sp,
+                                color = if (selectedLabel.isEmpty()) ScrymeDarkTextSecondary else ScrymeDarkTextPrimary
+                            )
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = ScrymeDarkTextSecondary
+                            )
+                        }
                     }
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(ScrymeDarkSurface)
+                        modifier = Modifier.background(RendererTokens.SurfaceRaised)
                     ) {
                         options.forEach { option ->
                             val optLabel = option["label"] as? String ?: ""
                             val optValue = option["value"]?.toString() ?: ""
                             DropdownMenuItem(
-                                text = { Text(optLabel, color = ScrymeDarkTextPrimary) },
+                                text = { Text(optLabel, color = ScrymeDarkTextPrimary, fontSize = 14.sp) },
                                 onClick = {
                                     onUpdateForm(id, optValue)
                                     expanded = false
@@ -287,24 +402,29 @@ fun MessageNodeRenderer(
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 if (label != null) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(text = label, color = ScrymeDarkTextSecondary, fontSize = 12.sp)
-                        Text(text = "${(value/max * 100).toInt()}%", color = ScrymeDarkTextSecondary, fontSize = 12.sp)
+                        Text(text = label, color = ScrymeDarkTextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                        Text(
+                            text = "${(value / max * 100).toInt()}%",
+                            color = ScrymeDarkTextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
                 LinearProgressIndicator(
                     progress = { value / max },
-                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                    color = ScrymeDarkAccent,
-                    trackColor = Color.Gray.copy(alpha = 0.2f)
+                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                    color = RendererTokens.Accent,
+                    trackColor = RendererTokens.NeutralMuted
                 )
             }
         }
         "Data.StatsGrid" -> {
             val children = node.children ?: emptyList()
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 children.chunked(2).forEach { rowChildren ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         rowChildren.forEach { child ->
                             Box(modifier = Modifier.weight(1f)) {
                                 MessageNodeRenderer(child, formState, onUpdateForm, data)
@@ -321,13 +441,26 @@ fun MessageNodeRenderer(
             val label = node.properties?.get("label") as? String ?: ""
             val value = node.properties?.get("value")?.toString() ?: ""
             Surface(
-                color = Color.Gray.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp),
+                color = RendererTokens.SurfaceSunken,
+                shape = RoundedCornerShape(RendererTokens.RadiusInner),
+                border = BorderStroke(1.dp, RendererTokens.Hairline),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = label, color = ScrymeDarkTextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    Text(text = interpolate(value, formState, data), color = ScrymeDarkTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                Column(modifier = Modifier.padding(14.dp), horizontalAlignment = Alignment.Start) {
+                    Text(
+                        text = label.uppercase(),
+                        color = ScrymeDarkTextSecondary,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.4.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = interpolate(value, formState, data),
+                        color = ScrymeDarkTextPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -351,35 +484,40 @@ fun ActionButtonsRenderer(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         actions.forEach { action ->
-            val color = when (action.type) {
-                "PRIMARY" -> ScrymeDarkAccent
-                "DESTRUCTIVE" -> Color.Red
-                else -> Color.Gray
+            val (containerColor, contentColor, border) = when (action.type) {
+                "PRIMARY" -> Triple(RendererTokens.Accent, Color.White, null)
+                "DESTRUCTIVE" -> Triple(RendererTokens.Destructive, Color.White, null)
+                "GHOST" -> Triple(Color.Transparent, ScrymeDarkTextSecondary, BorderStroke(1.dp, RendererTokens.Hairline))
+                else -> Triple(RendererTokens.SurfaceRaised, ScrymeDarkTextPrimary, BorderStroke(1.dp, RendererTokens.Hairline))
             }
 
             Button(
                 onClick = { onActionTriggered(action) },
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (action.type == "GHOST") Color.Transparent else color,
-                    contentColor = if (action.type == "GHOST") color else Color.White
+                    containerColor = containerColor,
+                    contentColor = contentColor,
+                    disabledContainerColor = containerColor.copy(alpha = 0.5f),
+                    disabledContentColor = contentColor.copy(alpha = 0.7f)
                 ),
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(8.dp)
+                border = border,
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
+                modifier = Modifier.weight(1f).height(40.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(RendererTokens.RadiusInner)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
-                        color = if (action.type == "GHOST") color else Color.White,
+                        color = contentColor,
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = action.label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(text = action.label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

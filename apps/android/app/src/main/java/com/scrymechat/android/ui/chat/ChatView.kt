@@ -2,10 +2,12 @@ package com.scrymechat.android.ui.chat
 
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,12 +20,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -33,11 +38,109 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.AttachmentDto
-import com.scrymechat.android.data.remote.CustomMessageDto
 import com.scrymechat.android.data.remote.MessageActionDto
 import com.scrymechat.android.ui.components.*
-import com.scrymechat.android.ui.theme.*
 import kotlin.math.roundToInt
+
+// ─── Theme-aware palette ─────────────────────────────────────────────────────
+// Mirrors the premium direction used on the login screen: rich gradients,
+// glass surfaces, and distinct light/dark variants rather than a single
+// shared dark-only palette (the original hardcoded ScrymeDark* tokens).
+
+internal data class ChatPalette(
+    val isDark: Boolean,
+    val canvasBg: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val glassSurface: Color,
+    val glassBorder: Color,
+    val bubbleSurface: Color,
+    val bubbleBorder: Color,
+    val inputBarBg: Color,
+    val inputFieldBg: Color,
+    val inputFieldBorder: Color,
+    val inputFieldBorderFocused: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textTertiary: Color,
+    val accent: Color,
+    val accentGradient: List<Color>,
+    val accentSoft: Color,
+    val divider: Color,
+    val replyStripBg: Color,
+    val replyStripAccent: Color,
+    val attachmentChipBg: Color,
+    val reactionChipBg: Color,
+    val reactionChipBorder: Color,
+    val scrimOverImage: Color,
+)
+
+@Composable
+internal fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
+    return if (isDark) {
+        ChatPalette(
+            isDark = true,
+            canvasBg = Color(0xFF0A0B10),
+            surface = Color(0xFF15171F),
+            surfaceVariant = Color(0xFF0E0F16),
+            glassSurface = Color.White.copy(alpha = 0.05f),
+            glassBorder = Color.White.copy(alpha = 0.09f),
+            bubbleSurface = Color.White.copy(alpha = 0.035f),
+            bubbleBorder = Color.White.copy(alpha = 0.06f),
+            inputBarBg = Color(0xFF11131B),
+            inputFieldBg = Color.White.copy(alpha = 0.05f),
+            inputFieldBorder = Color.White.copy(alpha = 0.10f),
+            inputFieldBorderFocused = Color(0xFF818CF8),
+            textPrimary = Color(0xFFF4F5F8),
+            textSecondary = Color(0xFF9CA3B5),
+            textTertiary = Color(0xFF6B7280),
+            accent = Color(0xFF818CF8),
+            accentGradient = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6)),
+            accentSoft = Color(0xFF818CF8).copy(alpha = 0.16f),
+            divider = Color.White.copy(alpha = 0.06f),
+            replyStripBg = Color(0xFF818CF8).copy(alpha = 0.10f),
+            replyStripAccent = Color(0xFF818CF8),
+            attachmentChipBg = Color.White.copy(alpha = 0.04f),
+            reactionChipBg = Color.White.copy(alpha = 0.06f),
+            reactionChipBorder = Color.White.copy(alpha = 0.10f),
+            scrimOverImage = Color.Black.copy(alpha = 0.55f),
+        )
+    } else {
+        ChatPalette(
+            isDark = false,
+            canvasBg = Color(0xFFF6F7FB),
+            surface = Color.White,
+            surfaceVariant = Color(0xFFFAFAFD),
+            glassSurface = Color.White.copy(alpha = 0.7f),
+            glassBorder = Color(0xFFE7E9F3),
+            bubbleSurface = Color.White,
+            bubbleBorder = Color(0xFFEDEEF6),
+            inputBarBg = Color(0xFFFAFAFD),
+            inputFieldBg = Color.White,
+            inputFieldBorder = Color(0xFFE2E5F1),
+            inputFieldBorderFocused = Color(0xFF6366F1),
+            textPrimary = Color(0xFF11121A),
+            textSecondary = Color(0xFF676B80),
+            textTertiary = Color(0xFF9598A8),
+            accent = Color(0xFF5B54E0),
+            accentGradient = listOf(Color(0xFF4F46E5), Color(0xFF7C3AED)),
+            accentSoft = Color(0xFF5B54E0).copy(alpha = 0.10f),
+            divider = Color(0xFFEEEFF6),
+            replyStripBg = Color(0xFF5B54E0).copy(alpha = 0.07f),
+            replyStripAccent = Color(0xFF5B54E0),
+            attachmentChipBg = Color(0xFFF6F7FB),
+            reactionChipBg = Color(0xFFF1F1FA),
+            reactionChipBorder = Color(0xFFE2E5F1),
+            scrimOverImage = Color.Black.copy(alpha = 0.45f),
+        )
+    }
+}
+
+private val ShapeBubble = RoundedCornerShape(14.dp)
+private val ShapeChip = RoundedCornerShape(10.dp)
+private val ShapeInputBar = RoundedCornerShape(22.dp)
+
+// ──────────────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -55,11 +158,13 @@ fun ChatView(
     typingUsers: List<String>,
     modifier: Modifier = Modifier
 ) {
+    val palette = chatPalette()
     var textState by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
     var fullScreenImageName by remember { mutableStateOf<String?>(null) }
     var fullScreenImageMimeType by remember { mutableStateOf<String?>(null) }
+    var inputFocused by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(messages.size) {
@@ -68,17 +173,18 @@ fun ChatView(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(ScrymeDarkSurfaceVariant)) {
+    Column(modifier = modifier.fillMaxSize().background(palette.canvasBg)) {
         // Messages List
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             state = listState,
             reverseLayout = true,
-            contentPadding = PaddingValues(bottom = 8.dp)
+            contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
         ) {
             items(messages, key = { it.id }) { message ->
                 SwipeableMessageItem(
                     message = message,
+                    palette = palette,
                     onReply = {
                         replyingTo = it
                         onReply(it)
@@ -104,55 +210,92 @@ fun ChatView(
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
-            Text(
-                text = if (typingUsers.size == 1) "${typingUsers[0]} is typing..." else "${typingUsers.size} users are typing...",
-                color = ScrymeDarkTextSecondary,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(palette.glassSurface)
+                    .border(1.dp, palette.glassBorder, RoundedCornerShape(50))
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                TypingDots(color = palette.accent)
+                Text(
+                    text = if (typingUsers.size == 1) "${typingUsers[0]} is typing" else "${typingUsers.size} people are typing",
+                    color = palette.textSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
 
         // Input Area
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ScrymeDarkSurfaceVariant)
-                .padding(8.dp)
+                .background(palette.inputBarBg)
+                .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
-            replyingTo?.let { reply ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Gray.copy(alpha = 0.2f))
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Reply, contentDescription = null, tint = ScrymeDarkTextSecondary, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Replying to ${reply.senderName ?: "User"}",
-                        color = ScrymeDarkTextSecondary,
-                        fontSize = 12.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = { replyingTo = null }, modifier = Modifier.size(16.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = null, tint = ScrymeDarkTextSecondary)
+            AnimatedVisibility(
+                visible = replyingTo != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                replyingTo?.let { reply ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(palette.replyStripBg)
+                            .padding(start = 10.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(3.dp)
+                                .height(24.dp)
+                                .background(palette.replyStripAccent, RoundedCornerShape(2.dp))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            Icons.Default.Reply,
+                            contentDescription = null,
+                            tint = palette.replyStripAccent,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Replying to ${reply.senderName ?: "User"}",
+                            color = palette.textPrimary,
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { replyingTo = null }, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "Cancel reply", tint = palette.textTertiary, modifier = Modifier.size(15.dp))
+                        }
                     }
                 }
             }
 
+            val inputBorderColor by animateColorAsState(
+                targetValue = if (inputFocused) palette.inputFieldBorderFocused else palette.inputFieldBorder,
+                label = "inputBorder"
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(ScrymeDarkBackground)
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .clip(ShapeInputBar)
+                    .background(palette.inputFieldBg)
+                    .border(1.5.dp, inputBorderColor, ShapeInputBar)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* Add attachment */ }) {
-                    Icon(Icons.Default.AddCircle, contentDescription = "Add", tint = ScrymeDarkTextSecondary)
+                IconButton(onClick = { /* Add attachment */ }, modifier = Modifier.size(38.dp)) {
+                    Icon(Icons.Default.AddCircle, contentDescription = "Add attachment", tint = palette.textSecondary, modifier = Modifier.size(22.dp))
                 }
 
                 TextField(
@@ -161,27 +304,48 @@ fun ChatView(
                         textState = it
                         if (it.isNotEmpty()) onTyping()
                     },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Message", color = ScrymeDarkTextSecondary) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .onFocusChanged { inputFocused = it.isFocused },
+                    placeholder = { Text("Message", color = palette.textTertiary, fontSize = 14.sp) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = ScrymeDarkTextPrimary,
-                        unfocusedTextColor = ScrymeDarkTextPrimary
+                        focusedTextColor = palette.textPrimary,
+                        unfocusedTextColor = palette.textPrimary,
+                        cursorColor = palette.accent
                     ),
-                    maxLines = 4
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.5.sp),
+                    maxLines = 5
                 )
 
-                if (textState.isNotBlank()) {
-                    IconButton(onClick = {
-                        onSendMessage(textState, replyingTo?.id)
-                        textState = ""
-                        replyingTo = null
-                    }) {
-                        Icon(Icons.Default.Send, contentDescription = "Send", tint = ScrymeDarkAccent)
+                AnimatedVisibility(
+                    visible = textState.isNotBlank(),
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(3.dp)
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(palette.accentGradient))
+                            .clickable {
+                                onSendMessage(textState, replyingTo?.id)
+                                textState = ""
+                                replyingTo = null
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
             }
@@ -213,10 +377,36 @@ fun ChatView(
     }
 }
 
+@Composable
+private fun TypingDots(color: Color) {
+    val infinite = rememberInfiniteTransition(label = "typing")
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { index ->
+            val delay = index * 150
+            val scale by infinite.animateFloat(
+                initialValue = 0.4f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600, delayMillis = delay, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot$index"
+            )
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .alpha(0.4f + 0.6f * scale)
+                    .background(color, CircleShape)
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SwipeableMessageItem(
     message: MessageEntity,
+    palette: ChatPalette,
     onReply: (MessageEntity) -> Unit,
     onForward: (MessageEntity) -> Unit,
     onDownload: (AttachmentDto) -> Unit = {},
@@ -226,11 +416,19 @@ fun SwipeableMessageItem(
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {}
 ) {
-    // Basic implementation of swipe-to-action
-    // In a real app, use a more sophisticated approach like AnchoredDraggable for better UX
+    // Swipe-to-action. Kept lightweight (drag offset + threshold) per the
+    // original approach, but with spring-back animation and a clearer,
+    // theme-aware reveal so the affordance reads as intentional rather than
+    // a layout glitch mid-drag.
     val swipeState = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
     val threshold = with(density) { 80.dp.toPx() }
+    val animatedOffset by animateFloatAsState(
+        targetValue = swipeState.value,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "swipeOffset"
+    )
+    val swipeProgress = (kotlin.math.abs(swipeState.value) / threshold).coerceIn(0f, 1f)
 
     Box(
         modifier = Modifier
@@ -250,16 +448,16 @@ fun SwipeableMessageItem(
                 }
             )
     ) {
-        // Background Actions
+        // Background Actions — scale + fade in as the swipe approaches threshold
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            horizontalArrangement = if (swipeState.value > 0) Arrangement.Start else Arrangement.End,
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+            horizontalArrangement = if (animatedOffset > 0) Arrangement.Start else Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (swipeState.value > 0) {
-                Icon(Icons.Default.Reply, contentDescription = "Reply", tint = ScrymeDarkAccent)
-            } else if (swipeState.value < 0) {
-                Icon(Icons.Default.Forward, contentDescription = "Forward", tint = ScrymeDarkAccent)
+            if (animatedOffset > 4f) {
+                SwipeActionIcon(icon = Icons.Default.Reply, palette = palette, progress = swipeProgress)
+            } else if (animatedOffset < -4f) {
+                SwipeActionIcon(icon = Icons.Default.Forward, palette = palette, progress = swipeProgress)
             }
         }
 
@@ -268,7 +466,7 @@ fun SwipeableMessageItem(
 
         Surface(
             modifier = Modifier
-                .offset { IntOffset(swipeState.value.roundToInt(), 0) }
+                .offset { IntOffset(animatedOffset.roundToInt(), 0) }
                 .fillMaxWidth()
                 .combinedClickable(
                     onClick = { },
@@ -276,65 +474,91 @@ fun SwipeableMessageItem(
                 ),
             color = Color.Transparent
         ) {
-            MessageItem(
-                message = message,
-                onDownload = onDownload,
-                onAction = onAction,
-                onUpdateForm = onUpdateForm,
-                formState = formState,
-                isLoading = isLoading,
-                onImageClick = onImageClick
-            )
+            Box {
+                MessageItem(
+                    message = message,
+                    palette = palette,
+                    onDownload = onDownload,
+                    onAction = onAction,
+                    onUpdateForm = onUpdateForm,
+                    formState = formState,
+                    isLoading = isLoading,
+                    onImageClick = onImageClick
+                )
 
-            DropdownMenu(
-                expanded = showContextMenu,
-                onDismissRequest = { showContextMenu = false },
-                modifier = Modifier.background(ScrymeDarkSurface)
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Reply", color = ScrymeDarkTextPrimary) },
-                    onClick = {
-                        onReply(message)
-                        showContextMenu = false
-                    },
-                    leadingIcon = { Icon(Icons.Default.Reply, contentDescription = null, tint = ScrymeDarkTextSecondary) }
-                )
-                DropdownMenuItem(
-                    text = { Text("Forward", color = ScrymeDarkTextPrimary) },
-                    onClick = {
-                        onForward(message)
-                        showContextMenu = false
-                    },
-                    leadingIcon = { Icon(Icons.Default.Forward, contentDescription = null, tint = ScrymeDarkTextSecondary) }
-                )
-                if (message.attachments.isNotEmpty()) {
-                    message.attachments.forEach { attachment ->
-                        DropdownMenuItem(
-                            text = { Text("Download ${attachment.name}", color = ScrymeDarkTextPrimary) },
-                            onClick = {
-                                onDownload(attachment)
-                                showContextMenu = false
-                            },
-                            leadingIcon = { Icon(Icons.Default.Download, contentDescription = null, tint = ScrymeDarkTextSecondary) }
-                        )
+                DropdownMenu(
+                    expanded = showContextMenu,
+                    onDismissRequest = { showContextMenu = false },
+                    modifier = Modifier
+                        .background(palette.surface)
+                        .border(1.dp, palette.glassBorder, RoundedCornerShape(12.dp))
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Reply", color = palette.textPrimary, fontSize = 14.sp) },
+                        onClick = {
+                            onReply(message)
+                            showContextMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Default.Reply, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Forward", color = palette.textPrimary, fontSize = 14.sp) },
+                        onClick = {
+                            onForward(message)
+                            showContextMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Default.Forward, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                    )
+                    if (message.attachments.isNotEmpty()) {
+                        message.attachments.forEach { attachment ->
+                            DropdownMenuItem(
+                                text = { Text("Download ${attachment.name}", color = palette.textPrimary, fontSize = 14.sp) },
+                                onClick = {
+                                    onDownload(attachment)
+                                    showContextMenu = false
+                                },
+                                leadingIcon = { Icon(Icons.Default.Download, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                            )
+                        }
                     }
+                    DropdownMenuItem(
+                        text = { Text("Copy Text", color = palette.textPrimary, fontSize = 14.sp) },
+                        onClick = {
+                            // TODO: Implement copy to clipboard
+                            showContextMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                    )
                 }
-                DropdownMenuItem(
-                    text = { Text("Copy Text", color = ScrymeDarkTextPrimary) },
-                    onClick = {
-                        // TODO: Implement copy to clipboard
-                        showContextMenu = false
-                    },
-                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null, tint = ScrymeDarkTextSecondary) }
-                )
             }
         }
     }
 }
 
 @Composable
+private fun SwipeActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, palette: ChatPalette, progress: Float) {
+    val scale = 0.7f + 0.3f * progress
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .alpha(0.4f + 0.6f * progress)
+            .clip(CircleShape)
+            .background(palette.accentSoft),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = palette.accent,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+@Composable
 fun MessageItem(
     message: MessageEntity,
+    palette: ChatPalette,
     onDownload: (AttachmentDto) -> Unit = {},
     onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
@@ -345,15 +569,16 @@ fun MessageItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 14.dp, vertical = 6.dp)
     ) {
         AsyncImage(
             model = message.senderAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderId}",
             contentDescription = null,
             modifier = Modifier
-                .size(40.dp)
+                .size(38.dp)
                 .clip(CircleShape)
-                .background(Color.Gray),
+                .border(1.dp, palette.glassBorder, CircleShape)
+                .background(palette.surfaceVariant),
             contentScale = ContentScale.Crop
         )
 
@@ -363,71 +588,97 @@ fun MessageItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = message.senderName ?: "Unknown User",
-                    color = ScrymeDarkTextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    color = palette.textPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.5.sp
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(7.dp))
                 Text(
-                    text = message.createdAt.split("T").getOrNull(0) ?: "",
-                    color = ScrymeDarkTextSecondary,
-                    fontSize = 12.sp
+                    text = formatMessageTimestamp(message.createdAt),
+                    color = palette.textTertiary,
+                    fontSize = 11.5.sp
                 )
             }
 
             if (message.replyToSenderName != null) {
-                Text(
-                    text = "Replying to ${message.replyToSenderName}",
-                    color = ScrymeDarkAccent,
-                    fontSize = 12.sp,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                )
+                Spacer(modifier = Modifier.height(3.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(13.dp)
+                            .background(palette.replyStripAccent, RoundedCornerShape(1.dp))
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Replying to ${message.replyToSenderName}",
+                        color = palette.replyStripAccent,
+                        fontSize = 12.sp,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Render message content based on type
-            if (message.messageType == "custom" || message.messageType == "approval" || message.messageType == "report") {
-                val customMessage = message.customMessage
-                if (customMessage != null) {
-                    CustomMessageRenderer(
-                        customMessage = customMessage,
-                        formState = formState,
-                        onUpdateForm = onUpdateForm,
-                        onActionTriggered = { action -> onAction(action, formState) },
-                        isLoading = isLoading
-                    )
-                } else {
-                    MarkdownText(content = message.content)
+            // Render message content based on type — wrapped in a subtle
+            // bubble surface for richer, more "designed" message cards,
+            // while plain text stays unboxed for a lighter conversational feel.
+            val isRichContent = message.messageType in setOf("custom", "approval", "report", "poll", "graph")
+
+            if (isRichContent) {
+                Surface(
+                    shape = ShapeBubble,
+                    color = palette.bubbleSurface,
+                    border = BorderStroke(1.dp, palette.bubbleBorder)
+                ) {
+                    Box(modifier = Modifier.padding(2.dp)) {
+                        if (message.messageType == "custom" || message.messageType == "approval" || message.messageType == "report") {
+                            val customMessage = message.customMessage
+                            if (customMessage != null) {
+                                CustomMessageRenderer(
+                                    customMessage = customMessage,
+                                    formState = formState,
+                                    onUpdateForm = onUpdateForm,
+                                    onActionTriggered = { action -> onAction(action, formState) },
+                                    isLoading = isLoading
+                                )
+                            } else {
+                                MarkdownText(content = message.content)
+                            }
+                        } else {
+                            when (message.messageType) {
+                                "poll" -> {
+                                    val question = message.metadata?.get("question") as? String ?: "Poll"
+                                    val optionsMap = message.metadata?.get("options") as? List<Map<String, Any>> ?: emptyList()
+                                    val options = optionsMap.map {
+                                        PollOption(it["id"] as String, it["text"] as String, (it["votes"] as? Number)?.toInt() ?: 0)
+                                    }
+                                    val totalVotes = options.sumOf { it.votes }
+                                    val selectedOptionId = message.metadata?.get("userVote") as? String
+                                    PollComponent(
+                                        question = question,
+                                        options = options,
+                                        totalVotes = totalVotes,
+                                        selectedOptionId = selectedOptionId,
+                                        onOptionClick = {}
+                                    )
+                                }
+                                "graph" -> {
+                                    val title = message.metadata?.get("title") as? String ?: "Graph"
+                                    val data = (message.metadata?.get("data") as? List<Number>)?.map { it.toFloat() } ?: emptyList()
+                                    val labels = message.metadata?.get("labels") as? List<String> ?: emptyList()
+                                    GraphComponent(title = title, data = data, labels = labels)
+                                }
+                                else -> {
+                                    MarkdownText(content = message.content)
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
-                when (message.messageType) {
-                    "poll" -> {
-                        val question = message.metadata?.get("question") as? String ?: "Poll"
-                        val optionsMap = message.metadata?.get("options") as? List<Map<String, Any>> ?: emptyList()
-                        val options = optionsMap.map {
-                            PollOption(it["id"] as String, it["text"] as String, (it["votes"] as? Number)?.toInt() ?: 0)
-                        }
-                        val totalVotes = options.sumOf { it.votes }
-                        val selectedOptionId = message.metadata?.get("userVote") as? String
-                        PollComponent(
-                            question = question,
-                            options = options,
-                            totalVotes = totalVotes,
-                            selectedOptionId = selectedOptionId,
-                            onOptionClick = {}
-                        )
-                    }
-                    "graph" -> {
-                        val title = message.metadata?.get("title") as? String ?: "Graph"
-                        val data = (message.metadata?.get("data") as? List<Number>)?.map { it.toFloat() } ?: emptyList()
-                        val labels = message.metadata?.get("labels") as? List<String> ?: emptyList()
-                        GraphComponent(title = title, data = data, labels = labels)
-                    }
-                    else -> {
-                        MarkdownText(content = message.content)
-                    }
-                }
+                MarkdownText(content = message.content)
             }
 
             // Attachments
@@ -435,16 +686,21 @@ fun MessageItem(
             message.attachments.forEach { attachment ->
                 if (attachment.type.startsWith("image/")) {
                     Box(modifier = Modifier.padding(top = 8.dp)) {
-                        AsyncImage(
-                            model = attachment.url,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 300.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { onImageClick(attachment) },
-                            contentScale = ContentScale.Fit
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, palette.bubbleBorder)
+                        ) {
+                            AsyncImage(
+                                model = attachment.url,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 300.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { onImageClick(attachment) },
+                                contentScale = ContentScale.Fit
+                            )
+                        }
                         IconButton(
                             onClick = {
                                 Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
@@ -452,16 +708,16 @@ fun MessageItem(
                             },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(4.dp)
-                                .size(32.dp)
+                                .padding(6.dp)
+                                .size(30.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.5f))
+                                .background(palette.scrimOverImage)
                         ) {
                             Icon(
                                 Icons.Default.Download,
                                 contentDescription = "Download",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                         }
                     }
@@ -470,24 +726,37 @@ fun MessageItem(
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ScrymeDarkSurface)
-                            .padding(8.dp),
+                            .clip(ShapeChip)
+                            .background(palette.attachmentChipBg)
+                            .border(1.dp, palette.bubbleBorder, ShapeChip)
+                            .padding(horizontal = 10.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.FilePresent, contentDescription = null, tint = ScrymeDarkTextSecondary)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(palette.accentSoft),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.FilePresent, contentDescription = null, tint = palette.accent, modifier = Modifier.size(15.dp))
+                        }
+                        Spacer(modifier = Modifier.width(9.dp))
                         Text(
                             text = attachment.name,
-                            color = ScrymeDarkTextPrimary,
-                            fontSize = 14.sp,
+                            color = palette.textPrimary,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier.weight(1f)
                         )
-                        IconButton(onClick = {
-                            Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
-                            onDownload(attachment)
-                        }) {
-                            Icon(Icons.Default.Download, contentDescription = "Download", tint = ScrymeDarkTextSecondary)
+                        IconButton(
+                            onClick = {
+                                Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
+                                onDownload(attachment)
+                            },
+                            modifier = Modifier.size(30.dp)
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = "Download", tint = palette.textSecondary, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
@@ -496,25 +765,47 @@ fun MessageItem(
             // Reactions
             if (message.reactions.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     message.reactions.forEach { reaction ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color.Gray.copy(alpha = 0.2f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(palette.reactionChipBg)
+                                .border(1.dp, palette.reactionChipBorder, RoundedCornerShape(50))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(text = reaction.emoji, fontSize = 12.sp)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = reaction.count.toString(), color = ScrymeDarkTextSecondary, fontSize = 12.sp)
+                                Text(text = reaction.count.toString(), color = palette.textSecondary, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * Formats an ISO-ish createdAt string into a short, human-friendly time.
+ * Falls back to the original date-only behavior if parsing fails, so this
+ * is a pure visual upgrade with no risk of crashing on unexpected formats.
+ */
+private fun formatMessageTimestamp(createdAt: String): String {
+    return try {
+        val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
+        val hhmm = timePart.substringBefore(".").substringBefore("Z")
+        val parts = hhmm.split(":")
+        if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
+        var hour = parts[0].toIntOrNull() ?: return hhmm
+        val minute = parts[1]
+        val suffix = if (hour >= 12) "PM" else "AM"
+        if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
+        "$hour:$minute $suffix"
+    } catch (e: Exception) {
+        createdAt.split("T").getOrNull(0) ?: createdAt
     }
 }
