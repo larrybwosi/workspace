@@ -37,6 +37,7 @@ class HomeViewModel @Inject constructor(
         loadDms()
         observeCurrentUser()
         observeRealtimeMessages()
+        observePresence()
     }
 
     private fun observeCurrentUser() {
@@ -70,7 +71,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectWorkspace(workspace: WorkspaceEntity?) {
-        _uiState.update { it.copy(selectedWorkspace = workspace, selectedChannel = null, isHomeSelected = workspace == null) }
+        _uiState.update { it.copy(selectedWorkspace = workspace, selectedChannel = null, selectedDmId = null, isHomeSelected = workspace == null) }
         if (workspace != null) {
             loadChannels(workspace.slug)
         }
@@ -95,11 +96,15 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectChannel(channel: ChannelEntity) {
-        _uiState.update { it.copy(selectedChannel = channel) }
+        _uiState.update { it.copy(selectedChannel = channel, selectedDmId = null) }
+    }
+
+    fun selectDm(dmId: String) {
+        _uiState.update { it.copy(selectedDmId = dmId, selectedChannel = null, isHomeSelected = true, selectedWorkspace = null) }
     }
 
     fun selectHome() {
-        selectWorkspace(null)
+        _uiState.update { it.copy(isHomeSelected = true, selectedWorkspace = null, selectedChannel = null, selectedDmId = null) }
         loadDms()
     }
 
@@ -114,12 +119,36 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun observePresence() {
+        viewModelScope.launch {
+            realtimeRepository.observePresence().collect { presence ->
+                _uiState.update { state ->
+                    val newPresence = state.userPresence.toMutableMap()
+                    newPresence[presence.userId] = presence.data?.get("status") as? String ?: "online"
+                    state.copy(userPresence = newPresence)
+                }
+            }
+        }
+    }
+
     private fun observeRealtimeMessages() {
         viewModelScope.launch {
             realtimeRepository.observeMessages().collect { messageDto ->
                 if (messageDto.dmId != null) {
                     loadDms() // Refresh DM list to update last message and sorting
+                } else if (messageDto.channelId != null) {
+                    // Update channels to reflect unread count changes
+                    uiState.value.selectedWorkspace?.slug?.let { loadChannels(it) }
                 }
+            }
+        }
+    }
+
+    fun deleteDm(dmId: String) {
+        viewModelScope.launch {
+            val result = dmRepository.deleteDm(dmId)
+            if (result is Resource.Success) {
+                loadDms()
             }
         }
     }
@@ -142,9 +171,11 @@ data class HomeUiState(
     val dms: List<DmWithUser> = emptyList(),
     val selectedWorkspace: WorkspaceEntity? = null,
     val selectedChannel: ChannelEntity? = null,
+    val selectedDmId: String? = null,
     val isHomeSelected: Boolean = true,
     val currentUser: UserEntity? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val expandedCategories: Set<String> = emptySet()
+    val expandedCategories: Set<String> = emptySet(),
+    val userPresence: Map<String, String> = emptyMap() // userId -> status (online, offline, etc)
 )

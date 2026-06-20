@@ -64,9 +64,9 @@ class ReplyReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (entityType == "dm") {
-                    chatRepository.markDmRead(entityId)
+                    chatRepository.markMessagesAsRead(entityId, false)
                 } else {
-                    chatRepository.markChannelRead(entityId)
+                    chatRepository.markMessagesAsRead(entityId, true)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mark $entityType $entityId as read", e)

@@ -30,6 +30,12 @@ interface MessageDao {
     @Query("DELETE FROM messages WHERE dmId = :dmId")
     suspend fun deleteMessagesForDm(dmId: String)
 
+    @Query("UPDATE messages SET readByCurrentUser = 1 WHERE channelId = :channelId")
+    suspend fun markChannelMessagesAsRead(channelId: String)
+
+    @Query("UPDATE messages SET readByCurrentUser = 1 WHERE dmId = :dmId")
+    suspend fun markDmMessagesAsRead(dmId: String)
+
     @Query("DELETE FROM messages")
     suspend fun deleteAll()
 }

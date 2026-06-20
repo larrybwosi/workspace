@@ -185,6 +185,28 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun markMessagesAsRead(id: String, isChannel: Boolean): Resource<Unit> {
+        return try {
+            val response = if (isChannel) {
+                api.markChannelMessagesAsRead(id)
+            } else {
+                api.markDmMessagesAsRead(id)
+            }
+            if (response.isSuccessful) {
+                if (isChannel) {
+                    dao.markChannelMessagesAsRead(id)
+                } else {
+                    dao.markDmMessagesAsRead(id)
+                }
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     private fun MessageDto.toEntity(): MessageEntity {
         val type = (metadata?.get("type") as? String) ?: "standard"
         val entity = MessageEntity(
@@ -201,6 +223,8 @@ class ChatRepository @Inject constructor(
             replyToId = replyToId,
             replyToSenderName = replyTo?.sender?.name,
             readByCurrentUser = readByCurrentUser,
+            isDelivered = isDelivered ?: true,
+            isReadByOthers = isReadByOthers ?: false,
             attachments = attachments,
             metadata = metadata,
             reactions = reactions,
