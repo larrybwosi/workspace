@@ -35,6 +35,15 @@ vi.mock('@repo/database', () => ({
     workspaceMember: {
       findUnique: vi.fn(),
     },
+    apiKey: {
+      count: vi.fn(),
+    },
+    webhook: {
+      count: vi.fn(),
+    },
+    webhookLog: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -348,6 +357,57 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
         expect.stringContaining('3 commits'),
         expect.anything()
       );
+    });
+  });
+
+  describe('getStats', () => {
+    it('should return correct stats and calculate success rate', async () => {
+      const userId = 'user-1';
+
+      mockPrisma.apiKey.count
+        .mockResolvedValueOnce(2) // active
+        .mockResolvedValueOnce(5); // total
+
+      mockPrisma.webhook.count
+        .mockResolvedValueOnce(1) // active
+        .mockResolvedValueOnce(3); // total
+
+      mockPrisma.webhookLog.findMany.mockResolvedValue([
+        { success: true },
+        { success: true },
+        { success: false },
+        { success: true },
+      ]);
+
+      const result = await service.getStats(userId);
+
+      expect(result).toEqual({
+        activeKeys: 2,
+        totalKeys: 5,
+        activeWebhooks: 1,
+        totalWebhooks: 3,
+        apiCalls24h: 0,
+        rateLimitUsage: 0,
+        webhookSuccessRate: 75,
+      });
+
+      expect(mockPrisma.apiKey.count).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.webhook.count).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.webhookLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 100,
+          where: { webhook: { userId } },
+        })
+      );
+    });
+
+    it('should handle zero logs for success rate', async () => {
+      mockPrisma.apiKey.count.mockResolvedValue(0);
+      mockPrisma.webhook.count.mockResolvedValue(0);
+      mockPrisma.webhookLog.findMany.mockResolvedValue([]);
+
+      const result = await service.getStats('user-1');
+      expect(result.webhookSuccessRate).toBe(0);
     });
   });
 });
