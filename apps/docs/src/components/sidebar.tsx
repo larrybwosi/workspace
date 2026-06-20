@@ -66,16 +66,16 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
                       key={link.href}
                       to={link.href}
                       className={cn(
-                        'group flex w-full items-center rounded-md px-3 py-1.5 text-sm transition-all duration-200 relative',
+                        'group flex w-full items-center rounded-lg px-3 py-1.5 text-sm transition-all duration-200 relative',
                         isActive
-                          ? 'text-primary font-semibold bg-primary/5'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 hover:translate-x-1'
+                          ? 'text-primary font-bold bg-primary/5 shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                       )}
                     >
                       {isActive && (
-                        <div className="absolute left-0 w-1 h-4 bg-primary rounded-full -translate-x-0.5 transition-all duration-300" />
+                        <div className="absolute left-0 w-1 h-4 bg-primary rounded-full -translate-x-1 transition-all duration-300" />
                       )}
-                      <span className="relative z-10">{link.label}</span>
+                      <span className="relative z-10 tracking-tight">{link.label}</span>
                     </Link>
                   );
                 })}
