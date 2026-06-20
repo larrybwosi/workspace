@@ -17,13 +17,7 @@ export class AndroidAuthController {
 
   @Get('check-username')
   async checkUsername(@Query('username') username: string) {
-    if (!username || username.length < 3) {
-      throw new BadRequestException('Username must be at least 3 characters long');
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
-    }
+    this.validateUsername(username);
 
     try {
       const user = await prisma.user.findUnique({
@@ -33,8 +27,17 @@ export class AndroidAuthController {
 
       return { available: !user };
     } catch (error: any) {
-      this.logger.error(`Error checking username availability: ${error.message}`, error.stack);
-      throw new BadRequestException('Failed to check username availability');
+      this.handleAuthError(error, 'Failed to check username availability');
+    }
+  }
+
+  private validateUsername(username: string) {
+    if (!username || username.length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters long');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
     }
   }
 
@@ -60,13 +63,13 @@ export class AndroidAuthController {
           password: body.password,
           name: body.name,
           username: body.username,
-          image: body.image,
+          image: body.avatar || body.image,
           bio: body.bio,
         },
       });
       return this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
-      this.handleAuthError(error);
+      this.handleAuthError(error, 'Signup failed');
     }
   }
 
@@ -96,13 +99,7 @@ export class AndroidAuthController {
       throw new BadRequestException('Password must be at least 8 characters long');
     }
 
-    if (body.username.length < 3) {
-      throw new BadRequestException('Username must be at least 3 characters long');
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(body.username)) {
-      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
-    }
+    this.validateUsername(body.username);
   }
 
   private async performSocialLogin(provider: string, data: any) {
@@ -120,9 +117,16 @@ export class AndroidAuthController {
     if (!response || !response.session) {
       throw new BadRequestException(errorMessage);
     }
+
+    // Better-Auth uses 'image' but we also want to provide 'avatar' for compatibility
+    const user = {
+      ...response.user,
+      avatar: response.user.image,
+    };
+
     return {
       token: response.session.token,
-      user: response.user,
+      user,
       session: response.session,
     };
   }
@@ -149,11 +153,11 @@ export class AndroidAuthController {
     };
   }
 
-  private handleAuthError(error: any) {
-    this.logger.error(`Authentication error: ${error.message}`, error.stack);
+  private handleAuthError(error: any, defaultMessage = 'Authentication failed') {
+    this.logger.error(`${defaultMessage}: ${error.message}`, error.stack);
     if (error.status === 401) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    throw new BadRequestException(error.message || 'Authentication failed');
+    throw new BadRequestException(error.message || defaultMessage);
   }
 }
