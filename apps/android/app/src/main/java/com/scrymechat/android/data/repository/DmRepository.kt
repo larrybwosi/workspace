@@ -73,9 +73,7 @@ class DmRepository @Inject constructor(
         id = id,
         creatorId = creatorId,
         otherUserId = user.id,
-        lastMessageAt = lastMessageAt,
-        unreadCount = _count?.unreadCount ?: 0,
-        mentionCount = _count?.mentionCount ?: 0
+        lastMessageAt = lastMessageAt
     )
 
     private fun UserDto.toEntity() = UserEntity(

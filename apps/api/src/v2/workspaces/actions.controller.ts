@@ -7,7 +7,7 @@ import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
 import { PrismaService } from '../../prisma.service';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 
 @ApiTags('Message Actions')
 @ApiBearerAuth()
@@ -153,11 +153,7 @@ export class V2MessageActionsController {
       },
     });
 
-    const ably = getAblyRest();
-    if (ably) {
-      const ablyChannel = ably.channels.get(AblyChannels.channel(channelId));
-      await ablyChannel.publish(AblyEvents.MESSAGE_UPDATED, updatedMessage);
-    }
+    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, updatedMessage);
 
     return updatedMessage;
   }

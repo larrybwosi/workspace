@@ -35,7 +35,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { CustomMessageSchema } from '@repo/shared';
 import { StorageService } from '../../common/storage/storage.service';
 
@@ -68,8 +68,6 @@ class SendMessageDto {
   channelId?: string;
   @ApiProperty({ required: false, description: 'Required if channelId is not provided' })
   recipientId?: string;
-  @ApiProperty({ required: false, description: 'Optional external user ID for mapping' })
-  externalUserId?: string;
   @ApiProperty({ example: 'Hello world!' })
   content: string;
   @ApiProperty({ required: false })
@@ -105,7 +103,6 @@ const sendMessageSchema = z
   .object({
     channelId: z.string().optional(),
     recipientId: z.string().optional(),
-    externalUserId: z.string().optional(),
     content: z.string().min(1),
     threadId: z.string().optional(),
     contextId: z.string().optional(),
@@ -154,7 +151,6 @@ export class V2MessagesController {
   @ApiOperation({ summary: 'List all channels in the workspace', description: 'Requires channels:read scope.' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of channels returned successfully.' })
-  // fallow-ignore-next-line complexity
   async getChannels(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'channels:read')) {
       throw new ForbiddenException('Forbidden: Missing channels:read scope');
@@ -220,7 +216,6 @@ export class V2MessagesController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created successfully.' })
-  // fallow-ignore-next-line complexity
   async createChannel(@V2Context() context: ApiV2Context, @Body() body: CreateChannelDto) {
     if (!this.hasScope(context, 'channels:write')) {
       throw new ForbiddenException('Forbidden: Missing channels:write scope');
@@ -276,7 +271,6 @@ export class V2MessagesController {
       },
     },
   })
-  // fallow-ignore-next-line complexity
   @ApiResponse({ status: 201, description: 'Icon uploaded successfully.' })
   async uploadChannelIcon(
     @V2Context() context: ApiV2Context,
@@ -376,7 +370,6 @@ export class V2MessagesController {
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
   @ApiBody({ type: UpdateChannelDto })
   @ApiResponse({ status: 200, description: 'Channel updated successfully.' })
-  // fallow-ignore-next-line complexity
   async updateChannel(
     @V2Context() context: ApiV2Context,
     @Param('channelId') channelId: string,
@@ -447,7 +440,6 @@ export class V2MessagesController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'cursor', required: false })
   @ApiResponse({ status: 200, description: 'List of messages returned successfully.' })
-  // fallow-ignore-next-line complexity
   async getMessages(
     @V2Context() context: ApiV2Context,
     @Query('channelId') channelId?: string,
@@ -483,7 +475,7 @@ export class V2MessagesController {
      * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
      * Expected impact: Reduces JSON payload size and memory overhead by ~15-20%.
      */
-    // fallow-ignore-next-line complexity
+    // fallow-ignore-next-line code-duplication
     const messages = await prisma.message.findMany({
       where: {
         channelId: channelId || undefined,
@@ -534,20 +526,52 @@ export class V2MessagesController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: SendMessageDto })
   @ApiResponse({ status: 201, description: 'Message sent successfully.' })
-  // fallow-ignore-next-line complexity
   async sendMessage(@V2Context() context: ApiV2Context, @Req() req: FastifyRequest) {
     if (!this.hasScope(context, 'messages:send')) {
       throw new ForbiddenException('Forbidden: Missing messages:send scope');
     }
 
-    const { body, file } = await this.parseMultipartRequest(req);
+    // With Fastify multipart, we might have both fields and files
+    const isMultipart = req.isMultipart();
+    let body = req.body as any;
+    let file: any = undefined;
+
+    if (isMultipart) {
+      const parts = req.parts();
+      const fields: Record<string, any> = {};
+      for await (const part of parts) {
+        if (part.type === 'file') {
+          const buffer = await part.toBuffer();
+          file = {
+            buffer,
+            originalname: part.filename,
+            mimetype: part.mimetype,
+            size: buffer.length,
+          };
+        } else {
+          // part.type === 'field'
+          fields[part.fieldname] = part.value;
+        }
+      }
+      body = fields;
+    }
+
     const validatedData = sendMessageSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const data = validatedData.data;
-    const attachments = (data.attachments as any[]) || [];
+    const {
+      channelId,
+      recipientId,
+      content,
+      threadId,
+      contextId,
+      messageType,
+      metadata,
+      actions,
+      attachments = [],
+    } = validatedData.data;
 
     if (file) {
       const asset = await this.storageService.uploadFile(file);
@@ -559,47 +583,7 @@ export class V2MessagesController {
       });
     }
 
-    this.validateCustomMetadata(data.messageType, data.metadata);
-
-    const senderId = await this.getSenderId(context, data.externalUserId);
-    const createdMessage = await this.performSend(context, { ...data, senderId, attachments });
-
-    if (createdMessage) {
-      await this.webhooksService.dispatch(context.workspaceId!, 'message.sent', {
-        message: createdMessage,
-      });
-    }
-
-    return { message: createdMessage };
-  }
-
-  private async parseMultipartRequest(req: FastifyRequest) {
-    const isMultipart = req.isMultipart();
-    if (!isMultipart) {
-      return { body: req.body as any, file: undefined };
-    }
-
-    const parts = req.parts();
-    const fields: Record<string, any> = {};
-    let file: any = undefined;
-
-    for await (const part of parts) {
-      if (part.type === 'file') {
-        const buffer = await part.toBuffer();
-        file = {
-          buffer,
-          originalname: part.filename,
-          mimetype: part.mimetype,
-          size: buffer.length,
-        };
-      } else {
-        fields[part.fieldname] = part.value;
-      }
-    }
-    return { body: fields, file };
-  }
-
-  private validateCustomMetadata(messageType?: string, metadata?: any) {
+    // Validate custom message metadata if messageType is 'custom', 'approval', or 'report'
     if (['custom', 'approval', 'report'].includes(messageType || '')) {
       const customMessageValidation = CustomMessageSchema.safeParse(metadata);
       if (!customMessageValidation.success) {
@@ -609,43 +593,12 @@ export class V2MessagesController {
         });
       }
     }
-  }
 
-  // fallow-ignore-next-line complexity
-  private async performSend(context: ApiV2Context, data: any) {
-    if (data.channelId) {
-      return this.sendToChannel(context, data);
-    }
-    if (data.recipientId) {
-      return this.sendToRecipient(context, data);
-    }
-    return null;
-  }
+    let createdMessage;
+    let activeThreadId = threadId;
+    let senderId = context.userId;
 
-  // fallow-ignore-next-line complexity
-  private async getSenderId(context: ApiV2Context, externalUserId?: string): Promise<string> {
-    if (externalUserId) {
-      if (!context.organizationId) {
-        throw new ForbiddenException('External user ID mapping is only available for M2M applications');
-      }
-
-      const mapping = await prisma.m2mUserMapping.findUnique({
-        where: {
-          organizationId_externalUserId: {
-            organizationId: context.organizationId,
-            externalUserId,
-          },
-        },
-      });
-
-      if (!mapping) {
-        await this.handleMissingMapping(context, externalUserId);
-        throw new BadRequestException(`No mapping found for external user ID: ${externalUserId}`);
-      }
-
-      return mapping.userId;
-    }
-
+    // M2M Support: Use default workspace bot as sender
     if (context.organizationId && !context.isBot) {
       const defaultBot = await prisma.botApplication.findFirst({
         where: { workspaceId: context.workspaceId },
@@ -653,92 +606,123 @@ export class V2MessagesController {
       });
 
       if (defaultBot?.botId) {
-        return defaultBot.botId;
+        senderId = defaultBot.botId;
       }
     }
 
-    return context.userId;
-  }
-
-  private async handleMissingMapping(context: ApiV2Context, externalUserId: string) {
-    let m2mApp;
-    if (context.m2mClientId) {
-      m2mApp = await prisma.m2mApplication.findUnique({
-        where: { clientId: context.m2mClientId },
+    if (channelId) {
+      /**
+       * ⚡ Performance Optimization:
+       * Uses 'findUnique' with 'select: { id: true }' for existence check to minimize DB payload.
+       */
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelId },
+        select: { id: true, workspaceId: true },
       });
-    }
 
-    if (!m2mApp) {
-      m2mApp = await prisma.m2mApplication.findFirst({
-        where: { organizationId: context.organizationId! },
-      });
-    }
+      if (!channel || channel.workspaceId !== context.workspaceId) {
+        throw new NotFoundException('Channel not found in this workspace');
+      }
 
-    if (m2mApp) {
-      await this.webhooksService.dispatchM2mCallback(
-        m2mApp,
-        'm2m.mapping.missing',
-        { externalUserId, workspaceId: context.workspaceId },
-        context.workspaceId!
-      );
-    }
-  }
+      if (contextId && !activeThreadId) {
+        const existingThread = await prisma.thread.findFirst({
+          where: {
+            channelId: channel.id,
+            tags: { some: { tag: contextId } },
+          },
+        });
 
-  // fallow-ignore-next-line complexity
-  private async sendToChannel(context: ApiV2Context, data: any) {
-    const {
-      channelId,
-      senderId,
-      content,
-      threadId,
-      contextId,
-      messageType,
-      metadata,
-      actions,
-      attachments,
-    } = data;
+        if (existingThread) {
+          activeThreadId = existingThread.id;
+        } else {
+          const newThread = await prisma.thread.create({
+            data: {
+              channelId: channel.id,
+              creatorId: context.userId,
+              tags: { create: { tag: contextId } },
+            },
+          });
+          activeThreadId = newThread.id;
+        }
+      }
 
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: { id: true, workspaceId: true },
-    });
-
-    if (!channel || channel.workspaceId !== context.workspaceId) {
-      throw new NotFoundException('Channel not found in this workspace');
-    }
-
-    let activeThreadId = threadId;
-    if (contextId && !activeThreadId) {
-      activeThreadId = await this.getOrCreateThread(context, channel.id, contextId);
-    }
-
-    const createdMessage = await prisma.message.create({
-      data: {
-        content,
-        channelId: channel.id,
-        userId: senderId,
-        threadId: activeThreadId,
-        messageType: messageType || 'standard',
-        metadata: {
-          ...((metadata as any) || {}),
-          isBot: context.isBot || false,
-          tokenId: context.tokenId || null,
-          m2mClientId: context.m2mClientId || null,
+      createdMessage = await prisma.message.create({
+        data: {
+          content,
+          channelId: channel.id,
+          userId: senderId,
+          threadId: activeThreadId,
+          messageType: messageType || 'standard',
+          metadata: {
+            ...((metadata as any) || {}),
+            isBot: context.isBot || false,
+            tokenId: context.tokenId || null,
+            m2mClientId: context.m2mClientId || null,
+          },
+          actions: actions
+            ? {
+                create: actions.map((a, index) => ({
+                  actionId: a.actionId,
+                  label: a.label,
+                  style: a.style,
+                  value: a.value,
+                  order: index,
+                })),
+              }
+            : undefined,
+          attachments: attachments
+            ? {
+                create: attachments.map(a => ({
+                  name: a.name,
+                  type: a.type,
+                  url: a.url,
+                  size: a.size,
+                })),
+              }
+            : undefined,
         },
-        actions: actions
-          ? {
-              create: actions.map((a: any, index: number) => ({
-                actionId: a.actionId,
-                label: a.label,
-                style: a.style,
-                value: a.value,
-                order: index,
-              })),
-            }
-          : undefined,
+        include: {
+          attachments: true,
+          actions: true,
+          user: { select: { id: true, name: true, avatar: true } },
+        },
+      });
+
+      await this.auditService.log(context, 'messages.send', 'message', createdMessage.id, {
+        channelId,
+        threadId: activeThreadId,
+      });
+
+      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, createdMessage);
+    } else if (recipientId) {
+      /**
+       * ⚡ Performance Optimization:
+       * 1. Uses 'findUnique' with 'select: { id: true }' for recipient membership check to minimize DB payload.
+       * 2. Consolidates DM existence check, DM creation, message creation, and timestamp update
+       *    into a single Prisma 'upsert' call with nested 'create'.
+       * Expected impact: Reduces database round-trips from 5 down to 2.
+       */
+      const recipientMembership = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: context.workspaceId!,
+            userId: recipientId,
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!recipientMembership) {
+        throw new ForbiddenException('Recipient is not a member of this workspace');
+      }
+
+      const participants = [senderId, recipientId].sort();
+      const messageData = {
+        content,
+        senderId: senderId,
         attachments: attachments?.length
           ? {
-              create: attachments.map((a: any) => ({
+              create: attachments.map(a => ({
                 name: a.name,
                 type: a.type,
                 url: a.url,
@@ -746,125 +730,55 @@ export class V2MessagesController {
               })),
             }
           : undefined,
-      },
-      include: {
-        attachments: true,
-        actions: true,
-        user: { select: { id: true, name: true, avatar: true } },
-      },
-    });
+      };
 
-    await this.auditService.log(context, 'messages.send', 'message', createdMessage.id, {
-      channelId,
-      threadId: activeThreadId,
-    });
-
-    const ably = getAblyRest();
-    if (ably) {
-      const ablyChannel = ably.channels.get(AblyChannels.channel(channelId));
-      await ablyChannel.publish(AblyEvents.MESSAGE_SENT, createdMessage);
-    }
-
-    return createdMessage;
-  }
-
-  private async getOrCreateThread(context: ApiV2Context, channelId: string, contextId: string): Promise<string> {
-    const existingThread = await prisma.thread.findFirst({
-      where: {
-        channelId,
-        tags: { some: { tag: contextId } },
-      },
-    });
-
-    if (existingThread) {
-      return existingThread.id;
-    }
-
-    const newThread = await prisma.thread.create({
-      data: {
-        channelId,
-        creatorId: context.userId,
-        tags: { create: { tag: contextId } },
-      },
-    });
-
-    return newThread.id;
-  }
-
-  // fallow-ignore-next-line complexity
-  private async sendToRecipient(context: ApiV2Context, data: any) {
-    const { recipientId, senderId, content, attachments } = data;
-
-    const recipientMembership = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: context.workspaceId!,
-          userId: recipientId,
-        },
-      },
-      select: { id: true },
-    });
-
-    if (!recipientMembership) {
-      throw new ForbiddenException('Recipient is not a member of this workspace');
-    }
-
-    const participants = [senderId, recipientId].sort();
-    const messageData = {
-      content,
-      senderId: senderId,
-      attachments: attachments?.length
-        ? {
-            create: attachments.map((a: any) => ({
-              name: a.name,
-              type: a.type,
-              url: a.url,
-              size: a.size,
-            })),
-          }
-        : undefined,
-    };
-
-    const dm = await prisma.directMessage.upsert({
-      where: {
-        participant1Id_participant2Id: {
-          participant1Id: participants[0],
-          participant2Id: participants[1],
-        },
-      },
-      update: {
-        lastMessageAt: new Date(),
-        messages: {
-          create: messageData,
-        },
-      },
-      create: {
-        participant1Id: participants[0],
-        participant2Id: participants[1],
-        lastMessageAt: new Date(),
-        messages: {
-          create: messageData,
-        },
-      },
-      select: {
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          include: {
-            attachments: true,
-            sender: { select: { id: true, name: true, avatar: true } },
+      const dm = await prisma.directMessage.upsert({
+        where: {
+          participant1Id_participant2Id: {
+            participant1Id: participants[0],
+            participant2Id: participants[1],
           },
         },
-      },
-    });
+        update: {
+          lastMessageAt: new Date(),
+          messages: {
+            create: messageData,
+          },
+        },
+        create: {
+          participant1Id: participants[0],
+          participant2Id: participants[1],
+          lastMessageAt: new Date(),
+          messages: {
+            create: messageData,
+          },
+        },
+        select: {
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              attachments: true,
+              sender: { select: { id: true, name: true, avatar: true } },
+            },
+          },
+        },
+      });
 
-    const createdMessage = dm.messages[0];
+      createdMessage = dm.messages[0];
 
-    await this.auditService.log(context, 'messages.send_dm', 'dm_message', createdMessage.id, {
-      recipientId,
-    });
+      await this.auditService.log(context, 'messages.send_dm', 'dm_message', createdMessage.id, {
+        recipientId,
+      });
+    }
 
-    return createdMessage;
+    if (createdMessage) {
+      await this.webhooksService.dispatch(context.workspaceId!, 'message.sent', {
+        message: createdMessage,
+      });
+    }
+
+    return { message: createdMessage };
   }
 
   private hasScope(context: ApiV2Context, scope: string): boolean {

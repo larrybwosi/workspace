@@ -11,10 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 
-import org.robolectric.annotation.Config
-
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class NotificationDeepLinkTest {
 
     private lateinit var context: Context
@@ -39,10 +36,9 @@ class NotificationDeepLinkTest {
 
         val notificationManager = shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager)
         val notifications = notificationManager.allNotifications
-        // In some environments, MessagingStyle might also post a group summary.
-        // We look for the one that isn't a group summary or matches the ID.
-        val notification = notifications.find { it.contentIntent != null } ?: notifications[0]
+        assertEquals(1, notifications.size)
 
+        val notification = notifications[0]
         val pendingIntent = notification.contentIntent
         val intent = shadowOf(pendingIntent).savedIntent
 
@@ -64,7 +60,9 @@ class NotificationDeepLinkTest {
 
         val notificationManager = shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager)
         val notifications = notificationManager.allNotifications
-        val notification = notifications.find { it.contentIntent != null } ?: notifications[0]
+        assertEquals(1, notifications.size)
+
+        val notification = notifications[0]
         val pendingIntent = notification.contentIntent
         val intent = shadowOf(pendingIntent).savedIntent
 
@@ -86,7 +84,9 @@ class NotificationDeepLinkTest {
 
         val notificationManager = shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager)
         val notifications = notificationManager.allNotifications
-        val notification = notifications.find { it.contentIntent != null } ?: notifications[0]
+        assertEquals(1, notifications.size)
+
+        val notification = notifications[0]
         val pendingIntent = notification.contentIntent
         val intent = shadowOf(pendingIntent).savedIntent
 

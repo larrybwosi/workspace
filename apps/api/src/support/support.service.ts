@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { AblyChannels, AblyEvents, getAblyRest } from '@repo/shared/server';
+import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 
 @Injectable()
 export class SupportService {
@@ -162,10 +162,8 @@ export class SupportService {
     });
 
     if (status === 'RESOLVED' || status === 'CLOSED') {
-      const ably = getAblyRest();
-      if (ably && ticket.channelId) {
-        const channel = ably.channels.get(AblyChannels.channel(ticket.channelId));
-        await channel.publish(AblyEvents.MESSAGE_SENT, {
+      if (ticket.channelId) {
+        await publishRealtime(AblyChannels.channel(ticket.channelId), AblyEvents.MESSAGE_SENT, {
           content: `This ticket has been marked as ${status.toLowerCase()}.`,
           messageType: 'system_notification',
           timestamp: new Date(),

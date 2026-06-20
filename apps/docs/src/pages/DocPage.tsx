@@ -4,7 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Sidebar } from '@/components/sidebar';
 import { SyntaxHighlighter, Button, Input, cn } from '@repo/ui';
-import { Icons } from '@/components/Icons';
 import {
   ChevronRight,
   MessageCircle,
@@ -16,9 +15,42 @@ import {
   Copy,
   Check,
   Lightbulb,
-  Download,
 } from 'lucide-react';
 
+const CodeBlock = ({ children, language }: { children: string; language: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(children.replace(/\n$/, ''));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [children]);
+
+  return (
+    <div className="my-8 rounded-xl overflow-hidden shadow-md border border-border/10 bg-[#0d1117]">
+      <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">{language}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 text-[11px] font-medium text-white/40 hover:text-white transition-colors"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3 w-3" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-3 w-3" />
+              Copy
+            </>
+          )}
+        </button>
+      </div>
+      <SyntaxHighlighter code={children.replace(/\n$/, '')} language={language} />
+    </div>
+  );
+};
 
 interface DocPageProps {
   type: 'user-guide' | 'api-reference';
@@ -77,19 +109,6 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
   const githubUrl = `https://github.com/skyrme-chat/skyrme-chat/edit/main/apps/docs/src/content/${type === 'user-guide' ? 'docs' : 'api'}/${activeSlug}.md`;
 
-  const handleDownload = () => {
-    if (!content) return;
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${activeSlug}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1">
       <div className="flex flex-col md:flex-row gap-6 lg:gap-12 py-10">
@@ -115,21 +134,13 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                 <span className="text-foreground font-medium capitalize">{activeSlug?.replace(/-/g, ' ')}</span>
               </nav>
 
-              <div className="flex items-center justify-between mb-8">
-                <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-                  {activeSlug?.replace(/-/g, ' ')}
-                </h1>
-                <Button variant="outline" size="sm" onClick={handleDownload} className="h-8 gap-2 rounded-full px-4">
-                  <Download className="h-3.5 w-3.5" />
-                  <span className="text-xs font-semibold">Download</span>
-                </Button>
-              </div>
-
               <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/10">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    h1: () => null, // Hidden because we show it above with download button
+                    h1: ({ children }) => (
+                      <h1 className="text-4xl font-bold tracking-tight mb-4 border-none">{children}</h1>
+                    ),
                     h2: ({ ...props }) => {
                       const id = props.children
                         ?.toString()
@@ -139,23 +150,21 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                       return (
                         <h2
                           id={id}
-                          className="group flex items-center text-2xl font-bold mt-16 mb-6 pb-2 border-b border-border/40 scroll-mt-24"
+                          className="group flex items-center text-2xl font-semibold mt-12 mb-4 scroll-mt-24"
                           {...props}
                         >
                           {props.children}
                           <a
                             href={`#${id}`}
-                            className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary/60 hover:text-primary"
+                            className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary"
                           >
                             #
                           </a>
                         </h2>
                       );
                     },
-                    h3: ({ children }) => (
-                      <h3 className="text-lg font-bold mt-10 mb-4 text-foreground/90 tracking-tight">{children}</h3>
-                    ),
-                    p: ({ children }) => <p className="text-muted-foreground leading-8 mb-6 text-[15px]">{children}</p>,
+                    h3: ({ children }) => <h3 className="text-xl font-medium mt-8 mb-4">{children}</h3>,
+                    p: ({ children }) => <p className="text-muted-foreground leading-7 mb-6">{children}</p>,
                     blockquote: ({ children }) => {
                       // Extract text content to detect variant
                       const flatten = (node: any): string => {
@@ -203,15 +212,11 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                         : children;
 
                       return (
-                        <div className={cn('my-8 rounded-xl border p-5 flex gap-4 shadow-sm', colorClass)}>
-                          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 dark:bg-black/10">
-                            <Icon className="h-5 w-5 shrink-0" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-bold text-[13px] uppercase tracking-[0.15em] mb-1 opacity-80">
-                              {title}
-                            </div>
-                            <div className="text-[15px] leading-relaxed font-medium prose-p:my-0">{cleanChildren}</div>
+                        <div className={cn('my-6 rounded-lg border-l-4 p-4 flex gap-4', colorClass)}>
+                          <Icon className="h-5 w-5 shrink-0 mt-0.5" />
+                          <div>
+                            <div className="font-bold text-sm uppercase tracking-wider mb-1">{title}</div>
+                            <div className="text-[15px] leading-relaxed opacity-90 prose-p:my-0">{cleanChildren}</div>
                           </div>
                         </div>
                       );
@@ -220,15 +225,11 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                       const match = /language-(\w+)/.exec(className || '');
                       const language = match ? match[1] : '';
                       return !inline && match ? (
-                        <SyntaxHighlighter
-                          language={language}
-                          code={String(children).replace(/\n$/, '')}
-                          showLineNumbers={true}
-                        />
+                        <CodeBlock language={language}>{String(children)}</CodeBlock>
                       ) : (
                         <code
                           className={cn(
-                            'bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono text-[13px] font-medium',
+                            'bg-muted/80 text-primary px-1.5 py-0.5 rounded font-mono text-[13px]',
                             className
                           )}
                           {...props}
@@ -270,37 +271,35 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                 </ReactMarkdown>
               </div>
 
-              <div className="mt-20 pt-10 border-t border-border/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-10">
-                <div className="space-y-5">
-                  <h4 className="text-sm font-bold tracking-tight text-foreground/80">Was this page helpful?</h4>
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="h-9 px-5 rounded-full hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50 transition-all">
-                      <ThumbsUp className="mr-2 h-3.5 w-3.5" /> Yes
+              <div className="mt-16 pt-8 border-t border-border/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8">
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold">Was this page helpful?</h4>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-9 px-4">
+                      <ThumbsUp className="mr-2 h-4 w-4" /> Yes
                     </Button>
-                    <Button variant="outline" size="sm" className="h-9 px-5 rounded-full hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/50 transition-all">
-                      <ThumbsDown className="mr-2 h-3.5 w-3.5" /> No
+                    <Button variant="outline" size="sm" className="h-9 px-4">
+                      <ThumbsDown className="mr-2 h-4 w-4" /> No
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-start sm:items-end gap-3 text-[13px] font-medium text-muted-foreground">
+                <div className="flex flex-col items-start sm:items-end gap-2 text-sm text-muted-foreground">
                   <a
                     href={githubUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center hover:text-primary transition-colors group"
+                    className="flex items-center hover:text-foreground transition-colors"
                   >
-                    <Icons.gitHub className="mr-2 h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
                     Edit this page on GitHub
                   </a>
                   <a
                     href="https://discord.gg/skyrmechat"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center hover:text-primary transition-colors group"
+                    className="flex items-center hover:text-foreground transition-colors"
                   >
-                    <MessageCircle className="mr-2 h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
-                    Join our Discord community
+                    <MessageCircle className="mr-2 h-4 w-4" /> Join our Discord community
                   </a>
                 </div>
               </div>
@@ -335,17 +334,13 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                     </div>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-xl shadow-primary/10">
-                    <h5 className="text-xs font-black uppercase tracking-[0.2em] mb-2 opacity-90">Enterprise Support</h5>
-                    <p className="text-[11px] opacity-70 leading-relaxed mb-4 font-medium">
-                      Deploy Skyrme Chat on-premise with dedicated engineer support.
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                    <h5 className="text-xs font-bold text-primary mb-1">Need help?</h5>
+                    <p className="text-[11px] text-muted-foreground mb-3">
+                      Our engineers are available to help you integrate Skyrme Chat.
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full bg-transparent border-white/20 dark:border-black/20 hover:bg-white/10 dark:hover:bg-black/10 text-white dark:text-zinc-950 text-[10px] font-bold uppercase tracking-widest transition-colors"
-                    >
-                      Talk to Sales
+                    <Button variant="link" size="xs" className="p-0 h-auto text-primary font-bold">
+                      Contact Support &rarr;
                     </Button>
                   </div>
                 </div>

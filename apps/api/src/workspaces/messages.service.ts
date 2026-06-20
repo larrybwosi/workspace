@@ -1,9 +1,9 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
-  getAblyRest,
   AblyChannels,
   AblyEvents,
+  publishRealtime,
   notifyMention,
   notifyMentions,
   notifyChannel,
@@ -282,11 +282,10 @@ export class MessagesService {
 
     const sender = (message as any).user;
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
-    const ably = getAblyRest();
 
     /**
      * ⚡ Performance Optimization:
-     * 1. Parallelizes side effects (Ably publishing and notifications) using Promise.all.
+     * 1. Parallelizes side effects (Realtime publishing and notifications) using Promise.all.
      * 2. Prevents sequential accumulation of external service latency.
      * 3. Significantly reduces total request tail latency.
      */
@@ -297,9 +296,7 @@ export class MessagesService {
       mentionsAll || mentionsHere
         ? notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere)
         : Promise.resolve(),
-      ably
-        ? (ably as any).channels.get(AblyChannels.channel(channelId)).publish(AblyEvents.MESSAGE_SENT, message)
-        : Promise.resolve(),
+      publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message),
     ]);
 
     return message;
@@ -328,12 +325,7 @@ export class MessagesService {
       },
     });
 
-    const ably = getAblyRest();
-    if (ably) {
-      // Send updates to the main channel like in the controller
-      const channel = (ably as any).channels.get(AblyChannels.channel(message.channelId));
-      await channel.publish(AblyEvents.MESSAGE_UPDATED, message);
-    }
+    await publishRealtime(AblyChannels.channel(message.channelId), AblyEvents.MESSAGE_UPDATED, message);
 
     return message;
   }
@@ -379,14 +371,10 @@ export class MessagesService {
       });
     }
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-      await channel.publish(AblyEvents.MESSAGE_DELETED, {
-        id: messageId,
-        threadId: existingMessage.rootThread?.id,
-      });
-    }
+    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
+      id: messageId,
+      threadId: existingMessage.rootThread?.id,
+    });
 
     return { success: true };
   }
@@ -526,14 +514,10 @@ export class MessagesService {
     }
 
     if (targetChannelId) {
-      const ably = getAblyRest();
-      if (ably) {
-        const channel = (ably as any).channels.get(AblyChannels.user(userId));
-        await channel.publish(AblyEvents.MESSAGE_READ, {
-          channelId: targetChannelId,
-          messageIds,
-        });
-      }
+      await publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
+        channelId: targetChannelId,
+        messageIds,
+      });
     }
 
     return { success: true };
@@ -591,12 +575,12 @@ export class MessagesService {
       },
     });
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channelId = (reaction as any).message.channelId;
-      const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, reaction, action: 'add' });
-    }
+    const channelId = (reaction as any).message.channelId;
+    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+      messageId,
+      reaction,
+      action: 'add',
+    });
 
     return reaction;
   }
@@ -626,12 +610,13 @@ export class MessagesService {
         },
       });
 
-      const ably = getAblyRest();
-      if (ably) {
-        const channelId = (reaction as any).message.channelId;
-        const channel = (ably as any).channels.get(AblyChannels.channel(channelId));
-        await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
-      }
+      const channelId = (reaction as any).message.channelId;
+      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+        messageId,
+        emoji,
+        userId,
+        action: 'remove',
+      });
     } catch (error) {
       // Prisma error code for 'Record to delete does not exist'
       if ((error as any).code === 'P2025') {
@@ -717,15 +702,11 @@ export class MessagesService {
       },
     });
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = (ably as any).channels.get(AblyChannels.channel(message.channel.id));
-      await channel.publish('message.action_response', {
-        messageId: message.id,
-        actionId: data.actionId,
-        response,
-      });
-    }
+    await publishRealtime(AblyChannels.channel(message.channel.id), 'message.action_response', {
+      messageId: message.id,
+      actionId: data.actionId,
+      response,
+    });
 
     if (callbackUrl) {
       try {

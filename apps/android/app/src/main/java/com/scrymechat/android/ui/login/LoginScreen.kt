@@ -304,56 +304,48 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             // ── Social auth row ───────────────────────────────────────────
-            val showGoogle = com.scrymechat.android.BuildConfig.GOOGLE_CLIENT_ID.isNotEmpty()
-            val showGithub = com.scrymechat.android.BuildConfig.GITHUB_CLIENT_ID.isNotEmpty()
-
-            if (showGoogle || showGithub) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    if (showGoogle) {
-                        GlassOAuthButton(
-                            label = "Google",
-                            palette = palette,
-                            logoContent = {
-                                Text(
-                                    text = "G",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF4285F4)
-                                )
-                            },
-                            onClick = { /* Google Login implementation would use BuildConfig.GOOGLE_CLIENT_ID */ },
-                            modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                GlassOAuthButton(
+                    label = "Google",
+                    palette = palette,
+                    logoContent = {
+                        Text(
+                            text = "G",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color(0xFF4285F4)
                         )
-                    }
-                    if (showGithub) {
-                        GlassOAuthButton(
-                            label = "GitHub",
-                            palette = palette,
-                            logoContent = {
-                                Text(
-                                    text = "⌥",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = palette.textPrimary
-                                )
-                            },
-                            onClick = {
-                                val githubAuthUrl = "https://github.com/login/oauth/authorize" +
-                                        "?client_id=${com.scrymechat.android.BuildConfig.GITHUB_CLIENT_ID}" +
-                                        "&scope=user:email" +
-                                        "&redirect_uri=scrymechat://auth"
-                                val customTabsIntent = CustomTabsIntent.Builder().build()
-                                customTabsIntent.launchUrl(context, Uri.parse(githubAuthUrl))
-                            },
-                            modifier = Modifier.weight(1f)
+                    },
+                    onClick = { /* Google Login */ },
+                    modifier = Modifier.weight(1f)
+                )
+                GlassOAuthButton(
+                    label = "GitHub",
+                    palette = palette,
+                    logoContent = {
+                        Text(
+                            text = "⌥",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = palette.textPrimary
                         )
-                    }
-                }
-                Spacer(modifier = Modifier.height(22.dp))
+                    },
+                    onClick = {
+                        val githubAuthUrl = "https://github.com/login/oauth/authorize" +
+                                "?client_id=YOUR_GITHUB_CLIENT_ID" +
+                                "&scope=user:email" +
+                                "&redirect_uri=scrymechat://auth"
+                        val customTabsIntent = CustomTabsIntent.Builder().build()
+                        customTabsIntent.launchUrl(context, Uri.parse(githubAuthUrl))
+                    },
+                    modifier = Modifier.weight(1f)
+                )
             }
+
+            Spacer(modifier = Modifier.height(22.dp))
 
             // ── Divider ───────────────────────────────────────────────────
             Row(

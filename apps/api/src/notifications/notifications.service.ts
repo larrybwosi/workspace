@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
-  getAblyRest,
   AblyChannels,
   AblyEvents,
+  publishRealtime,
   queueNotification,
   notifyMention as sharedNotifyMention,
   notifyMentions as sharedNotifyMentions,
@@ -67,17 +67,12 @@ export class NotificationsService {
       },
     });
 
-    // Send real-time notification via Ably
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = ably.channels.get(AblyChannels.notifications(payload.userId));
-
-      await channel.publish(AblyEvents.NOTIFICATION, {
-        id: notification.id,
-        ...payload,
-        createdAt: notification.createdAt,
-      });
-    }
+    // Send real-time notification
+    await publishRealtime(AblyChannels.notifications(payload.userId), AblyEvents.NOTIFICATION, {
+      id: notification.id,
+      ...payload,
+      createdAt: notification.createdAt,
+    });
 
     try {
       await queueNotification({

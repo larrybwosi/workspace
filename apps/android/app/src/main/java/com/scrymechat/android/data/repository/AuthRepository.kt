@@ -129,13 +129,4 @@ class AuthRepository @Inject constructor(
             Result.failure(e)
         }
     }
-
-    suspend fun refresh(): Result<Unit> {
-        return try {
-            val response = authApi.refresh()
-            handleAuthResponse(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 }

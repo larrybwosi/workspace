@@ -28,12 +28,6 @@ android {
 
         val apiUrl = System.getenv("API_URL") ?: "http://localhost:3000"
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
-
-        val googleClientId = System.getenv("GOOGLE_CLIENT_ID") ?: ""
-        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
-
-        val githubClientId = System.getenv("GITHUB_CLIENT_ID") ?: ""
-        buildConfigField("String", "GITHUB_CLIENT_ID", "\"$githubClientId\"")
     }
 
     buildTypes {

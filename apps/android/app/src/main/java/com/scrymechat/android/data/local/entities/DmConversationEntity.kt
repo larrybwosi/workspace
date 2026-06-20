@@ -8,7 +8,5 @@ data class DmConversationEntity(
     @PrimaryKey val id: String,
     val creatorId: String?,
     val otherUserId: String,
-    val lastMessageAt: String,
-    val unreadCount: Int = 0,
-    val mentionCount: Int = 0
+    val lastMessageAt: String
 )

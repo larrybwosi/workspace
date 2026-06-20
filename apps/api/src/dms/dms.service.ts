@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents, publishToAbly } from '@repo/shared/server';
+import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
@@ -225,7 +225,7 @@ export class DmsService {
       creatorId: dm.participant1Id,
     };
 
-    await publishToAbly(AblyChannels.user(targetUserId), AblyEvents.DM_RECEIVED, {
+    await publishRealtime(AblyChannels.user(targetUserId), AblyEvents.DM_RECEIVED, {
       dmId: dm.id,
       from: userName,
     });
@@ -401,11 +401,7 @@ export class DmsService {
       messageType: 'standard',
     };
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = ably.channels.get(AblyChannels.dm(dmId));
-      await channel.publish(AblyEvents.MESSAGE_SENT, formattedMessage);
-    }
+    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_SENT, formattedMessage);
 
     // Notify the other participant
     const recipientId = dm.participant1Id === userId ? dm.participant2Id : dm.participant1Id;
@@ -445,11 +441,7 @@ export class DmsService {
       messageType: 'standard',
     };
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = ably.channels.get(AblyChannels.dm(dmId));
-      await channel.publish(AblyEvents.MESSAGE_UPDATED, formattedMessage);
-    }
+    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_UPDATED, formattedMessage);
 
     return formattedMessage;
   }
@@ -459,11 +451,7 @@ export class DmsService {
       where: { id: messageId },
     });
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = ably.channels.get(AblyChannels.dm(dmId));
-      await channel.publish(AblyEvents.MESSAGE_DELETED, { id: messageId });
-    }
+    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_DELETED, { id: messageId });
 
     return { success: true };
   }
@@ -495,14 +483,10 @@ export class DmsService {
     }
 
     if (targetDmId) {
-      const ably = getAblyRest();
-      if (ably) {
-        const channel = (ably as any).channels.get(AblyChannels.user(userId));
-        await channel.publish(AblyEvents.MESSAGE_READ, {
-          dmId: targetDmId,
-          messageIds,
-        });
-      }
+      await publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
+        dmId: targetDmId,
+        messageIds,
+      });
     }
 
     return { success: true };
@@ -525,11 +509,11 @@ export class DmsService {
       },
     });
 
-    const ably = getAblyRest();
-    if (ably) {
-      const channel = ably.channels.get(AblyChannels.dm(dmId));
-      await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, reaction, action: 'add' });
-    }
+    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_REACTION, {
+      messageId,
+      reaction,
+      action: 'add',
+    });
 
     return reaction;
   }
@@ -552,11 +536,12 @@ export class DmsService {
         },
       });
 
-      const ably = getAblyRest();
-      if (ably) {
-        const channel = ably.channels.get(AblyChannels.dm(dmId));
-        await channel.publish(AblyEvents.MESSAGE_REACTION, { messageId, emoji, userId, action: 'remove' });
-      }
+      await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_REACTION, {
+        messageId,
+        emoji,
+        userId,
+        action: 'remove',
+      });
     } catch (error) {
       // Prisma error code for 'Record to delete does not exist' - we ignore it here
       // to maintain idempotency and match previous behavior.
