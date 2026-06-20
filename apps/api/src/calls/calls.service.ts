@@ -9,7 +9,7 @@ import { type User, type Call, type CallParticipant, prisma } from '@repo/databa
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import {
   agoraServerConfig as agoraConfig,
-  publishToAbly,
+  publishRealtime,
   AblyChannels,
   AblyEvents,
   isUserEligibleForAsset,
@@ -140,7 +140,7 @@ export class CallsService {
 
       if (recipientId) {
         initiationSideEffects.push(
-          publishToAbly(AblyChannels.user(recipientId), 'incoming-call', {
+          publishRealtime(AblyChannels.user(recipientId), 'incoming-call', {
             callId: call.id,
             type,
             initiator: {
@@ -161,7 +161,7 @@ export class CallsService {
           ...members
             .filter(m => m.userId !== user.id)
             .map(m =>
-              publishToAbly(AblyChannels.user(m.userId), 'incoming-call', {
+              publishRealtime(AblyChannels.user(m.userId), 'incoming-call', {
                 callId: call.id,
                 type,
                 initiator: {
@@ -183,7 +183,7 @@ export class CallsService {
           ...members
             .filter(m => m.userId !== user.id)
             .map(m =>
-              publishToAbly(AblyChannels.user(m.userId), 'incoming-call', {
+              publishRealtime(AblyChannels.user(m.userId), 'incoming-call', {
                 callId: call.id,
                 type,
                 initiator: {
@@ -197,7 +197,7 @@ export class CallsService {
         );
 
         initiationSideEffects.push(
-          publishToAbly(AblyChannels.channel(channelId), 'channel-call-started', {
+          publishRealtime(AblyChannels.channel(channelId), 'channel-call-started', {
             callId: call.id,
             type,
             initiatorId: user.id,
@@ -208,7 +208,7 @@ export class CallsService {
 
       if (workspaceId) {
         initiationSideEffects.push(
-          publishToAbly(AblyChannels.workspace(workspaceId), 'call-started', {
+          publishRealtime(AblyChannels.workspace(workspaceId), 'call-started', {
             callId: call.id,
             type,
             initiatorId: user.id,
@@ -296,7 +296,7 @@ export class CallsService {
 
       if (workspaceId) {
         joinSideEffects.push(
-          publishToAbly(AblyChannels.workspace(workspaceId), 'call-joined', {
+          publishRealtime(AblyChannels.workspace(workspaceId), 'call-joined', {
             callId,
             userId: user.id,
           })
@@ -304,7 +304,7 @@ export class CallsService {
       }
 
       joinSideEffects.push(
-        publishToAbly(AblyChannels.call(callId), 'call-joined', {
+        publishRealtime(AblyChannels.call(callId), 'call-joined', {
           callId,
           userId: user.id,
         })
@@ -318,7 +318,7 @@ export class CallsService {
         ...call.participants
           .filter(p => p.userId !== user.id && !p.leftAt)
           .map(p =>
-            publishToAbly(AblyChannels.user(p.userId), 'call-joined', {
+            publishRealtime(AblyChannels.user(p.userId), 'call-joined', {
               callId,
               userId: user.id,
             })
@@ -348,13 +348,13 @@ export class CallsService {
 
       const workspaceId = (call.metadata as any)?.workspaceId;
       if (workspaceId) {
-        await publishToAbly(AblyChannels.workspace(workspaceId), 'call-left', {
+        await publishRealtime(AblyChannels.workspace(workspaceId), 'call-left', {
           callId,
           userId: user.id,
         });
       }
 
-      await publishToAbly(AblyChannels.call(callId), 'call-left', {
+      await publishRealtime(AblyChannels.call(callId), 'call-left', {
         callId,
         userId: user.id,
       });
@@ -372,12 +372,12 @@ export class CallsService {
         });
 
         if (workspaceId) {
-          await publishToAbly(AblyChannels.workspace(workspaceId), 'call-ended', {
+          await publishRealtime(AblyChannels.workspace(workspaceId), 'call-ended', {
             callId,
           });
         }
 
-        await publishToAbly(AblyChannels.call(callId), 'call-ended', {
+        await publishRealtime(AblyChannels.call(callId), 'call-ended', {
           callId,
         });
       }
@@ -400,7 +400,7 @@ export class CallsService {
         call.participants
           .filter(p => p.userId !== user.id && !p.leftAt)
           .map(p =>
-            publishToAbly(AblyChannels.user(p.userId), 'participant-state-changed', {
+            publishRealtime(AblyChannels.user(p.userId), 'participant-state-changed', {
               callId,
               userId: user.id,
               ...data,
@@ -424,7 +424,7 @@ export class CallsService {
 
       await Promise.all(
         call.participants.map(p =>
-          publishToAbly(AblyChannels.user(p.userId), 'participant-promoted', {
+          publishRealtime(AblyChannels.user(p.userId), 'participant-promoted', {
             callId,
             userId: targetParticipant.userId,
             agoraUid: targetParticipant.agoraUid,
@@ -451,7 +451,7 @@ export class CallsService {
 
       await Promise.all(
         call.participants.map(p =>
-          publishToAbly(AblyChannels.user(p.userId), 'participant-removed', {
+          publishRealtime(AblyChannels.user(p.userId), 'participant-removed', {
             callId,
             userId: targetParticipant.userId,
             agoraUid: targetParticipant.agoraUid,
@@ -476,7 +476,7 @@ export class CallsService {
 
       await Promise.all(
         call.participants.map(p =>
-          publishToAbly(AblyChannels.user(p.userId), 'call-ended', {
+          publishRealtime(AblyChannels.user(p.userId), 'call-ended', {
             callId,
           })
         )
@@ -487,7 +487,7 @@ export class CallsService {
         call.participants
           .filter(p => p.userId !== user.id && !p.leftAt)
           .map(p =>
-            publishToAbly(AblyChannels.user(p.userId), 'screen-share-started', {
+            publishRealtime(AblyChannels.user(p.userId), 'screen-share-started', {
               callId,
               userId: user.id,
               agoraUid: myAgoraUid,
@@ -552,8 +552,8 @@ export class CallsService {
       },
     });
 
-    // Notify recipient via Ably
-    await publishToAbly(AblyChannels.user(targetUserId), 'dm:received', {
+    // Notify recipient via Realtime
+    await publishRealtime(AblyChannels.user(targetUserId), 'dm:received', {
       dmId: dm.id,
       message,
       callMetadata: {
@@ -711,7 +711,7 @@ export class CallsService {
      * 3. Replaces O(N) sequential notification loop with a single batch operation.
      */
     const sideEffects: Promise<any>[] = [
-      publishToAbly(AblyChannels.workspace(workspaceId), 'call-scheduled', {
+      publishRealtime(AblyChannels.workspace(workspaceId), 'call-scheduled', {
         callId: call.id,
         title,
         type,
@@ -772,7 +772,7 @@ export class CallsService {
     });
 
     if (callId) {
-      await publishToAbly(AblyChannels.call(callId), AblyEvents.SOUNDBOARD_PLAYED, {
+      await publishRealtime(AblyChannels.call(callId), AblyEvents.SOUNDBOARD_PLAYED, {
         soundId: sound.id,
         url: sound.url,
         userId: user.id,

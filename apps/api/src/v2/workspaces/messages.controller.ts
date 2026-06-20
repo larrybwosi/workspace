@@ -35,7 +35,7 @@ import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { V2WebhooksService } from '../v2-webhooks.service';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { CustomMessageSchema } from '@repo/shared';
 import { StorageService } from '../../common/storage/storage.service';
 
@@ -693,11 +693,7 @@ export class V2MessagesController {
         threadId: activeThreadId,
       });
 
-      const ably = getAblyRest();
-      if (ably) {
-        const ablyChannel = ably.channels.get(AblyChannels.channel(channelId));
-        await ablyChannel.publish(AblyEvents.MESSAGE_SENT, createdMessage);
-      }
+      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, createdMessage);
     } else if (recipientId) {
       /**
        * ⚡ Performance Optimization:

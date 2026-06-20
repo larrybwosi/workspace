@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { publishToAbly, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { publishRealtime, AblyChannels, AblyEvents } from '@repo/shared/server';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class V10InteractionsService {
       version: 1,
     };
 
-    await publishToAbly('global-system-events', 'INTERACTION_CREATE', interactionEvent);
+    await publishRealtime('global-system-events', 'INTERACTION_CREATE', interactionEvent);
 
     return interactionEvent;
   }
