@@ -368,7 +368,7 @@ fun MessageNodeRenderer(
                                 color = if (selectedLabel.isEmpty()) ScrymeDarkTextSecondary else ScrymeDarkTextPrimary
                             )
                             Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.ArrowDropDown,
+                                imageVector = Icons.Default.Info,
                                 contentDescription = null,
                                 tint = ScrymeDarkTextSecondary
                             )

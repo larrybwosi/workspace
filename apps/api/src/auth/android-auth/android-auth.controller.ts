@@ -1,7 +1,6 @@
-import { Controller, Post, Body, UnauthorizedException, BadRequestException, Logger, Headers, Req } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, BadRequestException, Logger, Req } from '@nestjs/common';
 import { auth } from '../better-auth';
 import { prisma } from '@repo/database';
-import { Request } from 'express';
 
 @Controller('auth/android')
 export class AndroidAuthController {
@@ -54,7 +53,7 @@ export class AndroidAuthController {
   }
 
   @Post('refresh')
-  async refresh(@Req() request: Request) {
+  async refresh(@Req() request: any) {
     try {
       const session = await auth.api.getSession({
         headers: request.headers,

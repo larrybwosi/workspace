@@ -294,7 +294,7 @@ fun SidebarItem(
             .clip(RoundedCornerShape(6.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = androidx.compose.material3.ripple.ripple(color = SidebarTokens.Accent)
+                indication = null,
             ) { onClick() },
         color = backgroundColor
     ) {
