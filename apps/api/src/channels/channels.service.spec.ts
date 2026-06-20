@@ -42,6 +42,10 @@ vi.mock('@repo/database', () => ({
     channelMember: {
       findUnique: vi.fn(),
     },
+    supportTicket: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     $transaction: vi.fn(async (cb) => {
        if (typeof cb === 'function') return cb(prisma);
        return Promise.all(cb);
@@ -80,6 +84,7 @@ describe('ChannelsService', () => {
     notifyMentions: mockNotifyMentions,
     notifyChannel: mockNotifyChannel,
     notifyNewMessage: mockNotifyNewMessage,
+    notifyReply: vi.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -102,7 +107,24 @@ describe('ChannelsService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('getGlobalChannels', () => {
+    it('should use _count optimization', async () => {
+      mockPrisma.channel.findMany.mockResolvedValue([]);
+      await service.getGlobalChannels();
+      const callArg = mockPrisma.channel.findMany.mock.calls[0][0];
+      expect(callArg.include).toHaveProperty('_count');
+    });
+  });
+
   describe('markAsRead', () => {
+    it('should use batch createMany optimization', async () => {
+      mockPrisma.messageRead.createMany.mockResolvedValue({ count: 1 });
+      await service.markAsRead('user-1', ['msg-1']);
+      expect(mockPrisma.messageRead.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skipDuplicates: true })
+      );
+    });
+
     it('should call publishRealtime when channelId is provided', async () => {
       mockPrisma.messageRead.createMany.mockResolvedValue({ count: 1 });
       await service.markAsRead('user-1', ['msg-1'], 'ch-1');
@@ -111,10 +133,22 @@ describe('ChannelsService', () => {
   });
 
   describe('removeReaction', () => {
+    it('should use atomic delete optimization', async () => {
+      mockPrisma.reaction.delete.mockResolvedValue({ id: 'r-1' });
+      await service.removeReaction('ch-1', 'msg-1', 'user-1', '👍');
+      expect(mockPrisma.reaction.delete).toHaveBeenCalled();
+    });
+
     it('should call publishRealtime', async () => {
       mockPrisma.reaction.delete.mockResolvedValue({ id: 'r-1' });
       await service.removeReaction('ch-1', 'msg-1', 'user-1', '👍');
       expect(sharedServer.publishRealtime).toHaveBeenCalled();
+    });
+
+    it('should handle P2025 error gracefully', async () => {
+      mockPrisma.reaction.delete.mockRejectedValue({ code: 'P2025' });
+      const result = await service.removeReaction('ch-1', 'msg-1', 'user-1', '👍');
+      expect(result).toEqual({ success: true });
     });
   });
 });
