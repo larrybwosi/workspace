@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import { publishRealtime, AblyChannels } from '@repo/shared/server';
 
@@ -28,7 +28,7 @@ export class V10EnterpriseService {
         departmentId,
         title: body.title,
         content: body.content,
-        createdById: userId,
+        authorId: userId,
       },
     });
 

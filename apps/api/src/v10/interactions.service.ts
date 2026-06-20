@@ -8,7 +8,7 @@ export class V10InteractionsService {
   async handleInteraction(body: any) {
     const { type, data, guild_id, channel_id, member, user } = body;
 
-    const interactionId = \`int_\${crypto.randomBytes(8).toString('hex')}\`;
+    const interactionId = "int_" + crypto.randomBytes(8).toString("hex");
     const userId = user?.id || member?.user?.id;
 
     // Log interaction
@@ -118,5 +118,9 @@ export class V10InteractionsService {
     });
 
     return updatedMessage;
+  }
+
+  async handleCallback(id: string, token: string, body: any) {
+    return { success: true };
   }
 }
