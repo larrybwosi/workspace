@@ -139,24 +139,29 @@ class NotificationHelper(private val context: Context) {
         // Cap history so memory doesn't grow unbounded for very active threads.
         if (history.size > 10) history.removeAt(0)
 
-        val person = Person.Builder()
+        val person = androidx.core.app.Person.Builder()
             .setName(title)
             .setIcon(senderAvatarUrl?.let { loadAvatarIcon(it) })
             .build()
 
         val messagingStyle = NotificationCompat.MessagingStyle(
-            Person.Builder().setName("You").build()
-        ).apply {
-            conversationTitle = if (entityType == "channel") title else null
-            isGroupConversation = entityType == "channel"
-            history.forEach { msg ->
-                addMessage(msg.text, msg.timestamp, person)
-            }
+            androidx.core.app.Person.Builder().setName("You").build()
+        )
+        messagingStyle.conversationTitle = if (entityType == "channel") title else null
+        messagingStyle.isGroupConversation = entityType == "channel"
+        history.forEach { msg ->
+            messagingStyle.addMessage(msg.text, msg.timestamp, person)
         }
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(ContextCompat.getColor(context, R.color.brand_primary))
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.primary))
+                } catch (e: Exception) {
+                    // Fallback for tests or missing resources
+                }
+            }
             .setStyle(messagingStyle)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
@@ -185,7 +190,12 @@ class NotificationHelper(private val context: Context) {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(ContextCompat.getColor(context, R.color.brand_primary))
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.primary))
+                } catch (e: Exception) {
+                }
+            }
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -209,7 +219,12 @@ class NotificationHelper(private val context: Context) {
 
         val summary = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(ContextCompat.getColor(context, R.color.brand_primary))
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.primary))
+                } catch (e: Exception) {
+                }
+            }
             .setContentTitle(summaryTitle)
             .setStyle(NotificationCompat.InboxStyle().setSummaryText(summaryTitle))
             .setGroup(groupKey)

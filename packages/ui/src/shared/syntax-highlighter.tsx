@@ -39,39 +39,56 @@ export function SyntaxHighlighter({
   return (
     <div
       className={cn(
-        'group relative my-4 overflow-hidden rounded-lg border border-border bg-muted/30 dark:bg-[#0d1117]',
+        'group relative my-6 overflow-hidden rounded-xl border border-border bg-muted/20 dark:bg-zinc-950/50 shadow-sm',
         className
       )}
     >
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b border-border bg-muted/50 dark:bg-[#161b22] px-4 py-2 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <FileCode className="h-4 w-4" />
-          <span className="font-mono">{fileName || `${normalizedLang} snippet`}</span>
+      <div className="flex items-center justify-between border-b border-border bg-muted/40 dark:bg-zinc-900/50 px-4 py-2.5 text-xs text-muted-foreground backdrop-blur-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="flex gap-1.5 mr-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-red-500/20 dark:bg-red-500/10 border border-red-500/30" />
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-500/20 dark:bg-amber-500/10 border border-amber-500/30" />
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 border border-emerald-500/30" />
+          </div>
+          <FileCode className="h-3.5 w-3.5 opacity-70" />
+          <span className="font-medium tracking-tight uppercase text-[10px] opacity-70">
+            {fileName || normalizedLang}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Wrap Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn('h-6 w-6 hover:bg-white/10', isWrapped && 'bg-white/10 text-zinc-100')}
+          <button
+            className={cn(
+              'h-7 px-2 flex items-center gap-1.5 rounded-md hover:bg-zinc-500/10 text-muted-foreground transition-colors',
+              isWrapped && 'text-primary bg-primary/10 hover:bg-primary/20'
+            )}
             onClick={() => setIsWrapped(!isWrapped)}
             title="Toggle text wrap"
           >
             <WrapText className="h-3.5 w-3.5" />
-          </Button>
+            <span className="text-[10px] font-semibold uppercase tracking-wider hidden sm:inline">Wrap</span>
+          </button>
 
           {/* Copy Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 hover:bg-white/10"
+          <button
+            className="h-7 px-2 flex items-center gap-1.5 rounded-md hover:bg-zinc-500/10 text-muted-foreground transition-colors"
             onClick={copyToClipboard}
             title="Copy code"
           >
-            {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-          </Button>
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500">Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">Copy</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -85,10 +102,11 @@ export function SyntaxHighlighter({
           wrapLongLines={isWrapped}
           customStyle={{
             margin: 0,
-            padding: '1.5rem 1rem',
-            fontSize: '0.875rem', // text-sm
-            lineHeight: '1.5rem',
+            padding: '1.25rem 1rem',
+            fontSize: '13px',
+            lineHeight: '1.6',
             backgroundColor: 'transparent', // Use container bg
+            fontFamily: 'var(--font-mono)',
           }}
           codeTagProps={{
             style: {

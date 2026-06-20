@@ -24,7 +24,9 @@ data class ChannelMemberDto(
 data class ChannelCountDto(
     val messages: Int? = null,
     val members: Int? = null,
-    val threads: Int? = null
+    val threads: Int? = null,
+    val unreadCount: Int? = null,
+    val mentionCount: Int? = null
 )
 
 data class CreateChannelRequest(

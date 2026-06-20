@@ -34,7 +34,7 @@ import com.scrymechat.android.data.local.entities.UserEntity
 // derived from isSystemInDarkTheme(), rather than hardcoded ScrymeDark*
 // tokens that forced dark mode regardless of the device setting.
 
-internal data class ProfilePalette(
+data class ProfilePalette(
     val isDark: Boolean,
     val canvasBg: Color,
     val cardSurface: Color,
@@ -54,7 +54,7 @@ internal data class ProfilePalette(
 )
 
 @Composable
-internal fun profilePalette(isDark: Boolean = isSystemInDarkTheme()): ProfilePalette {
+fun profilePalette(isDark: Boolean = isSystemInDarkTheme()): ProfilePalette {
     return if (isDark) {
         ProfilePalette(
             isDark = true,

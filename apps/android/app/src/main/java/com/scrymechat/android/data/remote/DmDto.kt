@@ -18,7 +18,9 @@ data class DmLastMessageDto(
 )
 
 data class DmCountDto(
-    val messages: Int
+    val messages: Int,
+    val unreadCount: Int? = null,
+    val mentionCount: Int? = null
 )
 
 data class CreateDmRequest(
