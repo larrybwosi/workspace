@@ -102,17 +102,22 @@ fun HomeScreen(
                         currentUser = uiState.currentUser,
                         expandedCategories = uiState.expandedCategories,
                         dms = uiState.dms,
+                        userPresence = uiState.userPresence,
                         onChannelClick = {
                             viewModel.selectChannel(it)
+                            chatViewModel.setChannel(it.id)
                             uiState.selectedWorkspace?.slug?.let { slug ->
                                 chatViewModel.setWorkspaceSlug(slug)
                             }
-                            chatViewModel.setChannel(it.id)
                             scope.launch { drawerState.close() }
                         },
                         onDmClick = {
+                            viewModel.selectDm(it.id)
                             chatViewModel.setDm(it.id)
                             scope.launch { drawerState.close() }
+                        },
+                        onDeleteDm = {
+                            viewModel.deleteDm(it)
                         },
                         onCategoryToggle = { viewModel.toggleCategory(it) },
                         onSettingsClick = onSettingsClick,
@@ -128,6 +133,8 @@ fun HomeScreen(
         MainContent(
             selectedWorkspace = uiState.selectedWorkspace,
             selectedChannel = uiState.selectedChannel,
+            selectedDm = uiState.dms.find { it.dm.id == uiState.selectedDmId }?.dm,
+            selectedDmWithUser = uiState.dms.find { it.dm.id == uiState.selectedDmId },
             isHomeSelected = uiState.isHomeSelected,
             chatUiState = chatUiState,
             currentUser = uiState.currentUser,
@@ -154,6 +161,8 @@ fun HomeScreen(
 fun MainContent(
     selectedWorkspace: com.scrymechat.android.data.local.entities.WorkspaceEntity?,
     selectedChannel: com.scrymechat.android.data.local.entities.ChannelEntity?,
+    selectedDm: com.scrymechat.android.data.local.entities.DmConversationEntity? = null,
+    selectedDmWithUser: com.scrymechat.android.data.local.dao.DmWithUser? = null,
     isHomeSelected: Boolean,
     chatUiState: com.scrymechat.android.ui.chat.ChatUiState,
     currentUser: com.scrymechat.android.data.local.entities.UserEntity?,
@@ -175,7 +184,7 @@ fun MainContent(
             .background(ScrymeDarkSurfaceVariant)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top Bar — slightly taller, with a subtle elevation line instead of a flat divider
+            // Top Bar
             Surface(
                 color = ScrymeDarkSurfaceVariant,
                 shadowElevation = 2.dp,
@@ -199,36 +208,67 @@ fun MainContent(
 
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    val titleIcon = when {
-                        isHomeSelected -> null
-                        selectedChannel != null -> Icons.Default.Tag
-                        else -> null
-                    }
-                    titleIcon?.let {
-                        Icon(
-                            it,
-                            contentDescription = null,
-                            tint = ScrymeDarkTextSecondary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
+                    Column {
+                        val title = when {
+                            selectedChannel != null -> selectedChannel.name
+                            selectedDm != null -> selectedDmWithUser?.otherUserName ?: "Direct Message"
+                            selectedWorkspace != null -> selectedWorkspace.name
+                            isHomeSelected -> "Home"
+                            else -> "Scrymechat"
+                        }
 
-                    Text(
-                        text = if (isHomeSelected) "Home"
-                               else if (selectedChannel != null) selectedChannel.name
-                               else selectedWorkspace?.name ?: "Scrymechat",
-                        color = ScrymeDarkTextPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 17.sp,
-                        letterSpacing = 0.1.sp
-                    )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (selectedChannel != null) {
+                                Icon(
+                                    Icons.Default.Tag,
+                                    contentDescription = null,
+                                    tint = ScrymeDarkTextSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                            Text(
+                                text = title,
+                                color = ScrymeDarkTextPrimary,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 17.sp,
+                                letterSpacing = 0.1.sp
+                            )
+                        }
+
+                        if (selectedDm != null) {
+                            val status = chatUiState.otherUserPresence ?: selectedDmWithUser?.otherUserStatus
+                            if (status != null) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                when (status) {
+                                                    "online" -> Color(0xFF34C77B)
+                                                    "idle" -> Color(0xFFFAA61A)
+                                                    "dnd" -> Color(0xFFF04747)
+                                                    else -> ScrymeDarkTextSecondary
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = status.replaceFirstChar { it.uppercase() },
+                                        color = ScrymeDarkTextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = isHomeSelected,
+                    visible = isHomeSelected && selectedDm == null,
                     enter = fadeIn(tween(220)),
                     exit = fadeOut(tween(120))
                 ) {
@@ -239,7 +279,7 @@ fun MainContent(
                     )
                 }
 
-                if (!isHomeSelected && selectedChannel != null) {
+                if (!isHomeSelected && (selectedChannel != null || selectedDm != null)) {
                     ChatView(
                         messages = chatUiState.messages,
                         onSendMessage = onSendMessage,
@@ -251,9 +291,10 @@ fun MainContent(
                         formStates = formStates,
                         loadingActions = loadingActions,
                         onTyping = onTyping,
-                        typingUsers = chatUiState.typingUsers
+                        typingUsers = chatUiState.typingUsers,
+                        currentUserId = currentUser?.id
                     )
-                } else if (!isHomeSelected && selectedChannel == null && selectedWorkspace != null) {
+                } else if (!isHomeSelected && selectedChannel == null && selectedDm == null && selectedWorkspace != null) {
                     WelcomeScreen(workspaceName = selectedWorkspace.name)
                 }
             }

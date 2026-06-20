@@ -156,6 +156,7 @@ fun ChatView(
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
+    currentUserId: String? = null,
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
@@ -199,7 +200,8 @@ fun ChatView(
                         fullScreenImageUrl = attachment.url
                         fullScreenImageName = attachment.name
                         fullScreenImageMimeType = attachment.type
-                    }
+                    },
+                    currentUserId = currentUserId
                 )
             }
         }
@@ -414,7 +416,8 @@ fun SwipeableMessageItem(
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
     isLoading: Boolean = false,
-    onImageClick: (AttachmentDto) -> Unit = {}
+    onImageClick: (AttachmentDto) -> Unit = {},
+    currentUserId: String? = null
 ) {
     // Swipe-to-action. Kept lightweight (drag offset + threshold) per the
     // original approach, but with spring-back animation and a clearer,
@@ -483,7 +486,8 @@ fun SwipeableMessageItem(
                     onUpdateForm = onUpdateForm,
                     formState = formState,
                     isLoading = isLoading,
-                    onImageClick = onImageClick
+                    onImageClick = onImageClick,
+                    currentUserId = currentUserId
                 )
 
                 DropdownMenu(
@@ -564,7 +568,8 @@ fun MessageItem(
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
     isLoading: Boolean = false,
-    onImageClick: (AttachmentDto) -> Unit = {}
+    onImageClick: (AttachmentDto) -> Unit = {},
+    currentUserId: String? = null
 ) {
     Row(
         modifier = Modifier
@@ -598,6 +603,26 @@ fun MessageItem(
                     color = palette.textTertiary,
                     fontSize = 11.5.sp
                 )
+
+                if (message.senderId == currentUserId) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    val icon = when {
+                        message.isReadByOthers -> Icons.Default.DoneAll
+                        message.isDelivered -> Icons.Default.DoneAll
+                        else -> Icons.Default.Done
+                    }
+                    val tint = when {
+                        message.isReadByOthers -> palette.accent
+                        message.isDelivered -> palette.textTertiary
+                        else -> palette.textTertiary
+                    }
+                    Icon(
+                        icon,
+                        contentDescription = if (message.isReadByOthers) "Read" else if (message.isDelivered) "Delivered" else "Sent",
+                        tint = tint,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
 
             if (message.replyToSenderName != null) {
