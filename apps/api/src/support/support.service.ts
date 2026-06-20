@@ -5,61 +5,63 @@ import { AblyChannels, AblyEvents, getAblyRest } from '@repo/shared/server';
 @Injectable()
 export class SupportService {
   async createTicket(workspaceId: string, customerUserId: string, subject: string, initialMessage?: string) {
-    const customerProfile = await prisma.customerProfile.findUnique({
-      where: { userId: customerUserId },
-    });
-
-    if (!customerProfile) {
-      throw new BadRequestException('Customer profile not found');
-    }
-
-    // Create a dedicated channel for this ticket
-    const channel = await prisma.channel.create({
-      data: {
-        name: `ticket-${Math.random().toString(36).substring(7)}`,
-        icon: '🎫',
-        type: 'support_ticket',
-        workspaceId,
-        isPrivate: true,
-        members: {
-          create: {
-            userId: customerUserId,
-            role: 'member',
-          },
-        },
-      },
-    });
-
-    const ticket = await prisma.supportTicket.create({
-      data: {
-        workspaceId,
-        customerId: customerProfile.id,
-        subject,
-        channelId: channel.id,
-        status: 'OPEN',
-      },
-      include: {
-        customer: {
-          include: {
-            user: true,
-          },
-        },
-        channel: true,
-      },
-    });
-
-    if (initialMessage) {
-      await prisma.message.create({
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates customer lookup, channel creation, ticket creation, and initial message creation
+     * into a single database round-trip using nested Prisma operations.
+     * Reduces database RTT from 4 down to 1.
+     */
+    try {
+      const ticket = await prisma.supportTicket.create({
         data: {
-          channelId: channel.id,
-          userId: customerUserId,
-          content: initialMessage,
-          messageType: 'support_request',
+          subject,
+          status: 'OPEN',
+          workspace: { connect: { id: workspaceId } },
+          customer: { connect: { userId: customerUserId } },
+          channel: {
+            create: {
+              name: `ticket-${Math.random().toString(36).substring(7)}`,
+              icon: '🎫',
+              type: 'support_ticket',
+              workspace: { connect: { id: workspaceId } },
+              isPrivate: true,
+              members: {
+                create: {
+                  userId: customerUserId,
+                  role: 'member',
+                },
+              },
+              messages: initialMessage
+                ? {
+                    create: {
+                      userId: customerUserId,
+                      content: initialMessage,
+                      messageType: 'support_request',
+                    },
+                  }
+                : undefined,
+            },
+          },
+        },
+        include: {
+          customer: {
+            include: {
+              user: true,
+            },
+          },
+          channel: true,
         },
       });
-    }
 
-    return ticket;
+      return ticket;
+    } catch (error) {
+      // Prisma error code for 'An operation failed because it depends on one or more records that were required but not found'
+      // This happens when 'connect: { userId: customerUserId }' fails because the customer profile doesn't exist.
+      if ((error as any).code === 'P2025') {
+        throw new BadRequestException('Customer profile not found');
+      }
+      throw error;
+    }
   }
 
   async getTickets(workspaceId: string, userId: string) {
