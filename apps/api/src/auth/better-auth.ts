@@ -58,6 +58,9 @@ export const auth: any = betterAuth({
       username: {
         type: 'string',
       },
+      bio: {
+        type: 'string',
+      },
     },
   },
   plugins: [jwt(), organization(), admin() as any],

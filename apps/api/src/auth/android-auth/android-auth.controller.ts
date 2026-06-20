@@ -1,9 +1,42 @@
-import { Controller, Post, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Query,
+  Body,
+  UnauthorizedException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { auth } from '../better-auth';
+import { prisma } from '@repo/database';
 
 @Controller('auth/android')
 export class AndroidAuthController {
   private readonly logger = new Logger(AndroidAuthController.name);
+
+  @Get('check-username')
+  async checkUsername(@Query('username') username: string) {
+    if (!username || username.length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters long');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
+    }
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      });
+
+      return { available: !user };
+    } catch (error: any) {
+      this.logger.error(`Error checking username availability: ${error.message}`, error.stack);
+      throw new BadRequestException('Failed to check username availability');
+    }
+  }
 
   @Post('login')
   async login(@Body() body: any) {
@@ -27,6 +60,8 @@ export class AndroidAuthController {
           password: body.password,
           name: body.name,
           username: body.username,
+          image: body.image,
+          bio: body.bio,
         },
       });
       return this.handleAuthResponse(response, 'Failed to create account');
@@ -55,6 +90,18 @@ export class AndroidAuthController {
     const fields = ['email', 'password', 'name', 'username'];
     if (fields.some((f) => !body[f])) {
       throw new BadRequestException('Email, password, name, and username are required');
+    }
+
+    if (body.password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long');
+    }
+
+    if (body.username.length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters long');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(body.username)) {
+      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
     }
   }
 
