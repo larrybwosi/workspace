@@ -12,6 +12,9 @@ interface MessageDao {
     @Query("SELECT * FROM messages WHERE dmId = :dmId ORDER BY createdAt DESC")
     fun getMessagesForDmFlow(dmId: String): Flow<List<MessageEntity>>
 
+    @Query("SELECT * FROM messages WHERE threadId = :threadId OR id = :threadId ORDER BY createdAt DESC")
+    fun getMessagesForThreadFlow(threadId: String): Flow<List<MessageEntity>>
+
     @Query("SELECT * FROM messages WHERE id = :id")
     suspend fun getMessageById(id: String): MessageEntity?
 

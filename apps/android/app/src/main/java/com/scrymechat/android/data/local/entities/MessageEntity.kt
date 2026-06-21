@@ -25,7 +25,10 @@ data class MessageEntity(
     val attachments: List<AttachmentDto> = emptyList(),
     val metadata: Map<String, Any>? = null,
     val reactions: List<ReactionGroupDto> = emptyList(),
-    val messageType: String? = null
+    val messageType: String? = null,
+    val threadId: String? = null,
+    val replyCount: Int = 0,
+    val isPinned: Boolean = false
 ) {
     @Ignore
     var customMessage: CustomMessageDto? = null

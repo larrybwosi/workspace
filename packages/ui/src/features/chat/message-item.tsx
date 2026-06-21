@@ -1,6 +1,6 @@
 'use client';
 
-import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2 } from 'lucide-react';
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2, Pin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
 import { cn } from '../../lib/utils';
@@ -41,6 +41,7 @@ interface MessageItemProps {
   message: any;
   showAvatar?: boolean;
   onReply?: (messageId: string) => void;
+  onThreadOpen?: (message: any) => void;
   onReaction?: (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void;
   depth?: number;
   isReply?: boolean;
@@ -82,28 +83,39 @@ const MessageEditor = memo(({ initialContent, onSave, onCancel }: MessageEditorP
 
 MessageEditor.displayName = 'MessageEditor';
 
-const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any, message: any, userBadges: any[], isReply: boolean }) => (
-  <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
-    <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
-      {user?.name}
-    </span>
-    {message.metadata?.isBot && (
-      <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
-        Bot
+const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any, message: any, userBadges: any[], isReply: boolean }) => {
+  const timestamp = useMemo(() => format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm'), [message.timestamp]);
+  const replyToName = (message as any).replyToUser?.name || 'someone';
+
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
+      <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
+        {user?.name}
       </span>
-    )}
-    {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
-    <span className="text-[12px] text-muted-foreground/70 font-normal">
-      {format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm')}
-    </span>
-    {isReply && (
-      <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
-        <Reply className="h-3 w-3" />
-        replied to {(message as any).replyToUser?.name || 'someone'}
+      {message.metadata?.isBot && (
+        <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
+          Bot
+        </span>
+      )}
+      {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
+      <span className="text-[12px] text-muted-foreground/70 font-normal">
+        {timestamp}
       </span>
-    )}
-  </div>
-));
+      {message.isPinned && (
+        <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
+          <Pin className="h-3 w-3 fill-current" />
+          Pinned
+        </span>
+      )}
+      {isReply && (
+        <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
+          <Reply className="h-3 w-3" />
+          replied to {replyToName}
+        </span>
+      )}
+    </div>
+  );
+});
 
 MessageHeader.displayName = 'MessageHeader';
 
@@ -318,10 +330,71 @@ const MessageContent = memo(({
 
 MessageContent.displayName = 'MessageContent';
 
+const MessageThreadIndicator = memo(({
+  replyCount,
+  threadId,
+  onClick
+}: {
+  replyCount?: number,
+  threadId?: string,
+  onClick: () => void
+}) => {
+  if (replyCount && replyCount > 0 || threadId) {
+      return (
+        <button
+          onClick={onClick}
+          className="mt-1 flex items-center gap-2 text-[13px] font-medium text-primary hover:underline transition-all"
+        >
+          {replyCount && replyCount > 0 ? `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}` : 'View thread'}
+        </button>
+      );
+    }
+    return null;
+});
+
+MessageThreadIndicator.displayName = 'MessageThreadIndicator';
+
+const MessageBodyRenderer = memo(({ message, handleCustomAction, isActionPending }: {
+  message: any,
+  handleCustomAction: any,
+  isActionPending: boolean
+}) => {
+  const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
+    (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
+
+  if (isImplicitCode) {
+    const { language, code } = extractCodeInfo(message.content);
+    return (
+      <div className="w-full mt-2">
+        <SyntaxHighlighter
+          code={code}
+          language={language as string}
+          fileName={((message.metadata?.fileName as string) || '') as any}
+        />
+      </div>
+    );
+  }
+
+  if (['custom', 'approval', 'report'].includes(message.messageType)) {
+    return (
+      <CustomMessage
+        message={message}
+        onAction={handleCustomAction}
+        isLoading={isActionPending}
+      />
+    );
+  }
+
+  return renderCustomMessage(message);
+});
+
+MessageBodyRenderer.displayName = 'MessageBodyRenderer';
+
 export const MessageItem = memo(function MessageItem({
   message,
   showAvatar = true,
   onReply,
+  onThreadOpen,
   onReaction,
   depth = 0,
   isReply = false,
@@ -344,8 +417,6 @@ export const MessageItem = memo(function MessageItem({
   const [isEditing, setIsEditing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const userBadges = (user as any)?.badges || [];
-
   const handleAddReaction = useCallback((emoji: string, isCustom?: boolean, customEmojiId?: string) => {
     onReaction?.(message.id, emoji, isCustom, customEmojiId);
   }, [message.id, onReaction]);
@@ -357,6 +428,10 @@ export const MessageItem = memo(function MessageItem({
   const handleReply = useCallback(() => {
     onReply?.(message.id);
   }, [message.id, onReply]);
+
+  const handleOpenThread = useCallback(() => {
+    onThreadOpen?.(message);
+  }, [message, onThreadOpen]);
 
   const handleEditMessage = useCallback(() => setIsEditing(true), []);
 
@@ -394,91 +469,41 @@ export const MessageItem = memo(function MessageItem({
     }
   }, [message.id, triggerActionMutation]);
 
-  const renderMessageBody = useCallback(() => {
-    const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
-      (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
-
-    if (isImplicitCode) {
-      const { language, code } = extractCodeInfo(message.content);
-      return (
-        <div className="w-full mt-2">
-          <SyntaxHighlighter
-            code={code}
-            language={language as string}
-            fileName={((message.metadata?.fileName as string) || '') as any}
-          />
-        </div>
-      );
-    }
-
-    if (['custom', 'approval', 'report'].includes(message.messageType)) {
-      return (
-        <CustomMessage
-          message={message}
-          onAction={handleCustomAction}
-          isLoading={triggerActionMutation.isPending}
-        />
-      );
-    }
-
-    return renderCustomMessage(message);
-  }, [message, handleCustomAction, triggerActionMutation.isPending]);
-
   const showToolbar = isHovered || isMenuOpen;
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div
-          ref={highlightRef}
-          className={cn(
-            'group relative flex items-start px-4 gap-3 w-full select-text',
-            showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
-            'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
-            isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
-            isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
-            isHighlighted && 'bg-primary/10'
-          )}
+        <MessageLayout
+          highlightRef={highlightRef}
+          showAvatar={showAvatar}
+          isMenuOpen={isMenuOpen}
+          isMentioned={isMentioned}
+          isHighlighted={isHighlighted}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
-            {showAvatar ? (
-              <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
-                <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
-                <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-                  {user?.name?.slice(0, 2).toUpperCase() || '??'}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <span className={cn('text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap', showToolbar ? 'opacity-100' : 'opacity-0')}>
-                {format(new Date(message.timestamp || new Date()), 'HH:mm')}
-              </span>
-            )}
-          </div>
+          <MessageAvatar
+            showAvatar={showAvatar}
+            user={user}
+            timestamp={message.timestamp}
+            showToolbar={showToolbar}
+          />
 
-          <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
-            {showAvatar && <MessageHeader user={user} message={message} userBadges={userBadges} isReply={isReply} />}
-            <MessageContent
-              message={message}
-              isEditing={isEditing}
-              handleSaveEdit={handleSaveEdit}
-              setIsEditing={setIsEditing}
-              renderMessageBody={renderMessageBody}
-            />
-            <DocumentEmbed message={message} />
-            <MessageAttachments attachments={message.attachments} message={message} />
-            {message.actions && message.actions.length > 0 && (
-              <MessageActions actions={message.actions} messageId={message.id} triggerActionMutation={triggerActionMutation} />
-            )}
-            {message.reactions && message.reactions.length > 0 && (
-              <MessageReactions
-                reactions={message.reactions}
-                handleAddReaction={handleAddReaction}
-                handleToggleReaction={handleToggleReaction}
-              />
-            )}
-          </div>
+          <MessageMainContent
+            showAvatar={showAvatar}
+            user={user}
+            message={message}
+            isReply={isReply}
+            isEditing={isEditing}
+            handleSaveEdit={handleSaveEdit}
+            setIsEditing={setIsEditing}
+            handleCustomAction={handleCustomAction}
+            isActionPending={triggerActionMutation.isPending}
+            handleOpenThread={handleOpenThread}
+            handleAddReaction={handleAddReaction}
+            handleToggleReaction={handleToggleReaction}
+          />
 
           {showToolbar && (
             <MessageToolbar
@@ -491,27 +516,199 @@ export const MessageItem = memo(function MessageItem({
               handleDeleteMessage={handleDeleteMessage}
             />
           )}
-        </div>
+        </MessageLayout>
       </ContextMenuTrigger>
 
-      <ContextMenuContent className="w-52">
-        <ContextMenuItem onClick={handleReply}>
-          <Reply className="mr-2 h-4 w-4" /> Reply
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleCopyMessageLink}>
-          <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
-        </ContextMenuItem>
-        <ContextMenuItem onClick={() => navigator.clipboard.writeText(message.content)}>
-          <Copy className="mr-2 h-4 w-4" /> Copy Text
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleEditMessage}>
-          <Edit className="mr-2 h-4 w-4" /> Edit
-        </ContextMenuItem>
-        <ContextMenuItem className="text-destructive focus:text-destructive" onClick={handleDeleteMessage}>
-          <Trash2 className="mr-2 h-4 w-4" /> Delete
-        </ContextMenuItem>
-      </ContextMenuContent>
+      <MessageContextMenuContent
+        handleReply={handleReply}
+        handleCopyMessageLink={handleCopyMessageLink}
+        messageContent={message.content}
+        handleEditMessage={handleEditMessage}
+        handleDeleteMessage={handleDeleteMessage}
+      />
     </ContextMenu>
   );
 });
+
+const MessageLayout = memo(({
+  children,
+  highlightRef,
+  showAvatar,
+  isMenuOpen,
+  isMentioned,
+  isHighlighted,
+  onMouseEnter,
+  onMouseLeave
+}: {
+  children: React.ReactNode,
+  highlightRef?: React.RefObject<HTMLDivElement | null>,
+  showAvatar: boolean,
+  isMenuOpen: boolean,
+  isMentioned: boolean,
+  isHighlighted: boolean,
+  onMouseEnter: () => void,
+  onMouseLeave: () => void
+}) => (
+  <div
+    ref={highlightRef}
+    className={cn(
+      'group relative flex items-start px-4 gap-3 w-full select-text',
+      showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
+      'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
+      isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
+      isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
+      isHighlighted && 'bg-primary/10'
+    )}
+    onMouseEnter={onMouseEnter}
+    onMouseLeave={onMouseLeave}
+  >
+    {children}
+  </div>
+));
+
+MessageLayout.displayName = 'MessageLayout';
+
+const MessageMainContent = memo(({
+  showAvatar,
+  user,
+  message,
+  isReply,
+  isEditing,
+  handleSaveEdit,
+  setIsEditing,
+  handleCustomAction,
+  isActionPending,
+  handleOpenThread,
+  handleAddReaction,
+  handleToggleReaction
+}: {
+  showAvatar: boolean,
+  user: any,
+  message: any,
+  isReply: boolean,
+  isEditing: boolean,
+  handleSaveEdit: (c: string) => void,
+  setIsEditing: (e: boolean) => void,
+  handleCustomAction: any,
+  isActionPending: boolean,
+  handleOpenThread: () => void,
+  handleAddReaction: any,
+  handleToggleReaction: any
+}) => (
+  <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
+    {showAvatar && <MessageHeader user={user} message={message} userBadges={(user as any)?.badges || []} isReply={isReply} />}
+    <MessageContent
+      message={message}
+      isEditing={isEditing}
+      handleSaveEdit={handleSaveEdit}
+      setIsEditing={setIsEditing}
+      renderMessageBody={() => (
+        <MessageBodyRenderer
+          message={message}
+          handleCustomAction={handleCustomAction}
+          isActionPending={isActionPending}
+        />
+      )}
+    />
+    <DocumentEmbed message={message} />
+    <MessageAttachments attachments={message.attachments} message={message} />
+    <MessageActionsWrapper message={message} handleCustomAction={handleCustomAction} isActionPending={isActionPending} />
+    <MessageThreadIndicator
+      replyCount={message.replyCount}
+      threadId={message.threadId}
+      onClick={handleOpenThread}
+    />
+    <MessageReactionsWrapper message={message} handleAddReaction={handleAddReaction} handleToggleReaction={handleToggleReaction} />
+  </div>
+));
+
+const MessageActionsWrapper = memo(({ message, handleCustomAction, isActionPending }: { message: any, handleCustomAction: any, isActionPending: boolean }) => {
+  if (!message.actions || message.actions.length === 0) return null;
+  return (
+    <MessageActions
+      actions={message.actions}
+      messageId={message.id}
+      triggerActionMutation={{ isPending: isActionPending, mutateAsync: handleCustomAction }}
+    />
+  );
+});
+
+MessageActionsWrapper.displayName = 'MessageActionsWrapper';
+
+const MessageReactionsWrapper = memo(({ message, handleAddReaction, handleToggleReaction }: { message: any, handleAddReaction: any, handleToggleReaction: any }) => {
+  if (!message.reactions || message.reactions.length === 0) return null;
+  return (
+    <MessageReactions
+      reactions={message.reactions}
+      handleAddReaction={handleAddReaction}
+      handleToggleReaction={handleToggleReaction}
+    />
+  );
+});
+
+MessageReactionsWrapper.displayName = 'MessageReactionsWrapper';
+
+MessageMainContent.displayName = 'MessageMainContent';
+
+const MessageAvatar = memo(({ showAvatar, user, timestamp, showToolbar }: {
+  showAvatar: boolean,
+  user: any,
+  timestamp: Date,
+  showToolbar: boolean
+}) => {
+  const formattedTime = useMemo(() => format(new Date(timestamp || new Date()), 'HH:mm'), [timestamp]);
+
+  return (
+    <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
+      {showAvatar ? (
+        <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
+          <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
+          <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+            {user?.name?.slice(0, 2).toUpperCase() || '??'}
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <span className={cn('text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap', showToolbar ? 'opacity-100' : 'opacity-0')}>
+          {formattedTime}
+        </span>
+      )}
+    </div>
+  );
+});
+
+MessageAvatar.displayName = 'MessageAvatar';
+
+const MessageContextMenuContent = memo(({
+  handleReply,
+  handleCopyMessageLink,
+  messageContent,
+  handleEditMessage,
+  handleDeleteMessage
+}: {
+  handleReply: () => void,
+  handleCopyMessageLink: () => void,
+  messageContent: string,
+  handleEditMessage: () => void,
+  handleDeleteMessage: () => void
+}) => (
+  <ContextMenuContent className="w-52">
+    <ContextMenuItem onClick={handleReply}>
+      <Reply className="mr-2 h-4 w-4" /> Reply
+    </ContextMenuItem>
+    <ContextMenuItem onClick={handleCopyMessageLink}>
+      <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
+    </ContextMenuItem>
+    <ContextMenuItem onClick={() => navigator.clipboard.writeText(messageContent)}>
+      <Copy className="mr-2 h-4 w-4" /> Copy Text
+    </ContextMenuItem>
+    <ContextMenuSeparator />
+    <ContextMenuItem onClick={handleEditMessage}>
+      <Edit className="mr-2 h-4 w-4" /> Edit
+    </ContextMenuItem>
+    <ContextMenuItem className="text-destructive focus:text-destructive" onClick={handleDeleteMessage}>
+      <Trash2 className="mr-2 h-4 w-4" /> Delete
+    </ContextMenuItem>
+  </ContextMenuContent>
+));
+
+MessageContextMenuContent.displayName = 'MessageContextMenuContent';

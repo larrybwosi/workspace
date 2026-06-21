@@ -60,6 +60,8 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       channelId: string;
       threadId?: string;
       contextId?: string;
+      messageType?: string;
+      attachments?: unknown[];
     }) => {
       const prefix = isV2 ? '/v2' : '';
 
@@ -74,7 +76,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Message, variables: { channelId: string; threadId?: string }) => {
       queryClient.invalidateQueries({
         queryKey: messageKeys.list(variables.channelId, workspaceSlug, variables.threadId),
       });
@@ -129,8 +131,8 @@ export function useTriggerAction(workspaceSlug?: string) {
     }: {
       messageId: string;
       actionId: string;
-      payload?: Record<string, any>;
-      formState?: Record<string, any>;
+      payload?: Record<string, unknown>;
+      formState?: Record<string, unknown>;
     }) => {
       // Always use V2 endpoint for actions as it supports M2M callbacks
       const url = `/v2/workspaces/${workspaceSlug}/messages/${messageId}/actions/${actionId}`;
@@ -219,9 +221,10 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
         }, 1000); // 1 second buffer
       });
     },
-    onSuccess: data => {
+    onSuccess: (data: unknown) => {
       // Optimistically update query data to mark messages as read in the UI
-      const { channelId, messageIds } = data as { channelId: string; messageIds: string[] };
+      const typedData = data as { channelId: string; messageIds: string[] };
+      const { channelId, messageIds } = typedData;
       const queryKey = workspaceSlug
         ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
         : messageKeys.list(channelId);
@@ -306,14 +309,14 @@ export function useSendDMMessage() {
       replyToId?: string;
       attachments?: unknown[];
     }) => {
-      const { data } = await apiClient.post(`/dms/${dmId}/messages`, {
+      const { data } = await apiClient.post<Message>(`/dms/${dmId}/messages`, {
         content,
         replyToId,
         attachments,
       });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Message, variables: { dmId: string }) => {
       queryClient.invalidateQueries({ queryKey: dmKeys.list(variables.dmId) });
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     },

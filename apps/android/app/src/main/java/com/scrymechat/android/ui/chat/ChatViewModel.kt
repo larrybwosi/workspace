@@ -34,6 +34,7 @@ class ChatViewModel @Inject constructor(
 
     private var currentChannelId: String? = null
     private var currentDmId: String? = null
+    private var currentThreadId: String? = null
     private var currentWorkspaceSlug: String? = null
 
     init {
@@ -46,13 +47,34 @@ class ChatViewModel @Inject constructor(
     }
 
     fun setChannel(channelId: String) {
-        if (currentChannelId == channelId) return
+        if (currentChannelId == channelId && currentThreadId == null) return
 
         currentChannelId?.let { realtimeRepository.leaveRoom("channel:$it") }
+        currentThreadId?.let { realtimeRepository.leaveRoom("thread:$it") }
         currentChannelId = channelId
         currentDmId = null
+        currentThreadId = null
+
+        _uiState.update { it.copy(isThread = false, threadRootMessage = null) }
 
         realtimeRepository.joinRoom("channel:$channelId")
+        loadMessages()
+    }
+
+    fun setThread(channelId: String, message: MessageEntity) {
+        val threadId = message.id
+        if (currentThreadId == threadId) return
+
+        currentChannelId?.let { realtimeRepository.leaveRoom("channel:$it") }
+        currentThreadId?.let { realtimeRepository.leaveRoom("thread:$it") }
+
+        currentChannelId = channelId
+        currentThreadId = threadId
+        currentDmId = null
+
+        _uiState.update { it.copy(isThread = true, threadRootMessage = message) }
+
+        realtimeRepository.joinRoom("thread:$threadId")
         loadMessages()
     }
 
@@ -81,9 +103,13 @@ class ChatViewModel @Inject constructor(
     private fun loadMessages() {
         val channelId = currentChannelId
         val dmId = currentDmId
+        val threadId = currentThreadId
 
         viewModelScope.launch {
             when {
+                threadId != null && channelId != null -> chatRepository.getThreadMessages(channelId, threadId).collect { resource ->
+                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
+                }
                 channelId != null -> chatRepository.getChannelMessages(channelId).collect { resource ->
                     if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
                 }
@@ -95,6 +121,7 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             val flow = when {
+                threadId != null -> chatRepository.getThreadMessagesFlow(threadId)
                 channelId != null -> chatRepository.getChannelMessagesFlow(channelId)
                 dmId != null -> chatRepository.getDmMessagesFlow(dmId)
                 else -> return@launch
@@ -135,9 +162,11 @@ class ChatViewModel @Inject constructor(
     fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null) {
         val channelId = targetChannelId ?: currentChannelId
         val dmId = currentDmId
+        val threadId = currentThreadId
 
         viewModelScope.launch {
             val result = when {
+                threadId != null && channelId != null -> chatRepository.sendThreadMessage(channelId, threadId, content)
                 channelId != null -> chatRepository.sendChannelMessage(channelId, content, replyToId)
                 dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId)
                 else -> return@launch
@@ -183,6 +212,12 @@ class ChatViewModel @Inject constructor(
     }
 
     fun handleMessageAction(context: Context, message: MessageEntity, action: MessageActionDto, formState: Map<String, Any>) {
+        if (action.id == "add_reaction") {
+            val emoji = formState["emoji"] as? String ?: return
+            toggleReaction(message.id, emoji)
+            return
+        }
+
         when (action.handler.type) {
             "LINK" -> {
                 action.handler.url?.let { url ->
@@ -224,6 +259,25 @@ class ChatViewModel @Inject constructor(
         _uiState.update { it.copy(activeModal = null) }
     }
 
+    fun toggleReaction(messageId: String, emoji: String) {
+        val channelId = currentChannelId
+        val dmId = currentDmId
+
+        viewModelScope.launch {
+            val result = if (channelId != null) {
+                chatRepository.addReaction(channelId, messageId, emoji, true)
+            } else if (dmId != null) {
+                chatRepository.addReaction(dmId, messageId, emoji, false)
+            } else return@launch
+
+            if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            } else {
+                loadMessages() // Refresh to show reaction
+            }
+        }
+    }
+
     fun downloadAttachment(url: String, fileName: String, mimeType: String? = null) {
         storageRepository.downloadFile(url, fileName, mimeType)
     }
@@ -234,7 +288,9 @@ data class ChatUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val typingUsers: List<String> = emptyList(),
-    val activeModal: ModalState? = null
+    val activeModal: ModalState? = null,
+    val isThread: Boolean = false,
+    val threadRootMessage: MessageEntity? = null
 )
 
 data class ModalState(
