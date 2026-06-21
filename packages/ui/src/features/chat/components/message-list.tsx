@@ -58,7 +58,7 @@ const UnreadDivider = memo(function UnreadDivider() {
   );
 });
 
-export const LoadMoreButton = memo(({ hasNextPage, fetchNextPage, isFetchingNextPage }: {
+const LoadMoreButton = memo(({ hasNextPage, fetchNextPage, isFetchingNextPage }: {
   hasNextPage?: boolean,
   fetchNextPage: () => void,
   isFetchingNextPage: boolean
@@ -81,7 +81,7 @@ export const LoadMoreButton = memo(({ hasNextPage, fetchNextPage, isFetchingNext
 
 LoadMoreButton.displayName = 'LoadMoreButton';
 
-export const MessageSkeletons = memo(() => (
+const MessageSkeletons = memo(() => (
   <div className="space-y-3">
     {[1, 2, 3, 4, 5].map(i => (
       <MessageSkeleton key={i} />
@@ -91,7 +91,7 @@ export const MessageSkeletons = memo(() => (
 
 MessageSkeletons.displayName = 'MessageSkeletons';
 
-export const EmptyState = memo(({ activeChannelId }: { activeChannelId: string }) => (
+const EmptyState = memo(({ activeChannelId }: { activeChannelId: string }) => (
   <div className="flex flex-col items-center justify-center flex-1 p-8 text-center opacity-50">
     <div className="h-14 w-14 bg-muted rounded-full mb-3 flex items-center justify-center text-2xl">👋</div>
     <h3 className="font-semibold text-sm">No messages yet</h3>
@@ -103,7 +103,7 @@ export const EmptyState = memo(({ activeChannelId }: { activeChannelId: string }
 
 EmptyState.displayName = 'EmptyState';
 
-export const MessageItemWrapper = memo(({
+const MessageItemWrapper = memo(({
   item,
   isGrouped,
   isHighlighted,
@@ -168,7 +168,7 @@ export const MessageItemWrapper = memo(({
 
 MessageItemWrapper.displayName = 'MessageItemWrapper';
 
-export const MessageItems = memo(({
+const MessageItems = memo(({
   renderList,
   highlightedMessageId,
   initialUnreadId,

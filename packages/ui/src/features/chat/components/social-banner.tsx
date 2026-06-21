@@ -6,7 +6,7 @@ import { Button } from '../../../components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../../../components/avatar';
 import { cn } from '../../../lib/utils';
 
-export const SocialBannerStats = memo(({ socialProfile }: { socialProfile: any }) => {
+const SocialBannerStats = memo(({ socialProfile }: { socialProfile: any }) => {
   const hasMutualWorkspaces = socialProfile.mutualWorkspaces?.length > 0;
   const hasMutualFriends = socialProfile.mutualFriends?.length > 0;
 
@@ -58,7 +58,7 @@ export const SocialBannerStats = memo(({ socialProfile }: { socialProfile: any }
 
 SocialBannerStats.displayName = 'SocialBannerStats';
 
-export const SocialBannerActions = memo(({
+const SocialBannerActions = memo(({
   socialProfile,
   handleBlockUser,
   handleSendFriendRequest,

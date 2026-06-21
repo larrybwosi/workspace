@@ -76,7 +76,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Message, variables: { channelId: string; threadId?: string }) => {
       queryClient.invalidateQueries({
         queryKey: messageKeys.list(variables.channelId, workspaceSlug, variables.threadId),
       });
@@ -131,8 +131,8 @@ export function useTriggerAction(workspaceSlug?: string) {
     }: {
       messageId: string;
       actionId: string;
-      payload?: Record<string, any>;
-      formState?: Record<string, any>;
+      payload?: Record<string, unknown>;
+      formState?: Record<string, unknown>;
     }) => {
       // Always use V2 endpoint for actions as it supports M2M callbacks
       const url = `/v2/workspaces/${workspaceSlug}/messages/${messageId}/actions/${actionId}`;
@@ -316,7 +316,7 @@ export function useSendDMMessage() {
       });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Message, variables: { dmId: string }) => {
       queryClient.invalidateQueries({ queryKey: dmKeys.list(variables.dmId) });
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     },

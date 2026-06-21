@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo, SetStateAction } from 'react';
 import {
   useMessages,
   useSendMessage,
@@ -16,10 +16,8 @@ import {
   useSendFriendRequest,
   useRespondToFriendRequest,
   messageKeys,
-  AblyChannels,
-  AblyEvents
 } from '@repo/api-client';
-import { getAblyClient } from '@repo/shared';
+import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import type { Message } from '@repo/types';
 
 export const useChannelViewParams = () => {
@@ -82,29 +80,31 @@ export const useRealtimeSubscriptions = (activeChannelId: string, workspaceSlug?
 export const useReadReceipts = (activeChannelId: string, scrollAreaRef: React.RefObject<HTMLDivElement | null>, markedMessageIds: React.MutableRefObject<Set<string>>, messages: Message[], currentUserId?: string, markMessagesAsReadMutation?: any) => {
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  const handleIntersect = useCallback((entries: IntersectionObserverEntry[]) => {
+    const visibleUnreadIds: string[] = [];
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const messageId = entry.target.getAttribute('data-message-id');
+        if (messageId && !markedMessageIds.current.has(messageId)) {
+          visibleUnreadIds.push(messageId);
+          markedMessageIds.current.add(messageId);
+        }
+      }
+    });
+    if (visibleUnreadIds.length > 0) {
+      markMessagesAsReadMutation.mutate({ messageIds: visibleUnreadIds, channelId: activeChannelId });
+    }
+  }, [activeChannelId, markedMessageIds, markMessagesAsReadMutation]);
+
   useEffect(() => {
     if (typeof window === 'undefined' || !activeChannelId) return;
-    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
-      const visibleUnreadIds: string[] = [];
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const messageId = entry.target.getAttribute('data-message-id');
-          if (messageId && !markedMessageIds.current.has(messageId)) {
-            visibleUnreadIds.push(messageId);
-            markedMessageIds.current.add(messageId);
-          }
-        }
-      });
-      if (visibleUnreadIds.length > 0) {
-        markMessagesAsReadMutation.mutate({ messageIds: visibleUnreadIds, channelId: activeChannelId });
-      }
-    };
+
     observerRef.current = new IntersectionObserver(handleIntersect, {
       root: scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]'),
       threshold: 0.5,
     });
     return () => { observerRef.current?.disconnect(); observerRef.current = null; };
-  }, [activeChannelId]);
+  }, [activeChannelId, handleIntersect, scrollAreaRef]);
 
   useEffect(() => {
     if (!observerRef.current || messages.length === 0) return;
@@ -121,4 +121,71 @@ export const useReadReceipts = (activeChannelId: string, scrollAreaRef: React.Re
       }
     });
   }, [messages, currentUserId]);
+};
+
+export const useChannelViewScroll = (
+  messages: Message[],
+  isLoading: boolean,
+  highlightedMessageId: string | null,
+  initialUnreadId: string | null,
+  highlightedMessageRef: React.RefObject<HTMLDivElement | null>,
+  firstUnreadRef: React.RefObject<HTMLDivElement | null>,
+  messagesEndRef: React.RefObject<HTMLDivElement | null>
+) => {
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => setIsAtBottom(entry.isIntersecting), { threshold: 0.1 });
+    if (messagesEndRef.current) observer.observe(messagesEndRef.current);
+    return () => observer.disconnect();
+  }, [messages.length, messagesEndRef]);
+
+  useEffect(() => {
+    if (isLoading || messages.length === 0 || hasInitialScrolled) return;
+    const scrollOptions: ScrollIntoViewOptions = highlightedMessageId ? { behavior: 'smooth', block: 'center' } : { behavior: 'auto', block: 'start' };
+    const targetRef = highlightedMessageId ? highlightedMessageRef : (initialUnreadId ? firstUnreadRef : null);
+
+    if (targetRef?.current) {
+      setTimeout(() => { targetRef.current?.scrollIntoView(scrollOptions); setHasInitialScrolled(true); }, 100);
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      setHasInitialScrolled(true);
+    }
+  }, [messages.length, highlightedMessageId, initialUnreadId, isLoading, hasInitialScrolled, highlightedMessageRef, firstUnreadRef, messagesEndRef]);
+
+  useEffect(() => {
+    if (hasInitialScrolled && isAtBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length, hasInitialScrolled, isAtBottom, messagesEndRef]);
+
+  return { isAtBottom, hasInitialScrolled, setHasInitialScrolled };
+};
+
+export const useUnreadLineLogic = (
+  messages: Message[],
+  isLoading: boolean,
+  hasInitialScrolled: boolean,
+  channelId: string,
+  viewedChannels: Set<string>,
+  isAtBottom: boolean,
+  currentUserId?: string
+) => {
+  const [initialUnreadId, setInitialUnreadId] = useState<string | null>(null);
+
+  const firstUnreadMessageId = useMemo(() => messages.find(m => !m.readByCurrentUser)?.id || null, [messages]);
+
+  useEffect(() => {
+    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled && !viewedChannels.has(channelId)) {
+      setInitialUnreadId(firstUnreadMessageId);
+      viewedChannels.add(channelId);
+    }
+  }, [isLoading, messages.length, firstUnreadMessageId, initialUnreadId, hasInitialScrolled, channelId, viewedChannels]);
+
+  useEffect(() => {
+    if (messages.length > 0 && hasInitialScrolled) {
+      if (isAtBottom || messages[messages.length - 1].userId === currentUserId) setInitialUnreadId(null);
+    }
+  }, [messages, currentUserId, hasInitialScrolled, isAtBottom]);
+
+  return { initialUnreadId, setInitialUnreadId };
 };

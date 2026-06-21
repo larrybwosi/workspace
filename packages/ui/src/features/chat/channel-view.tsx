@@ -19,7 +19,9 @@ import {
   useChannelMutations,
   useSocialActions,
   useRealtimeSubscriptions,
-  useReadReceipts
+  useReadReceipts,
+  useChannelViewScroll,
+  useUnreadLineLogic
 } from './hooks/use-channel-view';
 
 import { SocialBanner } from './components/social-banner';
@@ -50,10 +52,7 @@ export function ChannelView({
 
   const [viewedChannels] = useState(() => new Set<string>());
   const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null);
-  const [isAtBottom, setIsAtBottom] = useState(false);
-  const [initialUnreadId, setInitialUnreadId] = useState<string | null>(null);
   const [activeThread, setActiveThread] = useState<any | null>(null);
-  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,48 +110,20 @@ export function ChannelView({
   }, [channelData]);
 
   const messages = useMemo(() => messagesData?.pages?.flatMap(page => page.messages) || [], [messagesData]);
-  const firstUnreadMessageId = useMemo(() => messages.find(m => !m.readByCurrentUser)?.id || null, [messages]);
 
-  useEffect(() => {
-    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled && !viewedChannels.has(channelId)) {
-      setInitialUnreadId(firstUnreadMessageId);
-      viewedChannels.add(channelId);
-    }
-  }, [isLoading, messages.length, firstUnreadMessageId, initialUnreadId, hasInitialScrolled, channelId, viewedChannels]);
+  const { isAtBottom, hasInitialScrolled, setHasInitialScrolled } = useChannelViewScroll(
+    messages, isLoading, highlightedMessageId, null, highlightedMessageRef, firstUnreadRef, messagesEndRef
+  );
 
-  useEffect(() => {
-    if (messages.length > 0 && hasInitialScrolled) {
-      if (isAtBottom || messages[messages.length - 1].userId === currentUser?.id) setInitialUnreadId(null);
-    }
-  }, [messages, currentUser?.id, hasInitialScrolled, isAtBottom]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => setIsAtBottom(entry.isIntersecting), { threshold: 0.1 });
-    if (messagesEndRef.current) observer.observe(messagesEndRef.current);
-    return () => observer.disconnect();
-  }, [messages.length]);
+  const { initialUnreadId, setInitialUnreadId } = useUnreadLineLogic(
+    messages, isLoading, hasInitialScrolled, channelId, viewedChannels, isAtBottom, currentUser?.id
+  );
 
   useEffect(() => {
     markedMessageIds.current.clear();
     setHasInitialScrolled(false);
     setInitialUnreadId(null);
-  }, [channelId]);
-
-  useEffect(() => {
-    if (isLoading || messages.length === 0 || hasInitialScrolled) return;
-    const scrollOptions: ScrollIntoViewOptions = highlightedMessageId ? { behavior: 'smooth', block: 'center' } : { behavior: 'auto', block: 'start' };
-    const targetRef = highlightedMessageId ? highlightedMessageRef : (initialUnreadId ? firstUnreadRef : null);
-    if (targetRef?.current) {
-      setTimeout(() => { targetRef.current?.scrollIntoView(scrollOptions); setHasInitialScrolled(true); }, 100);
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      setHasInitialScrolled(true);
-    }
-  }, [messages.length, highlightedMessageId, initialUnreadId, isLoading, hasInitialScrolled]);
-
-  useEffect(() => {
-    if (hasInitialScrolled && isAtBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, hasInitialScrolled, isAtBottom]);
+  }, [channelId, setHasInitialScrolled, setInitialUnreadId]);
 
   useReadReceipts(channelId, scrollAreaRef, markedMessageIds, messages, currentUser?.id, markMessagesAsReadMutation);
 
@@ -237,6 +208,7 @@ export function ChannelView({
           handleReaction={handleReaction}
           channelId={channelId}
           workspaceSlug={workspaceSlug}
+        activeChannelId={channelId}
         />
 
         <div className="shrink-0 px-6 py-6 bg-background">

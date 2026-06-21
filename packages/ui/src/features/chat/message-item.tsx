@@ -655,22 +655,26 @@ const MessageAvatar = memo(({ showAvatar, user, timestamp, showToolbar }: {
   user: any,
   timestamp: Date,
   showToolbar: boolean
-}) => (
-  <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
-    {showAvatar ? (
-      <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
-        <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
-        <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-          {user?.name?.slice(0, 2).toUpperCase() || '??'}
-        </AvatarFallback>
-      </Avatar>
-    ) : (
-      <span className={cn('text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap', showToolbar ? 'opacity-100' : 'opacity-0')}>
-        {format(new Date(timestamp || new Date()), 'HH:mm')}
-      </span>
-    )}
-  </div>
-));
+}) => {
+  const formattedTime = useMemo(() => format(new Date(timestamp || new Date()), 'HH:mm'), [timestamp]);
+
+  return (
+    <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
+      {showAvatar ? (
+        <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
+          <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
+          <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+            {user?.name?.slice(0, 2).toUpperCase() || '??'}
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <span className={cn('text-[11px] text-muted-foreground/60 leading-[1.375rem] transition-opacity duration-100 whitespace-nowrap', showToolbar ? 'opacity-100' : 'opacity-0')}>
+          {formattedTime}
+        </span>
+      )}
+    </div>
+  );
+});
 
 MessageAvatar.displayName = 'MessageAvatar';
 
