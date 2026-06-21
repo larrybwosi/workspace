@@ -83,34 +83,39 @@ const MessageEditor = memo(({ initialContent, onSave, onCancel }: MessageEditorP
 
 MessageEditor.displayName = 'MessageEditor';
 
-const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any, message: any, userBadges: any[], isReply: boolean }) => (
-  <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
-    <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
-      {user?.name}
-    </span>
-    {message.metadata?.isBot && (
-      <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
-        Bot
+const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any, message: any, userBadges: any[], isReply: boolean }) => {
+  const timestamp = useMemo(() => format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm'), [message.timestamp]);
+  const replyToName = (message as any).replyToUser?.name || 'someone';
+
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
+      <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
+        {user?.name}
       </span>
-    )}
-    {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
-    <span className="text-[12px] text-muted-foreground/70 font-normal">
-      {format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm')}
-    </span>
-    {message.isPinned && (
-      <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
-        <Pin className="h-3 w-3 fill-current" />
-        Pinned
+      {message.metadata?.isBot && (
+        <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
+          Bot
+        </span>
+      )}
+      {userBadges.length > 0 && <UserBadgeDisplay badges={userBadges} maxDisplay={2} size="sm" />}
+      <span className="text-[12px] text-muted-foreground/70 font-normal">
+        {timestamp}
       </span>
-    )}
-    {isReply && (
-      <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
-        <Reply className="h-3 w-3" />
-        replied to {(message as any).replyToUser?.name || 'someone'}
-      </span>
-    )}
-  </div>
-));
+      {message.isPinned && (
+        <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
+          <Pin className="h-3 w-3 fill-current" />
+          Pinned
+        </span>
+      )}
+      {isReply && (
+        <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
+          <Reply className="h-3 w-3" />
+          replied to {replyToName}
+        </span>
+      )}
+    </div>
+  );
+});
 
 MessageHeader.displayName = 'MessageHeader';
 
@@ -325,6 +330,42 @@ const MessageContent = memo(({
 
 MessageContent.displayName = 'MessageContent';
 
+const MessageBodyRenderer = memo(({ message, handleCustomAction, isActionPending }: {
+  message: any,
+  handleCustomAction: any,
+  isActionPending: boolean
+}) => {
+  const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
+    (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
+
+  if (isImplicitCode) {
+    const { language, code } = extractCodeInfo(message.content);
+    return (
+      <div className="w-full mt-2">
+        <SyntaxHighlighter
+          code={code}
+          language={language as string}
+          fileName={((message.metadata?.fileName as string) || '') as any}
+        />
+      </div>
+    );
+  }
+
+  if (['custom', 'approval', 'report'].includes(message.messageType)) {
+    return (
+      <CustomMessage
+        message={message}
+        onAction={handleCustomAction}
+        isLoading={isActionPending}
+      />
+    );
+  }
+
+  return renderCustomMessage(message);
+});
+
+MessageBodyRenderer.displayName = 'MessageBodyRenderer';
+
 export const MessageItem = memo(function MessageItem({
   message,
   showAvatar = true,
@@ -406,35 +447,25 @@ export const MessageItem = memo(function MessageItem({
     }
   }, [message.id, triggerActionMutation]);
 
-  const renderMessageBody = useCallback(() => {
-    const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
-      (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
+  const MessageThreadIndicator = useMemo(() => {
+    if (!(message.replyCount > 0 || message.threadId)) return null;
+    return (
+      <button
+        onClick={handleOpenThread}
+        className="mt-1 flex items-center gap-2 text-[13px] font-medium text-primary hover:underline transition-all"
+      >
+        {message.replyCount > 0 ? `${message.replyCount} ${message.replyCount === 1 ? 'reply' : 'replies'}` : 'View thread'}
+      </button>
+    );
+  }, [message.replyCount, message.threadId, handleOpenThread]);
 
-    if (isImplicitCode) {
-      const { language, code } = extractCodeInfo(message.content);
-      return (
-        <div className="w-full mt-2">
-          <SyntaxHighlighter
-            code={code}
-            language={language as string}
-            fileName={((message.metadata?.fileName as string) || '') as any}
-          />
-        </div>
-      );
-    }
-
-    if (['custom', 'approval', 'report'].includes(message.messageType)) {
-      return (
-        <CustomMessage
-          message={message}
-          onAction={handleCustomAction}
-          isLoading={triggerActionMutation.isPending}
-        />
-      );
-    }
-
-    return renderCustomMessage(message);
-  }, [message, handleCustomAction, triggerActionMutation.isPending]);
+  const renderMessageBody = useCallback(() => (
+    <MessageBodyRenderer
+      message={message}
+      handleCustomAction={handleCustomAction}
+      isActionPending={triggerActionMutation.isPending}
+    />
+  ), [message, handleCustomAction, triggerActionMutation.isPending]);
 
   const showToolbar = isHovered || isMenuOpen;
 
@@ -483,17 +514,7 @@ export const MessageItem = memo(function MessageItem({
             {message.actions && message.actions.length > 0 && (
               <MessageActions actions={message.actions} messageId={message.id} triggerActionMutation={triggerActionMutation} />
             )}
-            {(message.replyCount > 0 || message.threadId) && (
-              <button
-                onClick={handleOpenThread}
-                className="mt-1 flex items-center gap-2 text-[13px] font-medium text-primary hover:underline transition-all"
-              >
-                <div className="flex -space-x-1">
-                  {/* Small avatar stack could go here */}
-                </div>
-                {message.replyCount > 0 ? `${message.replyCount} ${message.replyCount === 1 ? 'reply' : 'replies'}` : 'View thread'}
-              </button>
-            )}
+            {MessageThreadIndicator}
             {message.reactions && message.reactions.length > 0 && (
               <MessageReactions
                 reactions={message.reactions}

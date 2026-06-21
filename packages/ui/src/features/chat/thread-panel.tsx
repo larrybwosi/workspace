@@ -8,7 +8,7 @@ import { MessageComposer } from './message-composer';
 import { useMessages, useSendMessage } from '@repo/api-client';
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { cn } from '../../lib/utils';
-import { type Message } from '../../lib/types';
+import { type Message } from '@repo/types';
 import { Skeleton } from '../../components/skeleton';
 
 interface ThreadPanelProps {
@@ -55,6 +55,7 @@ export function ThreadPanel({
       threadId,
       attachments,
       messageType: 'standard',
+      mentions: [],
     });
   };
 

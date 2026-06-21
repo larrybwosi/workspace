@@ -8,7 +8,7 @@ import { ThreadPanel } from './thread-panel';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';
 import { Loader2 } from 'lucide-react';
-import type { Thread, Message, Attachment } from '../../lib/types';
+import type { Thread, Message, Attachment } from '@repo/types';
 import {
   useMessages,
   useSendMessage,
@@ -96,6 +96,119 @@ const UnreadDivider = memo(function UnreadDivider() {
     </div>
   );
 });
+
+const SocialBanner = memo(({
+  dmUser,
+  socialProfile,
+  handleBlockUser,
+  handleSendFriendRequest,
+  isBlockPending,
+  isFriendRequestPending
+}: {
+  dmUser: any,
+  socialProfile: any,
+  handleBlockUser: () => void,
+  handleSendFriendRequest: () => void,
+  isBlockPending: boolean,
+  isFriendRequestPending: boolean
+}) => (
+  <div className="bg-primary/5 border-b border-border/50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="flex items-center gap-4">
+      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+        <UserPlus className="h-6 w-6" />
+      </div>
+      <div>
+        <p className="text-sm font-bold">{dmUser?.name || 'This user'} is not in your friend list</p>
+        <div className="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1.5">
+          {socialProfile.mutualWorkspaces?.length > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {socialProfile.mutualWorkspaces.slice(0, 3).map((ws: any) => (
+                  <Avatar key={ws.id} className="h-5 w-5 rounded-md border-2 border-background shrink-0">
+                    <AvatarImage src={ws.icon} />
+                    <AvatarFallback className="text-[6px] rounded-md bg-muted">
+                      {ws.name.slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                {socialProfile.mutualWorkspaces.length} mutual workspace
+                {socialProfile.mutualWorkspaces.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+          {socialProfile.mutualFriends?.length > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {socialProfile.mutualFriends.slice(0, 3).map((f: any) => (
+                  <Avatar key={f.id} className="h-5 w-5 border-2 border-background shrink-0">
+                    <AvatarImage src={f.avatar} />
+                    <AvatarFallback className="text-[6px] bg-muted">
+                      {f.name.slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                {socialProfile.mutualFriends.length} mutual friend
+                {socialProfile.mutualFriends.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+          {socialProfile.mutualWorkspaces?.length === 0 && socialProfile.mutualFriends?.length === 0 && (
+            <span className="text-[11px] font-medium text-muted-foreground">No mutual workspaces or friends</span>
+          )}
+        </div>
+      </div>
+    </div>
+    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+      <Button
+        variant="outline"
+        size="sm"
+        className={cn(
+          'h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20',
+          socialProfile.isBlockedByMe && 'bg-destructive/10 text-destructive border-destructive/20'
+        )}
+        onClick={handleBlockUser}
+        disabled={isBlockPending}
+      >
+        <ShieldAlert className="h-3.5 w-3.5 mr-2" />
+        {socialProfile.isBlockedByMe ? 'Unblock' : 'Block'}
+      </Button>
+      <Button
+        size="sm"
+        className="h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none shadow-sm"
+        onClick={handleSendFriendRequest}
+        disabled={
+          isFriendRequestPending ||
+          (socialProfile.friendRequestStatus === 'pending' && socialProfile.friendRequestSide === 'sender')
+        }
+      >
+        {socialProfile.friendRequestStatus === 'pending' ? (
+          socialProfile.friendRequestSide === 'sender' ? (
+            <>
+              <Check className="h-3.5 w-3.5 mr-2" />
+              Request Sent
+            </>
+          ) : (
+            <>
+              <UserPlus className="h-3.5 w-3.5 mr-2" />
+              Accept Request
+            </>
+          )
+        ) : (
+          <>
+            <UserPlus className="h-3.5 w-3.5 mr-2" />
+            Add Friend
+          </>
+        )}
+      </Button>
+    </div>
+  </div>
+));
+
+SocialBanner.displayName = 'SocialBanner';
 
 // --- Main Component ---
 
@@ -445,16 +558,16 @@ export function ChannelView({
   }, [messages, currentUser?.id]);
 
   // 4. Organize Messages
-  const renderList = useMemo(() => {
+  const organizeMessages = useCallback((msgs: Message[], unreadId: string | null) => {
     const list: Array<
       { type: 'message'; data: Message; depth: number } | { type: 'date'; date: Date } | { type: 'unread' }
     > = [];
 
     const messageMap = new Map<string, Message & { replies: Message[] }>();
-    messages.forEach(msg => messageMap.set(msg.id, { ...msg, replies: [] }));
+    msgs.forEach(msg => messageMap.set(msg.id, { ...msg, replies: [] }));
 
     const rootMessages: (Message & { replies: Message[] })[] = [];
-    messages.forEach(msg => {
+    msgs.forEach(msg => {
       if (msg.replyTo && messageMap.has(msg.replyTo)) {
         messageMap.get(msg.replyTo)!.replies.push(messageMap.get(msg.id)!);
       } else if (!msg.replyTo) {
@@ -466,31 +579,26 @@ export function ChannelView({
 
     let lastDate: Date | null = null;
 
-    rootMessages.forEach(rootMsg => {
-      const currentDate = new Date(rootMsg.timestamp);
+    const addMessageToList = (msg: Message, depth: number) => {
+      const currentDate = new Date(msg.timestamp);
       if (!lastDate || currentDate.toDateString() !== lastDate.toDateString()) {
         list.push({ type: 'date', date: currentDate });
         lastDate = currentDate;
       }
 
-      if (rootMsg.id === initialUnreadId) list.push({ type: 'unread' });
+      if (msg.id === unreadId) list.push({ type: 'unread' });
+      list.push({ type: 'message', data: msg, depth });
+    };
 
-      list.push({ type: 'message', data: rootMsg, depth: 0 });
-
-      rootMsg.replies.forEach(reply => {
-        const replyDate = new Date(reply.timestamp);
-        if (!lastDate || replyDate.toDateString() !== lastDate.toDateString()) {
-          list.push({ type: 'date', date: replyDate });
-          lastDate = replyDate;
-        }
-
-        if (reply.id === initialUnreadId) list.push({ type: 'unread' });
-        list.push({ type: 'message', data: reply, depth: 1 });
-      });
+    rootMessages.forEach(rootMsg => {
+      addMessageToList(rootMsg, 0);
+      rootMsg.replies.forEach(reply => addMessageToList(reply, 1));
     });
 
     return list;
-  }, [messages, initialUnreadId]);
+  }, []);
+
+  const renderList = useMemo(() => organizeMessages(messages, initialUnreadId), [messages, initialUnreadId, organizeMessages]);
 
   // Handlers
   const handleSendMessage = (content: string, attachments?: UploadedFile[]) => {
@@ -622,100 +730,14 @@ export function ChannelView({
 
       {/* Social Banner for non-friends in DMs */}
       {isDm && dmUserId !== currentUser?.id && socialProfile && !socialProfile.isFriend && !isWidget && (
-        <div className="bg-primary/5 border-b border-border/50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <UserPlus className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-sm font-bold">{dmUser?.name || 'This user'} is not in your friend list</p>
-              <div className="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1.5">
-                {socialProfile.mutualWorkspaces?.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-2">
-                      {socialProfile.mutualWorkspaces.slice(0, 3).map((ws: any) => (
-                        <Avatar key={ws.id} className="h-5 w-5 rounded-md border-2 border-background shrink-0">
-                          <AvatarImage src={ws.icon} />
-                          <AvatarFallback className="text-[6px] rounded-md bg-muted">
-                            {ws.name.slice(0, 1).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                    </div>
-                    <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-                      {socialProfile.mutualWorkspaces.length} mutual workspace
-                      {socialProfile.mutualWorkspaces.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                )}
-                {socialProfile.mutualFriends?.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-2">
-                      {socialProfile.mutualFriends.slice(0, 3).map((f: any) => (
-                        <Avatar key={f.id} className="h-5 w-5 border-2 border-background shrink-0">
-                          <AvatarImage src={f.avatar} />
-                          <AvatarFallback className="text-[6px] bg-muted">
-                            {f.name.slice(0, 1).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                    </div>
-                    <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-                      {socialProfile.mutualFriends.length} mutual friend
-                      {socialProfile.mutualFriends.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                )}
-                {socialProfile.mutualWorkspaces?.length === 0 && socialProfile.mutualFriends?.length === 0 && (
-                  <span className="text-[11px] font-medium text-muted-foreground">No mutual workspaces or friends</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                'h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20',
-                socialProfile.isBlockedByMe && 'bg-destructive/10 text-destructive border-destructive/20'
-              )}
-              onClick={handleBlockUser}
-              disabled={blockUserMutation.isPending || unblockUserMutation.isPending}
-            >
-              <ShieldAlert className="h-3.5 w-3.5 mr-2" />
-              {socialProfile.isBlockedByMe ? 'Unblock' : 'Block'}
-            </Button>
-            <Button
-              size="sm"
-              className="h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none shadow-sm"
-              onClick={handleSendFriendRequest}
-              disabled={
-                sendFriendRequestMutation.isPending ||
-                (socialProfile.friendRequestStatus === 'pending' && socialProfile.friendRequestSide === 'sender')
-              }
-            >
-              {socialProfile.friendRequestStatus === 'pending' ? (
-                socialProfile.friendRequestSide === 'sender' ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 mr-2" />
-                    Request Sent
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-3.5 w-3.5 mr-2" />
-                    Accept Request
-                  </>
-                )
-              ) : (
-                <>
-                  <UserPlus className="h-3.5 w-3.5 mr-2" />
-                  Add Friend
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        <SocialBanner
+          dmUser={dmUser}
+          socialProfile={socialProfile}
+          handleBlockUser={handleBlockUser}
+          handleSendFriendRequest={handleSendFriendRequest}
+          isBlockPending={blockUserMutation.isPending || unblockUserMutation.isPending}
+          isFriendRequestPending={sendFriendRequestMutation.isPending}
+        />
       )}
 
       {/* Main Scroll Area */}

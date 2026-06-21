@@ -61,7 +61,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       threadId?: string;
       contextId?: string;
       messageType?: string;
-      attachments?: any[];
+      attachments?: unknown[];
     }) => {
       const prefix = isV2 ? '/v2' : '';
 
@@ -223,7 +223,8 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
     },
     onSuccess: data => {
       // Optimistically update query data to mark messages as read in the UI
-      const { channelId, messageIds } = data as { channelId: string; messageIds: string[] };
+      const typedData = data as { channelId: string; messageIds: string[] };
+      const { channelId, messageIds } = typedData;
       const queryKey = workspaceSlug
         ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
         : messageKeys.list(channelId);
@@ -308,7 +309,7 @@ export function useSendDMMessage() {
       replyToId?: string;
       attachments?: unknown[];
     }) => {
-      const { data } = await apiClient.post(`/dms/${dmId}/messages`, {
+      const { data } = await apiClient.post<Message>(`/dms/${dmId}/messages`, {
         content,
         replyToId,
         attachments,

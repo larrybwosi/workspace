@@ -384,7 +384,7 @@ fun ChatView(
         ReactionPicker(
             onEmojiSelected = { emoji ->
                 reactionPickerMessage?.let { msg ->
-                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = com.scrymechat.android.data.remote.ActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
+                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = com.scrymechat.android.data.remote.MessageActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
                 }
             },
             onDismiss = { reactionPickerMessage = null }
