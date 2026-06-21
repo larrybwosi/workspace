@@ -14,7 +14,6 @@ import {
   Sparkles,
   Plug2,
   Hash,
-  Bookmark,
 } from 'lucide-react';
 import { Button } from '../components/button';
 import { ScrollArea } from '../components/scroll-area';
@@ -191,7 +190,6 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
       items: [
         { icon: LayoutDashboard, label: 'Dashboard', href: `/workspace/${slug}` },
         { icon: Sparkles, label: 'Assistant', href: `/workspace/${slug}/assistant` },
-        { icon: Bookmark, label: 'Saved Items', href: `/workspace/${slug}/saved` },
       ],
     },
     {
