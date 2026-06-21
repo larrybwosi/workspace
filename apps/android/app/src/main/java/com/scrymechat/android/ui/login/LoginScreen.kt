@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -331,7 +332,7 @@ fun LoginScreen(
                                 uncheckedTrackColor = ColorBorder,
                                 uncheckedBorderColor = ColorBorder
                             ),
-                            modifier = Modifier.scale(0.8f)
+                            modifier = graphicsLayer(scaleX = 0.8f, scaleY = 0.8f)
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Column {
@@ -587,7 +588,3 @@ private fun EnterpriseOAuthButton(
     }
 }
 
-// Simple modifier extension for compact switch sizing
-private fun Modifier.scale(scale: Float): Modifier = this.then(
-    androidx.compose.ui.draw.scale(scale)
-)
