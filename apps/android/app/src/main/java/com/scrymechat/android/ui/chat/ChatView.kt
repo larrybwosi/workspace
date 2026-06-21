@@ -2,7 +2,6 @@ package com.scrymechat.android.ui.chat
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -19,7 +18,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -44,9 +42,6 @@ fun ChatView(
     onSendMessage: (String, String?) -> Unit,
     onReply: (MessageEntity) -> Unit,
     onForward: (MessageEntity) -> Unit,
-    onReaction: (String, String) -> Unit = { _, _ -> },
-    onDeleteMessage: (String) -> Unit = {},
-    onThreadOpen: (MessageEntity) -> Unit = {},
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
     modifier: Modifier = Modifier
@@ -70,36 +65,13 @@ fun ChatView(
             contentPadding = PaddingValues(bottom = 8.dp)
         ) {
             items(messages, key = { it.id }) { message ->
-                var showOptions by remember { mutableStateOf(false) }
-
-                if (showOptions) {
-                    MessageOptionsBottomSheet(
-                        message = message,
-                        onDismiss = { showOptions = false },
-                        onAction = { action ->
-                            showOptions = false
-                            if (action.startsWith("react:")) {
-                                val emoji = action.removePrefix("react:")
-                                onReaction(message.id, emoji)
-                            } else if (action == "thread") {
-                                onThreadOpen(message)
-                            } else if (action == "delete") {
-                                onDeleteMessage(message.id)
-                            } else if (action == "forward") {
-                                onForward(message)
-                            }
-                        }
-                    )
-                }
-
                 SwipeableMessageItem(
                     message = message,
                     onReply = {
                         replyingTo = it
                         onReply(it)
                     },
-                    onForward = { onForward(it) },
-                    onLongPress = { showOptions = true }
+                    onForward = { onForward(it) }
                 )
             }
         }
@@ -200,8 +172,7 @@ fun ChatView(
 fun SwipeableMessageItem(
     message: MessageEntity,
     onReply: (MessageEntity) -> Unit,
-    onForward: (MessageEntity) -> Unit,
-    onLongPress: (MessageEntity) -> Unit = {}
+    onForward: (MessageEntity) -> Unit
 ) {
     // Basic implementation of swipe-to-action
     // In a real app, use a more sophisticated approach like AnchoredDraggable for better UX
@@ -247,97 +218,16 @@ fun SwipeableMessageItem(
                 .fillMaxWidth(),
             color = Color.Transparent
         ) {
-            MessageItem(message = message, onLongPress = onLongPress)
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MessageOptionsBottomSheet(
-    message: MessageEntity,
-    onDismiss: () -> Unit,
-    onAction: (String) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState()
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = ScrymeDarkSurfaceVariant,
-        contentColor = ScrymeDarkTextPrimary
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
-        ) {
-            // Quick Reactions
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                listOf("👍", "❤️", "😂", "😮", "😢", "😡").forEach { emoji ->
-                    Text(
-                        text = emoji,
-                        fontSize = 28.sp,
-                        modifier = Modifier
-                            .clickable { onAction("react:$emoji") }
-                            .padding(8.dp)
-                    )
-                }
-            }
-
-            HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
-
-            ListItem(
-                headlineContent = { Text("Reply in Thread") },
-                leadingContent = { Icon(Icons.Default.Message, contentDescription = null) },
-                modifier = Modifier.clickable { onAction("thread") },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
-            ListItem(
-                headlineContent = { Text("Copy Text") },
-                leadingContent = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
-                modifier = Modifier.clickable { onAction("copy") },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
-            ListItem(
-                headlineContent = { Text("Forward") },
-                leadingContent = { Icon(Icons.Default.Forward, contentDescription = null) },
-                modifier = Modifier.clickable { onAction("forward") },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
-            ListItem(
-                headlineContent = { Text("Pin Message") },
-                leadingContent = { Icon(Icons.Default.PushPin, contentDescription = null) },
-                modifier = Modifier.clickable { onAction("pin") },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
-            ListItem(
-                headlineContent = { Text("Delete Message", color = Color.Red) },
-                leadingContent = { Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red) },
-                modifier = Modifier.clickable { onAction("delete") },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
+            MessageItem(message = message)
         }
     }
 }
 
 @Composable
-fun MessageItem(
-    message: MessageEntity,
-    onLongPress: (MessageEntity) -> Unit = {}
-) {
+fun MessageItem(message: MessageEntity) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = { onLongPress(message) }
-                )
-            }
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         AsyncImage(

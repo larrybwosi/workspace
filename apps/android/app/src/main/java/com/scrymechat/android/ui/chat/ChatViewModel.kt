@@ -62,43 +62,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun addReaction(messageId: String, emoji: String) {
-        val channelId = currentChannelId
-        val dmId = currentDmId
-
-        viewModelScope.launch {
-            val result = when {
-                channelId != null -> chatRepository.addReaction(channelId, messageId, emoji, true)
-                dmId != null -> chatRepository.addReaction(dmId, messageId, emoji, false)
-                else -> return@launch
-            }
-
-            if (result is Resource.Error) {
-                _uiState.update { it.copy(error = result.message) }
-            } else {
-                // Refresh messages to show the new reaction
-                loadMessages()
-            }
-        }
-    }
-
-    fun deleteMessage(messageId: String) {
-        val channelId = currentChannelId
-        val dmId = currentDmId
-
-        viewModelScope.launch {
-            val result = when {
-                channelId != null -> chatRepository.deleteChannelMessage(channelId, messageId)
-                // Assuming DM delete follows a similar pattern if implemented in repository
-                else -> return@launch
-            }
-
-            if (result is Resource.Error) {
-                _uiState.update { it.copy(error = result.message) }
-            }
-        }
-    }
-
     private fun loadMessages() {
         val channelId = currentChannelId
         val dmId = currentDmId

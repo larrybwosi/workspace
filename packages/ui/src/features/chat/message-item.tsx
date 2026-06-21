@@ -1,6 +1,6 @@
 'use client';
 
-import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, ThumbsUp, Heart, Laugh, Bookmark } from 'lucide-react';
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
 import type { Message } from '../../lib/types';
@@ -44,7 +44,6 @@ interface MessageItemProps {
   showAvatar?: boolean;
   onReply?: (messageId: string) => void;
   onReaction?: (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void;
-  onThreadOpen?: (message: any) => void;
   depth?: number;
   isReply?: boolean;
   channelId?: string;
@@ -67,7 +66,6 @@ export const MessageItem = memo(function MessageItem({
   showAvatar = true,
   onReply,
   onReaction,
-  onThreadOpen,
   depth = 0,
   isReply = false,
   channelId = undefined,
@@ -103,10 +101,6 @@ export const MessageItem = memo(function MessageItem({
     onReply?.(message.id);
   };
 
-  const handleOpenThread = () => {
-    onThreadOpen?.(message);
-  };
-
   const handleEditMessage = () => setIsEditing(true);
 
   const handleDeleteMessage = () => {
@@ -127,10 +121,6 @@ export const MessageItem = memo(function MessageItem({
     const messageUrl = `${window.location.origin}${baseUrl}/${channelId}?messageId=${message.id}`;
     navigator.clipboard.writeText(messageUrl);
     toast.success('Link copied', { description: 'Message link copied to clipboard' });
-  };
-
-  const handleBookmark = () => {
-    toast.success('Message saved', { description: 'Message added to your saved items' });
   };
 
   const isImplicitCode = useMemo(() => {
@@ -330,47 +320,14 @@ export const MessageItem = memo(function MessageItem({
               <LinkPreview key={idx} url={link as any} />
             ))}
 
-            {/* Thread Indicator */}
-            {message.replyCount > 0 && !isReply && (
-              <div className="mt-1.5 flex items-center gap-2 group/thread">
-                <button
-                  onClick={handleOpenThread}
-                  className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-primary/5 transition-colors"
-                >
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].slice(0, Math.min(message.replyCount, 3)).map(i => (
-                      <div
-                        key={i}
-                        className="h-5 w-5 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center"
-                      >
-                        <Reply className="h-2.5 w-2.5 text-primary" />
-                      </div>
-                    ))}
-                  </div>
-                  <span className="text-[13px] font-bold text-primary">
-                    {message.replyCount} {message.replyCount === 1 ? 'reply' : 'replies'}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground opacity-0 group-hover/thread:opacity-100 transition-opacity ml-1">
-                    View thread
-                  </span>
-                </button>
-              </div>
-            )}
-
             {/* Reactions */}
             {message.reactions && message.reactions.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {message.reactions.map((reaction: any, idx: any) => (
                   <button
                     key={idx}
-                    className={cn(
-                      'flex items-center gap-1 px-1.5 py-0.5 rounded border transition-colors text-xs active:scale-95 group/reaction relative',
-                      reaction.users.includes(currentUser?.id)
-                        ? 'bg-primary/10 border-primary/30 hover:bg-primary/20'
-                        : 'bg-background border-border hover:bg-muted hover:border-primary/40'
-                    )}
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-xs active:scale-95"
                     onClick={() => handleToggleReaction(reaction.emoji)}
-                    title={reaction.users.length > 0 ? `Reacted by ${reaction.users.length} people` : ''}
                   >
                     {reaction.emoji.startsWith(':') ? (
                       <img
@@ -397,36 +354,6 @@ export const MessageItem = memo(function MessageItem({
           {/* ── Hover toolbar (Discord-style floating action bar) ── */}
           {showToolbar && (
             <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75">
-              <div className="flex items-center border-r border-border mr-0.5 pr-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 rounded hover:bg-muted"
-                  onClick={() => handleAddReaction('👍')}
-                  title="Thumbs Up"
-                >
-                  <ThumbsUp className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 rounded hover:bg-muted"
-                  onClick={() => handleAddReaction('❤️')}
-                  title="Heart"
-                >
-                  <Heart className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 rounded hover:bg-muted"
-                  onClick={() => handleAddReaction('😂')}
-                  title="Laugh"
-                >
-                  <Laugh className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-
               <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
                   <Smile className="h-4 w-4 text-muted-foreground" />
@@ -446,12 +373,6 @@ export const MessageItem = memo(function MessageItem({
                 <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
                     <Reply className="mr-2 h-4 w-4" /> Reply
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleBookmark} className="cursor-pointer">
-                    <Bookmark className="mr-2 h-4 w-4" /> Save Message
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleOpenThread} className="cursor-pointer">
-                    <MessageSquare className="mr-2 h-4 w-4" /> Reply in Thread
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopyMessageLink} className="cursor-pointer">
                     <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
@@ -483,9 +404,6 @@ export const MessageItem = memo(function MessageItem({
       <ContextMenuContent className="w-52">
         <ContextMenuItem onClick={handleReply}>
           <Reply className="mr-2 h-4 w-4" /> Reply
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleOpenThread}>
-          <MessageSquare className="mr-2 h-4 w-4" /> Reply in Thread
         </ContextMenuItem>
         <ContextMenuItem onClick={handleCopyMessageLink}>
           <LinkIcon className="mr-2 h-4 w-4" /> Copy Link
