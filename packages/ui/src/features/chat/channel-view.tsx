@@ -43,6 +43,7 @@ interface ChannelViewProps {
   contextId?: string;
   isWidget?: boolean;
   onToggleInfo?: () => void;
+  onThreadOpen?: (message: Message) => void;
 }
 
 // --- Helper Components ---
@@ -105,6 +106,7 @@ export function ChannelView({
   contextId,
   isWidget,
   onToggleInfo,
+  onThreadOpen,
 }: ChannelViewProps) {
   const searchParamsResult = useSearchParams();
   // next/navigation's useSearchParams returns ReadonlyURLSearchParams,
@@ -807,6 +809,7 @@ export function ChannelView({
                               showAvatar={!isGrouped}
                               onReply={handleReply}
                               onReaction={handleReaction}
+                              onThreadOpen={onThreadOpen}
                               depth={item.depth}
                               isReply={true}
                               isHighlighted={isHighlighted}
@@ -821,6 +824,7 @@ export function ChannelView({
                           showAvatar={!isGrouped}
                           onReply={handleReply}
                           onReaction={handleReaction}
+                          onThreadOpen={onThreadOpen}
                           depth={item.depth}
                           isReply={false}
                           isHighlighted={isHighlighted}
