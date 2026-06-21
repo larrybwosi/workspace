@@ -130,3 +130,8 @@
 
 **Learning:** Sequential Ably broadcasts and database lookups during call initiation or scheduling create significant latency, especially as the number of participants or workspace members grows (O(N) bottleneck).
 **Action:** Consolidate workspace and membership resolution into a single Prisma query using nested `select`. Parallelize independent side effects (Ably events, notifications) using `Promise.all` or optimized batch delivery utilities like `createNotifications` to reduce total response time from O(N) to O(1) RTT.
+
+## 2026-06-16 - [Prisma/Performance] Parallelizing Eligibility Checks
+
+**Learning:** In `isUserEligibleForAsset`, sequential database queries for user data and badge assignments create avoidable latency. Parallelizing these with `Promise.all` and using a targeted `select` to exclude large, irrelevant fields (like bio or avatar) reduces RTT from 2 to 1 and minimizes payload size.
+**Action:** Always parallelize independent verification queries and use targeted `select` to minimize DB payload in shared utility functions.
