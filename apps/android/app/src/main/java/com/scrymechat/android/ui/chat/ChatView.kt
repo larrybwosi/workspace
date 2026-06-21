@@ -148,7 +148,11 @@ fun ChatView(
     messages: List<MessageEntity>,
     onSendMessage: (String, String?) -> Unit,
     onReply: (MessageEntity) -> Unit,
+    onOpenThread: (MessageEntity) -> Unit = {},
     onForward: (MessageEntity) -> Unit,
+    onBack: () -> Unit = {},
+    isThread: Boolean = false,
+    threadTitle: String? = null,
     onDownload: (AttachmentDto) -> Unit = {},
     onAction: (MessageEntity, MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
@@ -165,6 +169,7 @@ fun ChatView(
     var fullScreenImageName by remember { mutableStateOf<String?>(null) }
     var fullScreenImageMimeType by remember { mutableStateOf<String?>(null) }
     var inputFocused by remember { mutableStateOf(false) }
+    var reactionPickerMessage by remember { mutableStateOf<MessageEntity?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(messages.size) {
@@ -174,6 +179,26 @@ fun ChatView(
     }
 
     Column(modifier = modifier.fillMaxSize().background(palette.canvasBg)) {
+        if (isThread) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
+                }
+                Text(
+                    text = threadTitle ?: "Thread",
+                    color = palette.textPrimary,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            Divider(color = palette.divider)
+        }
+
         // Messages List
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -189,6 +214,7 @@ fun ChatView(
                         replyingTo = it
                         onReply(it)
                     },
+                    onOpenThread = onOpenThread,
                     onForward = { onForward(it) },
                     onDownload = onDownload,
                     onAction = { action, formState -> onAction(message, action, formState) },
@@ -199,7 +225,8 @@ fun ChatView(
                         fullScreenImageUrl = attachment.url
                         fullScreenImageName = attachment.name
                         fullScreenImageMimeType = attachment.type
-                    }
+                    },
+                    onAddReaction = { reactionPickerMessage = it }
                 )
             }
         }
@@ -352,6 +379,18 @@ fun ChatView(
         }
     }
 
+    // Reaction Picker
+    if (reactionPickerMessage != null) {
+        ReactionPicker(
+            onEmojiSelected = { emoji ->
+                reactionPickerMessage?.let { msg ->
+                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = com.scrymechat.android.data.remote.ActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
+                }
+            },
+            onDismiss = { reactionPickerMessage = null }
+        )
+    }
+
     // Full screen image viewer
     if (fullScreenImageUrl != null) {
         Dialog(
@@ -408,6 +447,8 @@ fun SwipeableMessageItem(
     message: MessageEntity,
     palette: ChatPalette,
     onReply: (MessageEntity) -> Unit,
+    onOpenThread: (MessageEntity) -> Unit = {},
+    onAddReaction: (MessageEntity) -> Unit = {},
     onForward: (MessageEntity) -> Unit,
     onDownload: (AttachmentDto) -> Unit = {},
     onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
@@ -483,7 +524,8 @@ fun SwipeableMessageItem(
                     onUpdateForm = onUpdateForm,
                     formState = formState,
                     isLoading = isLoading,
-                    onImageClick = onImageClick
+                    onImageClick = onImageClick,
+                    onOpenThread = { onOpenThread(message) }
                 )
 
                 DropdownMenu(
@@ -508,6 +550,14 @@ fun SwipeableMessageItem(
                             showContextMenu = false
                         },
                         leadingIcon = { Icon(Icons.Default.Forward, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Add Reaction", color = palette.textPrimary, fontSize = 14.sp) },
+                        onClick = {
+                            onAddReaction(message)
+                            showContextMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Default.AddReaction, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
                     )
                     if (message.attachments.isNotEmpty()) {
                         message.attachments.forEach { attachment ->
@@ -560,6 +610,7 @@ fun MessageItem(
     message: MessageEntity,
     palette: ChatPalette,
     onDownload: (AttachmentDto) -> Unit = {},
+    onOpenThread: () -> Unit = {},
     onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
@@ -598,6 +649,15 @@ fun MessageItem(
                     color = palette.textTertiary,
                     fontSize = 11.5.sp
                 )
+                if (message.isPinned) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        Icons.Default.PushPin,
+                        contentDescription = "Pinned",
+                        tint = palette.accent,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
             }
 
             if (message.replyToSenderName != null) {
@@ -759,6 +819,21 @@ fun MessageItem(
                             Icon(Icons.Default.Download, contentDescription = "Download", tint = palette.textSecondary, modifier = Modifier.size(16.dp))
                         }
                     }
+                }
+            }
+
+            if (message.replyCount > 0 || message.threadId != null) {
+                TextButton(
+                    onClick = onOpenThread,
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.heightIn(min = 32.dp)
+                ) {
+                    Text(
+                        text = if (message.replyCount > 0) "${message.replyCount} ${if (message.replyCount == 1) "reply" else "replies"}" else "View thread",
+                        color = palette.accent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 

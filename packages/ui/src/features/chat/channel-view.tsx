@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { ScrollArea } from '../../components/scroll-area';
 import { MessageItem } from './message-item';
 import { MessageComposer } from './message-composer';
+import { ThreadPanel } from './thread-panel';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';
 import { Loader2 } from 'lucide-react';
@@ -148,6 +149,7 @@ export function ChannelView({
   const [isAtBottom, setIsAtBottom] = useState(false);
   const markedMessageIds = useRef<Set<string>>(new Set());
   const [initialUnreadId, setInitialUnreadId] = useState<string | null>(null);
+  const [activeThread, setActiveThread] = useState<any | null>(null);
 
   const { data: session } = useSession();
   const currentUser = session?.user;
@@ -538,6 +540,10 @@ export function ChannelView({
     }
   }, []);
 
+  const handleOpenThread = useCallback((message: any) => {
+    setActiveThread(message);
+  }, []);
+
   const handleReaction = useCallback(
     (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => {
       const message = messagesRef.current.find(m => m.id === messageId);
@@ -570,8 +576,9 @@ export function ChannelView({
 
   return (
     <div
-      className={cn('flex flex-col h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}
+      className={cn('flex h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}
     >
+      <div className="flex-1 flex flex-col min-w-0">
       {/* Header */}
       {!isWidget && (
         <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
@@ -806,6 +813,7 @@ export function ChannelView({
                               message={message}
                               showAvatar={!isGrouped}
                               onReply={handleReply}
+                              onThreadOpen={handleOpenThread}
                               onReaction={handleReaction}
                               depth={item.depth}
                               isReply={true}
@@ -820,6 +828,7 @@ export function ChannelView({
                           message={message}
                           showAvatar={!isGrouped}
                           onReply={handleReply}
+                          onThreadOpen={handleOpenThread}
                           onReaction={handleReaction}
                           depth={item.depth}
                           isReply={false}
@@ -862,6 +871,17 @@ export function ChannelView({
         }}
         channelId={activeChannelId}
       />
+      </div>
+
+      {/* Thread Panel */}
+      {activeThread && (
+        <ThreadPanel
+          rootMessage={activeThread}
+          onClose={() => setActiveThread(null)}
+          workspaceId={workspaceSlug}
+          channelId={activeChannelId}
+        />
+      )}
     </div>
   );
 }

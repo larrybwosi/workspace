@@ -1,6 +1,6 @@
 'use client';
 
-import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2 } from 'lucide-react';
+import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2, Pin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
 import { cn } from '../../lib/utils';
@@ -41,6 +41,7 @@ interface MessageItemProps {
   message: any;
   showAvatar?: boolean;
   onReply?: (messageId: string) => void;
+  onThreadOpen?: (message: any) => void;
   onReaction?: (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void;
   depth?: number;
   isReply?: boolean;
@@ -96,6 +97,12 @@ const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any,
     <span className="text-[12px] text-muted-foreground/70 font-normal">
       {format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm')}
     </span>
+    {message.isPinned && (
+      <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
+        <Pin className="h-3 w-3 fill-current" />
+        Pinned
+      </span>
+    )}
     {isReply && (
       <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
         <Reply className="h-3 w-3" />
@@ -322,6 +329,7 @@ export const MessageItem = memo(function MessageItem({
   message,
   showAvatar = true,
   onReply,
+  onThreadOpen,
   onReaction,
   depth = 0,
   isReply = false,
@@ -357,6 +365,10 @@ export const MessageItem = memo(function MessageItem({
   const handleReply = useCallback(() => {
     onReply?.(message.id);
   }, [message.id, onReply]);
+
+  const handleOpenThread = useCallback(() => {
+    onThreadOpen?.(message);
+  }, [message, onThreadOpen]);
 
   const handleEditMessage = useCallback(() => setIsEditing(true), []);
 
@@ -470,6 +482,17 @@ export const MessageItem = memo(function MessageItem({
             <MessageAttachments attachments={message.attachments} message={message} />
             {message.actions && message.actions.length > 0 && (
               <MessageActions actions={message.actions} messageId={message.id} triggerActionMutation={triggerActionMutation} />
+            )}
+            {(message.replyCount > 0 || message.threadId) && (
+              <button
+                onClick={handleOpenThread}
+                className="mt-1 flex items-center gap-2 text-[13px] font-medium text-primary hover:underline transition-all"
+              >
+                <div className="flex -space-x-1">
+                  {/* Small avatar stack could go here */}
+                </div>
+                {message.replyCount > 0 ? `${message.replyCount} ${message.replyCount === 1 ? 'reply' : 'replies'}` : 'View thread'}
+              </button>
             )}
             {message.reactions && message.reactions.length > 0 && (
               <MessageReactions

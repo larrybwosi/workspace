@@ -103,4 +103,19 @@ interface MessageApi {
         @Path("actionId") actionId: String,
         @Body body: Map<String, Any>
     ): Response<Map<String, Any>>
+
+    // Thread Messages
+    @GET("channels/{channelId}/messages")
+    suspend fun getThreadMessages(
+        @Path("channelId") channelId: String,
+        @Query("threadId") threadId: String,
+        @Query("limit") limit: Int = 50
+    ): Response<MessagesResponse>
+
+    @POST("channels/{channelId}/messages")
+    suspend fun sendThreadMessage(
+        @Path("channelId") channelId: String,
+        @Query("threadId") threadId: String,
+        @Body request: SendMessageRequest
+    ): Response<MessageDto>
 }

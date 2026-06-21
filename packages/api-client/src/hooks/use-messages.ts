@@ -60,6 +60,8 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       channelId: string;
       threadId?: string;
       contextId?: string;
+      messageType?: string;
+      attachments?: any[];
     }) => {
       const prefix = isV2 ? '/v2' : '';
 
