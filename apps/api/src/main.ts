@@ -8,6 +8,21 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
 import multipart from '@fastify/multipart';
+import { networkInterfaces } from 'os';
+
+// Resolves the first non-internal IPv4 address, mirroring how Next.js
+// determines the "Network" URL shown alongside "Local" on startup.
+function getNetworkAddress(): string | undefined {
+  const interfaces = networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] ?? []) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return undefined;
+}
 
 // Polyfill for BigInt serialization
 (BigInt.prototype as any).toJSON = function () {
@@ -30,6 +45,18 @@ async function bootstrap() {
   // Better Auth handles its own body parsing for /api/auth
   // We bypass Fastify's default body parser for these routes to avoid consuming the request stream
   const fastifyInstance = app.getHttpAdapter().getInstance();
+
+  // Log every incoming request: method, path, status code, and response time
+  fastifyInstance.addHook('onRequest', async (request: any) => {
+    (request as any)._startTime = Date.now();
+  });
+  fastifyInstance.addHook('onResponse', async (request: any, reply: any) => {
+    const startTime = (request as any)._startTime ?? Date.now();
+    const duration = Date.now() - startTime;
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`);
+  });
+
   fastifyInstance.addContentTypeParser('application/json', (request, payload, done) => {
     if (request.url.startsWith('/api/auth')) {
       done(null, undefined);
@@ -114,6 +141,20 @@ async function bootstrap() {
     process.exit(0);
   }
 
-  await app.listen(env.PORT);
+  await app.listen(env.PORT, '0.0.0.0');
+
+  const port = env.PORT;
+  const networkAddress = getNetworkAddress();
+
+  console.log('');
+  console.log(`   ▲ Skyrme Chat API`);
+  console.log(`   - Local:        http://localhost:${port}/api`);
+  if (networkAddress) {
+    console.log(`   - Network:      http://${networkAddress}:${port}/api`);
+  }
+  console.log(`   - Docs:         http://localhost:${port}/api/docs`);
+  console.log('');
+  console.log(' ✓ Server ready');
+  console.log('');
 }
 bootstrap();
