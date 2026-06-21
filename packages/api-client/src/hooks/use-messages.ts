@@ -221,7 +221,7 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
         }, 1000); // 1 second buffer
       });
     },
-    onSuccess: data => {
+    onSuccess: (data: unknown) => {
       // Optimistically update query data to mark messages as read in the UI
       const typedData = data as { channelId: string; messageIds: string[] };
       const { channelId, messageIds } = typedData;

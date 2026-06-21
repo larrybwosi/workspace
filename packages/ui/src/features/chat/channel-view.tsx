@@ -1,41 +1,30 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { ScrollArea } from '../../components/scroll-area';
-import { MessageItem } from './message-item';
 import { MessageComposer } from './message-composer';
 import { ThreadPanel } from './thread-panel';
-import { Button } from '../../components/button';
-import { Skeleton } from '../../components/skeleton';
-import { Loader2 } from 'lucide-react';
-import type { Thread, Message, Attachment } from '@repo/types';
-import {
-  useMessages,
-  useSendMessage,
-  useReplyToMessage,
-  useMarkMessagesAsRead,
-  messageKeys,
-  useUser,
-  useUserSocialProfile,
-  useSendFriendRequest,
-  useRespondToFriendRequest,
-  useFriendRequests,
-  useBlockUser,
-  useUnblockUser,
-  userKeys,
-} from '@repo/api-client';
-import { useAddReaction, useRemoveReaction } from '@repo/api-client';
 import { cn } from '../../lib/utils';
 import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
 import { type UploadedFile } from '@repo/shared';
 import { toast } from 'sonner';
-import { useChannel } from '@repo/api-client';
+import { useChannel, useUser, useUserSocialProfile, userKeys } from '@repo/api-client';
 import { useSession } from '@repo/shared';
-import { Settings, Hash, Phone, Video, Sidebar as SidebarIcon, UserPlus, ShieldAlert, Check } from 'lucide-react';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
+import type { Message } from '@repo/types';
+
+import {
+  useChannelViewParams,
+  useChannelMessages,
+  useChannelMutations,
+  useSocialActions,
+  useRealtimeSubscriptions,
+  useReadReceipts
+} from './hooks/use-channel-view';
+
+import { SocialBanner } from './components/social-banner';
+import { ChannelHeader } from './components/channel-header';
+import { MessageList } from './components/message-list';
 
 interface ChannelViewProps {
   channelId: string;
@@ -46,172 +35,6 @@ interface ChannelViewProps {
   onToggleInfo?: () => void;
 }
 
-// --- Helper Components ---
-
-const MessageSkeleton = memo(function MessageSkeleton() {
-  return (
-    <div className="flex items-start gap-3 py-0.5 px-4 w-full">
-      <Skeleton className="h-10 w-10 rounded-full shrink-0 mt-0.5" />
-      <div className="flex-1 space-y-1.5 overflow-hidden">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-3.5 w-20" />
-          <Skeleton className="h-3 w-10" />
-        </div>
-        <Skeleton className="h-3.5 w-[85%]" />
-        <Skeleton className="h-3.5 w-[55%]" />
-      </div>
-    </div>
-  );
-});
-
-const DateDivider = memo(function DateDivider({ date }: { date: Date }) {
-  const isToday = new Date().toDateString() === date.toDateString();
-  const isYesterday = new Date(Date.now() - 86400000).toDateString() === date.toDateString();
-
-  let dateLabel = date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  if (isToday) dateLabel = 'Today';
-  if (isYesterday) dateLabel = 'Yesterday';
-
-  return (
-    <div className="flex items-center my-3 mx-4">
-      <div className="flex-1 h-px bg-border" />
-      <span className="px-2 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</span>
-      <div className="flex-1 h-px bg-border" />
-    </div>
-  );
-});
-
-const UnreadDivider = memo(function UnreadDivider() {
-  return (
-    <div className="flex items-center my-1 mx-4">
-      <div className="flex-1 h-px bg-red-500/60" />
-      <span className="px-2 text-[10px] font-bold text-red-500 uppercase tracking-wider whitespace-nowrap">
-        New Messages
-      </span>
-      <div className="flex-1 h-px bg-red-500/60" />
-    </div>
-  );
-});
-
-const SocialBanner = memo(({
-  dmUser,
-  socialProfile,
-  handleBlockUser,
-  handleSendFriendRequest,
-  isBlockPending,
-  isFriendRequestPending
-}: {
-  dmUser: any,
-  socialProfile: any,
-  handleBlockUser: () => void,
-  handleSendFriendRequest: () => void,
-  isBlockPending: boolean,
-  isFriendRequestPending: boolean
-}) => (
-  <div className="bg-primary/5 border-b border-border/50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-    <div className="flex items-center gap-4">
-      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-        <UserPlus className="h-6 w-6" />
-      </div>
-      <div>
-        <p className="text-sm font-bold">{dmUser?.name || 'This user'} is not in your friend list</p>
-        <div className="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1.5">
-          {socialProfile.mutualWorkspaces?.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {socialProfile.mutualWorkspaces.slice(0, 3).map((ws: any) => (
-                  <Avatar key={ws.id} className="h-5 w-5 rounded-md border-2 border-background shrink-0">
-                    <AvatarImage src={ws.icon} />
-                    <AvatarFallback className="text-[6px] rounded-md bg-muted">
-                      {ws.name.slice(0, 1).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-                {socialProfile.mutualWorkspaces.length} mutual workspace
-                {socialProfile.mutualWorkspaces.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-          {socialProfile.mutualFriends?.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {socialProfile.mutualFriends.slice(0, 3).map((f: any) => (
-                  <Avatar key={f.id} className="h-5 w-5 border-2 border-background shrink-0">
-                    <AvatarImage src={f.avatar} />
-                    <AvatarFallback className="text-[6px] bg-muted">
-                      {f.name.slice(0, 1).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-                {socialProfile.mutualFriends.length} mutual friend
-                {socialProfile.mutualFriends.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-          {socialProfile.mutualWorkspaces?.length === 0 && socialProfile.mutualFriends?.length === 0 && (
-            <span className="text-[11px] font-medium text-muted-foreground">No mutual workspaces or friends</span>
-          )}
-        </div>
-      </div>
-    </div>
-    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-      <Button
-        variant="outline"
-        size="sm"
-        className={cn(
-          'h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20',
-          socialProfile.isBlockedByMe && 'bg-destructive/10 text-destructive border-destructive/20'
-        )}
-        onClick={handleBlockUser}
-        disabled={isBlockPending}
-      >
-        <ShieldAlert className="h-3.5 w-3.5 mr-2" />
-        {socialProfile.isBlockedByMe ? 'Unblock' : 'Block'}
-      </Button>
-      <Button
-        size="sm"
-        className="h-9 px-4 text-xs font-bold rounded-xl flex-1 sm:flex-none shadow-sm"
-        onClick={handleSendFriendRequest}
-        disabled={
-          isFriendRequestPending ||
-          (socialProfile.friendRequestStatus === 'pending' && socialProfile.friendRequestSide === 'sender')
-        }
-      >
-        {socialProfile.friendRequestStatus === 'pending' ? (
-          socialProfile.friendRequestSide === 'sender' ? (
-            <>
-              <Check className="h-3.5 w-3.5 mr-2" />
-              Request Sent
-            </>
-          ) : (
-            <>
-              <UserPlus className="h-3.5 w-3.5 mr-2" />
-              Accept Request
-            </>
-          )
-        ) : (
-          <>
-            <UserPlus className="h-3.5 w-3.5 mr-2" />
-            Add Friend
-          </>
-        )}
-      </Button>
-    </div>
-  </div>
-));
-
-SocialBanner.displayName = 'SocialBanner';
-
-// --- Main Component ---
-
 export function ChannelView({
   channelId,
   workspaceId: workspaceSlug,
@@ -220,688 +43,228 @@ export function ChannelView({
   isWidget,
   onToggleInfo,
 }: ChannelViewProps) {
-  const searchParamsResult = useSearchParams();
-  // next/navigation's useSearchParams returns ReadonlyURLSearchParams,
-  // while the shim/react-router version might return [URLSearchParams, setter].
-  const searchParams = Array.isArray(searchParamsResult) ? searchParamsResult[0] : searchParamsResult;
-  const highlightedMessageId = searchParams.get('messageId');
-  const queryClient = useQueryClient();
+  const { highlightedMessageId, queryClient } = useChannelViewParams();
+  const { messagesData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useChannelMessages(channelId, workspaceSlug, initialThreadId, contextId, isWidget);
+  const { data: channelData } = useChannel(channelId, workspaceSlug);
+  const { sendMessageMutation, replyToMessageMutation, addReactionMutation, removeReactionMutation, markMessagesAsReadMutation } = useChannelMutations(workspaceSlug, isWidget);
 
-  const activeChannelId = channelId;
-
-  const {
-    data: messagesData,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useMessages(activeChannelId, workspaceSlug, initialThreadId, contextId, isWidget);
-
-  const { data: channelData } = useChannel(activeChannelId, workspaceSlug);
-
-  // API Mutations
-  const sendMessageMutation = useSendMessage(workspaceSlug, isWidget);
-  const replyToMessageMutation = useReplyToMessage(workspaceSlug);
-  const addReactionMutation = useAddReaction();
-  const removeReactionMutation = useRemoveReaction();
-  const markMessagesAsReadMutation = useMarkMessagesAsRead(workspaceSlug);
-
-  // Keep track of channels we've already shown the "New Messages" line for in this session
-  // to satisfy the requirement: "disappear after the user leaves the channel and comes back"
   const [viewedChannels] = useState(() => new Set<string>());
+  const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [initialUnreadId, setInitialUnreadId] = useState<string | null>(null);
+  const [activeThread, setActiveThread] = useState<any | null>(null);
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
-  // State & Refs
-  const [replyingTo, setReplyingTo] = useState<{
-    id: string;
-    userName: string;
-  } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const highlightedMessageRef = useRef<HTMLDivElement>(null);
   const firstUnreadRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(false);
   const markedMessageIds = useRef<Set<string>>(new Set());
-  const [initialUnreadId, setInitialUnreadId] = useState<string | null>(null);
-  const [activeThread, setActiveThread] = useState<any | null>(null);
 
   const { data: session } = useSession();
   const currentUser = session?.user;
-
-  const isDm = activeChannelId.startsWith('dm-');
-  const dmUserId = isDm ? activeChannelId.replace('dm-', '') : null;
-
+  const dmUserId = channelId.startsWith('dm-') ? channelId.replace('dm-', '') : null;
   const { data: dmUser } = useUser(dmUserId || '');
   const { data: socialProfile } = useUserSocialProfile(dmUserId || '');
+  const { sendFriendRequestMutation, respondToFriendRequestMutation, friendRequests, blockUserMutation, unblockUserMutation } = useSocialActions(dmUserId);
 
-  const sendFriendRequestMutation = useSendFriendRequest();
-  const respondToFriendRequestMutation = useRespondToFriendRequest();
-  const { data: friendRequests } = useFriendRequests('received', 'pending');
-  const blockUserMutation = useBlockUser();
-  const unblockUserMutation = useUnblockUser();
-
-  const handleSendFriendRequest = () => {
-    if (!dmUserId) return;
-
-    if (socialProfile?.friendRequestStatus === 'pending' && socialProfile?.friendRequestSide === 'receiver') {
-      // Find the request ID
+  const handleSendFriendRequest = useCallback(() => {
+    if (!dmUserId || !socialProfile) return;
+    if (socialProfile.friendRequestStatus === 'pending' && socialProfile.friendRequestSide === 'receiver') {
       const request = friendRequests?.find((r: any) => r.senderId === dmUserId);
       if (request) {
-        respondToFriendRequestMutation.mutate(
-          { requestId: request.id, action: 'accept' },
-          {
-            onSuccess: () => {
-              toast.success('Friend request accepted!');
-              queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
-              queryClient.invalidateQueries({ queryKey: ['friend-requests'] });
-            },
-          }
-        );
+        respondToFriendRequestMutation.mutate({ requestId: request.id, action: 'accept' }, {
+          onSuccess: () => {
+            toast.success('Friend request accepted!');
+            queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
+            queryClient.invalidateQueries({ queryKey: ['friend-requests'] });
+          },
+        });
         return;
       }
     }
+    sendFriendRequestMutation.mutate({ receiverId: dmUserId }, {
+      onSuccess: () => {
+        toast.success('Friend request sent!');
+        queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
+      },
+      onError: (error: any) => toast.error(error?.response?.data?.message || 'Failed to send friend request'),
+    });
+  }, [dmUserId, socialProfile, friendRequests, respondToFriendRequestMutation, sendFriendRequestMutation, queryClient]);
 
-    sendFriendRequestMutation.mutate(
-      { receiverId: dmUserId },
-      {
-        onSuccess: () => {
-          toast.success('Friend request sent!');
-          queryClient.invalidateQueries({ queryKey: userKeys.socialProfile(dmUserId) });
-        },
-        onError: (error: any) => {
-          toast.error(error?.response?.data?.message || 'Failed to send friend request');
-        },
-      }
-    );
-  };
-
-  const handleBlockUser = () => {
+  const handleBlockUser = useCallback(() => {
     if (!dmUserId) return;
-
     if (socialProfile?.isBlockedByMe) {
-      unblockUserMutation.mutate(dmUserId, {
-        onSuccess: () => {
-          toast.success('User unblocked');
-        },
-      });
+      unblockUserMutation.mutate(dmUserId, { onSuccess: () => toast.success('User unblocked') });
     } else {
-      blockUserMutation.mutate(dmUserId, {
-        onSuccess: () => {
-          toast.success('User blocked');
-        },
-      });
+      blockUserMutation.mutate(dmUserId, { onSuccess: () => toast.success('User blocked') });
     }
-  };
+  }, [dmUserId, socialProfile, blockUserMutation, unblockUserMutation]);
 
-  // Real-time subscriptions
-  useEffect(() => {
-    if (!activeChannelId) return;
-
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
-
-    const handleMessage = (message: any) => {
-      const queryKey = workspaceSlug
-        ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages']
-        : messageKeys.list(activeChannelId);
-
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
-
-    const userChannel = ably.channels.get(AblyChannels.user(currentUser?.id || ''));
-    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleMessage);
-
-    return () => {
-      channel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
-      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleMessage);
-    };
-  }, [activeChannelId, workspaceSlug, queryClient, currentUser?.id]);
+  useRealtimeSubscriptions(channelId, workspaceSlug, queryClient, currentUser?.id);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [channelForm, setChannelForm] = useState({
-    name: '',
-    description: '',
-    type: 'public' as 'public' | 'private',
-  });
+  const [channelForm, setChannelForm] = useState({ name: '', description: '', type: 'public' as 'public' | 'private' });
 
   useEffect(() => {
-    if (channelData) {
-      setChannelForm({
-        name: channelData?.name,
-        description: channelData?.description || '',
-        type: (channelData as any)?.isPrivate ? 'private' : 'public',
-      });
-    }
+    if (channelData) setChannelForm({ name: channelData.name, description: channelData.description || '', type: (channelData as any).isPrivate ? 'private' : 'public' });
   }, [channelData]);
 
-  // 1. Flatten Data
-  const messages = useMemo(() => {
-    if (!messagesData?.pages) return [];
-    return messagesData.pages.flatMap(page => page.messages);
-  }, [messagesData]);
+  const messages = useMemo(() => messagesData?.pages?.flatMap(page => page.messages) || [], [messagesData]);
+  const firstUnreadMessageId = useMemo(() => messages.find(m => !m.readByCurrentUser)?.id || null, [messages]);
 
-  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
-
-  const firstUnreadMessageId = useMemo(() => {
-    const firstUnread = messages.find(m => !m.readByCurrentUser);
-    return firstUnread?.id || null;
-  }, [messages]);
-
-  // Set initial unread ID only once when messages load
   useEffect(() => {
-    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled) {
-      if (!viewedChannels.has(activeChannelId)) {
-        setInitialUnreadId(firstUnreadMessageId);
-        viewedChannels.add(activeChannelId);
-      }
+    if (!isLoading && messages.length > 0 && !initialUnreadId && !hasInitialScrolled && !viewedChannels.has(channelId)) {
+      setInitialUnreadId(firstUnreadMessageId);
+      viewedChannels.add(channelId);
     }
-  }, [
-    isLoading,
-    messages.length,
-    firstUnreadMessageId,
-    initialUnreadId,
-    hasInitialScrolled,
-    activeChannelId,
-    viewedChannels,
-  ]);
+  }, [isLoading, messages.length, firstUnreadMessageId, initialUnreadId, hasInitialScrolled, channelId, viewedChannels]);
 
-  // Clear unread line on new message or user interaction
   useEffect(() => {
     if (messages.length > 0 && hasInitialScrolled) {
-      const lastMessage = messages[messages.length - 1];
-
-      // If user is at the bottom and a new message arrives, clear the unread line
-      if (isAtBottom || lastMessage.userId === currentUser?.id) {
-        setInitialUnreadId(null);
-      }
+      if (isAtBottom || messages[messages.length - 1].userId === currentUser?.id) setInitialUnreadId(null);
     }
   }, [messages, currentUser?.id, hasInitialScrolled, isAtBottom]);
 
-  // Intersection Observer for scroll position
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsAtBottom(entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-
-    if (messagesEndRef.current) {
-      observer.observe(messagesEndRef.current);
-    }
-
+    const observer = new IntersectionObserver(([entry]) => setIsAtBottom(entry.isIntersecting), { threshold: 0.1 });
+    if (messagesEndRef.current) observer.observe(messagesEndRef.current);
     return () => observer.disconnect();
   }, [messages.length]);
-
-  // Reset marked messages when channel changes
-
-  // Stable references for callbacks to avoid re-renders of memoized MessageItem
-  const messagesRef = useRef(messages);
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
-  const currentUserRef = useRef(currentUser);
-  useEffect(() => {
-    currentUserRef.current = currentUser;
-  }, [currentUser]);
 
   useEffect(() => {
     markedMessageIds.current.clear();
     setHasInitialScrolled(false);
     setInitialUnreadId(null);
-  }, [activeChannelId]);
+  }, [channelId]);
 
-  // 2. Scroll Handling
   useEffect(() => {
     if (isLoading || messages.length === 0 || hasInitialScrolled) return;
-
-    if (highlightedMessageId && highlightedMessageRef.current) {
-      setTimeout(() => {
-        highlightedMessageRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-        setHasInitialScrolled(true);
-      }, 100);
-    } else if (initialUnreadId && firstUnreadRef.current) {
-      setTimeout(() => {
-        firstUnreadRef.current?.scrollIntoView({
-          behavior: 'auto',
-          block: 'start',
-        });
-        setHasInitialScrolled(true);
-      }, 100);
+    const scrollOptions: ScrollIntoViewOptions = highlightedMessageId ? { behavior: 'smooth', block: 'center' } : { behavior: 'auto', block: 'start' };
+    const targetRef = highlightedMessageId ? highlightedMessageRef : (initialUnreadId ? firstUnreadRef : null);
+    if (targetRef?.current) {
+      setTimeout(() => { targetRef.current?.scrollIntoView(scrollOptions); setHasInitialScrolled(true); }, 100);
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       setHasInitialScrolled(true);
     }
   }, [messages.length, highlightedMessageId, initialUnreadId, isLoading, hasInitialScrolled]);
 
-  // Auto-scroll to bottom on new messages if already at bottom
   useEffect(() => {
-    if (hasInitialScrolled && isAtBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages.length]);
+    if (hasInitialScrolled && isAtBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length, hasInitialScrolled, isAtBottom]);
 
-  // 3. Read Receipts (Intersection Observer for each message)
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  useReadReceipts(channelId, scrollAreaRef, markedMessageIds, messages, currentUser?.id, markMessagesAsReadMutation);
 
-  // Initialize observer once
-  useEffect(() => {
-    if (typeof window === 'undefined' || !activeChannelId) return;
-
-    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
-      const visibleUnreadIds: string[] = [];
-
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const messageId = entry.target.getAttribute('data-message-id');
-          if (messageId && !markedMessageIds.current.has(messageId)) {
-            // We use the latest messages from ref or closure
-            // In this case, we'll use a small trick: look up from the DOM or state
-            visibleUnreadIds.push(messageId);
-            markedMessageIds.current.add(messageId);
-          }
-        }
-      });
-
-      if (visibleUnreadIds.length > 0) {
-        // Filter out IDs that are already read or are by current user
-        // We'll do this check inside the mutation or here if we have latest messages
-        markMessagesAsReadMutation.mutate({
-          messageIds: visibleUnreadIds,
-          channelId: activeChannelId,
-        });
-      }
-    };
-
-    observerRef.current = new IntersectionObserver(handleIntersect, {
-      root: scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]'),
-      threshold: 0.5,
-    });
-
-    return () => {
-      observerRef.current?.disconnect();
-      observerRef.current = null;
-    };
-  }, [activeChannelId]);
-
-  // Re-observe messages when they change
-  useEffect(() => {
-    if (!observerRef.current || messages.length === 0) return;
-
-    // Observe all message elements
-    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (!viewport) return;
-
-    const messageElements = viewport.querySelectorAll('[data-message-id]');
-    messageElements.forEach(el => {
-      const messageId = el.getAttribute('data-message-id');
-      if (messageId && !markedMessageIds.current.has(messageId)) {
-        const message = messages.find(m => m.id === messageId);
-        if (message && !message.readByCurrentUser && message.userId !== currentUser?.id) {
-          observerRef.current?.observe(el);
-        }
-      }
-    });
-  }, [messages, currentUser?.id]);
-
-  // 4. Organize Messages
   const organizeMessages = useCallback((msgs: Message[], unreadId: string | null) => {
-    const list: Array<
-      { type: 'message'; data: Message; depth: number } | { type: 'date'; date: Date } | { type: 'unread' }
-    > = [];
-
+    const list: Array<{ type: 'message'; data: Message; depth: number } | { type: 'date'; date: Date } | { type: 'unread' }> = [];
     const messageMap = new Map<string, Message & { replies: Message[] }>();
     msgs.forEach(msg => messageMap.set(msg.id, { ...msg, replies: [] }));
-
-    const rootMessages: (Message & { replies: Message[] })[] = [];
-    msgs.forEach(msg => {
-      if (msg.replyTo && messageMap.has(msg.replyTo)) {
-        messageMap.get(msg.replyTo)!.replies.push(messageMap.get(msg.id)!);
-      } else if (!msg.replyTo) {
-        rootMessages.push(messageMap.get(msg.id)!);
-      }
-    });
-
+    const rootMessages = msgs.filter(msg => !msg.replyTo || !messageMap.has(msg.replyTo)).map(msg => messageMap.get(msg.id)!);
+    msgs.forEach(msg => { if (msg.replyTo && messageMap.has(msg.replyTo)) messageMap.get(msg.replyTo)!.replies.push(messageMap.get(msg.id)!); });
     rootMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
     let lastDate: Date | null = null;
-
-    const addMessageToList = (msg: Message, depth: number) => {
-      const currentDate = new Date(msg.timestamp);
-      if (!lastDate || currentDate.toDateString() !== lastDate.toDateString()) {
-        list.push({ type: 'date', date: currentDate });
-        lastDate = currentDate;
-      }
-
+    const addToList = (msg: Message, depth: number) => {
+      const d = new Date(msg.timestamp);
+      if (!lastDate || d.toDateString() !== lastDate.toDateString()) { list.push({ type: 'date', date: d }); lastDate = d; }
       if (msg.id === unreadId) list.push({ type: 'unread' });
       list.push({ type: 'message', data: msg, depth });
     };
-
-    rootMessages.forEach(rootMsg => {
-      addMessageToList(rootMsg, 0);
-      rootMsg.replies.forEach(reply => addMessageToList(reply, 1));
-    });
-
+    rootMessages.forEach(rm => { addToList(rm, 0); rm.replies.forEach(r => addToList(r, 1)); });
     return list;
   }, []);
 
   const renderList = useMemo(() => organizeMessages(messages, initialUnreadId), [messages, initialUnreadId, organizeMessages]);
 
-  // Handlers
-  const handleSendMessage = (content: string, attachments?: UploadedFile[]) => {
-    if (!activeChannelId) {
-      console.error('No active channel ID to send message to');
-      return;
-    }
+  const handleSendMessage = useCallback((content: string, attachments?: UploadedFile[]) => {
+    if (!channelId) return;
+    const p = { channelId, content, mentions: [], messageType: 'standard' as const, attachments, threadId: initialThreadId, contextId };
+    if (replyingTo) replyToMessageMutation.mutate({ ...p, messageId: replyingTo.id, attachments }, { onSuccess: () => setReplyingTo(null), onError: () => toast.error('Failed to send reply.') });
+    else sendMessageMutation.mutate(p, { onError: () => toast.error('Failed to send message.') });
+  }, [channelId, initialThreadId, contextId, replyingTo, replyToMessageMutation, sendMessageMutation]);
 
-    const payload = {
-      channelId: activeChannelId,
-      content,
-      mentions: [],
-      messageType: 'standard' as const,
-      attachments,
-      threadId: initialThreadId,
-      contextId,
-    };
+  const handleReply = useCallback((id: string) => {
+    const m = messages.find(msg => msg.id === id);
+    if (m) setReplyingTo({ id, userName: (m as any).user?.name || 'Unknown' });
+  }, [messages]);
 
-    if (replyingTo) {
-      replyToMessageMutation.mutate(
-        { ...payload, messageId: replyingTo.id, attachments },
-        {
-          onSuccess: () => {
-            setReplyingTo(null);
-          },
-          onError: error => {
-            console.error('Failed to send reply:', error);
-            toast.error('Failed to send reply. Please try again.');
-          },
-        }
-      );
-    } else {
-      sendMessageMutation.mutate(payload, {
-        onError: error => {
-          console.error('Failed to send message:', error);
-          toast.error('Failed to send message. Please try again.');
-        },
-      });
-    }
-  };
+  const handleOpenThread = useCallback((m: any) => setActiveThread(m), []);
 
-  const handleReply = useCallback((messageId: string) => {
-    const replyMessage = messagesRef.current.find(m => m.id === messageId);
-    if (replyMessage) {
-      const user = (replyMessage as any).user;
-      setReplyingTo({ id: messageId, userName: user?.name || 'Unknown' });
-    }
-  }, []);
+  const handleReaction = useCallback((id: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => {
+    const m = messages.find(msg => msg.id === id);
+    if (!m) return;
+    if (m.reactions.find(r => r.emoji === emoji)?.users.includes(currentUser?.id || '')) removeReactionMutation.mutate({ messageId: id, emoji, channelId, workspaceSlug });
+    else addReactionMutation.mutate({ messageId: id, emoji, channelId, isCustom, customEmojiId, workspaceSlug });
+  }, [messages, currentUser?.id, channelId, workspaceSlug, removeReactionMutation, addReactionMutation]);
 
-  const handleOpenThread = useCallback((message: any) => {
-    setActiveThread(message);
-  }, []);
-
-  const handleReaction = useCallback(
-    (messageId: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => {
-      const message = messagesRef.current.find(m => m.id === messageId);
-      if (!message) return;
-
-      const hasReacted = message.reactions
-        .find(r => r.emoji === emoji)
-        ?.users.includes(currentUserRef.current?.id || '');
-
-      if (hasReacted) {
-        removeReactionMutation.mutate({
-          messageId,
-          emoji,
-          channelId: activeChannelId,
-          workspaceSlug,
-        });
-      } else {
-        addReactionMutation.mutate({
-          messageId,
-          emoji,
-          channelId: activeChannelId,
-          isCustom,
-          customEmojiId,
-          workspaceSlug,
-        });
-      }
-    },
-    [activeChannelId, workspaceSlug, removeReactionMutation, addReactionMutation]
-  );
+  const isDm = channelId.startsWith('dm-');
 
   return (
-    <div
-      className={cn('flex h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}
-    >
+    <div className={cn('flex h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
       <div className="flex-1 flex flex-col min-w-0">
-      {/* Header */}
-      {!isWidget && (
-        <div className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-background/50 backdrop-blur-md z-10">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Hash className="h-5 w-5" />
-              <span className="text-sm">/</span>
-              <span className="text-sm font-medium">v3.0</span>
-              <span className="text-sm">/</span>
-            </div>
-            <h2 className="font-bold text-lg truncate">{channelData?.name || activeChannelId || 'general'}</h2>
-          </div>
+        <ChannelHeader
+          isWidget={isWidget}
+          channelName={channelData?.name || channelId || 'general'}
+          onEdit={() => setEditDialogOpen(true)}
+          onToggleInfo={onToggleInfo}
+        />
 
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted">
-              <Video className="h-4 w-4" />
-            </Button>
-            <div className="w-px h-4 bg-border/50 mx-1" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
-              onClick={() => setEditDialogOpen(true)}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground rounded-xl hover:bg-muted"
-              onClick={onToggleInfo}
-            >
-              <SidebarIcon className="h-4 w-4" />
-            </Button>
-          </div>
+        {isDm && dmUserId && currentUser?.id && dmUserId !== currentUser.id && socialProfile && !socialProfile.isFriend && !isWidget && (
+          <SocialBanner
+            dmUser={dmUser}
+            socialProfile={socialProfile}
+            handleBlockUser={handleBlockUser}
+            handleSendFriendRequest={handleSendFriendRequest}
+            isBlockPending={blockUserMutation.isPending || unblockUserMutation.isPending}
+            isFriendRequestPending={sendFriendRequestMutation.isPending}
+          />
+        )}
+
+        <MessageList
+          scrollAreaRef={scrollAreaRef}
+          messagesEndRef={messagesEndRef}
+          hasNextPage={hasNextPage}
+          fetchNextPage={fetchNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          isLoading={isLoading}
+          renderList={renderList}
+          highlightedMessageId={highlightedMessageId}
+          initialUnreadId={initialUnreadId}
+          highlightedMessageRef={highlightedMessageRef}
+          firstUnreadRef={firstUnreadRef}
+          handleReply={handleReply}
+          handleOpenThread={handleOpenThread}
+          handleReaction={handleReaction}
+          channelId={channelId}
+          workspaceSlug={workspaceSlug}
+        />
+
+        <div className="shrink-0 px-6 py-6 bg-background">
+          <MessageComposer
+            onSend={handleSendMessage}
+            placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${channelId || 'thread'}`}
+            replyingTo={replyingTo}
+            onCancelReply={() => setReplyingTo(null)}
+            channelId={channelId}
+          />
         </div>
-      )}
 
-      {/* Social Banner for non-friends in DMs */}
-      {isDm && dmUserId !== currentUser?.id && socialProfile && !socialProfile.isFriend && !isWidget && (
-        <SocialBanner
-          dmUser={dmUser}
-          socialProfile={socialProfile}
-          handleBlockUser={handleBlockUser}
-          handleSendFriendRequest={handleSendFriendRequest}
-          isBlockPending={blockUserMutation.isPending || unblockUserMutation.isPending}
-          isFriendRequestPending={sendFriendRequestMutation.isPending}
-        />
-      )}
-
-      {/* Main Scroll Area */}
-      <div className="flex-1 min-h-0 w-full relative bg-dotted">
-        <ScrollArea ref={scrollAreaRef} className="h-full w-full">
-          {/* Top padding, then messages push to bottom */}
-          <div className="flex flex-col justify-end min-h-full pt-4 pb-2">
-            {/* Load More */}
-            {hasNextPage && (
-              <div className="flex justify-center py-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  className="text-xs text-muted-foreground h-7"
-                >
-                  {isFetchingNextPage ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : 'Load older messages'}
-                </Button>
-              </div>
-            )}
-
-            {/* Content */}
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <MessageSkeleton key={i} />
-                ))}
-              </div>
-            ) : renderList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center flex-1 p-8 text-center opacity-50">
-                <div className="h-14 w-14 bg-muted rounded-full mb-3 flex items-center justify-center text-2xl">👋</div>
-                <h3 className="font-semibold text-sm">No messages yet</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Be the first to send a message in #{activeChannelId}.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col w-full">
-                {renderList.map((item, index) => {
-                  if (item.type === 'date') {
-                    return <DateDivider key={`date-${item.date.getTime()}`} date={item.date} />;
-                  }
-
-                  if (item.type === 'unread') {
-                    return <UnreadDivider key="unread-divider" />;
-                  }
-
-                  const message = item.data;
-                  const prevItem = renderList[index - 1];
-
-                  // Group consecutive messages from same user within 7 min
-                  let isGrouped = false;
-                  if (prevItem?.type === 'message') {
-                    const prevMessage = prevItem.data;
-                    const timeDiff = new Date(message.timestamp).getTime() - new Date(prevMessage.timestamp).getTime();
-                    const isSameUser = prevMessage.userId === message.userId;
-                    const isRecent = timeDiff < 7 * 60 * 1000;
-                    // Don't group across depth changes (root vs reply)
-                    const isSameDepth = prevItem.depth === item.depth;
-                    isGrouped = isSameUser && isRecent && isSameDepth;
-                  }
-
-                  const isHighlighted = message.id === highlightedMessageId;
-                  const isInitialUnread = message.id === initialUnreadId;
-                  const isReply = item.depth > 0;
-
-                  return (
-                    <div
-                      key={message.id}
-                      ref={el => {
-                        if (isHighlighted) highlightedMessageRef.current = el;
-                        if (isInitialUnread) firstUnreadRef.current = el;
-                      }}
-                      data-message-id={message.id}
-                      className={cn(
-                        'group relative w-full',
-                        // Discord-style: compact gap for grouped, small gap for new block
-                        isGrouped ? 'mt-0.5' : 'mt-3',
-                        isHighlighted && 'bg-yellow-500/10',
-                        // Hover highlight like Discord
-                        'hover:bg-muted/40 transition-colors duration-75'
-                      )}
-                    >
-                      {/* Reply indentation: left border + indent matching avatar column */}
-                      {isReply ? (
-                        // 40px avatar + 12px gap = 52px total left offset to align reply content
-                        <div className="flex">
-                          {/* Left gutter: matches avatar width (40px) + gap (12px) = 52px */}
-                          <div className="w-[52px] shrink-0 flex justify-center">
-                            <div className="w-px bg-border/60 h-full" />
-                          </div>
-                          <div className="flex-1 min-w-0 pr-4">
-                            <MessageItem
-                              message={message}
-                              showAvatar={!isGrouped}
-                              onReply={handleReply}
-                              onThreadOpen={handleOpenThread}
-                              onReaction={handleReaction}
-                              depth={item.depth}
-                              isReply={true}
-                              isHighlighted={isHighlighted}
-                              channelId={channelId}
-                              workspaceId={workspaceSlug}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <MessageItem
-                          message={message}
-                          showAvatar={!isGrouped}
-                          onReply={handleReply}
-                          onThreadOpen={handleOpenThread}
-                          onReaction={handleReaction}
-                          depth={item.depth}
-                          isReply={false}
-                          isHighlighted={isHighlighted}
-                          channelId={channelId}
-                          workspaceId={workspaceSlug}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <div ref={messagesEndRef} className="h-px" />
-          </div>
-        </ScrollArea>
-      </div>
-
-      {/* Composer */}
-      <div className="shrink-0 px-6 py-6 bg-background">
-        <MessageComposer
-          onSend={handleSendMessage}
-          placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${activeChannelId || 'thread'}`}
-          replyingTo={replyingTo}
-          onCancelReply={() => setReplyingTo(null)}
-          channelId={activeChannelId}
+        <EditChannelDialog
+          editChannelOpen={editDialogOpen}
+          setEditChannelOpen={setEditDialogOpen}
+          channelForm={channelForm}
+          setChannelForm={setChannelForm}
+          handleEditChannel={() => setEditDialogOpen(false)}
+          channelId={channelId}
         />
       </div>
 
-      <EditChannelDialog
-        editChannelOpen={editDialogOpen}
-        setEditChannelOpen={setEditDialogOpen}
-        channelForm={channelForm}
-        setChannelForm={setChannelForm}
-        handleEditChannel={() => {
-          // The settings UI inside handles its own save,
-          // and we could trigger a general channel update here if needed.
-          setEditDialogOpen(false);
-        }}
-        channelId={activeChannelId}
-      />
-      </div>
-
-      {/* Thread Panel */}
       {activeThread && (
         <ThreadPanel
           rootMessage={activeThread}
           onClose={() => setActiveThread(null)}
           workspaceId={workspaceSlug}
-          channelId={activeChannelId}
+          channelId={channelId}
         />
       )}
     </div>
