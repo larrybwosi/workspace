@@ -15,7 +15,7 @@ export function QRCodeLoginPage() {
   useEffect(() => {
     async function initQR() {
       try {
-        const { data } = await apiClient.post('/auth/device/qr/generate');
+        const { data } = await apiClient.post('/device-auth/qr/generate');
         setSessionId(data.sessionId);
       } catch (e) {
         console.error('Failed to generate QR', e);
@@ -35,7 +35,7 @@ export function QRCodeLoginPage() {
     // Start polling
     pollingRef.current = setInterval(async () => {
       try {
-        const { data } = await apiClient.get(`/auth/device/qr/status/${sessionId}`);
+        const { data } = await apiClient.get(`/device-auth/qr/status/${sessionId}`);
         if (data.status === 'authorized') {
           handleAuthorization(data);
         } else if (data.status === 'expired') {

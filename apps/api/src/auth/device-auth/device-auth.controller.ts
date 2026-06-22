@@ -16,7 +16,7 @@ import Redis from 'ioredis';
 import { auth } from '../better-auth';
 import { publishRealtime } from '@repo/shared/server';
 
-@Controller('auth/device')
+@Controller('device-auth')
 export class DeviceAuthController {
   constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
 

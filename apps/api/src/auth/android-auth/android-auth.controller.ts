@@ -11,7 +11,7 @@ import {
 import { auth } from '../better-auth';
 import { prisma } from '@repo/database';
 
-@Controller('auth/android')
+@Controller('android-auth')
 export class AndroidAuthController {
   private readonly logger = new Logger(AndroidAuthController.name);
 
