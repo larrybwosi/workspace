@@ -18,12 +18,12 @@ const getEnv = (name: string) => {
 };
 
 const getBaseURL = () => {
+  // Prefer local auth routes (port 3001) for the web app
   const url =
-    getEnv('API_URL') ||
-    getEnv('NEXT_PUBLIC_API_URL') ||
-    getEnv('VITE_API_URL') ||
-    getEnv('EXPO_PUBLIC_API_URL') ||
-    'http://localhost:3000';
+    getEnv('BETTER_AUTH_URL') ||
+    getEnv('NEXT_PUBLIC_APP_URL') ||
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+
   if (url.includes('/api/auth')) {
     return url;
   }
