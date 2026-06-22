@@ -85,4 +85,37 @@ interface MessageApi {
         @Path("messageId") messageId: String,
         @Path("emoji") emoji: String
     ): Response<Unit>
+
+    @POST("dms/{conversationId}/read")
+    suspend fun markDmRead(
+        @Path("conversationId") conversationId: String
+    ): Response<Unit>
+
+    @POST("channels/{channelId}/read")
+    suspend fun markChannelRead(
+        @Path("channelId") channelId: String
+    ): Response<Unit>
+
+    @POST("v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}")
+    suspend fun triggerMessageAction(
+        @Path("slug") slug: String,
+        @Path("messageId") messageId: String,
+        @Path("actionId") actionId: String,
+        @Body body: Map<String, Any>
+    ): Response<Map<String, Any>>
+
+    // Thread Messages
+    @GET("channels/{channelId}/messages")
+    suspend fun getThreadMessages(
+        @Path("channelId") channelId: String,
+        @Query("threadId") threadId: String,
+        @Query("limit") limit: Int = 50
+    ): Response<MessagesResponse>
+
+    @POST("channels/{channelId}/messages")
+    suspend fun sendThreadMessage(
+        @Path("channelId") channelId: String,
+        @Query("threadId") threadId: String,
+        @Body request: SendMessageRequest
+    ): Response<MessageDto>
 }

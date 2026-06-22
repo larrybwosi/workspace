@@ -88,6 +88,7 @@ fun ScrymeNavHost(
                 onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
                 onReply = { /* TODO */ },
                 onForward = { /* TODO */ },
+                onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onTyping = { /* TODO */ },
                 typingUsers = chatUiState.typingUsers
             )

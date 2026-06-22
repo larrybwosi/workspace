@@ -10,8 +10,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class NotificationDeepLinkTest {
 
     private lateinit var context: Context
@@ -36,9 +38,10 @@ class NotificationDeepLinkTest {
 
         val notificationManager = shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager)
         val notifications = notificationManager.allNotifications
-        assertEquals(1, notifications.size)
+        // Expect 2: the conversation notification and the group summary
+        assertEquals(2, notifications.size)
 
-        val notification = notifications[0]
+        val notification = notifications.find { it.flags and android.app.Notification.FLAG_GROUP_SUMMARY == 0 }!!
         val pendingIntent = notification.contentIntent
         val intent = shadowOf(pendingIntent).savedIntent
 
@@ -60,9 +63,9 @@ class NotificationDeepLinkTest {
 
         val notificationManager = shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager)
         val notifications = notificationManager.allNotifications
-        assertEquals(1, notifications.size)
+        assertEquals(2, notifications.size)
 
-        val notification = notifications[0]
+        val notification = notifications.find { it.flags and android.app.Notification.FLAG_GROUP_SUMMARY == 0 }!!
         val pendingIntent = notification.contentIntent
         val intent = shadowOf(pendingIntent).savedIntent
 
@@ -84,9 +87,9 @@ class NotificationDeepLinkTest {
 
         val notificationManager = shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager)
         val notifications = notificationManager.allNotifications
-        assertEquals(1, notifications.size)
+        assertEquals(2, notifications.size)
 
-        val notification = notifications[0]
+        val notification = notifications.find { it.flags and android.app.Notification.FLAG_GROUP_SUMMARY == 0 }!!
         val pendingIntent = notification.contentIntent
         val intent = shadowOf(pendingIntent).savedIntent
 

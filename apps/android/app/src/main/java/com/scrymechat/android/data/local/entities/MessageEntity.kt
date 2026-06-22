@@ -1,8 +1,10 @@
 package com.scrymechat.android.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.scrymechat.android.data.remote.AttachmentDto
+import com.scrymechat.android.data.remote.CustomMessageDto
 import com.scrymechat.android.data.remote.ReactionGroupDto
 
 @Entity(tableName = "messages")
@@ -23,5 +25,11 @@ data class MessageEntity(
     val attachments: List<AttachmentDto> = emptyList(),
     val metadata: Map<String, Any>? = null,
     val reactions: List<ReactionGroupDto> = emptyList(),
-    val messageType: String? = null
-)
+    val messageType: String? = null,
+    val threadId: String? = null,
+    val replyCount: Int = 0,
+    val isPinned: Boolean = false
+) {
+    @Ignore
+    var customMessage: CustomMessageDto? = null
+}

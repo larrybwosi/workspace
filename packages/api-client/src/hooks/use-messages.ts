@@ -48,19 +48,20 @@ export function useMessages(
   });
 }
 
+type SendMessageVariables = Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & {
+  channelId: string;
+  threadId?: string;
+  contextId?: string;
+  messageType?: string;
+  attachments?: unknown[];
+};
+
 // Send message
 export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      channelId,
-      ...message
-    }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & {
-      channelId: string;
-      threadId?: string;
-      contextId?: string;
-    }) => {
+    mutationFn: async ({ channelId, ...message }: SendMessageVariables) => {
       const prefix = isV2 ? '/v2' : '';
 
       let url;
@@ -74,7 +75,7 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
       const { data } = await apiClient.post<Message>(url, { ...message, channelId });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Message, variables: SendMessageVariables) => {
       queryClient.invalidateQueries({
         queryKey: messageKeys.list(variables.channelId, workspaceSlug, variables.threadId),
       });
@@ -119,6 +120,32 @@ export function useDeleteMessage(workspaceSlug?: string) {
 }
 
 // Reply to message
+export function useTriggerAction(workspaceSlug?: string) {
+  return useMutation({
+    mutationFn: async ({
+      messageId,
+      actionId,
+      payload,
+      formState,
+    }: {
+      messageId: string;
+      actionId: string;
+      payload?: Record<string, unknown>;
+      formState?: Record<string, unknown>;
+    }) => {
+      // Always use V2 endpoint for actions as it supports M2M callbacks
+      const url = `/v2/workspaces/${workspaceSlug}/messages/${messageId}/actions/${actionId}`;
+      const { data } = await apiClient.post(url, { payload, formState });
+      return { data, messageId };
+    },
+    onSuccess: () => {
+      // We don't necessarily know which channel this message belongs to here,
+      // but Ably should handle the real-time update anyway.
+      // If we want to be sure, we'd need to invalidate all message lists or pass channelId.
+    },
+  });
+}
+
 export function useReplyToMessage(workspaceSlug?: string) {
   const queryClient = useQueryClient();
 
@@ -193,9 +220,10 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
         }, 1000); // 1 second buffer
       });
     },
-    onSuccess: data => {
+    onSuccess: (data: unknown) => {
       // Optimistically update query data to mark messages as read in the UI
-      const { channelId, messageIds } = data as { channelId: string; messageIds: string[] };
+      const typedData = data as { channelId: string; messageIds: string[] };
+      const { channelId, messageIds } = typedData;
       const queryKey = workspaceSlug
         ? ['workspaces', workspaceSlug, 'channels', channelId, 'messages']
         : messageKeys.list(channelId);
@@ -264,30 +292,27 @@ export function useDMMessages(dmId: string) {
   });
 }
 
+type SendDMMessageVariables = {
+  dmId: string;
+  content: string;
+  replyToId?: string;
+  attachments?: unknown[];
+};
+
 // Send DM message
 export function useSendDMMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      dmId,
-      content,
-      replyToId,
-      attachments,
-    }: {
-      dmId: string;
-      content: string;
-      replyToId?: string;
-      attachments?: unknown[];
-    }) => {
-      const { data } = await apiClient.post(`/dms/${dmId}/messages`, {
+    mutationFn: async ({ dmId, content, replyToId, attachments }: SendDMMessageVariables) => {
+      const { data } = await apiClient.post<Message>(`/dms/${dmId}/messages`, {
         content,
         replyToId,
         attachments,
       });
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Message, variables: SendDMMessageVariables) => {
       queryClient.invalidateQueries({ queryKey: dmKeys.list(variables.dmId) });
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     },

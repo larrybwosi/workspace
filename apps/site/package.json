@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "0.0.592",
+  "version": "0.0.664",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,25 +10,20 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives "
   },
   "dependencies": {
-    "@radix-ui/react-slot": "^1.1.2",
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "5.96.2",
-    "better-auth": "1.6.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^12.4.7",
     "lucide-react": "^1.7.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-helmet-async": "^2.0.5",
     "react-router": "^7.14.0",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^2.6.1",
     "tw-animate-css": "1.3.3"
   },
   "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22.19.15",
@@ -36,7 +31,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.27",
-    "@repo/eslint-config": "workspace:*",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.3",

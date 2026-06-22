@@ -1,9 +1,45 @@
-import { Controller, Post, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Query,
+  Body,
+  UnauthorizedException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { auth } from '../better-auth';
+import { prisma } from '@repo/database';
 
 @Controller('auth/android')
 export class AndroidAuthController {
   private readonly logger = new Logger(AndroidAuthController.name);
+
+  @Get('check-username')
+  async checkUsername(@Query('username') username: string) {
+    this.validateUsername(username);
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      });
+
+      return { available: !user };
+    } catch (error: any) {
+      this.handleAuthError(error, 'Failed to check username availability');
+    }
+  }
+
+  private validateUsername(username: string) {
+    if (!username || username.length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters long');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
+    }
+  }
 
   @Post('login')
   async login(@Body() body: any) {
@@ -27,11 +63,13 @@ export class AndroidAuthController {
           password: body.password,
           name: body.name,
           username: body.username,
+          image: body.avatar || body.image,
+          bio: body.bio,
         },
       });
       return this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
-      this.handleAuthError(error);
+      this.handleAuthError(error, 'Signup failed');
     }
   }
 
@@ -56,6 +94,12 @@ export class AndroidAuthController {
     if (fields.some((f) => !body[f])) {
       throw new BadRequestException('Email, password, name, and username are required');
     }
+
+    if (body.password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long');
+    }
+
+    this.validateUsername(body.username);
   }
 
   private async performSocialLogin(provider: string, data: any) {
@@ -73,9 +117,16 @@ export class AndroidAuthController {
     if (!response || !response.session) {
       throw new BadRequestException(errorMessage);
     }
+
+    // Better-Auth uses 'image' but we also want to provide 'avatar' for compatibility
+    const user = {
+      ...response.user,
+      avatar: response.user.image,
+    };
+
     return {
       token: response.session.token,
-      user: response.user,
+      user,
       session: response.session,
     };
   }
@@ -102,11 +153,11 @@ export class AndroidAuthController {
     };
   }
 
-  private handleAuthError(error: any) {
-    this.logger.error(`Authentication error: ${error.message}`, error.stack);
+  private handleAuthError(error: any, defaultMessage = 'Authentication failed') {
+    this.logger.error(`${defaultMessage}: ${error.message}`, error.stack);
     if (error.status === 401) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    throw new BadRequestException(error.message || 'Authentication failed');
+    throw new BadRequestException(error.message || defaultMessage);
   }
 }
