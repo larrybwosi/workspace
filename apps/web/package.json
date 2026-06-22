@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.0.669",
+  "version": "0.0.671",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001 --webpack",
