@@ -7,9 +7,11 @@ import {
   UnauthorizedException,
   BadRequestException,
   Logger,
+  Req,
 } from '@nestjs/common';
 import { auth } from '../better-auth';
 import { prisma } from '@repo/database';
+import { FastifyRequest } from 'fastify';
 
 @Controller('auth/android')
 export class AndroidAuthController {
@@ -47,9 +49,24 @@ export class AndroidAuthController {
     this.validateLoginInput(email, password);
 
     try {
-      return await this.performLogin(email, password);
+      const response = await auth.api.signInEmail({
+        body: { email, password },
+      });
+      return this.handleAuthResponse(response, 'Invalid credentials');
     } catch (error: any) {
       this.handleAuthError(error);
+    }
+  }
+
+  @Post('refresh')
+  async refresh(@Req() req: FastifyRequest) {
+    try {
+      const response = await auth.api.getSession({
+        headers: req.headers as any,
+      });
+      return await this.handleAuthResponse(response, 'Session expired');
+    } catch (error: any) {
+      this.handleAuthError(error, 'Refresh failed');
     }
   }
 
@@ -67,7 +84,7 @@ export class AndroidAuthController {
           bio: body.bio,
         },
       });
-      return this.handleAuthResponse(response, 'Failed to create account');
+      return await this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
       this.handleAuthError(error, 'Signup failed');
     }
@@ -113,7 +130,7 @@ export class AndroidAuthController {
     }
   }
 
-  private handleAuthResponse(response: any, errorMessage: string) {
+  private async handleAuthResponse(response: any, errorMessage: string) {
     if (!response || !response.session) {
       throw new BadRequestException(errorMessage);
     }
@@ -124,10 +141,21 @@ export class AndroidAuthController {
       avatar: response.user.image,
     };
 
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+    });
+
+    // BigInt needs to be converted to number for JSON serialization
+    const serializedMemberships = memberships.map((m) => ({
+      ...m,
+      permissions: Number(m.permissions),
+    }));
+
     return {
       token: response.session.token,
       user,
       session: response.session,
+      memberships: serializedMemberships,
     };
   }
 
@@ -135,22 +163,6 @@ export class AndroidAuthController {
     if (!email || !password) {
       throw new BadRequestException('Email and password are required');
     }
-  }
-
-  private async performLogin(email: string, password: string) {
-    const response = await auth.api.signInEmail({
-      body: { email, password },
-    });
-
-    if (!response || !response.session) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    return {
-      token: response.session.token,
-      user: response.user,
-      session: response.session,
-    };
   }
 
   private handleAuthError(error: any, defaultMessage = 'Authentication failed') {

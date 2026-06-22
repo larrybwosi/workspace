@@ -31,6 +31,15 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    suspend fun refresh(): Result<Unit> {
+        return try {
+            val response = authApi.refresh()
+            handleAuthResponse(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun googleLogin(idToken: String): Result<Unit> {
         return try {
             val response = authApi.googleLogin(GoogleLoginRequest(idToken))
