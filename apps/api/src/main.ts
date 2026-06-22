@@ -8,6 +8,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
 import multipart from '@fastify/multipart';
+import rawBody from 'fastify-raw-body';
 import { networkInterfaces } from 'os';
 
 // Resolves the first non-internal IPv4 address, mirroring how Next.js
@@ -148,7 +149,7 @@ function renderHomepage(version: string, docsPath: string): string {
       <strong>${version}</strong>
     </div>
     <a class="button" href="${docsPath}">View API Documentation</a>
-    <footer>Powered by NestJS &amp; Fastify</footer>
+    <footer>Powered by Scryme Technologies</footer>
   </div>
 </body>
 </html>`;
@@ -162,11 +163,12 @@ function renderHomepage(version: string, docsPath: string): string {
 async function bootstrap() {
   const env = validateEnv();
 
-  // Configure the Fastify adapter with required limits and rawBody support
-  // enabling rawBody allows Better Auth to parse its own streams where necessary.
+  // Configure the Fastify adapter with required body size limits.
+  // Raw body capture (needed by Better Auth) is registered separately
+  // below via the fastify-raw-body plugin, since FastifyAdapter's
+  // constructor only accepts Fastify's own server options.
   const adapter = new FastifyAdapter({
     bodyLimit: 30 * 1024 * 1024, // 30MB
-    rawBody: true,
   });
 
   // Create the Nest application without disabling the global body parser
@@ -193,6 +195,17 @@ async function bootstrap() {
 
   // Register multipart support safely
   await app.register(multipart as any);
+
+  // Register raw-body capture so request.rawBody is available where
+  // needed (e.g. Better Auth parsing its own streams). global: false
+  // means routes opt in individually via { config: { rawBody: true } }
+  // — adjust to `global: true` if every route needs it.
+  await app.register(rawBody as any, {
+    field: 'rawBody',
+    global: false,
+    encoding: 'utf8',
+    runFirst: true,
+  });
 
   // Serve a simple, clean homepage at the bare root ("/") so visiting the
   // server directly from a browser doesn't show a bare 404. This is
