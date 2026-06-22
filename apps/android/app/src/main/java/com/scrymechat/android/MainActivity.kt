@@ -16,9 +16,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.remote.RealtimeService
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import com.scrymechat.android.ui.login.LoginViewModel
 import com.scrymechat.android.ui.navigation.ScrymeNavHost
 import com.scrymechat.android.ui.navigation.Screen
@@ -70,8 +73,11 @@ class MainActivity : ComponentActivity() {
                 }
 
                 LaunchedEffect(Unit) {
-                    if (sessionManager.getToken() != null) {
-                        startRealtimeService()
+                    sessionManager.getApiUrlFlow().collectLatest {
+                        if (sessionManager.getToken() != null) {
+                            stopService(Intent(this@MainActivity, RealtimeService::class.java))
+                            startRealtimeService()
+                        }
                     }
                 }
 
