@@ -59,6 +59,7 @@ vi.mock('@repo/database', () => ({
     },
     directMessage: {
       findFirst: vi.fn(),
+      create: vi.fn(),
     },
     dMMessage: {
       create: vi.fn(),
@@ -75,6 +76,7 @@ vi.mock('@repo/shared/server', () => ({
     appId: 'test_app_id',
     appCertificate: 'test_cert',
   },
+  publishRealtime: vi.fn().mockResolvedValue(undefined),
   publishToAbly: vi.fn().mockResolvedValue(undefined),
   AblyChannels: {
     user: vi.fn((id: string) => `user:${id}`),
@@ -91,6 +93,7 @@ vi.mock('@repo/shared/server', () => ({
   },
   isUserEligibleForAsset: vi.fn().mockResolvedValue(true),
   logAssetUsage: vi.fn().mockResolvedValue(undefined),
+  createNotifications: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { prisma } from '@repo/database';
@@ -412,8 +415,8 @@ describe('CallsService', () => {
 
     it('should use workspaceSlug in notification when slug is provided but not workspaceId', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'resolved-id' });
-      const { publishToAbly } = await import('@repo/shared/server');
-      const mockPublish = publishToAbly as any;
+      const { publishRealtime } = await import('@repo/shared/server');
+      const mockPublish = publishRealtime as any;
 
       mockPrisma.call.findFirst.mockResolvedValue(null);
       mockPrisma.call.create.mockResolvedValue({
@@ -468,8 +471,8 @@ describe('CallsService', () => {
         workspaceId: 'resolved-ws-id',
         scheduledFor: new Date(),
       });
-      const { publishToAbly } = await import('@repo/shared/server');
-      (publishToAbly as any).mockResolvedValue(undefined);
+      const { publishRealtime } = await import('@repo/shared/server');
+      (publishRealtime as any).mockResolvedValue(undefined);
 
       const body = {
         title: 'Meeting',
@@ -498,8 +501,8 @@ describe('CallsService', () => {
         workspaceId: 'direct-ws-id',
         scheduledFor: new Date(),
       });
-      const { publishToAbly } = await import('@repo/shared/server');
-      (publishToAbly as any).mockResolvedValue(undefined);
+      const { publishRealtime } = await import('@repo/shared/server');
+      (publishRealtime as any).mockResolvedValue(undefined);
 
       const body = {
         title: 'Meeting',
@@ -524,8 +527,8 @@ describe('CallsService', () => {
         id: 'resolved-id',
         members: [{ userId: 'user-1', role: 'member' }],
       });
-      const { publishToAbly } = await import('@repo/shared/server');
-      (publishToAbly as any).mockResolvedValue(undefined);
+      const { publishRealtime } = await import('@repo/shared/server');
+      (publishRealtime as any).mockResolvedValue(undefined);
 
       const scheduledAt = new Date(Date.now() + 3600000).toISOString();
       mockPrisma.call.create.mockResolvedValue({
@@ -551,14 +554,14 @@ describe('CallsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // updateCall – new publishToAbly on call channel for join/leave/end (PR change)
+  // updateCall – new publishRealtime on call channel for join/leave/end (PR change)
   // ─────────────────────────────────────────────────────────────────────────────
-  describe('updateCall – publishToAbly on call channel', () => {
+  describe('updateCall – publishRealtime on call channel', () => {
     const mockUser = { id: 'user-1' } as any;
 
     it('should publish call-joined to the call channel when joining', async () => {
-      const { publishToAbly, AblyChannels } = await import('@repo/shared/server');
-      const mockPublish = publishToAbly as any;
+      const { publishRealtime, AblyChannels } = await import('@repo/shared/server');
+      const mockPublish = publishRealtime as any;
 
       mockPrisma.call.findUnique.mockResolvedValue({
         id: 'call-1',
@@ -580,8 +583,8 @@ describe('CallsService', () => {
     });
 
     it('should publish call-left to the call channel when leaving', async () => {
-      const { publishToAbly } = await import('@repo/shared/server');
-      const mockPublish = publishToAbly as any;
+      const { publishRealtime } = await import('@repo/shared/server');
+      const mockPublish = publishRealtime as any;
 
       mockPrisma.call.findUnique.mockResolvedValue({
         id: 'call-1',
@@ -603,8 +606,8 @@ describe('CallsService', () => {
     });
 
     it('should publish call-ended to call channel when last participant leaves', async () => {
-      const { publishToAbly } = await import('@repo/shared/server');
-      const mockPublish = publishToAbly as any;
+      const { publishRealtime } = await import('@repo/shared/server');
+      const mockPublish = publishRealtime as any;
 
       mockPrisma.call.findUnique.mockResolvedValue({
         id: 'call-1',
@@ -627,8 +630,8 @@ describe('CallsService', () => {
     });
 
     it('should NOT publish call-ended to call channel when there are still active participants', async () => {
-      const { publishToAbly } = await import('@repo/shared/server');
-      const mockPublish = publishToAbly as any;
+      const { publishRealtime } = await import('@repo/shared/server');
+      const mockPublish = publishRealtime as any;
 
       mockPrisma.call.findUnique.mockResolvedValue({
         id: 'call-1',

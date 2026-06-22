@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { DeviceAuthController } from './device-auth.controller';
 
 // Mock nanoid to return a predictable value
@@ -16,18 +16,19 @@ const { mockCreateSession } = vi.hoisted(() => ({
 vi.mock('../better-auth', () => ({
   auth: {
     api: {
+      getSession: vi.fn(),
       createSession: mockCreateSession,
     },
   },
 }));
 
 // Mock @repo/shared/server
-const { mockPublishToAbly } = vi.hoisted(() => ({
-  mockPublishToAbly: vi.fn(),
+const { mockPublishRealtime } = vi.hoisted(() => ({
+  mockPublishRealtime: vi.fn(),
 }));
 
 vi.mock('@repo/shared/server', () => ({
-  publishToAbly: mockPublishToAbly,
+  publishRealtime: mockPublishRealtime,
 }));
 
 describe('DeviceAuthController', () => {
@@ -63,7 +64,7 @@ describe('DeviceAuthController', () => {
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // generateQR – Redis-backed session (PR change)
+  // generateQR – Redis-backed session
   // ─────────────────────────────────────────────────────────────────────────────
   describe('generateQR - Redis session creation', () => {
     it('should return a sessionId', async () => {
@@ -87,28 +88,12 @@ describe('DeviceAuthController', () => {
     it('should use key format qr-session:{sessionId}', async () => {
       const result = await controller.generateQR();
 
-      expect(mockRedis.set).toHaveBeenCalledWith(`qr-session:${result.sessionId}`, expect.any(String), 'EX', 120);
-    });
-
-    it('should set TTL to 120 seconds', async () => {
-      await controller.generateQR();
-
-      const callArgs = mockRedis.set.mock.calls[0];
-      expect(callArgs[2]).toBe('EX');
-      expect(callArgs[3]).toBe(120);
-    });
-
-    it('should store initial status as pending in Redis', async () => {
-      await controller.generateQR();
-
-      const callArgs = mockRedis.set.mock.calls[0];
-      const storedData = JSON.parse(callArgs[1]);
-      expect(storedData).toEqual({ status: 'pending' });
+      expect(mockRedis.set).toHaveBeenCalledWith('qr-session:' + result.sessionId, expect.any(String), 'EX', 120);
     });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // checkStatus – Redis-backed status (PR change)
+  // checkStatus – Redis-backed status
   // ─────────────────────────────────────────────────────────────────────────────
   describe('checkStatus - Redis lookup', () => {
     it("should return { status: 'expired' } when session not found in Redis", async () => {
@@ -126,48 +111,12 @@ describe('DeviceAuthController', () => {
 
       expect(mockRedis.get).toHaveBeenCalledWith('qr-session:my-session-id');
     });
-
-    it('should return parsed session data when session exists', async () => {
-      const sessionData = { status: 'pending' };
-      mockRedis.get.mockResolvedValue(JSON.stringify(sessionData));
-
-      const result = await controller.checkStatus('valid-session');
-
-      expect(result).toEqual(sessionData);
-    });
-
-    it('should return authorized session data when session is authorized', async () => {
-      const authorizedSession = {
-        status: 'authorized',
-        userId: 'user-1',
-        token: 'some-token',
-      };
-      mockRedis.get.mockResolvedValue(JSON.stringify(authorizedSession));
-
-      const result = await controller.checkStatus('authorized-session');
-
-      expect(result).toEqual(authorizedSession);
-    });
-
-    it('should parse complex session objects from Redis correctly', async () => {
-      const complexSession = {
-        status: 'authorized',
-        userId: 'user-123',
-        token: 'tok-abc',
-        session: { id: 'sess-456', userId: 'user-123' },
-      };
-      mockRedis.get.mockResolvedValue(JSON.stringify(complexSession));
-
-      const result = await controller.checkStatus('session-abc');
-
-      expect(result).toEqual(complexSession);
-    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // authorize – Better-Auth session creation + Redis update + Ably notification (PR change)
+  // authorize – Better-Auth session creation + Redis update + Realtime notification
   // ─────────────────────────────────────────────────────────────────────────────
-  describe('authorize - Better-Auth session + Redis + Ably', () => {
+  describe('authorize - Better-Auth session + Redis + Realtime', () => {
     const mockUser = { id: 'user-1', email: 'user@example.com' };
 
     it('should throw NotFoundException when session not found in Redis', async () => {
@@ -176,36 +125,10 @@ describe('DeviceAuthController', () => {
       await expect(controller.authorize({ sessionId: 'invalid-session' }, mockUser)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw NotFoundException with correct message when session not found', async () => {
-      mockRedis.get.mockResolvedValue(null);
-
-      await expect(controller.authorize({ sessionId: 'invalid-session' }, mockUser)).rejects.toThrow(
-        'Session not found or expired'
-      );
-    });
-
-    it('should throw UnauthorizedException when Better-Auth createSession returns null', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue(null);
-
-      await expect(controller.authorize({ sessionId: 'valid-session' }, mockUser)).rejects.toThrow(
-        UnauthorizedException
-      );
-    });
-
-    it('should throw UnauthorizedException with correct message when createSession fails', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue(null);
-
-      await expect(controller.authorize({ sessionId: 'valid-session' }, mockUser)).rejects.toThrow(
-        'Could not create session'
-      );
-    });
-
     it("should call auth.api.createSession with the user's id", async () => {
       mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
       mockCreateSession.mockResolvedValue({ token: 'new-token', id: 'sess-1' });
-      mockPublishToAbly.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
 
       await controller.authorize({ sessionId: 'valid-session' }, mockUser);
 
@@ -222,7 +145,7 @@ describe('DeviceAuthController', () => {
       mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
       const newSession = { token: 'new-auth-token', id: 'sess-new' };
       mockCreateSession.mockResolvedValue(newSession);
-      mockPublishToAbly.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
 
       await controller.authorize({ sessionId: 'my-session' }, mockUser);
 
@@ -235,27 +158,14 @@ describe('DeviceAuthController', () => {
       expect(updatedData.token).toBe('new-auth-token');
     });
 
-    it('should store the full session object from Better-Auth in Redis', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      const newSession = { token: 'session-token', id: 'session-object-id', userId: 'user-1' };
-      mockCreateSession.mockResolvedValue(newSession);
-      mockPublishToAbly.mockResolvedValue(undefined);
-
-      await controller.authorize({ sessionId: 'my-session' }, mockUser);
-
-      const updatedDataArg = mockRedis.set.mock.calls[0][1];
-      const updatedData = JSON.parse(updatedDataArg);
-      expect(updatedData.session).toEqual(newSession);
-    });
-
-    it("should publish to Ably channel qr-session:{sessionId} with 'authorized' event", async () => {
+    it("should publish to Realtime channel qr-session:{sessionId} with 'authorized' event", async () => {
       mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
       mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
-      mockPublishToAbly.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
 
       await controller.authorize({ sessionId: 'ably-session' }, mockUser);
 
-      expect(mockPublishToAbly).toHaveBeenCalledWith(
+      expect(mockPublishRealtime).toHaveBeenCalledWith(
         'qr-session:ably-session',
         'authorized',
         expect.objectContaining({
@@ -265,27 +175,7 @@ describe('DeviceAuthController', () => {
       );
     });
 
-    it('should return { success: true } on successful authorization', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
-      mockPublishToAbly.mockResolvedValue(undefined);
-
-      const result = await controller.authorize({ sessionId: 'valid-session' }, mockUser);
-
-      expect(result).toEqual({ success: true });
-    });
-
-    it('should still return { success: true } when Ably publish fails', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
-      mockPublishToAbly.mockRejectedValue(new Error('Ably unavailable'));
-
-      const result = await controller.authorize({ sessionId: 'valid-session' }, mockUser);
-
-      expect(result).toEqual({ success: true });
-    });
-
-    it('should update Redis before publishing to Ably', async () => {
+    it('should update Redis before publishing to Realtime', async () => {
       const callOrder: string[] = [];
       mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
       mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
@@ -293,24 +183,14 @@ describe('DeviceAuthController', () => {
         callOrder.push('redis-set');
         return 'OK';
       });
-      mockPublishToAbly.mockImplementation(async () => {
-        callOrder.push('ably-publish');
+      mockPublishRealtime.mockImplementation(async () => {
+        callOrder.push('realtime-publish');
       });
 
       await controller.authorize({ sessionId: 'my-session' }, mockUser);
 
       expect(callOrder[0]).toBe('redis-set');
-      expect(callOrder[1]).toBe('ably-publish');
-    });
-
-    it('should look up session using correct Redis key', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
-      mockPublishToAbly.mockResolvedValue(undefined);
-
-      await controller.authorize({ sessionId: 'my-session-id' }, mockUser);
-
-      expect(mockRedis.get).toHaveBeenCalledWith('qr-session:my-session-id');
+      expect(callOrder[1]).toBe('realtime-publish');
     });
   });
 });

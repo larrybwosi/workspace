@@ -71,6 +71,7 @@ export class UsersController {
         banner: true,
         statusText: true,
         statusEmoji: true,
+        bio: true,
         role: true,
         status: true,
         createdAt: true,
@@ -259,16 +260,20 @@ export class UsersController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated' })
   async updateMe(@CurrentUser() user: User, @Body() body: any) {
-    const { name, avatar, banner, statusText, statusEmoji, notificationPreferences } = body;
+    const { name, avatar, image, banner, statusText, statusEmoji, bio, notificationPreferences } = body;
+
+    const profileImage = avatar || image;
 
     return prisma.user.update({
       where: { id: user.id },
       data: {
         name,
-        avatar,
+        avatar: profileImage,
+        image: profileImage,
         banner,
         statusText,
         statusEmoji,
+        bio,
         notificationPreferences: notificationPreferences !== undefined ? notificationPreferences : undefined,
       },
     });

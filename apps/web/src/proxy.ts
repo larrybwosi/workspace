@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
+import { validateEnv } from '@repo/shared';
 
 const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations'];
 const authPrefix = '/api/auth';
@@ -16,7 +17,7 @@ export default async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: request.headers,
   });
-
+  console.log(session);
   if (!session) {
     return NextResponse.redirect(new URL('/login', request.url));
   }

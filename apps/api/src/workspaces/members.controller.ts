@@ -16,7 +16,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { publishToAbly, AblyChannels } from '@repo/shared/server';
+import { publishRealtime, AblyChannels } from '@repo/shared/server';
 
 class UpdateMemberRoleDto {
   @ApiProperty({ enum: ['owner', 'admin', 'member', 'guest'], example: 'admin' })
@@ -152,7 +152,7 @@ export class MembersController {
       },
     });
 
-    await publishToAbly(AblyChannels.user(updatedMember.userId), 'NOTIFICATION', {
+    await publishRealtime(AblyChannels.user(updatedMember.userId), 'NOTIFICATION', {
       type: 'workspace.role_changed',
       workspaceId: workspace.id,
       newRole: role,
@@ -221,7 +221,7 @@ export class MembersController {
       },
     });
 
-    await publishToAbly(AblyChannels.user(memberToRemove.userId), 'NOTIFICATION', {
+    await publishRealtime(AblyChannels.user(memberToRemove.userId), 'NOTIFICATION', {
       type: 'workspace.removed',
       workspaceId: workspace.id,
     });

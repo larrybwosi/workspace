@@ -68,11 +68,6 @@ class RealtimeService : LifecycleService() {
                 Log.d("RealtimeService", "Socket transport opened")
             }
 
-            // Set auth token dynamically
-            // socket.io() returns the Manager, which has an options field
-            // However, it seems the Kotlin/Java client might have different accessors depending on version
-            // For now, let's rely on the Singleton being re-provided if possible or re-initializing the Manager
-
             socket.connect()
             Log.d("RealtimeService", "Socket connecting...")
         } else {

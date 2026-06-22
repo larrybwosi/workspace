@@ -133,8 +133,15 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
 
   async publish(channel: string, event: string, data: any): Promise<void> {
     this.logger.log(`Publishing to ${channel}: ${event}`);
+
+    // Map Ably events to Android-expected Socket.io events
+    let mappedEvent = event;
+    if (event === 'message:sent') mappedEvent = 'message:new';
+    else if (event === 'message:updated') mappedEvent = 'message:update';
+    else if (event === 'notification') mappedEvent = 'notification:new';
+
     const payload = typeof data === 'object' && data !== null ? { ...data, _channel: channel } : data;
-    this.server.to(channel).emit(event, payload);
+    this.server.to(channel).emit(mappedEvent, payload);
   }
 
   @SubscribeMessage('publish')

@@ -18,20 +18,76 @@ export const PropertyValueSchema = z.union([
   z.record(z.string(), z.any()),
 ]);
 
+/**
+ * Validation Schema for Input components
+ */
+export const ValidationSchema = z.object({
+  required: z.boolean().optional(),
+  pattern: z.string().optional(), // Regex pattern
+  minLength: z.number().optional(),
+  maxLength: z.number().optional(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+  errorMessage: z.string().optional(),
+});
+
+export type ValidationSchemaType = z.infer<typeof ValidationSchema>;
+
+/**
+ * Data Source Schema for dynamic content (e.g., Select options)
+ */
+export const DataSourceSchema = z.object({
+  type: z.enum(['STATIC', 'API', 'VARIABLE']),
+  /** For STATIC: the list of items */
+  items: z.array(z.object({
+    label: z.string(),
+    value: z.union([z.string(), z.number(), z.boolean()]),
+  })).optional(),
+  /** For API: the endpoint to fetch from */
+  url: z.string().optional(),
+  method: z.enum(['GET', 'POST']).default('GET').optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  /** For VARIABLE: the key in the message 'data' object */
+  key: z.string().optional(),
+  /** Map the response to the expected format { label, value } */
+  map: z.object({
+    label: z.string(),
+    value: z.string(),
+  }).optional(),
+});
+
+/**
+ * Condition Schema for Visibility and Logic
+ */
+export const ConditionSchema = z.object({
+  /** The field ID to check */
+  field: z.string(),
+  /** The operator to apply */
+  operator: z.enum(['EQUALS', 'NOT_EQUALS', 'CONTAINS', 'GREATER_THAN', 'LESS_THAN', 'EXISTS', 'NOT_EXISTS']),
+  /** The value to compare against */
+  value: z.any().optional(),
+});
+
 // A "Node" is the building block of our message
 // Similar to a GraphQL execution result but for UI components
 export type MessageNode = {
-  /** The type of component (e.g., 'Text', 'Button', 'Card', 'Layout') */
+  /** The type of component (e.g., 'Text.Paragraph', 'Input.Text', 'Layout.Card') */
   type: string;
-  /** Unique identifier for the node within the message */
+  /** Unique identifier for the node - required for inputs to track state */
   id?: string;
   /** Key-value pairs for component-specific configuration */
   properties?: Record<string, any>;
   /** Nested child nodes */
   children?: MessageNode[];
-  /** Optional metadata about this specific node (e.g., visibility, roles) */
+  /** Optional logic to determine if this node should be rendered */
+  condition?: ConditionSchemaType;
+  /** Optional validation rules for input nodes */
+  validation?: ValidationSchemaType;
+  /** Optional metadata about this specific node */
   metadata?: Record<string, any>;
 };
+
+export type ConditionSchemaType = z.infer<typeof ConditionSchema>;
 
 // Zod Schema for recursive MessageNode
 export const MessageNodeSchema: z.ZodType<MessageNode> = z.lazy(() =>
@@ -40,6 +96,8 @@ export const MessageNodeSchema: z.ZodType<MessageNode> = z.lazy(() =>
     id: z.string().optional(),
     properties: z.record(z.string(), z.any()).optional(),
     children: z.array(MessageNodeSchema).optional(),
+    condition: ConditionSchema.optional(),
+    validation: ValidationSchema.optional(),
     metadata: z.record(z.string(), z.any()).optional(),
   })
 );
@@ -52,7 +110,7 @@ export const CustomMessageSchema = z.object({
   version: z.string().default('v1'),
   /** The human-readable title for the message schema/template */
   templateId: z.string().optional(),
-  /** The logical "Type" of the custom message (e.g., 'APPROVAL', 'REPORT') */
+  /** The logical "Type" of the custom message (e.g., 'APPROVAL', 'REPORT', 'FORM') */
   type: z.string(),
   /** Top-level configuration and branding */
   context: z.object({
@@ -77,12 +135,17 @@ export const CustomMessageSchema = z.object({
           type: z.enum(['CALLBACK', 'LINK', 'MODAL']),
           url: z.string().optional(),
           callbackId: z.string().optional(),
+          /** Payload to send back with the callback */
           payload: z.record(z.string(), z.any()).optional(),
+          /** Whether to include all form state in the callback payload */
+          includeFormState: z.boolean().default(true).optional(),
         }),
+        /** Optional condition for showing the action */
+        condition: ConditionSchema.optional(),
       })
     )
     .optional(),
-  /** Shared data used by various nodes in the message */
+  /** Shared data used for variable interpolation and logic */
   data: z.record(z.string(), z.any()).optional(),
   /** Constraints for visibility and interaction */
   constraints: z
@@ -138,6 +201,7 @@ export const createApprovalMessage = (data: {
         type: 'CALLBACK',
         callbackId: data.callbackId,
         payload: { action: 'approve' },
+        includeFormState: true,
       },
     },
     {
@@ -149,6 +213,7 @@ export const createApprovalMessage = (data: {
         type: 'CALLBACK',
         callbackId: data.callbackId,
         payload: { action: 'reject' },
+        includeFormState: true,
       },
     },
   ],

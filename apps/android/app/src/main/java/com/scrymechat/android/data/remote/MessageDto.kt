@@ -18,7 +18,10 @@ data class MessageDto(
     val isEdited: Boolean = false,
     val replyToId: String? = null,
     val replyTo: ReplyToDto? = null,
-    val readByCurrentUser: Boolean = false
+    val readByCurrentUser: Boolean = false,
+    val threadId: String? = null,
+    val replyCount: Int = 0,
+    val isPinned: Boolean = false
 )
 
 data class AttachmentDto(

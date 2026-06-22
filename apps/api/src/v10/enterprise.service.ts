@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { publishToAbly, AblyChannels } from '@repo/shared/server';
+import { publishRealtime, AblyChannels } from '@repo/shared/server';
 
 @Injectable()
 export class V10EnterpriseService {
@@ -34,8 +34,8 @@ export class V10EnterpriseService {
       },
     });
 
-    // Notify clients via Ably
-    await publishToAbly(AblyChannels.workspace(department.workspaceId), 'DEPARTMENT_ANNOUNCEMENT_CREATE', {
+    // Notify clients via Realtime
+    await publishRealtime(AblyChannels.workspace(department.workspaceId), 'DEPARTMENT_ANNOUNCEMENT_CREATE', {
       announcement,
     });
 

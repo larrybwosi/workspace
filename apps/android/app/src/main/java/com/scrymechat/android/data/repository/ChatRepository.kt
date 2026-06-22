@@ -6,6 +6,7 @@ import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,6 +32,25 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    fun getChannelMessagesFlow(channelId: String): Flow<List<MessageEntity>> = dao.getMessagesForChannelFlow(channelId)
+        .map { it.processCustomMessages() }
+
+    fun getThreadMessagesFlow(threadId: String): Flow<List<MessageEntity>> = dao.getMessagesForThreadFlow(threadId)
+        .map { it.processCustomMessages() }
+
+    private fun List<MessageEntity>.processCustomMessages(): List<MessageEntity> {
+        return this.onEach { message ->
+            if (message.customMessage == null && (message.messageType == "custom" || message.messageType == "approval" || message.messageType == "report")) {
+                try {
+                    val json = com.google.gson.Gson().toJson(message.metadata)
+                    message.customMessage = com.google.gson.Gson().fromJson(json, CustomMessageDto::class.java)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
     suspend fun sendChannelMessage(channelId: String, content: String, replyToId: String? = null): Resource<MessageEntity> {
         return try {
             val response = api.sendChannelMessage(channelId, SendMessageRequest(content, replyToId))
@@ -38,6 +58,34 @@ class ChatRepository @Inject constructor(
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
                 Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun sendThreadMessage(channelId: String, threadId: String, content: String): Resource<MessageEntity> {
+        return try {
+            val response = api.sendThreadMessage(channelId, threadId, SendMessageRequest(content))
+            if (response.isSuccessful && response.body() != null) {
+                val entity = response.body()!!.toEntity()
+                dao.insertMessage(entity)
+                Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun triggerAction(slug: String, messageId: String, actionId: String, body: Map<String, Any>): Resource<Map<String, Any>> {
+        return try {
+            val response = api.triggerMessageAction(slug, messageId, actionId, body)
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!)
             } else {
                 Resource.Error(response.message())
             }
@@ -92,6 +140,26 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    fun getDmMessagesFlow(dmId: String): Flow<List<MessageEntity>> = dao.getMessagesForDmFlow(dmId)
+        .map { it.processCustomMessages() }
+
+    fun getThreadMessages(channelId: String, threadId: String): Flow<Resource<List<MessageEntity>>> = flow {
+        emit(Resource.Loading())
+        try {
+            val response = api.getThreadMessages(channelId, threadId)
+            if (response.isSuccessful) {
+                val dtos = response.body()?.messages ?: emptyList()
+                val entities = dtos.map { it.toEntity() }
+                dao.insertMessages(entities)
+                emit(Resource.Success(entities))
+            } else {
+                emit(Resource.Error(response.message()))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+        }
+    }
+
     suspend fun sendDmMessage(conversationId: String, content: String, replyToId: String? = null): Resource<MessageEntity> {
         return try {
             val response = api.sendDmMessage(conversationId, SendMessageRequest(content, replyToId))
@@ -99,6 +167,32 @@ class ChatRepository @Inject constructor(
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
                 Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun markDmRead(dmId: String): Resource<Unit> {
+        return try {
+            val response = api.markDmRead(dmId)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun markChannelRead(channelId: String): Resource<Unit> {
+        return try {
+            val response = api.markChannelRead(channelId)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
             } else {
                 Resource.Error(response.message())
             }
@@ -143,23 +237,39 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    private fun MessageDto.toEntity() = MessageEntity(
-        id = id,
-        content = content,
-        channelId = channelId,
-        dmId = dmId,
-        senderId = senderId ?: authorId ?: userId ?: "",
-        senderName = user?.name ?: author?.name,
-        senderAvatar = user?.avatar ?: author?.avatar,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        isEdited = isEdited,
-        replyToId = replyToId,
-        replyToSenderName = replyTo?.sender?.name,
-        readByCurrentUser = readByCurrentUser,
-        attachments = attachments,
-        metadata = metadata,
-        reactions = reactions,
-        messageType = (metadata?.get("type") as? String) ?: "standard"
-    )
+    private fun MessageDto.toEntity(): MessageEntity {
+        val type = (metadata?.get("type") as? String) ?: "standard"
+        val entity = MessageEntity(
+            id = id,
+            content = content,
+            channelId = channelId,
+            dmId = dmId,
+            senderId = senderId ?: authorId ?: userId ?: "",
+            senderName = user?.name ?: author?.name,
+            senderAvatar = user?.avatar ?: author?.avatar,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            isEdited = isEdited,
+            replyToId = replyToId,
+            replyToSenderName = replyTo?.sender?.name,
+            readByCurrentUser = readByCurrentUser,
+            attachments = attachments,
+            metadata = metadata,
+            reactions = reactions,
+            messageType = type,
+            threadId = threadId,
+            replyCount = replyCount,
+            isPinned = isPinned
+        )
+
+        if (type == "custom" || type == "approval" || type == "report") {
+            try {
+                val json = com.google.gson.Gson().toJson(metadata)
+                entity.customMessage = com.google.gson.Gson().fromJson(json, CustomMessageDto::class.java)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return entity
+    }
 }

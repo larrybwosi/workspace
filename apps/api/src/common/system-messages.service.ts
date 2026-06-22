@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { getAblyRest, AblyChannels, AblyEvents } from '@repo/shared/server';
+import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 
 interface SystemMessageOptions {
   channelId: string;
@@ -25,11 +25,7 @@ export class SystemMessagesService {
     });
 
     if (options.broadcast !== false) {
-      const ably = getAblyRest();
-      if (ably) {
-        const channel = ably.channels.get(AblyChannels.thread(options.channelId));
-        await channel.publish(AblyEvents.MESSAGE_SENT, message);
-      }
+      await publishRealtime(AblyChannels.channel(options.channelId), AblyEvents.MESSAGE_SENT, message);
     }
 
     return message;

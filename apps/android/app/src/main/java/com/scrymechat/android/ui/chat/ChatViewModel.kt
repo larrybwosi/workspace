@@ -1,9 +1,13 @@
 package com.scrymechat.android.ui.chat
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.entities.MessageEntity
+import com.scrymechat.android.data.remote.MessageActionDto
 import com.scrymechat.android.data.repository.ChatRepository
 import com.scrymechat.android.data.repository.RealtimeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,28 +19,62 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val realtimeRepository: RealtimeRepository,
-    private val dmRepository: com.scrymechat.android.data.repository.DmRepository
+    private val dmRepository: com.scrymechat.android.data.repository.DmRepository,
+    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
+    private val _formStates = MutableStateFlow<Map<String, Map<String, Any>>>(emptyMap())
+    val formStates: StateFlow<Map<String, Map<String, Any>>> = _formStates.asStateFlow()
+
+    private val _loadingActions = MutableStateFlow<Set<String>>(emptySet())
+    val loadingActions: StateFlow<Set<String>> = _loadingActions.asStateFlow()
+
     private var currentChannelId: String? = null
     private var currentDmId: String? = null
+    private var currentThreadId: String? = null
+    private var currentWorkspaceSlug: String? = null
 
     init {
         observeRealtimeMessages()
         observeTypingStatus()
     }
 
+    fun setWorkspaceSlug(slug: String) {
+        currentWorkspaceSlug = slug
+    }
+
     fun setChannel(channelId: String) {
-        if (currentChannelId == channelId) return
+        if (currentChannelId == channelId && currentThreadId == null) return
 
         currentChannelId?.let { realtimeRepository.leaveRoom("channel:$it") }
+        currentThreadId?.let { realtimeRepository.leaveRoom("thread:$it") }
         currentChannelId = channelId
         currentDmId = null
+        currentThreadId = null
+
+        _uiState.update { it.copy(isThread = false, threadRootMessage = null) }
 
         realtimeRepository.joinRoom("channel:$channelId")
+        loadMessages()
+    }
+
+    fun setThread(channelId: String, message: MessageEntity) {
+        val threadId = message.id
+        if (currentThreadId == threadId) return
+
+        currentChannelId?.let { realtimeRepository.leaveRoom("channel:$it") }
+        currentThreadId?.let { realtimeRepository.leaveRoom("thread:$it") }
+
+        currentChannelId = channelId
+        currentThreadId = threadId
+        currentDmId = null
+
+        _uiState.update { it.copy(isThread = true, threadRootMessage = message) }
+
+        realtimeRepository.joinRoom("thread:$threadId")
         loadMessages()
     }
 
@@ -65,26 +103,32 @@ class ChatViewModel @Inject constructor(
     private fun loadMessages() {
         val channelId = currentChannelId
         val dmId = currentDmId
+        val threadId = currentThreadId
+
+        viewModelScope.launch {
+            when {
+                threadId != null && channelId != null -> chatRepository.getThreadMessages(channelId, threadId).collect { resource ->
+                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
+                }
+                channelId != null -> chatRepository.getChannelMessages(channelId).collect { resource ->
+                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
+                }
+                dmId != null -> chatRepository.getDmMessages(dmId).collect { resource ->
+                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
+                }
+            }
+        }
 
         viewModelScope.launch {
             val flow = when {
-                channelId != null -> chatRepository.getChannelMessages(channelId)
-                dmId != null -> chatRepository.getDmMessages(dmId)
+                threadId != null -> chatRepository.getThreadMessagesFlow(threadId)
+                channelId != null -> chatRepository.getChannelMessagesFlow(channelId)
+                dmId != null -> chatRepository.getDmMessagesFlow(dmId)
                 else -> return@launch
             }
 
-            flow.collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        _uiState.update { it.copy(messages = resource.data ?: emptyList(), isLoading = false) }
-                    }
-                    is Resource.Error -> {
-                        _uiState.update { it.copy(error = resource.message, isLoading = false) }
-                    }
-                    is Resource.Loading -> {
-                        _uiState.update { it.copy(isLoading = true) }
-                    }
-                }
+            flow.collect { messages ->
+                _uiState.update { it.copy(messages = messages, isLoading = false) }
             }
         }
     }
@@ -118,9 +162,11 @@ class ChatViewModel @Inject constructor(
     fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null) {
         val channelId = targetChannelId ?: currentChannelId
         val dmId = currentDmId
+        val threadId = currentThreadId
 
         viewModelScope.launch {
             val result = when {
+                threadId != null && channelId != null -> chatRepository.sendThreadMessage(channelId, threadId, content)
                 channelId != null -> chatRepository.sendChannelMessage(channelId, content, replyToId)
                 dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId)
                 else -> return@launch
@@ -156,11 +202,98 @@ class ChatViewModel @Inject constructor(
         }
         realtimeRepository.sendTyping(room, userId, userName)
     }
+
+    fun updateFormState(messageId: String, fieldId: String, value: Any) {
+        _formStates.update { current ->
+            val messageForm = current[messageId]?.toMutableMap() ?: mutableMapOf()
+            messageForm[fieldId] = value
+            current + (messageId to messageForm)
+        }
+    }
+
+    fun handleMessageAction(context: Context, message: MessageEntity, action: MessageActionDto, formState: Map<String, Any>) {
+        if (action.id == "add_reaction") {
+            val emoji = formState["emoji"] as? String ?: return
+            toggleReaction(message.id, emoji)
+            return
+        }
+
+        when (action.handler.type) {
+            "LINK" -> {
+                action.handler.url?.let { url ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                }
+            }
+            "CALLBACK" -> {
+                viewModelScope.launch {
+                    val workspaceSlug = currentWorkspaceSlug ?: return@launch
+                    _loadingActions.update { it + message.id }
+                    try {
+                        val payload = mutableMapOf<String, Any>()
+                        action.handler.payload?.let { payload.putAll(it) }
+
+                        val requestBody = mutableMapOf<String, Any>()
+                        requestBody["payload"] = payload
+                        if (action.handler.includeFormState) {
+                            requestBody["formState"] = formState
+                        }
+
+                        val result = chatRepository.triggerAction(workspaceSlug, message.id, action.id, requestBody)
+                        if (result is Resource.Error) {
+                            _uiState.update { it.copy(error = result.message) }
+                        }
+                    } finally {
+                        _loadingActions.update { it - message.id }
+                    }
+                }
+            }
+            "MODAL" -> {
+                val customMessage = message.customMessage ?: return
+                _uiState.update { it.copy(activeModal = ModalState(message.id, customMessage)) }
+            }
+        }
+    }
+
+    fun dismissModal() {
+        _uiState.update { it.copy(activeModal = null) }
+    }
+
+    fun toggleReaction(messageId: String, emoji: String) {
+        val channelId = currentChannelId
+        val dmId = currentDmId
+
+        viewModelScope.launch {
+            val result = if (channelId != null) {
+                chatRepository.addReaction(channelId, messageId, emoji, true)
+            } else if (dmId != null) {
+                chatRepository.addReaction(dmId, messageId, emoji, false)
+            } else return@launch
+
+            if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            } else {
+                loadMessages() // Refresh to show reaction
+            }
+        }
+    }
+
+    fun downloadAttachment(url: String, fileName: String, mimeType: String? = null) {
+        storageRepository.downloadFile(url, fileName, mimeType)
+    }
 }
 
 data class ChatUiState(
     val messages: List<MessageEntity> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val typingUsers: List<String> = emptyList()
+    val typingUsers: List<String> = emptyList(),
+    val activeModal: ModalState? = null,
+    val isThread: Boolean = false,
+    val threadRootMessage: MessageEntity? = null
+)
+
+data class ModalState(
+    val messageId: String,
+    val customMessage: com.scrymechat.android.data.remote.CustomMessageDto
 )

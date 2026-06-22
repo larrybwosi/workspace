@@ -14,7 +14,7 @@ import { CurrentUser } from '../current-user.decorator';
 import { nanoid } from 'nanoid';
 import Redis from 'ioredis';
 import { auth } from '../better-auth';
-import { publishToAbly } from '@repo/shared/server';
+import { publishRealtime } from '@repo/shared/server';
 
 @Controller('auth/device')
 export class DeviceAuthController {
@@ -70,11 +70,11 @@ export class DeviceAuthController {
 
     await this.redis.set(key, JSON.stringify(payload), 'EX', 120);
 
-    // Notify desktop client via Ably for instant update
+    // Notify desktop client via Realtime for instant update
     try {
-      await publishToAbly(`qr-session:${body.sessionId}`, 'authorized', payload);
+      await publishRealtime(`qr-session:${body.sessionId}`, 'authorized', payload);
     } catch (e) {
-      console.error('Failed to publish Ably notification for QR auth', e);
+      console.error('Failed to publish realtime notification for QR auth', e);
     }
 
     return { success: true };

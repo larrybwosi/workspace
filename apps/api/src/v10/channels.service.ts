@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
-import { publishToAbly, AblyChannels, AblyEvents, notifyAppExclusive } from '@repo/shared/server';
+import { publishRealtime, AblyChannels, AblyEvents, notifyAppExclusive } from '@repo/shared/server';
 import { hasPermission, Permissions } from '../common/permissions';
 
 @Injectable()
@@ -147,7 +147,7 @@ export class V10ChannelsService {
       },
     });
 
-    await publishToAbly(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, {
+    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, {
       message: {
         ...updatedMessage,
         user: {
@@ -230,7 +230,7 @@ export class V10ChannelsService {
       where: { id: messageId },
     });
 
-    await publishToAbly(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
+    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
       messageId,
       channelId,
     });
@@ -320,7 +320,7 @@ export class V10ChannelsService {
     }
 
     // Notify clients
-    await publishToAbly(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, {
+    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, {
       message: {
         ...message,
         user: {
