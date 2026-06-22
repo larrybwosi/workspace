@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { auth } from '../better-auth';
 import { prisma } from '@repo/database';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 
 @Controller('auth/android')
 export class AndroidAuthController {
@@ -59,10 +59,10 @@ export class AndroidAuthController {
   }
 
   @Post('refresh')
-  async refresh(@Req() req: Request) {
+  async refresh(@Req() req: FastifyRequest) {
     try {
       const response = await auth.api.getSession({
-        headers: req.headers,
+        headers: req.headers as any,
       });
       return await this.handleAuthResponse(response, 'Session expired');
     } catch (error: any) {
