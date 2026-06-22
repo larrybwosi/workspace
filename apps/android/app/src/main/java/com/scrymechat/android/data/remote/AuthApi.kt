@@ -16,6 +16,9 @@ interface AuthApi {
         @Body request: SignUpRequest
     ): Response<LoginResponse>
 
+    @POST("auth/android/refresh")
+    suspend fun refresh(): Response<LoginResponse>
+
     @POST("auth/android/social/google")
     suspend fun googleLogin(
         @Body request: GoogleLoginRequest
