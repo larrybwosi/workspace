@@ -23,8 +23,8 @@ class CreateWorkspaceDto {
   @ApiProperty({ example: 'My Workspace' })
   name: string;
 
-  @ApiProperty({ example: 'my-workspace' })
-  slug: string;
+  @ApiProperty({ required: false, example: 'my-workspace' })
+  slug?: string;
 
   @ApiProperty({ required: false, example: 'https://example.com/icon.png' })
   icon?: string;
@@ -68,7 +68,8 @@ const createWorkspaceSchema = z.object({
     .string()
     .min(1)
     .max(50)
-    .regex(/^[a-z0-9-]+$/),
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   icon: z.string().optional(),
   description: z.string().optional(),
   isPublic: z.boolean().optional(),
@@ -162,15 +163,32 @@ export class WorkspacesController {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const existingWorkspace = await prisma.workspace.findUnique({
-      where: { slug: validatedData.data.slug },
-    });
+    const { name, icon, description, isPublic, industry } = validatedData.data;
+    let slug = validatedData.data.slug;
 
-    if (existingWorkspace) {
-      throw new BadRequestException('Workspace slug already taken');
+    if (!slug) {
+      slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      // Check for collision and append random suffix if needed
+      const existingWorkspace = await prisma.workspace.findUnique({
+        where: { slug },
+      });
+
+      if (existingWorkspace) {
+        slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+      }
+    } else {
+      const existingWorkspace = await prisma.workspace.findUnique({
+        where: { slug },
+      });
+
+      if (existingWorkspace) {
+        throw new BadRequestException('Workspace slug already taken');
+      }
     }
-
-    const { name, slug, icon, description, isPublic, industry } = validatedData.data;
 
     return prisma.workspace.create({
       data: {
