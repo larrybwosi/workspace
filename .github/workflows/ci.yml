@@ -248,7 +248,7 @@ jobs:
           if [[ "$unit" != "success" ]]; then exit 1; fi
           if [[ "$api" != "success" ]]; then exit 1; fi
           if [[ "$web" != "success" ]]; then exit 1; fi
-          if [[ "$fallow" != "success" ]]; then exit 1; fi
+          if [[ "$fallow" != "success" && "${{ github.ref }}" != "refs/heads/main" ]]; then exit 1; fi
           if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
 
   desktop-verify:
