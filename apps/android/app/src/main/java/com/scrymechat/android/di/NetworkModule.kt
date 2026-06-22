@@ -101,10 +101,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideSocket(sessionManager: SessionManager): Socket {
-        val options = IO.Options.builder()
-            .setAuth(mapOf("token" to sessionManager.getToken()))
-            .build()
+    fun provideSocket(okHttpClient: OkHttpClient, sessionManager: SessionManager): Socket {
+        val options = IO.Options()
+        options.callFactory = okHttpClient
+        options.webSocketFactory = okHttpClient
+        options.auth = mapOf("token" to sessionManager.getToken())
+
         val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
         return IO.socket(URI.create(baseUrl), options)
     }

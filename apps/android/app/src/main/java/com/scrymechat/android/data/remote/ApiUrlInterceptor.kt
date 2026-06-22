@@ -15,8 +15,10 @@ class ApiUrlInterceptor @Inject constructor(
         val customUrl = sessionManagerProvider.get().getApiUrl()
 
         // Only intercept requests to our own API.
-        // We identify them if they are going to localhost (the default) or if they contain "/api/".
-        val isAppApiRequest = request.url.host == "localhost" || request.url.encodedPath.contains("/api/")
+        // We identify them if they are going to localhost (the default) or if they contain "/api/" or "/socket.io/".
+        val isAppApiRequest = request.url.host == "localhost" ||
+                request.url.encodedPath.contains("/api/") ||
+                request.url.encodedPath.contains("/socket.io/")
 
         if (customUrl != null && isAppApiRequest) {
             val newUrl = customUrl.toHttpUrlOrNull()
