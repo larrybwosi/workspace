@@ -138,7 +138,7 @@ class FriendsRepository @Inject constructor(
         banner = banner,
         statusText = statusText,
         statusEmoji = statusEmoji,
-        role = role,
-        status = status
+        role = role ?: "user",
+        status = status ?: "offline"
     )
 }
