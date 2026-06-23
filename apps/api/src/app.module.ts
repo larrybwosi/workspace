@@ -28,7 +28,7 @@ import { ScheduledNotificationsModule } from './scheduled-notifications/schedule
 import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
 import { AndroidAuthModule } from './auth/android-auth/android-auth.module';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { auth } from './auth/better-auth';
+import { auth } from '@repo/auth';
 
 @Module({
   imports: [

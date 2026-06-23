@@ -1,11 +1,11 @@
 {
   "name": "@repo/auth",
   "version": "0.0.676",
-  "main": "./src/auth.ts",
-  "types": "./src/auth.ts",
+  "main": "./auth.ts",
+  "types": "./auth.ts",
   "private": true,
   "exports": {
-    ".": "./src/auth.ts"
+    ".": "./auth.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -16,7 +16,7 @@
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
-    "better-auth": "^1.4.19",
+    "better-auth": "1.6.20",
     "typescript": "^6.0.3",
     "zod": "latest"
   },
