@@ -1,4 +1,4 @@
-import { auth } from './better-auth';
+import { auth } from '@repo/auth';
 
 export type Auth = typeof auth;
 

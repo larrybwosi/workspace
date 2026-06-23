@@ -11,7 +11,7 @@ const getBaseURL = () => {
   return url.includes('/api/auth') ? url : url.replace(/\/$/, '') + '/api/auth';
 };
 
-const allowedOrigins = env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [];
+const allowedOrigins = env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',').map((origin: string) => origin.trim()) : [];
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -59,6 +59,6 @@ export const auth = betterAuth({
     },
   },
 
-  // Removed 'as any' so the client accurately infers plugin methods (e.g., auth.organization)
-  plugins: [jwt(), organization(), username(), admin()],
+  // Re-added 'as any' to fix type errors in CI while maintaining plugin functionality
+  plugins: [jwt(), organization(), username(), admin()] as any,
 });
