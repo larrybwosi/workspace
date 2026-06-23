@@ -8,7 +8,7 @@ data class LoginRequest(
 data class LoginResponse(
     val token: String,
     val user: UserDto,
-    val session: SessionDto,
+    val session: SessionDto?,
     val memberships: List<WorkspaceMemberDto>? = null
 )
 
