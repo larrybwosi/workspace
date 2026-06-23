@@ -10,6 +10,7 @@ import { validateEnv } from '@repo/shared';
 import multipart from '@fastify/multipart';
 import rawBody from 'fastify-raw-body';
 import { networkInterfaces } from 'os';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 // Resolves the first non-internal IPv4 address, mirroring how Next.js
 // determines the "Network" URL shown alongside "Local" on startup.
@@ -172,13 +173,15 @@ async function bootstrap() {
   });
 
   // Create the Nest application without disabling the global body parser
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
+    bodyParser: false, // required by @thallesp/nestjs-better-auth; it re-adds parsers itself
+  });
 
   app.enableCors({
     credentials: true,
     origin: true,
   });
-
+  // app.useGlobalFilters(new AllExceptionsFilter());
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
   // Log every incoming request: method, path, status code, and response time
