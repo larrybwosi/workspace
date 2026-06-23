@@ -1,6 +1,6 @@
 {
   "name": "@repo/auth",
-  "version": "0.0.684",
+  "version": "0.0.685",
   "main": "./auth.ts",
   "types": "./auth.ts",
   "private": true,
