@@ -69,7 +69,7 @@ export class AndroidAuthController {
           bio: body.bio,
         } as any,
       });
-      return this.handleAuthResponse(response, 'Failed to create account');
+      return await this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
       this.handleAuthError(error, 'Signup failed');
     }
@@ -121,16 +121,29 @@ export class AndroidAuthController {
       const response = await auth.api.signInSocial({
         body: { provider, ...data },
       });
-      return this.handleAuthResponse(response, `${provider} authentication failed`);
+      return await this.handleAuthResponse(response, `${provider} authentication failed`);
     } catch (error: any) {
       this.handleAuthError(error);
     }
   }
 
-  private handleAuthResponse(response: any, errorMessage: string) {
+  private async handleAuthResponse(response: any, errorMessage: string) {
     // Check for either response.token OR response.session to verify success
     if (!response || (!response.token && !response.session)) {
       throw new BadRequestException(errorMessage);
+    }
+
+    let session = response.session;
+    const token = response.token || response.session?.token;
+
+    // If session is missing but we have a token, try to fetch it
+    if (!session && token) {
+      const sessionData = await auth.api.getSession({
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+      session = sessionData?.session;
     }
 
     const user = {
@@ -139,10 +152,9 @@ export class AndroidAuthController {
     };
 
     return {
-      // Fallback gracefully depending on where the token is located
-      token: response.token || response.session?.token,
+      token,
       user,
-      session: response.session || null,
+      session: session || null,
     };
   }
 
@@ -157,13 +169,11 @@ export class AndroidAuthController {
       body: { email, password },
     })) as any;
 
-    console.log(response);
-
-    if (!response || !response.token) {
+    if (!response || (!response.token && !response.session)) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.handleAuthResponse(response, 'Invalid credentials');
+    return await this.handleAuthResponse(response, 'Invalid credentials');
   }
 
   private handleAuthError(error: any, defaultMessage = 'Authentication failed') {
