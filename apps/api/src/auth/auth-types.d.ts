@@ -5,6 +5,8 @@ export type Auth = typeof auth;
 declare module 'better-auth' {
   interface User {
     role: string;
+    username: string;
+    bio?: string;
   }
   interface BetterAuth {
     api: {

@@ -51,7 +51,7 @@ export class DeviceAuthController {
 
     // Create a new session for the user via Better-Auth
     // We use the auth.api.createSession which is part of Better-Auth's internal API
-    const newSession = await auth.api.createSession({
+    const newSession = await (auth.api as any).createSession({
       body: {
         userId: user.id,
       },
