@@ -25,7 +25,7 @@
     "agora-token": "latest",
     "ai": "latest",
     "axios": "1.14.0",
-    "better-auth": "1.6.0",
+    "better-auth": "1.6.20",
     "clsx": "^2.1.1",
     "date-fns": "latest",
     "firebase": "latest",

@@ -1,17 +1,10 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Query,
-  Body,
-  UnauthorizedException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Post, Get, Query, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { auth } from '../better-auth';
 import { prisma } from '@repo/database';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 
 @Controller('android-auth')
+@AllowAnonymous()
 export class AndroidAuthController {
   private readonly logger = new Logger(AndroidAuthController.name);
 
@@ -62,7 +55,7 @@ export class AndroidAuthController {
           email: body.email,
           password: body.password,
           name: body.name,
-          username: body.username,
+          // username: body.username,
           image: body.avatar || body.image,
           bio: body.bio,
         },
@@ -91,7 +84,7 @@ export class AndroidAuthController {
 
   private validateSignupInput(body: any) {
     const fields = ['email', 'password', 'name', 'username'];
-    if (fields.some((f) => !body[f])) {
+    if (fields.some(f => !body[f])) {
       throw new BadRequestException('Email, password, name, and username are required');
     }
 
@@ -141,15 +134,16 @@ export class AndroidAuthController {
     const response = await auth.api.signInEmail({
       body: { email, password },
     });
+    console.log(response);
 
-    if (!response || !response.session) {
+    if (!response || !response.token) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     return {
-      token: response.session.token,
+      token: response.token,
       user: response.user,
-      session: response.session,
+      session: response,
     };
   }
 
