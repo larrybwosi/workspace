@@ -55,10 +55,10 @@ export class AndroidAuthController {
           email: body.email,
           password: body.password,
           name: body.name,
-          // username: body.username,
+          username: body.username,
           image: body.avatar || body.image,
           bio: body.bio,
-        },
+        } as any,
       });
       return this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
@@ -131,20 +131,15 @@ export class AndroidAuthController {
   }
 
   private async performLogin(email: string, password: string) {
-    const response = await auth.api.signInEmail({
+    const response = (await auth.api.signInEmail({
       body: { email, password },
-    });
-    console.log(response);
+    })) as any;
 
-    if (!response || !response.token) {
+    if (!response || !response.session) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return {
-      token: response.token,
-      user: response.user,
-      session: response,
-    };
+    return this.handleAuthResponse(response, 'Invalid credentials');
   }
 
   private handleAuthError(error: any, defaultMessage = 'Authentication failed') {
