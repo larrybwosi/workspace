@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable, Logger } from '@nestjs/common';
-import { auth } from '../../auth/better-auth';
+import { auth } from '@repo/auth';
 import { setSocketioProvider, RealtimeProvider } from '@repo/shared/server';
 
 @Injectable()

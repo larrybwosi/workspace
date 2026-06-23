@@ -1,14 +1,33 @@
 import { Controller, Post, Get, Query, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
-import { auth } from '../better-auth';
+import { auth } from '@repo/auth';
 import { prisma } from '@repo/database';
-import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
+import { AllowAnonymous, Session, UserSession } from '@thallesp/nestjs-better-auth';
 
 @Controller('android-auth')
-@AllowAnonymous()
 export class AndroidAuthController {
   private readonly logger = new Logger(AndroidAuthController.name);
 
+  /**
+   * Protected route to retrieve the current user session.
+   * Automatically guarded by nestjs-better-auth's global guard.
+   */
+  @Get('me')
+  async getProfile(@Session() session: UserSession) {
+    if (!session) {
+      throw new UnauthorizedException('No active session found');
+    }
+
+    return {
+      user: {
+        ...session.user,
+        avatar: session.user.image, // Maintaining avatar mapping for compatibility
+      },
+      session: session.session,
+    };
+  }
+
   @Get('check-username')
+  @AllowAnonymous()
   async checkUsername(@Query('username') username: string) {
     this.validateUsername(username);
 
@@ -24,17 +43,8 @@ export class AndroidAuthController {
     }
   }
 
-  private validateUsername(username: string) {
-    if (!username || username.length < 3) {
-      throw new BadRequestException('Username must be at least 3 characters long');
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
-    }
-  }
-
   @Post('login')
+  @AllowAnonymous()
   async login(@Body() body: any) {
     const { email, password } = body;
     this.validateLoginInput(email, password);
@@ -47,6 +57,7 @@ export class AndroidAuthController {
   }
 
   @Post('signup')
+  @AllowAnonymous()
   async signup(@Body() body: any) {
     this.validateSignupInput(body);
     try {
@@ -67,6 +78,7 @@ export class AndroidAuthController {
   }
 
   @Post('social/google')
+  @AllowAnonymous()
   async googleLogin(@Body() body: any) {
     if (!body.idToken) {
       throw new BadRequestException('Google idToken is required');
@@ -75,11 +87,22 @@ export class AndroidAuthController {
   }
 
   @Post('social/github')
+  @AllowAnonymous()
   async githubLogin(@Body() body: any) {
     if (!body.code) {
       throw new BadRequestException('GitHub authorization code is required');
     }
     return this.performSocialLogin('github', { code: body.code });
+  }
+
+  private validateUsername(username: string) {
+    if (!username || username.length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters long');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
+    }
   }
 
   private validateSignupInput(body: any) {
@@ -111,7 +134,6 @@ export class AndroidAuthController {
       throw new BadRequestException(errorMessage);
     }
 
-    // Better-Auth uses 'image' but we also want to provide 'avatar' for compatibility
     const user = {
       ...response.user,
       avatar: response.user.image,
@@ -135,7 +157,9 @@ export class AndroidAuthController {
       body: { email, password },
     })) as any;
 
-    if (!response || !response.session) {
+    console.log(response);
+
+    if (!response || !response.token) {
       throw new UnauthorizedException('Invalid credentials');
     }
 

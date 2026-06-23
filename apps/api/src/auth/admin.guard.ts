@@ -1,5 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { auth } from './better-auth';
+import { auth } from '@repo/auth';
 
 @Injectable()
 export class AdminGuard implements CanActivate {

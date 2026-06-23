@@ -164,17 +164,12 @@ function renderHomepage(version: string, docsPath: string): string {
 async function bootstrap() {
   const env = validateEnv();
 
-  // Configure the Fastify adapter with required body size limits.
-  // Raw body capture (needed by Better Auth) is registered separately
-  // below via the fastify-raw-body plugin, since FastifyAdapter's
-  // constructor only accepts Fastify's own server options.
   const adapter = new FastifyAdapter({
     bodyLimit: 30 * 1024 * 1024, // 30MB
   });
 
-  // Create the Nest application without disabling the global body parser
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
-    bodyParser: false, // required by @thallesp/nestjs-better-auth; it re-adds parsers itself
+    bodyParser: false,
   });
 
   app.enableCors({

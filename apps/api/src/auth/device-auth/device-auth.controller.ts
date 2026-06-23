@@ -13,7 +13,7 @@ import { AuthGuard } from '../auth.guard';
 import { CurrentUser } from '../current-user.decorator';
 import { nanoid } from 'nanoid';
 import Redis from 'ioredis';
-import { auth } from '../better-auth';
+import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
 
 @Controller('device-auth')
