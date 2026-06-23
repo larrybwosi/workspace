@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Query, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { auth } from '@repo/auth';
 import { prisma } from '@repo/database';
-import { AllowAnonymous, Session, UserSession } from '@thallesp/nestjs-better-auth';
+import { AllowAnonymous, Session, UserSession, OptionalAuth } from '@thallesp/nestjs-better-auth';
 
 @Controller('android-auth')
 export class AndroidAuthController {
@@ -13,10 +13,8 @@ export class AndroidAuthController {
    */
   @Get('me')
   async getProfile(@Session() session: UserSession) {
-    if (!session) {
-      throw new UnauthorizedException('No active session found');
-    }
-
+    // No manual 'if (!session)' check needed here!
+    // The global AuthGuard handles blocking unauthenticated requests for you.
     return {
       user: {
         ...session.user,
@@ -130,19 +128,21 @@ export class AndroidAuthController {
   }
 
   private handleAuthResponse(response: any, errorMessage: string) {
-    if (!response || !response.session) {
+    // Check for either response.token OR response.session to verify success
+    if (!response || (!response.token && !response.session)) {
       throw new BadRequestException(errorMessage);
     }
 
     const user = {
       ...response.user,
-      avatar: response.user.image,
+      avatar: response.user?.image || null,
     };
 
     return {
-      token: response.session.token,
+      // Fallback gracefully depending on where the token is located
+      token: response.token || response.session?.token,
       user,
-      session: response.session,
+      session: response.session || null,
     };
   }
 
