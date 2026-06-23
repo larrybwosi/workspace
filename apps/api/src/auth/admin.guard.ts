@@ -16,7 +16,7 @@ export class AdminGuard implements CanActivate {
     }
 
     // Check for both 'admin' and 'Admin' to prevent breaking changes during the migration
-    const userRole = session.user.role?.toLowerCase();
+    const userRole = (session.user as any).role?.toLowerCase();
     if (userRole !== 'admin') {
       throw new ForbiddenException('Admin access required');
     }

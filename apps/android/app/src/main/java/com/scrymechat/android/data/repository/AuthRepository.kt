@@ -64,8 +64,8 @@ class AuthRepository @Inject constructor(
                     banner = body.user.banner,
                     statusText = body.user.statusText,
                     statusEmoji = body.user.statusEmoji,
-                    role = body.user.role,
-                    status = body.user.status
+                    role = body.user.role ?: "user",
+                    status = body.user.status ?: "offline"
                 )
 
                 val sessionEntity = SessionEntity(
