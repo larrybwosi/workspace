@@ -35,15 +35,15 @@ export class V2ApplicationsService {
      * round-trips from 3 down to 1.
      * Expected impact: ~60% reduction in database latency for application creation.
      */
-    const application = await prisma.botApplication.create({
+    const application = (await prisma.botApplication.create({
       data: {
         name: data.name,
         description: data.description,
         clientId,
         clientSecret,
         verifyKey,
-        ownerId: finalOwnerId,
-        workspaceId: data.workspaceId,
+        owner: { connect: { id: finalOwnerId } },
+        workspace: data.workspaceId ? { connect: { id: data.workspaceId } } : undefined,
         bot: {
           create: {
             id: botId,
@@ -59,7 +59,7 @@ export class V2ApplicationsService {
       include: {
         bot: true,
       },
-    });
+    })) as any;
 
     return {
       ...application,
