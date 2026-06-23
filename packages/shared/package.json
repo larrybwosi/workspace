@@ -21,7 +21,7 @@
     "@repo/database": "workspace:*",
     "ably": "^2.21.0",
     "agora-token": "^2.0.5",
-    "better-auth": "1.6.0",
+    "better-auth": "1.6.20",
     "date-fns": "latest",
     "dotenv": "^17.4.1",
     "firebase-admin": "^13.7.0",

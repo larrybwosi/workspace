@@ -16,7 +16,7 @@
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
-    "better-auth": "^1.4.19",
+    "better-auth": "1.6.20",
     "typescript": "^6.0.3",
     "zod": "latest"
   },

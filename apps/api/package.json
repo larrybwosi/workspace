@@ -41,7 +41,7 @@
     "ably": "^2.21.0",
     "agora-token": "^2.0.5",
     "axios": "^1.7.9",
-    "better-auth": "^1.6.20",
+    "better-auth": "1.6.20",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "fastify": "^5.8.4",
