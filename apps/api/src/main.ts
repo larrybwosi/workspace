@@ -8,6 +8,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
 import { auth } from '@repo/auth';
+import { toNodeHandler } from 'better-auth/node';
 import multipart from '@fastify/multipart';
 import rawBody from 'fastify-raw-body';
 import { networkInterfaces } from 'os';
@@ -216,8 +217,9 @@ async function bootstrap() {
 
   // Mount the Better Auth handler. This ensures that all requests to /api/auth/*
   // (like session management, CSRF, etc.) are handled directly by Better Auth.
+  const authHandler = toNodeHandler(auth);
   fastifyInstance.all('/api/auth/*', async (request, reply) => {
-    return auth.handler(request.raw, reply.raw);
+    return authHandler(request.raw, reply.raw);
   });
 
   const redisUrl = env.REDIS_URL;
