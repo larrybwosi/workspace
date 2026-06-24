@@ -134,6 +134,42 @@ class HomeViewModel @Inject constructor(
             state.copy(expandedCategories = newExpanded)
         }
     }
+
+    fun setCreateWorkspaceDialogOpen(isOpen: Boolean) {
+        _uiState.update { it.copy(isCreateWorkspaceDialogOpen = isOpen) }
+    }
+
+    fun createWorkspace(request: com.scrymechat.android.data.remote.CreateWorkspaceRequest) {
+        viewModelScope.launch {
+            val result = workspaceRepository.createWorkspace(request)
+            if (result is Resource.Success) {
+                loadWorkspaces()
+            } else {
+                _uiState.update { it.copy(error = result.message) }
+            }
+        }
+    }
+
+    fun setCreateChannelDialogOpen(isOpen: Boolean) {
+        _uiState.update { it.copy(isCreateChannelDialogOpen = isOpen) }
+    }
+
+    fun createChannel(request: com.scrymechat.android.data.remote.CreateChannelRequest, categoryId: String?) {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            val finalRequest = if (categoryId != null) {
+                request.copy(departmentId = categoryId) // Using departmentId as parentId based on CreateChannelRequest
+            } else {
+                request
+            }
+            val result = channelRepository.createChannel(workspaceSlug, finalRequest)
+            if (result is Resource.Success) {
+                loadChannels(workspaceSlug)
+            } else {
+                _uiState.update { it.copy(error = result.message) }
+            }
+        }
+    }
 }
 
 data class HomeUiState(
@@ -146,5 +182,7 @@ data class HomeUiState(
     val currentUser: UserEntity? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val expandedCategories: Set<String> = emptySet()
+    val expandedCategories: Set<String> = emptySet(),
+    val isCreateWorkspaceDialogOpen: Boolean = false,
+    val isCreateChannelDialogOpen: Boolean = false
 )

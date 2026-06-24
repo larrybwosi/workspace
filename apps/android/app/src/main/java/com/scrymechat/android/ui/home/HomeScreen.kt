@@ -63,6 +63,21 @@ fun HomeScreen(
         )
     }
 
+    if (uiState.isCreateWorkspaceDialogOpen) {
+        CreateWorkspaceDialog(
+            onDismiss = { viewModel.setCreateWorkspaceDialogOpen(false) },
+            onCreate = { viewModel.createWorkspace(it) }
+        )
+    }
+
+    if (uiState.isCreateChannelDialogOpen) {
+        CreateChannelDialog(
+            categories = uiState.channels.filter { it.type == "category" },
+            onDismiss = { viewModel.setCreateChannelDialogOpen(false) },
+            onCreate = { request, categoryId -> viewModel.createChannel(request, categoryId) }
+        )
+    }
+
     val context = LocalContext.current
 
     chatUiState.activeModal?.let { modal ->
@@ -91,7 +106,8 @@ fun HomeScreen(
                         selectedWorkspace = uiState.selectedWorkspace,
                         isHomeSelected = uiState.isHomeSelected,
                         onWorkspaceClick = { viewModel.selectWorkspace(it) },
-                        onHomeClick = { viewModel.selectHome() }
+                        onHomeClick = { viewModel.selectHome() },
+                        onCreateWorkspaceClick = { viewModel.setCreateWorkspaceDialogOpen(true) }
                     )
 
                     ChannelSidebar(
@@ -119,7 +135,8 @@ fun HomeScreen(
                         onFriendsClick = {
                             onFriendsClick()
                             scope.launch { drawerState.close() }
-                        }
+                        },
+                        onCreateChannelClick = { viewModel.setCreateChannelDialogOpen(true) }
                     )
                 }
             }
