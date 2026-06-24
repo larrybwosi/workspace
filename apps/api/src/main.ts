@@ -214,7 +214,7 @@ async function bootstrap() {
   });
 
   const redisUrl = env.REDIS_URL;
-  if (redisUrl && env.REALTIME_PROVIDER === 'socketio') {
+  if (redisUrl) {
     const { RedisIoAdapter } = await import('./common/realtime/redis-io.adapter');
     const redisIoAdapter = new RedisIoAdapter(app, redisUrl);
     await redisIoAdapter.connectToRedis();
