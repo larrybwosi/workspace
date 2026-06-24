@@ -7,6 +7,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
+import { auth } from '@repo/auth';
 import multipart from '@fastify/multipart';
 import rawBody from 'fastify-raw-body';
 import { networkInterfaces } from 'os';
@@ -211,6 +212,12 @@ async function bootstrap() {
   // '/api' global prefix used by the rest of the application.
   fastifyInstance.get('/', async (_request: any, reply: any) => {
     reply.type('text/html').send(renderHomepage('2.0', '/api/docs'));
+  });
+
+  // Mount the Better Auth handler. This ensures that all requests to /api/auth/*
+  // (like session management, CSRF, etc.) are handled directly by Better Auth.
+  fastifyInstance.all('/api/auth/*', async (request, reply) => {
+    return auth.handler(request.raw, reply.raw);
   });
 
   const redisUrl = env.REDIS_URL;
