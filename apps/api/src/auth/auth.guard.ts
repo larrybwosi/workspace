@@ -36,13 +36,13 @@ export class AuthGuard implements CanActivate {
   }
 
   private injectSessionCookie(headers: Record<string, string>): void {
-    const auth = headers.authorization || headers.Authorization;
-    if (!auth?.startsWith('Bearer ')) return;
-
-    const token = auth.split(' ')[1];
+    const authHeader = headers.authorization || headers.Authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
     const key = 'better-auth.session_token';
-    if (headers.cookie?.includes(key)) return;
 
-    headers.cookie = headers.cookie ? `${headers.cookie}; ${key}=${token}` : `${key}=${token}`;
+    if (!token || headers.cookie?.includes(key)) return;
+
+    const sessionCookie = `${key}=${token}`;
+    headers.cookie = headers.cookie ? `${headers.cookie}; ${sessionCookie}` : sessionCookie;
   }
 }

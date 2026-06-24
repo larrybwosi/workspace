@@ -17,8 +17,7 @@
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
     "better-auth": "1.6.20",
-    "typescript": "^6.0.3",
-    "zod": "latest"
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
