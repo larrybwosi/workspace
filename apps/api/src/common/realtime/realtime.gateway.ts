@@ -13,7 +13,7 @@ import { setSocketioProvider, RealtimeProvider } from '@repo/shared/server';
 
 @Injectable()
 @WebSocketGateway({
-  path: '/api/socket.io',
+  path: '/socket.io',
   cors: {
     origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3001',
     credentials: true,
