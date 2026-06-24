@@ -31,10 +31,12 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      upsert: vi.fn(),
     },
     channel: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      upsert: vi.fn(),
     },
     workspaceTeamMember: {
       createMany: vi.fn(),
@@ -95,31 +97,27 @@ describe('V2ApplicationsService', () => {
         members: [{ userId, role: 'owner', permissions: String(1n << 3n) }],
       });
 
-      mockPrisma.workspaceMember.findUnique.mockResolvedValueOnce(null); // Bot not yet in workspace
       mockPrisma.workspaceMember.create.mockResolvedValue({ id: 'mem-bot' });
 
-      mockPrisma.workspaceTeam.findUnique.mockResolvedValue(null);
-      mockPrisma.workspaceTeam.create.mockResolvedValue({ id: 'team-1' });
-
-      mockPrisma.channel.findUnique.mockResolvedValue(null);
-      mockPrisma.channel.create.mockResolvedValue({ id: 'chan-1' });
+      mockPrisma.workspaceTeam.upsert.mockResolvedValue({ id: 'team-1', channelId: null });
+      mockPrisma.channel.upsert.mockResolvedValue({ id: 'chan-1' });
 
       mockPrisma.workspaceMember.findMany.mockResolvedValue([{ userId: 'owner-1', role: 'owner' }]);
 
       await service.installBot(userId, appId, workspaceId);
 
-      expect(mockPrisma.workspaceTeam.create).toHaveBeenCalledWith(
+      expect(mockPrisma.workspaceTeam.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
+          create: expect.objectContaining({
             name: 'Owners',
             appId: appId,
           }),
         })
       );
 
-      expect(mockPrisma.channel.create).toHaveBeenCalledWith(
+      expect(mockPrisma.channel.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
+          create: expect.objectContaining({
             name: 'owner-chat',
             appId: appId,
             type: 'private',
