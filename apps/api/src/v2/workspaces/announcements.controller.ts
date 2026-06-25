@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
@@ -80,6 +81,8 @@ const updateAnnouncementSchema = createAnnouncementSchema.partial();
 @Controller('v2/workspaces/:slug/announcements')
 @UseGuards(ApiV2Guard)
 export class V2AnnouncementsController {
+  private readonly logger = new Logger(V2AnnouncementsController.name);
+
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
