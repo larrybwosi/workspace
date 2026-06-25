@@ -119,7 +119,7 @@ export class V2WorkspacesController {
   @ApiBody({ type: AddMemberDto })
   @ApiResponse({ status: 201, description: 'Member added successfully.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  // fallow-ignore-next-line crap-score
+  // fallow-ignore-next-line complexity
   async addMember(@V2Context() context: ApiV2Context, @Body() body: AddMemberDto) {
     if (!this.hasScope(context, 'members:write')) {
       throw new ForbiddenException('Forbidden: Missing members:write scope');
