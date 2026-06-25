@@ -63,6 +63,53 @@ describe('V2WorkspacesController', () => {
     scopes: ['*'],
   } as any;
 
+  describe('addMember', () => {
+    it('should add a member successfully using consolidated create', async () => {
+      const mockMembership = {
+        id: 'member-1',
+        userId: 'user-2',
+        role: 'member',
+        user: { id: 'user-2', name: 'Bob', email: 'bob@example.com' },
+      };
+
+      (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
+
+      const result = await controller.addMember(mockContext, { email: 'bob@example.com', role: 'member' });
+
+      expect(prisma.workspaceMember.create).toHaveBeenCalledWith({
+        data: {
+          workspaceId: 'ws-1',
+          role: 'member',
+          user: { connect: { email: 'bob@example.com' } },
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+        },
+      });
+      expect(result).toEqual({ member: mockMembership });
+    });
+
+    it('should throw NotFoundException if user connect fails (P2025)', async () => {
+      const error = new Error('Not found') as any;
+      error.code = 'P2025';
+      (prisma.workspaceMember.create as any).mockRejectedValue(error);
+
+      await expect(
+        controller.addMember(mockContext, { email: 'missing@example.com' })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if user already a member (P2002)', async () => {
+      const error = new Error('Unique constraint failed') as any;
+      error.code = 'P2002';
+      (prisma.workspaceMember.create as any).mockRejectedValue(error);
+
+      await expect(
+        controller.addMember(mockContext, { email: 'exists@example.com' })
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
   describe('getMember', () => {
     it('should return member details using findUnique and O(1) lookup', async () => {
       const mockMember = {
