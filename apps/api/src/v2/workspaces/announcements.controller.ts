@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
@@ -80,6 +81,8 @@ const updateAnnouncementSchema = createAnnouncementSchema.partial();
 @Controller('v2/workspaces/:slug/announcements')
 @UseGuards(ApiV2Guard)
 export class V2AnnouncementsController {
+  private readonly logger = new Logger(V2AnnouncementsController.name);
+
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
@@ -124,7 +127,7 @@ export class V2AnnouncementsController {
       orderBy: { createdAt: 'desc' },
     });
 
-    await this.auditService.log(context, 'announcements.list', 'announcement');
+    this.auditService.log(context, 'announcements.list', 'announcement').catch(err => this.logger.error("Audit log error:", err));
 
     return { announcements };
   }
@@ -180,7 +183,7 @@ export class V2AnnouncementsController {
 
       const announcement = department.announcements[0];
 
-      await this.auditService.log(context, 'announcements.create', 'announcement', announcement.id, validatedData.data);
+      this.auditService.log(context, 'announcements.create', 'announcement', announcement.id, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
 
       return { announcement };
     } catch (error) {
@@ -245,7 +248,7 @@ export class V2AnnouncementsController {
       throw new NotFoundException('Announcement not found');
     }
 
-    await this.auditService.log(context, 'announcements.get', 'announcement', announcementId);
+    this.auditService.log(context, 'announcements.get', 'announcement', announcementId).catch(err => this.logger.error("Audit log error:", err));
 
     return { announcement };
   }
@@ -284,7 +287,7 @@ export class V2AnnouncementsController {
       },
     });
 
-    await this.auditService.log(context, 'announcements.update', 'announcement', announcementId, validatedData.data);
+    this.auditService.log(context, 'announcements.update', 'announcement', announcementId, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
 
     return { announcement };
   }
@@ -306,7 +309,7 @@ export class V2AnnouncementsController {
       },
     });
 
-    await this.auditService.log(context, 'announcements.delete', 'announcement', announcementId);
+    this.auditService.log(context, 'announcements.delete', 'announcement', announcementId).catch(err => this.logger.error("Audit log error:", err));
 
     return { success: true };
   }

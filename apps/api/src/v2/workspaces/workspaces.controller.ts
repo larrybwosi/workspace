@@ -67,7 +67,7 @@ export class V2WorkspacesController {
     }
 
     if (cachedMembers) {
-      await this.auditService.log(context, 'members.list', 'member');
+      this.auditService.log(context, 'members.list', 'member').catch(err => this.logger.error("Audit log error:", err));
       return { members: JSON.parse(cachedMembers), source: 'cache' };
     }
 
@@ -108,7 +108,7 @@ export class V2WorkspacesController {
       this.logger.warn('Redis error in getMembers (setex):', error);
     }
 
-    await this.auditService.log(context, 'members.list', 'member');
+    this.auditService.log(context, 'members.list', 'member').catch(err => this.logger.error("Audit log error:", err));
 
     return { members, source: 'database' };
   }
@@ -154,10 +154,10 @@ export class V2WorkspacesController {
 
     await this.redis.del(`v2:members:${context.workspaceId}`);
 
-    await this.auditService.log(context, 'members.add', 'member', userToAdd.id, {
+    this.auditService.log(context, 'members.add', 'member', userToAdd.id, {
       email,
       role,
-    });
+    }).catch(err => this.logger.error("Audit log error:", err));
 
     return { member: membership };
   }
@@ -213,7 +213,7 @@ export class V2WorkspacesController {
       throw new NotFoundException('Member not found in this workspace');
     }
 
-    await this.auditService.log(context, 'members.get', 'member', userId);
+    this.auditService.log(context, 'members.get', 'member', userId).catch(err => this.logger.error("Audit log error:", err));
 
     return { member };
   }
@@ -270,7 +270,7 @@ export class V2WorkspacesController {
 
     await this.redis.del(`v2:members:${context.workspaceId}`);
 
-    await this.auditService.log(context, 'members.remove', 'member', userId);
+    this.auditService.log(context, 'members.remove', 'member', userId).catch(err => this.logger.error("Audit log error:", err));
 
     return { success: true };
   }

@@ -82,7 +82,9 @@ export class V2WebhooksService {
         }
       });
 
-      await Promise.allSettled(deliveryPromises);
+      // Background the delivery to avoid blocking the API response.
+      // Individual delivery errors are already handled and logged within deliveryPromises.
+      Promise.allSettled(deliveryPromises);
     } catch (error) {
       console.error('Webhook Dispatch Error:', error);
     }
