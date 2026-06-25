@@ -166,7 +166,7 @@ export class V2MessagesController {
     }
 
     if (cachedChannels) {
-      await this.auditService.log(context, 'channels.list', 'channel');
+      this.auditService.log(context, 'channels.list', 'channel').catch(err => this.logger.error("Audit log error:", err));
       return { channels: JSON.parse(cachedChannels), source: 'cache' };
     }
 
@@ -206,7 +206,7 @@ export class V2MessagesController {
       this.logger.warn('Redis error in getChannels (setex):', error);
     }
 
-    await this.auditService.log(context, 'channels.list', 'channel');
+    this.auditService.log(context, 'channels.list', 'channel').catch(err => this.logger.error("Audit log error:", err));
 
     return { channels, source: 'database' };
   }
@@ -243,14 +243,14 @@ export class V2MessagesController {
 
     await this.redis.del(`v2:channels:${context.workspaceId}`);
 
-    await this.auditService.log(context, 'channels.create', 'channel', channel.id, {
+    this.auditService.log(context, 'channels.create', 'channel', channel.id, {
       name,
       type,
-    });
+    }).catch(err => this.logger.error("Audit log error:", err));
 
-    await this.webhooksService.dispatch(context.workspaceId!, 'channel.created', {
+    this.webhooksService.dispatch(context.workspaceId!, 'channel.created', {
       channel,
-    });
+    }).catch(err => this.logger.error("Webhook dispatch error:", err));
 
     return { channel };
   }
@@ -316,9 +316,9 @@ export class V2MessagesController {
 
     await this.redis.del(`v2:channels:${context.workspaceId}`);
 
-    await this.auditService.log(context, 'channels.update_icon', 'channel', channelId, {
+    this.auditService.log(context, 'channels.update_icon', 'channel', channelId, {
       url: asset.url,
-    });
+    }).catch(err => this.logger.error("Audit log error:", err));
 
     return { channel: updatedChannel };
   }
@@ -359,7 +359,7 @@ export class V2MessagesController {
       throw new NotFoundException('Channel not found');
     }
 
-    await this.auditService.log(context, 'channels.get', 'channel', channelId);
+    this.auditService.log(context, 'channels.get', 'channel', channelId).catch(err => this.logger.error("Audit log error:", err));
 
     return { channel };
   }
@@ -402,7 +402,7 @@ export class V2MessagesController {
 
     await this.redis.del(`v2:channels:${context.workspaceId}`);
 
-    await this.auditService.log(context, 'channels.update', 'channel', channelId, validatedData.data);
+    this.auditService.log(context, 'channels.update', 'channel', channelId, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
 
     return { channel };
   }
@@ -426,7 +426,7 @@ export class V2MessagesController {
 
     await this.redis.del(`v2:channels:${context.workspaceId}`);
 
-    await this.auditService.log(context, 'channels.delete', 'channel', channelId);
+    this.auditService.log(context, 'channels.delete', 'channel', channelId).catch(err => this.logger.error("Audit log error:", err));
 
     return { success: true };
   }
@@ -454,32 +454,20 @@ export class V2MessagesController {
 
     const limit = parseInt(limitStr || '50');
 
-    let activeThreadId = threadId;
-
-    if (contextId && !activeThreadId && channelId) {
-      const thread = await prisma.thread.findFirst({
-        where: {
-          channelId,
-          tags: { some: { tag: contextId } },
-        },
-      });
-
-      if (!thread) {
-        return { messages: [], nextCursor: null };
-      }
-      activeThreadId = thread.id;
-    }
-
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-     * Expected impact: Reduces JSON payload size and memory overhead by ~15-20%.
+     * 1. Consolidates thread lookup and message retrieval into a single query.
+     * 2. Uses nested relation filters to resolve context-tagged threads in one round-trip.
+     * 3. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+     * Expected impact: Reduces database round-trips from 2 down to 1 and shrinks JSON payload by ~15-20%.
      */
     // fallow-ignore-next-line code-duplication
     const messages = await prisma.message.findMany({
       where: {
         channelId: channelId || undefined,
-        threadId: activeThreadId || null,
+        thread: contextId && !threadId ? {
+          tags: { some: { tag: contextId } }
+        } : (threadId ? { id: threadId } : null),
         channel: { workspaceId: context.workspaceId },
       },
       take: limit,
@@ -509,11 +497,11 @@ export class V2MessagesController {
 
     const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
 
-    await this.auditService.log(context, 'messages.list', 'message', undefined, {
+    this.auditService.log(context, 'messages.list', 'message', undefined, {
       channelId,
-      threadId: activeThreadId,
+      threadId: messages[0]?.threadId || threadId,
       contextId,
-    });
+    }).catch(err => this.logger.error("Audit log error:", err));
 
     return { messages: messages.reverse(), nextCursor };
   }
@@ -688,12 +676,15 @@ export class V2MessagesController {
         },
       });
 
-      await this.auditService.log(context, 'messages.send', 'message', createdMessage.id, {
+      this.auditService.log(context, 'messages.send', 'message', createdMessage.id, {
         channelId,
         threadId: activeThreadId,
-      });
+      }).catch(err => this.logger.error("Audit log error:", err));
 
-      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, createdMessage);
+      // Background the realtime publishing to avoid blocking the API response
+      publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, createdMessage).catch(
+        err => this.logger.error('Realtime publishing error:', err)
+      );
     } else if (recipientId) {
       /**
        * ⚡ Performance Optimization:
@@ -767,15 +758,21 @@ export class V2MessagesController {
 
       createdMessage = dm.messages[0];
 
-      await this.auditService.log(context, 'messages.send_dm', 'dm_message', createdMessage.id, {
+      this.auditService.log(context, 'messages.send_dm', 'dm_message', createdMessage.id, {
         recipientId,
-      });
+      }).catch(err => this.logger.error("Audit log error:", err));
     }
 
     if (createdMessage) {
-      await this.webhooksService.dispatch(context.workspaceId!, 'message.sent', {
+      /**
+       * ⚡ Performance Optimization:
+       * Background the webhook dispatching.
+       * V2WebhooksService.dispatch already backgrounds the actual HTTP requests internally,
+       * but we still avoid awaiting the initial database lookup for active webhooks.
+       */
+      this.webhooksService.dispatch(context.workspaceId!, 'message.sent', {
         message: createdMessage,
-      });
+      }).catch(err => this.logger.error("Webhook dispatch error:", err));
     }
 
     return { message: createdMessage };
