@@ -124,7 +124,7 @@ export class V2AnnouncementsController {
       orderBy: { createdAt: 'desc' },
     });
 
-    await this.auditService.log(context, 'announcements.list', 'announcement');
+    this.auditService.log(context, 'announcements.list', 'announcement').catch(err => this.logger.error("Audit log error:", err));
 
     return { announcements };
   }
@@ -180,7 +180,7 @@ export class V2AnnouncementsController {
 
       const announcement = department.announcements[0];
 
-      await this.auditService.log(context, 'announcements.create', 'announcement', announcement.id, validatedData.data);
+      this.auditService.log(context, 'announcements.create', 'announcement', announcement.id, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
 
       return { announcement };
     } catch (error) {
@@ -245,7 +245,7 @@ export class V2AnnouncementsController {
       throw new NotFoundException('Announcement not found');
     }
 
-    await this.auditService.log(context, 'announcements.get', 'announcement', announcementId);
+    this.auditService.log(context, 'announcements.get', 'announcement', announcementId).catch(err => this.logger.error("Audit log error:", err));
 
     return { announcement };
   }
@@ -284,7 +284,7 @@ export class V2AnnouncementsController {
       },
     });
 
-    await this.auditService.log(context, 'announcements.update', 'announcement', announcementId, validatedData.data);
+    this.auditService.log(context, 'announcements.update', 'announcement', announcementId, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
 
     return { announcement };
   }
@@ -306,7 +306,7 @@ export class V2AnnouncementsController {
       },
     });
 
-    await this.auditService.log(context, 'announcements.delete', 'announcement', announcementId);
+    this.auditService.log(context, 'announcements.delete', 'announcement', announcementId).catch(err => this.logger.error("Audit log error:", err));
 
     return { success: true };
   }
