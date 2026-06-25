@@ -21,6 +21,7 @@ import com.scrymechat.android.data.remote.CreateChannelRequest
 @Composable
 fun CreateChannelDialog(
     categories: List<ChannelEntity>,
+    isLoading: Boolean = false,
     onDismiss: () -> Unit,
     onCreate: (CreateChannelRequest, String?) -> Unit
 ) {
@@ -43,14 +44,21 @@ fun CreateChannelDialog(
                         ),
                         selectedCategoryId
                     )
-                    onDismiss()
                 },
-                enabled = name.isNotBlank(),
+                enabled = name.isNotBlank() && !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = SidebarTokens.Accent
                 )
             ) {
-                Text("Create Channel")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Create Channel")
+                }
             }
         },
         dismissButton = {

@@ -17,46 +17,70 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
+import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
 
 class CreateWorkspaceDto {
+  @IsString()
   @ApiProperty({ example: 'My Workspace' })
   name: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'my-workspace' })
   slug?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'https://example.com/icon.png' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'A workspace for our team' })
   description?: string;
 }
 
 class UpdateWorkspaceDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated Workspace Name' })
   name?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'https://example.com/new-icon.png' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated description' })
   description?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   settings?: any;
 
+  @IsEnum(['free', 'pro', 'enterprise'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['free', 'pro', 'enterprise'] })
   plan?: 'free' | 'pro' | 'enterprise';
 
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false })
   isPublic?: boolean;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   customDomain?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   brandingConfig?: any;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   industry?: string;
 }

@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -16,6 +17,7 @@ import com.scrymechat.android.data.remote.CreateWorkspaceRequest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateWorkspaceDialog(
+    isLoading: Boolean = false,
     onDismiss: () -> Unit,
     onCreate: (CreateWorkspaceRequest) -> Unit
 ) {
@@ -37,14 +39,21 @@ fun CreateWorkspaceDialog(
                             isPublic = isPublic
                         )
                     )
-                    onDismiss()
                 },
-                enabled = name.isNotBlank(),
+                enabled = name.isNotBlank() && !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = SidebarTokens.Accent
                 )
             ) {
-                Text("Create Workspace")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Create Workspace")
+                }
             }
         },
         dismissButton = {
