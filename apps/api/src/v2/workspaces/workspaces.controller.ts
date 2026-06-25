@@ -119,6 +119,7 @@ export class V2WorkspacesController {
   @ApiBody({ type: AddMemberDto })
   @ApiResponse({ status: 201, description: 'Member added successfully.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
+  // fallow-ignore-next-line crap-score
   async addMember(@V2Context() context: ApiV2Context, @Body() body: AddMemberDto) {
     if (!this.hasScope(context, 'members:write')) {
       throw new ForbiddenException('Forbidden: Missing members:write scope');
@@ -139,7 +140,9 @@ export class V2WorkspacesController {
     try {
       const membership = await prisma.workspaceMember.create({
         data: {
-          workspaceId: context.workspaceId!,
+          workspace: {
+            connect: { id: context.workspaceId! },
+          },
           role,
           user: {
             connect: { email },

@@ -78,7 +78,7 @@ describe('V2WorkspacesController', () => {
 
       expect(prisma.workspaceMember.create).toHaveBeenCalledWith({
         data: {
-          workspaceId: 'ws-1',
+          workspace: { connect: { id: 'ws-1' } },
           role: 'member',
           user: { connect: { email: 'bob@example.com' } },
         },
