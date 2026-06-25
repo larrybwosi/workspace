@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: 'Scrymechat - Messaging and Team Chat Application',
   description: 'Your personal dashboard to manage your account and settings.',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.svg',
   },
   manifest: '/manifest.json',
   appleWebApp: {
