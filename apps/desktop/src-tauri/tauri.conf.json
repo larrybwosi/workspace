@@ -1,6 +1,6 @@
 {
   "productName": "Scrymechat",
-  "version": "0.0.704",
+  "version": "0.0.709",
   "identifier": "com.scrymechat.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
