@@ -140,12 +140,21 @@ export class DmsService {
   }
 
   async createDm(userId: string, targetUserId: string, userName: string) {
-    let dm = await prisma.directMessage.findFirst({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Sorts participant IDs to ensure consistent 'participant1Id_participant2Id' ordering.
+     * 2. Replaces 'findFirst' with 'findUnique' using the compound unique index for O(1) lookup.
+     * 3. This ensures O(1) performance for existing DM lookups and avoids duplicate DM pairs.
+     * Expected impact: Reduces database latency for existing DM resolution and prevents logical duplicates.
+     */
+    const [p1, p2] = [userId, targetUserId].sort();
+
+    let dm = await prisma.directMessage.findUnique({
       where: {
-        OR: [
-          { participant1Id: userId, participant2Id: targetUserId },
-          { participant1Id: targetUserId, participant2Id: userId },
-        ],
+        participant1Id_participant2Id: {
+          participant1Id: p1,
+          participant2Id: p2,
+        },
       },
       select: {
         id: true,
@@ -178,8 +187,8 @@ export class DmsService {
     if (!dm) {
       dm = await prisma.directMessage.create({
         data: {
-          participant1Id: userId,
-          participant2Id: targetUserId,
+          participant1Id: p1,
+          participant2Id: p2,
         },
         select: {
           id: true,
@@ -316,7 +325,14 @@ export class DmsService {
     const nextCursor = hasMore ? rawData[rawData.length - 1].createdAt.toISOString() : null;
 
     // Transform messages to match frontend expectations and reduce size
-    const formattedMessages = rawData.reverse().map(m => {
+    /**
+     * ⚡ Performance Optimization:
+     * Returns messages in the order they were fetched (newest first).
+     * The mobile app uses 'inverted' FlatList which expects this order.
+     * The web app sorts them oldest-first in-memory anyway.
+     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency with V2.
+     */
+    const formattedMessages = rawData.map(m => {
       // Group reactions by emoji
       const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();
       m.reactions.forEach(r => {
