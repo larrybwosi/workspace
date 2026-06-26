@@ -1,5 +1,3 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-◇ injected env (0) from ../../.env // tip: ⌘ suppress logs { quiet: true }
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
