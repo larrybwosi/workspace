@@ -1,21 +1,31 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Query,
-  Body,
-  UnauthorizedException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
-import { auth } from '../better-auth';
+import { Controller, Post, Get, Query, Body, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import { auth } from '@repo/auth';
 import { prisma } from '@repo/database';
+import { AllowAnonymous, Session, UserSession, OptionalAuth } from '@thallesp/nestjs-better-auth';
 
-@Controller('auth/android')
+@Controller('android-auth')
 export class AndroidAuthController {
   private readonly logger = new Logger(AndroidAuthController.name);
 
+  /**
+   * Protected route to retrieve the current user session.
+   * Automatically guarded by nestjs-better-auth's global guard.
+   */
+  @Get('me')
+  async getProfile(@Session() session: UserSession) {
+    // No manual 'if (!session)' check needed here!
+    // The global AuthGuard handles blocking unauthenticated requests for you.
+    return {
+      user: {
+        ...session.user,
+        avatar: session.user.image, // Maintaining avatar mapping for compatibility
+      },
+      session: session.session,
+    };
+  }
+
   @Get('check-username')
+  @AllowAnonymous()
   async checkUsername(@Query('username') username: string) {
     this.validateUsername(username);
 
@@ -31,17 +41,8 @@ export class AndroidAuthController {
     }
   }
 
-  private validateUsername(username: string) {
-    if (!username || username.length < 3) {
-      throw new BadRequestException('Username must be at least 3 characters long');
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
-    }
-  }
-
   @Post('login')
+  @AllowAnonymous()
   async login(@Body() body: any) {
     const { email, password } = body;
     this.validateLoginInput(email, password);
@@ -54,6 +55,7 @@ export class AndroidAuthController {
   }
 
   @Post('signup')
+  @AllowAnonymous()
   async signup(@Body() body: any) {
     this.validateSignupInput(body);
     try {
@@ -65,15 +67,16 @@ export class AndroidAuthController {
           username: body.username,
           image: body.avatar || body.image,
           bio: body.bio,
-        },
+        } as any,
       });
-      return this.handleAuthResponse(response, 'Failed to create account');
+      return await this.handleAuthResponse(response, 'Failed to create account');
     } catch (error: any) {
       this.handleAuthError(error, 'Signup failed');
     }
   }
 
   @Post('social/google')
+  @AllowAnonymous()
   async googleLogin(@Body() body: any) {
     if (!body.idToken) {
       throw new BadRequestException('Google idToken is required');
@@ -82,6 +85,7 @@ export class AndroidAuthController {
   }
 
   @Post('social/github')
+  @AllowAnonymous()
   async githubLogin(@Body() body: any) {
     if (!body.code) {
       throw new BadRequestException('GitHub authorization code is required');
@@ -89,9 +93,19 @@ export class AndroidAuthController {
     return this.performSocialLogin('github', { code: body.code });
   }
 
+  private validateUsername(username: string) {
+    if (!username || username.length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters long');
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new BadRequestException('Username can only contain letters, numbers, and underscores');
+    }
+  }
+
   private validateSignupInput(body: any) {
     const fields = ['email', 'password', 'name', 'username'];
-    if (fields.some((f) => !body[f])) {
+    if (fields.some(f => !body[f])) {
       throw new BadRequestException('Email, password, name, and username are required');
     }
 
@@ -107,27 +121,40 @@ export class AndroidAuthController {
       const response = await auth.api.signInSocial({
         body: { provider, ...data },
       });
-      return this.handleAuthResponse(response, `${provider} authentication failed`);
+      return await this.handleAuthResponse(response, `${provider} authentication failed`);
     } catch (error: any) {
       this.handleAuthError(error);
     }
   }
 
-  private handleAuthResponse(response: any, errorMessage: string) {
-    if (!response || !response.session) {
+  private async handleAuthResponse(response: any, errorMessage: string) {
+    // Check for either response.token OR response.session to verify success
+    if (!response || (!response.token && !response.session)) {
       throw new BadRequestException(errorMessage);
     }
 
-    // Better-Auth uses 'image' but we also want to provide 'avatar' for compatibility
+    let session = response.session;
+    const token = response.token || response.session?.token;
+
+    // If session is missing but we have a token, try to fetch it
+    if (!session && token) {
+      const sessionData = await auth.api.getSession({
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+      session = sessionData?.session;
+    }
+
     const user = {
       ...response.user,
-      avatar: response.user.image,
+      avatar: response.user?.image || null,
     };
 
     return {
-      token: response.session.token,
+      token,
       user,
-      session: response.session,
+      session: session || null,
     };
   }
 
@@ -138,19 +165,15 @@ export class AndroidAuthController {
   }
 
   private async performLogin(email: string, password: string) {
-    const response = await auth.api.signInEmail({
+    const response = (await auth.api.signInEmail({
       body: { email, password },
-    });
+    })) as any;
 
-    if (!response || !response.session) {
+    if (!response || (!response.token && !response.session)) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return {
-      token: response.session.token,
-      user: response.user,
-      session: response.session,
-    };
+    return await this.handleAuthResponse(response, 'Invalid credentials');
   }
 
   private handleAuthError(error: any, defaultMessage = 'Authentication failed') {

@@ -13,10 +13,10 @@ import { AuthGuard } from '../auth.guard';
 import { CurrentUser } from '../current-user.decorator';
 import { nanoid } from 'nanoid';
 import Redis from 'ioredis';
-import { auth } from '../better-auth';
+import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
 
-@Controller('auth/device')
+@Controller('device-auth')
 export class DeviceAuthController {
   constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
 
@@ -51,7 +51,7 @@ export class DeviceAuthController {
 
     // Create a new session for the user via Better-Auth
     // We use the auth.api.createSession which is part of Better-Auth's internal API
-    const newSession = await auth.api.createSession({
+    const newSession = await (auth.api as any).createSession({
       body: {
         userId: user.id,
       },

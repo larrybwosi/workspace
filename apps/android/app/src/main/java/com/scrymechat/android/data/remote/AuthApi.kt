@@ -6,22 +6,22 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface AuthApi {
-    @POST("auth/android/login")
+    @POST("android-auth/login")
     suspend fun login(
         @Body request: LoginRequest
     ): Response<LoginResponse>
 
-    @POST("auth/android/signup")
+    @POST("android-auth/signup")
     suspend fun signup(
         @Body request: SignUpRequest
     ): Response<LoginResponse>
 
-    @POST("auth/android/social/google")
+    @POST("android-auth/social/google")
     suspend fun googleLogin(
         @Body request: GoogleLoginRequest
     ): Response<LoginResponse>
 
-    @POST("auth/android/social/github")
+    @POST("android-auth/social/github")
     suspend fun githubLogin(
         @Body request: GithubLoginRequest
     ): Response<LoginResponse>
@@ -39,7 +39,7 @@ interface AuthApi {
         @Body request: Map<String, Any>
     ): Response<Unit>
 
-    @POST("auth/device/qr/authorize")
+    @POST("device-auth/qr/authorize")
     suspend fun authorizeQR(
         @Body request: QRAuthorizeRequest
     ): Response<QRAuthorizeResponse>

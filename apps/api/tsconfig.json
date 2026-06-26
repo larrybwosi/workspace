@@ -33,6 +33,9 @@
       "@repo/shared": [
         "../../packages/shared/index.ts"
       ],
+      "@repo/auth": [
+        "../../packages/auth.ts"
+      ],
       "@repo/shared/*": [
         "../../packages/shared/src/*"
       ],

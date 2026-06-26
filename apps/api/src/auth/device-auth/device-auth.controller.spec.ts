@@ -13,7 +13,7 @@ const { mockCreateSession } = vi.hoisted(() => ({
   mockCreateSession: vi.fn(),
 }));
 
-vi.mock('../better-auth', () => ({
+vi.mock('@repo/auth', () => ({
   auth: {
     api: {
       getSession: vi.fn(),

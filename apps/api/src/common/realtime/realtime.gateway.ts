@@ -8,11 +8,12 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable, Logger } from '@nestjs/common';
-import { auth } from '../../auth/better-auth';
+import { auth } from '@repo/auth';
 import { setSocketioProvider, RealtimeProvider } from '@repo/shared/server';
 
 @Injectable()
 @WebSocketGateway({
+  path: '/socket.io',
   cors: {
     origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3001',
     credentials: true,

@@ -64,15 +64,24 @@ class AuthRepository @Inject constructor(
                     banner = body.user.banner,
                     statusText = body.user.statusText,
                     statusEmoji = body.user.statusEmoji,
-                    role = body.user.role,
-                    status = body.user.status
+                    role = body.user.role ?: "user",
+                    status = body.user.status ?: "offline"
                 )
 
-                val sessionEntity = SessionEntity(
-                    id = body.session.id,
-                    userId = body.user.id,
-                    expiresAt = body.session.expiresAt
-                )
+                val sessionEntity = if (body.session != null) {
+                    SessionEntity(
+                        id = body.session.id,
+                        userId = body.user.id,
+                        expiresAt = body.session.expiresAt
+                    )
+                } else {
+                    // Fallback: Use the token as the session identifier if session data is missing
+                    SessionEntity(
+                        id = body.token,
+                        userId = body.user.id,
+                        expiresAt = "" // Indicating no specific expiry provided by server
+                    )
+                }
 
                 val membershipEntities = body.memberships?.map {
                     WorkspaceMemberEntity(

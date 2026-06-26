@@ -135,3 +135,8 @@
 
 **Learning:** In `isUserEligibleForAsset`, sequential database queries for user data and badge assignments create avoidable latency. Parallelizing these with `Promise.all` and using a targeted `select` to exclude large, irrelevant fields (like bio or avatar) reduces RTT from 2 to 1 and minimizes payload size.
 **Action:** Always parallelize independent verification queries and use targeted `select` to minimize DB payload in shared utility functions.
+
+## 2026-06-20 - [API/Bots] Optimized Bot Creation and Installation
+
+**Learning:** Sequential database operations for multi-entity creation (User + BotApplication) can be consolidated into a single nested Prisma 'create' call by pre-generating IDs (using 'crypto.randomUUID()'). In installation flows, replacing 'find-then-create' with 'upsert' or 'try-create-catch-P2002' patterns significantly reduces database round-trips.
+**Action:** Use nested Prisma writes for related entities and prefer optimistic 'create' with error handling for unique constraints to minimize RTT in multi-step service methods.

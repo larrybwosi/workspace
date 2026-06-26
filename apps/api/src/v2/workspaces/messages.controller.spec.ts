@@ -49,8 +49,8 @@ describe('V2MessagesController', () => {
       controllers: [V2MessagesController],
       providers: [
         { provide: 'REDIS_CLIENT', useValue: { get: vi.fn(), setex: vi.fn(), del: vi.fn(), incr: vi.fn(), expire: vi.fn() } },
-        { provide: V2AuditService, useValue: { log: vi.fn() } },
-        { provide: V2WebhooksService, useValue: { dispatch: vi.fn() } },
+        { provide: V2AuditService, useValue: { log: vi.fn().mockResolvedValue(undefined) } },
+        { provide: V2WebhooksService, useValue: { dispatch: vi.fn().mockResolvedValue(undefined) } },
         { provide: StorageService, useValue: { uploadFile: vi.fn() } },
         { provide: ConfigService, useValue: { get: vi.fn() } },
       ],

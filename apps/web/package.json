@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.0.664",
+  "version": "0.0.709",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001 --webpack",
@@ -25,7 +25,7 @@
     "agora-token": "latest",
     "ai": "latest",
     "axios": "1.14.0",
-    "better-auth": "1.6.0",
+    "better-auth": "1.6.20",
     "clsx": "^2.1.1",
     "date-fns": "latest",
     "firebase": "latest",

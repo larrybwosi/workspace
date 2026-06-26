@@ -10,7 +10,10 @@ import com.scrymechat.android.data.local.entities.SessionEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceMemberEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.SharedPreferences
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,6 +66,17 @@ class SessionManager @Inject constructor(
 
     fun getApiUrl(): String? {
         return sharedPreferences.getString("custom_api_url", null)
+    }
+
+    fun getApiUrlFlow(): Flow<String?> = callbackFlow {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            if (key == "custom_api_url") {
+                trySend(prefs.getString(key, null))
+            }
+        }
+        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        trySend(getApiUrl())
+        awaitClose { sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
     suspend fun isLoggedIn(): Boolean {
