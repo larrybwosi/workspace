@@ -20,7 +20,7 @@ services:
     image: redis:7-alpine
     container_name: scryme-chat-redis
     restart: always
-    command: redis-server --requirepass myredispassword
+    command: redis-server --requirepass ${REDIS_PASSWORD:-password}
     ports:
       - '6479:6379' # Changed container port to 6379
     volumes:
