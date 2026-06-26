@@ -83,7 +83,8 @@ fun ChannelSidebar(
     onDmClick: (DmConversationEntity) -> Unit = {},
     onCategoryToggle: (String) -> Unit,
     onSettingsClick: () -> Unit,
-    onFriendsClick: () -> Unit = {}
+    onFriendsClick: () -> Unit = {},
+    onCreateChannelClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -136,13 +137,31 @@ fun ChannelSidebar(
                     )
                 }
 
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = onCreateChannelClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SidebarTokens.SurfaceRaised),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = SidebarTokens.Accent)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Create Channel", color = SidebarTokens.TextPrimary, fontSize = 13.sp)
+                    }
+                }
+
                 categories.forEach { category ->
                     val isExpanded = expandedCategories.contains(category.id)
                     item(key = "cat_${category.id}") {
                         CategoryHeader(
                             name = category.name,
                             isExpanded = isExpanded,
-                            onToggle = { onCategoryToggle(category.id) }
+                            onToggle = { onCategoryToggle(category.id) },
+                            onAddClick = onCreateChannelClick
                         )
                     }
                     if (isExpanded) {
@@ -210,7 +229,8 @@ private fun SectionLabel(text: String) {
 fun CategoryHeader(
     name: String,
     isExpanded: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    onAddClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -235,7 +255,16 @@ fun CategoryHeader(
             color = SidebarTokens.TextTertiary,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.6.sp
+            letterSpacing = 0.6.sp,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add Channel",
+            tint = SidebarTokens.TextTertiary,
+            modifier = Modifier
+                .size(16.dp)
+                .clickable { onAddClick() }
         )
     }
 }

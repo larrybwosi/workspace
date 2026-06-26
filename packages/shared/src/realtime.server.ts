@@ -26,6 +26,11 @@ export async function publishRealtime(channel: string, event: string, data: any)
     await socketioProvider.publish(channel, event, data);
   } else {
     await publishToAblyServer(channel, event, data);
+    // Also publish to Socket.io if it's available, so Android clients can still receive updates
+    // even if the primary provider is Ably.
+    if (socketioProvider) {
+      await socketioProvider.publish(channel, event, data);
+    }
   }
 }
 

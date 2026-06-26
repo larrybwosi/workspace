@@ -14,6 +14,7 @@ import com.scrymechat.android.data.local.SessionManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.socket.client.Socket
 import javax.inject.Inject
+import javax.inject.Provider
 
 @AndroidEntryPoint
 class RealtimeService : LifecycleService() {

@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
-import { auth } from './better-auth';
+import { auth } from '@repo/auth';
 
 export interface ApiV2Context {
   userId: string;

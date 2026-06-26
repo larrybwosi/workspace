@@ -1,6 +1,6 @@
 {
   "name": "workspace",
-  "version": "0.0.664",
+  "version": "0.0.709",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -16,7 +16,8 @@
     "test:e2e": "turbo test:e2e",
     "lint:api": "cd apps/api && pnpm run lint",
     "lint:web": "cd apps/web && pnpm run lint",
-    "version:ci": "changeset version && pnpm install --no-frozen-lockfile"
+    "version:ci": "changeset version && pnpm install --no-frozen-lockfile",
+    "start:dev": "docker compose -f docker-compose.dev.yml up -d"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
@@ -49,7 +50,9 @@
       "react-dom": "19.2.5",
       "@tanstack/react-query": "5.96.2",
       "@types/react": "^19.2.14",
-      "@types/react-dom": "^19.2.3"
+      "@types/react-dom": "^19.2.3",
+      "better-auth": "1.6.20",
+      "@better-auth/core": "^1.6.20"
     },
     "peerDependencyRules": {
       "ignoreMissing": [

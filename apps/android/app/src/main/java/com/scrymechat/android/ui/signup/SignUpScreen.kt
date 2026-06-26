@@ -151,6 +151,26 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            // ── Username ──────────────────────────────────────────────────────
+            FieldLabel("Username")
+            Spacer(modifier = Modifier.height(6.dp))
+            ProTextField(
+                value         = uiState.username,
+                onValueChange = viewModel::onUsernameChanged,
+                placeholder   = "johndoe",
+                keyboardType  = KeyboardType.Text,
+                leadingIcon   = {
+                    Icon(
+                        imageVector        = Icons.Default.Person,
+                        contentDescription = null,
+                        tint               = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier           = Modifier.size(18.dp)
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
             // ── Email ─────────────────────────────────────────────────────────
             FieldLabel("Email Address")
             Spacer(modifier = Modifier.height(6.dp))

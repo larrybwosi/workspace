@@ -17,47 +17,70 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
-import { AblyChannels, EVENTS } from '@repo/shared/server';
+import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
 
 class CreateWorkspaceDto {
+  @IsString()
   @ApiProperty({ example: 'My Workspace' })
   name: string;
 
-  @ApiProperty({ example: 'my-workspace' })
-  slug: string;
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'my-workspace' })
+  slug?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'https://example.com/icon.png' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'A workspace for our team' })
   description?: string;
 }
 
 class UpdateWorkspaceDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated Workspace Name' })
   name?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'https://example.com/new-icon.png' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated description' })
   description?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   settings?: any;
 
+  @IsEnum(['free', 'pro', 'enterprise'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['free', 'pro', 'enterprise'] })
   plan?: 'free' | 'pro' | 'enterprise';
 
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false })
   isPublic?: boolean;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   customDomain?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   brandingConfig?: any;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   industry?: string;
 }
@@ -68,7 +91,8 @@ const createWorkspaceSchema = z.object({
     .string()
     .min(1)
     .max(50)
-    .regex(/^[a-z0-9-]+$/),
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   icon: z.string().optional(),
   description: z.string().optional(),
   isPublic: z.boolean().optional(),
@@ -157,20 +181,40 @@ export class WorkspacesController {
   @ApiResponse({ status: 201, description: 'Workspace created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input or slug already taken' })
   async createWorkspace(@CurrentUser() user: User, @Body() body: CreateWorkspaceDto): Promise<any> {
+    console.log('body :', body);
     const validatedData = createWorkspaceSchema.safeParse(body);
+    console.log(validatedData);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const existingWorkspace = await prisma.workspace.findUnique({
-      where: { slug: validatedData.data.slug },
-    });
+    console.log(validatedData.data);
+    const { name, icon, description, isPublic, industry } = validatedData.data;
+    let slug = validatedData.data.slug;
 
-    if (existingWorkspace) {
-      throw new BadRequestException('Workspace slug already taken');
+    if (!slug) {
+      slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      // Check for collision and append random suffix if needed
+      const existingWorkspace = await prisma.workspace.findUnique({
+        where: { slug },
+      });
+
+      if (existingWorkspace) {
+        slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+      }
+    } else {
+      const existingWorkspace = await prisma.workspace.findUnique({
+        where: { slug },
+      });
+
+      if (existingWorkspace) {
+        throw new BadRequestException('Workspace slug already taken');
+      }
     }
-
-    const { name, slug, icon, description, isPublic, industry } = validatedData.data;
 
     return prisma.workspace.create({
       data: {

@@ -63,7 +63,35 @@ fun HomeScreen(
         )
     }
 
+    if (uiState.isCreateWorkspaceDialogOpen) {
+        CreateWorkspaceDialog(
+            isLoading = uiState.isCreatingWorkspace,
+            onDismiss = { viewModel.setCreateWorkspaceDialogOpen(false) },
+            onCreate = { viewModel.createWorkspace(it) }
+        )
+    }
+
+    if (uiState.isCreateChannelDialogOpen) {
+        CreateChannelDialog(
+            categories = uiState.channels.filter { it.type == "category" },
+            isLoading = uiState.isCreatingChannel,
+            onDismiss = { viewModel.setCreateChannelDialogOpen(false) },
+            onCreate = { request, categoryId -> viewModel.createChannel(request, categoryId) }
+        )
+    }
+
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(
+                message = it,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearError()
+        }
+    }
 
     chatUiState.activeModal?.let { modal ->
         com.scrymechat.android.ui.components.CustomMessageModal(
@@ -77,76 +105,85 @@ fun HomeScreen(
         )
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = Color.Transparent,
-                drawerTonalElevation = 0.dp,
-                modifier = Modifier.width(312.dp) // 72 + 240
-            ) {
-                Row(modifier = Modifier.fillMaxSize()) {
-                    WorkspaceRail(
-                        workspaces = uiState.workspaces,
-                        selectedWorkspace = uiState.selectedWorkspace,
-                        isHomeSelected = uiState.isHomeSelected,
-                        onWorkspaceClick = { viewModel.selectWorkspace(it) },
-                        onHomeClick = { viewModel.selectHome() }
-                    )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent
+    ) { padding ->
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet(
+                    drawerContainerColor = Color.Transparent,
+                    drawerTonalElevation = 0.dp,
+                    modifier = Modifier.width(312.dp) // 72 + 240
+                ) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        WorkspaceRail(
+                            workspaces = uiState.workspaces,
+                            selectedWorkspace = uiState.selectedWorkspace,
+                            isHomeSelected = uiState.isHomeSelected,
+                            onWorkspaceClick = { viewModel.selectWorkspace(it) },
+                            onHomeClick = { viewModel.selectHome() },
+                            onCreateWorkspaceClick = { viewModel.setCreateWorkspaceDialogOpen(true) }
+                        )
 
-                    ChannelSidebar(
-                        workspace = uiState.selectedWorkspace,
-                        channels = uiState.channels,
-                        selectedChannel = uiState.selectedChannel,
-                        isHomeSelected = uiState.isHomeSelected,
-                        currentUser = uiState.currentUser,
-                        expandedCategories = uiState.expandedCategories,
-                        dms = uiState.dms,
-                        onChannelClick = {
-                            viewModel.selectChannel(it)
-                            uiState.selectedWorkspace?.slug?.let { slug ->
-                                chatViewModel.setWorkspaceSlug(slug)
-                            }
-                            chatViewModel.setChannel(it.id)
-                            scope.launch { drawerState.close() }
-                        },
-                        onDmClick = {
-                            chatViewModel.setDm(it.id)
-                            scope.launch { drawerState.close() }
-                        },
-                        onCategoryToggle = { viewModel.toggleCategory(it) },
-                        onSettingsClick = onSettingsClick,
-                        onFriendsClick = {
-                            onFriendsClick()
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                        ChannelSidebar(
+                            workspace = uiState.selectedWorkspace,
+                            channels = uiState.channels,
+                            selectedChannel = uiState.selectedChannel,
+                            isHomeSelected = uiState.isHomeSelected,
+                            currentUser = uiState.currentUser,
+                            expandedCategories = uiState.expandedCategories,
+                            dms = uiState.dms,
+                            onChannelClick = {
+                                viewModel.selectChannel(it)
+                                uiState.selectedWorkspace?.slug?.let { slug ->
+                                    chatViewModel.setWorkspaceSlug(slug)
+                                }
+                                chatViewModel.setChannel(it.id)
+                                scope.launch { drawerState.close() }
+                            },
+                            onDmClick = {
+                                chatViewModel.setDm(it.id)
+                                scope.launch { drawerState.close() }
+                            },
+                            onCategoryToggle = { viewModel.toggleCategory(it) },
+                            onSettingsClick = onSettingsClick,
+                            onFriendsClick = {
+                                onFriendsClick()
+                                scope.launch { drawerState.close() }
+                            },
+                            onCreateChannelClick = { viewModel.setCreateChannelDialogOpen(true) }
+                        )
+                    }
                 }
             }
+        ) {
+            MainContent(
+                selectedWorkspace = uiState.selectedWorkspace,
+                selectedChannel = uiState.selectedChannel,
+                isHomeSelected = uiState.isHomeSelected,
+                chatUiState = chatUiState,
+                currentUser = uiState.currentUser,
+                onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
+                onReply = { /* Handled in ChatView */ },
+                onForward = { forwardingMessage = it },
+                onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
+                onAction = { message, action, formState -> chatViewModel.handleMessageAction(context, message, action, formState) },
+                onUpdateForm = { messageId, fieldId, value -> chatViewModel.updateFormState(messageId, fieldId, value) },
+                formStates = formStates,
+                loadingActions = loadingActions,
+                onTyping = {
+                    uiState.currentUser?.let { user ->
+                        chatViewModel.sendTyping(user.id, user.name)
+                    }
+                },
+                onMenuClick = { scope.launch { drawerState.open() } },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            )
         }
-    ) {
-        MainContent(
-            selectedWorkspace = uiState.selectedWorkspace,
-            selectedChannel = uiState.selectedChannel,
-            isHomeSelected = uiState.isHomeSelected,
-            chatUiState = chatUiState,
-            currentUser = uiState.currentUser,
-            onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
-            onReply = { /* Handled in ChatView */ },
-            onForward = { forwardingMessage = it },
-            onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
-            onAction = { message, action, formState -> chatViewModel.handleMessageAction(context, message, action, formState) },
-            onUpdateForm = { messageId, fieldId, value -> chatViewModel.updateFormState(messageId, fieldId, value) },
-            formStates = formStates,
-            loadingActions = loadingActions,
-            onTyping = {
-                uiState.currentUser?.let { user ->
-                    chatViewModel.sendTyping(user.id, user.name)
-                }
-            },
-            onMenuClick = { scope.launch { drawerState.open() } },
-            modifier = Modifier.fillMaxSize()
-        )
     }
 }
 

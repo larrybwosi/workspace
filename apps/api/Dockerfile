@@ -12,7 +12,8 @@ FROM base AS builder
 WORKDIR /app
 RUN pnpm add -g turbo
 COPY . .
-RUN turbo prune api --docker
+# 💡 FIXED: Added the --scope flag here
+RUN turbo prune --scope=api --docker
 
 FROM base AS installer
 WORKDIR /app
@@ -43,7 +44,7 @@ RUN adduser --system --uid 1001 nestjs
 # Install Prisma globally for migrations
 RUN pnpm add -g prisma@7.8.0
 
-# Set up pnpm and prisma engines (as seen in original Dockerfile)
+# Set up pnpm and prisma engines
 RUN chown -R nestjs:nodejs /pnpm
 
 WORKDIR /app

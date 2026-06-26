@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -30,7 +31,8 @@ fun WorkspaceRail(
     selectedWorkspace: WorkspaceEntity?,
     isHomeSelected: Boolean,
     onWorkspaceClick: (WorkspaceEntity) -> Unit,
-    onHomeClick: () -> Unit
+    onHomeClick: () -> Unit,
+    onCreateWorkspaceClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -67,7 +69,9 @@ fun WorkspaceRail(
         // Workspaces List
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
         ) {
             items(workspaces) { workspace ->
                 WorkspaceIcon(
@@ -98,6 +102,21 @@ fun WorkspaceRail(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+
+        // Add Workspace Button
+        WorkspaceIcon(
+            isSelected = false,
+            onClick = onCreateWorkspaceClick,
+            content = {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Create Workspace",
+                    tint = SidebarTokens.Accent,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
