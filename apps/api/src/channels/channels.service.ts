@@ -82,57 +82,44 @@ export class ChannelsService {
      * Check access using existence checks (findFirst) instead of deep joins (include).
      * This avoids massive DB result sets when channels have many members or are shared extensively.
      */
-    /**
-     * ⚡ Performance Optimization:
-     * Consolidates channel existence check, direct membership check, workspace membership check,
-     * and shared channel access verification into a single database query using nested 'select'.
-     * Reduces database round-trips from up to 4 down to 1.
-     */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
-      select: {
-        id: true,
-        workspaceId: true,
-        isPrivate: true,
-        members: {
-          where: { userId },
-          select: { userId: true },
-        },
-        workspace: {
-          select: {
-            members: {
-              where: { userId },
-              select: { userId: true },
-            },
-          },
-        },
-        sharedWith: {
-          where: {
-            status: 'ACTIVE',
-            workspace: {
-              members: { some: { userId } },
-            },
-          },
-          select: { id: true },
-        },
-      },
+      select: { id: true, workspaceId: true, isPrivate: true },
     });
 
     if (!channel) {
       throw new NotFoundException('Channel not found');
     }
 
-    const isDirectMember = channel.members.length > 0;
-    const isWorkspaceMember = (channel.workspace?.members?.length ?? 0) > 0;
-    const isSharedMember = channel.sharedWith.length > 0;
+    // Check direct membership first (most common for private/shared channels)
+    const isMember = await prisma.channelMember.findUnique({
+      where: { channelId_userId: { channelId, userId } },
+    });
 
-    if (!isDirectMember) {
+    if (!isMember) {
+      // Check workspace membership
       if (channel.workspaceId) {
+        const isWorkspaceMember = await prisma.workspaceMember.findUnique({
+          where: { workspaceId_userId: { workspaceId: channel.workspaceId, userId } },
+        });
+
         if (!isWorkspaceMember) {
+          // Check shared channel access
+          const isSharedMember = await prisma.sharedChannel.findFirst({
+            where: {
+              channelId,
+              status: 'ACTIVE',
+              workspace: {
+                members: { some: { userId } },
+              },
+            },
+          });
+
           if (!isSharedMember) {
             throw new ForbiddenException('You do not have access to this channel');
           }
         } else if (channel.isPrivate) {
+          // Private channels in a workspace still require explicit membership
           throw new ForbiddenException('You do not have access to this private channel');
         }
       } else if (channel.isPrivate) {
@@ -213,13 +200,7 @@ export class ChannelsService {
     const nextCursor = hasMore ? rawData[rawData.length - 1].timestamp.toISOString() : null;
 
     // Transform messages to match frontend expectations and reduce size
-    /**
-     * ⚡ Performance Optimization:
-     * Returns messages in the order they were fetched (newest first).
-     * The mobile app uses 'inverted' FlatList which expects this order.
-     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency with V2.
-     */
-    const formattedMessages = rawData.map(msg => {
+    const formattedMessages = [...rawData].reverse().map(msg => {
       // Group reactions by emoji
       const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();
       msg.reactions.forEach(r => {
