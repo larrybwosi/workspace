@@ -1,6 +1,10 @@
 {
   "name": "workspace",
+<<<<<<< HEAD
   "version": "0.0.704",
+=======
+  "version": "0.0.709",
+>>>>>>> 91619a187c0812c576413234efcca5912f66d2fd
   "private": true,
   "scripts": {
     "build": "turbo build",
