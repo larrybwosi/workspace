@@ -19,7 +19,7 @@ export default function HomePage() {
 
         <div className="container py-24 sm:py-32">
           <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-7xl bg-linear-to-b from-foreground to-foreground/50 bg-clip-text text-transparent">
               Build the future of communication
             </h1>
             <p className="mt-6 text-lg leading-8 text-muted-foreground">
