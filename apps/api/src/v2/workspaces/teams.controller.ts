@@ -10,12 +10,15 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
+import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 
@@ -70,7 +73,12 @@ const updateTeamSchema = createTeamSchema.partial();
 @Controller('v2/workspaces/:slug/teams')
 @UseGuards(ApiV2Guard)
 export class V2TeamsController {
-  constructor(private readonly auditService: V2AuditService) {}
+  private readonly logger = new Logger(V2TeamsController.name);
+
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly auditService: V2AuditService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List all teams in the workspace', description: 'Requires teams:read scope.' })
@@ -81,9 +89,24 @@ export class V2TeamsController {
       throw new ForbiddenException('Forbidden: Missing teams:read scope');
     }
 
+    const cacheKey = `v2:teams:${context.workspaceId}`;
+    let cachedTeams: string | null = null;
+
+    try {
+      cachedTeams = await this.redis.get(cacheKey);
+    } catch (error) {
+      this.logger.warn('Redis error in getTeams:', error);
+    }
+
+    if (cachedTeams) {
+      this.auditService.log(context, 'teams.list', 'team').catch(err => this.logger.error('Audit log error:', err));
+      return { teams: JSON.parse(cachedTeams) };
+    }
+
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+     * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+     * 2. Implement Redis caching to reduce database load and improve response times.
      * Expected impact: Reduces JSON payload size and memory overhead by ~15-25%.
      */
     const teams = await prisma.workspaceTeam.findMany({
@@ -108,7 +131,13 @@ export class V2TeamsController {
       },
     });
 
-    await this.auditService.log(context, 'teams.list', 'team');
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(teams));
+    } catch (error) {
+      this.logger.warn('Redis error in getTeams (setex):', error);
+    }
+
+    this.auditService.log(context, 'teams.list', 'team').catch(err => this.logger.error('Audit log error:', err));
 
     return { teams };
   }
@@ -135,7 +164,15 @@ export class V2TeamsController {
       },
     });
 
-    await this.auditService.log(context, 'teams.create', 'team', team.id, validatedData.data);
+    try {
+      await this.redis.del(`v2:teams:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in createTeam (del):', error);
+    }
+
+    this.auditService
+      .log(context, 'teams.create', 'team', team.id, validatedData.data)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { team };
   }
@@ -152,7 +189,9 @@ export class V2TeamsController {
 
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+     * 1. Uses targeted 'select' instead of broad 'include' to reduce DB payload and memory usage.
+     * 2. Specifically excludes the 'permissions' (BigInt) field from the members relation.
+     * Expected impact: Reduces JSON payload size and avoids BigInt serialization overhead.
      */
     const team = await prisma.workspaceTeam.findFirst({
       where: { id: teamId, workspaceId: context.workspaceId },
@@ -171,7 +210,7 @@ export class V2TeamsController {
         appId: true,
         createdAt: true,
         updatedAt: true,
-        department: true,
+        department: { select: { id: true, name: true } },
         members: {
           select: {
             id: true,
@@ -189,7 +228,7 @@ export class V2TeamsController {
       throw new NotFoundException('Team not found');
     }
 
-    await this.auditService.log(context, 'teams.get', 'team', teamId);
+    this.auditService.log(context, 'teams.get', 'team', teamId).catch(err => this.logger.error('Audit log error:', err));
 
     return { team };
   }
@@ -215,7 +254,15 @@ export class V2TeamsController {
       data: validatedData.data,
     });
 
-    await this.auditService.log(context, 'teams.update', 'team', teamId, validatedData.data);
+    try {
+      await this.redis.del(`v2:teams:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in updateTeam (del):', error);
+    }
+
+    this.auditService
+      .log(context, 'teams.update', 'team', teamId, validatedData.data)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { team };
   }
@@ -234,7 +281,13 @@ export class V2TeamsController {
       where: { id: teamId, workspaceId: context.workspaceId },
     });
 
-    await this.auditService.log(context, 'teams.delete', 'team', teamId);
+    try {
+      await this.redis.del(`v2:teams:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in deleteTeam (del):', error);
+    }
+
+    this.auditService.log(context, 'teams.delete', 'team', teamId).catch(err => this.logger.error('Audit log error:', err));
 
     return { success: true };
   }
