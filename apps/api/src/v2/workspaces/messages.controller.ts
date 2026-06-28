@@ -503,7 +503,13 @@ export class V2MessagesController {
       contextId,
     }).catch(err => this.logger.error("Audit log error:", err));
 
-    return { messages: messages.reverse(), nextCursor };
+    /**
+     * ⚡ Performance Optimization:
+     * Returns messages in the order they were fetched (newest first).
+     * The mobile app uses 'inverted' FlatList which expects this order.
+     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency with core services.
+     */
+    return { messages, nextCursor };
   }
 
   @Post('messages')
