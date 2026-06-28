@@ -15,40 +15,17 @@ import {
   Copy,
   Check,
   Lightbulb,
+  Download,
 } from 'lucide-react';
 
 const CodeBlock = ({ children, language }: { children: string; language: string }) => {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(children.replace(/\n$/, ''));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [children]);
-
   return (
-    <div className="my-8 rounded-xl overflow-hidden shadow-md border border-border/10 bg-[#0d1117]">
-      <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">{language}</span>
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 text-[11px] font-medium text-white/40 hover:text-white transition-colors"
-        >
-          {copied ? (
-            <>
-              <Check className="h-3 w-3" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="h-3 w-3" />
-              Copy
-            </>
-          )}
-        </button>
-      </div>
-      <SyntaxHighlighter code={children.replace(/\n$/, '')} language={language} />
-    </div>
+    <SyntaxHighlighter
+      code={children.replace(/\n$/, '')}
+      language={language}
+      fileName={language.toUpperCase()}
+      className="my-8 shadow-md border-border/10"
+    />
   );
 };
 
@@ -109,6 +86,19 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
   const githubUrl = `https://github.com/skyrme-chat/skyrme-chat/edit/main/apps/docs/src/content/${type === 'user-guide' ? 'docs' : 'api'}/${activeSlug}.md`;
 
+  const handleDownload = () => {
+    if (!content) return;
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeSlug}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1">
       <div className="flex flex-col md:flex-row gap-6 lg:gap-12 py-10">
@@ -139,7 +129,9 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                   remarkPlugins={[remarkGfm]}
                   components={{
                     h1: ({ children }) => (
-                      <h1 className="text-4xl font-bold tracking-tight mb-4 border-none">{children}</h1>
+                      <h1 className="text-4xl font-extrabold tracking-tight mb-8 bg-linear-to-b from-foreground to-foreground/70 bg-clip-text text-transparent border-none">
+                        {children}
+                      </h1>
                     ),
                     h2: ({ ...props }) => {
                       const id = props.children
@@ -285,6 +277,12 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                 </div>
 
                 <div className="flex flex-col items-start sm:items-end gap-2 text-sm text-muted-foreground">
+                  <button
+                    onClick={handleDownload}
+                    className="flex items-center hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Download className="mr-2 h-4 w-4" /> Download Markdown
+                  </button>
                   <a
                     href={githubUrl}
                     target="_blank"
