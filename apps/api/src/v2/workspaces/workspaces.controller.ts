@@ -293,6 +293,7 @@ export class V2WorkspacesController {
     return { success: true };
   }
 
+  // fallow-ignore-next-line code-duplication
   private hasScope(context: ApiV2Context, scope: string): boolean {
     return context.scopes.includes(scope) || context.scopes.includes('*');
   }
