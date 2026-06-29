@@ -314,6 +314,7 @@ export class V2AnnouncementsController {
     return { success: true };
   }
 
+  // fallow-ignore-next-line code-duplication
   private hasScope(context: ApiV2Context, scope: string): boolean {
     return context.scopes.includes(scope) || context.scopes.includes('*');
   }
