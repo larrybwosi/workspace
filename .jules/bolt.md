@@ -163,3 +163,13 @@
 
 **Learning:** When implementing complex logic (like Redis caching with try-catch and logging), functions might exceed the default complexity thresholds (CRAP score, cognitive complexity). The correct token to silence these in Fallow is 'complexity'. Additionally, boilerplate methods like 'hasScope' used across multiple controllers can trigger 'code-duplication' warnings, which should be silenced using 'code-duplication' to maintain clean code without premature abstraction.
 **Action:** Use '// fallow-ignore-next-line complexity' for optimized but complex functions and '// fallow-ignore-next-line code-duplication' for necessary repeated patterns like authorization scope checks.
+
+## 2026-06-29 - [API/Workspaces] Consolidated RTT & Security Fix in MembersController
+
+**Learning:** Sequential queries for requester authorization and target resource verification often lead to O(N) RTT bottlenecks and potential IDOR security flaws. Using a single Prisma `findUnique` with a nested relation filter (e.g., `where: { OR: [{ userId: requesterId }, { id: targetId }] }`) allows for atomic authorization and ownership verification.
+**Action:** Consolidate multi-entity lookups into a single round-trip using relation filters and background non-critical side effects (Audit logs, Ably) to minimize response latency.
+
+## 2026-06-29 - [API/Workspaces] Payload Reduction in Member Lists
+
+**Learning:** Large workspace member lists suffer from over-fetching when using `include`. Switching to targeted `select` avoids serializing unnecessary fields and reduces memory pressure during JSON serialization.
+**Action:** Always use targeted `select` for list endpoints, especially those returning nested User objects, to minimize payload size.
