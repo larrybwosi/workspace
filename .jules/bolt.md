@@ -173,3 +173,8 @@
 
 **Learning:** Large workspace member lists suffer from over-fetching when using `include`. Switching to targeted `select` avoids serializing unnecessary fields and reduces memory pressure during JSON serialization.
 **Action:** Always use targeted `select` for list endpoints, especially those returning nested User objects, to minimize payload size.
+
+## 2025-05-30 - [Database] Atomic DM Resolution via Upsert
+
+**Learning:** Replacing the sequential 'findUnique-then-create' pattern for Direct Message conversations with a single Prisma 'upsert' using the compound unique index reduces database round-trips from 2 to 1 for new conversations.
+**Action:** Always prefer atomic 'upsert' or optimistic 'create' with 'P2002' handling for "get-or-create" patterns on unique indices to minimize RTT.
