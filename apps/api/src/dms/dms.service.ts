@@ -143,81 +143,53 @@ export class DmsService {
     /**
      * ⚡ Performance Optimization:
      * 1. Sorts participant IDs to ensure consistent 'participant1Id_participant2Id' ordering.
-     * 2. Replaces 'findFirst' with 'findUnique' using the compound unique index for O(1) lookup.
-     * 3. This ensures O(1) performance for existing DM lookups and avoids duplicate DM pairs.
-     * Expected impact: Reduces database latency for existing DM resolution and prevents logical duplicates.
+     * 2. Uses 'prisma.directMessage.upsert' with the compound unique index to resolve or create DM in one RTT.
+     * 3. Consolidates 'select' logic to reduce code duplication and ensure consistent response shape.
+     * Expected impact: Reduces database round-trips from 2 down to 1 for new conversations.
      */
     const [p1, p2] = [userId, targetUserId].sort();
 
-    let dm = await prisma.directMessage.findUnique({
+    const dmSelect = {
+      id: true,
+      participant1Id: true,
+      participant2Id: true,
+      lastMessageAt: true,
+      createdAt: true,
+      updatedAt: true,
+      participant1: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true,
+          image: true,
+          status: true,
+        },
+      },
+      participant2: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true,
+          image: true,
+          status: true,
+        },
+      },
+    };
+
+    const dm = await prisma.directMessage.upsert({
       where: {
         participant1Id_participant2Id: {
           participant1Id: p1,
           participant2Id: p2,
         },
       },
-      select: {
-        id: true,
-        participant1Id: true,
-        participant2Id: true,
-        lastMessageAt: true,
-        createdAt: true,
-        updatedAt: true,
-        participant1: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            image: true,
-            status: true,
-          },
-        },
-        participant2: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            image: true,
-            status: true,
-          },
-        },
+      update: {}, // No updates needed for existing DM
+      create: {
+        participant1Id: p1,
+        participant2Id: p2,
       },
+      select: dmSelect,
     });
-
-    if (!dm) {
-      dm = await prisma.directMessage.create({
-        data: {
-          participant1Id: p1,
-          participant2Id: p2,
-        },
-        select: {
-          id: true,
-          participant1Id: true,
-          participant2Id: true,
-          lastMessageAt: true,
-          createdAt: true,
-          updatedAt: true,
-          participant1: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              image: true,
-              status: true,
-            },
-          },
-          participant2: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              image: true,
-              status: true,
-            },
-          },
-        },
-      });
-    }
 
     const participant1 = {
       ...dm.participant1,
