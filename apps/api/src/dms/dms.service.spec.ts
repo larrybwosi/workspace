@@ -13,6 +13,7 @@ vi.mock('@repo/database', () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      upsert: vi.fn(),
     },
     dMMessage: {
       findMany: vi.fn(),
@@ -84,12 +85,11 @@ describe('DmsService', () => {
         participant2: { id: 'user-2', name: 'User 2' },
       };
 
-      (prisma.directMessage.findFirst as any).mockResolvedValue(null);
-      (prisma.directMessage.create as any).mockResolvedValue(mockDm);
+      (prisma.directMessage.upsert as any).mockResolvedValue(mockDm);
 
       const result = await service.createDm('user-1', 'user-2', 'User 1');
 
-      expect(prisma.directMessage.create).toHaveBeenCalled();
+      expect(prisma.directMessage.upsert).toHaveBeenCalled();
       expect(publishRealtime).toHaveBeenCalledWith('user:user-2', AblyEvents.DM_RECEIVED, {
         dmId: 'dm-1',
         from: 'User 1',
