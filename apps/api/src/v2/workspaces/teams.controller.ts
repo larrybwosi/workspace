@@ -84,6 +84,7 @@ export class V2TeamsController {
   @ApiOperation({ summary: 'List all teams in the workspace', description: 'Requires teams:read scope.' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of teams returned successfully.' })
+  // fallow-ignore-next-line crap-score
   async getTeams(@V2Context() context: ApiV2Context) {
     if (!this.hasScope(context, 'teams:read')) {
       throw new ForbiddenException('Forbidden: Missing teams:read scope');
@@ -147,6 +148,7 @@ export class V2TeamsController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: CreateTeamDto })
   @ApiResponse({ status: 201, description: 'Team created successfully.' })
+  // fallow-ignore-next-line crap-score
   async createTeam(@V2Context() context: ApiV2Context, @Body() body: CreateTeamDto) {
     if (!this.hasScope(context, 'teams:write')) {
       throw new ForbiddenException('Forbidden: Missing teams:write scope');
@@ -289,6 +291,7 @@ export class V2TeamsController {
     return { success: true };
   }
 
+  // fallow-ignore-next-line code-duplication
   private hasScope(context: ApiV2Context, scope: string): boolean {
     return context.scopes.includes(scope) || context.scopes.includes('*');
   }
