@@ -87,7 +87,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+        <DialogHeader bordered>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             Create New Workspace
@@ -168,7 +168,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
               <div className="space-y-2">
                 <Label>Workspace Icon</Label>
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl shadow-lg">
+                  <div className="h-16 w-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-3xl shadow-sm">
                     {icon || name?.charAt(0) || 'W'}
                   </div>
                   <div className="flex-1">
@@ -240,7 +240,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
             </div>
           )}
 
-          <DialogFooter className="gap-2">
+          <DialogFooter bordered className="gap-2">
             {step === 1 ? (
               <>
                 <Button type="button" variant="outline" onClick={() => handleClose(false)}>

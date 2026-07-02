@@ -65,7 +65,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader bordered>
           <DialogTitle>Create a new {type}</DialogTitle>
           <DialogDescription>
             {type === 'channel'
@@ -174,7 +174,7 @@ export function CreateChannelDialog({ open, onOpenChange, workspaceSlug, onCreat
           </TabsContent>
         </Tabs>
 
-        <DialogFooter>
+        <DialogFooter bordered>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

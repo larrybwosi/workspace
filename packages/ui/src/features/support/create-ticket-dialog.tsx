@@ -55,7 +55,7 @@ export function CreateTicketDialog({ open, onOpenChange, workspaceId }: CreateTi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
+          <DialogHeader bordered>
             <DialogTitle>Create Support Ticket</DialogTitle>
             <DialogDescription>
               Describe your issue and an agent will get back to you as soon as possible.
@@ -83,7 +83,7 @@ export function CreateTicketDialog({ open, onOpenChange, workspaceId }: CreateTi
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter bordered>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

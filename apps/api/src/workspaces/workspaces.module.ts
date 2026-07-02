@@ -11,6 +11,7 @@ import { InviteLinksController } from './invite-links.controller';
 import { ApiTokensController } from './api-tokens.controller';
 import { WebhooksController } from './webhooks.controller';
 import { CallsController } from './calls.controller';
+import { SearchController } from './search.controller';
 import { MessagesService } from './messages.service';
 import { TeamSyncService } from './team-sync.service';
 
@@ -29,6 +30,7 @@ import { TeamSyncService } from './team-sync.service';
     ApiTokensController,
     WebhooksController,
     CallsController,
+    SearchController,
   ],
 })
 export class WorkspacesModule {}
