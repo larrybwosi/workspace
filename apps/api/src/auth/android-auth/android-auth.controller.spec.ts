@@ -22,6 +22,9 @@ vi.mock('@repo/database', () => ({
     user: {
       findUnique: vi.fn(),
     },
+    workspaceMember: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -61,6 +64,7 @@ describe('AndroidAuthController', () => {
       expect(auth.api.getSession).toHaveBeenCalledWith({
         headers: {
           authorization: `Bearer ${mockToken}`,
+          cookie: `better-auth.session_token=${mockToken}`,
         },
       });
 
@@ -71,6 +75,7 @@ describe('AndroidAuthController', () => {
           avatar: 'avatar.png',
         },
         session: mockSession,
+        memberships: [],
       });
     });
 
@@ -91,6 +96,7 @@ describe('AndroidAuthController', () => {
       expect(auth.api.getSession).not.toHaveBeenCalled();
 
       expect(result.session).toEqual(mockSession);
+      expect(result.memberships).toEqual([]);
     });
 
     it('should throw UnauthorizedException if login fails', async () => {
@@ -130,6 +136,40 @@ describe('AndroidAuthController', () => {
       expect(auth.api.getSession).toHaveBeenCalled();
       expect(result.session).toEqual(mockSession);
       expect(result.token).toBe(mockToken);
+      expect(result.memberships).toEqual([]);
+    });
+  });
+
+  describe('refresh', () => {
+    it('should refresh session with valid token', async () => {
+      const mockToken = 'valid-token';
+      const mockUser = { id: 'user-1', email: 'test@example.com' };
+      const mockSession = { id: 'session-1', token: mockToken, expiresAt: new Date().toISOString() };
+
+      (auth.api.getSession as any).mockResolvedValue({
+        user: mockUser,
+        session: mockSession,
+      });
+
+      const result = await controller.refresh({ token: mockToken });
+
+      expect(auth.api.getSession).toHaveBeenCalledWith({
+        headers: {
+          authorization: `Bearer ${mockToken}`,
+          cookie: `better-auth.session_token=${mockToken}`,
+        },
+      });
+
+      expect(result.token).toBe(mockToken);
+      expect(result.session).toEqual(mockSession);
+      expect(result.memberships).toEqual([]);
+    });
+
+    it('should throw UnauthorizedException for invalid token', async () => {
+      (auth.api.getSession as any).mockResolvedValue(null);
+
+      await expect(controller.refresh({ token: 'invalid-token' }))
+        .rejects.toThrow(UnauthorizedException);
     });
   });
 });
