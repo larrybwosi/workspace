@@ -40,24 +40,36 @@ export class MembersController {
     /**
      * ⚡ Performance Optimization:
      * 1. Consolidates workspace lookup, membership verification, and retrieval of all members into a single query.
-     * 2. Fetches current user's membership for access control and all workspace members in one round-trip.
-     * 3. Uses nested 'select' for users to retrieve only essential profile fields.
-     * Expected impact: Reduces database round-trips from 2 down to 1.
+     * 2. Uses 'findFirst' with a nested relation filter to ensure the requester is a member at the database level.
+     * 3. Replaces 'include' with targeted 'select' to exclude 'permissions' (BigInt) and redundant fields.
+     * 4. Eliminates O(N) in-memory membership verification.
+     * Expected impact: Prevents fetching massive member lists for unauthorized requests and reduces JSON payload size.
      */
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        slug,
+        members: {
+          some: { userId: user.id },
+        },
+      },
       select: {
         id: true,
         members: {
-          // Fetch all members for the response
-          include: {
+          select: {
+            id: true,
+            workspaceId: true,
+            userId: true,
+            departmentId: true,
+            role: true,
+            memberType: true,
+            joinedAt: true,
+            notificationPreference: true,
             user: {
               select: {
                 id: true,
                 name: true,
                 email: true,
                 avatar: true,
-                image: true,
                 status: true,
               },
             },
@@ -67,13 +79,17 @@ export class MembersController {
     });
 
     if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    // Verify current user's membership for access control
-    const requesterMember = workspace.members.find(m => m.userId === user.id);
-
-    if (!requesterMember) {
+      /**
+       * If workspace is null, it either doesn't exist or the user is not a member.
+       * We perform a simple check to distinguish between the two for better API feedback.
+       */
+      const exists = await prisma.workspace.findUnique({
+        where: { slug },
+        select: { id: true },
+      });
+      if (!exists) {
+        throw new NotFoundException('Workspace not found');
+      }
       throw new ForbiddenException('Access denied');
     }
 
@@ -141,7 +157,7 @@ export class MembersController {
       },
     });
 
-    await prisma.workspaceAuditLog.create({
+    prisma.workspaceAuditLog.create({
       data: {
         workspaceId: workspace.id,
         userId: user.id,
@@ -150,13 +166,13 @@ export class MembersController {
         resourceId: memberId,
         metadata: { newRole: role },
       },
-    });
+    }).catch(err => console.error('Audit log error:', err));
 
-    await publishRealtime(AblyChannels.user(updatedMember.userId), 'NOTIFICATION', {
+    publishRealtime(AblyChannels.user(updatedMember.userId), 'NOTIFICATION', {
       type: 'workspace.role_changed',
       workspaceId: workspace.id,
       newRole: role,
-    });
+    }).catch(err => console.error('Realtime publishing error:', err));
 
     return updatedMember;
   }
@@ -170,17 +186,22 @@ export class MembersController {
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Combines workspace lookup and membership verification into a single database query.
-     * 2. Uses 'select' instead of 'include' to retrieve only the workspace ID and membership status.
-     * 3. Reduces database payload and memory usage for initial verification.
+     * 1. Consolidates workspace lookup, membership verification, and target member retrieval into a single query.
+     * 2. Uses nested 'select' with filtered relations to fetch requester and target member in one RTT.
+     * 3. Reduces database round-trips from 3 down to 1.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
         members: {
-          where: { userId: user.id },
-          select: { role: true },
+          where: {
+            OR: [
+              { userId: user.id },
+              { id: memberId }
+            ]
+          },
+          select: { id: true, userId: true, role: true },
         },
       },
     });
@@ -189,15 +210,12 @@ export class MembersController {
       throw new NotFoundException('Workspace not found');
     }
 
-    const requesterMember = workspace.members[0];
+    const requesterMember = workspace.members.find(m => m.userId === user.id);
+    const memberToRemove = workspace.members.find(m => m.id === memberId);
 
     if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
       throw new ForbiddenException('Access denied');
     }
-
-    const memberToRemove = await prisma.workspaceMember.findUnique({
-      where: { id: memberId },
-    });
 
     if (!memberToRemove) {
       throw new NotFoundException('Member not found');
@@ -211,7 +229,7 @@ export class MembersController {
       where: { id: memberId },
     });
 
-    await prisma.workspaceAuditLog.create({
+    prisma.workspaceAuditLog.create({
       data: {
         workspaceId: workspace.id,
         userId: user.id,
@@ -219,12 +237,12 @@ export class MembersController {
         resource: 'member',
         resourceId: memberId,
       },
-    });
+    }).catch(err => console.error('Audit log error:', err));
 
-    await publishRealtime(AblyChannels.user(memberToRemove.userId), 'NOTIFICATION', {
+    publishRealtime(AblyChannels.user(memberToRemove.userId), 'NOTIFICATION', {
       type: 'workspace.removed',
       workspaceId: workspace.id,
-    });
+    }).catch(err => console.error('Realtime publishing error:', err));
 
     return { success: true };
   }

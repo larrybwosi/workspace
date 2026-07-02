@@ -140,3 +140,11 @@
 
 **Learning:** Sequential database operations for multi-entity creation (User + BotApplication) can be consolidated into a single nested Prisma 'create' call by pre-generating IDs (using 'crypto.randomUUID()'). In installation flows, replacing 'find-then-create' with 'upsert' or 'try-create-catch-P2002' patterns significantly reduces database round-trips.
 **Action:** Use nested Prisma writes for related entities and prefer optimistic 'create' with error handling for unique constraints to minimize RTT in multi-step service methods.
+
+## 2026-07-02 - [Database] Consolidated Authorization & Membership Retrieval
+**Learning:** Performing O(N) in-memory membership verification after fetching a full members list is a major bottleneck. Moving authorization to the database layer using 'findFirst' with nested relation filters (e.g., 'members: { some: { userId } }') prevents fetching data for unauthorized requests and eliminates in-memory processing.
+**Action:** Always perform access control checks at the database query level using relation filters and use targeted 'select' to exclude heavy fields like BigInt permissions.
+
+## 2026-07-02 - [Database] Multi-Entity Lookup via OR Relation Filters
+**Learning:** Sequential queries for requester authorization and target entity verification (e.g., in removeMember) can be consolidated into a single database RTT using 'prisma.workspace.findUnique' with a nested 'select' on the relation using an 'OR' condition.
+**Action:** Consolidate multi-entity checks into a single round-trip by fetching all required relation records in one go and resolving them in-memory.
