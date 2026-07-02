@@ -30,7 +30,7 @@ export function EditProjectDialog({
   return (
     <Dialog open={editProjectOpen} onOpenChange={setEditProjectOpen}>
       <DialogContent>
-        <DialogHeader>
+        <DialogHeader bordered>
           <DialogTitle>Edit Project</DialogTitle>
           <DialogDescription>Update project information.</DialogDescription>
         </DialogHeader>
@@ -61,7 +61,7 @@ export function EditProjectDialog({
             />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter bordered>
           <Button variant="outline" onClick={() => setEditProjectOpen(false)}>
             Cancel
           </Button>

@@ -26,6 +26,7 @@ import { useRouter, useParams, usePathname } from '../hooks/use-universal-router
 import { useSession } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
+import { useCommandPalette } from './command-palette-provider';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
@@ -117,9 +118,9 @@ function ChannelSkeleton() {
 
 function StatusDot({ status }: { status?: string }) {
   const colorMap: Record<string, string> = {
-    online: 'bg-green-500',
-    away: 'bg-yellow-500',
-    busy: 'bg-red-500',
+    online: 'bg-success',
+    away: 'bg-warning',
+    busy: 'bg-destructive',
     offline: 'bg-muted-foreground/40',
   };
   return (
@@ -153,6 +154,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   const session = useSession();
   const sessionUser = session.data?.user;
   const { onlineUsers } = usePresence();
+  const commandPalette = useCommandPalette();
 
   const currentUser: User | undefined = sessionUser
     ? {
@@ -228,11 +230,26 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
 
         <div className="flex w-64 flex-col h-full">
           {/* Workspace title area */}
-          <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
-            <h1 className="text-lg font-bold truncate">{slug?.toString().replace(/-/g, ' ') || 'Workspace'}</h1>
-            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-muted-foreground">
-              <Search className="h-4 w-4" />
-            </Button>
+          <div className="h-16 flex items-center px-4 border-b border-sidebar-border/50">
+            <h1 className="text-base font-semibold truncate capitalize flex-1 px-2">
+              {workspace?.name || slug?.toString().replace(/-/g, ' ') || 'Workspace'}
+            </h1>
+          </div>
+
+          {/* Search trigger */}
+          <div className="px-3 pt-3">
+            <button
+              type="button"
+              onClick={() => commandPalette.setOpen(true)}
+              className="flex w-full items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Search workspace"
+            >
+              <Search className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left truncate">Search...</span>
+              <kbd className="pointer-events-none hidden items-center gap-0.5 rounded border border-sidebar-border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
           </div>
 
           {/* Scrollable nav */}

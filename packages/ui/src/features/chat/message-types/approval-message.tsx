@@ -4,11 +4,10 @@ import * as React from 'react';
 import { Check, X, MessageSquare, Clock, User, FileText } from 'lucide-react';
 import { Button } from '../../../components/button';
 import { Textarea } from '../../../components/textarea';
-import { Avatar, AvatarFallback } from '../../../components/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../components/avatar';
 import { Badge } from '../../../components/badge';
 import { Separator } from '../../../components/separator';
 import type { Message, MessageMetadata } from '../../../lib/types';
-import { mockUsers } from '../../../lib/mock-data';
 import { cn } from '../../../lib/utils';
 import { toast } from 'sonner';
 
@@ -23,8 +22,9 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
   const [localStatus, setLocalStatus] = React.useState(metadata.approvalStatus || 'pending');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const requester = mockUsers.find(u => u.id === message.userId);
-  const approver = metadata.approvedBy ? mockUsers.find(u => u.id === metadata.approvedBy) : null;
+  const requester = message.user ?? (message as any).sender ?? null;
+  const approver = (metadata as any).approvedByUser ?? null;
+  const initials = (name?: string) => (name ? name.slice(0, 2).toUpperCase() : '??');
 
   const handleAction = async (actionId: string) => {
     setIsSubmitting(true);
@@ -119,12 +119,15 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
                 {requester && (
                   <>
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">{requester.avatar}</AvatarFallback>
+                      <AvatarImage src={requester.image || requester.avatar} alt={requester.name} />
+                      <AvatarFallback className="text-xs">{initials(requester.name)}</AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">{requester.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {requester.role}
-                    </Badge>
+                    {requester.role && (
+                      <Badge variant="outline" className="text-xs">
+                        {requester.role}
+                      </Badge>
+                    )}
                   </>
                 )}
               </div>
@@ -212,7 +215,8 @@ export function ApprovalMessage({ message, metadata }: ApprovalMessageProps) {
                   </p>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">{approver.avatar}</AvatarFallback>
+                      <AvatarImage src={approver.image || approver.avatar} alt={approver.name} />
+                      <AvatarFallback className="text-xs">{initials(approver.name)}</AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">{approver.name}</span>
                   </div>

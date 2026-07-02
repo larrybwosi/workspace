@@ -77,7 +77,7 @@ export function CreateProjectDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
+        <DialogHeader bordered>
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>Start a new project in your workspace.</DialogDescription>
         </DialogHeader>
@@ -173,7 +173,7 @@ export function CreateProjectDialog({
             />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter bordered>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={createProject.isPending}>
             Cancel
           </Button>
