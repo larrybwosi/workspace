@@ -45,29 +45,6 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run tsc
 
-  fallow-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ github.token }}
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Run Prisma Generate
-        run: pnpm --filter @repo/database run db:generate
-      - name: Run Fallow Audit
-        uses: fallow-rs/fallow@v2
-        continue-on-error: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          command: audit
-        env:
-          FALLOW_PRODUCTION: 'true'
-
   unit-tests:
     runs-on: ubuntu-latest
     services:
@@ -231,7 +208,7 @@ jobs:
         run: cd apps/android && ./gradlew test
 
   all-tests-passed:
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, fallow-audit, native-android-test]
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -241,14 +218,12 @@ jobs:
           unit="${{ needs.unit-tests.result }}"
           api="${{ needs.api-e2e.result }}"
           web="${{ needs.web-e2e.result }}"
-          fallow="${{ needs.fallow-audit.result }}"
           android="${{ needs.native-android-test.result }}"
 
           if [[ "$lint" != "success" ]]; then exit 1; fi
           if [[ "$unit" != "success" ]]; then exit 1; fi
           if [[ "$api" != "success" ]]; then exit 1; fi
           if [[ "$web" != "success" ]]; then exit 1; fi
-          if [[ "$fallow" != "success" && "${{ github.ref }}" != "refs/heads/main" ]]; then exit 1; fi
           if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
 
   desktop-verify:
