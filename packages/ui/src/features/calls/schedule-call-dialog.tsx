@@ -69,7 +69,7 @@ export function ScheduleCallDialog({ open, onOpenChange, workspaceSlug, channelI
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+        <DialogHeader bordered>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
             Schedule a Call
@@ -127,7 +127,7 @@ export function ScheduleCallDialog({ open, onOpenChange, workspaceSlug, channelI
             />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter bordered>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
