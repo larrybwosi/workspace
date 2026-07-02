@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useWorkspace } from '@repo/api-client';
-import { useBranding } from '@repo/ui';
+import { useBranding, CommandPaletteProvider } from '@repo/ui';
 
 export default function WorkspaceLayoutClient({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -11,5 +11,9 @@ export default function WorkspaceLayoutClient({ children }: { children: React.Re
 
   useBranding(workspace?.brandingConfig);
 
-  return <>{children}</>;
+  return (
+    <CommandPaletteProvider workspaceSlug={slug} workspaceName={workspace?.name}>
+      {children}
+    </CommandPaletteProvider>
+  );
 }

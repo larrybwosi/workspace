@@ -1,44 +1,93 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type { SearchResult } from '@repo/types';
+
+export type WorkspaceSearchType = 'all' | 'messages' | 'channels' | 'members' | 'files';
+
+export interface SearchChannelResult {
+  id: string;
+  name: string;
+  slug: string | null;
+  icon: string;
+  type: string;
+  isPrivate: boolean;
+  description: string | null;
+}
+
+export interface SearchMemberResult {
+  id: string;
+  name: string | null;
+  email: string;
+  avatar: string | null;
+  status: string | null;
+  role: string | null;
+}
+
+export interface SearchMessageResult {
+  id: string;
+  content: string;
+  timestamp: string;
+  channelId: string;
+  threadId: string | null;
+  user: { id: string; name: string | null; avatar: string | null };
+  channel: { id: string; name: string; slug: string | null };
+}
+
+export interface SearchFileResult {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  size: string | null;
+  createdAt: string;
+  message: {
+    id: string;
+    channelId: string;
+    channel: { id: string; name: string; slug: string | null };
+  } | null;
+}
+
+export interface WorkspaceSearchResults {
+  channels: SearchChannelResult[];
+  members: SearchMemberResult[];
+  messages: SearchMessageResult[];
+  files: SearchFileResult[];
+}
+
+export interface WorkspaceSearchResponse {
+  query: string;
+  results: WorkspaceSearchResults;
+}
 
 export const searchKeys = {
   all: ['search'] as const,
-  results: (query: string) => [...searchKeys.all, query] as const,
+  workspace: (slug: string, query: string, type: WorkspaceSearchType) =>
+    [...searchKeys.all, slug, type, query] as const,
 };
 
-// Search across all content
-export function useSearch(query: string) {
-  return useQuery({
-    queryKey: searchKeys.results(query),
-    queryFn: async () => {
-      const { data } = await apiClient.get<SearchResult[]>('/search', {
-        params: { q: query },
-      });
-      return data;
-    },
-    enabled: query.length > 2, // Only search if query is longer than 2 characters
-  });
-}
+const EMPTY_RESULTS: WorkspaceSearchResults = { channels: [], members: [], messages: [], files: [] };
 
-// Search with filters
-export function useAdvancedSearch(
+/**
+ * Unified, session-authenticated workspace search that powers the command palette.
+ * Scoped to a single workspace slug and to channels the current user can access.
+ */
+export function useWorkspaceSearch(
+  slug: string | undefined,
   query: string,
-  filters: {
-    type?: 'message' | 'file' | 'thread';
-    channel?: string;
-    dateFrom?: Date;
-    dateTo?: Date;
-  }
+  options?: { type?: WorkspaceSearchType; limit?: number; enabled?: boolean }
 ) {
+  const type = options?.type ?? 'all';
+  const trimmed = query.trim();
+
   return useQuery({
-    queryKey: [...searchKeys.results(query), filters],
+    queryKey: searchKeys.workspace(slug ?? '', trimmed, type),
     queryFn: async () => {
-      const { data } = await apiClient.get<SearchResult[]>('/search/advanced', {
-        params: { q: query, ...filters },
+      const { data } = await apiClient.get<WorkspaceSearchResponse>(`/workspaces/${slug}/search`, {
+        params: { q: trimmed, type, limit: options?.limit ?? 8 },
       });
-      return data;
+      return data.results ?? EMPTY_RESULTS;
     },
-    enabled: query.length > 2,
+    enabled: Boolean(slug) && trimmed.length >= 1 && (options?.enabled ?? true),
+    placeholderData: previous => previous,
+    staleTime: 15_000,
   });
 }
