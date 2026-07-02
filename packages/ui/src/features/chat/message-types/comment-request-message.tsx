@@ -29,7 +29,6 @@ import {
 } from '../../../components/dropdown-menu';
 import { cn, formatTime } from '../../../lib/utils';
 import type { Message } from '../../../lib/types';
-import { mockUsers } from '../../../lib/mock-data';
 // Ensure this path matches your project structure
 import { MarkdownRenderer } from '../../../shared/markdown-renderer';
 import { useSession } from '@repo/shared';
@@ -101,7 +100,7 @@ export function CommentRequestMessage({
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const requester = mockUsers.find(u => u.id === message.userId);
+  const requester = message.user ?? (message as any).sender ?? null;
   const isResolved = status === 'resolved';
   const commentCount = comments.length;
 
@@ -252,7 +251,12 @@ export function CommentRequestMessage({
               <div className="relative space-y-4">
                 <div className="absolute left-[-20px] top-2 bottom-4 w-px bg-border/60" />
                 {comments.map(comment => (
-                  <CommentItem key={comment.id} comment={comment} currentUser={session?.user} />
+                  <CommentItem
+                    key={comment.id}
+                    comment={comment}
+                    currentUser={session?.user}
+                    requester={requester}
+                  />
                 ))}
               </div>
             )}
@@ -300,13 +304,20 @@ export function CommentRequestMessage({
 
 // --- Sub-Components ---
 
-function CommentItem({ comment, currentUser }: { comment: Comment; currentUser: any }) {
-  const author = mockUsers.find(u => u.id === comment.userId) || {
-    name: 'Unknown',
-    avatar: '',
-    id: 'unknown',
-  };
-  const isMe = currentUser.id === comment.userId;
+function CommentItem({
+  comment,
+  currentUser,
+  requester,
+}: {
+  comment: Comment;
+  currentUser: any;
+  requester: any;
+}) {
+  const isMe = currentUser?.id === comment.userId;
+  const candidate = isMe ? currentUser : comment.userId === requester?.id ? requester : null;
+  const author = candidate
+    ? { name: candidate.name, avatar: candidate.image || candidate.avatar || '', id: candidate.id }
+    : { name: 'Member', avatar: '', id: comment.userId };
 
   return (
     <div className="flex gap-3 group/comment">
