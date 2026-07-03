@@ -1,16 +1,14 @@
 'use client';
 
 import { ChannelView } from '@/components/features/chat/channel-view';
-import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { InfoPanel } from '@/components/shared/info-panel';
-import { useWorkspace } from '@repo/api-client';
+import { useWorkspaceChannels } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
-import { useWorkspaceChannels } from '@repo/api-client';
-
 export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlug: string }) {
+  // Info panel is closed by default; users open it via the header toggle
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { slug } = useParams();
@@ -18,27 +16,35 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
 
   const { data: channels } = useWorkspaceChannels(workspaceSlug);
 
+  // Resolve the real channel UUID from the slug
   const channel = channels?.find((c: any) => c.slug === channelSlug || c.id === channelSlug);
   const channelId = channel?.id || channelSlug;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspaceSlug} />
-      <div className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
-        <DynamicHeader
-          activeView={channelId}
-          onMenuClick={() => setSidebarOpen(true)}
-          onSearchClick={() => {}}
-          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
-        />
+      <WorkspaceSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        currentWorkspaceId={workspaceSlug}
+      />
 
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <div className="flex flex-1 overflow-hidden relative">
-          <main className="flex-1 flex flex-col min-w-0 bg-background h-full">
-            <ChannelView channelId={channelId} workspaceId={workspaceSlug} />
+          <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <ChannelView
+              channelId={channelId}
+              workspaceId={workspaceSlug}
+              onToggleInfo={() => setInfoPanelOpen(prev => !prev)}
+            />
           </main>
 
-          {/* 4. Info Panel: Rendered side-by-side */}
-          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={channelId} type="channel" />
+          {/* Info panel rendered side-by-side; hidden by default */}
+          <InfoPanel
+            isOpen={infoPanelOpen}
+            onClose={() => setInfoPanelOpen(false)}
+            id={channelId}
+            type="channel"
+          />
         </div>
       </div>
     </div>
