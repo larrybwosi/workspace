@@ -220,6 +220,7 @@ MessageReactions.displayName = 'MessageReactions';
 const MessageToolbar = memo(({
   handleAddReaction,
   handleReply,
+  handleOpenThread,
   setIsMenuOpen,
   handleCopyMessageLink,
   messageContent,
@@ -228,30 +229,38 @@ const MessageToolbar = memo(({
 }: {
   handleAddReaction: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
   handleReply: () => void,
+  handleOpenThread: () => void,
   setIsMenuOpen: (open: boolean) => void,
   handleCopyMessageLink: () => void,
   messageContent: string,
   handleEditMessage: () => void,
   handleDeleteMessage: () => void
 }) => (
-  <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75">
+  <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded-lg shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75 gap-0.5">
     <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-      <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
+      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" title="Add reaction">
         <Smile className="h-4 w-4 text-muted-foreground" />
       </Button>
     </CustomEmojiPicker>
 
-    <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted" onClick={handleReply}>
+    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={handleOpenThread} title="Open in thread">
       <MessageSquare className="h-4 w-4 text-muted-foreground" />
+    </Button>
+
+    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={handleReply} title="Reply">
+      <Reply className="h-4 w-4 text-muted-foreground" />
     </Button>
 
     <DropdownMenu onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 rounded hover:bg-muted">
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted">
           <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onClick={handleOpenThread} className="cursor-pointer">
+          <MessageSquare className="mr-2 h-4 w-4" /> Open Thread
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleReply} className="cursor-pointer">
           <Reply className="mr-2 h-4 w-4" /> Reply
         </DropdownMenuItem>
@@ -333,23 +342,39 @@ MessageContent.displayName = 'MessageContent';
 const MessageThreadIndicator = memo(({
   replyCount,
   threadId,
+  lastReplyUser,
   onClick
 }: {
   replyCount?: number,
   threadId?: string,
+  lastReplyUser?: { name: string; avatar?: string; image?: string },
   onClick: () => void
 }) => {
-  if (replyCount && replyCount > 0 || threadId) {
-      return (
-        <button
-          onClick={onClick}
-          className="mt-1 flex items-center gap-2 text-[13px] font-medium text-primary hover:underline transition-all"
-        >
+  if ((replyCount && replyCount > 0) || threadId) {
+    return (
+      <button
+        onClick={onClick}
+        className="mt-1.5 group flex items-center gap-2 rounded-md px-2 py-1 -ml-2 hover:bg-muted/60 transition-colors"
+      >
+        {lastReplyUser && (
+          <div className="h-5 w-5 rounded-full overflow-hidden bg-primary/20 shrink-0 flex items-center justify-center">
+            {lastReplyUser.avatar || lastReplyUser.image ? (
+              <img src={lastReplyUser.avatar || lastReplyUser.image} alt={lastReplyUser.name} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-[8px] font-bold text-primary">{lastReplyUser.name?.slice(0, 1).toUpperCase()}</span>
+            )}
+          </div>
+        )}
+        <span className="text-[13px] font-semibold text-primary group-hover:underline">
           {replyCount && replyCount > 0 ? `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}` : 'View thread'}
-        </button>
-      );
-    }
-    return null;
+        </span>
+        <span className="text-[12px] text-muted-foreground group-hover:text-foreground transition-colors">
+          View thread
+        </span>
+      </button>
+    );
+  }
+  return null;
 });
 
 MessageThreadIndicator.displayName = 'MessageThreadIndicator';
@@ -509,6 +534,7 @@ export const MessageItem = memo(function MessageItem({
             <MessageToolbar
               handleAddReaction={handleAddReaction}
               handleReply={handleReply}
+              handleOpenThread={handleOpenThread}
               setIsMenuOpen={setIsMenuOpen}
               handleCopyMessageLink={handleCopyMessageLink}
               messageContent={message.content}
@@ -521,6 +547,7 @@ export const MessageItem = memo(function MessageItem({
 
       <MessageContextMenuContent
         handleReply={handleReply}
+        handleOpenThread={handleOpenThread}
         handleCopyMessageLink={handleCopyMessageLink}
         messageContent={message.content}
         handleEditMessage={handleEditMessage}
@@ -616,6 +643,7 @@ const MessageMainContent = memo(({
     <MessageThreadIndicator
       replyCount={message.replyCount}
       threadId={message.threadId}
+      lastReplyUser={message.lastReplyUser || message.user}
       onClick={handleOpenThread}
     />
     <MessageReactionsWrapper message={message} handleAddReaction={handleAddReaction} handleToggleReaction={handleToggleReaction} />
@@ -680,18 +708,23 @@ MessageAvatar.displayName = 'MessageAvatar';
 
 const MessageContextMenuContent = memo(({
   handleReply,
+  handleOpenThread,
   handleCopyMessageLink,
   messageContent,
   handleEditMessage,
   handleDeleteMessage
 }: {
   handleReply: () => void,
+  handleOpenThread: () => void,
   handleCopyMessageLink: () => void,
   messageContent: string,
   handleEditMessage: () => void,
   handleDeleteMessage: () => void
 }) => (
   <ContextMenuContent className="w-52">
+    <ContextMenuItem onClick={handleOpenThread}>
+      <MessageSquare className="mr-2 h-4 w-4" /> Open Thread
+    </ContextMenuItem>
     <ContextMenuItem onClick={handleReply}>
       <Reply className="mr-2 h-4 w-4" /> Reply
     </ContextMenuItem>
