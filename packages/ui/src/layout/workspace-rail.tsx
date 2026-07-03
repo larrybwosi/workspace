@@ -37,7 +37,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
               className="h-12 w-12 rounded-2xl mb-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95"
               onClick={() => router.push('/')}
             >
-              <span className="text-2xl font-black">C</span>
+              <span className="text-2xl font-black">S</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">Home</TooltipContent>

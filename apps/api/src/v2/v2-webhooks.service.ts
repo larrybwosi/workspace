@@ -126,7 +126,7 @@ export class V2WebhooksService {
           response: JSON.stringify(response.data),
           statusCode: response.status,
           success: true,
-          userId: m2mApp.ownerId,
+          // userId: m2mApp.ownerId,
         },
       });
 
@@ -144,7 +144,7 @@ export class V2WebhooksService {
           statusCode: error.response?.status,
           success: false,
           error: error.message,
-          userId: m2mApp.ownerId,
+          // userId: m2mApp.ownerId,
         },
       });
 
