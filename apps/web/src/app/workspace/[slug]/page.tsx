@@ -19,11 +19,9 @@ import {
   LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
 import { cn } from '@/lib/utils';
@@ -116,19 +114,12 @@ export default function WorkspacePage() {
         {/* Minimal top bar for dashboard */}
         <header className="h-14 flex items-center justify-between px-6 border-b border-border bg-background/95 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" onClick={() => setSidebarOpen(true)}>
               <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M3 6h18M3 18h18" />
               </svg>
             </Button>
-            <span className="text-sm font-semibold text-muted-foreground">
-              {workspace.name}
-            </span>
+            <span className="text-sm font-semibold text-muted-foreground">{workspace.name}</span>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
             <span className="text-sm font-semibold text-foreground">Dashboard</span>
           </div>
@@ -148,7 +139,6 @@ export default function WorkspacePage() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 max-w-5xl mx-auto w-full space-y-6">
-
             {/* Workspace hero */}
             <div className="flex items-center gap-4">
               <div className="h-14 w-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl font-black text-primary shrink-0">
@@ -196,7 +186,12 @@ export default function WorkspacePage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-semibold">Recent Channels</CardTitle>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCreateChannelOpen(true)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setCreateChannelOpen(true)}
+                    >
                       <Plus className="h-3.5 w-3.5 mr-1" />
                       New
                     </Button>
@@ -205,7 +200,9 @@ export default function WorkspacePage() {
                 <CardContent className="pt-0">
                   {channelsLoading ? (
                     <div className="space-y-2">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 rounded-lg" />)}
+                      {[1, 2, 3].map(i => (
+                        <Skeleton key={i} className="h-10 rounded-lg" />
+                      ))}
                     </div>
                   ) : recentChannels.length > 0 ? (
                     <div className="space-y-0.5">
@@ -217,12 +214,14 @@ export default function WorkspacePage() {
                             href={`/workspace/${slug}/channels/${channel.slug ?? channel.id}`}
                             className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-muted transition-colors group"
                           >
-                            <div className={cn(
-                              'flex items-center justify-center h-7 w-7 rounded-md shrink-0',
-                              channel.type === 'private'
-                                ? 'bg-amber-500/10 text-amber-500'
-                                : 'bg-primary/10 text-primary'
-                            )}>
+                            <div
+                              className={cn(
+                                'flex items-center justify-center h-7 w-7 rounded-md shrink-0',
+                                channel.type === 'private'
+                                  ? 'bg-amber-500/10 text-amber-500'
+                                  : 'bg-primary/10 text-primary'
+                              )}
+                            >
                               <Icon className="h-3.5 w-3.5" />
                             </div>
                             <span className="flex-1 text-sm font-medium truncate text-foreground">{channel.name}</span>
