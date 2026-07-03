@@ -24,6 +24,7 @@ services:
       - NODE_ENV=production
     networks:
       - scrymechat-network
+      - dokploy-network
 
   api:
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
@@ -47,6 +48,7 @@ services:
       - NODE_ENV=production
     networks:
       - scrymechat-network
+      - dokploy-network
 
   postgres:
     image: postgres:17-alpine
@@ -86,4 +88,8 @@ volumes:
 
 networks:
   scrymechat-network:
+    name: scrymechat-network
     driver: bridge
+    attachable: true
+  dokploy-network:
+    external: true
