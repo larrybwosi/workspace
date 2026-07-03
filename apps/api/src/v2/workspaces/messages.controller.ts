@@ -592,15 +592,27 @@ export class V2MessagesController {
     let activeThreadId = threadId;
     let senderId = context.userId;
 
-    // M2M Support: Use default workspace bot as sender
+    // M2M Support: Use the M2M app's bot as sender if available, else fallback to workspace default bot
     if (context.organizationId && !context.isBot) {
-      const defaultBot = await prisma.botApplication.findFirst({
-        where: { workspaceId: context.workspaceId },
-        select: { botId: true },
-      });
+      if (context.m2mClientId) {
+        const m2mApp = await prisma.botApplication.findUnique({
+          where: { clientId: context.m2mClientId },
+          select: { botId: true },
+        });
+        if (m2mApp?.botId) {
+          senderId = m2mApp.botId;
+        }
+      }
 
-      if (defaultBot?.botId) {
-        senderId = defaultBot.botId;
+      if (senderId === context.userId) {
+        const defaultBot = await prisma.botApplication.findFirst({
+          where: { workspaceId: context.workspaceId },
+          select: { botId: true },
+        });
+
+        if (defaultBot?.botId) {
+          senderId = defaultBot.botId;
+        }
       }
     }
 

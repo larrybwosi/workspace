@@ -11,6 +11,16 @@ class CreateApplicationDto {
   description?: string;
   @ApiProperty({ required: false, description: 'Optional workspace ID to link the bot to' })
   workspaceId?: string;
+  @ApiProperty({ required: false })
+  organizationId?: string;
+  @ApiProperty({ required: false, example: ['*'] })
+  scopes?: string[];
+  @ApiProperty({ required: false })
+  allowedIps?: string[];
+  @ApiProperty({ required: false })
+  webhookUrl?: string;
+  @ApiProperty({ required: false })
+  webhookSecret?: string;
 }
 
 class UpdateApplicationDto {
@@ -20,6 +30,14 @@ class UpdateApplicationDto {
   description?: string;
   @ApiProperty({ required: false })
   channelDefinitions?: any;
+  @ApiProperty({ required: false })
+  scopes?: string[];
+  @ApiProperty({ required: false })
+  allowedIps?: string[];
+  @ApiProperty({ required: false })
+  webhookUrl?: string;
+  @ApiProperty({ required: false })
+  webhookSecret?: string;
 }
 
 @ApiTags('Bot Applications')

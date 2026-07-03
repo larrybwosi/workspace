@@ -52,49 +52,46 @@ export class V2OAuthController {
 
     const { client_id, client_secret, scope } = validatedData.data;
 
-    // 1. Try Bot Application
-    const botApp = await prisma.botApplication.findUnique({
+    // 1. Try Bot / M2M Application
+    const app = await prisma.botApplication.findUnique({
       where: { clientId: client_id },
       include: { bot: true },
     });
 
-    if (botApp) {
-      if (botApp.clientSecret !== client_secret) {
-        throw new UnauthorizedException('Invalid client credentials');
-      }
-
-      return this.issueToken(client_id, botApp.botId!, scope, 'bot');
-    }
-
-    // 2. Try M2M Application
-    const m2mApp = await prisma.m2mApplication.findUnique({
-      where: { clientId: client_id },
-    });
-
-    if (m2mApp) {
+    if (app) {
       const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
-      if (m2mApp.clientSecret !== hashedSecret && m2mApp.clientSecret !== client_secret) {
+      const isValid = app.clientSecret === client_secret || app.clientSecret === hashedSecret;
+
+      if (!isValid) {
         throw new UnauthorizedException('Invalid client credentials');
       }
 
       // Enterprise Feature: IP Whitelisting
-      if (m2mApp.allowedIps && m2mApp.allowedIps.length > 0) {
+      if (app.allowedIps && app.allowedIps.length > 0) {
         const clientIp = req.ip || req.socket.remoteAddress;
-        if (!clientIp || !m2mApp.allowedIps.includes(clientIp)) {
+        if (!clientIp || !app.allowedIps.includes(clientIp)) {
           throw new ForbiddenException('IP not allowed');
         }
       }
 
       // Check scopes
       const requestedScopes = scope ? scope.split(' ') : [];
-      const allowedScopes = m2mApp.scopes;
+      const allowedScopes = app.scopes;
 
-      const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s) && allowedScopes[0] !== '*');
-      if (unauthorizedScopes.length > 0) {
-        throw new ForbiddenException(`Unauthorized scopes: ${unauthorizedScopes.join(', ')}`);
+      if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
+        const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
+        if (unauthorizedScopes.length > 0) {
+          throw new ForbiddenException(`Unauthorized scopes: ${unauthorizedScopes.join(', ')}`);
+        }
       }
 
-      return this.issueToken(client_id, `m2m:${m2mApp.organizationId}`, scope || allowedScopes.join(' '), 'm2m');
+      if (app.organizationId) {
+        // M2M Application
+        return this.issueToken(client_id, `m2m:${app.organizationId}`, scope || (allowedScopes.length ? allowedScopes.join(' ') : '*'), 'm2m');
+      } else {
+        // Regular Bot Application
+        return this.issueToken(client_id, app.botId!, scope || '*', 'bot');
+      }
     }
 
     throw new UnauthorizedException('Invalid client credentials');

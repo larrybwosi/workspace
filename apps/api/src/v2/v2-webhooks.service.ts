@@ -116,9 +116,38 @@ export class V2WebhooksService {
         },
         timeout: 5000,
       });
+
+      // Log M2M webhook success
+      await prisma.webhookLog.create({
+        data: {
+          webhookId: m2mApp.id,
+          event: eventType,
+          payload: event as any,
+          response: JSON.stringify(response.data),
+          statusCode: response.status,
+          success: true,
+          userId: m2mApp.ownerId,
+        },
+      });
+
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('M2M Webhook Callback Error:', error);
+
+      // Log M2M webhook failure
+      await prisma.webhookLog.create({
+        data: {
+          webhookId: m2mApp.id,
+          event: eventType,
+          payload: event as any,
+          response: JSON.stringify(error.response?.data || {}),
+          statusCode: error.response?.status,
+          success: false,
+          error: error.message,
+          userId: m2mApp.ownerId,
+        },
+      });
+
       return null;
     }
   }
