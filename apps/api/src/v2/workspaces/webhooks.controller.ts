@@ -64,7 +64,22 @@ export class V2WebhooksController {
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all webhooks in the workspace', description: 'Requires webhooks:read scope.' })
+  @ApiOperation({
+    summary: 'List all webhooks in the workspace',
+    description: `
+Requires webhooks:read scope.
+List all webhooks configured for this workspace.
+
+**Supported Events:**
+- \`message.sent\`: Triggered when a new message is sent.
+- \`message.updated\`: Triggered when a message is edited or updated by a callback.
+- \`message.action\`: Triggered when a user clicks an interactive button on a message.
+- \`channel.created\`: Triggered when a new channel is created.
+- \`channel.updated\`: Triggered when channel details change.
+- \`member.joined\`: Triggered when a new member joins the workspace.
+- \`member.left\`: Triggered when a member leaves the workspace.
+    `,
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of webhooks returned successfully.' })
   async getWebhooks(@V2Context() context: ApiV2Context) {

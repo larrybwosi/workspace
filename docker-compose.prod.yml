@@ -17,13 +17,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
-      - REDIS_URL=redis://redis:6379
-      - NEXT_PUBLIC_API_URL=http://api:3000
       - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
     networks:
       - scrymechat-network
+      - dokploy-network
 
   api:
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
@@ -41,12 +43,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
-      - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
     networks:
       - scrymechat-network
+      - dokploy-network
 
   postgres:
     image: postgres:17-alpine
@@ -54,12 +59,14 @@ services:
     restart: always
     volumes:
       - db_data:/var/lib/postgresql/data
+    env_file:
+      - .env
     environment:
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
       - POSTGRES_DB=${DB_NAME:-main}
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -72,8 +79,25 @@ services:
     restart: always
     volumes:
       - redis_data:/data
+    env_file:
+      - .env
+    command: >
+      sh -c "
+        if [ -n \"$REDIS_PASSWORD\" ]; then
+          exec redis-server --requirepass \"$REDIS_PASSWORD\"
+        else
+          exec redis-server
+        fi
+      "
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: >
+        sh -c "
+          if [ -n \"$REDIS_PASSWORD\" ]; then
+            redis-cli -a \"$REDIS_PASSWORD\" ping
+          else
+            redis-cli ping
+          fi
+        "
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,4 +110,8 @@ volumes:
 
 networks:
   scrymechat-network:
+    name: scrymechat-network
     driver: bridge
+    attachable: true
+  dokploy-network:
+    external: true

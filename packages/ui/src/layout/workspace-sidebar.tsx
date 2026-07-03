@@ -14,6 +14,9 @@ import {
   Sparkles,
   Plug2,
   Hash,
+  ChevronRight,
+  MessageCircle,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '../components/button';
 import { ScrollArea } from '../components/scroll-area';
@@ -31,7 +34,7 @@ import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 import { CreateTicketDialog } from '../features/support/create-ticket-dialog';
-import { useCreateWorkspaceChannel, useWorkspaceChannels, useWorkspace } from '@repo/api-client';
+import { useCreateWorkspaceChannel, useWorkspaceChannels, useWorkspace, useFriends } from '@repo/api-client';
 import { User } from '../lib/types';
 import { usePresence } from '../lib/contexts/presence-context';
 
@@ -116,20 +119,74 @@ function ChannelSkeleton() {
   );
 }
 
-function StatusDot({ status }: { status?: string }) {
+function StatusDot({ status, className }: { status?: string; className?: string }) {
   const colorMap: Record<string, string> = {
-    online: 'bg-success',
-    away: 'bg-warning',
-    busy: 'bg-destructive',
+    online: 'bg-green-500',
+    away: 'bg-yellow-500',
+    busy: 'bg-red-500',
     offline: 'bg-muted-foreground/40',
   };
   return (
     <span
       className={cn(
-        'absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-sidebar',
-        colorMap[status ?? 'offline'] ?? colorMap.offline
+        'shrink-0 h-2 w-2 rounded-full ring-1 ring-sidebar',
+        colorMap[status ?? 'offline'] ?? colorMap.offline,
+        className
       )}
     />
+  );
+}
+
+// Collapsible section wrapper
+function CollapsibleSection({
+  label,
+  isCollapsed,
+  onToggle,
+  actionIcon,
+  actionLabel,
+  onAction,
+  children,
+}: {
+  label: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  actionIcon?: React.ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between px-3 mb-1 group/section">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+        >
+          <ChevronRight className={cn('h-3 w-3 transition-transform duration-150', !isCollapsed && 'rotate-90')} />
+          {label}
+        </button>
+        {onAction && (
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 rounded text-muted-foreground hover:text-foreground opacity-0 group-hover/section:opacity-100 transition-opacity"
+                  onClick={e => { e.stopPropagation(); onAction(); }}
+                  aria-label={actionLabel}
+                >
+                  {actionIcon}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">{actionLabel}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+      {!isCollapsed && <div className="space-y-0.5">{children}</div>}
+    </div>
   );
 }
 
@@ -147,6 +204,8 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false);
   const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
+  const [channelsCollapsed, setChannelsCollapsed] = React.useState(false);
+  const [dmsCollapsed, setDmsCollapsed] = React.useState(false);
 
   const { data: workspace } = useWorkspace(workspaceSlug ?? '');
   const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(workspaceSlug ?? '');
@@ -155,6 +214,9 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   const sessionUser = session.data?.user;
   const { onlineUsers } = usePresence();
   const commandPalette = useCommandPalette();
+
+  // Friends/DM list
+  const { data: friends, isLoading: friendsLoading } = useFriends();
 
   const currentUser: User | undefined = sessionUser
     ? {
@@ -230,8 +292,8 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
 
         <div className="flex w-64 flex-col h-full">
           {/* Workspace title area */}
-          <div className="h-16 flex items-center px-4 border-b border-sidebar-border/50">
-            <h1 className="text-base font-semibold truncate capitalize flex-1 px-2">
+          <div className="h-14 flex items-center px-4 border-b border-sidebar-border/50">
+            <h1 className="text-[15px] font-semibold truncate capitalize flex-1 px-1">
               {workspace?.name || slug?.toString().replace(/-/g, ' ') || 'Workspace'}
             </h1>
           </div>
@@ -275,7 +337,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
 
               <Separator className="bg-sidebar-border" />
 
-              {/* Channels */}
+              {/* Support tickets */}
               <div>
                 <div className="flex items-center justify-between px-3 mb-1">
                   <SectionLabel>Support</SectionLabel>
@@ -297,7 +359,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
                   </TooltipProvider>
                 </div>
 
-                <div className="space-y-0.5 mb-5">
+                <div className="space-y-0.5 mb-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -313,69 +375,138 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
                     <span className="flex-1 truncate text-left">All Tickets</span>
                   </Button>
                 </div>
-
-                <div className="flex items-center justify-between px-3 mb-1">
-                  <SectionLabel>Channels</SectionLabel>
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
-                          onClick={() => setCreateChannelOpen(true)}
-                          aria-label="Create channel"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">New channel</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-
-                <div className="space-y-0.5">
-                  {channelsLoading ? (
-                    <ChannelSkeleton />
-                  ) : channels?.length > 0 ? (
-                    channels.map((channel: any) => {
-                      const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
-                      const isActive = pathname === href;
-                      const Icon = channel.type === 'private' ? Lock : Hash;
-
-                      return (
-                        <Button
-                          key={channel.id}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
-                            isActive
-                              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                          )}
-                          onClick={() => handleNavigate(href, channel.slug ?? channel.id)}
-                        >
-                          <Icon
-                            className={cn(
-                              'h-3.5 w-3.5 shrink-0',
-                              isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
-                            )}
-                          />
-                          <span className="flex-1 truncate text-left">{channel.name}</span>
-                          {channel.unreadCount > 0 && (
-                            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                              {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
-                            </span>
-                          )}
-                        </Button>
-                      );
-                    })
-                  ) : (
-                    <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No channels yet</p>
-                  )}
-                </div>
               </div>
+
+              {/* Channels — collapsible */}
+              <CollapsibleSection
+                label="Channels"
+                isCollapsed={channelsCollapsed}
+                onToggle={() => setChannelsCollapsed(v => !v)}
+                actionIcon={<Plus className="h-3.5 w-3.5" />}
+                actionLabel="New channel"
+                onAction={() => setCreateChannelOpen(true)}
+              >
+                {channelsLoading ? (
+                  <ChannelSkeleton />
+                ) : channels?.length > 0 ? (
+                  channels.map((channel: any) => {
+                    const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
+                    const isActive = pathname === href;
+                    const Icon = channel.type === 'private' ? Lock : Hash;
+                    const hasUnread = (channel.unreadCount ?? 0) > 0;
+
+                    return (
+                      <Button
+                        key={channel.id}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                          isActive
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                            : hasUnread
+                              ? 'text-sidebar-foreground font-semibold hover:bg-sidebar-accent/50'
+                              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                        )}
+                        onClick={() => handleNavigate(href, channel.slug ?? channel.id)}
+                      >
+                        <Icon
+                          className={cn(
+                            'h-3.5 w-3.5 shrink-0',
+                            isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
+                          )}
+                        />
+                        <span className="flex-1 truncate text-left">{channel.name}</span>
+                        {hasUnread && (
+                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                            {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    );
+                  })
+                ) : (
+                  <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No channels yet</p>
+                )}
+              </CollapsibleSection>
+
+              {/* Direct Messages — collapsible */}
+              <CollapsibleSection
+                label="Direct Messages"
+                isCollapsed={dmsCollapsed}
+                onToggle={() => setDmsCollapsed(v => !v)}
+                actionIcon={<UserPlus className="h-3.5 w-3.5" />}
+                actionLabel="New direct message"
+                onAction={() => router.push('/friends')}
+              >
+                {friendsLoading ? (
+                  <div className="space-y-1">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="flex items-center h-9 px-3 gap-2.5">
+                        <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+                        <div className="flex-1 space-y-1">
+                          <Skeleton className="h-2.5 w-20 rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : friends?.length > 0 ? (
+                  friends.map((friend: any) => {
+                    const friendUser = friend.friend || friend.user || friend;
+                    const friendId = friendUser?.id || friend.friendId || friend.userId;
+                    const href = `/dm/${friendId}`;
+                    const isActive = pathname === href;
+                    const isOnline = onlineUsers.has(friendId);
+                    const presence = isOnline ? 'online' : 'offline';
+                    const displayName = friendUser?.name || friend.nickname || 'Unknown';
+
+                    return (
+                      <Button
+                        key={friendId}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                          isActive
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                        )}
+                        onClick={() => handleNavigate(href, friendId)}
+                      >
+                        <div className="relative shrink-0">
+                          <Avatar className="h-6 w-6 rounded-full">
+                            <AvatarImage src={friendUser?.avatar || friendUser?.image} alt={displayName} />
+                            <AvatarFallback className="text-[9px] bg-primary/20 text-primary">
+                              {displayName.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <StatusDot
+                            status={presence}
+                            className="absolute -bottom-0.5 -right-0.5 h-2 w-2 ring-1 ring-sidebar"
+                          />
+                        </div>
+                        <span className="flex-1 truncate text-left">{friend.nickname || displayName}</span>
+                        {isOnline && (
+                          <span className="text-[10px] text-green-500 font-medium shrink-0">Active</span>
+                        )}
+                      </Button>
+                    );
+                  })
+                ) : (
+                  <div className="px-3 py-3 text-center">
+                    <p className="text-xs text-muted-foreground/60 italic mb-2">No direct messages yet</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs w-full"
+                      onClick={() => router.push('/friends')}
+                    >
+                      <UserPlus className="h-3 w-3 mr-1.5" />
+                      Find people
+                    </Button>
+                  </div>
+                )}
+              </CollapsibleSection>
             </div>
           </ScrollArea>
         </div>

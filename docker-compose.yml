@@ -20,15 +20,30 @@ services:
       - scrymechat-network
 
   redis:
-    image: redis:7-alpine # Switched to alpine for consistency/size
+    image: redis:7-alpine
     container_name: scrymechat-workspace-redis
     restart: always
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
+    command: >
+      sh -c "
+        if [ -n \"$REDIS_PASSWORD\" ]; then
+          exec redis-server --requirepass \"$REDIS_PASSWORD\"
+        else
+          exec redis-server
+        fi
+      "
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: >
+        sh -c "
+          if [ -n \"$REDIS_PASSWORD\" ]; then
+            redis-cli -a \"$REDIS_PASSWORD\" ping
+          else
+            redis-cli ping
+          fi
+        "
       interval: 10s
       timeout: 5s
       retries: 5

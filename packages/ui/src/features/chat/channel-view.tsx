@@ -176,6 +176,9 @@ export function ChannelView({
         <ChannelHeader
           isWidget={isWidget}
           channelName={channelData?.name || channelId || 'general'}
+          channelDescription={(channelData as any)?.description}
+          memberCount={(channelData as any)?._count?.members ?? (channelData as any)?.memberCount}
+          isPrivate={(channelData as any)?.isPrivate || (channelData as any)?.type === 'private'}
           onEdit={() => setEditDialogOpen(true)}
           onToggleInfo={onToggleInfo}
         />
@@ -237,6 +240,7 @@ export function ChannelView({
           onClose={() => setActiveThread(null)}
           workspaceId={workspaceSlug}
           channelId={channelId}
+          channelName={channelData?.name}
         />
       )}
     </div>
