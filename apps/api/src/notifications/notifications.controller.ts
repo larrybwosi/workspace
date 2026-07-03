@@ -13,24 +13,30 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { NotificationsService } from './notifications.service';
+import { IsString, IsEnum, IsBoolean } from 'class-validator';
 
 class WorkspaceSettingsDto {
+  @IsString()
   @ApiProperty({ example: 'workspace_123' })
   workspaceId: string;
 
+  @IsEnum(['all', 'mentions', 'none'])
   @ApiProperty({ enum: ['all', 'mentions', 'none'], example: 'all' })
   preference: string;
 }
 
 class ChannelSettingsDto {
+  @IsString()
   @ApiProperty({ example: 'channel_123' })
   channelId: string;
 
+  @IsEnum(['all', 'mentions', 'none', 'default'])
   @ApiProperty({ enum: ['all', 'mentions', 'none', 'default'], example: 'all' })
   preference: string;
 }
 
 class UpdateNotificationDto {
+  @IsBoolean()
   @ApiProperty({ example: true })
   isRead: boolean;
 }

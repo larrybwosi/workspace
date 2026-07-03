@@ -20,12 +20,16 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
+import { IsString, IsOptional, IsEmail } from 'class-validator';
 
 // fallow-ignore-next-line code-duplication
 class AddMemberDto {
+  @IsEmail()
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
   email: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'member', description: 'The role of the member', required: false, default: 'member' })
   role?: string;
 }

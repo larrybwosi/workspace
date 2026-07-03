@@ -21,37 +21,76 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
+import { IsString, IsOptional } from 'class-validator';
 
 class CreateTeamDto {
+  @IsString()
   @ApiProperty({ example: 'Engineering' })
   name: string;
+
+  @IsString()
   @ApiProperty({ example: 'engineering' })
   slug: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   icon?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   color?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   departmentId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   leadId?: string;
 }
 
 class UpdateTeamDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   name?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   slug?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   icon?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   color?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   departmentId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   leadId?: string;
 }

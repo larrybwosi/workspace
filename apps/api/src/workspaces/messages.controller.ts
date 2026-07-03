@@ -24,38 +24,54 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { MessagesService } from '@/workspaces/messages.service';
+import { IsString, IsOptional, IsArray, IsObject } from 'class-validator';
 
 class CreateMessageDto {
+  @IsString()
   @ApiProperty({ example: 'Hello world!' })
   content: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'thread_123' })
   threadId?: string;
 
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   metadata?: any;
 
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: [Object] })
   attachments?: any[];
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   stickerId?: string;
 }
 
 class UpdateMessageDto {
+  @IsString()
   @ApiProperty({ example: 'Updated content' })
   content: string;
 }
 
 class MarkMessagesAsReadDto {
+  @IsArray()
+  @IsString({ each: true })
   @ApiProperty({ type: [String], example: ['msg_1', 'msg_2'] })
   messageIds: string[];
 }
 
 class AddReactionDto {
+  @IsString()
   @ApiProperty({ example: '👍' })
   emoji: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'emoji_123' })
   customEmojiId?: string;
 }

@@ -19,45 +19,95 @@ import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
+import { IsString, IsOptional, IsEnum, IsBoolean, IsObject, IsArray } from 'class-validator';
 
 class CreateAnnouncementDto {
+  @IsString()
   @ApiProperty({ example: 'dept_123' })
   departmentId: string;
+
+  @IsString()
   @ApiProperty({ example: 'New Policy' })
   title: string;
+
+  @IsString()
   @ApiProperty({ example: 'The new policy is...' })
   content: string;
+
+  @IsEnum(['low', 'normal', 'high', 'urgent'])
+  @IsOptional()
   @ApiProperty({ enum: ['low', 'normal', 'high', 'urgent'], default: 'normal', required: false })
   priority?: 'low' | 'normal' | 'high' | 'urgent';
+
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ default: false, required: false })
   pinned?: boolean;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'ISO string date' })
   publishAt?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'ISO string date' })
   expiresAt?: string;
+
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   targetAudience?: Record<string, any>;
+
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
   attachments?: any[];
 }
 
 class UpdateAnnouncementDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   departmentId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   title?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   content?: string;
+
+  @IsEnum(['low', 'normal', 'high', 'urgent'])
+  @IsOptional()
   @ApiProperty({ enum: ['low', 'normal', 'high', 'urgent'], required: false })
   priority?: 'low' | 'normal' | 'high' | 'urgent';
+
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false })
   pinned?: boolean;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   publishAt?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   expiresAt?: string;
+
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   targetAudience?: Record<string, any>;
+
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
   attachments?: any[];
 }

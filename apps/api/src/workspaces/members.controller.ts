@@ -17,8 +17,10 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { publishRealtime, AblyChannels } from '@repo/shared/server';
+import { IsEnum } from 'class-validator';
 
 class UpdateMemberRoleDto {
+  @IsEnum(['owner', 'admin', 'member', 'guest'])
   @ApiProperty({ enum: ['owner', 'admin', 'member', 'guest'], example: 'admin' })
   role: 'owner' | 'admin' | 'member' | 'guest';
 }

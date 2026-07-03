@@ -3,39 +3,85 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, A
 import { ApiV2Guard, ApiV2Context } from '../auth/api-v2.guard';
 import { V2Context } from '../auth/v2-context.decorator';
 import { V2ApplicationsService } from './applications.service';
+import { IsString, IsOptional, IsArray } from 'class-validator';
 
 class CreateApplicationDto {
+  @IsString()
   @ApiProperty({ example: 'My Bot' })
   name: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'Optional workspace ID to link the bot to' })
   workspaceId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   organizationId?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ required: false, example: ['*'] })
   scopes?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ required: false })
   allowedIps?: string[];
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   webhookUrl?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   webhookSecret?: string;
 }
 
 class UpdateApplicationDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   name?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsOptional()
   @ApiProperty({ required: false })
   channelDefinitions?: any;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ required: false })
   scopes?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ required: false })
   allowedIps?: string[];
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   webhookUrl?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   webhookSecret?: string;
 }

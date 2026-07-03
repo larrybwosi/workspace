@@ -18,34 +18,52 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { AblyChannels, EVENTS, getAblyServer } from '@repo/shared/server';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 
 class CreateWorkspaceChannelDto {
+  @IsString()
   @ApiProperty({ example: 'general' })
   name: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'The general channel for everyone' })
   description?: string;
 
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['public', 'private'], default: 'public' })
   type?: 'public' | 'private';
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'dept_123' })
   departmentId?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Hash' })
   icon?: string;
 }
 
 class UpdateWorkspaceChannelDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'new-name' })
   name?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated description' })
   description?: string;
 
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['public', 'private'] })
   type?: 'public' | 'private';
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'MessageSquare' })
   icon?: string;
 }
