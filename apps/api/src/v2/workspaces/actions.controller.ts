@@ -118,7 +118,7 @@ export class V2MessageActionsController {
     const m2mClientId = (message.metadata as any)?.m2mClientId;
     if (!m2mClientId) return null;
 
-    const m2mApp = await this.prisma.client.m2mApplication.findUnique({
+    const m2mApp = await this.prisma.client.botApplication.findUnique({
       where: { clientId: m2mClientId },
     });
 

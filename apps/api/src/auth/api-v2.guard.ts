@@ -178,6 +178,32 @@ export class ApiV2Guard implements CanActivate {
         if (context.userId.startsWith('m2m:')) {
           context.organizationId = context.userId.split(':')[1];
           context.m2mClientId = context.clientId;
+
+          // Enterprise Feature: Scope & IP Enforcement
+          const app = await prisma.botApplication.findUnique({
+            where: { clientId: context.m2mClientId },
+          });
+
+          if (app) {
+            // IP Whitelisting
+            if (app.allowedIps && app.allowedIps.length > 0) {
+              const clientIp = request.ip || request.socket.remoteAddress;
+              if (!clientIp || !app.allowedIps.includes(clientIp)) {
+                throw new ForbiddenException('IP not allowed');
+              }
+            }
+
+            // Scope Enforcement
+            const requestedScopes = context.scopes;
+            const allowedScopes = app.scopes;
+
+            if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
+              const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
+              if (unauthorizedScopes.length > 0) {
+                throw new ForbiddenException(`Unauthorized scopes: ${unauthorizedScopes.join(', ')}`);
+              }
+            }
+          }
         }
 
         /**
