@@ -39,11 +39,36 @@ export class V2OAuthController {
   @Post('token')
   @ApiOperation({
     summary: 'Exchange client credentials for an access token',
-    description: 'Used for bot, integration, and M2M authentication.',
+    description: `
+Used for bot, integration, and M2M authentication.
+
+**Scopes available:**
+- \`*\`: Full access (only for internal system bots).
+- \`provisioning:workspaces\`: Ability to create and manage workspaces.
+- \`messages:read\`: Read messages in allowed channels.
+- \`messages:send\`: Send messages and trigger actions.
+- \`channels:read\`: List and view channel details.
+- \`channels:write\`: Create and manage channels.
+- \`webhooks:read\`: View webhook configurations.
+- \`webhooks:write\`: Manage webhooks.
+    `,
   })
   @ApiBody({ type: TokenRequestDto })
-  @ApiResponse({ status: 200, description: 'Access token returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Access token returned successfully.',
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: { type: 'string', example: 'oat_...' },
+        token_type: { type: 'string', example: 'Bearer' },
+        expires_in: { type: 'integer', example: 3600 },
+        scope: { type: 'string', example: 'provisioning:workspaces messages:send' },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Invalid client credentials.' })
+  @ApiResponse({ status: 403, description: 'IP not allowed or unauthorized scopes.' })
   async getToken(@Req() req: any, @Body() body: TokenRequestDto) {
     const validatedData = tokenRequestSchema.safeParse(body);
     if (!validatedData.success) {
@@ -63,14 +88,14 @@ export class V2OAuthController {
       const isValid = app.clientSecret === client_secret || app.clientSecret === hashedSecret;
 
       if (!isValid) {
-        throw new UnauthorizedException('Invalid client credentials');
+        throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
       }
 
       // Enterprise Feature: IP Whitelisting
       if (app.allowedIps && app.allowedIps.length > 0) {
         const clientIp = req.ip || req.socket.remoteAddress;
         if (!clientIp || !app.allowedIps.includes(clientIp)) {
-          throw new ForbiddenException('IP not allowed');
+          throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist for this application.`);
         }
       }
 
