@@ -17,11 +17,14 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+import { IsString, IsOptional, IsNumber, IsObject } from 'class-validator';
 
 class CreateApiTokenDto {
+  @IsString()
   @ApiProperty({ example: 'My API Token' })
   name: string;
 
+  @IsObject()
   @ApiProperty({
     type: 'object',
     properties: {
@@ -54,9 +57,13 @@ class CreateApiTokenDto {
     teams?: string[];
   };
 
+  @IsNumber()
+  @IsOptional()
   @ApiProperty({ required: false, default: 1000, example: 5000 })
   rateLimit?: number;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'ISO format datetime' })
   expiresAt?: string;
 }

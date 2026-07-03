@@ -18,20 +18,32 @@ import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
 import { V2ApplicationsService } from '../applications.service';
+import { IsString, IsOptional, IsArray } from 'class-validator';
 
 class CreateM2mApplicationDto {
+  @IsString()
   @ApiProperty({ example: 'Provisioning App' })
   name: string;
 
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ example: ['provisioning:workspaces'], required: false })
   scopes?: string[];
 
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ example: ['127.0.0.1'], required: false })
   allowedIps?: string[];
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'https://api.example.com/webhook', required: false })
   webhookUrl?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'your-webhook-secret', required: false })
   webhookSecret?: string;
 }

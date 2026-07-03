@@ -11,17 +11,23 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty } from '@nestj
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import { z } from 'zod';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 
 class TokenRequestDto {
+  @IsEnum(['client_credentials'])
   @ApiProperty({ example: 'client_credentials', enum: ['client_credentials'] })
   grant_type: 'client_credentials';
 
+  @IsString()
   @ApiProperty({ example: 'your_client_id' })
   client_id: string;
 
+  @IsString()
   @ApiProperty({ example: 'your_client_secret' })
   client_secret: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'provisioning:workspaces', required: false })
   scope?: string;
 }

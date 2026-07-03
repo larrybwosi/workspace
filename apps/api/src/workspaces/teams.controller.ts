@@ -28,40 +28,61 @@ import type { User } from '@repo/database';
 import { z } from 'zod';
 import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared/server';
 import { TeamSyncService } from './team-sync.service';
+import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
 
 class CreateWorkspaceTeamDto {
+  @IsString()
   @ApiProperty({ example: 'Engineering' })
   name: string;
 
+  @IsString()
   @ApiProperty({ example: 'engineering' })
   slug: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Our engineering team' })
   description?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Users' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: '#3b82f6' })
   color?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'dept_123' })
   departmentId?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'user_123' })
   leadId?: string;
 
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ required: false, type: [String], example: ['user_123', 'user_456'] })
   memberIds?: string[];
 
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false, default: true })
   createChannel?: boolean;
 }
 
 class AddTeamMemberDto {
+  @IsString()
   @ApiProperty({ example: 'user_123' })
   userId: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'member' })
   role?: string;
 }

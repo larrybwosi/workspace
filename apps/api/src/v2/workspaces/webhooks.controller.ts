@@ -19,25 +19,47 @@ import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+import { IsString, IsOptional, IsArray, IsBoolean, IsUrl } from 'class-validator';
 
 class CreateWebhookDto {
+  @IsString()
   @ApiProperty({ example: 'My Webhook' })
   name: string;
+
+  @IsUrl()
   @ApiProperty({ example: 'https://example.com/webhook' })
   url: string;
+
+  @IsArray()
+  @IsString({ each: true })
   @ApiProperty({ example: ['message.sent', 'channel.created'] })
   events: string[];
+
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ default: true, required: false })
   active?: boolean;
 }
 
 class UpdateWebhookDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   name?: string;
+
+  @IsUrl()
+  @IsOptional()
   @ApiProperty({ required: false })
   url?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ required: false })
   events?: string[];
+
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false })
   active?: boolean;
 }

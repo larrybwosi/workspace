@@ -38,48 +38,98 @@ import { V2WebhooksService } from '../v2-webhooks.service';
 import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { CustomMessageSchema } from '@repo/shared';
 import { StorageService } from '../../common/storage/storage.service';
+import { IsString, IsOptional, IsEnum, IsObject, IsArray } from 'class-validator';
 
 class CreateChannelDto {
+  @IsString()
   @ApiProperty({ example: 'general' })
   name: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'Hash', required: false, default: 'Hash' })
   icon?: string;
+
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ enum: ['public', 'private'], default: 'public', required: false })
   type?: 'public' | 'private';
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   metadata?: Record<string, any>;
 }
 
 class UpdateChannelDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   name?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   icon?: string;
+
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ enum: ['public', 'private'], required: false })
   type?: 'public' | 'private';
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
 }
 
 class SendMessageDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'Required if recipientId is not provided' })
   channelId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'Required if channelId is not provided' })
   recipientId?: string;
+
+  @IsString()
   @ApiProperty({ example: 'Hello world!' })
   content: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   threadId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   contextId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, default: 'standard' })
   messageType?: string;
+
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   metadata?: Record<string, any>;
+
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
   actions?: any[];
+
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
   attachments?: any[];
 }
