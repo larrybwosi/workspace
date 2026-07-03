@@ -13,16 +13,21 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { FriendsService } from './friends.service';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 
 class SendFriendRequestDto {
+  @IsString()
   @ApiProperty({ example: 'user_123', description: 'The ID of the user to send a request to' })
   receiverId: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: "Hi, let's be friends!" })
   message?: string;
 }
 
 class UpdateFriendRequestDto {
+  @IsEnum(['accept', 'decline', 'cancel'])
   @ApiProperty({ enum: ['accept', 'decline', 'cancel'], example: 'accept' })
   action: 'accept' | 'decline' | 'cancel';
 }

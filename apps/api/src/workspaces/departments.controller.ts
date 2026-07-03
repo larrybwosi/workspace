@@ -28,55 +28,84 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { getAblyServer, AblyChannels, EVENTS } from '@repo/shared/server';
+import { IsString, IsOptional, IsBoolean, IsEnum, IsArray } from 'class-validator';
 
 class CreateWorkspaceDepartmentDto {
+  @IsString()
   @ApiProperty({ example: 'Human Resources' })
   name: string;
 
+  @IsString()
   @ApiProperty({ example: 'hr' })
   slug: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'HR department' })
   description?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Building' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: '#f43f5e' })
   color?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'dept_123' })
   parentId?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'user_123' })
   managerId?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   settings?: any;
 
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false, default: true })
   createChannel?: boolean;
 }
 
 class UpdateWorkspaceDepartmentDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'New Name' })
   name?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated description' })
   description?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Building2' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: '#ef4444' })
   color?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, nullable: true })
   parentId?: string | null;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, nullable: true })
   managerId?: string | null;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   settings?: any;
 }

@@ -18,19 +18,26 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+import { IsString, IsArray, IsUrl, IsOptional, IsBoolean } from 'class-validator';
 
 class CreateWorkspaceWebhookDto {
+  @IsString()
   @ApiProperty({ example: 'My Webhook' })
   name: string;
 
+  @IsUrl()
   @ApiProperty({ example: 'https://example.com/webhook' })
   url: string;
 
+  @IsArray()
+  @IsString({ each: true })
   @ApiProperty({ type: [String], example: ['message.sent', 'channel.created'] })
   events: string[];
 }
 
 class UpdateWorkspaceWebhookDto {
+  @IsBoolean()
+  @IsOptional()
   @ApiProperty({ required: false, example: true })
   active?: boolean;
 }

@@ -13,18 +13,23 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { DmsService } from './dms.service';
+import { IsString, IsArray } from 'class-validator';
 
 class CreateDmDto {
+  @IsString()
   @ApiProperty({ example: 'user_123', description: 'The ID of the user to start a DM with' })
   userId: string;
 }
 
 class UpdateDmMessageDto {
+  @IsString()
   @ApiProperty({ example: 'Updated message content' })
   content: string;
 }
 
 class MarkAsReadDto {
+  @IsArray()
+  @IsString({ each: true })
   @ApiProperty({ type: [String], example: ['msg_1', 'msg_2'] })
   messageIds: string[];
 }

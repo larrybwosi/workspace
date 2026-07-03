@@ -18,11 +18,14 @@ import { prisma } from '@repo/database';
 import { V2AuditService } from '../v2-audit.service';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+import { IsString, IsOptional, IsNumber, IsObject } from 'class-validator';
 
 class CreateTokenDto {
+  @IsString()
   @ApiProperty({ example: 'My App Token' })
   name: string;
 
+  @IsObject()
   @ApiProperty({
     type: 'object',
     properties: {
@@ -55,9 +58,13 @@ class CreateTokenDto {
   })
   permissions: { actions: string[] };
 
+  @IsNumber()
+  @IsOptional()
   @ApiProperty({ required: false, default: 1000 })
   rateLimit?: number;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'ISO string date' })
   expiresAt?: string;
 }

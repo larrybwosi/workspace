@@ -5,11 +5,16 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { nanoid } from 'nanoid';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 class CreateInviteLinkDto {
+  @IsNumber()
+  @IsOptional()
   @ApiProperty({ required: false, example: 0, description: 'Maximum uses, 0 for unlimited' })
   maxUses?: number;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'Expiration date in ISO format' })
   expiresAt?: string;
 }

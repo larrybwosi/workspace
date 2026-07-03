@@ -21,32 +21,45 @@ import {
   pauseScheduledNotification,
   resumeScheduledNotification,
 } from '@repo/shared/server';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
 
 class CreateScheduledNotificationDto {
+  @IsString()
   @ApiProperty({ example: 'Reminder' })
   title: string;
 
+  @IsString()
   @ApiProperty({ example: 'Meeting in 10 minutes' })
   message: string;
 
+  @IsEnum(['custom', 'once', 'daily', 'weekly', 'monthly'])
   @ApiProperty({ enum: ['custom', 'once', 'daily', 'weekly', 'monthly'], example: 'once' })
   scheduleType: 'custom' | 'once' | 'daily' | 'weekly' | 'monthly';
 
+  @IsString()
   @ApiProperty({ description: 'ISO format datetime' })
   scheduledFor: string;
 
+  @IsOptional()
   @ApiProperty({ required: false, type: Object })
   recurrence?: any;
 
+  @IsEnum(['channel'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['channel'] })
   entityType?: 'channel';
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   entityId?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   linkUrl?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   metadata?: any;
 }
