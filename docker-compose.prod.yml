@@ -1,12 +1,12 @@
 services:
   web:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
     container_name: scrymechat-web
     restart: always
     expose:
       - '3001'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -26,13 +26,13 @@ services:
       - scrymechat-network
 
   api:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-scrymechat}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
     container_name: scrymechat-api
     restart: always
     expose:
       - '3000'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
