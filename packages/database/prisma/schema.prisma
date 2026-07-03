@@ -1579,7 +1579,7 @@ model LiveChatSession {
 }
 
 model Organization {
-  m2mApplications M2mApplication[]
+  botApplications BotApplication[]
   workspaces      Workspace[]
   id        String   @id @default(cuid())
   name      String
@@ -1736,6 +1736,15 @@ model BotApplication {
   workspaceId String?
   workspace   Workspace? @relation(fields: [workspaceId], references: [id])
 
+  // Unified M2M fields
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  scopes         String[]
+  allowedIps     String[]
+  webhookUrl     String?
+  webhookSecret  String?
+  metadata       Json?
+
   @@map("bot_applications")
 }
 
@@ -1784,21 +1793,3 @@ model SystemAnnouncement {
   @@map("system_announcements")
 }
 
-model M2mApplication {
-  id             String   @id @default(cuid())
-  name           String
-  clientId       String   @unique
-  clientSecret   String
-  organizationId String
-  scopes         String[]
-  allowedIps     String[]
-  webhookUrl     String?
-  webhookSecret  String?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("m2m_applications")
-}
