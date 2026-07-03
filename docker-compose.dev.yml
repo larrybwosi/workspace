@@ -10,9 +10,14 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
       - POSTGRES_DB=${DB_NAME:-main}
     ports:
-      - '54321:5432' # Changed container port to 5432
+      - '54321:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
@@ -20,11 +25,30 @@ services:
     image: redis:7-alpine
     container_name: scryme-chat-redis
     restart: always
-    command: redis-server --requirepass myredispassword
+    command: >
+      sh -c "
+        if [ -n \"$REDIS_PASSWORD\" ]; then
+          exec redis-server --requirepass \"$REDIS_PASSWORD\"
+        else
+          exec redis-server --requirepass myredispassword
+        fi
+      "
     ports:
-      - '6479:6379' # Changed container port to 6379
+      - '6479:6379'
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: >
+        sh -c "
+          if [ -n \"$REDIS_PASSWORD\" ]; then
+            redis-cli -a \"$REDIS_PASSWORD\" ping
+          else
+            redis-cli -a myredispassword ping
+          fi
+        "
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
