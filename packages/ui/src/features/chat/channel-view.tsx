@@ -211,10 +211,11 @@ export function ChannelView({
           handleReaction={handleReaction}
           channelId={channelId}
           workspaceSlug={workspaceSlug}
-        activeChannelId={channelId}
+          activeChannelId={channelId}
+          channelName={channelData?.name}
         />
 
-        <div className="shrink-0 px-6 py-6 bg-background">
+        <div className="shrink-0 px-6 pb-6 bg-background">
           <MessageComposer
             onSend={handleSendMessage}
             placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${channelId || 'thread'}`}

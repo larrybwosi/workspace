@@ -21,6 +21,22 @@ class CreateDmDto {
   userId: string;
 }
 
+class CreateDmMessageDto {
+  @IsString()
+  @ApiProperty({ example: 'Hello!' })
+  content: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  replyToId?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
+  attachments?: any[];
+}
+
 class UpdateDmMessageDto {
   @IsString()
   @ApiProperty({ example: 'Updated message content' })
@@ -95,8 +111,13 @@ export class DmsController {
   @Post(':conversationId/messages')
   @ApiOperation({ summary: 'Send a message in a DM' })
   @ApiParam({ name: 'conversationId', description: 'The conversation ID' })
+  @ApiBody({ type: CreateDmMessageDto })
   @ApiResponse({ status: 201, description: 'Message sent' })
-  async createMessage(@Param('conversationId') conversationId: string, @CurrentUser() user: User, @Body() body: any) {
+  async createMessage(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+    @Body() body: CreateDmMessageDto
+  ) {
     return this.dmsService.createMessage(conversationId, user.id, body);
   }
 

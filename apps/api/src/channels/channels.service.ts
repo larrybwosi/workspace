@@ -249,7 +249,7 @@ export class ChannelsService {
   }
 
   async createMessage(channelId: string, userId: string, body: any) {
-    const { content, messageType, metadata, replyToId, attachments, stickerId } = body;
+    const { content, messageType, metadata, replyToId, threadId, attachments, stickerId } = body;
 
     const userMentions = extractUserMentions(content);
     const channelMentions = extractChannelMentions(content);
@@ -316,6 +316,7 @@ export class ChannelsService {
           messageType: messageType || 'standard',
           metadata: { ...metadata, stickerId },
           replyToId,
+          threadId,
           depth: replyToId ? 1 : 0,
           mentions: {
             create: [
