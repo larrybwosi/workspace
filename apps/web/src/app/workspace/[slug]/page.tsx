@@ -10,7 +10,6 @@ import { Users, MessageSquare, Settings, ArrowRight, Plus, UserPlus } from 'luci
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
-import { InfoPanel } from '@/components/shared/info-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Define a proper interface for your Workspace data
@@ -37,17 +36,16 @@ export default function WorkspacePage() {
   const { data: workspaces, isLoading } = useWorkspaces();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
-  const [infoPanelOpen, setInfoPanelOpen] = useState(false);
 
   // Memoize the workspace lookup for performance
   const workspace = useMemo(() => workspaces?.find((w: Workspace) => w.slug === slug), [workspaces, slug]);
 
   // Recommendation: Pass the workspace ID inside the mutate function
   // rather than at the hook level if your API client allows.
-  const createChannelMutation = useCreateWorkspaceChannel(workspace?.id || '');
+  const createChannelMutation = useCreateWorkspaceChannel(slug || '');
 
   const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
-    if (!workspace?.id) return;
+    if (!slug) return;
 
     createChannelMutation.mutate(
       {
@@ -118,7 +116,6 @@ export default function WorkspacePage() {
           activeView="Workspace Dashboard"
           onMenuClick={() => setSidebarOpen(true)}
           onSearchClick={() => {}}
-          onInfoClick={() => setInfoPanelOpen(prev => !prev)}
         />
 
         <div className="flex flex-1 overflow-hidden">
@@ -203,13 +200,6 @@ export default function WorkspacePage() {
               </CardContent>
             </Card>
           </div>
-
-          <InfoPanel
-            isOpen={infoPanelOpen}
-            onClose={() => setInfoPanelOpen(false)}
-            type="workspace"
-            id={workspace.id}
-          />
         </div>
       </main>
 
