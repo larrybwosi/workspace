@@ -515,7 +515,14 @@ export class V2MessagesController {
   @Post('messages')
   @ApiOperation({
     summary: 'Send a message',
-    description: 'Requires messages:send scope. Supports multipart/form-data for file uploads.',
+    description: `
+Requires messages:send scope. Supports multipart/form-data for file uploads.
+
+**M2M Behavior:**
+- If the request is made by an M2M application, the message is sent by the app's associated bot.
+- If no app bot exists, it falls back to the workspace's **Default Bot**.
+- You can include \`actions\` to create interactive buttons that trigger webhooks.
+    `,
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: SendMessageDto })

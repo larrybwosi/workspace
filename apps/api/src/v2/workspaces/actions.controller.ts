@@ -22,7 +22,18 @@ export class V2MessageActionsController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Trigger a message action', description: 'Requires messages:send scope.' })
+  @ApiOperation({
+    summary: 'Trigger a message action',
+    description: `
+Triggers a custom action associated with a message.
+
+**M2M Interactivity:**
+If the message was sent by an M2M application, triggering an action will:
+1. Dispatch a **Callback** to the M2M application's configured \`webhookUrl\`.
+2. The callback includes the \`formState\` and \`payload\` provided in the request.
+3. The M2M application can respond to the callback to **update the message** content or metadata in real-time.
+    `,
+  })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
   @ApiParam({ name: 'actionId', description: 'The custom action ID defined in the message' })
