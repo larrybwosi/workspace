@@ -184,8 +184,22 @@ describe('ChannelsService', () => {
     });
 
     it('should return messages in newest-first order (no reverse)', async () => {
-      const msg1 = { id: '1', timestamp: new Date('2023-01-01T12:00:00Z'), reactions: [], mentions: [], readBy: [] };
-      const msg2 = { id: '2', timestamp: new Date('2023-01-01T11:00:00Z'), reactions: [], mentions: [], readBy: [] };
+      const msg1 = {
+        id: '1',
+        timestamp: new Date('2023-01-01T12:00:00Z'),
+        reactions: [],
+        mentions: [],
+        readBy: [],
+        user: { id: 'u1', name: 'User 1', avatar: null, image: 'img1' },
+      };
+      const msg2 = {
+        id: '2',
+        timestamp: new Date('2023-01-01T11:00:00Z'),
+        reactions: [],
+        mentions: [],
+        readBy: [],
+        user: { id: 'u2', name: 'User 2', avatar: 'av2', image: null },
+      };
 
       mockPrisma.channel.findUnique.mockResolvedValue({
         id: channelId,

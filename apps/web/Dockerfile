@@ -12,7 +12,7 @@ FROM base AS builder
 WORKDIR /app
 RUN pnpm add -g turbo
 COPY . .
-RUN turbo prune web --docker
+RUN turbo prune --scope=web --docker
 
 FROM base AS installer
 WORKDIR /app
@@ -47,7 +47,7 @@ RUN adduser --system --uid 1001 nextjs
 # Install Prisma globally for migrations
 RUN pnpm add -g prisma@7.8.0
 
-# Set up pnpm and prisma engines (as seen in original Dockerfile)
+# Set up pnpm and prisma engines
 RUN chown -R nextjs:nodejs /pnpm
 
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
@@ -66,7 +66,5 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
-# Note: server.js in standalone mode is at apps/web/server.js usually,
-# but turbo prune + standalone might put it at the root of standalone output.
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "apps/web/server.js"]
