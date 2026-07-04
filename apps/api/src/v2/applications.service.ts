@@ -328,7 +328,7 @@ export class V2ApplicationsService {
     const base64Id = Buffer.from(userId).toString('base64');
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const signature = crypto
-      .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'default_secret')
+      .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'change-me-to-a-random-secret')
       .update(`${base64Id}.${timestamp}`)
       .digest('base64url');
 
