@@ -188,7 +188,7 @@ export class MessagesService {
   }
 
   async createMessage(userId: string, body: any) {
-    const { channelId, content, messageType, metadata, replyToId, attachments, stickerId } = body;
+    const { channelId, content, messageType, metadata, replyToId, threadId, attachments, stickerId } = body;
 
     if (!channelId) {
       throw new BadRequestException('Channel ID required');
@@ -247,6 +247,7 @@ export class MessagesService {
           messageType: messageType || 'standard',
           metadata: { ...metadata, stickerId },
           replyToId,
+          threadId,
           depth: replyToId ? 1 : 0,
           mentions: {
             create: [

@@ -91,13 +91,24 @@ const MessageSkeletons = memo(() => (
 
 MessageSkeletons.displayName = 'MessageSkeletons';
 
-const EmptyState = memo(({ activeChannelId }: { activeChannelId: string }) => (
-  <div className="flex flex-col items-center justify-center flex-1 p-8 text-center opacity-50">
-    <div className="h-14 w-14 bg-muted rounded-full mb-3 flex items-center justify-center text-2xl">👋</div>
-    <h3 className="font-semibold text-sm">No messages yet</h3>
-    <p className="text-xs text-muted-foreground mt-1">
-      Be the first to send a message in #{activeChannelId}.
+const EmptyState = memo(({ activeChannelId, channelName, isDm }: { activeChannelId: string, channelName?: string, isDm?: boolean }) => (
+  <div className="flex flex-col items-start justify-end flex-1 p-8 mb-4 max-w-3xl">
+    <div className="h-20 w-20 bg-muted rounded-full mb-4 flex items-center justify-center text-4xl shadow-sm">
+      {isDm ? '👤' : '#'}
+    </div>
+    <h1 className="text-3xl font-bold mb-2">
+      Welcome to {isDm ? '' : '#'}{channelName || activeChannelId}!
+    </h1>
+    <p className="text-muted-foreground text-base">
+      {isDm
+        ? `This is the beginning of your direct message history with ${channelName || 'this user'}.`
+        : `This is the start of the #${channelName || activeChannelId} channel.`}
     </p>
+    {!isDm && (
+      <Button variant="link" className="px-0 text-primary h-auto mt-2 text-sm">
+        Edit Channel
+      </Button>
+    )}
   </div>
 ));
 
@@ -269,7 +280,9 @@ export const MessageList = memo(({
   handleReaction,
   channelId,
   workspaceSlug,
-  activeChannelId
+  activeChannelId,
+  channelName,
+  onScrollToBottom
 }: {
   scrollAreaRef: React.RefObject<HTMLDivElement | null>,
   messagesEndRef: React.RefObject<HTMLDivElement | null>,
@@ -287,11 +300,13 @@ export const MessageList = memo(({
   handleReaction: (id: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
   channelId: string,
   workspaceSlug?: string,
-  activeChannelId: string
+  activeChannelId: string,
+  channelName?: string,
+  onScrollToBottom?: () => void
 }) => (
   <div className="flex-1 min-h-0 w-full relative bg-dotted">
     <ScrollArea ref={scrollAreaRef} className="h-full w-full">
-      <div className="flex flex-col justify-end min-h-full pt-4 pb-2">
+      <div className="flex flex-col justify-end min-h-full pt-4 pb-6">
         <LoadMoreButton
           hasNextPage={hasNextPage}
           fetchNextPage={fetchNextPage}
@@ -301,7 +316,11 @@ export const MessageList = memo(({
         {isLoading ? (
           <MessageSkeletons />
         ) : renderList.length === 0 ? (
-          <EmptyState activeChannelId={activeChannelId} />
+          <EmptyState
+            activeChannelId={activeChannelId}
+            channelName={channelName}
+            isDm={channelId.startsWith('dm-')}
+          />
         ) : (
           <div className="flex flex-col w-full">
             <MessageItems

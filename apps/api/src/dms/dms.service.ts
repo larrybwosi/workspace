@@ -383,10 +383,15 @@ export class DmsService {
 
     const formattedMessage = {
       ...message,
-      userId: (message as any).senderId,
-      user: (message as any).sender,
-      timestamp: (message as any).createdAt,
+      userId: message.senderId,
+      user: {
+        ...(message as any).sender,
+        avatar: (message as any).sender.avatar || (message as any).sender.image,
+      },
+      timestamp: message.createdAt,
       messageType: 'standard',
+      reactions: [],
+      readByCurrentUser: true,
     };
 
     await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_SENT, formattedMessage);
