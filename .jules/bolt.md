@@ -140,3 +140,41 @@
 
 **Learning:** Sequential database operations for multi-entity creation (User + BotApplication) can be consolidated into a single nested Prisma 'create' call by pre-generating IDs (using 'crypto.randomUUID()'). In installation flows, replacing 'find-then-create' with 'upsert' or 'try-create-catch-P2002' patterns significantly reduces database round-trips.
 **Action:** Use nested Prisma writes for related entities and prefer optimistic 'create' with error handling for unique constraints to minimize RTT in multi-step service methods.
+<<<<<<< HEAD
+=======
+
+## 2025-05-30 - [Database] Consolidated Access Verification for Channels
+
+**Learning:** Sequential existence and membership checks (Channel -> ChannelMember -> WorkspaceMember -> SharedChannel) create a linear O(N) RTT bottleneck for message retrieval.
+**Action:** Use a single Prisma 'findUnique' call with nested 'select' and relation filters (e.g., 'members: { where: { userId } }') to perform all access verification in one database round-trip.
+
+## 2025-05-30 - [API] Eliminated Redundant Message Reversal
+
+**Learning:** Performing '.reverse()' on message lists in both the service and controller creates unnecessary O(N) CPU overhead and risks logical data order regressions.
+**Action:** Standardize on 'newest-first' (descending) order for all core messaging services to match Android's inverted list requirements. Remove in-memory reversal operations to improve efficiency and maintain consistency across V1 and V2 APIs.
+>>>>>>> 91619a187c0812c576413234efcca5912f66d2fd
+
+## 2026-06-28 - [API/Teams] Optimized Teams Controller with Redis Caching and Background Auditing
+
+**Learning:** Sibling controllers like 'V2WorkspacesController' and 'V2DepartmentsController' have established a high-performance pattern that 'V2TeamsController' was missing. Specifically, hierarchical list retrieval ('getTeams') benefits from Redis caching with TTL-based invalidation, and non-critical side effects like audit logging should always be backgrounded to minimize total request latency. Furthermore, refining relation 'select' statements to exclude 'BigInt' fields (like permissions) avoids JSON serialization overhead and potential Node.js performance bottlenecks.
+**Action:** Consistently apply Redis caching and background side-effects across all V2 workspace-scoped controllers. Always use targeted 'select' for relations to exclude 'BigInt' fields and reduce DB payload.
+
+## 2026-06-28 - [Audit/CI] Handling Fallow Audit False Positives
+
+**Learning:** When implementing complex logic (like Redis caching with try-catch and logging), functions might exceed the default complexity thresholds (CRAP score, cognitive complexity). The correct token to silence these in Fallow is 'complexity'. Additionally, boilerplate methods like 'hasScope' used across multiple controllers can trigger 'code-duplication' warnings, which should be silenced using 'code-duplication' to maintain clean code without premature abstraction.
+**Action:** Use '// fallow-ignore-next-line complexity' for optimized but complex functions and '// fallow-ignore-next-line code-duplication' for necessary repeated patterns like authorization scope checks.
+
+## 2026-06-29 - [API/Workspaces] Consolidated RTT & Security Fix in MembersController
+
+**Learning:** Sequential queries for requester authorization and target resource verification often lead to O(N) RTT bottlenecks and potential IDOR security flaws. Using a single Prisma `findUnique` with a nested relation filter (e.g., `where: { OR: [{ userId: requesterId }, { id: targetId }] }`) allows for atomic authorization and ownership verification.
+**Action:** Consolidate multi-entity lookups into a single round-trip using relation filters and background non-critical side effects (Audit logs, Ably) to minimize response latency.
+
+## 2026-06-29 - [API/Workspaces] Payload Reduction in Member Lists
+
+**Learning:** Large workspace member lists suffer from over-fetching when using `include`. Switching to targeted `select` avoids serializing unnecessary fields and reduces memory pressure during JSON serialization.
+**Action:** Always use targeted `select` for list endpoints, especially those returning nested User objects, to minimize payload size.
+
+## 2025-05-30 - [Database] Atomic DM Resolution via Upsert
+
+**Learning:** Replacing the sequential 'findUnique-then-create' pattern for Direct Message conversations with a single Prisma 'upsert' using the compound unique index reduces database round-trips from 2 to 1 for new conversations.
+**Action:** Always prefer atomic 'upsert' or optimistic 'create' with 'P2002' handling for "get-or-create" patterns on unique indices to minimize RTT.

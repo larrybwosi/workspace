@@ -38,48 +38,98 @@ import { V2WebhooksService } from '../v2-webhooks.service';
 import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { CustomMessageSchema } from '@repo/shared';
 import { StorageService } from '../../common/storage/storage.service';
+import { IsString, IsOptional, IsEnum, IsObject, IsArray } from 'class-validator';
 
 class CreateChannelDto {
+  @IsString()
   @ApiProperty({ example: 'general' })
   name: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'Hash', required: false, default: 'Hash' })
   icon?: string;
+
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ enum: ['public', 'private'], default: 'public', required: false })
   type?: 'public' | 'private';
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   metadata?: Record<string, any>;
 }
 
 class UpdateChannelDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   name?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   icon?: string;
+
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ enum: ['public', 'private'], required: false })
   type?: 'public' | 'private';
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
 }
 
 class SendMessageDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'Required if recipientId is not provided' })
   channelId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, description: 'Required if channelId is not provided' })
   recipientId?: string;
+
+  @IsString()
   @ApiProperty({ example: 'Hello world!' })
   content: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   threadId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   contextId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, default: 'standard' })
   messageType?: string;
+
+  @IsObject()
+  @IsOptional()
   @ApiProperty({ required: false })
   metadata?: Record<string, any>;
+
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
   actions?: any[];
+
+  @IsArray()
+  @IsOptional()
   @ApiProperty({ required: false, type: 'array', items: { type: 'object' } })
   attachments?: any[];
 }
@@ -503,13 +553,26 @@ export class V2MessagesController {
       contextId,
     }).catch(err => this.logger.error("Audit log error:", err));
 
-    return { messages: messages.reverse(), nextCursor };
+    /**
+     * ⚡ Performance Optimization:
+     * Returns messages in the order they were fetched (newest first).
+     * The mobile app uses 'inverted' FlatList which expects this order.
+     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency with core services.
+     */
+    return { messages, nextCursor };
   }
 
   @Post('messages')
   @ApiOperation({
     summary: 'Send a message',
-    description: 'Requires messages:send scope. Supports multipart/form-data for file uploads.',
+    description: `
+Requires messages:send scope. Supports multipart/form-data for file uploads.
+
+**M2M Behavior:**
+- If the request is made by an M2M application, the message is sent by the app's associated bot.
+- If no app bot exists, it falls back to the workspace's **Default Bot**.
+- You can include \`actions\` to create interactive buttons that trigger webhooks.
+    `,
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: SendMessageDto })
@@ -586,15 +649,27 @@ export class V2MessagesController {
     let activeThreadId = threadId;
     let senderId = context.userId;
 
-    // M2M Support: Use default workspace bot as sender
+    // M2M Support: Use the M2M app's bot as sender if available, else fallback to workspace default bot
     if (context.organizationId && !context.isBot) {
-      const defaultBot = await prisma.botApplication.findFirst({
-        where: { workspaceId: context.workspaceId },
-        select: { botId: true },
-      });
+      if (context.m2mClientId) {
+        const m2mApp = await prisma.botApplication.findUnique({
+          where: { clientId: context.m2mClientId },
+          select: { botId: true },
+        });
+        if (m2mApp?.botId) {
+          senderId = m2mApp.botId;
+        }
+      }
 
-      if (defaultBot?.botId) {
-        senderId = defaultBot.botId;
+      if (senderId === context.userId) {
+        const defaultBot = await prisma.botApplication.findFirst({
+          where: { workspaceId: context.workspaceId },
+          select: { botId: true },
+        });
+
+        if (defaultBot?.botId) {
+          senderId = defaultBot.botId;
+        }
       }
     }
 

@@ -7,6 +7,7 @@ import { ThemeProvider } from '../layout/theme-provider';
 import { NotificationListener } from '../features/notifications/notification-listener';
 import { PresenceProvider } from './contexts/presence-context';
 import { useSession } from '@repo/shared';
+import { UniversalRouterConfig } from '../hooks/use-universal-router';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -98,7 +99,9 @@ function WebProvidersInner({ children }: ProvidersProps) {
 export function WebProviders({ children }: ProvidersProps) {
   return (
     <BaseProviders>
-      <WebProvidersInner>{children}</WebProvidersInner>
+      <UniversalRouterConfig type="next">
+        <WebProvidersInner>{children}</WebProvidersInner>
+      </UniversalRouterConfig>
     </BaseProviders>
   );
 }
@@ -120,7 +123,9 @@ function AdminProvidersInner({ children }: ProvidersProps) {
 export function AdminProviders({ children }: ProvidersProps) {
   return (
     <BaseProviders>
-      <AdminProvidersInner>{children}</AdminProvidersInner>
+      <UniversalRouterConfig type="react-router">
+        <AdminProvidersInner>{children}</AdminProvidersInner>
+      </UniversalRouterConfig>
     </BaseProviders>
   );
 }

@@ -17,20 +17,33 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
+import { V2ApplicationsService } from '../applications.service';
+import { IsString, IsOptional, IsArray } from 'class-validator';
 
 class CreateM2mApplicationDto {
+  @IsString()
   @ApiProperty({ example: 'Provisioning App' })
   name: string;
 
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ example: ['provisioning:workspaces'], required: false })
   scopes?: string[];
 
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({ example: ['127.0.0.1'], required: false })
   allowedIps?: string[];
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'https://api.example.com/webhook', required: false })
   webhookUrl?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'your-webhook-secret', required: false })
   webhookSecret?: string;
 }
@@ -48,13 +61,15 @@ const createM2mSchema = z.object({
 @Controller('organizations/:orgSlug/m2m')
 @UseGuards(AuthGuard)
 export class M2mController {
+  constructor(private readonly applicationsService: V2ApplicationsService) {}
+
   @Get()
   @ApiOperation({ summary: 'List M2M applications for an organization' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
   async getM2mApplications(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string) {
     const organization = await this.verifyOrgAdmin(user.id, orgSlug);
 
-    const applications = await prisma.m2mApplication.findMany({
+    const applications = await prisma.botApplication.findMany({
       where: { organizationId: organization.id },
       select: {
         id: true,
@@ -85,29 +100,13 @@ export class M2mController {
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
-    const { name, scopes, allowedIps, webhookUrl, webhookSecret } = validatedData.data;
 
-    const clientId = `m2m_${crypto.randomBytes(16).toString('hex')}`;
-    const clientSecret = crypto.randomBytes(32).toString('hex');
-    const hashedSecret = crypto.createHash('sha256').update(clientSecret).digest('hex');
-
-    const application = await prisma.m2mApplication.create({
-      data: {
-        name,
-        clientId,
-        clientSecret: hashedSecret,
-        organizationId: organization.id,
-        scopes,
-        allowedIps,
-        webhookUrl,
-        webhookSecret,
-      },
+    const application = await this.applicationsService.createApplication(user.id, {
+      ...validatedData.data,
+      organizationId: organization.id,
     });
 
-    return {
-      ...application,
-      clientSecret, // Return raw once
-    };
+    return application;
   }
 
   @Delete(':id')
@@ -117,7 +116,7 @@ export class M2mController {
   async deleteM2mApplication(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string, @Param('id') id: string) {
     const organization = await this.verifyOrgAdmin(user.id, orgSlug);
 
-    await prisma.m2mApplication.delete({
+    await prisma.botApplication.delete({
       where: { id, organizationId: organization.id },
     });
 

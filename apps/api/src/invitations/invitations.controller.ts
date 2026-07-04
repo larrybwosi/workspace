@@ -14,20 +14,29 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { InvitationsService } from './invitations.service';
 import { z } from 'zod';
+import { IsString, IsOptional, IsEmail } from 'class-validator';
 
 class CreateInvitationDto {
+  @IsEmail()
   @ApiProperty({ example: 'user@example.com' })
   email: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'member' })
   role?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'workspace_123' })
   workspaceId?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'channel_123' })
   channelId?: string;
 
+  @IsOptional()
   @ApiProperty({ required: false })
   permissions?: any;
 }

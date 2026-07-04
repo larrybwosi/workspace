@@ -11,7 +11,7 @@ export function generateBotToken(userId: string): string {
 
   // Signature of base64Id + timestamp
   const signature = crypto
-    .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'default_secret')
+    .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'change-me-to-a-random-secret')
     .update(`${base64Id}.${timestamp}`)
     .digest('base64url');
 
@@ -32,7 +32,7 @@ export function validateBotToken(token: string): string | null {
 
     // Verify signature
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'default_secret')
+      .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'change-me-to-a-random-secret')
       .update(`${base64Id}.${timestamp}`)
       .digest('base64url');
 

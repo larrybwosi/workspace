@@ -274,7 +274,7 @@ export function MessageComposer({
         {parts.map((part, i) => {
           if (part.startsWith('@') || part.startsWith('#')) {
             return (
-              <span key={i} className="text-blue-400 bg-blue-400/10 rounded-sm">
+              <span key={i} className="text-chart-1 bg-chart-1/15 rounded-sm">
                 {part}
               </span>
             );

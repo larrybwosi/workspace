@@ -45,6 +45,8 @@ next-env.d.ts
 
 
 /src/prisma
+playwright-report/
+test-results/
 
 # Rust / Tauri
 apps/desktop/src-tauri/target/

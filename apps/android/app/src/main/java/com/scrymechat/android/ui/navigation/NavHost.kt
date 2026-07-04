@@ -85,12 +85,15 @@ fun ScrymeNavHost(
 
             com.scrymechat.android.ui.chat.ChatView(
                 messages = chatUiState.messages,
-                onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
+                onSendMessage = { content, replyToId, attachments -> chatViewModel.sendMessage(content, replyToId, null, attachments) },
                 onReply = { /* TODO */ },
                 onForward = { /* TODO */ },
                 onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onTyping = { /* TODO */ },
-                typingUsers = chatUiState.typingUsers
+                typingUsers = chatUiState.typingUsers,
+                pendingAttachments = chatUiState.pendingAttachments,
+                onAttach = { uri -> chatViewModel.uploadFile(uri, navController.context) },
+                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) }
             )
         }
         composable(Screen.Channel.route) { backStackEntry ->

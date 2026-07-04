@@ -21,7 +21,6 @@ export const auth = betterAuth({
     admin({
       defaultRole: 'Member',
     }),
-    nextCookies(),
     jwt(),
     organization(),
     oauthProvider({
@@ -44,6 +43,7 @@ export const auth = betterAuth({
         'workspaces:read',
       ],
     }),
+    nextCookies(),
   ],
 });
 

@@ -40,7 +40,7 @@ export class ApiV10Guard implements CanActivate {
       const [base64Id, timestamp, signature] = parts;
 
       const expectedSignature = crypto
-        .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'default_secret')
+        .createHmac('sha256', process.env.BOT_TOKEN_SECRET || 'change-me-to-a-random-secret')
         .update(`${base64Id}.${timestamp}`)
         .digest('base64url');
 

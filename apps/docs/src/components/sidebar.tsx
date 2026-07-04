@@ -7,10 +7,12 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
 
   const links = isUserGuide
     ? [
-        { href: '/user-guide/joining-workspace', label: 'Joining a Workspace', category: 'Basics' },
+        { href: '/user-guide/joining-workspace', label: 'Joining a Workspace', category: 'Getting Started' },
         { href: '/user-guide/sending-messages', label: 'Sending Messages', category: 'Basics' },
+        { href: '/user-guide/custom-messages', label: 'Custom Messages', category: 'Basics' },
         { href: '/user-guide/making-calls', label: 'Making Calls', category: 'Advanced' },
         { href: '/user-guide/inviting-members', label: 'Inviting Members', category: 'Advanced' },
+        { href: '/user-guide/applications', label: 'Applications', category: 'Integrations' },
         { href: '/user-guide/m2m-integration', label: 'M2M Integration', category: 'Integrations' },
         { href: '/user-guide/bot-provisioning', label: 'Bot Provisioning', category: 'Integrations' },
         { href: '/user-guide/mcp', label: 'Model Context Protocol', category: 'Integrations' },

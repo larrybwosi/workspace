@@ -20,12 +20,16 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
+import { IsString, IsOptional, IsEmail } from 'class-validator';
 
 // fallow-ignore-next-line code-duplication
 class AddMemberDto {
+  @IsEmail()
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
   email: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'member', description: 'The role of the member', required: false, default: 'member' })
   role?: string;
 }
@@ -67,7 +71,7 @@ export class V2WorkspacesController {
     }
 
     if (cachedMembers) {
-      this.auditService.log(context, 'members.list', 'member').catch(err => this.logger.error("Audit log error:", err));
+      this.auditService.log(context, 'members.list', 'member').catch(err => this.logger.error('Audit log error:', err));
       return { members: JSON.parse(cachedMembers), source: 'cache' };
     }
 
@@ -108,7 +112,7 @@ export class V2WorkspacesController {
       this.logger.warn('Redis error in getMembers (setex):', error);
     }
 
-    this.auditService.log(context, 'members.list', 'member').catch(err => this.logger.error("Audit log error:", err));
+    this.auditService.log(context, 'members.list', 'member').catch(err => this.logger.error('Audit log error:', err));
 
     return { members, source: 'database' };
   }
@@ -227,7 +231,9 @@ export class V2WorkspacesController {
       throw new NotFoundException('Member not found in this workspace');
     }
 
-    this.auditService.log(context, 'members.get', 'member', userId).catch(err => this.logger.error("Audit log error:", err));
+    this.auditService
+      .log(context, 'members.get', 'member', userId)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { member };
   }
@@ -284,11 +290,14 @@ export class V2WorkspacesController {
 
     await this.redis.del(`v2:members:${context.workspaceId}`);
 
-    this.auditService.log(context, 'members.remove', 'member', userId).catch(err => this.logger.error("Audit log error:", err));
+    this.auditService
+      .log(context, 'members.remove', 'member', userId)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { success: true };
   }
 
+  // fallow-ignore-next-line code-duplication
   private hasScope(context: ApiV2Context, scope: string): boolean {
     return context.scopes.includes(scope) || context.scopes.includes('*');
   }

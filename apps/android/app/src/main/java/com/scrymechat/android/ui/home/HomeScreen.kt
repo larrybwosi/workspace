@@ -165,12 +165,24 @@ fun HomeScreen(
                 isHomeSelected = uiState.isHomeSelected,
                 chatUiState = chatUiState,
                 currentUser = uiState.currentUser,
-                onSendMessage = { content, replyToId -> chatViewModel.sendMessage(content, replyToId) },
+                onSendMessage = { content, replyToId, attachments -> chatViewModel.sendMessage(content, replyToId, null, attachments) },
                 onReply = { /* Handled in ChatView */ },
+                onOpenThread = { message ->
+                    uiState.selectedChannel?.let { channel ->
+                        chatViewModel.setThread(channel.id, message)
+                    }
+                },
                 onForward = { forwardingMessage = it },
+                onBack = {
+                    uiState.selectedChannel?.let { channel ->
+                        chatViewModel.setChannel(channel.id)
+                    }
+                },
                 onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onAction = { message, action, formState -> chatViewModel.handleMessageAction(context, message, action, formState) },
                 onUpdateForm = { messageId, fieldId, value -> chatViewModel.updateFormState(messageId, fieldId, value) },
+                onAttach = { uri -> chatViewModel.uploadFile(uri, context) },
+                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) },
                 formStates = formStates,
                 loadingActions = loadingActions,
                 onTyping = {
@@ -194,12 +206,16 @@ fun MainContent(
     isHomeSelected: Boolean,
     chatUiState: com.scrymechat.android.ui.chat.ChatUiState,
     currentUser: com.scrymechat.android.data.local.entities.UserEntity?,
-    onSendMessage: (String, String?) -> Unit,
+    onSendMessage: (String, String?, List<com.scrymechat.android.data.remote.CreateAttachmentRequest>?) -> Unit,
     onReply: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
+    onOpenThread: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit = {},
     onForward: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
+    onBack: () -> Unit = {},
     onDownload: (com.scrymechat.android.data.remote.AttachmentDto) -> Unit = {},
     onAction: (com.scrymechat.android.data.local.entities.MessageEntity, com.scrymechat.android.data.remote.MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
+    onAttach: (android.net.Uri) -> Unit = {},
+    onRemoveAttachment: (com.scrymechat.android.data.remote.CreateAttachmentRequest) -> Unit = {},
     formStates: Map<String, Map<String, Any>> = emptyMap(),
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit,
@@ -281,10 +297,17 @@ fun MainContent(
                         messages = chatUiState.messages,
                         onSendMessage = onSendMessage,
                         onReply = onReply,
+                        onOpenThread = onOpenThread,
                         onForward = onForward,
+                        onBack = onBack,
+                        isThread = chatUiState.isThread,
+                        threadTitle = chatUiState.threadRootMessage?.let { "Thread with ${it.senderName}" },
                         onDownload = onDownload,
                         onAction = onAction,
                         onUpdateForm = onUpdateForm,
+                        onAttach = onAttach,
+                        onRemoveAttachment = onRemoveAttachment,
+                        pendingAttachments = chatUiState.pendingAttachments,
                         formStates = formStates,
                         loadingActions = loadingActions,
                         onTyping = onTyping,

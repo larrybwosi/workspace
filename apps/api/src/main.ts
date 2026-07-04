@@ -8,25 +8,10 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { WsAdapter } from '@nestjs/platform-ws';
 import { validateEnv } from '@repo/shared';
 import { auth } from '@repo/auth';
-import { toNodeHandler } from 'better-auth/node';
-import multipart from '@fastify/multipart';
-import rawBody from 'fastify-raw-body';
-import { networkInterfaces } from 'os';
+import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
+import fastifyCookie from '@fastify/cookie';
+import fastifyMultipart from '@fastify/multipart';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-
-// Resolves the first non-internal IPv4 address, mirroring how Next.js
-// determines the "Network" URL shown alongside "Local" on startup.
-function getNetworkAddress(): string | undefined {
-  const interfaces = networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name] ?? []) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-  return undefined;
-}
 
 // Simple, clean landing page shown when someone hits the server root
 // directly from a browser (e.g. http://localhost:PORT/).
@@ -170,9 +155,7 @@ async function bootstrap() {
     bodyLimit: 30 * 1024 * 1024, // 30MB
   });
 
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
-    bodyParser: false,
-  });
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
 
   app.enableCors({
     credentials: true,
@@ -193,33 +176,28 @@ async function bootstrap() {
     console.log(`[${timestamp}] ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`);
   });
 
-  // Register multipart support safely
-  await app.register(multipart as any);
-
-  // Register raw-body capture so request.rawBody is available where
-  // needed (e.g. Better Auth parsing its own streams). global: false
-  // means routes opt in individually via { config: { rawBody: true } }
-  // — adjust to `global: true` if every route needs it.
-  await app.register(rawBody as any, {
-    field: 'rawBody',
-    global: false,
-    encoding: 'utf8',
-    runFirst: true,
-  });
-
-  // Serve a simple, clean homepage at the bare root ("/") so visiting the
-  // server directly from a browser doesn't show a bare 404. This is
-  // registered on the raw Fastify instance so it lives outside the
-  // '/api' global prefix used by the rest of the application.
+  await app.register(fastifyCookie as any);
+  await app.register(fastifyMultipart as any);
   fastifyInstance.get('/', async (_request: any, reply: any) => {
     reply.type('text/html').send(renderHomepage('2.0', '/api/docs'));
   });
 
-  // Mount the Better Auth handler. This ensures that all requests to /api/auth/*
-  // (like session management, CSRF, etc.) are handled directly by Better Auth.
-  const authHandler = toNodeHandler(auth);
-  fastifyInstance.all('/api/auth/*', async (request, reply) => {
-    return authHandler(request.raw, reply.raw);
+  fastifyInstance.route({
+    method: ['GET', 'POST'],
+    url: '/api/auth/*',
+    async handler(request, reply) {
+      const url = new URL(request.url, `http://${request.headers.host}`);
+      const headers = fromNodeHeaders(request.headers);
+      const req = new Request(url.toString(), {
+        method: request.method,
+        headers,
+        ...(request.body ? { body: JSON.stringify(request.body) } : {}),
+      });
+      const response = await auth.handler(req);
+      reply.status(response.status);
+      response.headers.forEach((v, k) => reply.header(k, v));
+      return reply.send(response.body ? await response.text() : null);
+    },
   });
 
   const redisUrl = env.REDIS_URL;
@@ -270,15 +248,11 @@ async function bootstrap() {
   await app.listen(env.PORT, '0.0.0.0');
 
   const port = env.PORT;
-  const networkAddress = getNetworkAddress();
 
   console.log('');
-  console.log(`   ▲ Skyrme Chat API`);
-  console.log(`   - Local:        http://localhost:${port}/api`);
-  if (networkAddress) {
-    console.log(`   - Network:      http://${networkAddress}:${port}/api`);
-  }
-  console.log(`   - Docs:         http://localhost:${port}/api/docs`);
+  console.log(`  Skyrme Chat API`);
+  console.log(`  - Local:        http://localhost:${port}/api`);
+  console.log(`  - Docs:         http://localhost:${port}/api/docs`);
   console.log('');
   console.log(' ✓ Server ready');
   console.log('');

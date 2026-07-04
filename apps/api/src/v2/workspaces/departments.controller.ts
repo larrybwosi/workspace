@@ -20,37 +20,76 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
+import { IsString, IsOptional } from 'class-validator';
 
 class CreateDepartmentDto {
+  @IsString()
   @ApiProperty({ example: 'Product' })
   name: string;
+
+  @IsString()
   @ApiProperty({ example: 'product' })
   slug: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   icon?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   color?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   parentId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   managerId?: string;
 }
 
 class UpdateDepartmentDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   name?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   slug?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   description?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   icon?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   color?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   parentId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false })
   managerId?: string;
 }

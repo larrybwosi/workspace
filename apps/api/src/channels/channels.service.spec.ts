@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsService } from './channels.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import * as sharedServer from '@repo/shared/server';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 // Mock @repo/database
 vi.mock('@repo/database', () => ({
@@ -113,6 +114,93 @@ describe('ChannelsService', () => {
       await service.getGlobalChannels();
       const callArg = mockPrisma.channel.findMany.mock.calls[0][0];
       expect(callArg.include).toHaveProperty('_count');
+    });
+  });
+
+  describe('getMessages', () => {
+    const userId = 'user-1';
+    const channelId = 'channel-1';
+
+    it('should throw NotFoundException if channel does not exist', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+      await expect(service.getMessages(channelId, userId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should allow access if user is a direct member', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        isPrivate: true,
+        members: [{ userId }],
+        workspace: { members: [] },
+        sharedWith: [],
+      });
+      mockPrisma.message.findMany.mockResolvedValue([]);
+
+      await service.getMessages(channelId, userId);
+      expect(mockPrisma.message.findMany).toHaveBeenCalled();
+    });
+
+    it('should allow access if user is a workspace member of a public channel', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'workspace-1',
+        isPrivate: false,
+        members: [],
+        workspace: { members: [{ userId }] },
+        sharedWith: [],
+      });
+      mockPrisma.message.findMany.mockResolvedValue([]);
+
+      await service.getMessages(channelId, userId);
+      expect(mockPrisma.message.findMany).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException if workspace member tries to access a private channel without direct membership', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'workspace-1',
+        isPrivate: true,
+        members: [],
+        workspace: { members: [{ userId }] },
+        sharedWith: [],
+      });
+
+      await expect(service.getMessages(channelId, userId)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow access if user has shared access through their workspace', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'workspace-1',
+        isPrivate: false,
+        members: [],
+        workspace: { members: [] },
+        sharedWith: [{ id: 'shared-1' }], // Filtered to current user's workspace in the query
+      });
+      mockPrisma.message.findMany.mockResolvedValue([]);
+
+      await service.getMessages(channelId, userId);
+      expect(mockPrisma.message.findMany).toHaveBeenCalled();
+    });
+
+    it('should return messages in newest-first order (no reverse)', async () => {
+      const msg1 = { id: '1', timestamp: new Date('2023-01-01T12:00:00Z'), reactions: [], mentions: [], readBy: [] };
+      const msg2 = { id: '2', timestamp: new Date('2023-01-01T11:00:00Z'), reactions: [], mentions: [], readBy: [] };
+
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        members: [{ userId }],
+        workspace: { members: [] },
+        sharedWith: [],
+      });
+      // messages.findMany returns in desc order as requested in the query
+      mockPrisma.message.findMany.mockResolvedValue([msg1, msg2]);
+
+      const result = await service.getMessages(channelId, userId);
+
+      // Verification of newest-first order (descending)
+      expect(result.messages[0].id).toBe('1');
+      expect(result.messages[1].id).toBe('2');
     });
   });
 

@@ -16,6 +16,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { IntegrationsService } from './integrations.service';
 import { z } from 'zod';
+import { IsString, IsArray, IsUrl, IsEnum, IsOptional, IsObject } from 'class-validator';
 
 const createWebhookSchema = z.object({
   name: z.string().min(1).max(100),
@@ -58,12 +59,16 @@ const createIntegrationSchema = z.object({
 });
 
 class CreateIntegrationWebhookDto {
+  @IsString()
   @ApiProperty({ example: 'My Integration Webhook' })
   name: string;
 
+  @IsUrl()
   @ApiProperty({ example: 'https://example.com/webhook' })
   url: string;
 
+  @IsArray()
+  @IsString({ each: true })
   @ApiProperty({ type: [String], example: ['event.name'] })
   events: string[];
 }
@@ -176,6 +181,21 @@ export class IntegrationsController {
 }
 
 class CreateIntegrationDto {
+  @IsEnum([
+    'slack',
+    'github',
+    'gitlab',
+    'jira',
+    'linear',
+    'notion',
+    'figma',
+    'discord',
+    'teams',
+    'zapier',
+    'make',
+    'custom',
+    'huly',
+  ])
   @ApiProperty({
     enum: [
       'slack',
@@ -196,9 +216,11 @@ class CreateIntegrationDto {
   })
   service: string;
 
+  @IsString()
   @ApiProperty({ example: 'My GitHub Integration' })
   name: string;
 
+  @IsObject()
   @ApiProperty({
     type: 'object',
     properties: {
@@ -218,6 +240,8 @@ class CreateIntegrationDto {
   })
   config: any;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Integration with GitHub' })
   description?: string;
 }

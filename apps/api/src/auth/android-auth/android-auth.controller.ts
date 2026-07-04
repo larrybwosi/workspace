@@ -93,6 +93,40 @@ export class AndroidAuthController {
     return this.performSocialLogin('github', { code: body.code });
   }
 
+  @Post('refresh')
+  @AllowAnonymous()
+  async refresh(@Body() body: any) {
+    const { token } = body;
+    if (!token) {
+      throw new BadRequestException('Token is required for refresh');
+    }
+
+    try {
+      // Use getSession to verify the current token and return fresh session data
+      const response = await auth.api.getSession({
+        headers: {
+          authorization: `Bearer ${token}`,
+          cookie: `better-auth.session_token=${token}`,
+        },
+      });
+
+      if (!response) {
+        throw new UnauthorizedException('Invalid or expired session');
+      }
+
+      return await this.handleAuthResponse(
+        {
+          token,
+          user: response.user,
+          session: response.session,
+        },
+        'Failed to refresh session'
+      );
+    } catch (error: any) {
+      this.handleAuthError(error, 'Refresh failed');
+    }
+  }
+
   private validateUsername(username: string) {
     if (!username || username.length < 3) {
       throw new BadRequestException('Username must be at least 3 characters long');
@@ -141,6 +175,7 @@ export class AndroidAuthController {
       const sessionData = await auth.api.getSession({
         headers: {
           authorization: `Bearer ${token}`,
+          cookie: `better-auth.session_token=${token}`,
         },
       });
       session = sessionData?.session;
@@ -151,10 +186,27 @@ export class AndroidAuthController {
       avatar: response.user?.image || null,
     };
 
+    // Fetch user memberships to return to the Android app
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId: response.user.id },
+    });
+
+    // Convert BigInt permissions to Number for Android compatibility
+    const serializedMemberships = memberships.map(m => ({
+      ...m,
+      permissions: Number(m.permissions),
+    }));
+
     return {
       token,
       user,
-      session: session || null,
+      session: session
+        ? {
+            ...session,
+            token: session.token || token, // Ensure token is present in session object
+          }
+        : null,
+      memberships: serializedMemberships,
     };
   }
 

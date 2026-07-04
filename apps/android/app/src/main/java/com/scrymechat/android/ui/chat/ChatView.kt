@@ -20,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
@@ -36,9 +37,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.scrymechat.android.data.local.entities.MessageEntity
-import com.scrymechat.android.data.remote.AttachmentDto
-import com.scrymechat.android.data.remote.MessageActionDto
+import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.ui.components.*
 import kotlin.math.roundToInt
 
@@ -146,7 +149,7 @@ private val ShapeInputBar = RoundedCornerShape(22.dp)
 @Composable
 fun ChatView(
     messages: List<MessageEntity>,
-    onSendMessage: (String, String?) -> Unit,
+    onSendMessage: (String, String?, List<CreateAttachmentRequest>?) -> Unit,
     onReply: (MessageEntity) -> Unit,
     onOpenThread: (MessageEntity) -> Unit = {},
     onForward: (MessageEntity) -> Unit,
@@ -160,6 +163,9 @@ fun ChatView(
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
+    pendingAttachments: List<CreateAttachmentRequest> = emptyList(),
+    onAttach: (Uri) -> Unit = {},
+    onRemoveAttachment: (CreateAttachmentRequest) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
@@ -258,12 +264,73 @@ fun ChatView(
         }
 
         // Input Area
+        val fileLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri ->
+            uri?.let { onAttach(it) }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(palette.inputBarBg)
                 .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
+            AnimatedVisibility(
+                visible = pendingAttachments.isNotEmpty(),
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    pendingAttachments.forEach { attachment ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = palette.attachmentChipBg,
+                            border = BorderStroke(1.dp, palette.bubbleBorder)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (attachment.type.startsWith("image/")) Icons.Default.Image else Icons.Default.FilePresent,
+                                    contentDescription = null,
+                                    tint = palette.accent,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = attachment.name,
+                                    color = palette.textPrimary,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.widthIn(max = 100.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                IconButton(
+                                    onClick = { onRemoveAttachment(attachment) },
+                                    modifier = Modifier.size(18.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Remove",
+                                        tint = palette.textTertiary,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             AnimatedVisibility(
                 visible = replyingTo != null,
                 enter = fadeIn() + expandVertically(),
@@ -321,7 +388,7 @@ fun ChatView(
                     .padding(horizontal = 6.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* Add attachment */ }, modifier = Modifier.size(38.dp)) {
+                IconButton(onClick = { fileLauncher.launch("*/*") }, modifier = Modifier.size(38.dp)) {
                     Icon(Icons.Default.AddCircle, contentDescription = "Add attachment", tint = palette.textSecondary, modifier = Modifier.size(22.dp))
                 }
 
@@ -350,7 +417,7 @@ fun ChatView(
                 )
 
                 AnimatedVisibility(
-                    visible = textState.isNotBlank(),
+                    visible = textState.isNotBlank() || pendingAttachments.isNotEmpty(),
                     enter = scaleIn() + fadeIn(),
                     exit = scaleOut() + fadeOut()
                 ) {
@@ -361,7 +428,7 @@ fun ChatView(
                             .clip(CircleShape)
                             .background(Brush.linearGradient(palette.accentGradient))
                             .clickable {
-                                onSendMessage(textState, replyingTo?.id)
+                                onSendMessage(textState, replyingTo?.id, pendingAttachments)
                                 textState = ""
                                 replyingTo = null
                             },

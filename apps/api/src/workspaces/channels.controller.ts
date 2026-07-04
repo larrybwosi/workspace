@@ -18,34 +18,52 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { AblyChannels, EVENTS, getAblyServer } from '@repo/shared/server';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 
 class CreateWorkspaceChannelDto {
+  @IsString()
   @ApiProperty({ example: 'general' })
   name: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'The general channel for everyone' })
   description?: string;
 
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['public', 'private'], default: 'public' })
   type?: 'public' | 'private';
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'dept_123' })
   departmentId?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Hash' })
   icon?: string;
 }
 
 class UpdateWorkspaceChannelDto {
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'new-name' })
   name?: string;
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated description' })
   description?: string;
 
+  @IsEnum(['public', 'private'])
+  @IsOptional()
   @ApiProperty({ required: false, enum: ['public', 'private'] })
   type?: 'public' | 'private';
 
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'MessageSquare' })
   icon?: string;
 }
@@ -144,6 +162,7 @@ export class ChannelsController {
   @ApiBody({ type: CreateWorkspaceChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created successfully' })
   async createChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateWorkspaceChannelDto) {
+    console.log(body);
     /**
      * ⚡ Performance Optimization:
      * 1. Combines workspace lookup and membership verification into a single database query.
@@ -173,6 +192,7 @@ export class ChannelsController {
 
     const validatedData = createChannelSchema.safeParse(body);
     if (!validatedData.success) {
+      console.log(validatedData.error.issues);
       throw new BadRequestException(validatedData.error.issues);
     }
     const data = validatedData.data;

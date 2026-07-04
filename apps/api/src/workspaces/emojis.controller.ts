@@ -14,14 +14,18 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
+import { IsString } from 'class-validator';
 
 class CreateEmojiDto {
+  @IsString()
   @ApiProperty({ example: 'party-parrot' })
   name: string;
 
+  @IsString()
   @ApiProperty({ example: 'party_parrot' })
   shortcode: string;
 
+  @IsString()
   @ApiProperty({ example: 'https://example.com/emoji.png' })
   imageUrl: string;
 }
