@@ -751,6 +751,12 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
         },
       });
 
+      if (activeThreadId) {
+        this.redis
+          .del(`v2:threads:${context.workspaceId}:default`)
+          .catch(err => this.logger.warn('Redis error in sendMessage (del v2:threads):', err));
+      }
+
       this.auditService.log(context, 'messages.send', 'message', createdMessage.id, {
         channelId,
         threadId: activeThreadId,
