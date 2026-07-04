@@ -232,19 +232,22 @@ export class ChannelsService {
 
       return {
         ...msg,
-        user: {
-          ...msg.user,
-          avatar: msg.user.avatar || msg.user.image,
-        },
-        replyTo: msg.replyTo
+        user: msg.user
           ? {
-              ...msg.replyTo,
-              user: {
-                ...msg.replyTo.user,
-                avatar: msg.replyTo.user.avatar || msg.replyTo.user.image,
-              },
+              ...msg.user,
+              avatar: msg.user.avatar || msg.user.image,
             }
           : null,
+        replyTo:
+          msg.replyTo && msg.replyTo.user
+            ? {
+                ...msg.replyTo,
+                user: {
+                  ...msg.replyTo.user,
+                  avatar: msg.replyTo.user.avatar || msg.replyTo.user.image,
+                },
+              }
+            : msg.replyTo,
         reactions: Array.from(reactionGroups.values()),
         mentions: msg.mentions.map(m => m.mention),
         readByCurrentUser: msg.readBy.length > 0,
