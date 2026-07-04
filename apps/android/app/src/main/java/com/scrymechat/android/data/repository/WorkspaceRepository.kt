@@ -81,6 +81,34 @@ class WorkspaceRepository @Inject constructor(
         }
     }
 
+    fun discoverWorkspaces(query: String? = null): Flow<Resource<List<WorkspaceDto>>> = flow {
+        emit(Resource.Loading())
+        try {
+            val response = api.discoverWorkspaces(query)
+            if (response.isSuccessful) {
+                emit(Resource.Success(response.body() ?: emptyList()))
+            } else {
+                emit(Resource.Error(response.message()))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+        }
+    }
+
+    suspend fun joinWorkspace(slug: String): Resource<Unit> {
+        return try {
+            val response = api.joinWorkspace(slug)
+            if (response.isSuccessful) {
+                // After joining, we might want to refresh workspaces
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     private fun WorkspaceDto.toEntity() = WorkspaceEntity(
         id = id,
         name = name,

@@ -268,8 +268,9 @@ export class WorkspacesController {
    */
   @Get('discover')
   @ApiOperation({ summary: 'Discover public workspaces' })
+  @ApiQuery({ name: 'q', required: false, description: 'Search query for workspace name or slug' })
   @ApiResponse({ status: 200, description: 'List of discoverable workspaces' })
-  async discoverWorkspaces(@CurrentUser() user: User): Promise<any> {
+  async discoverWorkspaces(@CurrentUser() user: User, @Query('q') query?: string): Promise<any> {
     // Return workspaces the user is NOT a member of
     return prisma.workspace.findMany({
       where: {
@@ -279,6 +280,12 @@ export class WorkspacesController {
             userId: user.id,
           },
         },
+        OR: query
+          ? [
+              { name: { contains: query, mode: 'insensitive' } },
+              { slug: { contains: query, mode: 'insensitive' } },
+            ]
+          : undefined,
       },
       select: {
         id: true,

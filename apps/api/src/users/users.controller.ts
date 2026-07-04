@@ -30,30 +30,40 @@ import { Query } from '@nestjs/common';
 @UseGuards(AuthGuard)
 export class UsersController {
   @Get('search')
-  @ApiOperation({ summary: 'Search for users by username' })
-  @ApiQuery({ name: 'username', required: true })
-  @ApiResponse({ status: 200, description: 'User details' })
-  async searchUser(@Query('username') username: string) {
-    const user = await prisma.user.findFirst({
+  @ApiOperation({ summary: 'Search for users by username or name' })
+  @ApiQuery({ name: 'query', required: true })
+  @ApiResponse({ status: 200, description: 'List of users' })
+  async searchUsers(@Query('query') query: string) {
+    if (!query || query.length < 2) {
+      return [];
+    }
+
+    return prisma.user.findMany({
       where: {
-        username: {
-          equals: username,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            username: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+        ],
       },
       select: {
         id: true,
         name: true,
         username: true,
         avatar: true,
+        status: true,
       },
+      take: 20,
     });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
   }
 
   @Get('me')
