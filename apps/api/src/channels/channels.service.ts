@@ -79,8 +79,10 @@ export class ChannelsService {
   async getMessages(channelId: string, userId: string, cursor?: string, limitNum = 50) {
     /**
      * ⚡ Performance Optimization:
-     * Check access using existence checks (findFirst) instead of deep joins (include).
-     * This avoids massive DB result sets when channels have many members or are shared extensively.
+     * 1. Consolidates channel existence, direct membership, workspace membership, and shared access
+     *    verification into a single database query using nested 'select' and relation filters.
+     * 2. This reduces database round-trips from 4 down to 1.
+     * 3. Avoids deep joins or full table scans by using targeted relation filters.
      */
     /**
      * ⚡ Performance Optimization:
@@ -160,6 +162,7 @@ export class ChannelsService {
             id: true,
             name: true,
             avatar: true,
+            image: true,
           },
         },
         reactions: {
@@ -193,10 +196,13 @@ export class ChannelsService {
         replyTo: {
           select: {
             id: true,
+            content: true,
             user: {
               select: {
                 id: true,
                 name: true,
+                avatar: true,
+                image: true,
               },
             },
           },
@@ -212,13 +218,6 @@ export class ChannelsService {
     const rawData = hasMore ? messages.slice(0, limitNum) : messages;
     const nextCursor = hasMore ? rawData[rawData.length - 1].timestamp.toISOString() : null;
 
-    // Transform messages to match frontend expectations and reduce size
-    /**
-     * ⚡ Performance Optimization:
-     * Returns messages in the order they were fetched (newest first).
-     * The mobile app uses 'inverted' FlatList which expects this order.
-     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency with V2.
-     */
     const formattedMessages = rawData.map(msg => {
       // Group reactions by emoji
       const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();
@@ -233,6 +232,19 @@ export class ChannelsService {
 
       return {
         ...msg,
+        user: {
+          ...msg.user,
+          avatar: msg.user.avatar || msg.user.image,
+        },
+        replyTo: msg.replyTo
+          ? {
+              ...msg.replyTo,
+              user: {
+                ...msg.replyTo.user,
+                avatar: msg.replyTo.user.avatar || msg.replyTo.user.image,
+              },
+            }
+          : null,
         reactions: Array.from(reactionGroups.values()),
         mentions: msg.mentions.map(m => m.mention),
         readByCurrentUser: msg.readBy.length > 0,
@@ -382,23 +394,11 @@ export class ChannelsService {
   ) {
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
     if (recipientIds.length > 0) {
-      await this.notificationsService.notifyMentions(
-        messageId,
-        recipientIds,
-        senderName,
-        channelId,
-        content
-      );
+      await this.notificationsService.notifyMentions(messageId, recipientIds, senderName, channelId, content);
     }
 
     if (mentionsAll || mentionsHere) {
-      await this.notificationsService.notifyChannel(
-        channelId,
-        senderName,
-        messageId,
-        content,
-        mentionsHere
-      );
+      await this.notificationsService.notifyChannel(channelId, senderName, messageId, content, mentionsHere);
     }
 
     await this.notificationsService.notifyNewMessage(

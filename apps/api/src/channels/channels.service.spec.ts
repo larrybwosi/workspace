@@ -239,4 +239,91 @@ describe('ChannelsService', () => {
       expect(result).toEqual({ success: true });
     });
   });
+
+  describe('getMessages', () => {
+    const channelId = 'ch-1';
+    const userId = 'user-1';
+    const workspaceId = 'ws-1';
+
+    beforeEach(() => {
+      mockPrisma.message.findMany.mockResolvedValue([]);
+    });
+
+    it('should allow access for direct channel member', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId,
+        isPrivate: true,
+        members: [{ id: 'cm-1' }],
+        workspace: { members: [] },
+        sharedWith: [],
+      });
+
+      await service.getMessages(channelId, userId);
+
+      expect(mockPrisma.message.findMany).toHaveBeenCalled();
+    });
+
+    it('should allow access for workspace member (public channel)', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId,
+        isPrivate: false,
+        members: [],
+        workspace: { members: [{ id: 'wm-1' }] },
+        sharedWith: [],
+      });
+
+      await service.getMessages(channelId, userId);
+
+      expect(mockPrisma.message.findMany).toHaveBeenCalled();
+    });
+
+    it('should allow access for shared channel member', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId,
+        isPrivate: true,
+        members: [],
+        workspace: { members: [] },
+        sharedWith: [{ id: 'sc-1' }],
+      });
+
+      await service.getMessages(channelId, userId);
+
+      expect(mockPrisma.message.findMany).toHaveBeenCalled();
+    });
+
+    it('should deny access for workspace member to private channel without membership', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId,
+        isPrivate: true,
+        members: [],
+        workspace: { members: [{ id: 'wm-1' }] },
+        sharedWith: [],
+      });
+
+      await expect(service.getMessages(channelId, userId)).rejects.toThrow('You do not have access to this private channel');
+    });
+
+    it('should deny access for unauthorized user', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId,
+        isPrivate: false,
+        members: [],
+        workspace: { members: [] },
+        sharedWith: [],
+      });
+
+      await expect(service.getMessages(channelId, userId)).rejects.toThrow('You do not have access to this channel');
+    });
+
+    it('should throw NotFoundException if channel does not exist', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+
+      await expect(service.getMessages(channelId, userId)).rejects.toThrow('Channel not found');
+    });
+  });
 });
