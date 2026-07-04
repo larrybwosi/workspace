@@ -232,17 +232,17 @@ export class ChannelsService {
 
       return {
         ...msg,
-        user: {
+        user: msg.user ? {
           ...msg.user,
           avatar: msg.user.avatar || msg.user.image,
-        },
+        } : undefined,
         replyTo: msg.replyTo
           ? {
               ...msg.replyTo,
-              user: {
+              user: msg.replyTo.user ? {
                 ...msg.replyTo.user,
                 avatar: msg.replyTo.user.avatar || msg.replyTo.user.image,
-              },
+              } : undefined,
             }
           : null,
         reactions: Array.from(reactionGroups.values()),
