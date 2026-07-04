@@ -5,9 +5,10 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.provider.OpenableColumns
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.entities.MessageEntity
-import com.scrymechat.android.data.remote.MessageActionDto
+import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.data.repository.ChatRepository
 import com.scrymechat.android.data.repository.RealtimeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -159,21 +160,72 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null) {
+    fun uploadFile(uri: Uri, context: Context) {
+        viewModelScope.launch {
+            try {
+                var fileName = "file"
+                var fileSize = 0L
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    if (cursor.moveToFirst()) {
+                        fileName = cursor.getString(nameIndex)
+                        fileSize = cursor.getLong(sizeIndex)
+                    }
+                }
+
+                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
+                val tempFile = java.io.File.createTempFile("upload", null, context.cacheDir)
+                tempFile.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+
+                val result = storageRepository.uploadFile(tempFile)
+                if (result.isSuccess) {
+                    val uploadResponse = result.getOrThrow()
+                    val attachment = CreateAttachmentRequest(
+                        name = uploadResponse.name,
+                        type = uploadResponse.type,
+                        url = uploadResponse.url,
+                        size = uploadResponse.size.toInt()
+                    )
+                    _uiState.update { it.copy(pendingAttachments = it.pendingAttachments + attachment) }
+                } else {
+                    _uiState.update { it.copy(error = result.exceptionOrNull()?.message ?: "Upload failed") }
+                }
+                tempFile.delete()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message ?: "An error occurred during upload") }
+            }
+        }
+    }
+
+    fun removePendingAttachment(attachment: CreateAttachmentRequest) {
+        _uiState.update { it.copy(pendingAttachments = it.pendingAttachments - attachment) }
+    }
+
+    fun onBack() {
+        currentChannelId?.let { setChannel(it) }
+    }
+
+    fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null, attachments: List<CreateAttachmentRequest>? = null) {
         val channelId = targetChannelId ?: currentChannelId
         val dmId = currentDmId
         val threadId = currentThreadId
+        val finalAttachments = attachments ?: _uiState.value.pendingAttachments
 
         viewModelScope.launch {
             val result = when {
-                threadId != null && channelId != null -> chatRepository.sendThreadMessage(channelId, threadId, content)
-                channelId != null -> chatRepository.sendChannelMessage(channelId, content, replyToId)
-                dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId)
+                threadId != null && channelId != null -> chatRepository.sendThreadMessage(channelId, threadId, content, finalAttachments)
+                channelId != null -> chatRepository.sendChannelMessage(channelId, content, replyToId, finalAttachments)
+                dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, finalAttachments)
                 else -> return@launch
             }
 
             if (result is Resource.Error) {
                 _uiState.update { it.copy(error = result.message) }
+            } else {
+                _uiState.update { it.copy(pendingAttachments = emptyList()) }
             }
         }
     }
@@ -290,7 +342,8 @@ data class ChatUiState(
     val typingUsers: List<String> = emptyList(),
     val activeModal: ModalState? = null,
     val isThread: Boolean = false,
-    val threadRootMessage: MessageEntity? = null
+    val threadRootMessage: MessageEntity? = null,
+    val pendingAttachments: List<CreateAttachmentRequest> = emptyList()
 )
 
 data class ModalState(

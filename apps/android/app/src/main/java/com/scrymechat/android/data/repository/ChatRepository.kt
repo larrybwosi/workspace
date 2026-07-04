@@ -51,9 +51,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun sendChannelMessage(channelId: String, content: String, replyToId: String? = null): Resource<MessageEntity> {
+    suspend fun sendChannelMessage(channelId: String, content: String, replyToId: String? = null, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
         return try {
-            val response = api.sendChannelMessage(channelId, SendMessageRequest(content, replyToId))
+            val response = api.sendChannelMessage(channelId, SendMessageRequest(content, replyToId, attachments))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
@@ -66,9 +66,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun sendThreadMessage(channelId: String, threadId: String, content: String): Resource<MessageEntity> {
+    suspend fun sendThreadMessage(channelId: String, threadId: String, content: String, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
         return try {
-            val response = api.sendThreadMessage(channelId, threadId, SendMessageRequest(content))
+            val response = api.sendThreadMessage(channelId, threadId, SendMessageRequest(content, null, attachments))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
@@ -160,9 +160,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun sendDmMessage(conversationId: String, content: String, replyToId: String? = null): Resource<MessageEntity> {
+    suspend fun sendDmMessage(conversationId: String, content: String, replyToId: String? = null, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
         return try {
-            val response = api.sendDmMessage(conversationId, SendMessageRequest(content, replyToId))
+            val response = api.sendDmMessage(conversationId, SendMessageRequest(content, replyToId, attachments))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
