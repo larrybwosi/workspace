@@ -12,7 +12,6 @@ FROM base AS builder
 WORKDIR /app
 RUN pnpm add -g turbo
 COPY . .
-# 💡 FIXED: Added the --scope flag here
 RUN turbo prune --scope=api --docker
 
 FROM base AS installer
@@ -41,7 +40,7 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# Install Prisma globally for migrations
+# Install Prisma globally for migrations (confirmed by user)
 RUN pnpm add -g prisma@7.8.0
 
 # Set up pnpm and prisma engines
@@ -49,8 +48,8 @@ RUN chown -R nestjs:nodejs /pnpm
 
 WORKDIR /app
 
-COPY --from=installer --chown=nestjs:nodejs /app/apps/api/dist ./dist
 COPY --from=installer --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=installer --chown=nestjs:nodejs /app/apps/api/dist ./dist
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/package.json ./package.json
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/packages/database/prisma.config.ts ./
