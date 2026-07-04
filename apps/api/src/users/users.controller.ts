@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Body,
+  Query,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -22,7 +23,6 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
-import { Query } from '@nestjs/common';
 
 @ApiTags('Users')
 @ApiBearerAuth()
