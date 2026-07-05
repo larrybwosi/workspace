@@ -38,8 +38,10 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     chatViewModel: ChatViewModel = hiltViewModel(),
+    workspaceSlug: String? = null,
     onSettingsClick: () -> Unit,
-    onFriendsClick: () -> Unit = {}
+    onFriendsClick: () -> Unit = {},
+    onDiscoveryClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
@@ -48,6 +50,12 @@ fun HomeScreen(
     var forwardingMessage by remember { mutableStateOf<com.scrymechat.android.data.local.entities.MessageEntity?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(workspaceSlug) {
+        workspaceSlug?.let {
+            viewModel.selectWorkspaceBySlug(it)
+        }
+    }
 
     if (forwardingMessage != null) {
         ForwardMessageDialog(
@@ -125,7 +133,7 @@ fun HomeScreen(
                             isHomeSelected = uiState.isHomeSelected,
                             onWorkspaceClick = { viewModel.selectWorkspace(it) },
                             onHomeClick = { viewModel.selectHome() },
-                            onCreateWorkspaceClick = { viewModel.setCreateWorkspaceDialogOpen(true) }
+                            onCreateWorkspaceClick = { onDiscoveryClick() }
                         )
 
                         ChannelSidebar(

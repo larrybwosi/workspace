@@ -76,6 +76,23 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun selectWorkspaceBySlug(slug: String) {
+        viewModelScope.launch {
+            // First refresh workspaces to ensure we have the new one
+            workspaceRepository.getWorkspaces().collect { resource ->
+                if (resource is Resource.Success) {
+                    val workspaces = resource.data ?: emptyList()
+                    _uiState.update { it.copy(workspaces = workspaces) }
+
+                    val workspace = workspaces.find { it.slug == slug }
+                    if (workspace != null) {
+                        selectWorkspace(workspace)
+                    }
+                }
+            }
+        }
+    }
+
     private fun loadChannels(workspaceSlug: String) {
         viewModelScope.launch {
             channelRepository.getWorkspaceChannels(workspaceSlug).collect { resource ->
