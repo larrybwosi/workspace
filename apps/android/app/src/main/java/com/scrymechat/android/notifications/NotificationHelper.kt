@@ -79,7 +79,7 @@ class NotificationHelper(private val context: Context) {
             ).apply {
                 description = "Direct messages and @mentions that need your attention"
                 enableLights(true)
-                lightColor = Color.parseColor("#5B5FEF")
+                lightColor = Color.parseColor("#8B5CF6")
             }
 
             val highChannel = NotificationChannel(
