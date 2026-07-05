@@ -148,6 +148,7 @@ private val ShapeInputBar = RoundedCornerShape(22.dp)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatView(
+    chatTitle: String = "",
     messages: List<MessageEntity>,
     onSendMessage: (String, String?, List<CreateAttachmentRequest>?) -> Unit,
     onReply: (MessageEntity) -> Unit,
@@ -206,34 +207,40 @@ fun ChatView(
         }
 
         // Messages List
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            state = listState,
-            reverseLayout = true,
-            contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
-        ) {
-            items(messages, key = { it.id }) { message ->
-                SwipeableMessageItem(
-                    message = message,
-                    palette = palette,
-                    onReply = {
-                        replyingTo = it
-                        onReply(it)
-                    },
-                    onOpenThread = onOpenThread,
-                    onForward = { onForward(it) },
-                    onDownload = onDownload,
-                    onAction = { action, formState -> onAction(message, action, formState) },
-                    onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
-                    formState = formStates[message.id] ?: emptyMap(),
-                    isLoading = loadingActions.contains(message.id),
-                    onImageClick = { attachment ->
-                        fullScreenImageUrl = attachment.url
-                        fullScreenImageName = attachment.name
-                        fullScreenImageMimeType = attachment.type
-                    },
-                    onAddReaction = { reactionPickerMessage = it }
-                )
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            if (messages.isEmpty()) {
+                EmptyChatState(chatTitle = chatTitle, palette = palette, isDm = !chatTitle.startsWith("#") && !isThread)
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    reverseLayout = true,
+                    contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
+                ) {
+                    items(messages, key = { it.id }) { message ->
+                        SwipeableMessageItem(
+                            message = message,
+                            palette = palette,
+                            onReply = {
+                                replyingTo = it
+                                onReply(it)
+                            },
+                            onOpenThread = onOpenThread,
+                            onForward = { onForward(it) },
+                            onDownload = onDownload,
+                            onAction = { action, formState -> onAction(message, action, formState) },
+                            onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
+                            formState = formStates[message.id] ?: emptyMap(),
+                            isLoading = loadingActions.contains(message.id),
+                            onImageClick = { attachment ->
+                                fullScreenImageUrl = attachment.url
+                                fullScreenImageName = attachment.name
+                                fullScreenImageMimeType = attachment.type
+                            },
+                            onAddReaction = { reactionPickerMessage = it }
+                        )
+                    }
+                }
             }
         }
 
@@ -480,6 +487,52 @@ fun ChatView(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = false) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .size(68.dp)
+                .clip(CircleShape)
+                .background(palette.accentSoft),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                if (isDm) Icons.Default.Person else Icons.Default.Tag,
+                contentDescription = null,
+                tint = palette.accent,
+                modifier = Modifier.size(36.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = if (isDm) chatTitle else "Welcome to #$chatTitle!",
+            color = palette.textPrimary,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = if (isDm) "This is the beginning of your direct message history with @$chatTitle."
+                   else "This is the start of the #$chatTitle channel.",
+            color = palette.textSecondary,
+            fontSize = 15.sp
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 

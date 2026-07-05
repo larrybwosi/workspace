@@ -84,6 +84,11 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         this.logger.log(`Client ${client.id} left room: ${room}`);
       });
 
+      client.on('typing', (data: { room: string; userId: string; userName: string }) => {
+        this.logger.log(`User ${data.userName} is typing in ${data.room}`);
+        client.to(data.room).emit('typing', data);
+      });
+
       client.on('enter-presence', (data: { channel: string; userId: string; data?: any }) => {
         this.logger.log(`User ${data.userId} entering presence for ${data.channel}`);
 
