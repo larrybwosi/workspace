@@ -140,8 +140,6 @@
 
 **Learning:** Sequential database operations for multi-entity creation (User + BotApplication) can be consolidated into a single nested Prisma 'create' call by pre-generating IDs (using 'crypto.randomUUID()'). In installation flows, replacing 'find-then-create' with 'upsert' or 'try-create-catch-P2002' patterns significantly reduces database round-trips.
 **Action:** Use nested Prisma writes for related entities and prefer optimistic 'create' with error handling for unique constraints to minimize RTT in multi-step service methods.
-<<<<<<< HEAD
-=======
 
 ## 2025-05-30 - [Database] Consolidated Access Verification for Channels
 
@@ -152,7 +150,6 @@
 
 **Learning:** Performing '.reverse()' on message lists in both the service and controller creates unnecessary O(N) CPU overhead and risks logical data order regressions.
 **Action:** Standardize on 'newest-first' (descending) order for all core messaging services to match Android's inverted list requirements. Remove in-memory reversal operations to improve efficiency and maintain consistency across V1 and V2 APIs.
->>>>>>> 91619a187c0812c576413234efcca5912f66d2fd
 
 ## 2026-06-28 - [API/Teams] Optimized Teams Controller with Redis Caching and Background Auditing
 

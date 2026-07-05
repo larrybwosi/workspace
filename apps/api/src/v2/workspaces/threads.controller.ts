@@ -1,9 +1,20 @@
-import { Controller, Get, Query, Param, UseGuards, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Param,
+  UseGuards,
+  ForbiddenException,
+  NotFoundException,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
+import Redis from 'ioredis';
 import { V2AuditService } from '../v2-audit.service';
 
 @ApiTags('Threads')
@@ -11,7 +22,12 @@ import { V2AuditService } from '../v2-audit.service';
 @Controller('v2/workspaces/:slug/threads')
 @UseGuards(ApiV2Guard)
 export class V2ThreadsController {
-  constructor(private readonly auditService: V2AuditService) {}
+  private readonly logger = new Logger(V2ThreadsController.name);
+
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly auditService: V2AuditService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List all threads in the workspace', description: 'Requires threads:read scope.' })
@@ -28,12 +44,34 @@ export class V2ThreadsController {
       throw new ForbiddenException('Forbidden: Missing threads:read scope');
     }
 
+    const isDefaultQuery = !channelId && limitStr === '20';
+    const cacheKey = `v2:threads:${context.workspaceId}:default`;
+    let cachedThreads: string | null = null;
+
+    if (isDefaultQuery) {
+      try {
+        cachedThreads = await this.redis.get(cacheKey);
+      } catch (error) {
+        this.logger.warn('Redis error in getThreads:', error);
+      }
+    }
+
+    if (cachedThreads) {
+      this.auditService
+        .log(context, 'threads.list', 'thread', undefined, {
+          channelId,
+        })
+        .catch(err => this.logger.error('Audit log error:', err));
+      return { threads: JSON.parse(cachedThreads) };
+    }
+
     const limit = parseInt(limitStr);
 
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-     * Expected impact: Reduces JSON payload size and memory overhead by ~15-25%.
+     * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+     * 2. Implement Redis caching to reduce database load and improve response times.
+     * Expected impact: Reduces DB RTT from 1 to 0 for cached hits and shrinks JSON payload by ~15-25%.
      */
     const threads = await prisma.thread.findMany({
       where: {
@@ -59,9 +97,19 @@ export class V2ThreadsController {
       },
     });
 
-    await this.auditService.log(context, 'threads.list', 'thread', undefined, {
-      channelId,
-    });
+    if (isDefaultQuery) {
+      try {
+        await this.redis.setex(cacheKey, 600, JSON.stringify(threads));
+      } catch (error) {
+        this.logger.warn('Redis error in getThreads (setex):', error);
+      }
+    }
+
+    this.auditService
+      .log(context, 'threads.list', 'thread', undefined, {
+        channelId,
+      })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { threads };
   }
@@ -125,10 +173,12 @@ export class V2ThreadsController {
 
     const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
 
-    await this.auditService.log(context, 'threads.messages', 'thread', threadId, {
-      limit,
-      cursor,
-    });
+    this.auditService
+      .log(context, 'threads.messages', 'thread', threadId, {
+        limit,
+        cursor,
+      })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { messages, nextCursor };
   }
@@ -172,7 +222,9 @@ export class V2ThreadsController {
       throw new NotFoundException('Thread not found for this context');
     }
 
-    await this.auditService.log(context, 'threads.get_by_context', 'thread', thread.id, { contextId });
+    this.auditService
+      .log(context, 'threads.get_by_context', 'thread', thread.id, { contextId })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { thread };
   }
