@@ -95,11 +95,15 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectChannel(channel: ChannelEntity) {
-        _uiState.update { it.copy(selectedChannel = channel) }
+        _uiState.update { it.copy(selectedChannel = channel, selectedDm = null, isHomeSelected = false) }
+    }
+
+    fun selectDm(dm: DmWithUser) {
+        _uiState.update { it.copy(selectedDm = dm, selectedChannel = null, isHomeSelected = false) }
     }
 
     fun selectHome() {
-        selectWorkspace(null)
+        _uiState.update { it.copy(isHomeSelected = true, selectedChannel = null, selectedDm = null, selectedWorkspace = null) }
         loadDms()
     }
 
@@ -186,6 +190,7 @@ data class HomeUiState(
     val dms: List<DmWithUser> = emptyList(),
     val selectedWorkspace: WorkspaceEntity? = null,
     val selectedChannel: ChannelEntity? = null,
+    val selectedDm: DmWithUser? = null,
     val isHomeSelected: Boolean = true,
     val currentUser: UserEntity? = null,
     val isLoading: Boolean = false,

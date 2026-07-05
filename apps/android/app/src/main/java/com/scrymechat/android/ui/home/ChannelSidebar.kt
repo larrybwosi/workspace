@@ -80,7 +80,7 @@ fun ChannelSidebar(
     expandedCategories: Set<String>,
     dms: List<com.scrymechat.android.data.local.dao.DmWithUser> = emptyList(),
     onChannelClick: (ChannelEntity) -> Unit,
-    onDmClick: (DmConversationEntity) -> Unit = {},
+    onDmClick: (com.scrymechat.android.data.local.dao.DmWithUser) -> Unit = {},
     onCategoryToggle: (String) -> Unit,
     onSettingsClick: () -> Unit,
     onFriendsClick: () -> Unit = {},
@@ -122,7 +122,7 @@ fun ChannelSidebar(
                         icon = Icons.Default.ChatBubble,
                         label = dmWithUser.otherUserName ?: "Unknown User",
                         isSelected = false,
-                        onClick = { onDmClick(dmWithUser.dm) }
+                        onClick = { onDmClick(dmWithUser) }
                     )
                 }
             } else {
