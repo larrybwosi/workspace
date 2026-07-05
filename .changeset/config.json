@@ -3,7 +3,7 @@
   "changelog": "@changesets/cli/changelog",
   "commit": true,
   "fixed": [
-    ["api", "web", "mobile", "desktop"]
+    ["api", "web", "@repo/android", "desktop"]
   ],
   "linked": [],
   "access": "restricted",
