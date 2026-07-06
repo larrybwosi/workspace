@@ -228,14 +228,14 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                   </div>
 
                   <div className="space-y-6">
-                    {!isCurrentUser && (
+                    {!isCurrentUser && socialProfile && (
                       <div>
                         <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Mutual Connections</h4>
                         <div className="space-y-4">
                           <div className="flex flex-col gap-2">
                             <span className="text-sm font-medium">Mutual Workspaces</span>
                             <div className="flex flex-wrap gap-2">
-                              {socialProfile?.mutualWorkspaces?.length > 0 ? (
+                              {socialProfile.mutualWorkspaces && socialProfile.mutualWorkspaces.length > 0 ? (
                                 socialProfile.mutualWorkspaces.map((ws: any) => (
                                   <Badge key={ws.id} variant="outline" className="gap-1">
                                     {ws.name}
@@ -250,7 +250,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                           <div className="flex flex-col gap-2">
                             <span className="text-sm font-medium">Mutual Friends</span>
                             <div className="flex flex-wrap gap-2">
-                              {socialProfile?.mutualFriends?.length > 0 ? (
+                              {socialProfile.mutualFriends && socialProfile.mutualFriends.length > 0 ? (
                                 socialProfile.mutualFriends.map((friend: any) => (
                                   <Avatar key={friend.id} className="h-8 w-8 border border-background">
                                     <AvatarImage src={friend.avatar} alt={friend.name} />

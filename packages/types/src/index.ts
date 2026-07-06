@@ -13,6 +13,7 @@ export interface User {
   createdAt?: string | Date;
   phone?: string;
   location?: string;
+  bio?: string;
 }
 
 export interface Reaction {
