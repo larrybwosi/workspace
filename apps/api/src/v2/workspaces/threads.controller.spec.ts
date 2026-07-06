@@ -87,8 +87,15 @@ describe('V2ThreadsController', () => {
   describe('getThreadMessages', () => {
     const context: any = { workspaceId: 'ws-1', scopes: ['threads:read', 'messages:read'] };
 
-    it('should return messages in ascending order', async () => {
-      const messages = [{ id: 'msg-1', timestamp: new Date() }];
+    it('should return messages in ascending order and format them', async () => {
+      const messages = [
+        {
+          id: 'msg-1',
+          timestamp: new Date(),
+          reactions: [{ emoji: '👍', userId: 'user-1' }],
+          user: { id: 'u-1', name: 'User 1', avatar: 'av-1' },
+        },
+      ];
       (prisma.message.findMany as any).mockResolvedValue(messages);
 
       const result = await controller.getThreadMessages(context, 'thread-1');
@@ -98,7 +105,10 @@ describe('V2ThreadsController', () => {
           orderBy: { timestamp: 'asc' },
         })
       );
-      expect(result.messages).toEqual(messages);
+      expect(result.messages[0]).toMatchObject({
+        id: 'msg-1',
+        reactions: [{ emoji: '👍', count: 1, users: ['user-1'] }],
+      });
     });
   });
 });
