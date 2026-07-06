@@ -41,6 +41,31 @@ describe('UsersController', () => {
 
   const mockUser = { id: 'user-1', name: 'Alice' } as any;
 
+  describe('getUser', () => {
+    it('should return a user profile if found', async () => {
+      const mockFoundUser = {
+        id: 'user-2',
+        name: 'Bob',
+        username: 'bob',
+        avatar: 'bob-avatar',
+      };
+      (prisma.user.findUnique as any).mockResolvedValue(mockFoundUser);
+
+      const result = await controller.getUser('user-2');
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 'user-2' },
+        select: expect.any(Object),
+      });
+      expect(result).toEqual(mockFoundUser);
+    });
+
+    it('should throw NotFoundException if user is not found', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue(null);
+      await expect(controller.getUser('non-existent')).rejects.toThrow();
+    });
+  });
+
   describe('registerDeviceToken', () => {
     it('should use upsert for atomic registration', async () => {
       const body = {

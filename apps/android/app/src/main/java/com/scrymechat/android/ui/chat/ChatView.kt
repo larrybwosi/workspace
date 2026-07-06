@@ -167,6 +167,7 @@ fun ChatView(
     pendingAttachments: List<CreateAttachmentRequest> = emptyList(),
     onAttach: (Uri) -> Unit = {},
     onRemoveAttachment: (CreateAttachmentRequest) -> Unit = {},
+    onAvatarClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
@@ -237,7 +238,8 @@ fun ChatView(
                                 fullScreenImageName = attachment.name
                                 fullScreenImageMimeType = attachment.type
                             },
-                            onAddReaction = { reactionPickerMessage = it }
+                            onAddReaction = { reactionPickerMessage = it },
+                            onAvatarClick = onAvatarClick
                         )
                     }
                 }
@@ -575,7 +577,8 @@ fun SwipeableMessageItem(
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
     isLoading: Boolean = false,
-    onImageClick: (AttachmentDto) -> Unit = {}
+    onImageClick: (AttachmentDto) -> Unit = {},
+    onAvatarClick: (String) -> Unit = {}
 ) {
     // Swipe-to-action. Kept lightweight (drag offset + threshold) per the
     // original approach, but with spring-back animation and a clearer,
@@ -645,7 +648,8 @@ fun SwipeableMessageItem(
                     formState = formState,
                     isLoading = isLoading,
                     onImageClick = onImageClick,
-                    onOpenThread = { onOpenThread(message) }
+                    onOpenThread = { onOpenThread(message) },
+                    onAvatarClick = onAvatarClick
                 )
 
                 DropdownMenu(
@@ -735,7 +739,8 @@ fun MessageItem(
     onUpdateForm: (String, Any) -> Unit = { _, _ -> },
     formState: Map<String, Any> = emptyMap(),
     isLoading: Boolean = false,
-    onImageClick: (AttachmentDto) -> Unit = {}
+    onImageClick: (AttachmentDto) -> Unit = {},
+    onAvatarClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -749,7 +754,8 @@ fun MessageItem(
                 .size(38.dp)
                 .clip(CircleShape)
                 .border(1.dp, palette.glassBorder, CircleShape)
-                .background(palette.surfaceVariant),
+                .background(palette.surfaceVariant)
+                .clickable { onAvatarClick(message.senderId) },
             contentScale = ContentScale.Crop
         )
 

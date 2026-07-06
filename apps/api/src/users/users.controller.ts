@@ -90,6 +90,37 @@ export class UsersController {
     });
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a user profile by ID' })
+  @ApiParam({ name: 'id', description: 'The user ID' })
+  @ApiResponse({ status: 200, description: 'User profile details' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUser(@Param('id') id: string): Promise<any> {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        avatar: true,
+        image: true,
+        banner: true,
+        statusText: true,
+        statusEmoji: true,
+        bio: true,
+        role: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
   @Get(':id/social-profile')
   @ApiOperation({ summary: 'Get social profile between current user and target user' })
   @ApiParam({ name: 'id', description: 'The target user ID' })

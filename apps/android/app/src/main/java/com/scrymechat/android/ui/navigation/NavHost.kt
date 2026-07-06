@@ -121,7 +121,22 @@ fun ScrymeNavHost(
                 typingUsers = chatUiState.typingUsers,
                 pendingAttachments = chatUiState.pendingAttachments,
                 onAttach = { uri -> chatViewModel.uploadFile(uri, navController.context) },
-                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) }
+                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) },
+                onAvatarClick = { id ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(id))
+                }
+            )
+        }
+        composable(Screen.OtherUserProfile.route) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            OtherUserProfileScreen(
+                userId = userId,
+                onBack = { navController.popBackStack() },
+                onSendMessage = { id ->
+                    navController.navigate(Screen.Chat.createRoute(id)) {
+                        popUpTo(Screen.Home.route)
+                    }
+                }
             )
         }
         composable(Screen.Channel.route) { backStackEntry ->
