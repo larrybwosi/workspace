@@ -111,6 +111,42 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
+
+    private val _targetUser = MutableStateFlow<UserEntity?>(null)
+    val targetUser: StateFlow<UserEntity?> = _targetUser.asStateFlow()
+
+    private val _isLoadingTarget = MutableStateFlow(false)
+    val isLoadingTarget: StateFlow<Boolean> = _isLoadingTarget.asStateFlow()
+
+    fun fetchUser(userId: String) {
+        viewModelScope.launch {
+            _isLoadingTarget.value = true
+            try {
+                val response = authApi.getUser(userId)
+                if (response.isSuccessful) {
+                    val userDto = response.body()
+                    if (userDto != null) {
+                        _targetUser.value = UserEntity(
+                            id = userDto.id,
+                            name = userDto.name,
+                            username = userDto.username,
+                            email = "", // Private info
+                            avatar = userDto.avatar,
+                            banner = null,
+                            statusText = null,
+                            statusEmoji = null,
+                            role = "member",
+                            status = "offline"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _errorEvents.tryEmit("Error fetching user: ${e.localizedMessage}")
+            } finally {
+                _isLoadingTarget.value = false
+            }
+        }
+    }
 }
 
 data class ProfileUiState(
