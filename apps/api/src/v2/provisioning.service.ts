@@ -115,12 +115,12 @@ export class ProvisioningService {
           }
         }
 
-        // 5. Create Default Bot
+        // 5. Create Default Bot (System Bot)
         const botId = `bot_${crypto.randomBytes(8).toString('hex')}`;
         const botUser = await tx.user.create({
           data: {
             id: botId,
-            name: `${workspace.name} Bot`,
+            name: `System Bot`,
             email: `${workspace.slug}-bot@system.internal`,
             isBot: true,
             status: 'online',
@@ -132,8 +132,8 @@ export class ProvisioningService {
 
         const botApp = await tx.botApplication.create({
           data: {
-            name: `${workspace.name} Bot`,
-            description: `Default bot for ${workspace.name}`,
+            name: `System Bot`,
+            description: `Default system bot for ${workspace.name}. Responsible for announcements and general info.`,
             clientId,
             clientSecret,
             ownerId: owner.id,
@@ -142,12 +142,12 @@ export class ProvisioningService {
           },
         });
 
-        // Add bot to workspace members
+        // Add bot to workspace members as an admin to ensure it can post system-wide
         await tx.workspaceMember.create({
           data: {
             workspaceId: workspace.id,
             userId: botUser.id,
-            role: 'bot',
+            role: 'admin',
           },
         });
 
