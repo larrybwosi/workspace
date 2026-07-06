@@ -178,3 +178,8 @@
 
 **Learning:** Replacing the sequential 'findUnique-then-create' pattern for Direct Message conversations with a single Prisma 'upsert' using the compound unique index reduces database round-trips from 2 to 1 for new conversations.
 **Action:** Always prefer atomic 'upsert' or optimistic 'create' with 'P2002' handling for "get-or-create" patterns on unique indices to minimize RTT.
+
+## 2026-07-05 - [API/Announcements] Optimized Announcements with Redis Caching and Background Logging
+
+**Learning:** Sibling controllers (Teams, Departments) had established a high-performance pattern that Announcements was missing. Hierarchical list retrieval benefits significantly from Redis caching (600s TTL) with explicit invalidation on mutations. Furthermore, backgrounding non-critical side effects like audit logs with `.catch()` prevents logging failures from impacting the main request latency and improves overall throughput.
+**Action:** Consistently apply the Redis caching + background logging pattern to all workspace-scoped list endpoints. Ensure cache invalidation is handled in all mutation methods (create, update, delete).
