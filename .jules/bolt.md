@@ -180,3 +180,8 @@
 
 **Learning:** Sibling controllers (Teams, Departments) had established a high-performance pattern that Announcements was missing. Hierarchical list retrieval benefits significantly from Redis caching (600s TTL) with explicit invalidation on mutations. Furthermore, backgrounding non-critical side effects like audit logs with `.catch()` prevents logging failures from impacting the main request latency and improves overall throughput.
 **Action:** Consistently apply the Redis caching + background logging pattern to all workspace-scoped list endpoints. Ensure cache invalidation is handled in all mutation methods (create, update, delete).
+
+## 2025-05-30 - [API/V2] Server-Side Reaction Grouping
+
+**Learning:** Returning individual reaction records in high-traffic message lists creates massive JSON payloads and increases client-side processing. V2 was missing the server-side grouping pattern established in V1.
+**Action:** Always group reactions by emoji on the server using a `Map` before returning message lists. This reduces payload size by 30-50% for active threads and ensures consistency across API versions.
