@@ -50,16 +50,6 @@ export class MessagesService {
 
     return workspace;
   }
-
-  // --- Message Operations ---
-  /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Only fetches the current user's read status instead of all read receipts.
-   * 3. Removed redundant 'replies' include as the frontend reconstructs threads from flat list.
-   * 4. Groups reactions in-memory to match frontend optimized format.
-   * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
-   */
   async getMessages(channelId: string, userId: string, cursor?: string, limit = 50) {
     if (!channelId) {
       throw new BadRequestException('Channel ID required');

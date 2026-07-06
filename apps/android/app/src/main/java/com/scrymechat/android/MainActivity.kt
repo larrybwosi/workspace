@@ -28,6 +28,7 @@ import com.scrymechat.android.ui.navigation.Screen
 import com.scrymechat.android.ui.theme.ScrymechatTheme
 import com.scrymechat.android.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -73,12 +74,18 @@ class MainActivity : ComponentActivity() {
                 }
 
                 LaunchedEffect(Unit) {
-                    sessionManager.getApiUrlFlow().collectLatest {
-                        if (sessionManager.getToken() != null) {
-                            stopService(Intent(this@MainActivity, RealtimeService::class.java))
-                            startRealtimeService()
+                    combine(
+                        sessionManager.getActiveSessionFlow(),
+                        sessionManager.getApiUrlFlow()
+                    ) { session, apiUrl -> session to apiUrl }
+                        .collectLatest { (session, _) ->
+                            if (session != null) {
+                                stopService(Intent(this@MainActivity, RealtimeService::class.java))
+                                startRealtimeService()
+                            } else {
+                                stopService(Intent(this@MainActivity, RealtimeService::class.java))
+                            }
                         }
-                    }
                 }
 
                 LaunchedEffect(intent) {

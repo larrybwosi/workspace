@@ -34,6 +34,11 @@ interface AuthApi {
     @GET("users/me")
     suspend fun getMe(): Response<UserResponse>
 
+    @GET("users/{id}")
+    suspend fun getUser(
+        @retrofit2.http.Path("id") id: String
+    ): Response<UserDto>
+
     @POST("users/me")
     suspend fun updateMe(
         @Body request: Map<String, Any>
@@ -45,9 +50,9 @@ interface AuthApi {
     ): Response<QRAuthorizeResponse>
 
     @GET("users/search")
-    suspend fun searchUser(
-        @retrofit2.http.Query("username") username: String
-    ): Response<UserDto>
+    suspend fun searchUsers(
+        @retrofit2.http.Query("query") query: String
+    ): Response<List<UserDto>>
 }
 
 data class QRAuthorizeRequest(

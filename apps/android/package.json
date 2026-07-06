@@ -1,6 +1,6 @@
 {
-  "name": "@repo/android",
-  "version": "0.0.764",
+  "name": "android",
+  "version": "0.0.772",
   "private": true,
   "scripts": {
     "build": "./gradlew assembleDebug",

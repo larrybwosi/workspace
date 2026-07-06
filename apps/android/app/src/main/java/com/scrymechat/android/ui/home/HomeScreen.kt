@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.scrymechat.android.ui.chat.ChatView
 import com.scrymechat.android.ui.chat.ChatViewModel
 import com.scrymechat.android.ui.chat.ForwardMessageDialog
@@ -37,8 +38,10 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     chatViewModel: ChatViewModel = hiltViewModel(),
+    workspaceSlug: String? = null,
     onSettingsClick: () -> Unit,
-    onFriendsClick: () -> Unit = {}
+    onFriendsClick: () -> Unit = {},
+    onDiscoveryClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
@@ -47,6 +50,12 @@ fun HomeScreen(
     var forwardingMessage by remember { mutableStateOf<com.scrymechat.android.data.local.entities.MessageEntity?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(workspaceSlug) {
+        workspaceSlug?.let {
+            viewModel.selectWorkspaceBySlug(it)
+        }
+    }
 
     if (forwardingMessage != null) {
         ForwardMessageDialog(
@@ -124,7 +133,7 @@ fun HomeScreen(
                             isHomeSelected = uiState.isHomeSelected,
                             onWorkspaceClick = { viewModel.selectWorkspace(it) },
                             onHomeClick = { viewModel.selectHome() },
-                            onCreateWorkspaceClick = { viewModel.setCreateWorkspaceDialogOpen(true) }
+                            onCreateWorkspaceClick = { onDiscoveryClick() }
                         )
 
                         ChannelSidebar(
@@ -144,7 +153,8 @@ fun HomeScreen(
                                 scope.launch { drawerState.close() }
                             },
                             onDmClick = {
-                                chatViewModel.setDm(it.id)
+                                viewModel.selectDm(it)
+                                chatViewModel.setDm(it.dm.id)
                                 scope.launch { drawerState.close() }
                             },
                             onCategoryToggle = { viewModel.toggleCategory(it) },
@@ -160,6 +170,7 @@ fun HomeScreen(
             }
         ) {
             MainContent(
+                uiState = uiState,
                 selectedWorkspace = uiState.selectedWorkspace,
                 selectedChannel = uiState.selectedChannel,
                 isHomeSelected = uiState.isHomeSelected,
@@ -201,6 +212,7 @@ fun HomeScreen(
 
 @Composable
 fun MainContent(
+    uiState: HomeUiState,
     selectedWorkspace: com.scrymechat.android.data.local.entities.WorkspaceEntity?,
     selectedChannel: com.scrymechat.android.data.local.entities.ChannelEntity?,
     isHomeSelected: Boolean,
@@ -228,6 +240,13 @@ fun MainContent(
             .background(ScrymeDarkSurfaceVariant)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            val title = when {
+                isHomeSelected -> "Home"
+                selectedChannel != null -> selectedChannel.name
+                uiState.selectedDm != null -> uiState.selectedDm.otherUserName ?: "Unknown User"
+                else -> selectedWorkspace?.name ?: "Scrymechat"
+            }
+
             // Top Bar — slightly taller, with a subtle elevation line instead of a flat divider
             Surface(
                 color = ScrymeDarkSurfaceVariant,
@@ -255,6 +274,7 @@ fun MainContent(
                     val titleIcon = when {
                         isHomeSelected -> null
                         selectedChannel != null -> Icons.Default.Tag
+                        uiState.selectedDm != null -> null // Could be a status indicator
                         else -> null
                     }
                     titleIcon?.let {
@@ -267,10 +287,19 @@ fun MainContent(
                         Spacer(modifier = Modifier.width(4.dp))
                     }
 
+                    if (uiState.selectedDm != null) {
+                        AsyncImage(
+                            model = uiState.selectedDm.otherUserAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${uiState.selectedDm.dm.otherUserId}",
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
                     Text(
-                        text = if (isHomeSelected) "Home"
-                               else if (selectedChannel != null) selectedChannel.name
-                               else selectedWorkspace?.name ?: "Scrymechat",
+                        text = title,
                         color = ScrymeDarkTextPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp,
@@ -292,8 +321,9 @@ fun MainContent(
                     )
                 }
 
-                if (!isHomeSelected && selectedChannel != null) {
+                if (!isHomeSelected && (selectedChannel != null || uiState.selectedDm != null)) {
                     ChatView(
+                        chatTitle = title,
                         messages = chatUiState.messages,
                         onSendMessage = onSendMessage,
                         onReply = onReply,

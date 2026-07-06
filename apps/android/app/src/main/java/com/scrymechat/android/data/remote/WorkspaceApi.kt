@@ -11,7 +11,9 @@ interface WorkspaceApi {
     suspend fun createWorkspace(@Body request: CreateWorkspaceRequest): Response<WorkspaceDto>
 
     @GET("workspaces/discover")
-    suspend fun discoverWorkspaces(): Response<List<WorkspaceDto>>
+    suspend fun discoverWorkspaces(
+        @retrofit2.http.Query("q") query: String? = null
+    ): Response<List<WorkspaceDto>>
 
     @POST("workspaces/{slug}/join")
     suspend fun joinWorkspace(@Path("slug") slug: String): Response<WorkspaceMemberDto>

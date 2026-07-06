@@ -296,14 +296,6 @@ export class DmsService {
     const rawData = hasMore ? messages.slice(0, limitNum) : messages;
     const nextCursor = hasMore ? rawData[rawData.length - 1].createdAt.toISOString() : null;
 
-    // Transform messages to match frontend expectations and reduce size
-    /**
-     * ⚡ Performance Optimization:
-     * Returns messages in the order they were fetched (newest first).
-     * The mobile app uses 'inverted' FlatList which expects this order.
-     * The web app sorts them oldest-first in-memory anyway.
-     * Removing .reverse() avoids unnecessary O(N) operation and maintains consistency with V2.
-     */
     const formattedMessages = rawData.map(m => {
       // Group reactions by emoji
       const reactionGroups = new Map<string, { emoji: string; count: number; users: string[] }>();

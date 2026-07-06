@@ -4,10 +4,16 @@ sealed class Screen(val route: String) {
     object Welcome : Screen("welcome")
     object SignUp : Screen("signup")
     object Login : Screen("login")
-    object Home : Screen("home")
+    object Home : Screen("home?slug={slug}") {
+        fun createRoute(slug: String?) = if (slug != null) "home?slug=$slug" else "home"
+    }
+    object Discovery : Screen("discovery")
     object Friends : Screen("friends")
     object Chat : Screen("chat/{userId}") {
         fun createRoute(userId: String) = "chat/$userId"
+    }
+    object OtherUserProfile : Screen("user_profile/{userId}") {
+        fun createRoute(userId: String) = "user_profile/$userId"
     }
     object Channel : Screen("channel/{channelId}") {
         fun createRoute(channelId: String) = "channel/$channelId"
