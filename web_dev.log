@@ -1,0 +1,15 @@
+
+> web@2.0.0 dev /app/apps/web
+> next dev --port 3001 --webpack
+
+▲ Next.js 16.2.1 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 765ms
+ ○ (pwa) PWA support is disabled.
+
+○ Compiling proxy ...
+◇ injected env (0) from ../../.env // tip: ⌘ enable debugging { debug: true }
+○ Compiling /login ...
+◇ injected env (0) from ../../.env // tip: ⌁ auth for agents [www.vestauth.com]
+ GET /login 200 in 116ms (next.js: 5ms, proxy.ts: 8ms, application-code: 103ms)
