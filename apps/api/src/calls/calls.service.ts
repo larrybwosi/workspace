@@ -474,13 +474,32 @@ export class CallsService {
         },
       });
 
-      await Promise.all(
-        call.participants.map(p =>
+      const workspaceId = (call.metadata as any)?.workspaceId;
+      const endSideEffects: Promise<any>[] = [];
+
+      if (workspaceId) {
+        endSideEffects.push(
+          publishRealtime(AblyChannels.workspace(workspaceId), 'call-ended', {
+            callId,
+          })
+        );
+      }
+
+      endSideEffects.push(
+        publishRealtime(AblyChannels.call(callId), 'call-ended', {
+          callId,
+        })
+      );
+
+      endSideEffects.push(
+        ...call.participants.map(p =>
           publishRealtime(AblyChannels.user(p.userId), 'call-ended', {
             callId,
           })
         )
       );
+
+      await Promise.all(endSideEffects);
     } else if (action === 'screenShareStarted') {
       const myAgoraUid = call.participants.find(p => p.userId === user.id)?.agoraUid;
       await Promise.all(

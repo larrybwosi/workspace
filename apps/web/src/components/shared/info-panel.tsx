@@ -42,8 +42,10 @@ import {
   useScheduledCalls,
   useJoinCall,
   useStartCall,
+  useEndCall,
   useGenerateInviteLink,
   useUserSocialProfile,
+  useCurrentUser,
 } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { useCallStore } from '@repo/shared';
@@ -78,6 +80,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
   const { data: socialProfileData, isLoading: isSocialLoading } = useUserSocialProfile(dmUser?.id || '');
   const socialProfile = socialProfileData as any;
+  const { data: currentUser } = useCurrentUser();
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
@@ -90,6 +93,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
   const joinCallMutation = useJoinCall();
   const startCallMutation = useStartCall();
+  const endCallMutation = useEndCall();
   const generateInviteLinkMutation = useGenerateInviteLink();
 
   const handleJoinCall = async (call: any) => {
@@ -128,6 +132,21 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     } catch (error) {
       console.error(error);
       toast.error('Failed to start call');
+    }
+  };
+
+  const handleEndCall = async (callId: string) => {
+    if (!workspaceSlug) return;
+
+    try {
+      await endCallMutation.mutateAsync({
+        callId,
+        workspaceSlug,
+      });
+      toast.success('Ending call for everyone...');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to end call');
     }
   };
 
@@ -602,13 +621,28 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                                     Started by {call.initiator?.name}
                                   </span>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  className="w-full h-8 text-xs font-bold"
-                                  onClick={() => handleJoinCall(call)}
-                                >
-                                  Join Call
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 h-8 text-xs font-bold"
+                                    onClick={() => handleJoinCall(call)}
+                                  >
+                                    Join Call
+                                  </Button>
+                                  {call.participants?.some(
+                                    (p: any) => p.userId === currentUser?.id && p.role === 'host'
+                                  ) && (
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="h-8 text-xs font-bold"
+                                      onClick={() => handleEndCall(call.id)}
+                                      disabled={endCallMutation.isPending}
+                                    >
+                                      End
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
