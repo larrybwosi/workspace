@@ -276,11 +276,20 @@ export function VideoCallContent({
   }, [session?.user?.id, onEnd, fetchParticipants]);
 
   useEffect(() => {
-    fetch(`/api/calls/${callId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'join', uid }),
-    }).then(() => fetchParticipants());
+    const joinCall = async () => {
+      try {
+        await fetch(`/api/calls/${callId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'join', uid }),
+        });
+        await fetchParticipants();
+      } catch (err) {
+        console.error('Failed to join call:', err);
+        toast.error('Failed to join call. Please try again.');
+      }
+    };
+    joinCall();
   }, [callId, fetchParticipants, uid]);
 
   useEffect(() => {
@@ -300,21 +309,31 @@ export function VideoCallContent({
   };
 
   const toggleMic = async () => {
-    setMicOn(!micOn);
-    await fetch(`/api/calls/${callId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'updateState', muted: micOn }),
-    });
+    const newMicState = !micOn;
+    setMicOn(newMicState);
+    try {
+      await fetch(`/api/calls/${callId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateState', muted: !newMicState }),
+      });
+    } catch (err) {
+      console.error('Failed to update mic state:', err);
+    }
   };
 
   const toggleCamera = async () => {
-    setCameraOn(!cameraOn);
-    await fetch(`/api/calls/${callId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'updateState', videoOff: cameraOn }),
-    });
+    const newCameraState = !cameraOn;
+    setCameraOn(newCameraState);
+    try {
+      await fetch(`/api/calls/${callId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateState', videoOff: !newCameraState }),
+      });
+    } catch (err) {
+      console.error('Failed to update camera state:', err);
+    }
   };
 
   const toggleScreenShare = async () => {
@@ -323,11 +342,15 @@ export function VideoCallContent({
 
     if (newState && cameraOn) {
       setCameraOn(false);
-      await fetch(`/api/calls/${callId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'updateState', videoOff: true }),
-      });
+      try {
+        await fetch(`/api/calls/${callId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'updateState', videoOff: true }),
+        });
+      } catch (err) {
+        console.error('Failed to update camera state for screen share:', err);
+      }
     }
   };
 
