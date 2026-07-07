@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
@@ -11,6 +11,8 @@ import { V2AuditService } from '../v2-audit.service';
 @Controller('v2/workspaces/:slug/search')
 @UseGuards(ApiV2Guard)
 export class V2SearchController {
+  private readonly logger = new Logger(V2SearchController.name);
+
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get('members')
@@ -55,9 +57,11 @@ export class V2SearchController {
       },
     });
 
-    await this.auditService.log(context, 'search.members', 'member', undefined, {
-      query,
-    });
+    this.auditService
+      .log(context, 'search.members', 'member', undefined, {
+        query,
+      })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { results: users };
   }
@@ -122,7 +126,9 @@ export class V2SearchController {
       },
     });
 
-    await this.auditService.log(context, 'search.messages', 'message', undefined, { query, channelId });
+    this.auditService
+      .log(context, 'search.messages', 'message', undefined, { query, channelId })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { results: messages };
   }

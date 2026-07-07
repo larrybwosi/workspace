@@ -9,6 +9,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
@@ -103,6 +104,8 @@ const createTokenSchema = z.object({
 @Controller('v2/workspaces/:slug/api-tokens')
 @UseGuards(ApiV2Guard)
 export class V2ApiTokensController {
+  private readonly logger = new Logger(V2ApiTokensController.name);
+
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
@@ -130,7 +133,7 @@ export class V2ApiTokensController {
       orderBy: { createdAt: 'desc' },
     });
 
-    await this.auditService.log(context, 'tokens.list', 'api_token');
+    this.auditService.log(context, 'tokens.list', 'api_token').catch(err => this.logger.error('Audit log error:', err));
 
     return { tokens };
   }
@@ -166,7 +169,9 @@ export class V2ApiTokensController {
       },
     });
 
-    await this.auditService.log(context, 'tokens.create', 'api_token', apiToken.id, { name: data.name });
+    this.auditService
+      .log(context, 'tokens.create', 'api_token', apiToken.id, { name: data.name })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { ...apiToken, token: rawToken };
   }
@@ -193,7 +198,9 @@ export class V2ApiTokensController {
       where: { id: tokenId },
     });
 
-    await this.auditService.log(context, 'tokens.delete', 'api_token', tokenId, { name: token.name });
+    this.auditService
+      .log(context, 'tokens.delete', 'api_token', tokenId, { name: token.name })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { success: true };
   }
@@ -230,7 +237,9 @@ export class V2ApiTokensController {
       },
     });
 
-    await this.auditService.log(context, 'tokens.rotate', 'api_token', tokenId, { name: existingToken.name });
+    this.auditService
+      .log(context, 'tokens.rotate', 'api_token', tokenId, { name: existingToken.name })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { ...updatedToken, token: rawToken };
   }

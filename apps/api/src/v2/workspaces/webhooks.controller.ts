@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
@@ -83,6 +84,8 @@ const updateWebhookSchema = z.object({
 @Controller('v2/workspaces/:slug/webhooks')
 @UseGuards(ApiV2Guard)
 export class V2WebhooksController {
+  private readonly logger = new Logger(V2WebhooksController.name);
+
   constructor(private readonly auditService: V2AuditService) {}
 
   @Get()
@@ -114,7 +117,7 @@ List all webhooks configured for this workspace.
       orderBy: { createdAt: 'desc' },
     });
 
-    await this.auditService.log(context, 'webhooks.list', 'webhook');
+    this.auditService.log(context, 'webhooks.list', 'webhook').catch(err => this.logger.error('Audit log error:', err));
 
     return { webhooks };
   }
@@ -148,7 +151,9 @@ List all webhooks configured for this workspace.
       },
     });
 
-    await this.auditService.log(context, 'webhooks.create', 'webhook', webhook.id, { name: data.name, url: data.url });
+    this.auditService
+      .log(context, 'webhooks.create', 'webhook', webhook.id, { name: data.name, url: data.url })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { webhook, secret };
   }
@@ -172,7 +177,7 @@ List all webhooks configured for this workspace.
       throw new NotFoundException('Webhook not found');
     }
 
-    await this.auditService.log(context, 'webhooks.get', 'webhook', webhookId);
+    this.auditService.log(context, 'webhooks.get', 'webhook', webhookId).catch(err => this.logger.error('Audit log error:', err));
 
     return { webhook };
   }
@@ -204,7 +209,7 @@ List all webhooks configured for this workspace.
       data,
     });
 
-    await this.auditService.log(context, 'webhooks.update', 'webhook', webhookId, data);
+    this.auditService.log(context, 'webhooks.update', 'webhook', webhookId, data).catch(err => this.logger.error('Audit log error:', err));
 
     return { webhook };
   }
@@ -231,7 +236,9 @@ List all webhooks configured for this workspace.
       where: { id: webhookId },
     });
 
-    await this.auditService.log(context, 'webhooks.delete', 'webhook', webhookId, { name: webhook.name });
+    this.auditService
+      .log(context, 'webhooks.delete', 'webhook', webhookId, { name: webhook.name })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { success: true };
   }

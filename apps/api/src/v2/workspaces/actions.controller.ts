@@ -1,4 +1,4 @@
-import { Controller, Post, Param, UseGuards, NotFoundException, Body } from '@nestjs/common';
+import { Controller, Post, Param, UseGuards, NotFoundException, Body, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
@@ -14,6 +14,8 @@ import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 @Controller('v2/workspaces/:slug/messages/:messageId/actions/:actionId')
 @UseGuards(ApiV2Guard)
 export class V2MessageActionsController {
+  private readonly logger = new Logger(V2MessageActionsController.name);
+
   constructor(
     private readonly auditService: V2AuditService,
     private readonly webhooksService: V2WebhooksService,
@@ -65,7 +67,9 @@ If the message was sent by an M2M application, triggering an action will:
       },
     });
 
-    await this.auditService.log(context, 'messages.action', 'message_action', action.id, { messageId, actionId });
+    this.auditService
+      .log(context, 'messages.action', 'message_action', action.id, { messageId, actionId })
+      .catch(err => this.logger.error('Audit log error:', err));
 
     await this.handleIntegrationActions(context, message, actionId);
 
@@ -120,7 +124,7 @@ If the message was sent by an M2M application, triggering an action will:
           description: `Message: ${message.content}\n\nLink: /workspace/${context.workspaceId}/channels/${message.channelId}/messages/${message.id}`,
         });
       } catch (err) {
-        console.error('Failed to create Huly task:', err);
+        this.logger.error('Failed to create Huly task:', err);
       }
     }
   }
