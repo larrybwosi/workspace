@@ -15,7 +15,7 @@ export default function OrganizationSettingsClient() {
   const orgSlug = params?.slug as string;
   const { data: organization, isLoading } = useOrganization(orgSlug);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('workspaces');
 
   if (isLoading) {
@@ -37,7 +37,7 @@ export default function OrganizationSettingsClient() {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DynamicHeader
           activeView="Organization Settings"
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
           onSearchClick={() => {}}
         />
 
