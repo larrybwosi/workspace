@@ -2,6 +2,13 @@
 
 Your M2M application can seamlessly provision and manage custom bots for your tenants. This allows for specialized integrations tailored to each workspace.
 
+## System Bot (Default)
+
+Every workspace provisioned via the M2M API automatically includes a **System Bot**.
+- **Name:** System Bot
+- **Role:** Workspace Admin
+- **Purpose:** Handles system-wide announcements, automated onboarding, and acts as the default sender for M2M integrations that do not have their own dedicated bot.
+
 ## Creating a Bot for a Workspace
 
 To create a new bot specifically for a tenant's workspace, use the Applications API:

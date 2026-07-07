@@ -199,6 +199,37 @@ export class V2AnnouncementsController {
 
     const { departmentId, ...data } = validatedData.data;
 
+    let authorId = context.userId;
+
+    // M2M Support: Resolve author to a valid bot user
+    if (authorId.startsWith('m2m:')) {
+      if (context.m2mClientId) {
+        const m2mApp = await prisma.botApplication.findUnique({
+          where: { clientId: context.m2mClientId },
+          select: { botId: true },
+        });
+        if (m2mApp?.botId) {
+          authorId = m2mApp.botId;
+        }
+      }
+
+      if (authorId.startsWith('m2m:')) {
+        const defaultBot = await prisma.botApplication.findFirst({
+          where: {
+            workspaceId: context.workspaceId,
+            botId: { not: null },
+          },
+          select: { botId: true },
+        });
+
+        if (defaultBot?.botId) {
+          authorId = defaultBot.botId;
+        } else {
+          throw new BadRequestException('M2M requires a bot to be provisioned in this workspace to create announcements.');
+        }
+      }
+    }
+
     /**
      * ⚡ Performance Optimization:
      * 1. Consolidates department existence verification and announcement creation into a single query.
@@ -215,7 +246,7 @@ export class V2AnnouncementsController {
           announcements: {
             create: {
               ...data,
-              authorId: context.userId,
+              authorId: authorId,
               publishAt: data.publishAt ? new Date(data.publishAt) : null,
               expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
               targetAudience: data.targetAudience as any,

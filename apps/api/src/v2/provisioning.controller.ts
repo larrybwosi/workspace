@@ -94,9 +94,11 @@ export class ProvisioningController {
     description: `
 Provisions a new workspace within your organization.
 When provisioned via M2M:
-1. A **Default Bot** is automatically created for the workspace.
+1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.
 2. Your M2M application is installed as an **Administrator** in the new workspace.
 3. The specified owner and initial members are added (must belong to the same organization).
+
+The System Bot acts as the default sender for messages and announcements sent via M2M if no application-specific bot is configured.
     `,
   })
   @ApiBody({ type: ProvisionWorkspaceDto })

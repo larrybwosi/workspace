@@ -33,8 +33,15 @@ curl -X POST https://api.yourdomain.com/api/v2/oauth/token \
 ## Provisioning Workspaces
 
 You can provision new workspaces (tenants) for your organization. When a workspace is provisioned via M2M:
-1. A **Default Bot** is automatically created.
+1. A **System Bot** (Default Bot) is automatically created with admin privileges.
 2. Your M2M application is installed as an **Administrator** in the new workspace.
+
+### System Bot & M2M Messaging
+When you send messages or create announcements via M2M, the platform automatically resolves the sender.
+- If your M2M application has an associated bot, it will be used as the sender.
+- Otherwise, the **System Bot** of the workspace will be used.
+
+This ensures that system-generated content always has a valid bot author, allowing you to send announcements even if you haven't created a custom bot for your M2M application.
 
 ```bash
 curl -X POST https://api.yourdomain.com/api/v2/provisioning/workspaces \
@@ -48,6 +55,20 @@ curl -X POST https://api.yourdomain.com/api/v2/provisioning/workspaces \
     "initialMembers": [
       { "email": "dev@acme.com", "role": "member" }
     ]
+  }'
+```
+
+### Creating an Announcement via M2M
+
+```bash
+curl -X POST https://api.yourdomain.com/v2/workspaces/acme-corp/announcements \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "departmentId": "DEPT_ID",
+    "title": "Scheduled Maintenance",
+    "content": "System will be down for maintenance on Sunday at 2 AM UTC.",
+    "priority": "high"
   }'
 ```
 
