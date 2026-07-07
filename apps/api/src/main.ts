@@ -13,8 +13,6 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
-// Simple, clean landing page shown when someone hits the server root
-// directly from a browser (e.g. http://localhost:PORT/).
 function renderHomepage(version: string, docsPath: string): string {
   return `<!doctype html>
 <html lang="en">

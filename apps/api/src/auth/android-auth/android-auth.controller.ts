@@ -196,6 +196,7 @@ export class AndroidAuthController {
       ...m,
       permissions: Number(m.permissions),
     }));
+    console.log(session);
 
     return {
       token,
