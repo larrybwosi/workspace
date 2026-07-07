@@ -27,7 +27,7 @@ export function WelcomeState() {
 
         {/* Options */}
         <div className="grid gap-3">
-          <Card className="group rounded-xl border border-border/60 bg-card/50 shadow-none transition-all duration-200 hover:border-blue-500/40 hover:bg-blue-500/[0.03] hover:shadow-sm">
+          <Card className="group rounded-xl border border-border/60 bg-card/50 shadow-none transition-all duration-200 hover:border-blue-500/40 hover:bg-purple-500/3 hover:shadow-sm">
             <CardContent className="flex items-center gap-4 p-4">
               <div className="h-10 w-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 ring-1 ring-blue-500/10 transition-transform duration-200 group-hover:scale-105">
                 <MessageSquare className="h-5 w-5" strokeWidth={1.75} />
@@ -39,7 +39,7 @@ export function WelcomeState() {
             </CardContent>
           </Card>
 
-          <Card className="group rounded-xl border border-border/60 bg-card/50 shadow-none transition-all duration-200 hover:border-purple-500/40 hover:bg-purple-500/[0.03] hover:shadow-sm">
+          <Card className="group rounded-xl border border-border/60 bg-card/50 shadow-none transition-all duration-200 hover:border-purple-500/40 hover:bg-purple-500/3 hover:shadow-sm">
             <CardContent className="flex items-center gap-4 p-4">
               <div className="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0 ring-1 ring-purple-500/10 transition-transform duration-200 group-hover:scale-105">
                 <Users className="h-5 w-5" strokeWidth={1.75} />
