@@ -22,6 +22,7 @@ export function GeneralTab({ workspaceSlug }: GeneralTabProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('');
+  const [banner, setBanner] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [customDomain, setCustomDomain] = useState('');
   const [industry, setIndustry] = useState('');
@@ -30,12 +31,15 @@ export function GeneralTab({ workspaceSlug }: GeneralTabProps) {
   const [timezone, setTimezone] = useState('UTC');
   const [language, setLanguage] = useState('en');
   const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
 
   useEffect(() => {
     if (workspace) {
       setName(workspace.name || '');
       setDescription(workspace.description || '');
       setIcon(workspace.icon || '');
+      setBanner(workspace.banner || '');
       setIsPublic(workspace.isPublic || false);
       setCustomDomain(workspace.customDomain || '');
       setIndustry(workspace.industry || '');
@@ -52,6 +56,7 @@ export function GeneralTab({ workspaceSlug }: GeneralTabProps) {
         name,
         description,
         icon,
+        banner,
         isPublic,
         customDomain,
         industry,
@@ -73,6 +78,40 @@ export function GeneralTab({ workspaceSlug }: GeneralTabProps) {
     toast.success('URL copied to clipboard');
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'icon' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const setUploading = type === 'icon' ? setUploadingIcon : setUploadingBanner;
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      if (type === 'icon') {
+        setIcon(data.url);
+      } else {
+        setBanner(data.url);
+      }
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(`Failed to upload ${type}`);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -85,26 +124,70 @@ export function GeneralTab({ workspaceSlug }: GeneralTabProps) {
           <CardTitle>Workspace Profile</CardTitle>
           <CardDescription>Update your workspace information visible to all members</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-4">
-            <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white">
-              {icon || name?.charAt(0) || 'W'}
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label>Workspace Icon</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={icon}
-                  onChange={e => setIcon(e.target.value)}
-                  placeholder="Enter emoji"
-                  className="w-32"
-                  maxLength={2}
-                />
-                <Button variant="outline" size="icon">
-                  <Upload className="h-4 w-4" />
-                </Button>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col gap-6">
+            <div className="space-y-2">
+              <Label>Workspace Banner</Label>
+              <div
+                className="h-32 w-full rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden relative group cursor-pointer"
+                style={banner ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+              >
+                {!banner && <div className="text-muted-foreground flex flex-col items-center gap-2">
+                  <Upload className="h-8 w-8" />
+                  <span className="text-xs">Upload workspace banner</span>
+                </div>}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Label className="cursor-pointer bg-background/90 px-4 py-2 rounded-md text-sm font-medium">
+                    {uploadingBanner ? 'Uploading...' : banner ? 'Change Banner' : 'Upload Banner'}
+                    <Input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={e => handleFileUpload(e, 'banner')}
+                      disabled={uploadingBanner}
+                    />
+                  </Label>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">Use an emoji or upload an image</p>
+              <p className="text-[10px] text-muted-foreground">Recommended size: 1200x300px</p>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="relative group">
+                <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-2 border-background shadow-md">
+                  {icon && icon.length > 2 ? (
+                    <img src={icon} alt="Workspace Icon" className="h-full w-full object-cover" />
+                  ) : (
+                    icon || name?.charAt(0) || 'W'
+                  )}
+                </div>
+                <Label className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-transform">
+                  <Upload className="h-4 w-4" />
+                  <Input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={e => handleFileUpload(e, 'icon')}
+                    disabled={uploadingIcon}
+                  />
+                </Label>
+              </div>
+              <div className="flex-1 space-y-2 pt-1">
+                <Label>Workspace Icon</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={icon && icon.length <= 2 ? icon : ''}
+                    onChange={e => setIcon(e.target.value)}
+                    placeholder="Enter emoji"
+                    className="w-32"
+                    maxLength={2}
+                  />
+                  <div className="flex-1 text-[10px] text-muted-foreground leading-tight">
+                    Use an emoji directly or upload a custom image.
+                    Custom images will override any emoji set here.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -2,15 +2,43 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
+  Body,
   UseGuards,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
+import { z } from 'zod';
+import { IsString, IsOptional } from 'class-validator';
+
+class UpdateOrganizationDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'Updated Organization Name' })
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'https://example.com/logo.png' })
+  logo?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'https://example.com/banner.png' })
+  banner?: string;
+}
+
+const updateOrganizationSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  logo: z.string().optional(),
+  banner: z.string().optional(),
+});
 
 @ApiTags('Organizations')
 @ApiBearerAuth()
@@ -112,4 +140,45 @@ export class OrganizationsController {
     return { organization };
   }
 
+  @Patch()
+  @ApiOperation({ summary: 'Update organization details' })
+  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
+  @ApiBody({ type: UpdateOrganizationDto })
+  async updateOrganization(
+    @CurrentUser() user: User,
+    @Param('orgSlug') orgSlug: string,
+    @Body() body: UpdateOrganizationDto
+  ) {
+    const organization = await prisma.organization.findUnique({
+      where: { slug: orgSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const member = organization.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to update this organization');
+    }
+
+    const validatedData = updateOrganizationSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+
+    const updatedOrganization = await prisma.organization.update({
+      where: { id: organization.id },
+      data: validatedData.data,
+    });
+
+    return { organization: updatedOrganization };
+  }
 }

@@ -52,6 +52,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
   const [username, setUsername] = useState(user.username || '');
   const [avatar, setAvatar] = useState(user.avatar || user.image || '');
   const [banner, setBanner] = useState(user.banner || '');
+  const [bio, setBio] = useState(user.bio || '');
   const [statusText, setStatusText] = useState(user.statusText || '');
   const [statusEmoji, setStatusEmoji] = useState(user.statusEmoji || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -82,6 +83,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
         username,
         avatar,
         banner,
+        bio,
         statusText,
         statusEmoji,
         ...({ notificationPreferences: notifications } as any),
@@ -340,6 +342,26 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                         placeholder="username"
                         className="bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary pl-7"
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="bio" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    About Me
+                  </Label>
+                  <div className="relative">
+                    <textarea
+                      id="bio"
+                      value={bio}
+                      onChange={e => setBio(e.target.value)}
+                      className="w-full bg-muted/50 border-none rounded-md p-3 text-sm focus:ring-1 focus:ring-primary min-h-[100px] resize-none"
+                      placeholder="Tell us about yourself..."
+                      maxLength={190}
+                    />
+                    <div className="absolute bottom-2 right-2 text-[10px] text-muted-foreground font-medium">
+                      {bio.length}/190
                     </div>
                   </div>
                 </div>
