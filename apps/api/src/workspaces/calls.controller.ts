@@ -83,7 +83,7 @@ export class CallsController {
     return prisma.call.findMany({
       where: {
         status: { in: ['pending', 'active'] },
-        metadata: { path: ['workspaceId'], equals: workspaceId },
+        workspaceId,
       },
       select: CALL_SELECT as any,
       orderBy: { startedAt: 'desc' },

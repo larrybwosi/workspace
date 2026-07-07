@@ -47,7 +47,7 @@ export class CallsService {
     }
 
     if (!agoraConfig.appId || !agoraConfig.appCertificate) {
-      throw new InternalServerErrorException('Agora configuration is missing');
+      console.warn('Agora configuration is missing');
     }
 
     let workspaceId = incomingWorkspaceId;
@@ -134,8 +134,19 @@ export class CallsService {
           channelName: agoraChannelName,
           type,
           initiatorId: user.id,
+          workspaceId,
           status: 'pending',
           metadata: { workspaceId },
+        },
+      });
+
+      // Automatically add initiator as the first participant
+      await prisma.callParticipant.create({
+        data: {
+          callId: call.id,
+          userId: user.id,
+          role: "host",
+          joinedAt: new Date(),
         },
       });
 
@@ -232,24 +243,37 @@ export class CallsService {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
-    const token = RtcTokenBuilder.buildTokenWithUid(
-      agoraConfig.appId,
-      agoraConfig.appCertificate,
-      agoraChannelName,
-      uid,
-      RtcRole.PUBLISHER,
-      privilegeExpiredTs,
-      privilegeExpiredTs
-    );
+    let token = "mock-token";
+    if (agoraConfig.appId && agoraConfig.appCertificate) {
+      token = RtcTokenBuilder.buildTokenWithUid(
+        agoraConfig.appId,
+        agoraConfig.appCertificate,
+        agoraChannelName,
+        uid,
+        RtcRole.PUBLISHER,
+        privilegeExpiredTs,
+        privilegeExpiredTs
+      );
+    }
+
+    //     const token = RtcTokenBuilder.buildTokenWithUid(
+    //       agoraConfig.appId,
+    //       agoraConfig.appCertificate,
+    //       agoraChannelName,
+    //       uid,
+    //       RtcRole.PUBLISHER,
+    //       privilegeExpiredTs,
+    //       privilegeExpiredTs
+    //     );
 
     return {
       callId: call.id,
       token,
-      appId: agoraConfig.appId,
+      appId: agoraConfig.appId || "mock-app-id",
       channelName: agoraChannelName,
       uid,
       type: call.type,
-      workspaceId: workspaceId || (call.metadata as any)?.workspaceId,
+      workspaceId: workspaceId || call.workspaceId || (call.metadata as any)?.workspaceId,
     };
   }
 

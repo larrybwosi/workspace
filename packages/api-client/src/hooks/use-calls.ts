@@ -86,6 +86,7 @@ export function useStartCall() {
       notifyAll?: boolean;
     }) => {
       const { data } = await apiClient.post('/calls', params);
+      await apiClient.patch(`/calls/${data.callId}`, { action: "join", uid: data.uid });
       return data;
     },
     onSuccess: (_, variables) => {
@@ -112,10 +113,26 @@ export function useJoinCall() {
         data.token = tokenData.token;
       }
 
+      await apiClient.patch(`/calls/${data.callId}`, { action: "join", uid: data.uid });
       return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['active-calls', variables.workspaceSlug] });
+    },
+  });
+}
+
+export function useLeaveCall() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { callId: string; workspaceSlug: string }) => {
+      const { data } = await apiClient.patch(`/calls/${params.callId}`, {
+        action: "leave",
+      });
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["active-calls", variables.workspaceSlug] });
     },
   });
 }
