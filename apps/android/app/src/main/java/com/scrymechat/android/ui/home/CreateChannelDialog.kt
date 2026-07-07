@@ -1,10 +1,13 @@
 package com.scrymechat.android.ui.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.scrymechat.android.data.local.entities.ChannelEntity
 import com.scrymechat.android.data.remote.CreateChannelRequest
 
@@ -27,72 +32,50 @@ fun CreateChannelDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("text") }
+    var type by remember { mutableStateOf("public") }
     var selectedCategoryId by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(
-                onClick = {
-                    onCreate(
-                        CreateChannelRequest(
-                            name = name,
-                            description = description.ifBlank { null },
-                            type = type
-                        ),
-                        selectedCategoryId
-                    )
-                },
-                enabled = name.isNotBlank() && !isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = SidebarTokens.Accent
-                )
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Create Channel")
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = SidebarTokens.TextSecondary)
-            }
-        },
-        title = {
-            Text(
-                "Create New Channel",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = SidebarTokens.TextPrimary
-            )
-        },
-        text = {
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            shape = RoundedCornerShape(24.dp),
+            color = SidebarTokens.SurfaceRaised
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
+                Text(
+                    "Create Channel",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = SidebarTokens.TextPrimary
+                )
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Channel Name") },
+                    placeholder = { Text("e.g. general", color = SidebarTokens.TextSecondary.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    leadingIcon = { Icon(Icons.Rounded.Tag, contentDescription = null, tint = SidebarTokens.TextSecondary) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SidebarTokens.Accent,
                         focusedLabelColor = SidebarTokens.Accent,
                         unfocusedTextColor = SidebarTokens.TextPrimary,
-                        focusedTextColor = SidebarTokens.TextPrimary
+                        focusedTextColor = SidebarTokens.TextPrimary,
+                        unfocusedBorderColor = SidebarTokens.TextSecondary.copy(alpha = 0.2f)
                     )
                 )
 
@@ -100,13 +83,17 @@ fun CreateChannelDialog(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Description (Optional)") },
+                    placeholder = { Text("What is this channel about?", color = SidebarTokens.TextSecondary.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = { Icon(Icons.Rounded.Notes, contentDescription = null, tint = SidebarTokens.TextSecondary) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SidebarTokens.Accent,
                         focusedLabelColor = SidebarTokens.Accent,
                         unfocusedTextColor = SidebarTokens.TextPrimary,
-                        focusedTextColor = SidebarTokens.TextPrimary
+                        focusedTextColor = SidebarTokens.TextPrimary,
+                        unfocusedBorderColor = SidebarTokens.TextSecondary.copy(alpha = 0.2f)
                     )
                 )
 
@@ -121,19 +108,23 @@ fun CreateChannelDialog(
                         readOnly = true,
                         label = { Text("Category") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        leadingIcon = { Icon(Icons.Rounded.Folder, contentDescription = null, tint = SidebarTokens.TextSecondary) },
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = SidebarTokens.Accent,
                             focusedLabelColor = SidebarTokens.Accent,
                             unfocusedTextColor = SidebarTokens.TextPrimary,
-                            focusedTextColor = SidebarTokens.TextPrimary
+                            focusedTextColor = SidebarTokens.TextPrimary,
+                            unfocusedBorderColor = SidebarTokens.TextSecondary.copy(alpha = 0.2f)
                         )
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(SidebarTokens.SurfaceRaised)
                     ) {
                         DropdownMenuItem(
                             text = { Text("No Category", color = SidebarTokens.TextPrimary) },
@@ -158,56 +149,116 @@ fun CreateChannelDialog(
                 Column {
                     Text(
                         "Channel Type",
-                        color = SidebarTokens.TextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                        color = SidebarTokens.TextSecondary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         TypeButton(
-                            label = "Text",
-                            isSelected = type == "text",
-                            onClick = { type = "text" },
+                            label = "Public",
+                            isSelected = type == "public",
+                            icon = Icons.Rounded.Public,
+                            onClick = { type = "public" },
                             modifier = Modifier.weight(1f)
                         )
                         TypeButton(
-                            label = "Voice",
-                            isSelected = type == "voice",
-                            onClick = { type = "voice" },
+                            label = "Private",
+                            isSelected = type == "private",
+                            icon = Icons.Rounded.Lock,
+                            onClick = { type = "private" },
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Cancel", color = SidebarTokens.TextSecondary)
+                    }
+
+                    Button(
+                        onClick = {
+                            onCreate(
+                                CreateChannelRequest(
+                                    name = name,
+                                    description = description.ifBlank { null },
+                                    type = type
+                                ),
+                                selectedCategoryId
+                            )
+                        },
+                        enabled = name.isNotBlank() && !isLoading,
+                        modifier = Modifier.weight(2f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SidebarTokens.Accent,
+                            disabledContainerColor = SidebarTokens.Accent.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Create Channel", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
             }
-        },
-        containerColor = SidebarTokens.SurfaceRaised,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
 fun TypeButton(
     label: String,
     isSelected: Boolean,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(40.dp),
-        shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) SidebarTokens.Accent else SidebarTokens.SurfaceBase,
-        border = if (isSelected) null else BorderStroke(1.dp, SidebarTokens.Hairline)
+        modifier = modifier.height(44.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) SidebarTokens.Accent.copy(alpha = 0.15f) else Color.Transparent,
+        border = BorderStroke(
+            width = 1.5.dp,
+            color = if (isSelected) SidebarTokens.Accent else SidebarTokens.TextSecondary.copy(alpha = 0.2f)
+        )
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) SidebarTokens.Accent else SidebarTokens.TextSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
-                color = if (isSelected) Color.White else SidebarTokens.TextSecondary,
+                color = if (isSelected) SidebarTokens.Accent else SidebarTokens.TextSecondary,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
         }
     }

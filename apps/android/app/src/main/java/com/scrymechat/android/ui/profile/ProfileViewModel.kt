@@ -62,13 +62,13 @@ class ProfileViewModel @Inject constructor(
                     if (userResponse.isSuccessful) {
                         val body = userResponse.body()
                         val currentUser = _uiState.value.currentUser
-                        if (currentUser != null) {
+                        if (currentUser != null && body != null) {
                             val updatedUser = currentUser.copy(
-                                name = updates["name"] as? String ?: currentUser.name,
-                                username = updates["username"] as? String ?: currentUser.username,
-                                avatar = updates["avatar"] as? String ?: currentUser.avatar,
-                                banner = updates["banner"] as? String ?: currentUser.banner,
-                                statusText = updates["statusText"] as? String ?: currentUser.statusText
+                                name = body.name,
+                                username = body.username ?: currentUser.username,
+                                avatar = body.avatar ?: body.image ?: currentUser.avatar,
+                                banner = body.banner ?: currentUser.banner,
+                                statusText = body.statusText ?: currentUser.statusText
                             )
                             userDao.insertUser(updatedUser)
                         }

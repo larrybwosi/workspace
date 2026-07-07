@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import com.scrymechat.android.R
+import com.scrymechat.android.data.local.dao.WorkspaceDao
 import com.scrymechat.android.data.repository.ChatRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,9 @@ class ReplyReceiver : BroadcastReceiver() {
     @Inject
     lateinit var chatRepository: ChatRepository
 
+    @Inject
+    lateinit var workspaceDao: WorkspaceDao
+
     companion object {
         const val ACTION_REPLY = "com.scrymechat.android.action.REPLY"
         const val ACTION_MARK_READ = "com.scrymechat.android.action.MARK_READ"
@@ -41,6 +45,7 @@ class ReplyReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         val entityId = intent.getStringExtra("entityId")
         val entityType = intent.getStringExtra("entityType")
+        val workspaceId = intent.getStringExtra("workspaceId")
         val notificationId = intent.getIntExtra("notificationId", 0)
 
         if (entityId == null || entityType == null) {
@@ -49,8 +54,8 @@ class ReplyReceiver : BroadcastReceiver() {
         }
 
         when (intent.action) {
-            ACTION_MARK_READ -> handleMarkAsRead(context, entityId, entityType, pendingResult)
-            ACTION_REPLY -> handleReply(context, intent, entityId, entityType, notificationId, pendingResult)
+            ACTION_MARK_READ -> handleMarkAsRead(context, entityId, entityType, workspaceId, pendingResult)
+            ACTION_REPLY -> handleReply(context, intent, entityId, entityType, workspaceId, notificationId, pendingResult)
             else -> pendingResult.finish()
         }
     }
@@ -59,14 +64,17 @@ class ReplyReceiver : BroadcastReceiver() {
         context: Context,
         entityId: String,
         entityType: String,
+        workspaceId: String?,
         pendingResult: PendingResult
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (entityType == "dm") {
                     chatRepository.markDmRead(entityId)
-                } else {
-                    chatRepository.markChannelRead(entityId)
+                } else if (workspaceId != null) {
+                    workspaceDao.getWorkspaceById(workspaceId)?.slug?.let { slug ->
+                        chatRepository.markChannelRead(slug, entityId)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mark $entityType $entityId as read", e)
@@ -82,6 +90,7 @@ class ReplyReceiver : BroadcastReceiver() {
         intent: Intent,
         entityId: String,
         entityType: String,
+        workspaceId: String?,
         notificationId: Int,
         pendingResult: PendingResult
     ) {
@@ -97,13 +106,15 @@ class ReplyReceiver : BroadcastReceiver() {
             try {
                 if (entityType == "dm") {
                     chatRepository.sendDmMessage(entityId, replyText)
-                } else {
-                    chatRepository.sendChannelMessage(entityId, replyText)
+                } else if (workspaceId != null) {
+                    workspaceDao.getWorkspaceById(workspaceId)?.slug?.let { slug ->
+                        chatRepository.sendChannelMessage(slug, entityId, replyText)
+                    }
                 }
                 // Acknowledge the reply inline (matches the system's "message sent"
                 // pattern) so the conversation thread visibly includes what was sent,
                 // then clear it shortly after via clearConversation from the caller flow.
-                acknowledgeReplySent(context, notificationId, replyText)
+                acknowledgeReplySent(context, notificationId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send quick reply for $entityType $entityId", e)
                 showReplyFailed(context, notificationId, entityId, entityType, replyText)
@@ -114,7 +125,7 @@ class ReplyReceiver : BroadcastReceiver() {
     }
 
     /** Briefly confirms the reply went out, then lets the next push update replace it. */
-    private fun acknowledgeReplySent(context: Context, notificationId: Int, replyText: String) {
+    private fun acknowledgeReplySent(context: Context, notificationId: Int) {
         val notificationManager = NotificationManagerCompat.from(context)
         notificationManager.cancel(notificationId)
     }
