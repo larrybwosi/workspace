@@ -64,6 +64,7 @@ class AuthRepository @Inject constructor(
                     banner = body.user.banner,
                     statusText = body.user.statusText,
                     statusEmoji = body.user.statusEmoji,
+                    bio = body.user.bio,
                     role = body.user.role ?: "user",
                     status = body.user.status ?: "offline"
                 )

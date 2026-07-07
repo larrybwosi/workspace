@@ -41,7 +41,8 @@ fun HomeScreen(
     workspaceSlug: String? = null,
     onSettingsClick: () -> Unit,
     onFriendsClick: () -> Unit = {},
-    onDiscoveryClick: () -> Unit = {}
+    onDiscoveryClick: () -> Unit = {},
+    onUserProfileClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
@@ -202,6 +203,7 @@ fun HomeScreen(
                     }
                 },
                 onMenuClick = { scope.launch { drawerState.open() } },
+                onAvatarClick = onUserProfileClick,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -232,6 +234,7 @@ fun MainContent(
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit,
     onMenuClick: () -> Unit,
+    onAvatarClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -341,7 +344,8 @@ fun MainContent(
                         formStates = formStates,
                         loadingActions = loadingActions,
                         onTyping = onTyping,
-                        typingUsers = chatUiState.typingUsers
+                        typingUsers = chatUiState.typingUsers,
+                        onAvatarClick = onAvatarClick
                     )
                 } else if (!isHomeSelected && selectedChannel == null && selectedWorkspace != null) {
                     WelcomeScreen(workspaceName = selectedWorkspace.name)
