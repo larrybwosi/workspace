@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@repo/database';
-import { admin, jwt, organization, username } from 'better-auth/plugins';
+import { admin, bearer, jwt, organization, username } from 'better-auth/plugins';
 import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
@@ -81,5 +81,5 @@ export const auth = betterAuth({
   },
 
   // Re-added 'as any' to fix type errors in CI while maintaining plugin functionality
-  plugins: [jwt(), organization(), username(), admin()] as any,
+  plugins: [jwt(), organization(), username(), admin(), bearer()] as any,
 });
