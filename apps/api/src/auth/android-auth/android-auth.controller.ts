@@ -103,12 +103,28 @@ export class AndroidAuthController {
 
     try {
       // Use getSession to verify the current token and return fresh session data
-      const response = await auth.api.getSession({
+      let response = await auth.api.getSession({
         headers: {
           authorization: `Bearer ${token}`,
           cookie: `better-auth.session_token=${token}`,
         },
       });
+
+      // Fallback for refresh if API fails
+      if (!response) {
+        this.logger.log(`Refresh API call failed, trying direct DB lookup for token`);
+        const dbSession = await prisma.session.findUnique({
+          where: { token },
+          include: { user: true },
+        });
+
+        if (dbSession && dbSession.expiresAt > new Date()) {
+          response = {
+            session: dbSession,
+            user: dbSession.user,
+          } as any;
+        }
+      }
 
       if (!response) {
         throw new UnauthorizedException('Invalid or expired session');
@@ -162,23 +178,8 @@ export class AndroidAuthController {
   }
 
   private async handleAuthResponse(response: any, errorMessage: string) {
-    // Check for either response.token OR response.session to verify success
-    if (!response || (!response.token && !response.session)) {
+    if (!response || !response.user) {
       throw new BadRequestException(errorMessage);
-    }
-
-    let session = response.session;
-    const token = response.token || response.session?.token;
-
-    // If session is missing but we have a token, try to fetch it
-    if (!session && token) {
-      const sessionData = await auth.api.getSession({
-        headers: {
-          authorization: `Bearer ${token}`,
-          cookie: `better-auth.session_token=${token}`,
-        },
-      });
-      session = sessionData?.session;
     }
 
     const user = {
@@ -186,9 +187,48 @@ export class AndroidAuthController {
       avatar: response.user?.image || null,
     };
 
+    let session = response.session;
+    let token = response.token || response.session?.token;
+
+    // If session is missing but we have a token, try to fetch it
+    if (!session && token) {
+      try {
+        const sessionData = await auth.api.getSession({
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        });
+        session = sessionData?.session;
+      } catch (e: any) {
+        this.logger.warn(`Better Auth API failed to fetch session: ${e.message}`);
+      }
+
+      // Solid fallback: Direct database query if API fails
+      if (!session) {
+        this.logger.log(`Falling back to direct DB query for session with token`);
+        session = await prisma.session.findUnique({
+          where: { token },
+        });
+      }
+    }
+
+    // Fallback: If no token/session yet but we have user, try to find latest session for user
+    if (!session && !token && response.user?.id) {
+      this.logger.log(`No token or session in response, searching for latest session for user ${response.user.id}`);
+      session = await prisma.session.findFirst({
+        where: { userId: response.user.id },
+        orderBy: { createdAt: 'desc' },
+      });
+      token = session?.token;
+    }
+
+    if (!session && !token) {
+      throw new BadRequestException(errorMessage);
+    }
+
     // Fetch user memberships to return to the Android app
     const memberships = await prisma.workspaceMember.findMany({
-      where: { userId: response.user.id },
+      where: { userId: user.id },
     });
 
     // Convert BigInt permissions to Number for Android compatibility
@@ -199,7 +239,7 @@ export class AndroidAuthController {
     console.log(session);
 
     return {
-      token,
+      token: token || session?.token,
       user,
       session: session
         ? {
@@ -222,7 +262,7 @@ export class AndroidAuthController {
       body: { email, password },
     })) as any;
 
-    if (!response || (!response.token && !response.session)) {
+    if (!response || (!response.token && !response.session && !response.user)) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
