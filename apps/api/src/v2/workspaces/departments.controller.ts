@@ -11,6 +11,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV2Guard } from '../../auth/api-v2.guard';
@@ -111,6 +112,8 @@ const updateDepartmentSchema = createDepartmentSchema.partial();
 @Controller('v2/workspaces/:slug/departments')
 @UseGuards(ApiV2Guard)
 export class V2DepartmentsController {
+  private readonly logger = new Logger(V2DepartmentsController.name);
+
   constructor(
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly auditService: V2AuditService
@@ -129,7 +132,7 @@ export class V2DepartmentsController {
     const cached = await this.getFromCache(cacheKey);
 
     if (cached) {
-      await this.auditService.log(context, 'departments.list', 'department');
+      this.auditService.log(context, 'departments.list', 'department').catch(err => this.logger.error('Audit log error:', err));
       return { departments: cached };
     }
 
@@ -161,7 +164,7 @@ export class V2DepartmentsController {
     });
 
     await this.setCache(cacheKey, departments);
-    await this.auditService.log(context, 'departments.list', 'department');
+    this.auditService.log(context, 'departments.list', 'department').catch(err => this.logger.error('Audit log error:', err));
 
     return { departments };
   }
@@ -190,7 +193,9 @@ export class V2DepartmentsController {
 
     await this.clearCache(context.workspaceId!);
 
-    await this.auditService.log(context, 'departments.create', 'department', department.id, validatedData.data);
+    this.auditService
+      .log(context, 'departments.create', 'department', department.id, validatedData.data)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { department };
   }
@@ -251,7 +256,7 @@ export class V2DepartmentsController {
       throw new NotFoundException('Department not found');
     }
 
-    await this.auditService.log(context, 'departments.get', 'department', departmentId);
+    this.auditService.log(context, 'departments.get', 'department', departmentId).catch(err => this.logger.error('Audit log error:', err));
 
     return { department };
   }
@@ -283,7 +288,9 @@ export class V2DepartmentsController {
 
     await this.clearCache(context.workspaceId!);
 
-    await this.auditService.log(context, 'departments.update', 'department', departmentId, validatedData.data);
+    this.auditService
+      .log(context, 'departments.update', 'department', departmentId, validatedData.data)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { department };
   }
@@ -304,7 +311,7 @@ export class V2DepartmentsController {
 
     await this.clearCache(context.workspaceId!);
 
-    await this.auditService.log(context, 'departments.delete', 'department', departmentId);
+    this.auditService.log(context, 'departments.delete', 'department', departmentId).catch(err => this.logger.error('Audit log error:', err));
 
     return { success: true };
   }
@@ -318,7 +325,7 @@ export class V2DepartmentsController {
       const cached = await this.redis.get(key);
       return cached ? JSON.parse(cached) : null;
     } catch (err) {
-      console.warn('[Redis] Failed to get from cache:', err);
+      this.logger.warn('[Redis] Failed to get from cache:', err);
       return null;
     }
   }
@@ -327,7 +334,7 @@ export class V2DepartmentsController {
     try {
       await this.redis.setex(key, 600, JSON.stringify(data));
     } catch (err) {
-      console.warn('[Redis] Failed to set cache:', err);
+      this.logger.warn('[Redis] Failed to set cache:', err);
     }
   }
 
@@ -335,7 +342,7 @@ export class V2DepartmentsController {
     try {
       await this.redis.del(`v2:departments:${workspaceId}`);
     } catch (err) {
-      console.warn('[Redis] Failed to clear cache:', err);
+      this.logger.warn('[Redis] Failed to clear cache:', err);
     }
   }
 }
