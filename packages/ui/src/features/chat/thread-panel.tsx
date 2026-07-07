@@ -36,7 +36,7 @@ export function ThreadPanel({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMessages(channelId, workspaceId, threadId);
+  } = useMessages(channelId, workspaceId, threadId, undefined, false);
 
   const sendMessageMutation = useSendMessage(workspaceId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -162,7 +162,7 @@ export function ThreadPanel({
           </div>
 
           {/* Replies */}
-          {isLoading ? (
+          {isLoading && messages.length === 0 ? (
             <div className="space-y-4 px-4 py-2">
               {[1, 2, 3].map(i => (
                 <div key={i} className="flex gap-3">

@@ -237,8 +237,16 @@ class ChatViewModel @Inject constructor(
             realtimeRepository.observeMessages().collect { messageDto ->
                 val channelId = currentChannelId
                 val dmId = currentDmId
+                val threadId = currentThreadId
 
-                if (messageDto.channelId == channelId || messageDto.dmId == dmId) {
+                val isRelevant = when {
+                    threadId != null -> messageDto.threadId == threadId
+                    channelId != null -> messageDto.channelId == channelId && messageDto.threadId == null
+                    dmId != null -> messageDto.dmId == dmId
+                    else -> false
+                }
+
+                if (isRelevant) {
                     // Update local messages
                     loadMessages()
                 }

@@ -89,16 +89,18 @@ export class MessagesController {
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
   @ApiQuery({ name: 'cursor', required: false, description: 'Pagination cursor' })
   @ApiQuery({ name: 'limit', required: false, description: 'Number of messages to return' })
+  @ApiQuery({ name: 'threadId', required: false, description: 'Filter by thread ID' })
   @ApiResponse({ status: 200, description: 'List of messages' })
   async getMessages(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
     @Query('cursor') cursor: string,
-    @Query('limit') limitNum = '50'
+    @Query('limit') limitNum = '50',
+    @Query('threadId') threadId?: string
   ) {
     await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.getMessages(channelId, user.id, cursor, parseInt(limitNum));
+    return this.messagesService.getMessages(channelId, user.id, cursor, parseInt(limitNum), threadId);
   }
 
   @Post()

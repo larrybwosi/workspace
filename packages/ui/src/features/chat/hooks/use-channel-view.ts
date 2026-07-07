@@ -51,14 +51,25 @@ export const useSocialActions = (dmUserId: string | null) => {
   return { sendFriendRequestMutation, respondToFriendRequestMutation, friendRequests, blockUserMutation, unblockUserMutation };
 };
 
-export const useRealtimeSubscriptions = (activeChannelId: string, workspaceSlug?: string, queryClient?: any, currentUserId?: string) => {
+export const useRealtimeSubscriptions = (
+  activeChannelId: string,
+  workspaceSlug?: string,
+  queryClient?: any,
+  currentUserId?: string,
+  threadId?: string
+) => {
   useEffect(() => {
     if (!activeChannelId || !queryClient) return;
     const ably = getAblyClient();
     if (!ably) return;
-    const channel = ably.channels.get(AblyChannels.channel(activeChannelId));
+    const channel = threadId
+      ? ably.channels.get(AblyChannels.channel(activeChannelId)) // For threads we still listen on the main channel for consistency, or we could listen on thread channel
+      : ably.channels.get(AblyChannels.channel(activeChannelId));
+
     const handleMessage = () => {
-      const queryKey = workspaceSlug ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages'] : messageKeys.list(activeChannelId);
+      const queryKey = workspaceSlug
+        ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages', { threadId: threadId || null }]
+        : messageKeys.list(activeChannelId, undefined, threadId);
       queryClient.invalidateQueries({ queryKey });
     };
     channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
