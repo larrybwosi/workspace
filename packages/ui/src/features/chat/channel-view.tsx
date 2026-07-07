@@ -102,7 +102,7 @@ export function ChannelView({
     }
   }, [dmUserId, socialProfile, blockUserMutation, unblockUserMutation]);
 
-  useRealtimeSubscriptions(channelId, workspaceSlug, queryClient, currentUser?.id);
+  useRealtimeSubscriptions(channelId, workspaceSlug, queryClient, currentUser?.id, initialThreadId);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [channelForm, setChannelForm] = useState({ name: '', description: '', type: 'public' as 'public' | 'private' });
@@ -133,7 +133,13 @@ export function ChannelView({
     const list: Array<{ type: 'message'; data: Message; depth: number } | { type: 'date'; date: Date } | { type: 'unread' }> = [];
     const messageMap = new Map<string, Message & { replies: Message[] }>();
     msgs.forEach(msg => messageMap.set(msg.id, { ...msg, replies: [] }));
-    const rootMessages = msgs.filter(msg => !msg.replyTo || !messageMap.has(msg.replyTo)).map(msg => messageMap.get(msg.id)!);
+    // If we're in a thread view, we don't want to group by replyTo if it's not the thread root
+    const rootMessages = msgs
+      .filter(msg => {
+        if (initialThreadId) return true; // In thread view, treat all as root for flattening or handle differently
+        return !msg.replyTo || !messageMap.has(msg.replyTo);
+      })
+      .map(msg => messageMap.get(msg.id)!);
     msgs.forEach(msg => { if (msg.replyTo && messageMap.has(msg.replyTo)) messageMap.get(msg.replyTo)!.replies.push(messageMap.get(msg.id)!); });
     rootMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     let lastDate: Date | null = null;
@@ -143,7 +149,12 @@ export function ChannelView({
       if (msg.id === unreadId) list.push({ type: 'unread' });
       list.push({ type: 'message', data: msg, depth });
     };
-    rootMessages.forEach(rm => { addToList(rm, 0); rm.replies.forEach(r => addToList(r, 1)); });
+    rootMessages.forEach(rm => {
+      addToList(rm, 0);
+      if (!initialThreadId) {
+        rm.replies.forEach(r => addToList(r, 1));
+      }
+    });
     return list;
   }, []);
 

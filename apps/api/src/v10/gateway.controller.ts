@@ -65,6 +65,10 @@ export class V10GatewayController {
           'user:*': ['subscribe', 'publish', 'history', 'presence'],
           'notifications:*': ['subscribe', 'publish', 'history', 'presence'],
           'presence:*': ['subscribe', 'publish', 'history', 'presence'],
+          'thread:*': ['subscribe', 'publish', 'history', 'presence'],
+          'dm:*': ['subscribe', 'publish', 'history', 'presence'],
+          'call:*': ['subscribe', 'publish', 'history', 'presence'],
+          'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
         }),
         ttl: 3600 * 1000,
       });

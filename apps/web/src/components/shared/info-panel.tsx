@@ -484,7 +484,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                         ) : isChannelLoading ? (
                           <div className="h-4 w-24 bg-muted animate-pulse rounded" />
                         ) : (
-                          channel?.createdBy?.name || 'Unknown'
+                          (channel as any)?.createdBy?.name || (channel as any)?.creator?.name || 'Unknown'
                         )}
                       </span>
                     </div>
@@ -777,7 +777,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                     </div>
 
                     <div className="space-y-2">
-                      {isMembersLoading
+                      {isMembersLoading || isChannelLoading
                         ? Array.from({ length: 4 }).map((_, i) => (
                             <div key={i} className="flex items-center gap-2 py-1">
                               <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
@@ -788,7 +788,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                               <div className="h-5 w-14 rounded-full bg-muted animate-pulse shrink-0" />
                             </div>
                           ))
-                        : members.map((m: any) => {
+                        : (type === 'channel' && channel?.members ? channel.members : members).map((m: any) => {
                             const member = m.user || m;
                             return (
                               <div key={member.id} className="flex items-center gap-2">
@@ -808,9 +808,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                                   variant="secondary"
                                   className={cn(
                                     'text-xs',
-                                    m.role === 'admin' &&
+                                    (m.role || member.role) === 'admin' &&
                                       'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-                                    m.role === 'member' &&
+                                    (m.role || member.role) === 'member' &&
                                       'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                                   )}
                                 >

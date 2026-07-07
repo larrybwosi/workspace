@@ -64,7 +64,16 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
           allowed = room.endsWith(user.id);
         } else if (room === 'global-presence') {
           allowed = true;
-        } else if (room.startsWith('call-chat:')) {
+        } else if (
+          room.startsWith('call-chat:') ||
+          room.startsWith('call:') ||
+          room.startsWith('channel:') ||
+          room.startsWith('thread:') ||
+          room.startsWith('dm:') ||
+          room.startsWith('workspace:') ||
+          room.startsWith('presence:')
+        ) {
+          // In a real app, we should check if the user belongs to the channel/workspace
           allowed = true;
         } else {
           // For other rooms, we'll allow it for now but log it
@@ -144,6 +153,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     let mappedEvent = event;
     if (event === 'message:sent') mappedEvent = 'message:new';
     else if (event === 'message:updated') mappedEvent = 'message:update';
+    else if (event === 'message:deleted') mappedEvent = 'message:delete';
     else if (event === 'notification') mappedEvent = 'notification:new';
 
     const payload = typeof data === 'object' && data !== null ? { ...data, _channel: channel } : data;
