@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,10 +21,11 @@ export default function InviteClient({ token, initialInviteData }: InviteClientP
   const { data: session, isPending: sessionLoading } = authClient.useSession();
 
   const [joining, setJoining] = useState(false);
+  const autoJoinAttempted = useRef(false);
 
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     if (!session) {
-      router.push(`/signup?inviteToken=${token}`);
+      router.push(`/login?inviteToken=${token}`);
       return;
     }
 
@@ -53,7 +54,14 @@ export default function InviteClient({ token, initialInviteData }: InviteClientP
     } finally {
       setJoining(false);
     }
-  };
+  }, [session, token, initialInviteData, router, toast]);
+
+  useEffect(() => {
+    if (session && !joining && !autoJoinAttempted.current) {
+      autoJoinAttempted.current = true;
+      handleAccept();
+    }
+  }, [session, joining, handleAccept]);
 
   const { invitation, type } = initialInviteData;
   const inviterName = invitation.inviter?.name || 'A team member';
@@ -114,7 +122,7 @@ export default function InviteClient({ token, initialInviteData }: InviteClientP
           <Button
             className="w-full h-12 text-base font-semibold"
             onClick={handleAccept}
-            disabled={joining || sessionLoading}
+            disabled={joining || (sessionLoading && !session)}
           >
             {joining ? (
               <>
