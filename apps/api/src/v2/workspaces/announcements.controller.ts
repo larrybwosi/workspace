@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Inject,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
@@ -17,6 +18,7 @@ import { ApiV2Guard } from '../../auth/api-v2.guard';
 import type { ApiV2Context } from '../../auth/api-v2.guard';
 import { V2Context } from '../../auth/v2-context.decorator';
 import { prisma } from '@repo/database';
+import Redis from 'ioredis';
 import { z } from 'zod';
 import { V2AuditService } from '../v2-audit.service';
 import { IsString, IsOptional, IsEnum, IsBoolean, IsObject, IsArray } from 'class-validator';
@@ -133,7 +135,10 @@ const updateAnnouncementSchema = createAnnouncementSchema.partial();
 export class V2AnnouncementsController {
   private readonly logger = new Logger(V2AnnouncementsController.name);
 
-  constructor(private readonly auditService: V2AuditService) {}
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly auditService: V2AuditService
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -147,11 +152,28 @@ export class V2AnnouncementsController {
       throw new ForbiddenException('Forbidden: Missing announcements:read scope');
     }
 
+    const cacheKey = `v2:announcements:${context.workspaceId}`;
+    let cachedAnnouncements: string | null = null;
+
+    try {
+      cachedAnnouncements = await this.redis.get(cacheKey);
+    } catch (error) {
+      this.logger.warn('Redis error in getAnnouncements:', error);
+    }
+
+    if (cachedAnnouncements) {
+      this.auditService
+        .log(context, 'announcements.list', 'announcement')
+        .catch(err => this.logger.error('Audit log error:', err));
+      return { announcements: JSON.parse(cachedAnnouncements), source: 'cache' };
+    }
+
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to retrieve only essential announcement fields,
+     * 1. Uses 'select' instead of 'include' to retrieve only essential announcement fields,
      * avoiding over-fetching of large fields like 'readBy' or 'targetAudience'.
-     * Expected impact: Reduces JSON payload size and memory overhead by ~30-50%.
+     * 2. Implement Redis caching to reduce database load and improve response times.
+     * Expected impact: Reduces JSON payload size and database RTT by caching frequent reads.
      */
     const announcements = await prisma.departmentAnnouncement.findMany({
       where: {
@@ -177,9 +199,17 @@ export class V2AnnouncementsController {
       orderBy: { createdAt: 'desc' },
     });
 
-    this.auditService.log(context, 'announcements.list', 'announcement').catch(err => this.logger.error("Audit log error:", err));
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(announcements));
+    } catch (error) {
+      this.logger.warn('Redis error in getAnnouncements (setex):', error);
+    }
 
-    return { announcements };
+    this.auditService
+      .log(context, 'announcements.list', 'announcement')
+      .catch(err => this.logger.error('Audit log error:', err));
+
+    return { announcements, source: 'database' };
   }
 
   @Post()
@@ -264,7 +294,15 @@ export class V2AnnouncementsController {
 
       const announcement = department.announcements[0];
 
-      this.auditService.log(context, 'announcements.create', 'announcement', announcement.id, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
+      try {
+        await this.redis.del(`v2:announcements:${context.workspaceId}`);
+      } catch (error) {
+        this.logger.warn('Redis error in createAnnouncement (del):', error);
+      }
+
+      this.auditService
+        .log(context, 'announcements.create', 'announcement', announcement.id, validatedData.data)
+        .catch(err => this.logger.error('Audit log error:', err));
 
       return { announcement };
     } catch (error) {
@@ -329,7 +367,9 @@ export class V2AnnouncementsController {
       throw new NotFoundException('Announcement not found');
     }
 
-    this.auditService.log(context, 'announcements.get', 'announcement', announcementId).catch(err => this.logger.error("Audit log error:", err));
+    this.auditService
+      .log(context, 'announcements.get', 'announcement', announcementId)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { announcement };
   }
@@ -368,7 +408,15 @@ export class V2AnnouncementsController {
       },
     });
 
-    this.auditService.log(context, 'announcements.update', 'announcement', announcementId, validatedData.data).catch(err => this.logger.error("Audit log error:", err));
+    try {
+      await this.redis.del(`v2:announcements:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in updateAnnouncement (del):', error);
+    }
+
+    this.auditService
+      .log(context, 'announcements.update', 'announcement', announcementId, validatedData.data)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { announcement };
   }
@@ -390,7 +438,15 @@ export class V2AnnouncementsController {
       },
     });
 
-    this.auditService.log(context, 'announcements.delete', 'announcement', announcementId).catch(err => this.logger.error("Audit log error:", err));
+    try {
+      await this.redis.del(`v2:announcements:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in deleteAnnouncement (del):', error);
+    }
+
+    this.auditService
+      .log(context, 'announcements.delete', 'announcement', announcementId)
+      .catch(err => this.logger.error('Audit log error:', err));
 
     return { success: true };
   }
