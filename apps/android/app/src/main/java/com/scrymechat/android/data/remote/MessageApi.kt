@@ -5,41 +5,47 @@ import retrofit2.http.*
 
 interface MessageApi {
     // Channel Messages
-    @GET("channels/{channelId}/messages")
+    @GET("workspaces/{slug}/channels/{channelId}/messages")
     suspend fun getChannelMessages(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Query("cursor") cursor: String? = null,
         @Query("limit") limit: Int = 50
     ): Response<MessagesResponse>
 
-    @POST("channels/{channelId}/messages")
+    @POST("workspaces/{slug}/channels/{channelId}/messages")
     suspend fun sendChannelMessage(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Body request: SendMessageRequest
     ): Response<MessageDto>
 
-    @PATCH("channels/{channelId}/messages/{messageId}")
+    @PATCH("workspaces/{slug}/channels/{channelId}/messages/{messageId}")
     suspend fun updateChannelMessage(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Path("messageId") messageId: String,
         @Body request: UpdateMessageRequest
     ): Response<MessageDto>
 
-    @DELETE("channels/{channelId}/messages/{messageId}")
+    @DELETE("workspaces/{slug}/channels/{channelId}/messages/{messageId}")
     suspend fun deleteChannelMessage(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Path("messageId") messageId: String
     ): Response<Unit>
 
-    @POST("channels/{channelId}/messages/{messageId}/reactions")
+    @POST("workspaces/{slug}/channels/{channelId}/messages/{messageId}/reactions")
     suspend fun addChannelReaction(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Path("messageId") messageId: String,
         @Body request: Map<String, String> // { "emoji": "👍" }
     ): Response<ReactionDto>
 
-    @DELETE("channels/{channelId}/messages/{messageId}/reactions/{emoji}")
+    @DELETE("workspaces/{slug}/channels/{channelId}/messages/{messageId}/reactions/{emoji}")
     suspend fun removeChannelReaction(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Path("messageId") messageId: String,
         @Path("emoji") emoji: String
@@ -91,8 +97,9 @@ interface MessageApi {
         @Path("conversationId") conversationId: String
     ): Response<Unit>
 
-    @POST("channels/{channelId}/read")
+    @POST("workspaces/{slug}/channels/{channelId}/read")
     suspend fun markChannelRead(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String
     ): Response<Unit>
 
@@ -105,15 +112,17 @@ interface MessageApi {
     ): Response<Map<String, Any>>
 
     // Thread Messages
-    @GET("channels/{channelId}/messages")
+    @GET("workspaces/{slug}/channels/{channelId}/messages")
     suspend fun getThreadMessages(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Query("threadId") threadId: String,
         @Query("limit") limit: Int = 50
     ): Response<MessagesResponse>
 
-    @POST("channels/{channelId}/messages")
+    @POST("workspaces/{slug}/channels/{channelId}/messages")
     suspend fun sendThreadMessage(
+        @Path("slug") slug: String,
         @Path("channelId") channelId: String,
         @Query("threadId") threadId: String,
         @Body request: SendMessageRequest

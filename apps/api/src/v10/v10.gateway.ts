@@ -41,10 +41,10 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
   private async handleSystemEvent(name: string, data: any) {
     switch (name) {
       case AblyEvents.MESSAGE_SENT:
-        await this.dispatchMessageCreated(data.message);
+        await this.dispatchMessageCreated(data);
         break;
       case AblyEvents.MESSAGE_UPDATED:
-        await this.dispatchMessageUpdated(data.message);
+        await this.dispatchMessageUpdated(data);
         break;
       case AblyEvents.MESSAGE_DELETED:
         await this.dispatchMessageDeleted(data);
@@ -149,7 +149,7 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
   }
 
   private async dispatchMessageDeleted(data: any) {
-    const { messageId, channelId } = data;
+    const { id, channelId } = data;
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: { workspaceId: true },
@@ -163,7 +163,7 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
 
       for (const bot of bots) {
         this.dispatch(bot.userId, 'MESSAGE_DELETE', {
-          id: messageId,
+          id,
           channel_id: channelId,
           guild_id: channel.workspaceId,
         });

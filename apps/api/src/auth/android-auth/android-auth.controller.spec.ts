@@ -25,6 +25,10 @@ vi.mock('@repo/database', () => ({
     workspaceMember: {
       findMany: vi.fn().mockResolvedValue([]),
     },
+    session: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
   },
 }));
 
@@ -64,7 +68,6 @@ describe('AndroidAuthController', () => {
       expect(auth.api.getSession).toHaveBeenCalledWith({
         headers: {
           authorization: `Bearer ${mockToken}`,
-          cookie: `better-auth.session_token=${mockToken}`,
         },
       });
 

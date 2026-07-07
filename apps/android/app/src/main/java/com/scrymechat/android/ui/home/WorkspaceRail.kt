@@ -12,13 +12,17 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
 import com.scrymechat.android.ui.theme.ScrymeDarkAccent
@@ -73,12 +77,12 @@ fun WorkspaceRail(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            items(workspaces) { workspace ->
+            items(workspaces, key = { it.id }) { workspace ->
                 WorkspaceIcon(
                     isSelected = selectedWorkspace?.id == workspace.id,
                     onClick = { onWorkspaceClick(workspace) },
                     content = {
-                        if (workspace.icon != null) {
+                        if (workspace.icon != null && workspace.icon.startsWith("http")) {
                             AsyncImage(
                                 model = workspace.icon,
                                 contentDescription = workspace.name,
@@ -86,14 +90,22 @@ fun WorkspaceRail(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            // Placeholder or initials
+                            // Initial placeholder with premium gradient
                             Box(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
+                                        )
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                androidx.compose.material3.Text(
+                                Text(
                                     text = workspace.name.take(1).uppercase(),
-                                    color = Color.White
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }

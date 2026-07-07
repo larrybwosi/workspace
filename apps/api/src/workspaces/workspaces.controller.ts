@@ -46,6 +46,11 @@ class CreateWorkspaceDto {
 
   @IsString()
   @IsOptional()
+  @ApiProperty({ required: false, example: 'https://example.com/banner.png' })
+  banner?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'A workspace for our team' })
   description?: string;
 }
@@ -112,6 +117,7 @@ const createWorkspaceSchema = z.object({
 const updateWorkspaceSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   icon: z.string().optional(),
+  banner: z.string().optional(),
   description: z.string().optional(),
   settings: z.any().optional(),
   plan: z.enum(['free', 'pro', 'enterprise']).optional(),
@@ -150,6 +156,7 @@ export class WorkspacesController {
         name: true,
         slug: true,
         icon: true,
+        banner: true,
         description: true,
         ownerId: true,
         createdAt: true,
@@ -302,6 +309,7 @@ export class WorkspacesController {
         name: true,
         slug: true,
         icon: true,
+        banner: true,
         description: true,
         _count: {
           select: {

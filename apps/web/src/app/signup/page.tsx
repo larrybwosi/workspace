@@ -241,7 +241,10 @@ export default function SignupPage() {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
               Already have an account?{' '}
-              <Link href="/login" className="text-primary font-semibold hover:underline">
+              <Link
+                href={inviteToken ? `/login?inviteToken=${inviteToken}` : '/login'}
+                className="text-primary font-semibold hover:underline"
+              >
                 Sign in
               </Link>
             </div>

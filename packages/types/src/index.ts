@@ -107,6 +107,7 @@ export interface Channel {
   createdBy?: User;
   createdAt?: string | Date;
   threads?: (Thread & { _count?: { messages: number } })[];
+  members?: any[];
   _count?: {
     messages: number;
     members: number;

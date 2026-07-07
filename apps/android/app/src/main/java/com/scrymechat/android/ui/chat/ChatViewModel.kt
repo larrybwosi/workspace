@@ -105,13 +105,14 @@ class ChatViewModel @Inject constructor(
         val channelId = currentChannelId
         val dmId = currentDmId
         val threadId = currentThreadId
+        val slug = currentWorkspaceSlug
 
         viewModelScope.launch {
             when {
-                threadId != null && channelId != null -> chatRepository.getThreadMessages(channelId, threadId).collect { resource ->
+                threadId != null && channelId != null && slug != null -> chatRepository.getThreadMessages(slug, channelId, threadId).collect { resource ->
                     if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
                 }
-                channelId != null -> chatRepository.getChannelMessages(channelId).collect { resource ->
+                channelId != null && slug != null -> chatRepository.getChannelMessages(slug, channelId).collect { resource ->
                     if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
                 }
                 dmId != null -> chatRepository.getDmMessages(dmId).collect { resource ->
@@ -212,12 +213,13 @@ class ChatViewModel @Inject constructor(
         val channelId = targetChannelId ?: currentChannelId
         val dmId = currentDmId
         val threadId = currentThreadId
+        val slug = currentWorkspaceSlug
         val finalAttachments = attachments ?: _uiState.value.pendingAttachments
 
         viewModelScope.launch {
             val result = when {
-                threadId != null && channelId != null -> chatRepository.sendThreadMessage(channelId, threadId, content, finalAttachments)
-                channelId != null -> chatRepository.sendChannelMessage(channelId, content, replyToId, finalAttachments)
+                threadId != null && channelId != null && slug != null -> chatRepository.sendThreadMessage(slug, channelId, threadId, content, finalAttachments)
+                channelId != null && slug != null -> chatRepository.sendChannelMessage(slug, channelId, content, replyToId, finalAttachments)
                 dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, finalAttachments)
                 else -> return@launch
             }
@@ -235,8 +237,16 @@ class ChatViewModel @Inject constructor(
             realtimeRepository.observeMessages().collect { messageDto ->
                 val channelId = currentChannelId
                 val dmId = currentDmId
+                val threadId = currentThreadId
 
-                if (messageDto.channelId == channelId || messageDto.dmId == dmId) {
+                val isRelevant = when {
+                    threadId != null -> messageDto.threadId == threadId
+                    channelId != null -> messageDto.channelId == channelId && messageDto.threadId == null
+                    dmId != null -> messageDto.dmId == dmId
+                    else -> false
+                }
+
+                if (isRelevant) {
                     // Update local messages
                     loadMessages()
                 }
@@ -314,12 +324,13 @@ class ChatViewModel @Inject constructor(
     fun toggleReaction(messageId: String, emoji: String) {
         val channelId = currentChannelId
         val dmId = currentDmId
+        val slug = currentWorkspaceSlug
 
         viewModelScope.launch {
             val result = if (channelId != null) {
-                chatRepository.addReaction(channelId, messageId, emoji, true)
+                chatRepository.addReaction(slug, channelId, messageId, emoji, true)
             } else if (dmId != null) {
-                chatRepository.addReaction(dmId, messageId, emoji, false)
+                chatRepository.addReaction(null, dmId, messageId, emoji, false)
             } else return@launch
 
             if (result is Resource.Error) {

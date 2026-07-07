@@ -273,15 +273,17 @@ export function Sidebar({
         role="navigation"
         aria-label="Main navigation"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-full bg-sidebar border-r border-sidebar-border',
-          'transition-transform duration-200 ease-in-out',
-          'lg:static lg:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-50 flex h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out',
+          'lg:relative',
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         <WorkspaceRail />
 
-        <div className="flex w-64 flex-col h-full">
+        <div className={cn(
+          "flex flex-col h-full transition-all duration-300 ease-in-out overflow-hidden",
+          isOpen ? "w-64 opacity-100" : "w-0 opacity-0"
+        )}>
           {/* Header area */}
           <div className="h-16 flex items-center px-6 border-b border-sidebar-border/50">
             <h1 className="text-lg font-bold truncate">Social</h1>

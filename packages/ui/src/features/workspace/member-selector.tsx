@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import { Check } from 'lucide-react';
 import { Avatar, AvatarFallback } from '../../components/avatar';
 import { Button } from '../../components/button';
@@ -10,6 +9,7 @@ import { Badge } from '../../components/badge';
 import { cn } from '../../lib/utils';
 import { useWorkspaceMembers } from '@repo/api-client';
 import { Skeleton } from '../../components/skeleton';
+import { useMemo, useState } from 'react';
 
 interface MemberSelectorProps {
   workspaceSlug: string;
@@ -18,7 +18,7 @@ interface MemberSelectorProps {
 }
 
 export function MemberSelector({ workspaceSlug, selectedMembers, onChange }: MemberSelectorProps) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const { data: members, isLoading } = useWorkspaceMembers(workspaceSlug);
 
   const toggleMember = (userId: string) => {
@@ -29,9 +29,9 @@ export function MemberSelector({ workspaceSlug, selectedMembers, onChange }: Mem
     }
   };
 
-  const selectedUsers = React.useMemo(() => {
+  const selectedUsers = useMemo(() => {
     if (!members) return [];
-    return members.filter((member: any) => selectedMembers.includes(member.user.id));
+    return members?.filter((member: any) => selectedMembers?.includes(member.user.id));
   }, [members, selectedMembers]);
 
   return (

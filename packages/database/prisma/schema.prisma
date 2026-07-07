@@ -200,6 +200,7 @@ model Workspace {
   name        String
   slug        String   @unique
   icon        String?
+  banner      String?
   description String?
   ownerId     String
   plan        String   @default("free") // free, pro, enterprise
@@ -1585,6 +1586,7 @@ model Organization {
   name      String
   slug      String   @unique
   logo      String?
+  banner    String?
   metadata  Json?
   createdAt DateTime @default(now())
 

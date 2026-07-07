@@ -688,7 +688,7 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
     let senderId = context.userId;
 
     // M2M Support: Use the M2M app's bot as sender if available, else fallback to workspace default bot
-    if (context.organizationId && !context.isBot) {
+    if (senderId.startsWith('m2m:')) {
       if (context.m2mClientId) {
         const m2mApp = await prisma.botApplication.findUnique({
           where: { clientId: context.m2mClientId },
@@ -699,14 +699,19 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
         }
       }
 
-      if (senderId === context.userId) {
+      if (senderId.startsWith('m2m:')) {
         const defaultBot = await prisma.botApplication.findFirst({
-          where: { workspaceId: context.workspaceId },
+          where: {
+            workspaceId: context.workspaceId,
+            botId: { not: null },
+          },
           select: { botId: true },
         });
 
         if (defaultBot?.botId) {
           senderId = defaultBot.botId;
+        } else {
+          throw new BadRequestException('M2M requires a bot to be provisioned in this workspace to send messages.');
         }
       }
     }

@@ -15,10 +15,10 @@ class ChatRepository @Inject constructor(
     private val api: MessageApi,
     private val dao: MessageDao
 ) {
-    fun getChannelMessages(channelId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
+    fun getChannelMessages(workspaceSlug: String, channelId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
         try {
-            val response = api.getChannelMessages(channelId, cursor)
+            val response = api.getChannelMessages(workspaceSlug, channelId, cursor)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
@@ -51,9 +51,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun sendChannelMessage(channelId: String, content: String, replyToId: String? = null, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
+    suspend fun sendChannelMessage(workspaceSlug: String, channelId: String, content: String, replyToId: String? = null, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
         return try {
-            val response = api.sendChannelMessage(channelId, SendMessageRequest(content, replyToId, attachments))
+            val response = api.sendChannelMessage(workspaceSlug, channelId, SendMessageRequest(content, replyToId, attachments))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
@@ -66,9 +66,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun sendThreadMessage(channelId: String, threadId: String, content: String, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
+    suspend fun sendThreadMessage(workspaceSlug: String, channelId: String, threadId: String, content: String, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
         return try {
-            val response = api.sendThreadMessage(channelId, threadId, SendMessageRequest(content, null, attachments))
+            val response = api.sendThreadMessage(workspaceSlug, channelId, threadId, SendMessageRequest(content, null, attachments))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
@@ -94,9 +94,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun updateChannelMessage(channelId: String, messageId: String, content: String): Resource<MessageEntity> {
+    suspend fun updateChannelMessage(workspaceSlug: String, channelId: String, messageId: String, content: String): Resource<MessageEntity> {
         return try {
-            val response = api.updateChannelMessage(channelId, messageId, UpdateMessageRequest(content))
+            val response = api.updateChannelMessage(workspaceSlug, channelId, messageId, UpdateMessageRequest(content))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
@@ -109,9 +109,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteChannelMessage(channelId: String, messageId: String): Resource<Unit> {
+    suspend fun deleteChannelMessage(workspaceSlug: String, channelId: String, messageId: String): Resource<Unit> {
         return try {
-            val response = api.deleteChannelMessage(channelId, messageId)
+            val response = api.deleteChannelMessage(workspaceSlug, channelId, messageId)
             if (response.isSuccessful) {
                 dao.deleteMessageById(messageId)
                 Resource.Success(Unit)
@@ -143,10 +143,10 @@ class ChatRepository @Inject constructor(
     fun getDmMessagesFlow(dmId: String): Flow<List<MessageEntity>> = dao.getMessagesForDmFlow(dmId)
         .map { it.processCustomMessages() }
 
-    fun getThreadMessages(channelId: String, threadId: String): Flow<Resource<List<MessageEntity>>> = flow {
+    fun getThreadMessages(workspaceSlug: String, channelId: String, threadId: String): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
         try {
-            val response = api.getThreadMessages(channelId, threadId)
+            val response = api.getThreadMessages(workspaceSlug, channelId, threadId)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
@@ -188,9 +188,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun markChannelRead(channelId: String): Resource<Unit> {
+    suspend fun markChannelRead(workspaceSlug: String, channelId: String): Resource<Unit> {
         return try {
-            val response = api.markChannelRead(channelId)
+            val response = api.markChannelRead(workspaceSlug, channelId)
             if (response.isSuccessful) {
                 Resource.Success(Unit)
             } else {
@@ -201,16 +201,14 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun addReaction(targetId: String, messageId: String, emoji: String, isChannel: Boolean): Resource<Unit> {
+    suspend fun addReaction(workspaceSlug: String?, targetId: String, messageId: String, emoji: String, isChannel: Boolean): Resource<Unit> {
         return try {
-            val response = if (isChannel) {
-                api.addChannelReaction(targetId, messageId, mapOf("emoji" to emoji))
+            val response = if (isChannel && workspaceSlug != null) {
+                api.addChannelReaction(workspaceSlug, targetId, messageId, mapOf("emoji" to emoji))
             } else {
                 api.addDmReaction(targetId, messageId, mapOf("emoji" to emoji))
             }
             if (response.isSuccessful) {
-                // Here we might want to refresh the message in local DB to show the new reaction
-                // For now, we just return success
                 Resource.Success(Unit)
             } else {
                 Resource.Error(response.message())
@@ -220,10 +218,10 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun removeReaction(targetId: String, messageId: String, emoji: String, isChannel: Boolean): Resource<Unit> {
+    suspend fun removeReaction(workspaceSlug: String?, targetId: String, messageId: String, emoji: String, isChannel: Boolean): Resource<Unit> {
         return try {
-            val response = if (isChannel) {
-                api.removeChannelReaction(targetId, messageId, emoji)
+            val response = if (isChannel && workspaceSlug != null) {
+                api.removeChannelReaction(workspaceSlug, targetId, messageId, emoji)
             } else {
                 api.removeDmReaction(targetId, messageId, emoji)
             }

@@ -50,7 +50,7 @@ export class MessagesService {
 
     return workspace;
   }
-  async getMessages(channelId: string, userId: string, cursor?: string, limit = 50) {
+  async getMessages(channelId: string, userId: string, cursor?: string, limit = 50, threadId?: string) {
     if (!channelId) {
       throw new BadRequestException('Channel ID required');
     }
@@ -58,6 +58,7 @@ export class MessagesService {
     const messages = await prisma.message.findMany({
       where: {
         channelId,
+        threadId: threadId || null,
         ...(cursor ? { timestamp: { lt: new Date(cursor) } } : {}),
       },
       select: {
@@ -178,7 +179,7 @@ export class MessagesService {
   }
 
   async createMessage(userId: string, body: any) {
-    const { channelId, content, messageType, metadata, replyToId, attachments, stickerId } = body;
+    const { channelId, content, messageType, metadata, replyToId, threadId, attachments, stickerId } = body;
 
     if (!channelId) {
       throw new BadRequestException('Channel ID required');
@@ -237,6 +238,7 @@ export class MessagesService {
           messageType: messageType || 'standard',
           metadata: { ...metadata, stickerId },
           replyToId,
+          threadId,
           depth: replyToId ? 1 : 0,
           mentions: {
             create: [
@@ -363,6 +365,7 @@ export class MessagesService {
 
     await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
       id: messageId,
+      channelId,
       threadId: existingMessage.rootThread?.id,
     });
 

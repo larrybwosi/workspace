@@ -94,3 +94,4 @@ export * from './features/support/ticket-list';
 export * from './features/support/ticket-card';
 export * from './features/support/ticket-status-badge';
 export * from './features/support/create-ticket-dialog';
+export * from './features/organization/settings/general-tab';

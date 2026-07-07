@@ -77,6 +77,9 @@ fun ScrymeNavHost(
                 },
                 onDiscoveryClick = {
                     navController.navigate(Screen.Discovery.route)
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
                 }
             )
         }

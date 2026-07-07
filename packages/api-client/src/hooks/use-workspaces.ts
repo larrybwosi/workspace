@@ -61,6 +61,7 @@ export function useCreateWorkspace() {
       name: string;
       slug: string;
       icon?: string;
+      banner?: string;
       description?: string;
       isPublic?: boolean;
       industry?: string;
@@ -80,6 +81,7 @@ export function useUpdateWorkspace(workspaceSlug: string) {
     mutationFn: async (data: {
       name?: string;
       icon?: string;
+      banner?: string;
       description?: string;
       isPublic?: boolean;
       customDomain?: string;

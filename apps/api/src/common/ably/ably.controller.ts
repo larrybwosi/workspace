@@ -24,6 +24,7 @@ export class AblyController {
         'session:*': ['subscribe', 'publish', 'history', 'presence'],
         'workspace:*': ['subscribe', 'publish', 'history', 'presence'],
         'thread:*': ['subscribe', 'publish', 'history', 'presence'],
+        'call:*': ['subscribe', 'publish', 'history', 'presence'],
         'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
         'dm:*': ['subscribe', 'publish', 'history', 'presence'],
         'presence:*': ['subscribe', 'publish', 'history', 'presence'],

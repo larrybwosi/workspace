@@ -497,44 +497,78 @@ fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = fals
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(horizontal = 16.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.Start
     ) {
+        // Large distinctive icon for the channel/DM
         Box(
             modifier = Modifier
-                .size(68.dp)
+                .size(80.dp)
                 .clip(CircleShape)
                 .background(palette.accentSoft),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                if (isDm) Icons.Default.Person else Icons.Default.Tag,
+                imageVector = if (isDm) Icons.Default.Person else Icons.Default.Tag,
                 contentDescription = null,
                 tint = palette.accent,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(44.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Large, bold welcome header
         Text(
             text = if (isDm) chatTitle else "Welcome to #$chatTitle!",
             color = palette.textPrimary,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = (-0.5).sp
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
+        // Descriptive subtext explaining the beginning of the conversation
         Text(
-            text = if (isDm) "This is the beginning of your direct message history with @$chatTitle."
-                   else "This is the start of the #$chatTitle channel.",
+            text = if (isDm) {
+                "This is the beginning of your direct message history with @$chatTitle. Keep it friendly and respectful!"
+            } else {
+                "This is the start of the #$chatTitle channel. Why not send a message to say hello?"
+            },
             color = palette.textSecondary,
-            fontSize = 15.sp
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+            modifier = Modifier.fillMaxWidth(0.85f)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        if (!isDm) {
+            // Affordance for channel settings/editing (Visual only)
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { /* Could open channel settings */ }
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = null,
+                    tint = palette.accent,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Edit Channel",
+                    color = palette.accent,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
     }
 }
 
@@ -767,7 +801,8 @@ fun MessageItem(
                     text = message.senderName ?: "Unknown User",
                     color = palette.textPrimary,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.5.sp
+                    fontSize = 14.5.sp,
+                    modifier = Modifier.clickable { onAvatarClick(message.senderId) }
                 )
                 Spacer(modifier = Modifier.width(7.dp))
                 Text(
