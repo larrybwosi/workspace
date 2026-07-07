@@ -199,7 +199,7 @@ export class AndroidAuthController {
           },
         });
         session = sessionData?.session;
-      } catch (e) {
+      } catch (e: any) {
         this.logger.warn(`Better Auth API failed to fetch session: ${e.message}`);
       }
 
