@@ -767,7 +767,8 @@ fun MessageItem(
                     text = message.senderName ?: "Unknown User",
                     color = palette.textPrimary,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.5.sp
+                    fontSize = 14.5.sp,
+                    modifier = Modifier.clickable { onAvatarClick(message.senderId) }
                 )
                 Spacer(modifier = Modifier.width(7.dp))
                 Text(

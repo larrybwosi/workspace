@@ -45,10 +45,30 @@ fun OtherUserProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(user?.name ?: "Profile", color = palette.textPrimary) },
+                title = {
+                    Text(
+                        user?.name ?: "Profile",
+                        color = palette.textPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(palette.iconChipBg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = palette.textPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
@@ -62,88 +82,46 @@ fun OtherUserProfileScreen(
             }
         } else if (user != null) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                item {
+                    ProfileHeaderSection(user = user, palette = palette)
+                }
+
                 item {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(palette.cardSurface)
-                            .border(1.dp, palette.cardBorder, RoundedCornerShape(20.dp))
+                            .padding(horizontal = 16.dp, vertical = 24.dp)
                     ) {
-                        // Banner
-                        Box(
+                        if (!user?.bio.isNullOrEmpty()) {
+                            ProfileInfoSection(title = "ABOUT ME", content = user?.bio!!, palette = palette)
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+
+                        ProfileInfoSection(title = "USER INFORMATION", palette = palette) {
+                            InfoRow(label = "Username", value = "@${user?.username ?: "unknown"}", palette = palette)
+                            InfoRow(label = "Status", value = user?.status ?: "offline", palette = palette)
+                            InfoRow(label = "Role", value = user?.role ?: "Member", palette = palette)
+                        }
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Button(
+                            onClick = { onSendMessage(userId) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(120.dp)
-                                .background(if (user?.banner == null) palette.accent.copy(alpha = 0.2f) else Color.Transparent)
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
                         ) {
-                            user?.banner?.let { bannerUrl ->
-                                AsyncImage(
-                                    model = bannerUrl,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
+                            Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text("Send Message", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                         }
-
-                        // Avatar and Info
-                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            Column {
-                                Spacer(modifier = Modifier.height(44.dp))
-                                Text(user?.name ?: "", color = palette.textPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                                user?.username?.let { uname ->
-                                    Text("@$uname", color = palette.textSecondary, fontSize = 14.sp)
-                                }
-                                if (user?.statusText?.isNotEmpty() == true) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(user?.statusText ?: "", color = palette.textPrimary, fontSize = 15.sp)
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-
-                            // Avatar
-                            Box(
-                                modifier = Modifier
-                                    .offset(y = (-40).dp)
-                                    .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(palette.cardSurface)
-                                    .padding(4.dp)
-                                    .clip(CircleShape)
-                            ) {
-                                user?.avatar?.let { avatarUrl ->
-                                    AsyncImage(
-                                        model = avatarUrl,
-                                        contentDescription = null,
-                                        modifier = Modifier.fillMaxSize().clip(CircleShape)
-                                    )
-                                } ?: run {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize().background(palette.accent),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text((user?.name?.firstOrNull() ?: 'U').toString(), color = Color.White, fontSize = 32.sp)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                item {
-                    Button(
-                        onClick = { onSendMessage(userId) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Send Message")
                     }
                 }
             }
@@ -152,5 +130,147 @@ fun OtherUserProfileScreen(
                 Text("User not found", color = palette.textSecondary)
             }
         }
+    }
+}
+
+@Composable
+fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
+    Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
+        // Banner
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .then(
+                    if (user?.banner == null)
+                        Modifier.background(Brush.verticalGradient(palette.headerGradient))
+                    else
+                        Modifier.background(Color.Transparent)
+                )
+        ) {
+            user?.banner?.let { bannerUrl ->
+                AsyncImage(
+                    model = bannerUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            // Gradient Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
+                        )
+                    )
+            )
+        }
+
+        // Avatar and Name
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 20.dp, bottom = 0.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(palette.cardSurface)
+                    .padding(4.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, palette.avatarRing, CircleShape)
+            ) {
+                user?.avatar?.let { avatarUrl ->
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape)
+                    )
+                } ?: run {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Brush.linearGradient(palette.accentGradient)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            (user?.name?.firstOrNull() ?: 'U').toString().uppercase(),
+                            color = Color.White,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                user?.name ?: "",
+                color = palette.textPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                letterSpacing = (-0.5).sp
+            )
+
+            if (user?.statusText?.isNotEmpty() == true) {
+                Text(
+                    user.statusText!!,
+                    color = palette.textSecondary,
+                    fontSize = 15.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileInfoSection(title: String, palette: ProfilePalette, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            color = palette.textTertiary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = palette.cardSurface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), content = content)
+        }
+    }
+}
+
+@Composable
+fun ProfileInfoSection(title: String, content: String, palette: ProfilePalette) {
+    ProfileInfoSection(title = title, palette = palette) {
+        Text(
+            text = content,
+            color = palette.textPrimary,
+            fontSize = 15.sp,
+            lineHeight = 22.sp
+        )
+    }
+}
+
+@Composable
+fun InfoRow(label: String, value: String, palette: ProfilePalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = palette.textSecondary, fontSize = 14.sp)
+        Text(value, color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }

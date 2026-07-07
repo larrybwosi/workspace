@@ -132,11 +132,12 @@ class ProfileViewModel @Inject constructor(
                             username = userDto.username,
                             email = "", // Private info
                             avatar = userDto.avatar,
-                            banner = null,
-                            statusText = null,
-                            statusEmoji = null,
-                            role = "member",
-                            status = "offline"
+                            banner = userDto.banner,
+                            statusText = userDto.statusText,
+                            statusEmoji = userDto.statusEmoji,
+                            bio = userDto.bio,
+                            role = userDto.role ?: "member",
+                            status = userDto.status ?: "offline"
                         )
                     }
                 }

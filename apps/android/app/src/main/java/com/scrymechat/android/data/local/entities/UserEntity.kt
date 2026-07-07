@@ -13,6 +13,7 @@ data class UserEntity(
     val banner: String?,
     val statusText: String?,
     val statusEmoji: String?,
+    val bio: String?,
     val role: String,
     val status: String
 )
