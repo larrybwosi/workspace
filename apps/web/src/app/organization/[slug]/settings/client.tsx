@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building2, LayoutGrid, KeySquare, Settings as SettingsIcon } from 'lucide-react';
 import { WorkspacesTab } from './workspaces-tab';
 import { M2mTab } from './m2m-tab';
+import { GeneralTab as OrganizationGeneralTab } from '@repo/ui';
 
 export default function OrganizationSettingsClient() {
   const params = useParams();
@@ -80,9 +81,7 @@ export default function OrganizationSettingsClient() {
               </TabsContent>
 
               <TabsContent value="general" className="space-y-4">
-                <div className="p-8 text-center border-2 border-dashed rounded-lg text-muted-foreground">
-                  Organization profile settings coming soon.
-                </div>
+                <OrganizationGeneralTab orgSlug={orgSlug} />
               </TabsContent>
             </Tabs>
           </div>
