@@ -291,26 +291,42 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
 
-      # ↙️ Fixed the repository typo below (changeset -> changesets)
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm version:ci
-          publish: pnpm changeset tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Git Configuration
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Sync versions to non-package files
-        if: steps.changesets.outputs.published == 'true'
-        run: node scripts/update-version.js
+      - name: Handle Prerelease Mode
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            if [ ! -f .changeset/pre.json ]; then
+              pnpm changeset pre enter dev
+            fi
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            if [ -f .changeset/pre.json ]; then
+              pnpm changeset pre exit
+            fi
+          fi
+
+      - name: Version and Commit
+        id: versioning
+        run: |
+          pnpm version:auto
+          git add .
+          git commit -m "chore: release [skip ci]"
+          git push origin ${{ github.ref_name }}
+          echo "published=true" >> $GITHUB_OUTPUT
+
+      - name: Create and Push Tags
+        run: |
+          pnpm changeset tag
+          git push --tags
 
       - name: Get current version
-        if: steps.changesets.outputs.published == 'true'
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
+      published: ${{ steps.versioning.outputs.published }}
       version: ${{ steps.get_version.outputs.version }}
 
   docker-publish:
