@@ -363,6 +363,7 @@ export class MessagesService {
 
     await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
       id: messageId,
+      channelId,
       threadId: existingMessage.rootThread?.id,
     });
 

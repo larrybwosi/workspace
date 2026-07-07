@@ -91,15 +91,27 @@ const MessageSkeletons = memo(() => (
 
 MessageSkeletons.displayName = 'MessageSkeletons';
 
-const EmptyState = memo(({ activeChannelId }: { activeChannelId: string }) => (
-  <div className="flex flex-col items-center justify-center flex-1 p-8 text-center opacity-50">
-    <div className="h-14 w-14 bg-muted rounded-full mb-3 flex items-center justify-center text-2xl">👋</div>
-    <h3 className="font-semibold text-sm">No messages yet</h3>
-    <p className="text-xs text-muted-foreground mt-1">
-      Be the first to send a message in #{activeChannelId}.
-    </p>
-  </div>
-));
+const EmptyState = memo(({ activeChannelId, channelName }: { activeChannelId: string; channelName?: string }) => {
+  const name = channelName || activeChannelId;
+  const isDM = activeChannelId.startsWith('dm-');
+
+  return (
+    <div className="flex flex-col items-start justify-end flex-1 p-8 mb-4">
+      <div className="h-16 w-16 bg-muted rounded-full mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
+        {isDM ? ' @ ' : ' # '}
+      </div>
+      <h1 className="text-3xl font-bold mb-2">
+        Welcome to {isDM ? '' : '#'}
+        {name}!
+      </h1>
+      <p className="text-muted-foreground">
+        This is the start of the {isDM ? 'direct message history with ' : ' #'}
+        <span className="font-semibold">{name}</span>
+        {isDM ? '.' : ' channel.'}
+      </p>
+    </div>
+  );
+});
 
 EmptyState.displayName = 'EmptyState';
 
@@ -269,7 +281,8 @@ export const MessageList = memo(({
   handleReaction,
   channelId,
   workspaceSlug,
-  activeChannelId
+  activeChannelId,
+  channelName
 }: {
   scrollAreaRef: React.RefObject<HTMLDivElement | null>,
   messagesEndRef: React.RefObject<HTMLDivElement | null>,
@@ -287,23 +300,25 @@ export const MessageList = memo(({
   handleReaction: (id: string, emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
   channelId: string,
   workspaceSlug?: string,
-  activeChannelId: string
+  activeChannelId: string,
+  channelName?: string
 }) => (
   <div className="flex-1 min-h-0 w-full relative bg-dotted">
     <ScrollArea ref={scrollAreaRef} className="h-full w-full">
       <div className="flex flex-col justify-end min-h-full pt-4 pb-2">
-        <LoadMoreButton
-          hasNextPage={hasNextPage}
-          fetchNextPage={fetchNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-        />
+        {hasNextPage && (
+          <LoadMoreButton
+            hasNextPage={hasNextPage}
+            fetchNextPage={fetchNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+          />
+        )}
 
         {isLoading ? (
           <MessageSkeletons />
-        ) : renderList.length === 0 ? (
-          <EmptyState activeChannelId={activeChannelId} />
         ) : (
           <div className="flex flex-col w-full">
+            {!hasNextPage && <EmptyState activeChannelId={activeChannelId} channelName={channelName} />}
             <MessageItems
               renderList={renderList}
               highlightedMessageId={highlightedMessageId}
