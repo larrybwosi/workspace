@@ -826,7 +826,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                               <div className="h-5 w-14 rounded-full bg-muted animate-pulse shrink-0" />
                             </div>
                           ))
-                        : (type === 'channel' && channel?.members ? channel.members : members).map((m: any) => {
+                        : (type === 'channel' && (channel as any)?.members ? (channel as any).members : members).map((m: any) => {
                             const member = m.user || m;
                             return (
                               <div key={member.id} className="flex items-center gap-2">

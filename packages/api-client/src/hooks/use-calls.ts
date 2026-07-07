@@ -116,6 +116,21 @@ export function useJoinCall() {
   });
 }
 
+export function useEndCall() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { callId: string; workspaceSlug: string }) => {
+      const { data } = await apiClient.patch(`/calls/${params.callId}`, {
+        action: 'endForAll',
+      });
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['active-calls', variables.workspaceSlug] });
+    },
+  });
+}
+
 export function useScheduleCall() {
   const queryClient = useQueryClient();
   return useMutation({
