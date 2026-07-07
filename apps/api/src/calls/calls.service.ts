@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import { StartCallDto, UpdateCallDto, ScheduleCallDto, SoundboardSoundDto } from './dto/call-operations.dto';
 import {
   agoraServerConfig as agoraConfig,
   publishRealtime,
@@ -30,7 +31,7 @@ export class CallsService {
     return workspaceIdOrSlug;
   }
 
-  async startCall(user: User, body: any) {
+  async startCall(user: User, body: StartCallDto) {
     const {
       type,
       channelId,
@@ -43,6 +44,10 @@ export class CallsService {
 
     if (!type || (!incomingWorkspaceId && !workspaceSlug)) {
       throw new BadRequestException('Type and workspaceId are required');
+    }
+
+    if (!agoraConfig.appId || !agoraConfig.appCertificate) {
+      throw new InternalServerErrorException('Agora configuration is missing');
     }
 
     let workspaceId = incomingWorkspaceId;
@@ -106,6 +111,9 @@ export class CallsService {
       } else if (recipientId) {
         const participants = [user.id, recipientId].sort();
         agoraChannelName = `dm-${participants.join('-')}`;
+      } else if (incomingCallId) {
+        // Handled above, but if we reached here it means call was not found
+        throw new NotFoundException('Call not found');
       } else {
         throw new BadRequestException('channelId, recipientId, or callId is required');
       }
@@ -245,7 +253,7 @@ export class CallsService {
     };
   }
 
-  async updateCall(user: User, callId: string, body: any) {
+  async updateCall(user: User, callId: string, body: UpdateCallDto) {
     const { action, ...data } = body;
 
     const call = await prisma.call.findUnique({
@@ -360,7 +368,8 @@ export class CallsService {
       });
 
       if (activeParticipants === 0) {
-        const duration = Math.floor((Date.now() - call.startedAt.getTime()) / 1000);
+        const startedAt = call.startedAt ? new Date(call.startedAt).getTime() : Date.now();
+        const duration = Math.floor((Date.now() - startedAt) / 1000);
 
         await prisma.call.update({
           where: { id: callId },
@@ -463,7 +472,8 @@ export class CallsService {
         throw new ForbiddenException('Only hosts can end the call for everyone');
       }
 
-      const duration = Math.floor((Date.now() - call.startedAt.getTime()) / 1000);
+      const startedAt = call.startedAt ? new Date(call.startedAt).getTime() : Date.now();
+      const duration = Math.floor((Date.now() - startedAt) / 1000);
 
       await prisma.call.update({
         where: { id: callId },
@@ -662,12 +672,8 @@ export class CallsService {
     });
   }
 
-  async scheduleCall(user: User, body: any) {
+  async scheduleCall(user: User, body: ScheduleCallDto) {
     const { title, description, type, scheduledFor, workspaceId: incomingWorkspaceId, workspaceSlug, channelId } = body;
-
-    if (!title || !type || !scheduledFor || (!incomingWorkspaceId && !workspaceSlug)) {
-      throw new BadRequestException('Missing required fields');
-    }
 
     /**
      * ⚡ Performance Optimization:
@@ -765,7 +771,7 @@ export class CallsService {
     return call;
   }
 
-  async playSoundboardSound(user: User, body: any) {
+  async playSoundboardSound(user: User, body: SoundboardSoundDto) {
     const { soundId, callId } = body;
 
     const sound = await prisma.soundboardSound.findUnique({

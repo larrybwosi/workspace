@@ -97,8 +97,12 @@ export function useStartCall() {
 export function useJoinCall() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { type: string; callId: string; workspaceSlug: string }) => {
-      const { data } = await apiClient.post('/calls', params);
+    mutationFn: async (params: { type: string; callId: string; workspaceSlug: string; uid?: number }) => {
+      const { data } = await apiClient.post('/calls', {
+        type: params.type,
+        callId: params.callId,
+        workspaceSlug: params.workspaceSlug,
+      });
 
       if (!data.token) {
         const { data: tokenData } = await apiClient.post('/agora/token', {
