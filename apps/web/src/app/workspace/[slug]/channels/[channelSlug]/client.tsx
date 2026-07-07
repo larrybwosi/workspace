@@ -8,12 +8,10 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlug: string }) {
-  // Info panel is closed by default; users open it via the header toggle
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { slug } = useParams();
   const workspaceSlug = slug as string;
-
   const { data: channels } = useWorkspaceChannels(workspaceSlug);
 
   // Resolve the real channel UUID from the slug
@@ -22,14 +20,11 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <WorkspaceSidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        currentWorkspaceId={workspaceSlug}
-      />
+      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspaceSlug} />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <div className="flex flex-1 overflow-hidden relative">
+        {/* REMOVED 'relative' here so the InfoPanel behaves as a flex sibling rather than an overlay */}
+        <div className="flex flex-1 overflow-hidden">
           <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
             <ChannelView
               channelId={channelId}
@@ -38,13 +33,7 @@ export default function WorkspaceChannelPageClient({ channelSlug }: { channelSlu
             />
           </main>
 
-          {/* Info panel rendered side-by-side; hidden by default */}
-          <InfoPanel
-            isOpen={infoPanelOpen}
-            onClose={() => setInfoPanelOpen(false)}
-            id={channelId}
-            type="channel"
-          />
+          <InfoPanel isOpen={infoPanelOpen} onClose={() => setInfoPanelOpen(false)} id={channelId} type="channel" />
         </div>
       </div>
     </div>

@@ -147,6 +147,9 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
     }
   };
 
+  // If the panel is closed entirely, do not render anything on large screens either
+  if (!isOpen) return null;
+
   if (dmUser) {
     return (
       <>
@@ -154,7 +157,8 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
 
         <aside
           className={cn(
-            'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
+            'fixed top-0 bottom-0 right-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200',
+            'lg:static lg:h-full lg:z-0', // Desktop overrides: becomes static page flow item
             isOpen ? 'translate-x-0' : 'translate-x-full'
           )}
         >
@@ -227,7 +231,6 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                   <Video className="h-4 w-4 mr-2" />
                   Start Video Call
                 </Button>
-                {/* </CHANGE> */}
                 <Button variant="outline" className="w-full justify-start bg-transparent" size="sm">
                   <UserPlus className="h-4 w-4 mr-2" />
                   View Profile
@@ -344,23 +347,24 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   // Regular channel/project info panel
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay backdrop */}
       {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />}
 
       {/* Info Panel */}
       <aside
         className={cn(
-          'fixed lg:absolute right-0 top-0 bottom-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200 lg:translate-x-0',
+          'fixed top-0 bottom-0 right-0 z-50 w-80 bg-card border-l border-border flex flex-col transition-transform duration-200',
+          'lg:static lg:h-full lg:z-0', // Desktop overrides: becomes static page flow item
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         {/* Header */}
-        <div className="h-14 border-b border-border flex items-center justify-between px-4">
-          <div className="flex gap-1">
+        <div className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0">
+          <div className="flex gap-1 overflow-x-auto no-scrollbar py-1">
             <Button
               variant={activeTab === 'info' ? 'secondary' : 'ghost'}
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 shrink-0"
               onClick={() => setActiveTab('info')}
             >
               Info
@@ -368,7 +372,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             <Button
               variant={activeTab === 'search' ? 'secondary' : 'ghost'}
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 shrink-0"
               onClick={() => setActiveTab('search')}
             >
               Search
@@ -376,7 +380,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             <Button
               variant={activeTab === 'activity' ? 'secondary' : 'ghost'}
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 shrink-0"
               onClick={() => setActiveTab('activity')}
             >
               Activity
@@ -384,7 +388,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             <Button
               variant={activeTab === 'files' ? 'secondary' : 'ghost'}
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 shrink-0"
               onClick={() => setActiveTab('files')}
             >
               Files
@@ -392,7 +396,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             <Button
               variant={activeTab === 'pins' ? 'secondary' : 'ghost'}
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 shrink-0"
               onClick={() => setActiveTab('pins')}
             >
               Pins
@@ -400,13 +404,13 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
             <Button
               variant={activeTab === 'links' ? 'secondary' : 'ghost'}
               size="sm"
-              className="text-xs h-8"
+              className="text-xs h-8 shrink-0"
               onClick={() => setActiveTab('links')}
             >
               Links
             </Button>
           </div>
-          <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 shrink-0" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
