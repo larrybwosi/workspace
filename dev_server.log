@@ -1,0 +1,573 @@
+
+Attention:
+Turborepo now collects completely anonymous telemetry regarding usage.
+This information is used to shape the Turborepo roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://turborepo.dev/docs/telemetry
+
+• turbo 2.10.0
+
+   • Packages in scope: @repo/api-client, @repo/auth, @repo/database, @repo/eslint-config, @repo/prettier-config, @repo/shared, @repo/types, @repo/typescript-config, @repo/ui, admin, android, api, desktop, docs, site, web
+   • Running dev in 16 packages
+   • Remote caching disabled
+
+api:dev: cache bypass, force executing 4c4088c187390432
+web:dev: cache bypass, force executing 9b4f61a7265eb7be
+desktop:dev: cache bypass, force executing 9a94197fd0883dc6
+@repo/auth:dev: cache bypass, force executing 3edbc2aa4b57b441
+site:dev: cache bypass, force executing ce7b7646325ec29e
+docs:dev: cache bypass, force executing 66a0651d14db3935
+admin:dev: cache bypass, force executing d95beef64d79965a
+api:dev:
+api:dev: > api@2.0.0 dev /app/apps/api
+api:dev: > nest start --watch
+api:dev:
+admin:dev:
+admin:dev: > admin@2.0.0 dev /app/apps/admin
+admin:dev: > vite --port 3002
+admin:dev:
+site:dev:
+site:dev: > site@2.0.0 dev /app/apps/site
+site:dev: > vite --port 8080
+site:dev:
+docs:dev:
+docs:dev: > docs@2.0.0 dev /app/apps/docs
+docs:dev: > vite --port 3005
+docs:dev:
+web:dev:
+web:dev: > web@2.0.0 dev /app/apps/web
+web:dev: > next dev --port 3001 --webpack
+web:dev:
+@repo/auth:dev:
+@repo/auth:dev: > @repo/auth@0.0.772 dev /app/packages/auth
+@repo/auth:dev: > echo "no dev needed"
+@repo/auth:dev:
+@repo/auth:dev: no dev needed
+desktop:dev:
+desktop:dev: > desktop@2.0.0 dev /app/apps/desktop
+desktop:dev: > vite
+desktop:dev:
+admin:dev:
+admin:dev:   VITE v8.1.0  ready in 866 ms
+admin:dev:
+admin:dev:   ➜  Local:   http://localhost:3002/
+admin:dev:   ➜  Network: use --host to expose
+site:dev: 4:45:47 PM [vite] warning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.
+site:dev: `optimizeDeps.rollupOptions` / `ssr.optimizeDeps.rollupOptions` is deprecated. Use `optimizeDeps.rolldownOptions` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+docs:dev: 4:45:47 PM [vite] warning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.
+docs:dev: `optimizeDeps.rollupOptions` / `ssr.optimizeDeps.rollupOptions` is deprecated. Use `optimizeDeps.rolldownOptions` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+site:dev: [vite:react-babel] We recommend switching to `@vitejs/plugin-react-oxc` for improved performance. More information at https://vite.dev/rolldown
+docs:dev: [vite:react-babel] We recommend switching to `@vitejs/plugin-react-oxc` for improved performance. More information at https://vite.dev/rolldown
+docs:dev:
+docs:dev:   VITE v8.1.0  ready in 927 ms
+docs:dev:
+docs:dev:   ➜  Local:   http://localhost:3005/
+docs:dev:   ➜  Network: use --host to expose
+desktop:dev:
+desktop:dev:   VITE v8.1.0  ready in 873 ms
+desktop:dev:
+desktop:dev:   ➜  Local:   http://localhost:1420/
+desktop:dev:   ➜  Network: http://192.168.0.2:1420/
+docs:dev: [33mWarning: Invalid input options (1 issue found)
+docs:dev: - For the "jsx". Invalid key: Expected never but received "jsx". [0m
+site:dev:
+site:dev:   VITE v8.1.0  ready in 1045 ms
+site:dev:
+site:dev:   ➜  Local:   http://localhost:8080/
+site:dev:   ➜  Network: use --host to expose
+site:dev: [33mWarning: Invalid input options (1 issue found)
+site:dev: - For the "jsx". Invalid key: Expected never but received "jsx". [0m
+web:dev: ▲ Next.js 16.2.1 (webpack)
+web:dev: - Local:         http://localhost:3001
+web:dev: - Network:       http://192.168.0.2:3001
+web:dev: ✓ Ready in 1138ms
+site:dev: [33mWarning: Invalid input options (1 issue found)
+site:dev: - For the "jsx". Invalid key: Expected never but received "jsx". [0m
+docs:dev: [33mWarning: Invalid input options (1 issue found)
+docs:dev: - For the "jsx". Invalid key: Expected never but received "jsx". [0m
+admin:dev: 4:45:48 PM [vite] (client) [optimizer] bundling dependencies...
+site:dev: 4:45:48 PM [vite] (client) [optimizer] bundling dependencies...
+docs:dev: 4:45:48 PM [vite] (client) [optimizer] bundling dependencies...
+desktop:dev: 4:45:49 PM [vite] (client) [optimizer] bundling dependencies...
+api:dev:
+api:dev:  Info  Webpack is building your sources...
+api:dev:
+web:dev: Attention: Next.js now collects completely anonymous telemetry regarding usage.
+web:dev: This information is used to shape Next.js' roadmap and prioritize features.
+web:dev: You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+web:dev: https://nextjs.org/telemetry
+web:dev:
+web:dev:  ○ (pwa) PWA support is disabled.
+web:dev:
+api:dev: webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 34948 ms
+api:dev: ◇ injected env (0) from ../../.env // tip: ◈ encrypted .env [www.dotenvx.com]
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+api:dev: [33m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [33m   WARN[39m [38;5;3m[SanityStorageProvider] [39m[33mSanity client not configured. File uploads will use mock.[39m
+api:dev: [33m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [33m   WARN[39m [38;5;3m[MinioStorageProvider] [39m[33mMinio client not configured. Access key or secret key missing.[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[StorageService] [39m[32mStorage service initialized with Sanity provider[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCommonModule dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRealtimeModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTasksModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +3ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAndroidAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAblyModule dependencies initialized[39m[38;5;3m +2ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduledNotificationsModule dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCallsModule dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFriendsModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mWorkspacesModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSupportModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRedisModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDeviceAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAssetsModule dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mInvitationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mChannelsModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDmsModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIntegrationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThrottlerModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAdminModule dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mV10Module dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mV2Module dependencies initialized[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RealtimeGateway] [39m[32mRealtime Gateway Initialized[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[WebSocketsController] [39m[32mRealtimeGateway subscribed to the "publish" message[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[AuthModule] [39m[32mAuthModule initialized BetterAuth on '/api/auth'[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/api}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} route[39m[38;5;3m +3ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/config/realtime, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUsersController {/api/users}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/search, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/me, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/social-profile, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/block, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/block, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/me, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/me/device-tokens, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/me/device-tokens, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/me/device-tokens, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2WorkspacesController {/api/v2/workspaces/:slug/members}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/members, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/members, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/members/:userId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/members/:userId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2MessagesController {/api/v2/workspaces/:slug}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/channels, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/channels, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/channels/:channelId/icon, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/channels/:channelId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/channels/:channelId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/channels/:channelId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/messages, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/messages, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2SearchController {/api/v2/workspaces/:slug/search}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/search/members, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/search/messages, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2ApiTokensController {/api/v2/workspaces/:slug/api-tokens}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/api-tokens, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/api-tokens, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/api-tokens/:tokenId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/api-tokens/:tokenId/rotate, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2WebhooksController {/api/v2/workspaces/:slug/webhooks}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/webhooks, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/webhooks, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/webhooks/:webhookId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/webhooks/:webhookId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/webhooks/:webhookId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2ThreadsController {/api/v2/workspaces/:slug/threads}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/threads, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/threads/:threadId/messages, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/threads/context/:contextId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2MessageActionsController {/api/v2/workspaces/:slug/messages/:messageId/actions/:actionId}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/messages/:messageId/actions/:actionId, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2DepartmentsController {/api/v2/workspaces/:slug/departments}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/departments, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/departments, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/departments/:departmentId, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/departments/:departmentId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/departments/:departmentId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2TeamsController {/api/v2/workspaces/:slug/teams}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/teams, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/teams, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/teams/:teamId, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/teams/:teamId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/teams/:teamId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2AnnouncementsController {/api/v2/workspaces/:slug/announcements}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/announcements, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/announcements, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/announcements/:announcementId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/announcements/:announcementId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/workspaces/:slug/announcements/:announcementId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2OAuthController {/api/v2/oauth}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/oauth/token, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2ApplicationsController {/api/v2/applications}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications/:id, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications/:id, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications/:id/delete, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications/:id/reset-token, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/applications/:id/install, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV2ContactController {/api/v2/contact}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/contact, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mM2mController {/api/organizations/:orgSlug/m2m}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/organizations/:orgSlug/m2m, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/organizations/:orgSlug/m2m, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/organizations/:orgSlug/m2m/:id, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mProvisioningController {/api/v2/provisioning}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/v2/provisioning/workspaces, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrganizationsController {/api/organizations/:orgSlug}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/organizations/:orgSlug/workspaces, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/organizations/:orgSlug, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/organizations/:orgSlug, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntegrationsController {/api/integrations}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/plane/webhook, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/huly/webhook/:id, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/stats, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/webhooks, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/webhooks, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/webhooks/:webhookId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/webhooks/:webhookId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/webhooks/:webhookId/logs, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/api-keys, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/api-keys/:keyId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/integrations/api-keys/:keyId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWorkspaceIntegrationsController {/api/workspaces/:slug/integrations}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations/:integrationId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations/:integrationId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations/:integrationId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations/:integrationId/test, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations/webhooks, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/integrations/webhooks, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationsController {/api/notifications}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/mark-all-read, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/settings/workspace, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/settings/workspace, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/settings/channel, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/settings/channel, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/:notificationId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/:notificationId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAblyController {/api/ably}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/ably/token, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStorageController {/api/storage}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/storage/upload, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10UsersController {/api/bot/v10/users}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/users/:id, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/users/@me, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10GatewayController {/api/bot/v10/gateway}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/gateway/bot, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/gateway/auth, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10ChannelsController {/api/bot/v10/channels}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/channels/:id, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/channels/:id/messages, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/channels/:id/messages, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/channels/:id/messages/:messageId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/channels/:id/messages/:messageId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10GuildsController {/api/bot/v10/guilds}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/guilds/:guildId, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/guilds/:guildId/channels, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/guilds/:guildId/members, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/guilds/:guildId/roles, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/guilds/:guildId/members/:userId/roles/:roleId, PUT} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/guilds/:guildId/members/:userId/roles/:roleId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10ApplicationsController {/api/bot/v10/applications}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/applications/:id/commands, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/applications/:id/commands, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/applications/:id/guilds/:guildId/commands, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/applications/:id/guilds/:guildId/commands, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10InteractionsController {/api/bot/v10/interactions}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/interactions/:id/:token/callback, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mV10EnterpriseController {/api/bot/v10/enterprise}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bot/v10/enterprise/departments/:id/announcements, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInvitationsController {/api/invitations}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/invitations, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/invitations, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/invitations/:token, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/invitations/:token/accept, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCallsController {/api/calls}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls/:callId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls/:callId/invite, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls/:callId/participants, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls/scheduled, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls/scheduled, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/calls/soundboard, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mChannelsController {/api/channels}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages/:messageId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages/:messageId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages/read, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages/:messageId/reactions, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages/:messageId/reactions/:emoji, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/share, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/channels/:channelId/messages/:messageId/reply, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminController {/api/admin}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/stats, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/members, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/members/:userId/role, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assets, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assets, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assets, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assets, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/profile-assets, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/assets/stats, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/profile-assets, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/admin/upload, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDmsController {/api/dms}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages/:messageId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages/:messageId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages/read, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages/:messageId/reactions, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dms/:conversationId/messages/:messageId/reactions/:emoji, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFriendsController {/api/friends}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/friends, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/friends/requests, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/friends/requests, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/friends/requests/:requestId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/friends/requests/:requestId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWorkspacesController {/api/workspaces}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/discover, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/join, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMembersController {/api/workspaces/:slug/members}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/members, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/members/:memberId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/members/:memberId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mChannelsController {/api/workspaces/:slug/channels}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDepartmentsController {/api/workspaces/:slug/departments}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments/:departmentId, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments/:departmentId, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments/:departmentId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments/:departmentId/announcements, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/departments/:departmentId/announcements, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTeamsController {/api/workspaces/:slug/teams}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/teams, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/teams, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/teams/:teamId/members, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/teams/:teamId/members/:userId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMessagesController {/api/workspaces/:slug/channels/:channelId/messages}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages/:messageId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages/:messageId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages/read, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages/:messageId/reactions, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages/:messageId/reactions/:emoji, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/channels/:channelId/messages/:messageId/replies, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mEmojisController {/api/workspaces/:slug/emojis}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/emojis, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/emojis, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuditLogsController {/api/workspaces/:slug/audit-logs}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/audit-logs, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/audit-logs/export, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInviteLinksController {/api/workspaces/:slug/invite-links}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/invite-links, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/invite-links, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mApiTokensController {/api/workspaces/:slug/api-tokens}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/api-tokens, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/api-tokens, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/api-tokens/:tokenId, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWebhooksController {/api/workspaces/:slug/webhooks}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/webhooks, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/webhooks, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/webhooks/:webhookId, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/webhooks/:webhookId, DELETE} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCallsController {/api/workspaces/:slug/calls}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/calls/active, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSearchController {/api/workspaces/:slug/search}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/workspaces/:slug/search, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDeviceAuthController {/api/device-auth}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/device-auth/qr/generate, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/device-auth/qr/status/:sessionId, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/device-auth/qr/authorize, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAndroidAuthController {/api/android-auth}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/me, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/check-username, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/login, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/signup, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/social/google, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/social/github, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/android-auth/refresh, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mScheduledNotificationsController {/api/scheduled-notifications}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/scheduled-notifications, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/scheduled-notifications, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/scheduled-notifications/:id, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/scheduled-notifications/:id, DELETE} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAssetsController {/api/assets}:[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/assets/eligible, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSupportController {/api/support}:[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/tickets, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/tickets, GET} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/live-chat, POST} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/live-chat/:sessionId/end, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/tickets/:ticketId/status, PATCH} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/tickets/:ticketId/assign, PATCH} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/customers, POST} route[39m[38;5;3m +1ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/support/customers, GET} route[39m[38;5;3m +0ms[39m
+api:dev: [32m[Nest] 58239  - [39m07/07/2026, 4:46:31 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +150ms[39m
+api:dev:
+api:dev:   Skyrme Chat API
+api:dev:   - Local:        http://localhost:3000/api
+api:dev:   - Docs:         http://localhost:3000/api/docs
+api:dev:
+api:dev:  ✓ Server ready
+api:dev:
+api:dev: [95m[Nest] 58239  - [39m07/07/2026, 4:47:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:47:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:47:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16488:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16498:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:200790:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:227021:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.27_class-transformer@0.5.1_class-validator@0_c90d25bd98c2ab313c4b93fde45d6da5/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 58239  - [39m07/07/2026, 4:48:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:48:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:48:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16488:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16498:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:200790:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:227021:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.27_class-transformer@0.5.1_class-validator@0_c90d25bd98c2ab313c4b93fde45d6da5/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+web:dev: ○ Compiling proxy ...
+web:dev: ◇ injected env (0) from ../../.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+web:dev: ○ Compiling /login ...
+api:dev: [95m[Nest] 58239  - [39m07/07/2026, 4:49:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:49:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:49:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16488:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16498:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:200790:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:227021:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.27_class-transformer@0.5.1_class-validator@0_c90d25bd98c2ab313c4b93fde45d6da5/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 58239  - [39m07/07/2026, 4:50:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:50:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:50:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16488:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16498:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:200790:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:227021:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.27_class-transformer@0.5.1_class-validator@0_c90d25bd98c2ab313c4b93fde45d6da5/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 58239  - [39m07/07/2026, 4:51:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:51:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:51:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16488:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16498:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:200790:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:227021:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.27_class-transformer@0.5.1_class-validator@0_c90d25bd98c2ab313c4b93fde45d6da5/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
+api:dev: [95m[Nest] 58239  - [39m07/07/2026, 4:52:00 PM [95m  DEBUG[39m [38;5;3m[TasksService] [39m[95mRunning scheduled notifications, calls and queue task[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:52:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39m[31mError in TasksService cron job:[39m
+api:dev: [31m[Nest] 58239  - [39m07/07/2026, 4:52:00 PM [31m  ERROR[39m [38;5;3m[TasksService] [39mPrismaClientKnownRequestError:
+api:dev: Invalid `prisma.scheduledNotification.findMany()` invocation:
+api:dev:
+api:dev:
+api:dev:
+api:dev:     at zr.handleRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:8256[90m)[39m
+api:dev:     at zr.handleAndLogRequestError [90m(file:///app/apps/api/[39mdist/main.js:16488:7551[90m)[39m
+api:dev:     at zr.request [90m(file:///app/apps/api/[39mdist/main.js:16488:7258[90m)[39m
+api:dev: [90m    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)[39m
+api:dev:     at async a [90m(file:///app/apps/api/[39mdist/main.js:16498:6862[90m)[39m
+api:dev:     at async processScheduledNotifications [90m(file:///app/apps/api/[39mdist/main.js:200790:30[90m)[39m
+api:dev:     at async TasksService.handleCron [90m(file:///app/apps/api/[39mdist/main.js:227021:13[90m)[39m
+api:dev:     at async CronJob.<anonymous> (/app/node_modules/[4m.pnpm[24m/@nestjs+schedule@6.1.3_@nestjs+common@11.1.27_class-transformer@0.5.1_class-validator@0_c90d25bd98c2ab313c4b93fde45d6da5/node_modules/[4m@nestjs/schedule[24m/dist/schedule.explorer.js:124:17) {
+api:dev:   code: [32m'ECONNREFUSED'[39m,
+api:dev:   meta: {
+api:dev:     modelName: [32m'ScheduledNotification'[39m
+api:dev:   },
+api:dev:   clientVersion: [32m'7.8.0'[39m
+api:dev: }
