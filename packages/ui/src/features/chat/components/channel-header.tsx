@@ -14,7 +14,8 @@ export const ChannelHeader = memo(({
   memberCount,
   isPrivate,
   onEdit,
-  onToggleInfo
+  onToggleInfo,
+  onToggleSidebar
 }: {
   isWidget?: boolean;
   channelName: string;
@@ -23,6 +24,7 @@ export const ChannelHeader = memo(({
   isPrivate?: boolean;
   onEdit: () => void;
   onToggleInfo?: () => void;
+  onToggleSidebar?: () => void;
 }) => {
   if (isWidget) return null;
 
@@ -32,6 +34,16 @@ export const ChannelHeader = memo(({
     <div className="h-14 flex items-center justify-between px-4 border-b border-border bg-background/95 backdrop-blur-sm z-10 shrink-0">
       {/* Left: Channel identity */}
       <div className="flex items-center gap-2 min-w-0 flex-1">
+        {onToggleSidebar && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground rounded-lg hover:text-foreground hover:bg-muted"
+            onClick={onToggleSidebar}
+          >
+            <SidebarIcon className="h-4 w-4" />
+          </Button>
+        )}
         <div className={cn(
           'flex items-center justify-center h-7 w-7 rounded-lg shrink-0',
           isPrivate ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'

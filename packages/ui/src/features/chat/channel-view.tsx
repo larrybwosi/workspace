@@ -35,6 +35,7 @@ interface ChannelViewProps {
   contextId?: string;
   isWidget?: boolean;
   onToggleInfo?: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export function ChannelView({
@@ -44,6 +45,7 @@ export function ChannelView({
   contextId,
   isWidget,
   onToggleInfo,
+  onToggleSidebar,
 }: ChannelViewProps) {
   const { highlightedMessageId, queryClient } = useChannelViewParams();
   const { messagesData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useChannelMessages(channelId, workspaceSlug, initialThreadId, contextId, isWidget);
@@ -181,6 +183,7 @@ export function ChannelView({
           isPrivate={(channelData as any)?.isPrivate || (channelData as any)?.type === 'private'}
           onEdit={() => setEditDialogOpen(true)}
           onToggleInfo={onToggleInfo}
+          onToggleSidebar={onToggleSidebar}
         />
 
         {isDm && dmUserId && currentUser?.id && dmUserId !== currentUser.id && socialProfile && !socialProfile.isFriend && !isWidget && (

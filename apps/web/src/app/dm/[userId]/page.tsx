@@ -18,7 +18,7 @@ export default function DMPage() {
   const router = useRouter();
   const userId = params.userId as string;
 
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const [infoPanelOpen, setInfoPanelOpen] = React.useState(false);
 
   const { data: dmUser, isLoading } = useUser(userId);
@@ -66,9 +66,9 @@ export default function DMPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 lg:hidden shrink-0"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setSidebarOpen(prev => !prev)}
+              aria-label="Toggle navigation"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M3 6h18M3 18h18" />
@@ -156,6 +156,7 @@ export default function DMPage() {
             <ChannelView
               channelId={channelId}
               onToggleInfo={() => setInfoPanelOpen(v => !v)}
+              onToggleSidebar={() => setSidebarOpen(prev => !prev)}
             />
           </main>
 
