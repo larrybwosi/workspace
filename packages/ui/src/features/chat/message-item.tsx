@@ -31,6 +31,7 @@ import {
 } from '../../components/dropdown-menu';
 
 import { useUpdateMessage, useDeleteMessage, useTriggerAction } from '@repo/api-client';
+import * as React from 'react';
 import { useMemo, useState, memo, useCallback } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
 import { format } from 'date-fns';
@@ -500,7 +501,7 @@ export const MessageItem = memo(function MessageItem({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <MessageLayout
-          highlightRef={highlightRef}
+          ref={highlightRef}
           showAvatar={showAvatar}
           isMenuOpen={isMenuOpen}
           isMentioned={isMentioned}
@@ -557,27 +558,29 @@ export const MessageItem = memo(function MessageItem({
   );
 });
 
-const MessageLayout = memo(({
+const MessageLayout = memo(React.forwardRef<
+  HTMLDivElement,
+  {
+    children: React.ReactNode,
+    showAvatar: boolean,
+    isMenuOpen: boolean,
+    isMentioned: boolean,
+    isHighlighted: boolean,
+    onMouseEnter: () => void,
+    onMouseLeave: () => void
+  }
+>(({
   children,
-  highlightRef,
   showAvatar,
   isMenuOpen,
   isMentioned,
   isHighlighted,
   onMouseEnter,
-  onMouseLeave
-}: {
-  children: React.ReactNode,
-  highlightRef?: React.RefObject<HTMLDivElement | null>,
-  showAvatar: boolean,
-  isMenuOpen: boolean,
-  isMentioned: boolean,
-  isHighlighted: boolean,
-  onMouseEnter: () => void,
-  onMouseLeave: () => void
-}) => (
+  onMouseLeave,
+  ...props
+}, ref) => (
   <div
-    ref={highlightRef}
+    ref={ref}
     className={cn(
       'group relative flex items-start px-4 gap-3 w-full select-text',
       showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
@@ -588,10 +591,11 @@ const MessageLayout = memo(({
     )}
     onMouseEnter={onMouseEnter}
     onMouseLeave={onMouseLeave}
+    {...props}
   >
     {children}
   </div>
-));
+)));
 
 MessageLayout.displayName = 'MessageLayout';
 

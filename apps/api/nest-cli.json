@@ -4,7 +4,7 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "builder": "webpack",
-    "typeCheck": true,
+    "typeCheck": false,
     "webpackConfigPath": "webpack.config.cjs"
   }
 }

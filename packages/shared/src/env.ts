@@ -5,8 +5,8 @@ import { z } from 'zod';
  */
 export const baseEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3001'),
-  NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3000'),
+  NEXT_PUBLIC_APP_URL: z.url().default('http://localhost:3001'),
+  NEXT_PUBLIC_API_URL: z.url().default('http://localhost:3000'),
   NEXT_PUBLIC_SANITY_PROJECT_ID: z.string().optional(),
   NEXT_PUBLIC_SANITY_DATASET: z.string().default('production'),
   NEXT_PUBLIC_AGORA_APP_ID: z.string().optional(),
@@ -25,10 +25,10 @@ export const baseEnvSchema = z.object({
  */
 export const serverEnvSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().default(3000),
-  DATABASE_URL: z.string().url().optional(),
-  REDIS_URL: z.string().url().optional(),
+  DATABASE_URL: z.url().optional(),
+  REDIS_URL: z.url().optional(),
   BETTER_AUTH_SECRET: z.string().min(32).optional(),
-  BETTER_AUTH_URL: z.string().url().optional(),
+  BETTER_AUTH_URL: z.url().optional(),
   ABLY_API_KEY: z.string().optional(),
   REALTIME_PROVIDER: z.enum(['ably', 'socketio']).default('ably'),
   STORAGE_PROVIDER: z.enum(['sanity', 'minio']).default('sanity'),
@@ -40,11 +40,12 @@ export const serverEnvSchema = baseEnvSchema.extend({
   MINIO_SECRET_KEY: z.string().optional(),
   MINIO_BUCKET: z.string().default('uploads'),
   AGORA_APP_CERTIFICATE: z.string().optional(),
+  AGORA_APP_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   DODO_PAYMENTS_WEBHOOK_SECRET: z.string().optional(),
   EXPO_ACCESS_TOKEN: z.string().optional(),
-  DESKTOP_NOTIFICATION_ENDPOINT: z.string().url().default('http://localhost:3005'),
+  DESKTOP_NOTIFICATION_ENDPOINT: z.url().default('http://localhost:3005'),
   BOT_TOKEN_SECRET: z.string().default('change-me-to-a-random-secret'),
   WEBHOOK_SECRET: z.string().default('change-me-to-a-random-secret'),
   ALLOWED_ORIGINS: z.string().default('http://localhost:3001'),

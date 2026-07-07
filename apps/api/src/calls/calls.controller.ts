@@ -4,6 +4,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { CallsService } from './calls.service';
+import { StartCallDto, UpdateCallDto, ScheduleCallDto, SoundboardSoundDto } from './dto/call-operations.dto';
 
 @ApiTags('Calls')
 @ApiBearerAuth()
@@ -15,7 +16,7 @@ export class CallsController {
   @Post()
   @ApiOperation({ summary: 'Start a new call' })
   @ApiResponse({ status: 201, description: 'Call started' })
-  async startCall(@CurrentUser() user: User, @Body() body: any) {
+  async startCall(@CurrentUser() user: User, @Body() body: StartCallDto) {
     return this.callsService.startCall(user, body);
   }
 
@@ -23,7 +24,7 @@ export class CallsController {
   @ApiOperation({ summary: 'Update call state' })
   @ApiParam({ name: 'callId', description: 'The call ID' })
   @ApiResponse({ status: 200, description: 'Call updated' })
-  async updateCall(@CurrentUser() user: User, @Param('callId') callId: string, @Body() body: any) {
+  async updateCall(@CurrentUser() user: User, @Param('callId') callId: string, @Body() body: UpdateCallDto) {
     return this.callsService.updateCall(user, callId, body);
   }
 
@@ -54,14 +55,14 @@ export class CallsController {
   @Post('scheduled')
   @ApiOperation({ summary: 'Schedule a call' })
   @ApiResponse({ status: 201, description: 'Call scheduled' })
-  async scheduleCall(@CurrentUser() user: User, @Body() body: any) {
+  async scheduleCall(@CurrentUser() user: User, @Body() body: ScheduleCallDto) {
     return this.callsService.scheduleCall(user, body);
   }
 
   @Post('soundboard')
   @ApiOperation({ summary: 'Play a soundboard sound' })
   @ApiResponse({ status: 201, description: 'Sound played' })
-  async playSoundboardSound(@CurrentUser() user: User, @Body() body: any) {
+  async playSoundboardSound(@CurrentUser() user: User, @Body() body: SoundboardSoundDto) {
     return this.callsService.playSoundboardSound(user, body);
   }
 }

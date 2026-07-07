@@ -97,8 +97,12 @@ export function useStartCall() {
 export function useJoinCall() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { type: string; callId: string; workspaceSlug: string }) => {
-      const { data } = await apiClient.post('/calls', params);
+    mutationFn: async (params: { type: string; callId: string; workspaceSlug: string; uid?: number }) => {
+      const { data } = await apiClient.post('/calls', {
+        type: params.type,
+        callId: params.callId,
+        workspaceSlug: params.workspaceSlug,
+      });
 
       if (!data.token) {
         const { data: tokenData } = await apiClient.post('/agora/token', {
@@ -108,6 +112,21 @@ export function useJoinCall() {
         data.token = tokenData.token;
       }
 
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['active-calls', variables.workspaceSlug] });
+    },
+  });
+}
+
+export function useEndCall() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { callId: string; workspaceSlug: string }) => {
+      const { data } = await apiClient.patch(`/calls/${params.callId}`, {
+        action: 'endForAll',
+      });
       return data;
     },
     onSuccess: (_, variables) => {
