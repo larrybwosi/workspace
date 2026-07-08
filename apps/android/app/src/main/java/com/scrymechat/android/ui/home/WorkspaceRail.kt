@@ -42,7 +42,7 @@ fun WorkspaceRail(
         modifier = Modifier
             .width(72.dp)
             .fillMaxHeight()
-            .background(ScrymeDarkBackground),
+            .background(Color(0xFF1E1F22)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(12.dp))
@@ -172,4 +172,4 @@ fun WorkspaceIcon(
     }
 }
 
-val ScrymeDarkBackground = Color(0xFF000000)
+val ScrymeDarkBackground = Color(0xFF1E1F22)

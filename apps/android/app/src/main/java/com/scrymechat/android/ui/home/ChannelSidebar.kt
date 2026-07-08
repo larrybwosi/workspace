@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.scrymechat.android.ui.components.UserAvatar
 import com.scrymechat.android.data.local.entities.ChannelEntity
 import com.scrymechat.android.data.local.entities.DmConversationEntity
 import com.scrymechat.android.data.local.entities.UserEntity
@@ -48,10 +49,10 @@ import com.scrymechat.android.ui.theme.*
 object SidebarTokens {
     // Surfaces — restrained, low-contrast steps so elevation reads as
     // material rather than as a sudden color jump.
-    val SurfaceBase = Color(0xFF18191D)
-    val SurfaceRaised = Color(0xFF1F2024)
-    val SurfaceSelected = Color(0xFF262830)
-    val SurfaceFooter = Color(0xFF111216)
+    val SurfaceBase = Color(0xFF2B2D31)
+    val SurfaceRaised = Color(0xFF313338)
+    val SurfaceSelected = Color(0xFF35373C)
+    val SurfaceFooter = Color(0xFF232428)
 
     // Hairlines instead of flat block dividers — reads as a seam, not a wall.
     val Hairline = Color(0x14FFFFFF)
@@ -253,8 +254,8 @@ fun CategoryHeader(
         Text(
             text = name.uppercase(),
             color = SidebarTokens.TextTertiary,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
             letterSpacing = 0.6.sp,
             modifier = Modifier.weight(1f)
         )
@@ -355,7 +356,7 @@ fun SidebarItem(
             Text(
                 text = label,
                 color = contentColor,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -387,24 +388,12 @@ fun UserSection(
                 // Avatar with a subtle ring and a presence dot cut cleanly
                 // into the footer background (not a flat circle on top).
                 Box(modifier = Modifier.size(34.dp)) {
-                    if (currentUser?.avatar != null) {
-                        AsyncImage(
-                            model = currentUser.avatar,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape)
-                                .border(BorderStroke(1.dp, SidebarTokens.HairlineStrong), CircleShape)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape)
-                                .background(SidebarTokens.SurfaceRaised)
-                                .border(BorderStroke(1.dp, SidebarTokens.HairlineStrong), CircleShape)
-                        )
-                    }
+                    UserAvatar(
+                        name = currentUser?.name ?: "User",
+                        avatarUrl = currentUser?.avatar,
+                        size = 34.dp,
+                        borderColor = SidebarTokens.HairlineStrong
+                    )
                     Box(
                         modifier = Modifier
                             .size(13.dp)

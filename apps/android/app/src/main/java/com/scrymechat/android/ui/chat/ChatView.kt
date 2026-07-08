@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import com.scrymechat.android.ui.components.UserAvatar
 import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
@@ -84,8 +85,8 @@ fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     return if (isDark) {
         ChatPalette(
             isDark = true,
-            canvasBg = Color(0xFF0A0B10),
-            surface = Color(0xFF15171F),
+            canvasBg = Color(0xFF313338),
+            surface = Color(0xFF2B2D31),
             surfaceVariant = Color(0xFF0E0F16),
             glassSurface = Color.White.copy(alpha = 0.05f),
             glassBorder = Color.White.copy(alpha = 0.09f),
@@ -888,16 +889,12 @@ fun MessageItem(
             .padding(horizontal = 14.dp, vertical = if (isGroupHeader) 6.dp else 1.dp)
     ) {
         if (isGroupHeader) {
-            AsyncImage(
-                model = message.senderAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderId}",
-                contentDescription = null,
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, palette.glassBorder, CircleShape)
-                    .background(palette.surfaceVariant)
-                    .clickable { onAvatarClick(message.senderId) },
-                contentScale = ContentScale.Crop
+            UserAvatar(
+                name = message.senderName ?: "User",
+                avatarUrl = message.senderAvatar,
+                size = 38.dp,
+                modifier = Modifier.clickable { onAvatarClick(message.senderId) },
+                borderColor = palette.glassBorder
             )
         } else {
             // Discord-style timestamp placeholder for grouped messages
@@ -922,7 +919,7 @@ fun MessageItem(
                         text = message.senderName ?: "Unknown User",
                         color = palette.textPrimary,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.5.sp,
+                        fontSize = 16.sp,
                         modifier = Modifier.clickable { onAvatarClick(message.senderId) }
                     )
                     Spacer(modifier = Modifier.width(7.dp))
