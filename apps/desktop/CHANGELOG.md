@@ -1,5 +1,18 @@
 # desktop
 
+## 2.1.0-dev.2
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/api-client@0.1.0-dev.2
+  - @repo/types@0.1.0-dev.2
+  - @repo/ui@0.1.0-dev.2
+
 ## 2.1.0-dev.1
 
 ### Minor Changes
