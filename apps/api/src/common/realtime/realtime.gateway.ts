@@ -37,54 +37,57 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         headers: client.handshake.headers as any,
       });
 
-      if (!session) {
-        this.logger.log(`Unauthorized connection attempt: ${client.id}`);
-        client.disconnect();
-        return;
+      if (session) {
+        const userId = session.user.id;
+        (client as any).user = session.user;
+
+        // Join user-specific rooms
+        client.join(`user:${userId}`);
+        client.join(`notifications:${userId}`);
+
+        this.logger.log(`Client connected: ${client.id} (User: ${userId})`);
+      } else {
+        this.logger.log(`Unauthenticated client connected: ${client.id}`);
       }
-
-      const userId = session.user.id;
-      (client as any).user = session.user;
-
-      // Join user-specific rooms
-      client.join(`user:${userId}`);
-      client.join(`notifications:${userId}`);
-
-      this.logger.log(`Client connected: ${client.id} (User: ${userId})`);
 
       // Handle joining specific rooms (channels, workspaces, etc.)
       client.on('join-room', async (room: string) => {
         const user = (client as any).user;
-        if (!user) return;
 
         // Basic permission check
         let allowed = false;
 
-        if (room.startsWith('user:') || room.startsWith('notifications:')) {
-          allowed = room.endsWith(user.id);
-        } else if (room === 'global-presence') {
+        if (room.startsWith('qr-session:')) {
           allowed = true;
-        } else if (
-          room.startsWith('call-chat:') ||
-          room.startsWith('call:') ||
-          room.startsWith('channel:') ||
-          room.startsWith('thread:') ||
-          room.startsWith('dm:') ||
-          room.startsWith('workspace:') ||
-          room.startsWith('presence:')
-        ) {
-          // In a real app, we should check if the user belongs to the channel/workspace
-          allowed = true;
-        } else {
-          // For other rooms, we'll allow it for now but log it
-          allowed = true;
+        } else if (user) {
+          if (room.startsWith('user:') || room.startsWith('notifications:')) {
+            allowed = room.endsWith(user.id);
+          } else if (room === 'global-presence') {
+            allowed = true;
+          } else if (
+            room.startsWith('call-chat:') ||
+            room.startsWith('call:') ||
+            room.startsWith('channel:') ||
+            room.startsWith('thread:') ||
+            room.startsWith('dm:') ||
+            room.startsWith('workspace:') ||
+            room.startsWith('presence:')
+          ) {
+            // In a real app, we should check if the user belongs to the channel/workspace
+            allowed = true;
+          } else {
+            // For other rooms, we'll allow it for now but log it
+            allowed = true;
+          }
         }
 
         if (allowed) {
           client.join(room);
           this.logger.log(`Client ${client.id} joined room: ${room}`);
         } else {
-          this.logger.warn(`User ${user.id} attempted to join unauthorized room: ${room}`);
+          this.logger.warn(
+            `Client ${client.id} (User: ${user?.id || 'unauthenticated'}) attempted to join unauthorized room: ${room}`,
+          );
         }
       });
 
