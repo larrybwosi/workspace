@@ -15,8 +15,9 @@ sealed class Screen(val route: String) {
     object OtherUserProfile : Screen("user_profile/{userId}") {
         fun createRoute(userId: String) = "user_profile/$userId"
     }
-    object Channel : Screen("channel/{channelId}") {
-        fun createRoute(channelId: String) = "channel/$channelId"
+    object Channel : Screen("channel/{channelId}?slug={slug}") {
+        fun createRoute(channelId: String, slug: String? = null) =
+            if (slug != null) "channel/$channelId?slug=$slug" else "channel/$channelId"
     }
     object Profile : Screen("profile")
     object MyAccount : Screen("profile/account")

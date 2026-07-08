@@ -115,6 +115,15 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(selectedChannel = channel, selectedDm = null, isHomeSelected = false) }
     }
 
+    fun selectChannelById(channelId: String) {
+        viewModelScope.launch {
+            val channel = channelRepository.getChannel(channelId)
+            if (channel != null) {
+                selectChannel(channel)
+            }
+        }
+    }
+
     fun selectDm(dm: DmWithUser) {
         _uiState.update { it.copy(selectedDm = dm, selectedChannel = null, isHomeSelected = false) }
     }
