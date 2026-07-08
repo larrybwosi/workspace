@@ -96,6 +96,17 @@ fun ScrymeNavHost(
                 },
                 onUserProfileClick = { userId ->
                     navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                },
+                onWorkspaceClick = { slug ->
+                    navController.navigate(Screen.Home.createRoute(slug)) {
+                        popUpTo(Screen.Splash.route)
+                    }
+                },
+                onChannelClick = { channelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(channelId, slug))
+                },
+                onDmClick = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId))
                 }
             )
         }
@@ -108,44 +119,56 @@ fun ScrymeNavHost(
                     }
                 },
                 onDmClick = { userId ->
-                    navController.navigate(Screen.Chat.createRoute(userId))
+                    navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
                 }
             )
         }
         composable(Screen.Friends.route) {
             FriendsScreen(
                 onDmClick = { userId ->
-                    // Navigate to Chat with user (which should handle DM creation/selection)
-                    navController.navigate(Screen.Chat.createRoute(userId))
+                    navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
                 }
             )
         }
-        composable(Screen.Chat.route) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-            val chatViewModel: com.scrymechat.android.ui.chat.ChatViewModel = hiltViewModel()
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("isUserId") {
+                    type = androidx.navigation.NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: return@composable
+            val isUserId = backStackEntry.arguments?.getBoolean("isUserId") ?: false
 
-            LaunchedEffect(userId) {
-                chatViewModel.setDmByUser(userId)
-            }
-
-            val chatUiState by chatViewModel.uiState.collectAsState()
-
-            com.scrymechat.android.ui.chat.ChatView(
-                messages = chatUiState.messages,
-                onSendMessage = { content, replyToId, _ -> chatViewModel.sendMessage(content, replyToId, null, navController.context) },
-                onReply = { /* Done in ChatView state for now as it doesn't need to cross screens */ },
-                onForward = { /* TODO */ },
-                onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
-                onTyping = { /* TODO */ },
-                typingUsers = chatUiState.typingUsers,
-                pendingFiles = chatUiState.pendingFiles,
-                isSending = chatUiState.isSending,
-                onAttach = { uri -> chatViewModel.addPendingFile(uri, navController.context) },
-                onRemoveFile = { chatViewModel.removePendingFile(it) },
-                onAvatarClick = { id ->
-                    navController.navigate(Screen.OtherUserProfile.createRoute(id))
+            HomeScreen(
+                dmId = if (!isUserId) id else null,
+                dmUserId = if (isUserId) id else null,
+                onSettingsClick = {
+                    navController.navigate(Screen.Profile.route)
                 },
-                sessionManager = sessionManager
+                onFriendsClick = {
+                    navController.navigate(Screen.Friends.route)
+                },
+                onDiscoveryClick = {
+                    navController.navigate(Screen.Discovery.route)
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                },
+                onWorkspaceClick = { slug ->
+                    navController.navigate(Screen.Home.createRoute(slug)) {
+                        popUpTo(Screen.Splash.route)
+                    }
+                },
+                onChannelClick = { channelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(channelId, slug))
+                },
+                onDmClick = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId))
+                }
             )
         }
         composable(Screen.OtherUserProfile.route) { backStackEntry ->
@@ -189,6 +212,17 @@ fun ScrymeNavHost(
                 },
                 onUserProfileClick = { userId ->
                     navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                },
+                onWorkspaceClick = { slug ->
+                    navController.navigate(Screen.Home.createRoute(slug)) {
+                        popUpTo(Screen.Splash.route)
+                    }
+                },
+                onChannelClick = { newChannelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(newChannelId, slug))
+                },
+                onDmClick = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId))
                 }
             )
         }

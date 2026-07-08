@@ -91,7 +91,11 @@ export class FriendsService {
      */
     const receiver = await prisma.user.findFirst({
       where: {
-        OR: [{ email: receiverEmailOrUsername }, { username: receiverEmailOrUsername }],
+        OR: [
+          { id: receiverEmailOrUsername },
+          { email: receiverEmailOrUsername },
+          { username: receiverEmailOrUsername },
+        ],
       },
       select: {
         id: true,

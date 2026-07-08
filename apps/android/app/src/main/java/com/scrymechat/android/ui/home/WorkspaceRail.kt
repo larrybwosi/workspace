@@ -1,6 +1,7 @@
 package com.scrymechat.android.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -94,16 +95,12 @@ fun WorkspaceRail(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .background(
-                                        Brush.linearGradient(
-                                            listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
-                                        )
-                                    ),
+                                    .border(1.dp, SidebarTokens.Hairline, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = workspace.name.take(1).uppercase(),
-                                    color = Color.White,
+                                    color = SidebarTokens.TextPrimary,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -160,8 +157,13 @@ fun WorkspaceIcon(
         Surface(
             modifier = Modifier
                 .size(48.dp)
-                .clip(if (isSelected) RoundedCornerShape(16.dp) else CircleShape),
-            color = if (isSelected) ScrymeDarkAccent else ScrymeDarkSurfaceVariant
+                .clip(if (isSelected) RoundedCornerShape(16.dp) else CircleShape)
+                .border(
+                    width = 1.dp,
+                    color = if (isSelected) Color.White else SidebarTokens.Hairline,
+                    shape = if (isSelected) RoundedCornerShape(16.dp) else CircleShape
+                ),
+            color = Color.Transparent
         ) {
             Box(contentAlignment = Alignment.Center) {
                 content()
