@@ -40,10 +40,15 @@ fun HomeScreen(
     chatViewModel: ChatViewModel = hiltViewModel(),
     workspaceSlug: String? = null,
     channelId: String? = null,
+    dmId: String? = null,
+    dmUserId: String? = null,
     onSettingsClick: () -> Unit,
     onFriendsClick: () -> Unit = {},
     onDiscoveryClick: () -> Unit = {},
-    onUserProfileClick: (String) -> Unit = {}
+    onUserProfileClick: (String) -> Unit = {},
+    onWorkspaceClick: (String?) -> Unit = {},
+    onChannelClick: (String, String?) -> Unit = { _, _ -> },
+    onDmClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
@@ -54,14 +59,23 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    LaunchedEffect(workspaceSlug, channelId) {
-        workspaceSlug?.let { slug ->
-            viewModel.selectWorkspaceBySlug(slug)
-            chatViewModel.setWorkspaceSlug(slug)
-        }
-        channelId?.let {
-            viewModel.selectChannelById(it)
-            chatViewModel.setChannel(it)
+    LaunchedEffect(workspaceSlug, channelId, dmId, dmUserId) {
+        if (dmId != null) {
+            viewModel.selectDmById(dmId)
+            chatViewModel.setDm(dmId)
+        } else if (dmUserId != null) {
+            viewModel.selectDmByUserId(dmUserId)
+            chatViewModel.setDmByUser(dmUserId)
+        } else if (channelId != null) {
+            workspaceSlug?.let { viewModel.selectWorkspaceBySlug(it) }
+            viewModel.selectChannelById(channelId)
+            workspaceSlug?.let { chatViewModel.setWorkspaceSlug(it) }
+            chatViewModel.setChannel(channelId)
+        } else if (workspaceSlug != null) {
+            viewModel.selectWorkspaceBySlug(workspaceSlug)
+            chatViewModel.setWorkspaceSlug(workspaceSlug)
+        } else {
+            viewModel.selectHome()
         }
     }
 
@@ -139,8 +153,8 @@ fun HomeScreen(
                             workspaces = uiState.workspaces,
                             selectedWorkspace = uiState.selectedWorkspace,
                             isHomeSelected = uiState.isHomeSelected,
-                            onWorkspaceClick = { viewModel.selectWorkspace(it) },
-                            onHomeClick = { viewModel.selectHome() },
+                            onWorkspaceClick = { onWorkspaceClick(it.slug) },
+                            onHomeClick = { onWorkspaceClick(null) },
                             onCreateWorkspaceClick = { onDiscoveryClick() }
                         )
 
@@ -153,16 +167,11 @@ fun HomeScreen(
                             expandedCategories = uiState.expandedCategories,
                             dms = uiState.dms,
                             onChannelClick = {
-                                viewModel.selectChannel(it)
-                                uiState.selectedWorkspace?.slug?.let { slug ->
-                                    chatViewModel.setWorkspaceSlug(slug)
-                                }
-                                chatViewModel.setChannel(it.id)
+                                onChannelClick(it.id, uiState.selectedWorkspace?.slug)
                                 scope.launch { drawerState.close() }
                             },
                             onDmClick = {
-                                viewModel.selectDm(it)
-                                chatViewModel.setDm(it.dm.id)
+                                onDmClick(it.dm.id)
                                 scope.launch { drawerState.close() }
                             },
                             onCategoryToggle = { viewModel.toggleCategory(it) },
@@ -197,6 +206,7 @@ fun HomeScreen(
                         chatViewModel.setChannel(channel.id)
                     }
                 },
+                isDm = uiState.selectedDm != null,
                 onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onAction = { message, action, formState -> chatViewModel.handleMessageAction(context, message, action, formState) },
                 onUpdateForm = { messageId, fieldId, value -> chatViewModel.updateFormState(messageId, fieldId, value) },
@@ -234,6 +244,7 @@ fun MainContent(
     onOpenThread: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit = {},
     onForward: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
     onBack: () -> Unit = {},
+    isDm: Boolean = false,
     onDownload: (com.scrymechat.android.data.remote.AttachmentDto) -> Unit = {},
     onAction: (com.scrymechat.android.data.local.entities.MessageEntity, com.scrymechat.android.data.remote.MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
@@ -346,6 +357,7 @@ fun MainContent(
                         onBack = onBack,
                         isThread = chatUiState.isThread,
                         threadTitle = chatUiState.threadRootMessage?.let { "Thread with ${it.senderName}" },
+                        isDm = isDm,
                         onDownload = onDownload,
                         onAction = onAction,
                         onUpdateForm = onUpdateForm,

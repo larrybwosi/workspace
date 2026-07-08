@@ -51,6 +51,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun selectDmByUserId(userId: String) {
+        viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().firstOrNull()?.find { it.dm.otherUserId == userId }?.let {
+                selectDm(it)
+            }
+        }
+    }
+
     fun loadWorkspaces() {
         viewModelScope.launch {
             workspaceRepository.getWorkspaces().collect { resource ->
@@ -126,6 +134,14 @@ class HomeViewModel @Inject constructor(
 
     fun selectDm(dm: DmWithUser) {
         _uiState.update { it.copy(selectedDm = dm, selectedChannel = null, isHomeSelected = false) }
+    }
+
+    fun selectDmById(dmId: String) {
+        viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().firstOrNull()?.find { it.dm.id == dmId }?.let {
+                selectDm(it)
+            }
+        }
     }
 
     fun selectHome() {
