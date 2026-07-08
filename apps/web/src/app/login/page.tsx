@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { signIn, authClient } from '@/lib/auth/auth-client';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
+import { QRLogin } from '@/components/auth/qr-login';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showQR, setShowQR] = useState(false);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,8 +132,40 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Email Login Form */}
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+            {showQR ? (
+              <div className="space-y-4">
+                <QRLogin inviteToken={inviteToken} />
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowQR(false)}
+                  className="w-full text-muted-foreground hover:text-foreground"
+                >
+                  Back to email login
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowQR(true)}
+                  disabled={isLoading}
+                  className="w-full h-11 border-dashed border-2 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                >
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Log in with QR Code
+                </Button>
+
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="opacity-50" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground/60">Or email</span>
+                  </div>
+                </div>
+
+                {/* Email Login Form */}
+                <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -171,11 +205,13 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign in
-              </Button>
-            </form>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign in
+                  </Button>
+                </form>
+              </>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
