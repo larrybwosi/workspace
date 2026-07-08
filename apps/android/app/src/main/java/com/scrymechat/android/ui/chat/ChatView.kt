@@ -145,7 +145,7 @@ private val ShapeInputBar = RoundedCornerShape(22.dp)
 
 // ──────────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChatView(
     chatTitle: String = "",
