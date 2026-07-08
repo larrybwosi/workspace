@@ -51,6 +51,10 @@ class ChannelRepository @Inject constructor(
         }
     }
 
+    suspend fun getChannel(channelId: String): ChannelEntity? {
+        return dao.getChannelById(channelId)
+    }
+
     suspend fun updateChannel(slug: String, channelId: String, request: UpdateChannelRequest): Resource<ChannelEntity> {
         return try {
             val response = api.updateChannel(slug, channelId, request)

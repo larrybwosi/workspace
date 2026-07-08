@@ -1,17 +1,6 @@
-# docs
+# @repo/shared
 
-## 2.1.0-dev.5
-
-### Minor Changes
-
-- Automatic minor release for branch dev
-
-### Patch Changes
-
-- Updated dependencies
-  - @repo/ui@0.1.0-dev.5
-
-## 2.1.0-dev.4
+## 0.1.0-dev.5
 
 ### Minor Changes
 
@@ -20,20 +9,9 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @repo/ui@0.1.0-dev.4
+  - @repo/database@0.1.0-dev.5
 
-## 2.1.0-dev.3
-
-### Minor Changes
-
-- Automatic minor release for branch dev
-
-### Patch Changes
-
-- Updated dependencies
-  - @repo/ui@0.1.0-dev.3
-
-## 2.1.0-dev.2
+## 0.1.0-dev.4
 
 ### Minor Changes
 
@@ -42,9 +20,9 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @repo/ui@0.1.0-dev.2
+  - @repo/database@0.1.0-dev.4
 
-## 2.1.0-dev.1
+## 0.1.0-dev.3
 
 ### Minor Changes
 
@@ -53,28 +31,37 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @repo/ui@0.1.0-dev.1
+  - @repo/database@0.1.0-dev.3
 
-## 2.1.0-dev.0
+## 0.1.0-dev.2
 
 ### Minor Changes
 
 - Automatic minor release for branch dev
-- e4a49fd: nothing
 
 ### Patch Changes
 
 - Updated dependencies
-  - @repo/ui@0.1.0-dev.0
+  - @repo/database@0.1.0-dev.2
 
-## 2.0.0
+## 0.1.0-dev.1
 
-### Major Changes
+### Minor Changes
 
-- 38f19a9: First stable
+- Automatic minor release for branch dev
 
-## 1.0.0
+### Patch Changes
 
-### Major Changes
+- Updated dependencies
+  - @repo/database@0.1.0-dev.1
 
-- 2336f76: Update
+## 0.1.0-dev.0
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/database@0.1.0-dev.0

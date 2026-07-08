@@ -1,50 +1,37 @@
-# android
+# @repo/types
 
-## 2.1.0-dev.5
-
-### Minor Changes
-
-- Automatic minor release for branch dev
-
-## 2.1.0-dev.4
+## 0.1.0-dev.5
 
 ### Minor Changes
 
 - Automatic minor release for branch dev
 
-## 2.1.0-dev.3
+## 0.1.0-dev.4
 
 ### Minor Changes
 
 - Automatic minor release for branch dev
 
-## 2.1.0-dev.2
+## 0.1.0-dev.3
 
 ### Minor Changes
 
 - Automatic minor release for branch dev
 
-## 2.1.0-dev.1
+## 0.1.0-dev.2
 
 ### Minor Changes
 
 - Automatic minor release for branch dev
 
-## 2.1.0-dev.0
+## 0.1.0-dev.1
 
 ### Minor Changes
 
 - Automatic minor release for branch dev
-- e4a49fd: nothing
 
-## 2.0.0
+## 0.1.0-dev.0
 
-### Major Changes
+### Minor Changes
 
-- 38f19a9: First stable
-
-## 1.0.0
-
-### Major Changes
-
-- 2336f76: Update
+- Automatic minor release for branch dev

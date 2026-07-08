@@ -24,6 +24,31 @@ export class AndroidAuthController {
     };
   }
 
+  @Post('change-password')
+  async changePassword(@Session() session: UserSession, @Body() body: any) {
+    const { newPassword, currentPassword } = body;
+    if (!newPassword || newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters long');
+    }
+
+    try {
+      // @ts-ignore - Better Auth types can be tricky in some environments
+      await auth.api.changePassword({
+        body: {
+          newPassword,
+          currentPassword,
+          revokeOtherSessions: true,
+        },
+        headers: {
+          authorization: `Bearer ${session.session.token}`,
+        },
+      });
+      return { success: true };
+    } catch (error: any) {
+      this.handleAuthError(error, 'Failed to change password');
+    }
+  }
+
   @Get('check-username')
   @AllowAnonymous()
   async checkUsername(@Query('username') username: string) {

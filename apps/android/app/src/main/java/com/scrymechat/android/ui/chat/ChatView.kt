@@ -40,9 +40,14 @@ import coil.compose.AsyncImage
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.ui.components.*
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import java.time.Duration
+import java.time.Instant
 import kotlin.math.roundToInt
 
 // ─── Theme-aware palette ─────────────────────────────────────────────────────
@@ -145,7 +150,7 @@ private val ShapeInputBar = RoundedCornerShape(22.dp)
 
 // ──────────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChatView(
     chatTitle: String = "",
@@ -164,13 +169,16 @@ fun ChatView(
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
-    pendingAttachments: List<CreateAttachmentRequest> = emptyList(),
+    pendingFiles: List<PendingFile> = emptyList(),
+    isSending: Boolean = false,
     onAttach: (Uri) -> Unit = {},
-    onRemoveAttachment: (CreateAttachmentRequest) -> Unit = {},
+    onRemoveFile: (PendingFile) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
+    sessionManager: SessionManager? = null,
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
+    val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf(com.scrymechat.android.BuildConfig.API_URL)).map { it ?: com.scrymechat.android.BuildConfig.API_URL }.collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
     var textState by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
@@ -218,9 +226,22 @@ fun ChatView(
                     reverseLayout = true,
                     contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
                 ) {
-                    items(messages, key = { it.id }) { message ->
+                    items(
+                        count = messages.size,
+                        key = { index -> messages[index].id }
+                    ) { index ->
+                        val message = messages[index]
+                        val prevMessage = if (index + 1 < messages.size) messages[index + 1] else null
+
+                        // Check if this message should be grouped with the previous one (which is below it in reverse layout)
+                        val isGroupHeader = prevMessage == null ||
+                                           prevMessage.senderId != message.senderId ||
+                                           !isWithinGroupingTimeframe(prevMessage.createdAt, message.createdAt) ||
+                                           message.replyToSenderName != null
+
                         SwipeableMessageItem(
                             message = message,
+                            isGroupHeader = isGroupHeader,
                             palette = palette,
                             onReply = {
                                 replyingTo = it
@@ -239,7 +260,8 @@ fun ChatView(
                                 fullScreenImageMimeType = attachment.type
                             },
                             onAddReaction = { reactionPickerMessage = it },
-                            onAvatarClick = onAvatarClick
+                            onAvatarClick = onAvatarClick,
+                            apiUrl = apiUrl
                         )
                     }
                 }
@@ -286,7 +308,7 @@ fun ChatView(
                 .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
             AnimatedVisibility(
-                visible = pendingAttachments.isNotEmpty(),
+                visible = pendingFiles.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -297,41 +319,59 @@ fun ChatView(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    pendingAttachments.forEach { attachment ->
+                    pendingFiles.forEach { pending ->
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(12.dp),
                             color = palette.attachmentChipBg,
                             border = BorderStroke(1.dp, palette.bubbleBorder)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (attachment.type.startsWith("image/")) Icons.Default.Image else Icons.Default.FilePresent,
-                                    contentDescription = null,
-                                    tint = palette.accent,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = attachment.name,
-                                    color = palette.textPrimary,
-                                    fontSize = 12.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.widthIn(max = 100.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                IconButton(
-                                    onClick = { onRemoveAttachment(attachment) },
-                                    modifier = Modifier.size(18.dp)
+                            Box(modifier = Modifier.width(100.dp).height(100.dp)) {
+                                if (pending.type.startsWith("image/")) {
+                                    AsyncImage(
+                                        model = pending.uri,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.FilePresent,
+                                            contentDescription = null,
+                                            tint = palette.accent,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = pending.name,
+                                            color = palette.textPrimary,
+                                            fontSize = 10.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+
+                                // Scrim for the remove button
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.4f))
+                                        .clickable { onRemoveFile(pending) },
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         Icons.Default.Close,
                                         contentDescription = "Remove",
-                                        tint = palette.textTertiary,
-                                        modifier = Modifier.size(12.dp)
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -426,7 +466,7 @@ fun ChatView(
                 )
 
                 AnimatedVisibility(
-                    visible = textState.isNotBlank() || pendingAttachments.isNotEmpty(),
+                    visible = textState.isNotBlank() || pendingFiles.isNotEmpty() || isSending,
                     enter = scaleIn() + fadeIn(),
                     exit = scaleOut() + fadeOut()
                 ) {
@@ -436,19 +476,27 @@ fun ChatView(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(Brush.linearGradient(palette.accentGradient))
-                            .clickable {
-                                onSendMessage(textState, replyingTo?.id, pendingAttachments)
+                            .clickable(enabled = !isSending) {
+                                onSendMessage(textState, replyingTo?.id, null)
                                 textState = ""
                                 replyingTo = null
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.Send,
-                            contentDescription = "Send",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        if (isSending) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.Send,
+                                contentDescription = "Send",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -601,6 +649,7 @@ private fun TypingDots(color: Color) {
 @Composable
 fun SwipeableMessageItem(
     message: MessageEntity,
+    isGroupHeader: Boolean = true,
     palette: ChatPalette,
     onReply: (MessageEntity) -> Unit,
     onOpenThread: (MessageEntity) -> Unit = {},
@@ -612,7 +661,8 @@ fun SwipeableMessageItem(
     formState: Map<String, Any> = emptyMap(),
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {},
-    onAvatarClick: (String) -> Unit = {}
+    onAvatarClick: (String) -> Unit = {},
+    apiUrl: String = "http://localhost:3000"
 ) {
     // Swipe-to-action. Kept lightweight (drag offset + threshold) per the
     // original approach, but with spring-back animation and a clearer,
@@ -675,6 +725,7 @@ fun SwipeableMessageItem(
             Box {
                 MessageItem(
                     message = message,
+                    isGroupHeader = isGroupHeader,
                     palette = palette,
                     onDownload = onDownload,
                     onAction = onAction,
@@ -683,7 +734,8 @@ fun SwipeableMessageItem(
                     isLoading = isLoading,
                     onImageClick = onImageClick,
                     onOpenThread = { onOpenThread(message) },
-                    onAvatarClick = onAvatarClick
+                    onAvatarClick = onAvatarClick,
+                    apiUrl = apiUrl
                 )
 
                 DropdownMenu(
@@ -766,6 +818,7 @@ private fun SwipeActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVecto
 @Composable
 fun MessageItem(
     message: MessageEntity,
+    isGroupHeader: Boolean = true,
     palette: ChatPalette,
     onDownload: (AttachmentDto) -> Unit = {},
     onOpenThread: () -> Unit = {},
@@ -774,73 +827,84 @@ fun MessageItem(
     formState: Map<String, Any> = emptyMap(),
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {},
-    onAvatarClick: (String) -> Unit = {}
+    onAvatarClick: (String) -> Unit = {},
+    apiUrl: String = "http://localhost:3000"
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 6.dp)
+            .padding(horizontal = 14.dp, vertical = if (isGroupHeader) 6.dp else 1.dp)
     ) {
-        AsyncImage(
-            model = message.senderAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderId}",
-            contentDescription = null,
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .border(1.dp, palette.glassBorder, CircleShape)
-                .background(palette.surfaceVariant)
-                .clickable { onAvatarClick(message.senderId) },
-            contentScale = ContentScale.Crop
-        )
+        if (isGroupHeader) {
+            AsyncImage(
+                model = message.senderAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderId}",
+                contentDescription = null,
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, palette.glassBorder, CircleShape)
+                    .background(palette.surfaceVariant)
+                    .clickable { onAvatarClick(message.senderId) },
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            // Placeholder for compact mode to align with headers
+            Box(modifier = Modifier.size(38.dp)) {
+                // Show a tiny timestamp on hover/selected if we wanted to be really Discord-like,
+                // but for now just keep the space empty to align text.
+            }
+        }
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = message.senderName ?: "Unknown User",
-                    color = palette.textPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.5.sp,
-                    modifier = Modifier.clickable { onAvatarClick(message.senderId) }
-                )
-                Spacer(modifier = Modifier.width(7.dp))
-                Text(
-                    text = formatMessageTimestamp(message.createdAt),
-                    color = palette.textTertiary,
-                    fontSize = 11.5.sp
-                )
-                if (message.isPinned) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        Icons.Default.PushPin,
-                        contentDescription = "Pinned",
-                        tint = palette.accent,
-                        modifier = Modifier.size(12.dp)
-                    )
-                }
-            }
-
-            if (message.replyToSenderName != null) {
-                Spacer(modifier = Modifier.height(3.dp))
+            if (isGroupHeader) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .width(2.dp)
-                            .height(13.dp)
-                            .background(palette.replyStripAccent, RoundedCornerShape(1.dp))
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Replying to ${message.replyToSenderName}",
-                        color = palette.replyStripAccent,
-                        fontSize = 12.sp,
-                        fontStyle = FontStyle.Italic
+                        text = message.senderName ?: "Unknown User",
+                        color = palette.textPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.5.sp,
+                        modifier = Modifier.clickable { onAvatarClick(message.senderId) }
                     )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    Text(
+                        text = formatMessageTimestamp(message.createdAt),
+                        color = palette.textTertiary,
+                        fontSize = 11.5.sp
+                    )
+                    if (message.isPinned) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            Icons.Default.PushPin,
+                            contentDescription = "Pinned",
+                            tint = palette.accent,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(4.dp))
+                if (message.replyToSenderName != null) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(13.dp)
+                                .background(palette.replyStripAccent, RoundedCornerShape(1.dp))
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Replying to ${message.replyToSenderName}",
+                            color = palette.replyStripAccent,
+                            fontSize = 12.sp,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+            }
 
             // Render message content based on type — wrapped in a subtle
             // bubble surface for richer, more "designed" message cards,
@@ -943,6 +1007,17 @@ fun MessageItem(
                         }
                     }
                 } else {
+                    val extension = attachment.name.substringAfterLast(".", "").lowercase()
+                    val iconName = when (extension) {
+                        "pdf" -> "pdf.svg"
+                        "psd" -> "psd.svg"
+                        "doc", "docx" -> "word.svg"
+                        "xls", "xlsx" -> "xls.svg"
+                        "xd" -> "xd.svg"
+                        else -> null
+                    }
+                    val iconUrl = if (iconName != null) "$apiUrl/$iconName" else null
+
                     Row(
                         modifier = Modifier
                             .padding(top = 8.dp)
@@ -960,7 +1035,15 @@ fun MessageItem(
                                 .background(palette.accentSoft),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.FilePresent, contentDescription = null, tint = palette.accent, modifier = Modifier.size(15.dp))
+                            if (iconUrl != null) {
+                                AsyncImage(
+                                    model = iconUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Icon(Icons.Default.FilePresent, contentDescription = null, tint = palette.accent, modifier = Modifier.size(15.dp))
+                            }
                         }
                         Spacer(modifier = Modifier.width(9.dp))
                         Text(
@@ -1022,6 +1105,16 @@ fun MessageItem(
                 }
             }
         }
+    }
+}
+
+private fun isWithinGroupingTimeframe(time1: String, time2: String): Boolean {
+    return try {
+        val instant1 = Instant.parse(time1)
+        val instant2 = Instant.parse(time2)
+        Duration.between(instant1, instant2).abs().toMinutes() < 5
+    } catch (e: Exception) {
+        false
     }
 }
 

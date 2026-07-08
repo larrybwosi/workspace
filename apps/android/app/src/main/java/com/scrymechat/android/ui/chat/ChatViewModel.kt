@@ -161,73 +161,86 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun uploadFile(uri: Uri, context: Context) {
-        viewModelScope.launch {
-            try {
-                var fileName = "file"
-                var fileSize = 0L
-                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-                    if (cursor.moveToFirst()) {
-                        fileName = cursor.getString(nameIndex)
-                        fileSize = cursor.getLong(sizeIndex)
-                    }
-                }
+    fun addPendingFile(uri: Uri, context: Context) {
+        var fileName = "file"
+        var fileSize = 0L
+        var mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
 
-                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
-                val tempFile = java.io.File.createTempFile("upload", null, context.cacheDir)
-                tempFile.outputStream().use { outputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-
-                val result = storageRepository.uploadFile(tempFile)
-                if (result.isSuccess) {
-                    val uploadResponse = result.getOrThrow()
-                    val attachment = CreateAttachmentRequest(
-                        name = uploadResponse.name,
-                        type = uploadResponse.type,
-                        url = uploadResponse.url,
-                        size = uploadResponse.size.toInt()
-                    )
-                    _uiState.update { it.copy(pendingAttachments = it.pendingAttachments + attachment) }
-                } else {
-                    _uiState.update { it.copy(error = result.exceptionOrNull()?.message ?: "Upload failed") }
-                }
-                tempFile.delete()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "An error occurred during upload") }
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (cursor.moveToFirst()) {
+                if (nameIndex != -1) fileName = cursor.getString(nameIndex)
+                if (sizeIndex != -1) fileSize = cursor.getLong(sizeIndex)
             }
         }
+
+        val pendingFile = PendingFile(uri, fileName, mimeType, fileSize)
+        _uiState.update { it.copy(pendingFiles = it.pendingFiles + pendingFile) }
     }
 
-    fun removePendingAttachment(attachment: CreateAttachmentRequest) {
-        _uiState.update { it.copy(pendingAttachments = it.pendingAttachments - attachment) }
+    fun removePendingFile(pendingFile: PendingFile) {
+        _uiState.update { it.copy(pendingFiles = it.pendingFiles - pendingFile) }
     }
 
     fun onBack() {
         currentChannelId?.let { setChannel(it) }
     }
 
-    fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null, attachments: List<CreateAttachmentRequest>? = null) {
+    fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null, context: Context) {
         val channelId = targetChannelId ?: currentChannelId
         val dmId = currentDmId
         val threadId = currentThreadId
         val slug = currentWorkspaceSlug
-        val finalAttachments = attachments ?: _uiState.value.pendingAttachments
+        val pendingFiles = _uiState.value.pendingFiles
 
         viewModelScope.launch {
-            val result = when {
-                threadId != null && channelId != null && slug != null -> chatRepository.sendThreadMessage(slug, channelId, threadId, content, finalAttachments)
-                channelId != null && slug != null -> chatRepository.sendChannelMessage(slug, channelId, content, replyToId, finalAttachments)
-                dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, finalAttachments)
-                else -> return@launch
-            }
+            _uiState.update { it.copy(isSending = true, error = null) }
+            try {
+                val uploadedAttachments = mutableListOf<CreateAttachmentRequest>()
 
-            if (result is Resource.Error) {
-                _uiState.update { it.copy(error = result.message) }
-            } else {
-                _uiState.update { it.copy(pendingAttachments = emptyList()) }
+                // Sequential upload of pending files
+                for (pending in pendingFiles) {
+                    val inputStream = context.contentResolver.openInputStream(pending.uri) ?: continue
+                    val tempFile = java.io.File.createTempFile("upload", null, context.cacheDir)
+                    tempFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+
+                    val result = storageRepository.uploadFile(tempFile)
+                    if (result.isSuccess) {
+                        val uploadResponse = result.getOrThrow()
+                        uploadedAttachments.add(CreateAttachmentRequest(
+                            name = uploadResponse.name,
+                            type = uploadResponse.type,
+                            url = uploadResponse.url,
+                            size = uploadResponse.size.toInt()
+                        ))
+                    } else {
+                        _uiState.update { it.copy(error = "Failed to upload ${pending.name}", isSending = false) }
+                        tempFile.delete()
+                        return@launch
+                    }
+                    tempFile.delete()
+                }
+
+                val result = when {
+                    threadId != null && channelId != null && slug != null -> chatRepository.sendThreadMessage(slug, channelId, threadId, content, uploadedAttachments)
+                    channelId != null && slug != null -> chatRepository.sendChannelMessage(slug, channelId, content, replyToId, uploadedAttachments)
+                    dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, uploadedAttachments)
+                    else -> {
+                        _uiState.update { it.copy(isSending = false) }
+                        return@launch
+                    }
+                }
+
+                if (result is Resource.Error) {
+                    _uiState.update { it.copy(error = result.message, isSending = false) }
+                } else {
+                    _uiState.update { it.copy(pendingFiles = emptyList(), isSending = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message ?: "An error occurred", isSending = false) }
             }
         }
     }
@@ -349,12 +362,20 @@ class ChatViewModel @Inject constructor(
 data class ChatUiState(
     val messages: List<MessageEntity> = emptyList(),
     val isLoading: Boolean = false,
+    val isSending: Boolean = false,
     val error: String? = null,
     val typingUsers: List<String> = emptyList(),
     val activeModal: ModalState? = null,
     val isThread: Boolean = false,
     val threadRootMessage: MessageEntity? = null,
-    val pendingAttachments: List<CreateAttachmentRequest> = emptyList()
+    val pendingFiles: List<PendingFile> = emptyList()
+)
+
+data class PendingFile(
+    val uri: Uri,
+    val name: String,
+    val type: String,
+    val size: Long
 )
 
 data class ModalState(

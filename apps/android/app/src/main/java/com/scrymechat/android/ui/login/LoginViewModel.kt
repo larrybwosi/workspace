@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 open class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val sessionManager: SessionManager,
+    val sessionManager: SessionManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : ViewModel() {
 

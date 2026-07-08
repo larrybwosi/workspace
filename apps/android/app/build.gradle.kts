@@ -103,6 +103,7 @@ dependencies {
 
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-svg:2.5.0")
 
     // Lifecycle Service
     implementation("androidx.lifecycle:lifecycle-service:2.7.0")

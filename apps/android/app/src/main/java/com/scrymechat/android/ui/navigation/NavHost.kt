@@ -21,10 +21,26 @@ import com.scrymechat.android.ui.discovery.DiscoveryScreen
 @Composable
 fun ScrymeNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route,
-    themeViewModel: ThemeViewModel = hiltViewModel()
+    startDestination: String = Screen.Splash.route,
+    themeViewModel: ThemeViewModel = hiltViewModel(),
+    sessionManager: com.scrymechat.android.data.local.SessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Screen.Splash.route) {
+            com.scrymechat.android.ui.welcome.SplashScreen(
+                sessionManager = sessionManager,
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.createRoute(null)) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToWelcome = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Welcome.route) {
             val apiUrl by themeViewModel.apiUrl.collectAsState()
             WelcomeScreen(
@@ -116,18 +132,20 @@ fun ScrymeNavHost(
 
             com.scrymechat.android.ui.chat.ChatView(
                 messages = chatUiState.messages,
-                onSendMessage = { content, replyToId, attachments -> chatViewModel.sendMessage(content, replyToId, null, attachments) },
-                onReply = { /* TODO */ },
+                onSendMessage = { content, replyToId, _ -> chatViewModel.sendMessage(content, replyToId, null, navController.context) },
+                onReply = { /* Done in ChatView state for now as it doesn't need to cross screens */ },
                 onForward = { /* TODO */ },
                 onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onTyping = { /* TODO */ },
                 typingUsers = chatUiState.typingUsers,
-                pendingAttachments = chatUiState.pendingAttachments,
-                onAttach = { uri -> chatViewModel.uploadFile(uri, navController.context) },
-                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) },
+                pendingFiles = chatUiState.pendingFiles,
+                isSending = chatUiState.isSending,
+                onAttach = { uri -> chatViewModel.addPendingFile(uri, navController.context) },
+                onRemoveFile = { chatViewModel.removePendingFile(it) },
                 onAvatarClick = { id ->
                     navController.navigate(Screen.OtherUserProfile.createRoute(id))
-                }
+                },
+                sessionManager = sessionManager
             )
         }
         composable(Screen.OtherUserProfile.route) { backStackEntry ->
@@ -142,9 +160,37 @@ fun ScrymeNavHost(
                 }
             )
         }
-        composable(Screen.Channel.route) { backStackEntry ->
-            val channelId = backStackEntry.arguments?.getString("channelId")
-            // Placeholder for Channel screen
+        composable(
+            route = Screen.Channel.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("channelId") {
+                    type = androidx.navigation.NavType.StringType
+                },
+                androidx.navigation.navArgument("slug") {
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
+            val workspaceSlug = backStackEntry.arguments?.getString("slug")
+
+            HomeScreen(
+                workspaceSlug = workspaceSlug,
+                channelId = channelId,
+                onSettingsClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onFriendsClick = {
+                    navController.navigate(Screen.Friends.route)
+                },
+                onDiscoveryClick = {
+                    navController.navigate(Screen.Discovery.route)
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                }
+            )
         }
         composable(Screen.Profile.route) {
             ProfileScreen(
