@@ -276,13 +276,6 @@ export class WorkspacesController {
     });
   }
 
-  /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Optimized membership check using a direct findUnique on WorkspaceMember.
-   * 3. Replaces full 'members' list with a simple count.
-   * Expected impact: Significantly reduces response time and memory overhead for large workspaces.
-   */
   @Get('discover')
   @ApiOperation({ summary: 'Discover public workspaces' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query for workspace name or slug' })
@@ -298,10 +291,7 @@ export class WorkspacesController {
           },
         },
         OR: query
-          ? [
-              { name: { contains: query, mode: 'insensitive' } },
-              { slug: { contains: query, mode: 'insensitive' } },
-            ]
+          ? [{ name: { contains: query, mode: 'insensitive' } }, { slug: { contains: query, mode: 'insensitive' } }]
           : undefined,
       },
       select: {
@@ -441,12 +431,6 @@ export class WorkspacesController {
     @Param('slug') slug: string,
     @Body() body: UpdateWorkspaceDto
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       include: {

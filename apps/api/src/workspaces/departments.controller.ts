@@ -384,12 +384,6 @@ export class DepartmentsController {
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and department retrieval into a single query.
-     * 2. Uses nested 'select' to fetch only required fields and relations.
-     * 3. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -512,11 +506,6 @@ export class DepartmentsController {
     @Param('departmentId') departmentId: string,
     @Body() body: UpdateWorkspaceDepartmentDto
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and authorization check into a single query.
-     * 2. Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -639,11 +628,6 @@ export class DepartmentsController {
     @Query('limit') limitNum = '20',
     @Query('priority') priority: string
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -714,11 +698,6 @@ export class DepartmentsController {
     @Param('departmentId') departmentId: string,
     @Body() body: CreateDepartmentAnnouncementDto
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {

@@ -39,13 +39,6 @@ export class MembersController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of members' })
   async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and retrieval of all members into a single query.
-     * 2. Fetches current user's membership for access control and all workspace members in one round-trip.
-     * 3. Uses nested 'select' for users to retrieve only essential profile fields.
-     * Expected impact: Reduces database round-trips from 2 down to 1.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -101,13 +94,6 @@ export class MembersController {
     @Param('memberId') memberId: string,
     @Body() body: UpdateMemberRoleDto
   ) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, requester authorization, and target member verification into a single database query.
-     * 2. Backgrounds non-critical side effects (audit logging, realtime notifications) to minimize response latency.
-     * 3. Fixes security flaw by ensuring the target member belongs to the specified workspace.
-     * Expected impact: Reduces database round-trips from 3 down to 2 and significantly improves response time.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -187,13 +173,6 @@ export class MembersController {
   @ApiResponse({ status: 200, description: 'Member removed successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden: Only owner or admin can remove' })
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, requester authorization, and target member verification into a single database query.
-     * 2. Backgrounds non-critical side effects (audit logging, realtime notifications) to minimize response latency.
-     * 3. Fixes security flaw by ensuring the target member belongs to the specified workspace.
-     * Expected impact: Reduces database round-trips from 3 down to 2 and significantly improves response time.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
