@@ -1,6 +1,9 @@
 package com.scrymechat.android.ui.chat
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -10,7 +13,6 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +22,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
@@ -31,15 +32,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
@@ -51,9 +50,6 @@ import java.time.Instant
 import kotlin.math.roundToInt
 
 // ─── Theme-aware palette ─────────────────────────────────────────────────────
-// Mirrors the premium direction used on the login screen: rich gradients,
-// glass surfaces, and distinct light/dark variants rather than a single
-// shared dark-only palette (the original hardcoded ScrymeDark* tokens).
 
 data class ChatPalette(
     val isDark: Boolean,
@@ -162,6 +158,7 @@ fun ChatView(
     onBack: () -> Unit = {},
     isThread: Boolean = false,
     threadTitle: String? = null,
+    isDm: Boolean = false,
     onDownload: (AttachmentDto) -> Unit = {},
     onAction: (MessageEntity, MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
@@ -178,7 +175,10 @@ fun ChatView(
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
-    val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf(com.scrymechat.android.BuildConfig.API_URL)).map { it ?: com.scrymechat.android.BuildConfig.API_URL }.collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
+    val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf(com.scrymechat.android.BuildConfig.API_URL))
+        .map { it ?: com.scrymechat.android.BuildConfig.API_URL }
+        .collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
+
     var textState by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
@@ -188,52 +188,73 @@ fun ChatView(
     var reactionPickerMessage by remember { mutableStateOf<MessageEntity?>(null) }
     val listState = rememberLazyListState()
 
+    // Safely scroll to bottom (item 0 in reverse layout) on message count changes
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(0)
+            try {
+                listState.animateScrollToItem(0)
+            } catch (_: Exception) {
+                // Ignore scroll exceptions during rapid layout updates
+            }
         }
     }
+
+    // Clean channel title without duplicate '#' prefix
+    val cleanTitle = chatTitle.removePrefix("#")
 
     Column(modifier = modifier.fillMaxSize().background(palette.canvasBg)) {
         if (isThread) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(horizontal = 8.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
                 }
+                Icon(
+                    imageVector = Icons.Default.Tag,
+                    contentDescription = null,
+                    tint = palette.accent,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = threadTitle ?: "Thread",
+                    text = threadTitle?.removePrefix("#") ?: "Thread",
                     color = palette.textPrimary,
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 8.dp)
+                    fontWeight = FontWeight.Bold
                 )
             }
             Divider(color = palette.divider)
         }
 
-        // Messages List
+        // Messages List Container
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             if (messages.isEmpty()) {
-                EmptyChatState(chatTitle = chatTitle, palette = palette, isDm = !chatTitle.startsWith("#") && !isThread)
+                EmptyChatState(
+                    chatTitle = cleanTitle,
+                    palette = palette,
+                    isDm = isDm
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     state = listState,
                     reverseLayout = true,
-                    contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 12.dp)
                 ) {
                     items(
                         count = messages.size,
-                        key = { index -> messages[index].id }
+                        key = { index ->
+                            val msgId = messages[index].id
+                            if (msgId.isNotBlank()) "${msgId}_$index" else "msg_$index"
+                        }
                     ) { index ->
                         val message = messages[index]
                         val prevMessage = if (index + 1 < messages.size) messages[index + 1] else null
 
-                        // Check if this message should be grouped with the previous one (which is below it in reverse layout)
                         val isGroupHeader = prevMessage == null ||
                                            prevMessage.senderId != message.senderId ||
                                            !isWithinGroupingTimeframe(prevMessage.createdAt, message.createdAt) ||
@@ -286,7 +307,7 @@ fun ChatView(
             ) {
                 TypingDots(color = palette.accent)
                 Text(
-                    text = if (typingUsers.size == 1) "${typingUsers[0]} is typing" else "${typingUsers.size} people are typing",
+                    text = if (typingUsers.size == 1) "${typingUsers[0]} is typing..." else "${typingUsers.size} people are typing...",
                     color = palette.textSecondary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -356,7 +377,6 @@ fun ChatView(
                                     }
                                 }
 
-                                // Scrim for the remove button
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
@@ -450,7 +470,13 @@ fun ChatView(
                     modifier = Modifier
                         .weight(1f)
                         .onFocusChanged { inputFocused = it.isFocused },
-                    placeholder = { Text("Message", color = palette.textTertiary, fontSize = 14.sp) },
+                    placeholder = {
+                        Text(
+                            text = if (isDm) "Message @$cleanTitle" else "Message #$cleanTitle",
+                            color = palette.textTertiary,
+                            fontSize = 14.sp
+                        )
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -508,7 +534,7 @@ fun ChatView(
         ReactionPicker(
             onEmojiSelected = { emoji ->
                 reactionPickerMessage?.let { msg ->
-                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = com.scrymechat.android.data.remote.MessageActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
+                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = MessageActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
                 }
             },
             onDismiss = { reactionPickerMessage = null }
@@ -526,13 +552,15 @@ fun ChatView(
                 onClose = { fullScreenImageUrl = null },
                 onDownload = {
                     fullScreenImageUrl?.let { url ->
-                        onDownload(AttachmentDto(
-                            id = "",
-                            name = fullScreenImageName ?: "image.jpg",
-                            url = url,
-                            type = fullScreenImageMimeType ?: "image/jpeg",
-                            size = 0
-                        ))
+                        onDownload(
+                            AttachmentDto(
+                                id = "",
+                                name = fullScreenImageName ?: "image.jpg",
+                                url = url,
+                                type = fullScreenImageMimeType ?: "image/jpeg",
+                                size = 0
+                            )
+                        )
                     }
                 }
             )
@@ -540,19 +568,28 @@ fun ChatView(
     }
 }
 
+/**
+ * Discord-style Empty State component for Channels and Direct Messages.
+ */
 @Composable
-fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = false) {
+fun EmptyChatState(
+    chatTitle: String,
+    palette: ChatPalette,
+    isDm: Boolean = false
+) {
+    val cleanTitle = chatTitle.removePrefix("#")
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 32.dp),
+            .padding(horizontal = 24.dp, vertical = 28.dp),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.Start
     ) {
-        // Large distinctive icon for the channel/DM
+        // Large Discord-style round icon header
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(72.dp)
                 .clip(CircleShape)
                 .background(palette.accentSoft),
             contentAlignment = Alignment.Center
@@ -561,60 +598,78 @@ fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = fals
                 imageVector = if (isDm) Icons.Default.Person else Icons.Default.Tag,
                 contentDescription = null,
                 tint = palette.accent,
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Large, bold welcome header
-        Text(
-            text = if (isDm) chatTitle else "Welcome to #$chatTitle!",
-            color = palette.textPrimary,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = (-0.5).sp
-        )
+        // Discord-style welcome title
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (!isDm) {
+                Icon(
+                    imageVector = Icons.Default.Tag,
+                    contentDescription = null,
+                    tint = palette.textPrimary,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .padding(end = 4.dp)
+                )
+            }
+            Text(
+                text = if (isDm) cleanTitle else "Welcome to #$cleanTitle!",
+                color = palette.textPrimary,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
+            )
+        }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Descriptive subtext explaining the beginning of the conversation
+        // Discord-style explanatory subtitle
         Text(
             text = if (isDm) {
-                "This is the beginning of your direct message history with @$chatTitle. Keep it friendly and respectful!"
+                "This is the beginning of your direct message history with @$cleanTitle. Keep it friendly and respectful!"
             } else {
-                "This is the start of the #$chatTitle channel. Why not send a message to say hello?"
+                "This is the start of the #$cleanTitle channel."
             },
             color = palette.textSecondary,
-            fontSize = 16.sp,
+            fontSize = 15.5.sp,
             lineHeight = 22.sp,
-            modifier = Modifier.fillMaxWidth(0.85f)
+            modifier = Modifier.fillMaxWidth(0.9f)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         if (!isDm) {
-            // Affordance for channel settings/editing (Visual only)
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { /* Could open channel settings */ }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = palette.accentSoft,
+                border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.2f)),
+                modifier = Modifier.clickable { /* Channel edit/settings action */ }
             ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = palette.accent,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Edit Channel",
-                    color = palette.accent,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = palette.accent,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Edit Channel",
+                        color = palette.accent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -623,7 +678,10 @@ fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = fals
 @Composable
 private fun TypingDots(color: Color) {
     val infinite = rememberInfiniteTransition(label = "typing")
-    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         repeat(3) { index ->
             val delay = index * 150
             val scale by infinite.animateFloat(
@@ -664,10 +722,6 @@ fun SwipeableMessageItem(
     onAvatarClick: (String) -> Unit = {},
     apiUrl: String = "http://localhost:3000"
 ) {
-    // Swipe-to-action. Kept lightweight (drag offset + threshold) per the
-    // original approach, but with spring-back animation and a clearer,
-    // theme-aware reveal so the affordance reads as intentional rather than
-    // a layout glitch mid-drag.
     val swipeState = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
     val threshold = with(density) { 80.dp.toPx() }
@@ -696,9 +750,10 @@ fun SwipeableMessageItem(
                 }
             )
     ) {
-        // Background Actions — scale + fade in as the swipe approaches threshold
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
             horizontalArrangement = if (animatedOffset > 0) Arrangement.Start else Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -709,7 +764,6 @@ fun SwipeableMessageItem(
             }
         }
 
-        // Message Content
         var showContextMenu by remember { mutableStateOf(false) }
 
         Surface(
@@ -784,7 +838,6 @@ fun SwipeableMessageItem(
                     DropdownMenuItem(
                         text = { Text("Copy Text", color = palette.textPrimary, fontSize = 14.sp) },
                         onClick = {
-                            // TODO: Implement copy to clipboard
                             showContextMenu = false
                         },
                         leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
@@ -797,7 +850,6 @@ fun SwipeableMessageItem(
 
 @Composable
 private fun SwipeActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, palette: ChatPalette, progress: Float) {
-    val scale = 0.7f + 0.3f * progress
     Box(
         modifier = Modifier
             .size(34.dp)
@@ -848,10 +900,16 @@ fun MessageItem(
                 contentScale = ContentScale.Crop
             )
         } else {
-            // Placeholder for compact mode to align with headers
-            Box(modifier = Modifier.size(38.dp)) {
-                // Show a tiny timestamp on hover/selected if we wanted to be really Discord-like,
-                // but for now just keep the space empty to align text.
+            // Discord-style timestamp placeholder for grouped messages
+            Box(
+                modifier = Modifier.size(38.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = formatMessageTimestamp(message.createdAt, shortOnly = true),
+                    color = palette.textTertiary.copy(alpha = 0.5f),
+                    fontSize = 9.5.sp
+                )
             }
         }
 
@@ -906,9 +964,7 @@ fun MessageItem(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            // Render message content based on type — wrapped in a subtle
-            // bubble surface for richer, more "designed" message cards,
-            // while plain text stays unboxed for a lighter conversational feel.
+            // Render Message Body safely
             val isRichContent = message.messageType in setOf("custom", "approval", "report", "poll", "graph")
 
             if (isRichContent) {
@@ -929,7 +985,7 @@ fun MessageItem(
                                     isLoading = isLoading
                                 )
                             } else {
-                                MarkdownText(content = message.content)
+                                MarkdownText(content = message.content.ifEmpty { " " })
                             }
                         } else {
                             when (message.messageType) {
@@ -956,14 +1012,16 @@ fun MessageItem(
                                     GraphComponent(title = title, data = data, labels = labels)
                                 }
                                 else -> {
-                                    MarkdownText(content = message.content)
+                                    MarkdownText(content = message.content.ifEmpty { " " })
                                 }
                             }
                         }
                     }
                 }
             } else {
-                MarkdownText(content = message.content)
+                if (message.content.isNotBlank()) {
+                    MarkdownText(content = message.content)
+                }
             }
 
             // Attachments
@@ -1119,11 +1177,9 @@ private fun isWithinGroupingTimeframe(time1: String, time2: String): Boolean {
 }
 
 /**
- * Formats an ISO-ish createdAt string into a short, human-friendly time.
- * Falls back to the original date-only behavior if parsing fails, so this
- * is a pure visual upgrade with no risk of crashing on unexpected formats.
+ * Robust timestamp formatter for message headers and compact mode.
  */
-private fun formatMessageTimestamp(createdAt: String): String {
+private fun formatMessageTimestamp(createdAt: String, shortOnly: Boolean = false): String {
     return try {
         val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
         val hhmm = timePart.substringBefore(".").substringBefore("Z")
@@ -1131,6 +1187,9 @@ private fun formatMessageTimestamp(createdAt: String): String {
         if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
         var hour = parts[0].toIntOrNull() ?: return hhmm
         val minute = parts[1]
+        if (shortOnly) {
+            return String.format("%02d:%s", hour, minute)
+        }
         val suffix = if (hour >= 12) "PM" else "AM"
         if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
         "$hour:$minute $suffix"

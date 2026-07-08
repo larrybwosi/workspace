@@ -18,7 +18,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +30,102 @@ import com.scrymechat.android.ui.theme.*
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+
+/**
+ * Shared layout tokens. Centralizing these keeps spacing/radius consistent
+ * across every settings surface instead of ad-hoc dp values per screen.
+ */
+private object SettingsTokens {
+    val ScreenPadding = 20.dp
+    val SectionSpacing = 28.dp
+    val FieldSpacing = 14.dp
+    val CardRadius = 12.dp
+    val CardBorderWidth = 1.dp
+    val RowVerticalPadding = 14.dp
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    palette: ProfilePalette,
+    subtitle: String? = null
+) {
+    Column {
+        Text(
+            text = title.uppercase(),
+            color = palette.textTertiary,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        if (subtitle != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                color = palette.textSecondary,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+/**
+ * A neutral, low-emphasis card container used to group related settings —
+ * mirrors the "panel" pattern common in enterprise admin consoles.
+ */
+@Composable
+private fun SettingsCard(
+    palette: ProfilePalette,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(SettingsTokens.CardRadius))
+            .background(palette.cardSurface)
+            .border(SettingsTokens.CardBorderWidth, palette.cardBorder, RoundedCornerShape(SettingsTokens.CardRadius))
+            .padding(16.dp),
+        content = content
+    )
+}
+
+@Composable
+private fun standardTextFieldColors(palette: ProfilePalette) = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = palette.textPrimary,
+    unfocusedTextColor = palette.textPrimary,
+    focusedBorderColor = palette.accent,
+    unfocusedBorderColor = palette.cardBorder,
+    focusedLabelColor = palette.accent,
+    unfocusedLabelColor = palette.textSecondary,
+    cursorColor = palette.accent
+)
+
+@Composable
+private fun SettingsTopBar(
+    title: String,
+    palette: ProfilePalette,
+    onBack: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                title,
+                color = palette.textPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
+    )
+}
+
+// ---------------------------------------------------------------------------
+// My Account
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,70 +141,80 @@ fun MyAccountScreen(
     var email by remember(user) { mutableStateOf(user?.email ?: "") }
     var showChangePasswordDialog by remember { mutableStateOf(false) }
 
+    val hasChanges = name != (user?.name ?: "") || email != (user?.email ?: "")
+    val isEmailValid = email.isBlank() || android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("My Account", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("My Account", palette, onBack) },
         containerColor = palette.canvasBg
     ) { padding ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(SettingsTokens.SectionSpacing)
+        ) {
             item {
-                Text("ACCOUNT INFORMATION", color = palette.textTertiary, style = MaterialTheme.typography.labelMedium)
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = palette.textPrimary,
-                        unfocusedTextColor = palette.textPrimary,
-                        focusedBorderColor = palette.accent,
-                        unfocusedBorderColor = palette.cardBorder
+                Column {
+                    SectionHeader(
+                        title = "Account Information",
+                        subtitle = "This information may be visible to other members of your organization.",
+                        palette = palette
                     )
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = palette.textPrimary,
-                        unfocusedTextColor = palette.textPrimary,
-                        focusedBorderColor = palette.accent,
-                        unfocusedBorderColor = palette.cardBorder
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = { viewModel.updateProfile(mapOf("name" to name, "email" to email)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
-                ) {
-                    Text("Save Changes")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SettingsCard(palette) {
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("Full Name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = standardTextFieldColors(palette)
+                        )
+                        Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email Address") },
+                            singleLine = true,
+                            isError = !isEmailValid,
+                            supportingText = {
+                                if (!isEmailValid) {
+                                    Text("Enter a valid email address", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = standardTextFieldColors(palette)
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Button(
+                            onClick = { viewModel.updateProfile(mapOf("name" to name, "email" to email)) },
+                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                            enabled = hasChanges && isEmailValid,
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+                        ) {
+                            Text("Save Changes", fontWeight = FontWeight.Medium)
+                        }
+                    }
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(32.dp))
-                Text("PASSWORD AND AUTHENTICATION", color = palette.textTertiary, style = MaterialTheme.typography.labelMedium)
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = { showChangePasswordDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = palette.accent)
-                ) {
-                    Text("Change Password")
+                Column {
+                    SectionHeader(
+                        title = "Password & Authentication",
+                        subtitle = "Manage how you sign in and secure your account.",
+                        palette = palette
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SettingsCard(palette) {
+                        SettingsActionRow(
+                            icon = Icons.Default.Lock,
+                            title = "Password",
+                            description = "Last changed unavailable — update it periodically for account security.",
+                            actionLabel = "Change",
+                            palette = palette,
+                            onClick = { showChangePasswordDialog = true }
+                        )
+                    }
                 }
             }
         }
@@ -122,10 +227,48 @@ fun MyAccountScreen(
             onConfirm = { current, new ->
                 viewModel.changePassword(current, new) {
                     showChangePasswordDialog = false
-                    // Optionally show success toast
                 }
             }
         )
+    }
+}
+
+/** A labeled row with a trailing action button — used for one-off settings actions. */
+@Composable
+private fun SettingsActionRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    description: String,
+    actionLabel: String,
+    palette: ProfilePalette,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(palette.accent.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = palette.accent, modifier = Modifier.size(18.dp))
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = palette.textPrimary, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyLarge)
+            Text(description, color = palette.textSecondary, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        OutlinedButton(
+            onClick = onClick,
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = palette.accent)
+        ) {
+            Text(actionLabel)
+        }
     }
 }
 
@@ -139,38 +282,59 @@ fun ChangePasswordDialog(
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
+    val passwordsMatch = confirmPassword.isEmpty() || newPassword == confirmPassword
+    val meetsLength = newPassword.length >= 8
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Change Password", color = palette.textPrimary) },
+        title = { Text("Change Password", color = palette.textPrimary, fontWeight = FontWeight.SemiBold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(SettingsTokens.FieldSpacing)) {
+                Text(
+                    "Choose a strong password you don't use elsewhere.",
+                    color = palette.textSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
                 OutlinedTextField(
                     value = currentPassword,
                     onValueChange = { currentPassword = it },
                     label = { Text("Current Password") },
+                    singleLine = true,
                     visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = standardTextFieldColors(palette)
                 )
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
                     label = { Text("New Password") },
+                    singleLine = true,
+                    isError = newPassword.isNotEmpty() && !meetsLength,
+                    supportingText = { Text("Minimum 8 characters", color = palette.textTertiary) },
                     visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = standardTextFieldColors(palette)
                 )
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
                     label = { Text("Confirm New Password") },
+                    singleLine = true,
+                    isError = !passwordsMatch,
+                    supportingText = {
+                        if (!passwordsMatch) Text("Passwords do not match", color = MaterialTheme.colorScheme.error)
+                    },
                     visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = standardTextFieldColors(palette)
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onConfirm(currentPassword, newPassword) },
-                enabled = newPassword.isNotEmpty() && newPassword == confirmPassword && newPassword.length >= 8,
+                enabled = currentPassword.isNotEmpty() && meetsLength && newPassword == confirmPassword,
+                shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
             ) {
                 Text("Update Password")
@@ -181,9 +345,14 @@ fun ChangePasswordDialog(
                 Text("Cancel", color = palette.textSecondary)
             }
         },
-        containerColor = palette.cardSurface
+        containerColor = palette.cardSurface,
+        shape = RoundedCornerShape(SettingsTokens.CardRadius)
     )
 }
+
+// ---------------------------------------------------------------------------
+// Voice Settings
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -192,56 +361,74 @@ fun VoiceSettingsScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val palette = profilePalette()
-    val sessionManager = (viewModel as? ProfileViewModel)?.let {
-        // In a real app we'd use a dedicated SettingsViewModel or inject sessionManager
-    }
-    // For now, we will handle it via a remember block and a call to a mockable method in ProfileViewModel
-    // Better: let's use the actual sessionManager if possible, but the current UI structure uses hiltViewModel<ProfileViewModel>()
-
     val voiceMode by viewModel.voiceMode.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Voice", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("Voice", palette, onBack) },
         containerColor = palette.canvasBg
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("INPUT MODE", color = palette.textTertiary, style = MaterialTheme.typography.labelMedium)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding)
+        ) {
+            SectionHeader(
+                title = "Input Mode",
+                subtitle = "Choose how your microphone is activated during calls.",
+                palette = palette
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { viewModel.updateVoiceMode("voice_activity") }
-            ) {
-                RadioButton(
+            SettingsCard(palette) {
+                SelectableOptionRow(
+                    label = "Voice Activity",
+                    description = "Automatically transmit when you speak.",
                     selected = voiceMode == "voice_activity",
-                    onClick = { viewModel.updateVoiceMode("voice_activity") },
-                    colors = RadioButtonDefaults.colors(selectedColor = palette.accent)
+                    palette = palette,
+                    onSelect = { viewModel.updateVoiceMode("voice_activity") }
                 )
-                Text("Voice Activity", color = palette.textPrimary)
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { viewModel.updateVoiceMode("push_to_talk") }
-            ) {
-                RadioButton(
+                HorizontalDivider(color = palette.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
+                SelectableOptionRow(
+                    label = "Push to Talk",
+                    description = "Hold a key or button to transmit audio.",
                     selected = voiceMode == "push_to_talk",
-                    onClick = { viewModel.updateVoiceMode("push_to_talk") },
-                    colors = RadioButtonDefaults.colors(selectedColor = palette.accent)
+                    palette = palette,
+                    onSelect = { viewModel.updateVoiceMode("push_to_talk") }
                 )
-                Text("Push to Talk", color = palette.textPrimary)
             }
         }
     }
 }
+
+@Composable
+private fun SelectableOptionRow(
+    label: String,
+    description: String? = null,
+    selected: Boolean,
+    palette: ProfilePalette,
+    onSelect: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect)
+            .padding(vertical = SettingsTokens.RowVerticalPadding / 2)
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onSelect,
+            colors = RadioButtonDefaults.colors(selectedColor = palette.accent)
+        )
+        Column {
+            Text(label, color = palette.textPrimary, fontWeight = FontWeight.Medium)
+            if (description != null) {
+                Text(description, color = palette.textSecondary, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Language Settings
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -253,22 +440,19 @@ fun LanguageSettingsScreen(
     val selectedLanguage by viewModel.language.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Language", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("Language", palette, onBack) },
         containerColor = palette.canvasBg
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            LanguageOption("English (US)", "en_us", selectedLanguage, palette) { viewModel.updateLanguage(it) }
-            LanguageOption("English (UK)", "en_uk", selectedLanguage, palette) { viewModel.updateLanguage(it) }
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding)
+        ) {
+            SectionHeader(title = "Display Language", palette = palette)
+            Spacer(modifier = Modifier.height(16.dp))
+            SettingsCard(palette) {
+                LanguageOption("English (US)", "en_us", selectedLanguage, palette) { viewModel.updateLanguage(it) }
+                HorizontalDivider(color = palette.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
+                LanguageOption("English (UK)", "en_uk", selectedLanguage, palette) { viewModel.updateLanguage(it) }
+            }
         }
     }
 }
@@ -276,39 +460,68 @@ fun LanguageSettingsScreen(
 @Composable
 fun LanguageOption(label: String, value: String, selectedValue: String, palette: ProfilePalette, onSelect: (String) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable { onSelect(value) }.padding(vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(value) }
+            .padding(vertical = SettingsTokens.RowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, color = palette.textPrimary, modifier = Modifier.weight(1f))
         if (value == selectedValue) {
-            Icon(Icons.Default.Check, contentDescription = null, tint = palette.accent)
+            Icon(Icons.Default.Check, contentDescription = "Selected", tint = palette.accent)
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Authorized Apps
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthorizedAppsScreen(onBack: () -> Unit) {
     val palette = profilePalette()
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Authorized Apps", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("Authorized Apps", palette, onBack) },
         containerColor = palette.canvasBg
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-            Text("No apps authorized yet.", color = palette.textSecondary)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding)
+        ) {
+            SectionHeader(
+                title = "Connected Applications",
+                subtitle = "Third-party applications with access to your account.",
+                palette = palette
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            SettingsCard(palette) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        Icons.Default.Apps,
+                        contentDescription = null,
+                        tint = palette.textTertiary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("No apps authorized yet", color = palette.textPrimary, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Applications you authorize will appear here.",
+                        color = palette.textSecondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// User Profile
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -341,27 +554,21 @@ fun UserProfileScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("User Profile", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("User Profile", palette, onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = palette.canvasBg
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(SettingsTokens.SectionSpacing)
         ) {
             item {
-                Text("Preview and edit your global profile.", color = palette.textSecondary, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    "Preview and edit your profile as it appears to others.",
+                    color = palette.textSecondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             // Profile Preview Card
@@ -369,16 +576,16 @@ fun UserProfileScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(SettingsTokens.CardRadius))
                         .background(palette.cardSurface)
-                        .border(1.dp, palette.cardBorder, RoundedCornerShape(20.dp))
+                        .border(SettingsTokens.CardBorderWidth, palette.cardBorder, RoundedCornerShape(SettingsTokens.CardRadius))
                 ) {
                     // Banner
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
-                            .background(if (user?.banner == null && uiState.pendingBannerUri == null) palette.accent.copy(alpha = 0.2f) else Color.Transparent)
+                            .background(if (user?.banner == null && uiState.pendingBannerUri == null) palette.accent.copy(alpha = 0.12f) else Color.Transparent)
                             .clickable { bannerLauncher.launch("image/*") }
                     ) {
                         val bannerModel = uiState.pendingBannerUri ?: user?.banner
@@ -392,13 +599,14 @@ fun UserProfileScreen(
                         }
                         Box(
                             modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(40.dp)
+                                .align(Alignment.BottomEnd)
+                                .padding(10.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.4f)),
+                                .background(Color.Black.copy(alpha = 0.45f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Banner", tint = Color.White, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Edit, contentDescription = "Edit Banner", tint = Color.White, modifier = Modifier.size(16.dp))
                         }
                     }
 
@@ -406,7 +614,7 @@ fun UserProfileScreen(
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Column {
                             Spacer(modifier = Modifier.height(44.dp)) // space for overlapping avatar
-                            Text(name, color = palette.textPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(name, color = palette.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
                             Text("@$username", color = palette.textSecondary, fontSize = 14.sp)
                             if (statusText.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -442,77 +650,67 @@ fun UserProfileScreen(
                                 }
                             }
                             Box(
-                                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)),
+                                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.15f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.CameraAlt, contentDescription = "Edit Avatar", tint = Color.White, modifier = Modifier.size(24.dp))
+                                Icon(Icons.Default.CameraAlt, contentDescription = "Edit Avatar", tint = Color.White, modifier = Modifier.size(22.dp))
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(32.dp))
             }
 
             item {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Display Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = palette.textPrimary,
-                        unfocusedTextColor = palette.textPrimary,
-                        focusedBorderColor = palette.accent,
-                        unfocusedBorderColor = palette.cardBorder
-                    )
-                )
+                SectionHeader(title = "Profile Details", palette = palette)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Username") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = palette.textPrimary,
-                        unfocusedTextColor = palette.textPrimary,
-                        focusedBorderColor = palette.accent,
-                        unfocusedBorderColor = palette.cardBorder
+                SettingsCard(palette) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Display Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
                     )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = statusText,
-                    onValueChange = { statusText = it },
-                    label = { Text("About Me") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = palette.textPrimary,
-                        unfocusedTextColor = palette.textPrimary,
-                        focusedBorderColor = palette.accent,
-                        unfocusedBorderColor = palette.cardBorder
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Username") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
                     )
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        viewModel.saveProfile(mapOf(
-                            "name" to name,
-                            "username" to username,
-                            "statusText" to statusText
-                        ), context)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isUploading,
-                    colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
-                ) {
-                    if (uiState.isUploading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                    } else {
-                        Text("Save Profile")
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = statusText,
+                        onValueChange = { statusText = it },
+                        label = { Text("About Me") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = {
+                            viewModel.saveProfile(mapOf(
+                                "name" to name,
+                                "username" to username,
+                                "statusText" to statusText
+                            ), context)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !uiState.isUploading,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+                    ) {
+                        if (uiState.isUploading) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("Save Profile", fontWeight = FontWeight.Medium)
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
@@ -530,6 +728,10 @@ private fun android.content.Context.uriToFile(uri: Uri): File {
     return file
 }
 
+// ---------------------------------------------------------------------------
+// Privacy & Safety
+// ---------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrivacySafetyScreen(
@@ -538,43 +740,51 @@ fun PrivacySafetyScreen(
 ) {
     val palette = profilePalette()
     val uiState by viewModel.uiState.collectAsState()
-    val user = uiState.currentUser
 
-    // In a real app, these would come from the user.preferences or similar
+    // In a real app, these would come from user.preferences or similar
     var allowDms by remember { mutableStateOf(true) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Privacy & Safety", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("Privacy & Safety", palette, onBack) },
         containerColor = palette.canvasBg
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("DIRECT MESSAGE SAFETY", color = palette.textTertiary, style = MaterialTheme.typography.labelMedium)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding)
+        ) {
+            SectionHeader(
+                title = "Direct Message Safety",
+                subtitle = "Control who can start a direct conversation with you.",
+                palette = palette
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Allow direct messages from server members", color = palette.textPrimary, modifier = Modifier.weight(1f))
-                Switch(
-                    checked = allowDms,
-                    onCheckedChange = {
-                        allowDms = it
-                        // Persist via updateProfile or a dedicated updatePreferences
-                        viewModel.updateProfile(mapOf("privacySettings" to mapOf("allowDmsFromMembers" to it)))
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = palette.accent, checkedTrackColor = palette.accent.copy(alpha = 0.5f))
-                )
+            SettingsCard(palette) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Allow direct messages from server members", color = palette.textPrimary, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Members of shared servers can message you directly.",
+                            color = palette.textSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Switch(
+                        checked = allowDms,
+                        onCheckedChange = {
+                            allowDms = it
+                            viewModel.updateProfile(mapOf("privacySettings" to mapOf("allowDmsFromMembers" to it)))
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = palette.accent, checkedTrackColor = palette.accent.copy(alpha = 0.5f))
+                    )
+                }
             }
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Appearance
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -585,26 +795,25 @@ fun AppearanceSettingsScreen(
 ) {
     val palette = profilePalette()
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Appearance", color = palette.textPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = palette.topBarBg)
-            )
-        },
+        topBar = { SettingsTopBar("Appearance", palette, onBack) },
         containerColor = palette.canvasBg
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            Text("THEME", color = palette.textTertiary, style = MaterialTheme.typography.labelMedium)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(SettingsTokens.ScreenPadding)
+        ) {
+            SectionHeader(
+                title = "Theme",
+                subtitle = "Choose how the app looks on this device.",
+                palette = palette
+            )
             Spacer(modifier = Modifier.height(16.dp))
-
-            ThemeOption("System Default", "system", currentTheme, onThemeChange, palette)
-            ThemeOption("Dark", "dark", currentTheme, onThemeChange, palette)
-            ThemeOption("Light", "light", currentTheme, onThemeChange, palette)
+            SettingsCard(palette) {
+                ThemeOption("System Default", "system", currentTheme, onThemeChange, palette)
+                HorizontalDivider(color = palette.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
+                ThemeOption("Dark", "dark", currentTheme, onThemeChange, palette)
+                HorizontalDivider(color = palette.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
+                ThemeOption("Light", "light", currentTheme, onThemeChange, palette)
+            }
         }
     }
 }
@@ -615,14 +824,14 @@ fun ThemeOption(label: String, value: String, currentValue: String, onSelect: (S
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
             .clickable { onSelect(value) }
+            .padding(vertical = SettingsTokens.RowVerticalPadding / 2)
     ) {
         RadioButton(
             selected = currentValue == value,
             onClick = { onSelect(value) },
             colors = RadioButtonDefaults.colors(selectedColor = palette.accent)
         )
-        Text(label, color = palette.textPrimary, modifier = Modifier.padding(start = 8.dp))
+        Text(label, color = palette.textPrimary, modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Medium)
     }
 }
