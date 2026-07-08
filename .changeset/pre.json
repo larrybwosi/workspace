@@ -1,0 +1,26 @@
+{
+  "mode": "pre",
+  "tag": "dev",
+  "initialVersions": {
+    "admin": "2.0.0",
+    "android": "2.0.0",
+    "api": "2.0.0",
+    "desktop": "2.0.0",
+    "docs": "2.0.0",
+    "site": "2.0.0",
+    "web": "2.0.0",
+    "@repo/api-client": "0.0.772",
+    "@repo/auth": "0.0.772",
+    "@repo/database": "0.0.772",
+    "@repo/eslint-config": "0.0.772",
+    "@repo/prettier-config": "0.0.772",
+    "@repo/shared": "0.0.772",
+    "@repo/types": "0.0.772",
+    "@repo/typescript-config": "0.0.772",
+    "@repo/ui": "0.0.772"
+  },
+  "changesets": [
+    "auto-release-198f2f1a",
+    "famous-otters-tap"
+  ]
+}
