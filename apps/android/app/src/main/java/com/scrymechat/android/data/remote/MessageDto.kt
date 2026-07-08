@@ -8,8 +8,9 @@ data class MessageDto(
     val authorId: String? = null,
     val senderId: String? = null,
     val userId: String? = null, // Backend often aliases senderId to userId in formatted responses
-    val createdAt: String,
-    val updatedAt: String,
+    val createdAt: String? = null,
+    val timestamp: String? = null, // Workspace messages use timestamp instead of createdAt
+    val updatedAt: String? = null,
     val author: UserDto? = null,
     val user: UserDto? = null, // Backend often aliases author to user
     val attachments: List<AttachmentDto> = emptyList(),

@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.remote.UserDto
 import com.scrymechat.android.data.remote.WorkspaceDto
+import com.scrymechat.android.ui.home.CreateWorkspaceDialog
 import com.scrymechat.android.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +55,11 @@ fun DiscoveryScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.setCreateWorkspaceDialogOpen(true) }) {
+                        Icon(Icons.Default.Add, contentDescription = "Create Workspace")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -123,6 +129,14 @@ fun DiscoveryScreen(
                 }
             }
         }
+    }
+
+    if (uiState.isCreateWorkspaceDialogOpen) {
+        CreateWorkspaceDialog(
+            onDismiss = { viewModel.setCreateWorkspaceDialogOpen(false) },
+            onCreate = { viewModel.createWorkspace(it) },
+            isLoading = uiState.isCreatingWorkspace
+        )
     }
 }
 
