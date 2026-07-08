@@ -100,6 +100,7 @@ private fun standardTextFieldColors(palette: ProfilePalette) = OutlinedTextField
     cursorColor = palette.accent
 )
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsTopBar(
     title: String,
@@ -127,7 +128,7 @@ private fun SettingsTopBar(
 // My Account
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MyAccountScreen(
     onBack: () -> Unit,
@@ -354,7 +355,7 @@ fun ChangePasswordDialog(
 // Voice Settings
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun VoiceSettingsScreen(
     onBack: () -> Unit,
@@ -430,7 +431,7 @@ private fun SelectableOptionRow(
 // Language Settings
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun LanguageSettingsScreen(
     onBack: () -> Unit,
@@ -477,7 +478,7 @@ fun LanguageOption(label: String, value: String, selectedValue: String, palette:
 // Authorized Apps
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun AuthorizedAppsScreen(onBack: () -> Unit) {
     val palette = profilePalette()
@@ -523,7 +524,7 @@ fun AuthorizedAppsScreen(onBack: () -> Unit) {
 // User Profile
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     onBack: () -> Unit,
@@ -732,7 +733,7 @@ private fun android.content.Context.uriToFile(uri: Uri): File {
 // Privacy & Safety
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PrivacySafetyScreen(
     onBack: () -> Unit,
@@ -786,7 +787,7 @@ fun PrivacySafetyScreen(
 // Appearance
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun AppearanceSettingsScreen(
     onBack: () -> Unit,

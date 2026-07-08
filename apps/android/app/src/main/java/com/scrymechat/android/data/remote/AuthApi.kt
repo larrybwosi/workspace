@@ -41,7 +41,7 @@ interface AuthApi {
 
     @POST("users/me")
     suspend fun updateMe(
-        @Body request: Map<String, Any>
+        @Body request: Map<String, @JvmSuppressWildcards Any>
     ): Response<Unit>
 
     @POST("device-auth/qr/authorize")
