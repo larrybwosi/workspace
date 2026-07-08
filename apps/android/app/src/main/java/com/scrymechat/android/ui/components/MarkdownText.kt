@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.sp
 import com.scrymechat.android.ui.theme.ScrymeDarkTextPrimary
 
 /**
@@ -82,6 +83,6 @@ fun MarkdownText(
         text = annotatedString,
         modifier = modifier,
         color = color,
-        style = MaterialTheme.typography.bodyMedium
+        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
     )
 }
