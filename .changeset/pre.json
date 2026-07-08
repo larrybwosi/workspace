@@ -21,6 +21,7 @@
   },
   "changesets": [
     "auto-release-198f2f1a",
+    "auto-release-354e0e25",
     "famous-otters-tap"
   ]
 }
