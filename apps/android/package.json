@@ -1,6 +1,6 @@
 {
   "name": "android",
-  "version": "2.1.0-dev.3",
+  "version": "2.1.0-dev.4",
   "private": true,
   "scripts": {
     "build": "./gradlew assembleDebug",
