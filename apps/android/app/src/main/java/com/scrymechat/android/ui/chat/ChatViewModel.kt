@@ -195,7 +195,7 @@ class ChatViewModel @Inject constructor(
         val pendingFiles = _uiState.value.pendingFiles
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSending = true) }
+            _uiState.update { it.copy(isSending = true, error = null) }
             try {
                 val uploadedAttachments = mutableListOf<CreateAttachmentRequest>()
 

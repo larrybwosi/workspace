@@ -21,10 +21,26 @@ import com.scrymechat.android.ui.discovery.DiscoveryScreen
 @Composable
 fun ScrymeNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route,
-    themeViewModel: ThemeViewModel = hiltViewModel()
+    startDestination: String = Screen.Splash.route,
+    themeViewModel: ThemeViewModel = hiltViewModel(),
+    sessionManager: com.scrymechat.android.data.local.SessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Screen.Splash.route) {
+            com.scrymechat.android.ui.welcome.SplashScreen(
+                sessionManager = sessionManager,
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.createRoute(null)) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToWelcome = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Welcome.route) {
             val apiUrl by themeViewModel.apiUrl.collectAsState()
             WelcomeScreen(
@@ -117,7 +133,7 @@ fun ScrymeNavHost(
             com.scrymechat.android.ui.chat.ChatView(
                 messages = chatUiState.messages,
                 onSendMessage = { content, replyToId, _ -> chatViewModel.sendMessage(content, replyToId, null, navController.context) },
-                onReply = { /* TODO */ },
+                onReply = { /* Done in ChatView state for now as it doesn't need to cross screens */ },
                 onForward = { /* TODO */ },
                 onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onTyping = { /* TODO */ },
@@ -128,7 +144,8 @@ fun ScrymeNavHost(
                 onRemoveFile = { chatViewModel.removePendingFile(it) },
                 onAvatarClick = { id ->
                     navController.navigate(Screen.OtherUserProfile.createRoute(id))
-                }
+                },
+                sessionManager = sessionManager
             )
         }
         composable(Screen.OtherUserProfile.route) { backStackEntry ->

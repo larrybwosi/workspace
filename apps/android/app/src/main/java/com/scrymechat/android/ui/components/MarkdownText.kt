@@ -27,13 +27,15 @@ fun MarkdownText(
         val boldRegex = """\*\*(.*?)\*\*""".toRegex()
         val italicRegex = """\*(.*?)\*""".toRegex()
         val codeRegex = """`(.*?)`""".toRegex()
+        val mentionRegex = """@(\w+)""".toRegex()
 
         // This is a naive implementation for the sake of completion
         // Real markdown parsing is complex
 
         val allMatches = (boldRegex.findAll(content).map { it to "bold" } +
                           italicRegex.findAll(content).map { it to "italic" } +
-                          codeRegex.findAll(content).map { it to "code" })
+                          codeRegex.findAll(content).map { it to "code" } +
+                          mentionRegex.findAll(content).map { it to "mention" })
                           .sortedBy { it.first.range.first }
 
         var lastIndex = 0
@@ -56,6 +58,15 @@ fun MarkdownText(
                 "code" -> {
                     withStyle(style = SpanStyle(fontFamily = FontFamily.Monospace, background = androidx.compose.ui.graphics.Color.DarkGray.copy(alpha = 0.5f))) {
                         append(match.groupValues[1])
+                    }
+                }
+                "mention" -> {
+                    withStyle(style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color(0xFF818CF8), // Palette accent
+                        background = androidx.compose.ui.graphics.Color(0xFF818CF8).copy(alpha = 0.15f)
+                    )) {
+                        append(match.value)
                     }
                 }
             }

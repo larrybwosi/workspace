@@ -1,6 +1,7 @@
 package com.scrymechat.android.ui.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Welcome : Screen("welcome")
     object SignUp : Screen("signup")
     object Login : Screen("login")
