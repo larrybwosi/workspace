@@ -33,6 +33,11 @@ class CreateMessageDto {
 
   @IsString()
   @IsOptional()
+  @ApiProperty({ required: false, example: 'msg_123' })
+  replyToId?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'thread_123' })
   threadId?: string;
 
