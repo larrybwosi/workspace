@@ -142,9 +142,37 @@ fun ScrymeNavHost(
                 }
             )
         }
-        composable(Screen.Channel.route) { backStackEntry ->
-            val channelId = backStackEntry.arguments?.getString("channelId")
-            // Placeholder for Channel screen
+        composable(
+            route = Screen.Channel.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("channelId") {
+                    type = androidx.navigation.NavType.StringType
+                },
+                androidx.navigation.navArgument("slug") {
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
+            val workspaceSlug = backStackEntry.arguments?.getString("slug")
+
+            HomeScreen(
+                workspaceSlug = workspaceSlug,
+                channelId = channelId,
+                onSettingsClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onFriendsClick = {
+                    navController.navigate(Screen.Friends.route)
+                },
+                onDiscoveryClick = {
+                    navController.navigate(Screen.Discovery.route)
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                }
+            )
         }
         composable(Screen.Profile.route) {
             ProfileScreen(

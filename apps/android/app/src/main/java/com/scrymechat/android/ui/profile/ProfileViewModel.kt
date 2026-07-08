@@ -56,7 +56,16 @@ class ProfileViewModel @Inject constructor(
     fun updateProfile(updates: Map<String, Any>) {
         viewModelScope.launch {
             try {
-                val response = authApi.updateMe(updates)
+                // Ensure field names match backend expectations (image/avatar)
+                val finalUpdates = updates.toMutableMap()
+                if (finalUpdates.containsKey("avatar")) {
+                    val avatarUrl = finalUpdates["avatar"]
+                    if (avatarUrl != null) {
+                        finalUpdates["image"] = avatarUrl
+                    }
+                }
+
+                val response = authApi.updateMe(finalUpdates)
                 if (response.isSuccessful) {
                     val userResponse = authApi.getMe()
                     if (userResponse.isSuccessful) {
@@ -68,7 +77,9 @@ class ProfileViewModel @Inject constructor(
                                 username = body.username ?: currentUser.username,
                                 avatar = body.avatar ?: body.image ?: currentUser.avatar,
                                 banner = body.banner ?: currentUser.banner,
-                                statusText = body.statusText ?: currentUser.statusText
+                                statusText = body.statusText ?: currentUser.statusText,
+                                statusEmoji = body.statusEmoji ?: currentUser.statusEmoji,
+                                bio = body.bio ?: currentUser.bio
                             )
                             userDao.insertUser(updatedUser)
                         }

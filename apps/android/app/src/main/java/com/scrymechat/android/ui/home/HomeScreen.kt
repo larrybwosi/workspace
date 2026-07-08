@@ -39,6 +39,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     chatViewModel: ChatViewModel = hiltViewModel(),
     workspaceSlug: String? = null,
+    channelId: String? = null,
     onSettingsClick: () -> Unit,
     onFriendsClick: () -> Unit = {},
     onDiscoveryClick: () -> Unit = {},
@@ -52,9 +53,14 @@ fun HomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(workspaceSlug) {
-        workspaceSlug?.let {
-            viewModel.selectWorkspaceBySlug(it)
+    LaunchedEffect(workspaceSlug, channelId) {
+        workspaceSlug?.let { slug ->
+            viewModel.selectWorkspaceBySlug(slug)
+            chatViewModel.setWorkspaceSlug(slug)
+        }
+        channelId?.let {
+            viewModel.selectChannelById(it)
+            chatViewModel.setChannel(it)
         }
     }
 

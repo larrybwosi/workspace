@@ -105,7 +105,7 @@ object NetworkModule {
         val options = IO.Options()
         options.callFactory = okHttpClient
         options.webSocketFactory = okHttpClient
-        options.path = "/api/socket.io"
+        options.path = "/socket.io"
         options.auth = mapOf("token" to sessionManager.getToken())
 
         val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
