@@ -45,6 +45,7 @@ import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.ui.components.*
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToInt
@@ -177,7 +178,7 @@ fun ChatView(
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
-    val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf("http://localhost:3000")).collectAsState(initial = "http://localhost:3000")
+    val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf(com.scrymechat.android.BuildConfig.API_URL)).map { it ?: com.scrymechat.android.BuildConfig.API_URL }.collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
     var textState by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
@@ -225,7 +226,10 @@ fun ChatView(
                     reverseLayout = true,
                     contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
                 ) {
-                    items(messages.size) { index ->
+                    items(
+                        count = messages.size,
+                        key = { index -> messages[index].id }
+                    ) { index ->
                         val message = messages[index]
                         val prevMessage = if (index + 1 < messages.size) messages[index + 1] else null
 
@@ -236,7 +240,6 @@ fun ChatView(
                                            message.replyToSenderName != null
 
                         SwipeableMessageItem(
-                            key = message.id,
                             message = message,
                             isGroupHeader = isGroupHeader,
                             palette = palette,
@@ -645,7 +648,6 @@ private fun TypingDots(color: Color) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SwipeableMessageItem(
-    key: String,
     message: MessageEntity,
     isGroupHeader: Boolean = true,
     palette: ChatPalette,
