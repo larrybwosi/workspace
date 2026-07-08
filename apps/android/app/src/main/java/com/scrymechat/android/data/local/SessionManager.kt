@@ -60,6 +60,22 @@ class SessionManager @Inject constructor(
         return sharedPreferences.getString("theme_preference", "system") ?: "system"
     }
 
+    fun saveVoiceMode(mode: String) {
+        sharedPreferences.edit().putString("voice_mode", mode).apply()
+    }
+
+    fun getVoiceMode(): String {
+        return sharedPreferences.getString("voice_mode", "voice_activity") ?: "voice_activity"
+    }
+
+    fun saveLanguage(language: String) {
+        sharedPreferences.edit().putString("language_preference", language).apply()
+    }
+
+    fun getLanguage(): String {
+        return sharedPreferences.getString("language_preference", "en_us") ?: "en_us"
+    }
+
     fun saveApiUrl(url: String) {
         sharedPreferences.edit().putString("custom_api_url", url).apply()
     }

@@ -164,9 +164,10 @@ fun ChatView(
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
-    pendingAttachments: List<CreateAttachmentRequest> = emptyList(),
+    pendingFiles: List<PendingFile> = emptyList(),
+    isSending: Boolean = false,
     onAttach: (Uri) -> Unit = {},
-    onRemoveAttachment: (CreateAttachmentRequest) -> Unit = {},
+    onRemoveFile: (PendingFile) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -286,7 +287,7 @@ fun ChatView(
                 .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
             AnimatedVisibility(
-                visible = pendingAttachments.isNotEmpty(),
+                visible = pendingFiles.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -297,41 +298,59 @@ fun ChatView(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    pendingAttachments.forEach { attachment ->
+                    pendingFiles.forEach { pending ->
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(12.dp),
                             color = palette.attachmentChipBg,
                             border = BorderStroke(1.dp, palette.bubbleBorder)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (attachment.type.startsWith("image/")) Icons.Default.Image else Icons.Default.FilePresent,
-                                    contentDescription = null,
-                                    tint = palette.accent,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = attachment.name,
-                                    color = palette.textPrimary,
-                                    fontSize = 12.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.widthIn(max = 100.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                IconButton(
-                                    onClick = { onRemoveAttachment(attachment) },
-                                    modifier = Modifier.size(18.dp)
+                            Box(modifier = Modifier.width(100.dp).height(100.dp)) {
+                                if (pending.type.startsWith("image/")) {
+                                    AsyncImage(
+                                        model = pending.uri,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.FilePresent,
+                                            contentDescription = null,
+                                            tint = palette.accent,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = pending.name,
+                                            color = palette.textPrimary,
+                                            fontSize = 10.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+
+                                // Scrim for the remove button
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.4f))
+                                        .clickable { onRemoveFile(pending) },
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         Icons.Default.Close,
                                         contentDescription = "Remove",
-                                        tint = palette.textTertiary,
-                                        modifier = Modifier.size(12.dp)
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -426,7 +445,7 @@ fun ChatView(
                 )
 
                 AnimatedVisibility(
-                    visible = textState.isNotBlank() || pendingAttachments.isNotEmpty(),
+                    visible = textState.isNotBlank() || pendingFiles.isNotEmpty() || isSending,
                     enter = scaleIn() + fadeIn(),
                     exit = scaleOut() + fadeOut()
                 ) {
@@ -436,19 +455,27 @@ fun ChatView(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(Brush.linearGradient(palette.accentGradient))
-                            .clickable {
-                                onSendMessage(textState, replyingTo?.id, pendingAttachments)
+                            .clickable(enabled = !isSending) {
+                                onSendMessage(textState, replyingTo?.id, null)
                                 textState = ""
                                 replyingTo = null
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.Send,
-                            contentDescription = "Send",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        if (isSending) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.Send,
+                                contentDescription = "Send",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }

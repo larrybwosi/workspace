@@ -44,6 +44,7 @@ fun MyAccountScreen(
 
     var name by remember(user) { mutableStateOf(user?.name ?: "") }
     var email by remember(user) { mutableStateOf(user?.email ?: "") }
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -104,7 +105,7 @@ fun MyAccountScreen(
                 Text("PASSWORD AND AUTHENTICATION", color = palette.textTertiary, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedButton(
-                    onClick = {},
+                    onClick = { showChangePasswordDialog = true },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = palette.accent)
                 ) {
@@ -113,6 +114,75 @@ fun MyAccountScreen(
             }
         }
     }
+
+    if (showChangePasswordDialog) {
+        ChangePasswordDialog(
+            palette = palette,
+            onDismiss = { showChangePasswordDialog = false },
+            onConfirm = { current, new ->
+                viewModel.changePassword(current, new) {
+                    showChangePasswordDialog = false
+                    // Optionally show success toast
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun ChangePasswordDialog(
+    palette: ProfilePalette,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Change Password", color = palette.textPrimary) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = currentPassword,
+                    onValueChange = { currentPassword = it },
+                    label = { Text("Current Password") },
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("New Password") },
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm New Password") },
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(currentPassword, newPassword) },
+                enabled = newPassword.isNotEmpty() && newPassword == confirmPassword && newPassword.length >= 8,
+                colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+            ) {
+                Text("Update Password")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = palette.textSecondary)
+            }
+        },
+        containerColor = palette.cardSurface
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,8 +192,13 @@ fun VoiceSettingsScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val palette = profilePalette()
-    // Mock preference persistence
-    var inputMode by remember { mutableStateOf("voice_activity") }
+    val sessionManager = (viewModel as? ProfileViewModel)?.let {
+        // In a real app we'd use a dedicated SettingsViewModel or inject sessionManager
+    }
+    // For now, we will handle it via a remember block and a call to a mockable method in ProfileViewModel
+    // Better: let's use the actual sessionManager if possible, but the current UI structure uses hiltViewModel<ProfileViewModel>()
+
+    val voiceMode by viewModel.voiceMode.collectAsState()
 
     Scaffold(
         topBar = {
@@ -144,22 +219,22 @@ fun VoiceSettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { inputMode = "voice_activity" }
+                modifier = Modifier.fillMaxWidth().clickable { viewModel.updateVoiceMode("voice_activity") }
             ) {
                 RadioButton(
-                    selected = inputMode == "voice_activity",
-                    onClick = { inputMode = "voice_activity" },
+                    selected = voiceMode == "voice_activity",
+                    onClick = { viewModel.updateVoiceMode("voice_activity") },
                     colors = RadioButtonDefaults.colors(selectedColor = palette.accent)
                 )
                 Text("Voice Activity", color = palette.textPrimary)
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { inputMode = "push_to_talk" }
+                modifier = Modifier.fillMaxWidth().clickable { viewModel.updateVoiceMode("push_to_talk") }
             ) {
                 RadioButton(
-                    selected = inputMode == "push_to_talk",
-                    onClick = { inputMode = "push_to_talk" },
+                    selected = voiceMode == "push_to_talk",
+                    onClick = { viewModel.updateVoiceMode("push_to_talk") },
                     colors = RadioButtonDefaults.colors(selectedColor = palette.accent)
                 )
                 Text("Push to Talk", color = palette.textPrimary)
@@ -170,9 +245,12 @@ fun VoiceSettingsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LanguageSettingsScreen(onBack: () -> Unit) {
+fun LanguageSettingsScreen(
+    onBack: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel()
+) {
     val palette = profilePalette()
-    var selectedLanguage by remember { mutableStateOf("en_us") }
+    val selectedLanguage by viewModel.language.collectAsState()
 
     Scaffold(
         topBar = {
@@ -189,8 +267,8 @@ fun LanguageSettingsScreen(onBack: () -> Unit) {
         containerColor = palette.canvasBg
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            LanguageOption("English (US)", "en_us", selectedLanguage, palette) { selectedLanguage = it }
-            LanguageOption("English (UK)", "en_uk", selectedLanguage, palette) { selectedLanguage = it }
+            LanguageOption("English (US)", "en_us", selectedLanguage, palette) { viewModel.updateLanguage(it) }
+            LanguageOption("English (UK)", "en_uk", selectedLanguage, palette) { viewModel.updateLanguage(it) }
         }
     }
 }
@@ -255,17 +333,11 @@ fun UserProfileScreen(
     }
 
     val avatarLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val file = context.uriToFile(it)
-            viewModel.uploadImage(file, "avatar")
-        }
+        uri?.let { viewModel.setPendingAvatar(it) }
     }
 
     val bannerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val file = context.uriToFile(it)
-            viewModel.uploadImage(file, "banner")
-        }
+        uri?.let { viewModel.setPendingBanner(it) }
     }
 
     Scaffold(
@@ -306,12 +378,13 @@ fun UserProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
-                            .background(if (user?.banner == null) palette.accent.copy(alpha = 0.2f) else Color.Transparent)
+                            .background(if (user?.banner == null && uiState.pendingBannerUri == null) palette.accent.copy(alpha = 0.2f) else Color.Transparent)
                             .clickable { bannerLauncher.launch("image/*") }
                     ) {
-                        if (user?.banner != null) {
+                        val bannerModel = uiState.pendingBannerUri ?: user?.banner
+                        if (bannerModel != null) {
                             AsyncImage(
-                                model = user.banner,
+                                model = bannerModel,
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
@@ -353,9 +426,10 @@ fun UserProfileScreen(
                                 .clip(CircleShape)
                                 .clickable { avatarLauncher.launch("image/*") }
                         ) {
-                            if (user?.avatar != null) {
+                            val avatarModel = uiState.pendingAvatarUri ?: user?.avatar
+                            if (avatarModel != null) {
                                 AsyncImage(
-                                    model = user.avatar,
+                                    model = avatarModel,
                                     contentDescription = null,
                                     modifier = Modifier.fillMaxSize().clip(CircleShape)
                                 )
@@ -422,11 +496,11 @@ fun UserProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        viewModel.updateProfile(mapOf(
+                        viewModel.saveProfile(mapOf(
                             "name" to name,
                             "username" to username,
                             "statusText" to statusText
-                        ))
+                        ), context)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isUploading,

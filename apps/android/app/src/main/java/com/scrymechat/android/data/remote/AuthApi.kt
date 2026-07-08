@@ -49,6 +49,11 @@ interface AuthApi {
         @Body request: QRAuthorizeRequest
     ): Response<QRAuthorizeResponse>
 
+    @POST("android-auth/change-password")
+    suspend fun changePassword(
+        @Body request: Map<String, String>
+    ): Response<Unit>
+
     @GET("users/search")
     suspend fun searchUsers(
         @retrofit2.http.Query("query") query: String

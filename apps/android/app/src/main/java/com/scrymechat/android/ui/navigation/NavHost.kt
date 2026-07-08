@@ -116,15 +116,16 @@ fun ScrymeNavHost(
 
             com.scrymechat.android.ui.chat.ChatView(
                 messages = chatUiState.messages,
-                onSendMessage = { content, replyToId, attachments -> chatViewModel.sendMessage(content, replyToId, null, attachments) },
+                onSendMessage = { content, replyToId, _ -> chatViewModel.sendMessage(content, replyToId, null, navController.context) },
                 onReply = { /* TODO */ },
                 onForward = { /* TODO */ },
                 onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
                 onTyping = { /* TODO */ },
                 typingUsers = chatUiState.typingUsers,
-                pendingAttachments = chatUiState.pendingAttachments,
-                onAttach = { uri -> chatViewModel.uploadFile(uri, navController.context) },
-                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) },
+                pendingFiles = chatUiState.pendingFiles,
+                isSending = chatUiState.isSending,
+                onAttach = { uri -> chatViewModel.addPendingFile(uri, navController.context) },
+                onRemoveFile = { chatViewModel.removePendingFile(it) },
                 onAvatarClick = { id ->
                     navController.navigate(Screen.OtherUserProfile.createRoute(id))
                 }
