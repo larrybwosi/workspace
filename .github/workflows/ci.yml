@@ -271,7 +271,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [all-tests-passed]
+    needs: [changes, all-tests-passed]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     steps:
       - name: Checkout Repo
@@ -306,6 +306,27 @@ jobs:
             if [ -f .changeset/pre.json ]; then
               pnpm changeset pre exit
             fi
+          fi
+
+      # Ensures a dev push that only touches the Android app still gets a
+      # prerelease version bump, even if nobody wrote a changeset for it.
+      # main is untouched by this and continues to rely solely on authored
+      # changesets.
+      - name: Auto-changeset for Android-only prerelease (dev)
+        if: github.ref == 'refs/heads/dev' && needs.changes.outputs.android == 'true'
+        run: |
+          existing=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null)
+          if [ -z "$existing" ]; then
+            echo "No changeset found for this push; generating an automatic patch changeset for the android package."
+            cat > .changeset/auto-android-$(date +%s).md << EOF
+          ---
+          "android": patch
+          ---
+
+          Automated prerelease version bump triggered by Android app changes.
+          EOF
+          else
+            echo "Changeset(s) already present, skipping auto-generation."
           fi
 
       - name: Version and Commit
