@@ -63,6 +63,7 @@ export class MessagesService {
       },
       select: {
         id: true,
+        channelId: true,
         userId: true,
         content: true,
         messageType: true,
@@ -165,7 +166,6 @@ export class MessagesService {
         // We keep replyTo as an object because the UI uses it for the 'replied to' header
         // while also keeping the ID available if needed.
         // Remove raw fields not needed in frontend
-        replyToId: undefined,
         readBy: undefined,
         _count: undefined,
       };
