@@ -113,7 +113,7 @@ class NotificationHelper(private val context: Context) {
         val senderAvatarUrl = data["senderAvatarUrl"]
 
         val channelId = when (type) {
-            "direct_message", "mention" -> CHANNEL_URGENT
+            "direct_message", "mention", "friend_request" -> CHANNEL_URGENT
             "channel_alert" -> CHANNEL_HIGH
             else -> CHANNEL_NORMAL
         }
@@ -121,6 +121,11 @@ class NotificationHelper(private val context: Context) {
         // Conversation notifications (DM/channel) get a stable ID per-conversation so
         // new messages update the same thread instead of stacking duplicate entries.
         // System notifications keep a unique, timestamp-based ID.
+        if (type == "friend_request") {
+            showFriendRequestNotification(entityId, title, body)
+            return
+        }
+
         val isConversation = entityId.isNotEmpty() && (type == "direct_message" || type == "mention" || type == "channel_alert")
         val notificationId = if (isConversation) {
             conversationKey(entityType, entityId).hashCode()
@@ -175,6 +180,51 @@ class NotificationHelper(private val context: Context) {
 
         notificationManager.notify(notificationId, notification)
         postGroupSummary(entityType, channelId)
+    }
+
+    private fun showFriendRequestNotification(requestId: String, title: String, body: String) {
+        val notificationId = requestId.hashCode()
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("type", "friend_request")
+            putExtra("entityId", requestId)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val acceptIntent = Intent(context, ReplyReceiver::class.java).apply {
+            action = ReplyReceiver.ACTION_ACCEPT_FRIEND
+            putExtra("entityId", requestId)
+            putExtra("notificationId", notificationId)
+        }
+        val acceptPendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId * 10 + 4, // Unique request code for accept
+            acceptIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_URGENT)
+            .setSmallIcon(R.drawable.ic_notification)
+            .apply {
+                try {
+                    setColor(ContextCompat.getColor(context, R.color.brand_primary))
+                } catch (e: Exception) {}
+            }
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_SOCIAL)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .addAction(R.drawable.ic_check, "Accept", acceptPendingIntent)
+            .build()
+
+        notificationManager.notify(notificationId, notification)
     }
 
     private fun showSystemNotification(notificationId: Int, channelId: String, title: String, body: String) {

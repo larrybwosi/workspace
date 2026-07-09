@@ -65,18 +65,14 @@ class FriendsViewModel @Inject constructor(
     fun sendFriendRequest(username: String) {
         viewModelScope.launch {
             try {
-                val searchResponse = authApi.searchUsers(username)
-                if (searchResponse.isSuccessful && !searchResponse.body().isNullOrEmpty()) {
-                    // Try to find an exact match or just take the first one
-                    val user = searchResponse.body()!!.find { it.username?.lowercase() == username.lowercase() }
-                        ?: searchResponse.body()!![0]
-                    friendsRepository.sendFriendRequest(user.id)
+                val result = friendsRepository.sendFriendRequest(username)
+                if (result is Resource.Success) {
                     loadData()
                 } else {
-                    _uiState.update { it.copy(error = "User not found") }
+                    _uiState.update { it.copy(error = result.message ?: "User not found") }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "Failed to find user") }
+                _uiState.update { it.copy(error = e.message ?: "Failed to send request") }
             }
         }
     }

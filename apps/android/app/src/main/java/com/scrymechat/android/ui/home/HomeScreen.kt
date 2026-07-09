@@ -68,7 +68,7 @@ fun HomeScreen(
             chatViewModel.setDmByUser(dmUserId)
         } else if (channelId != null) {
             workspaceSlug?.let { viewModel.selectWorkspaceBySlug(it) }
-            viewModel.selectChannelById(channelId)
+            viewModel.selectChannelById(channelId, workspaceSlug)
             workspaceSlug?.let { chatViewModel.setWorkspaceSlug(it) }
             chatViewModel.setChannel(channelId)
         } else if (workspaceSlug != null) {

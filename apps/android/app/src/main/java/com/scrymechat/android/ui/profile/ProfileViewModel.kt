@@ -22,7 +22,8 @@ class ProfileViewModel @Inject constructor(
     private val storageRepository: StorageRepository,
     private val authApi: AuthApi,
     private val sessionManager: SessionManager,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -211,10 +212,20 @@ class ProfileViewModel @Inject constructor(
     private val _isLoadingTarget = MutableStateFlow(false)
     val isLoadingTarget: StateFlow<Boolean> = _isLoadingTarget.asStateFlow()
 
+    private val _socialProfile = MutableStateFlow<com.scrymechat.android.data.remote.SocialProfileDto?>(null)
+    val socialProfile: StateFlow<com.scrymechat.android.data.remote.SocialProfileDto?> = _socialProfile.asStateFlow()
+
     fun fetchUser(userId: String) {
         viewModelScope.launch {
             _isLoadingTarget.value = true
             try {
+                launch {
+                    val socialResult = authRepository.getSocialProfile(userId)
+                    socialResult.onSuccess { profile ->
+                        _socialProfile.value = profile
+                    }
+                }
+
                 val response = authApi.getUser(userId)
                 if (response.isSuccessful) {
                     val userDto = response.body()
