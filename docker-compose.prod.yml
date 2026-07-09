@@ -17,6 +17,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rustfs:
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -73,6 +75,19 @@ services:
     networks:
       - scrymechat-network
 
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: scrymechat-rustfs
+    restart: always
+    expose:
+      - '9000'
+    env_file:
+      - .env
+    volumes:
+      - rustfs_data:/data
+    networks:
+      - scrymechat-network
+
   redis:
     image: redis:7-alpine
     container_name: scrymechat-redis
@@ -107,6 +122,7 @@ services:
 volumes:
   db_data:
   redis_data:
+  rustfs_data:
 
 networks:
   scrymechat-network:

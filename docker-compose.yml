@@ -19,6 +19,20 @@ services:
     networks:
       - scrymechat-network
 
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: scrymechat-rustfs
+    restart: always
+    ports:
+      - '9000:9000'
+    environment:
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
+    volumes:
+      - rustfs_data:/data
+    networks:
+      - scrymechat-network
+
   redis:
     image: redis:7-alpine
     container_name: scrymechat-workspace-redis
@@ -53,6 +67,7 @@ services:
 volumes:
   db_data:
   redis_data:
+  rustfs_data:
 
 networks:
   scrymechat-network:
