@@ -61,24 +61,32 @@ fun HomeScreen(
     val context = LocalContext.current
 
     LaunchedEffect(workspaceSlug, channelId, dmId, dmUserId) {
-        if (dmId != null) {
+    when {
+        dmId != null -> {
             viewModel.selectDmById(dmId)
             chatViewModel.setDm(dmId)
-        } else if (dmUserId != null) {
+        }
+        dmUserId != null -> {
             viewModel.selectDmByUserId(dmUserId)
             chatViewModel.setDmByUser(dmUserId)
-        } else if (channelId != null) {
-            workspaceSlug?.let { viewModel.selectWorkspaceBySlug(it) }
+        }
+        channelId != null -> {
+            // Wait for the workspace switch to finish loading its channels
+            // BEFORE selecting the channel, so it can't be wiped out afterward.
+            if (workspaceSlug != null) {
+                viewModel.selectWorkspaceBySlug(workspaceSlug)
+                chatViewModel.setWorkspaceSlug(workspaceSlug)
+            }
             viewModel.selectChannelById(channelId, workspaceSlug)
-            workspaceSlug?.let { chatViewModel.setWorkspaceSlug(it) }
             chatViewModel.setChannel(channelId)
-        } else if (workspaceSlug != null) {
+        }
+        workspaceSlug != null -> {
             viewModel.selectWorkspaceBySlug(workspaceSlug)
             chatViewModel.setWorkspaceSlug(workspaceSlug)
-        } else {
-            viewModel.selectHome()
         }
+        else -> viewModel.selectHome()
     }
+}
 
     if (forwardingMessage != null) {
         ForwardMessageDialog(
