@@ -1,5 +1,44 @@
 # @repo/ui
 
+## 0.1.0-dev.16
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/api-client@0.1.0-dev.16
+  - @repo/shared@0.1.0-dev.16
+  - @repo/types@0.1.0-dev.16
+
+## 0.1.0-dev.15
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/api-client@0.1.0-dev.15
+  - @repo/shared@0.1.0-dev.15
+  - @repo/types@0.1.0-dev.15
+
+## 0.1.0-dev.14
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/api-client@0.1.0-dev.14
+  - @repo/shared@0.1.0-dev.14
+  - @repo/types@0.1.0-dev.14
+
 ## 0.1.0-dev.13
 
 ### Minor Changes

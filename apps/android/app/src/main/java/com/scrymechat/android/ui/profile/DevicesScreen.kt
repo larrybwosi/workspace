@@ -187,7 +187,7 @@ fun DevicesScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(items = sessions, key = { it.id }) { session ->
+                        items(items = sessions, key = { session: DeviceSession -> session.id }) { session ->
                             DeviceItemCard(
                                 session = session,
                                 onRevoke = { viewModel.revokeSession(session.id) }

@@ -51,6 +51,10 @@ data class ProfilePalette(
     val dangerSoft: Color,
     val avatarRing: Color,
     val topBarBg: Color,
+    val statusOnline: Color,
+    val statusIdle: Color,
+    val statusDnd: Color,
+    val statusOffline: Color,
 )
 
 @Composable
@@ -73,6 +77,10 @@ fun profilePalette(isDark: Boolean = isSystemInDarkTheme()): ProfilePalette {
             dangerSoft = Color(0xFFF87171).copy(alpha = 0.12f),
             avatarRing = Color(0xFF818CF8).copy(alpha = 0.5f),
             topBarBg = Color(0xFF0A0B10),
+            statusOnline = Color(0xFF23A55A),
+            statusIdle = Color(0xFFF0B232),
+            statusDnd = Color(0xFFF23F43),
+            statusOffline = Color(0xFF80848E),
         )
     } else {
         ProfilePalette(
@@ -92,6 +100,10 @@ fun profilePalette(isDark: Boolean = isSystemInDarkTheme()): ProfilePalette {
             dangerSoft = Color(0xFFDC2626).copy(alpha = 0.08f),
             avatarRing = Color(0xFF5B54E0).copy(alpha = 0.35f),
             topBarBg = Color(0xFFF6F7FB),
+            statusOnline = Color(0xFF23A55A),
+            statusIdle = Color(0xFFF0B232),
+            statusDnd = Color(0xFFF23F43),
+            statusOffline = Color(0xFF80848E),
         )
     }
 }

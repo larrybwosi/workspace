@@ -1,5 +1,23 @@
 # android
 
+## 2.1.0-dev.16
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 2.1.0-dev.15
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 2.1.0-dev.14
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 2.1.0-dev.13
 
 ### Minor Changes
