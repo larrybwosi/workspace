@@ -48,7 +48,8 @@ fun HomeScreen(
     onUserProfileClick: (String) -> Unit = {},
     onWorkspaceClick: (String?) -> Unit = {},
     onChannelClick: (String, String?) -> Unit = { _, _ -> },
-    onDmClick: (String) -> Unit = {}
+    onDmClick: (String) -> Unit = {},
+    onNotificationsClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val chatUiState by chatViewModel.uiState.collectAsState()
@@ -155,7 +156,8 @@ fun HomeScreen(
                             isHomeSelected = uiState.isHomeSelected,
                             onWorkspaceClick = { onWorkspaceClick(it.slug) },
                             onHomeClick = { onWorkspaceClick(null) },
-                            onCreateWorkspaceClick = { onDiscoveryClick() }
+                            onCreateWorkspaceClick = { onDiscoveryClick() },
+                            onNotificationsClick = onNotificationsClick
                         )
 
                         ChannelSidebar(
@@ -367,7 +369,7 @@ fun MainContent(
                     )
                 }
 
-                if (!isHomeSelected && (selectedChannel != null || uiState.selectedDm != null)) {
+                if (!isHomeSelected && (selectedChannel != null || uiState.selectedDm != null || uiState.isChannelLoading)) {
                     ChatView(
                         chatTitle = title,
                         messages = chatUiState.messages,

@@ -28,6 +28,7 @@ sealed class Screen(val route: String) {
     object Devices : Screen("profile/devices")
     object Appearance : Screen("profile/appearance")
     object Notifications : Screen("profile/notifications")
+    object NotificationsPage : Screen("notifications")
     object Voice : Screen("profile/voice")
     object Language : Screen("profile/language")
     object AuthorizedApps : Screen("profile/apps")

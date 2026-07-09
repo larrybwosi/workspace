@@ -17,6 +17,7 @@ import com.scrymechat.android.ui.profile.*
 import com.scrymechat.android.ui.settings.NotificationSettingsScreen
 import com.scrymechat.android.ui.friends.FriendsScreen
 import com.scrymechat.android.ui.discovery.DiscoveryScreen
+import com.scrymechat.android.ui.notifications.NotificationsScreen
 
 @Composable
 fun ScrymeNavHost(
@@ -107,6 +108,32 @@ fun ScrymeNavHost(
                 },
                 onDmClick = { dmId ->
                     navController.navigate(Screen.Chat.createRoute(dmId))
+                },
+                onNotificationsClick = {
+                    navController.navigate(Screen.NotificationsPage.route)
+                }
+            )
+        }
+        composable(Screen.NotificationsPage.route) {
+            NotificationsScreen(
+                onBack = { navController.popBackStack() },
+                onNotificationClick = { notification ->
+                    when (notification.entityType) {
+                        "channel" -> {
+                            val slug = notification.metadata?.get("workspaceSlug") as? String
+                            notification.entityId?.let { channelId ->
+                                navController.navigate(Screen.Channel.createRoute(channelId, slug))
+                            }
+                        }
+                        "direct_message" -> {
+                            notification.entityId?.let { dmId ->
+                                navController.navigate(Screen.Chat.createRoute(dmId))
+                            }
+                        }
+                        else -> {
+                            // Default back if no specific navigation
+                        }
+                    }
                 }
             )
         }
@@ -146,6 +173,9 @@ fun ScrymeNavHost(
             HomeScreen(
                 dmId = if (!isUserId) id else null,
                 dmUserId = if (isUserId) id else null,
+                onNotificationsClick = {
+                    navController.navigate(Screen.NotificationsPage.route)
+                },
                 onSettingsClick = {
                     navController.navigate(Screen.Profile.route)
                 },
@@ -201,6 +231,9 @@ fun ScrymeNavHost(
             HomeScreen(
                 workspaceSlug = workspaceSlug,
                 channelId = channelId,
+                onNotificationsClick = {
+                    navController.navigate(Screen.NotificationsPage.route)
+                },
                 onSettingsClick = {
                     navController.navigate(Screen.Profile.route)
                 },
