@@ -69,8 +69,14 @@ fun HomeScreen(
         dmUserId != null -> {
             viewModel.selectDmByUserId(dmUserId)
             chatViewModel.setDmByUser(dmUserId)
-        } else if (channelId != null) {
-            workspaceSlug?.let { viewModel.selectWorkspaceBySlug(it, channelId) }
+        }
+        channelId != null -> {
+            // Wait for the workspace switch to finish loading its channels
+            // BEFORE selecting the channel, so it can't be wiped out afterward.
+            if (workspaceSlug != null) {
+                viewModel.selectWorkspaceBySlug(workspaceSlug)
+                chatViewModel.setWorkspaceSlug(workspaceSlug)
+            }
             viewModel.selectChannelById(channelId, workspaceSlug)
             chatViewModel.setChannel(channelId)
         }
@@ -80,6 +86,7 @@ fun HomeScreen(
         }
         else -> viewModel.selectHome()
     }
+}  }
 }
 
     if (channelId != null) {
