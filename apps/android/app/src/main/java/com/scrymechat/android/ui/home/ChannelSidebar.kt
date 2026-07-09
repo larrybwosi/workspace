@@ -1,11 +1,13 @@
 package com.scrymechat.android.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -31,45 +34,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.scrymechat.android.ui.components.UserAvatar
 import com.scrymechat.android.data.local.entities.ChannelEntity
-import com.scrymechat.android.data.local.entities.DmConversationEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
-import com.scrymechat.android.ui.theme.*
 
 /**
- * Enterprise-grade design tokens for the sidebar.
+ * Discord-style design tokens for the sidebar.
  *
- * These layer on top of the existing Scryme*** theme colors rather than
- * replacing them, so the rest of the app is unaffected. Centralizing them
- * here makes the "premium" intent legible and easy to re-tune in one place.
+ * Surfaces step up in small, low-contrast increments so elevation reads as
+ * material rather than a sudden color jump — the same trick Discord, Slack,
+ * and Linear all use for chrome that needs to disappear behind content.
  */
 object SidebarTokens {
-    // Surfaces — restrained, low-contrast steps so elevation reads as
-    // material rather than as a sudden color jump.
-    val SurfaceBase = Color(0xFF2B2D31)
-    val SurfaceRaised = Color(0xFF313338)
-    val SurfaceSelected = Color(0xFF35373C)
-    val SurfaceFooter = Color(0xFF232428)
+    val SurfaceBase = Color(0xFF2B2D31)      // channel list background
+    val SurfaceRaised = Color(0xFF313338)    // header / raised chrome
+    val SurfaceSelected = Color(0xFF3F4248)  // selected row fill
+    val SurfacePressed = Color(0xFF35373C)   // hover/press fill
+    val SurfaceFooter = Color(0xFF232428)    // member footer, sits "below" base
 
-    // Hairlines instead of flat block dividers — reads as a seam, not a wall.
     val Hairline = Color(0x14FFFFFF)
     val HairlineStrong = Color(0x22FFFFFF)
 
-    // Single restrained brand accent used sparingly: selection rail, focus,
-    // presence ring highlight. Everything else stays neutral.
-    val Accent = Color(0xFF6C8DFF)
-    val AccentMuted = Color(0x296C8DFF)
+    val Accent = Color(0xFF5865F2)           // Discord blurple, used sparingly
+    val Online = Color(0xFF23A55A)
+    val Danger = Color(0xFFED4245)
 
-    val Online = Color(0xFF34C77B)
+    val TextBright = Color(0xFFF2F3F5)       // selected / unread label
+    val TextPrimary = Color(0xFFDBDEE1)      // default label
+    val TextMuted = Color(0xFF949BA4)        // category labels, subtitles
+    val TextFaint = Color(0xFF6D6F78)        // icon idle tint
 
-    val TextPrimary = Color(0xFFEDEEF1)
-    val TextSecondary = Color(0xFF8E909C)
-    val TextTertiary = Color(0xFF6B6D78)
+    val PillIndicator = Color(0xFFF2F3F5)
 }
 
+/** Which glyph a channel row should show, independent of category chrome. */
+private fun channelLeadingIcon(channel: ChannelEntity): Any {
+    if (!channel.icon.isNullOrEmpty() && channel.icon != "#") return channel.icon
+    return when (channel.type) {
+        "voice" -> Icons.AutoMirrored.Filled.VolumeUp
+        "announcement" -> Icons.Default.Campaign
+        "stage" -> Icons.Default.RecordVoiceOver
+        "forum" -> Icons.AutoMirrored.Filled.Chat
+        else -> Icons.Default.Tag
+    }
+}
 
 @Composable
 fun ChannelSidebar(
@@ -96,27 +105,37 @@ fun ChannelSidebar(
     ) {
         SidebarHeader(
             title = if (isHomeSelected) "Direct Messages" else (workspace?.name ?: ""),
-            subtitle = if (isHomeSelected) null else "Workspace"
+            subtitle = null
         )
 
         HorizontalDivider(color = SidebarTokens.Hairline, thickness = 1.dp)
 
-        // Channel/DM List
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .padding(horizontal = 8.dp)
         ) {
             if (isHomeSelected) {
                 item {
+                    Spacer(modifier = Modifier.height(8.dp))
                     SidebarItem(
                         icon = Icons.Default.Person,
                         label = "Friends",
                         isSelected = false,
                         onClick = onFriendsClick
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    SectionLabel(text = "Direct Messages")
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                item {
+                    SectionLabel(text = "Direct Messages", trailing = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "New DM",
+                            tint = SidebarTokens.TextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    })
                 }
 
                 items(dms, key = { it.dm.id }) { dmWithUser ->
@@ -129,9 +148,13 @@ fun ChannelSidebar(
                         onClick = { onDmClick(dmWithUser) }
                     )
                 }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
             } else {
                 val categories = channels.filter { it.parentId == null && it.type == "category" }
                 val uncategorized = channels.filter { it.parentId == null && it.type != "category" }
+
+                item { Spacer(modifier = Modifier.height(8.dp)) }
 
                 items(uncategorized, key = { it.id }) { channel ->
                     ChannelItem(
@@ -141,35 +164,22 @@ fun ChannelSidebar(
                     )
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = onCreateChannelClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SidebarTokens.SurfaceRaised),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = SidebarTokens.Accent)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Create Channel", color = SidebarTokens.TextPrimary, fontSize = 13.sp)
-                    }
-                }
-
                 categories.forEach { category ->
                     val isExpanded = expandedCategories.contains(category.id)
+                    val categoryChannels = channels.filter { it.parentId == category.id }
+                    val hasUnread = categoryChannels.any { it.unreadCount > 0 }
+
                     item(key = "cat_${category.id}") {
                         CategoryHeader(
                             name = category.name,
                             isExpanded = isExpanded,
+                            hasUnread = hasUnread && !isExpanded,
                             onToggle = { onCategoryToggle(category.id) },
                             onAddClick = onCreateChannelClick
                         )
                     }
+
                     if (isExpanded) {
-                        val categoryChannels = channels.filter { it.parentId == category.id }
                         items(categoryChannels, key = { it.id }) { channel ->
                             ChannelItem(
                                 channel = channel,
@@ -178,6 +188,12 @@ fun ChannelSidebar(
                             )
                         }
                     }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    CreateChannelRow(onClick = onCreateChannelClick)
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -188,87 +204,163 @@ fun ChannelSidebar(
 
 @Composable
 private fun SidebarHeader(title: String, subtitle: String?) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = SidebarTokens.SurfaceRaised
     ) {
-        Column {
-            Text(
-                text = title,
-                color = SidebarTokens.TextPrimary,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (subtitle != null) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = subtitle,
-                    color = SidebarTokens.TextTertiary,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.sp,
-                    letterSpacing = 0.2.sp
+                    text = title,
+                    color = SidebarTokens.TextBright,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        color = SidebarTokens.TextMuted,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 11.sp
+                    )
+                }
             }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                tint = SidebarTokens.TextMuted,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text.uppercase(),
-        color = SidebarTokens.TextTertiary,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
-        letterSpacing = 0.6.sp,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-    )
+private fun SectionLabel(text: String, trailing: (@Composable () -> Unit)? = null) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text.uppercase(),
+            color = SidebarTokens.TextMuted,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.4.sp
+        )
+        trailing?.invoke()
+    }
 }
 
 @Composable
 fun CategoryHeader(
     name: String,
     isExpanded: Boolean,
+    hasUnread: Boolean = false,
     onToggle: () -> Unit,
     onAddClick: () -> Unit = {}
 ) {
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded) 0f else -90f,
+        animationSpec = tween(150),
+        label = "categoryChevron"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(4.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
+                indication = rememberRipple()
             ) { onToggle() }
-            .padding(top = 18.dp, bottom = 6.dp, start = 4.dp, end = 4.dp),
+            .padding(top = 16.dp, bottom = 4.dp, start = 4.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            imageVector = Icons.Default.KeyboardArrowDown,
             contentDescription = null,
-            tint = SidebarTokens.TextTertiary,
-            modifier = Modifier.size(14.dp)
+            tint = SidebarTokens.TextMuted,
+            modifier = Modifier
+                .size(14.dp)
+                .rotate(rotation)
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(2.dp))
         Text(
             text = name.uppercase(),
-            color = SidebarTokens.TextTertiary,
+            color = SidebarTokens.TextMuted,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.6.sp,
+            letterSpacing = 0.4.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
+        if (hasUnread) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(SidebarTokens.Danger)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+        }
         Icon(
             imageVector = Icons.Default.Add,
             contentDescription = "Add Channel",
-            tint = SidebarTokens.TextTertiary,
+            tint = SidebarTokens.TextMuted,
             modifier = Modifier
                 .size(16.dp)
-                .clickable { onAddClick() }
+                .clip(CircleShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(bounded = false, radius = 12.dp)
+                ) { onAddClick() }
+        )
+    }
+}
+
+@Composable
+private fun CreateChannelRow(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(32.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple()
+            ) { onClick() }
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = null,
+            tint = SidebarTokens.TextFaint,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = "Create Channel",
+            color = SidebarTokens.TextMuted,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -279,16 +371,8 @@ fun ChannelItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val icon = if (!channel.icon.isNullOrEmpty() && channel.icon != "#") {
-        channel.icon
-    } else {
-        when (channel.type) {
-            "voice" -> Icons.AutoMirrored.Filled.VolumeUp
-            else -> Icons.Default.Tag
-        }
-    }
     SidebarItem(
-        icon = icon,
+        icon = channelLeadingIcon(channel),
         label = channel.name,
         isSelected = isSelected,
         unreadCount = channel.unreadCount,
@@ -297,12 +381,11 @@ fun ChannelItem(
 }
 
 /**
- * Core list row used for channels, DMs, and static entries.
- *
- * Selection is communicated two ways at once — a soft fill and a thin
- * accent rail on the leading edge — which is the pattern enterprise tools
- * (Linear, Slack, Notion) converge on because it reads instantly even at a
- * glance, and it animates smoothly between states instead of snapping.
+ * Core list row used for channels, DMs, and static entries — the Discord
+ * pattern: a small white pill in the gutter that's a dot when unread and
+ * grows to fill the row when selected, paired with a soft fill and brighter
+ * text/icon color. State is communicated redundantly on purpose so it reads
+ * at a glance without relying on color alone.
  */
 @Composable
 fun SidebarItem(
@@ -312,98 +395,116 @@ fun SidebarItem(
     unreadCount: Int = 0,
     onClick: () -> Unit
 ) {
+    val isUnread = unreadCount > 0 && !isSelected
+
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) SidebarTokens.SurfaceSelected else Color.Transparent,
         animationSpec = tween(150),
         label = "sidebarItemBackground"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isSelected) SidebarTokens.TextPrimary else SidebarTokens.TextSecondary,
+        targetValue = when {
+            isSelected || isUnread -> SidebarTokens.TextBright
+            else -> SidebarTokens.TextPrimary
+        },
         animationSpec = tween(150),
         label = "sidebarItemContent"
     )
-    val railWidth by animateFloatAsState(
-        targetValue = if (isSelected) 3f else 0f,
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) SidebarTokens.TextBright else SidebarTokens.TextFaint,
         animationSpec = tween(150),
-        label = "sidebarItemRail"
+        label = "sidebarItemIcon"
+    )
+    val pillHeight by animateDpAsState(
+        targetValue = when {
+            isSelected -> 20.dp
+            isUnread -> 8.dp
+            else -> 0.dp
+        },
+        animationSpec = tween(150),
+        label = "sidebarItemPill"
     )
 
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(36.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(color = SidebarTokens.Accent)
-            ) { onClick() },
-        color = backgroundColor
+            .height(34.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        // Pill indicator lives in the 8dp gutter to the left of the row,
+        // outside the row's own clipped/rounded surface.
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(x = (-8).dp)
+                .width(4.dp)
+                .height(pillHeight)
+                .clip(RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
+                .background(SidebarTokens.PillIndicator)
+        )
+
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .drawBehind {
-                    if (railWidth > 0f) {
-                        drawRoundRect(
-                            color = SidebarTokens.Accent,
-                            topLeft = Offset(0f, size.height * 0.22f),
-                            size = androidx.compose.ui.geometry.Size(railWidth.dp.toPx(), size.height * 0.56f),
-                            cornerRadius = CornerRadius(2.dp.toPx())
-                        )
-                    }
-                }
-                .padding(start = 12.dp, end = 10.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(color = SidebarTokens.Accent)
+                ) { onClick() },
+            color = backgroundColor
         ) {
-            when (icon) {
-                is ImageVector -> {
-                    Icon(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 10.dp, end = 8.dp)
+            ) {
+                when (icon) {
+                    is ImageVector -> Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = if (isSelected) SidebarTokens.Accent else SidebarTokens.TextTertiary,
+                        tint = iconColor,
                         modifier = Modifier.size(18.dp)
                     )
-                }
-                is String -> {
-                    Text(
+                    is String -> Text(
                         text = icon,
                         fontSize = 16.sp,
                         modifier = Modifier.size(18.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
+                    else -> Spacer(modifier = Modifier.size(18.dp))
                 }
-                else -> {
-                    Spacer(modifier = Modifier.size(18.dp))
-                }
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = label,
-                color = if (unreadCount > 0 && !isSelected) SidebarTokens.TextPrimary else contentColor,
-                fontSize = 15.sp,
-                fontWeight = if (isSelected || unreadCount > 0) FontWeight.SemiBold else FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-            if (unreadCount > 0) {
+
                 Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .height(18.dp)
-                        .widthIn(min = 18.dp)
-                        .clip(RoundedCornerShape(9.dp))
-                        .background(Color(0xFFF23F43))
-                        .padding(horizontal = 5.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (unreadCount > 99) "99+" else unreadCount.toString(),
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
+
+                Text(
+                    text = label,
+                    color = contentColor,
+                    fontSize = 15.sp,
+                    fontWeight = if (isSelected || isUnread) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                if (unreadCount > 0) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .widthIn(min = 16.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(SidebarTokens.Danger)
+                            .padding(horizontal = 5.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -420,58 +521,69 @@ fun UserSection(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(52.dp),
             color = SidebarTokens.SurfaceFooter
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Avatar with a subtle ring and a presence dot cut cleanly
-                // into the footer background (not a flat circle on top).
-                Box(modifier = Modifier.size(34.dp)) {
-                    UserAvatar(
-                        name = currentUser?.name ?: "User",
-                        avatarUrl = currentUser?.avatar,
-                        size = 34.dp,
-                        borderColor = SidebarTokens.HairlineStrong
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(13.dp)
-                            .align(Alignment.BottomEnd)
-                            .clip(CircleShape)
-                            .background(SidebarTokens.SurfaceFooter)
-                            .padding(2.5.dp)
-                    ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        ) { onSettingsClick() }
+                        .padding(horizontal = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.size(32.dp)) {
+                        UserAvatar(
+                            name = currentUser?.name ?: "User",
+                            avatarUrl = currentUser?.avatar,
+                            size = 32.dp,
+                            borderColor = SidebarTokens.HairlineStrong
+                        )
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .size(13.dp)
+                                .align(Alignment.BottomEnd)
                                 .clip(CircleShape)
-                                .background(SidebarTokens.Online)
+                                .background(SidebarTokens.SurfaceFooter)
+                                .padding(2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                                    .background(SidebarTokens.Online)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = currentUser?.name ?: "User",
+                            color = SidebarTokens.TextBright,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Online",
+                            color = SidebarTokens.TextMuted,
+                            fontSize = 11.sp,
+                            maxLines = 1
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = currentUser?.name ?: "User",
-                        color = SidebarTokens.TextPrimary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = "Online",
-                        color = SidebarTokens.TextTertiary,
-                        fontSize = 11.sp,
-                        maxLines = 1
-                    )
                 }
 
                 FooterIconButton(icon = Icons.Default.Mic, contentDescription = "Mute") { /* Mute */ }
@@ -488,11 +600,11 @@ private fun FooterIconButton(
     contentDescription: String,
     onClick: () -> Unit
 ) {
-    IconButton(onClick = onClick, modifier = Modifier.size(30.dp)) {
+    IconButton(onClick = onClick, modifier = Modifier.size(28.dp)) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = SidebarTokens.TextTertiary,
+            tint = SidebarTokens.TextMuted,
             modifier = Modifier.size(17.dp)
         )
     }
