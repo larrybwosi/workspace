@@ -61,33 +61,32 @@ fun HomeScreen(
     val context = LocalContext.current
 
     LaunchedEffect(workspaceSlug, channelId, dmId, dmUserId) {
-    when {
-        dmId != null -> {
-            viewModel.selectDmById(dmId)
-            chatViewModel.setDm(dmId)
-        }
-        dmUserId != null -> {
-            viewModel.selectDmByUserId(dmUserId)
-            chatViewModel.setDmByUser(dmUserId)
-        }
-        channelId != null -> {
-            // Wait for the workspace switch to finish loading its channels
-            // BEFORE selecting the channel, so it can't be wiped out afterward.
-            if (workspaceSlug != null) {
+        when {
+            dmId != null -> {
+                viewModel.selectDmById(dmId)
+                chatViewModel.setDm(dmId)
+            }
+            dmUserId != null -> {
+                viewModel.selectDmByUserId(dmUserId)
+                chatViewModel.setDmByUser(dmUserId)
+            }
+            channelId != null -> {
+                // Use the unified sequential select function to avoid race conditions that wipe out the channel state
+                if (workspaceSlug != null) {
+                    viewModel.selectWorkspaceAndChannel(workspaceSlug, channelId)
+                    chatViewModel.setWorkspaceSlug(workspaceSlug)
+                } else {
+                    viewModel.selectChannelById(channelId)
+                }
+                chatViewModel.setChannel(channelId)
+            }
+            workspaceSlug != null -> {
                 viewModel.selectWorkspaceBySlug(workspaceSlug)
                 chatViewModel.setWorkspaceSlug(workspaceSlug)
             }
-            viewModel.selectChannelById(channelId, workspaceSlug)
-            chatViewModel.setChannel(channelId)
+            else -> viewModel.selectHome()
         }
-        workspaceSlug != null -> {
-            viewModel.selectWorkspaceBySlug(workspaceSlug)
-            chatViewModel.setWorkspaceSlug(workspaceSlug)
-        }
-        else -> viewModel.selectHome()
     }
-}  }
-}
 
     if (channelId != null) {
         androidx.activity.compose.BackHandler {
@@ -99,10 +98,10 @@ fun HomeScreen(
         ForwardMessageDialog(
             message = forwardingMessage!!,
             channels = uiState.channels,
-            onForward = { channelId ->
+            onForward = { targetId ->
                 chatViewModel.sendMessage(
                     content = "Forwarded message from ${forwardingMessage!!.senderName ?: "User"}:\n\n${forwardingMessage!!.content}",
-                    targetChannelId = channelId,
+                    targetChannelId = targetId,
                     context = context
                 )
                 forwardingMessage = null

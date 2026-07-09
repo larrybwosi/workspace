@@ -51,6 +51,85 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Atomically and sequentially selects a workspace and a channel within it.
+     * This avoids race conditions between parallel async operations that can result
+     * in the selected channel being wiped out, which would cause the workspace
+     * welcome screen to be shown instead of the chat view.
+     */
+    fun selectWorkspaceAndChannel(workspaceSlug: String, channelId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isChannelLoading = true) }
+
+            // 1. Try to fetch/render from local cache/database first to avoid any layout flash
+            val localWorkspaces = _uiState.value.workspaces
+            val workspace = localWorkspaces.find { it.slug == workspaceSlug }
+                ?: workspaceRepository.getWorkspaceBySlug(workspaceSlug)
+            val channel = channelRepository.getChannel(channelId)
+
+            if (workspace != null && channel != null) {
+                _uiState.update { state ->
+                    state.copy(
+                        selectedWorkspace = workspace,
+                        selectedChannel = channel,
+                        selectedDm = null,
+                        isHomeSelected = false
+                    )
+                }
+            }
+
+            // 2. Fetch/refresh workspaces from server
+            try {
+                val workspaceResource = workspaceRepository.getWorkspaces()
+                    .first { it !is Resource.Loading }
+
+                if (workspaceResource is Resource.Success) {
+                    val workspaces = workspaceResource.data ?: emptyList()
+                    _uiState.update { it.copy(workspaces = workspaces) }
+
+                    val updatedWorkspace = workspaces.find { it.slug == workspaceSlug }
+                        ?: workspaceRepository.getWorkspaceBySlug(workspaceSlug)
+
+                    if (updatedWorkspace != null) {
+                        // 3. Fetch channels of the selected workspace
+                        val channelsResource = channelRepository.getWorkspaceChannels(workspaceSlug)
+                            .first { it !is Resource.Loading }
+
+                        if (channelsResource is Resource.Success) {
+                            val channels = channelsResource.data ?: emptyList()
+
+                            // Find the target channel from the list, database, or server
+                            val updatedChannel = channels.find { it.id == channelId }
+                                ?: channelRepository.getChannel(channelId)
+                                ?: channelRepository.fetchChannelFromServer(workspaceSlug, channelId).let {
+                                    if (it is Resource.Success) it.data else null
+                                }
+
+                            _uiState.update { state ->
+                                state.copy(
+                                    selectedWorkspace = updatedWorkspace,
+                                    channels = channels,
+                                    selectedChannel = updatedChannel,
+                                    selectedDm = null,
+                                    isHomeSelected = false,
+                                    isChannelLoading = false
+                                )
+                            }
+                        } else {
+                            _uiState.update { it.copy(isChannelLoading = false, error = channelsResource.message) }
+                        }
+                    } else {
+                        _uiState.update { it.copy(isChannelLoading = false, error = "Workspace not found") }
+                    }
+                } else {
+                    _uiState.update { it.copy(isChannelLoading = false, error = workspaceResource.message) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isChannelLoading = false, error = e.localizedMessage ?: "Failed to load channel") }
+            }
+        }
+    }
+
     fun selectDmByUserId(userId: String) {
         viewModelScope.launch {
             dmDao.getDmsWithUserInfoFlow().firstOrNull()?.find { it.dm.otherUserId == userId }?.let {
