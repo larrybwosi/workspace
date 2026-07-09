@@ -23,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       android: ${{ steps.filter.outputs.android }}
+      web: ${{ steps.filter.outputs.web }}
+      desktop: ${{ steps.filter.outputs.desktop }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -31,6 +33,10 @@ jobs:
           filters: |
             android:
               - 'apps/android/**'
+            web:
+              - 'apps/web/**'
+            desktop:
+              - 'apps/desktop/**'
 
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -137,6 +143,8 @@ jobs:
         run: pnpm turbo run test:e2e --filter=api
 
   web-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.web == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -225,12 +233,12 @@ jobs:
           if [[ "$lint" != "success" ]]; then exit 1; fi
           if [[ "$unit" != "success" ]]; then exit 1; fi
           if [[ "$api" != "success" ]]; then exit 1; fi
-          if [[ "$web" != "success" ]]; then exit 1; fi
+          if [[ "$web" != "success" && "$web" != "skipped" ]]; then exit 1; fi
           if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
 
   desktop-verify:
-    if: github.event_name == 'pull_request'
-    needs: [all-tests-passed]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.desktop == 'true'
+    needs: [changes, all-tests-passed]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
