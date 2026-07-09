@@ -35,6 +35,10 @@ class WorkspaceRepository @Inject constructor(
         }
     }
 
+    suspend fun getWorkspaceBySlug(slug: String): WorkspaceEntity? {
+        return dao.getWorkspaceBySlug(slug)
+    }
+
     suspend fun createWorkspace(request: CreateWorkspaceRequest): Resource<WorkspaceEntity> {
         return try {
             val response = api.createWorkspace(request)
