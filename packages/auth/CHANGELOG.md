@@ -1,5 +1,17 @@
 # @repo/auth
 
+## 0.1.0-dev.15
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/database@0.1.0-dev.15
+  - @repo/shared@0.1.0-dev.15
+
 ## 0.1.0-dev.14
 
 ### Minor Changes

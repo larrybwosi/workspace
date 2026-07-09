@@ -1,5 +1,16 @@
 # docs
 
+## 2.1.0-dev.15
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/ui@0.1.0-dev.15
+
 ## 2.1.0-dev.14
 
 ### Minor Changes
