@@ -1,5 +1,11 @@
 # @repo/types
 
+## 0.1.0-dev.13
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 0.1.0-dev.12
 
 ### Minor Changes
