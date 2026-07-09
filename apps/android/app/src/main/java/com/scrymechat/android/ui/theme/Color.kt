@@ -21,3 +21,4 @@ val ScrymeDarkBackground = Color(0xFF000000)
 val ScrymeDarkTextPrimary = Color(0xFFFFFFFF)
 val ScrymeDarkTextSecondary = Color(0xFF949BA4)
 val ScrymeDarkAccent = Color(0xFF5865F2) // Keep the accent for brand recognition
+val ScrymeDarkDivider = Color(0xFF1F1F1F)

@@ -120,11 +120,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectChannel(channel: ChannelEntity) {
-        _uiState.update { it.copy(selectedChannel = channel, selectedDm = null, isHomeSelected = false) }
+        _uiState.update { it.copy(selectedChannel = channel, selectedDm = null, isHomeSelected = false, isChannelLoading = false) }
     }
 
     fun selectChannelById(channelId: String, slug: String? = null) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isChannelLoading = true) }
             val channel = channelRepository.getChannel(channelId)
             if (channel != null) {
                 selectChannel(channel)
@@ -132,7 +133,11 @@ class HomeViewModel @Inject constructor(
                 val result = channelRepository.fetchChannelFromServer(slug, channelId)
                 if (result is Resource.Success && result.data != null) {
                     selectChannel(result.data)
+                } else {
+                    _uiState.update { it.copy(isChannelLoading = false) }
                 }
+            } else {
+                _uiState.update { it.copy(isChannelLoading = false) }
             }
         }
     }
@@ -246,5 +251,6 @@ data class HomeUiState(
     val isCreateWorkspaceDialogOpen: Boolean = false,
     val isCreateChannelDialogOpen: Boolean = false,
     val isCreatingWorkspace: Boolean = false,
-    val isCreatingChannel: Boolean = false
+    val isCreatingChannel: Boolean = false,
+    val isChannelLoading: Boolean = false
 )

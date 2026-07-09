@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,7 +38,8 @@ fun WorkspaceRail(
     isHomeSelected: Boolean,
     onWorkspaceClick: (WorkspaceEntity) -> Unit,
     onHomeClick: () -> Unit,
-    onCreateWorkspaceClick: () -> Unit
+    onCreateWorkspaceClick: () -> Unit,
+    onNotificationsClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -47,6 +49,22 @@ fun WorkspaceRail(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(12.dp))
+
+        // Notifications Button
+        WorkspaceIcon(
+            isSelected = false,
+            onClick = onNotificationsClick,
+            content = {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notifications",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Home Button
         WorkspaceIcon(

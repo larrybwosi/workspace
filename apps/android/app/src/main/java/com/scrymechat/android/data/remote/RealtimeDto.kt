@@ -13,8 +13,18 @@ data class PresenceDto(
 
 data class NotificationDto(
     val id: String,
+    val userId: String,
     val title: String,
-    val body: String,
+    val message: String,
     val type: String,
-    val metadata: Map<String, Any>? = null
+    val entityType: String? = null,
+    val entityId: String? = null,
+    val linkUrl: String? = null,
+    val isRead: Boolean = false,
+    val metadata: Map<String, Any>? = null,
+    val createdAt: String
+)
+
+data class UpdateNotificationRequest(
+    val isRead: Boolean
 )

@@ -28,6 +28,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideNotificationApi(retrofit: Retrofit): NotificationApi {
+        return retrofit.create(NotificationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideInvitationsApi(retrofit: Retrofit): InvitationsApi {
         return retrofit.create(InvitationsApi::class.java)
     }

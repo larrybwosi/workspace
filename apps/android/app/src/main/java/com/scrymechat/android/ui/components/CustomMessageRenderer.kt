@@ -371,7 +371,7 @@ fun MessageNodeRenderer(
                             Icon(
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null,
-                                tint = com.scrymechat.android.ui.home.SidebarTokens.TextSecondary
+                                tint = com.scrymechat.android.ui.home.SidebarTokens.TextMuted
                             )
                         }
                     }

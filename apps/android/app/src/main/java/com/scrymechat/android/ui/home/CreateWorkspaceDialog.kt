@@ -151,14 +151,14 @@ fun CreateWorkspaceDialog(
                                            else "Give your workspace a name",
                                     fontSize = 12.sp,
                                     color = if (slugLabel != null) SidebarTokens.Accent.copy(alpha = 0.7f)
-                                            else SidebarTokens.TextSecondary.copy(alpha = 0.45f)
+                                            else SidebarTokens.TextMuted.copy(alpha = 0.45f)
                                 )
                             }
                         }
                     }
 
                     HorizontalDivider(
-                        color = SidebarTokens.TextSecondary.copy(alpha = 0.08f)
+                        color = SidebarTokens.TextMuted.copy(alpha = 0.08f)
                     )
 
                     // ── Name ──────────────────────────────────────────────────
@@ -189,7 +189,7 @@ fun CreateWorkspaceDialog(
                         Text(
                             text = "scrymechat.com/${effectiveSlug.ifBlank { "…" }}",
                             fontSize = 11.sp,
-                            color = SidebarTokens.TextSecondary.copy(alpha = 0.55f),
+                            color = SidebarTokens.TextMuted.copy(alpha = 0.55f),
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
@@ -214,7 +214,7 @@ fun CreateWorkspaceDialog(
                                 "${description.length}/200",
                                 fontSize = 11.sp,
                                 color = if (description.length > 180) SidebarTokens.Accent
-                                        else SidebarTokens.TextSecondary.copy(alpha = 0.35f)
+                                        else SidebarTokens.TextMuted.copy(alpha = 0.35f)
                             )
                         }
                     }
@@ -225,11 +225,11 @@ fun CreateWorkspaceDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         color = if (isPublic) SidebarTokens.Accent.copy(alpha = 0.07f)
-                                else SidebarTokens.TextSecondary.copy(alpha = 0.04f),
+                                else SidebarTokens.TextMuted.copy(alpha = 0.04f),
                         border = BorderStroke(
                             width = 1.dp,
                             color = if (isPublic) SidebarTokens.Accent.copy(alpha = 0.28f)
-                                    else SidebarTokens.TextSecondary.copy(alpha = 0.1f)
+                                    else SidebarTokens.TextMuted.copy(alpha = 0.1f)
                         )
                     ) {
                         Row(
@@ -248,7 +248,7 @@ fun CreateWorkspaceDialog(
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
                                     color = if (isPublic) SidebarTokens.Accent.copy(alpha = 0.14f)
-                                            else SidebarTokens.TextSecondary.copy(alpha = 0.08f),
+                                            else SidebarTokens.TextMuted.copy(alpha = 0.08f),
                                     modifier = Modifier.size(36.dp)
                                 ) {
                                     Box(
@@ -265,7 +265,7 @@ fun CreateWorkspaceDialog(
                                             Icon(
                                                 imageVector = if (public) Icons.Rounded.Public else Icons.Rounded.Lock,
                                                 contentDescription = null,
-                                                tint = if (public) SidebarTokens.Accent else SidebarTokens.TextSecondary,
+                                                tint = if (public) SidebarTokens.Accent else SidebarTokens.TextMuted,
                                                 modifier = Modifier.size(18.dp)
                                             )
                                         }
@@ -290,7 +290,7 @@ fun CreateWorkspaceDialog(
                                     Text(
                                         text = if (isPublic) "Anyone can discover and join"
                                                else "Invite-only access",
-                                        color = SidebarTokens.TextSecondary,
+                                        color = SidebarTokens.TextMuted,
                                         fontSize = 12.sp
                                     )
                                 }
@@ -302,9 +302,9 @@ fun CreateWorkspaceDialog(
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
                                     checkedTrackColor = SidebarTokens.Accent,
-                                    uncheckedThumbColor = SidebarTokens.TextSecondary.copy(alpha = 0.55f),
-                                    uncheckedTrackColor = SidebarTokens.TextSecondary.copy(alpha = 0.12f),
-                                    uncheckedBorderColor = SidebarTokens.TextSecondary.copy(alpha = 0.2f)
+                                    uncheckedThumbColor = SidebarTokens.TextMuted.copy(alpha = 0.55f),
+                                    uncheckedTrackColor = SidebarTokens.TextMuted.copy(alpha = 0.12f),
+                                    uncheckedBorderColor = SidebarTokens.TextMuted.copy(alpha = 0.2f)
                                 )
                             )
                         }
@@ -320,11 +320,11 @@ fun CreateWorkspaceDialog(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = SidebarTokens.TextSecondary
+                                contentColor = SidebarTokens.TextMuted
                             ),
                             border = BorderStroke(
                                 1.dp,
-                                SidebarTokens.TextSecondary.copy(alpha = 0.18f)
+                                SidebarTokens.TextMuted.copy(alpha = 0.18f)
                             )
                         ) {
                             Text("Cancel", fontWeight = FontWeight.Medium)
@@ -406,7 +406,7 @@ private fun WorkspaceTextField(
         placeholder = {
             Text(
                 placeholder,
-                color = SidebarTokens.TextSecondary.copy(alpha = 0.32f),
+                color = SidebarTokens.TextMuted.copy(alpha = 0.32f),
                 fontSize = 14.sp
             )
         },
@@ -420,7 +420,7 @@ private fun WorkspaceTextField(
                 imageVector = leadingIcon,
                 contentDescription = null,
                 tint = if (isFocused) SidebarTokens.Accent
-                       else SidebarTokens.TextSecondary.copy(alpha = 0.4f),
+                       else SidebarTokens.TextMuted.copy(alpha = 0.4f),
                 modifier = Modifier.size(18.dp)
             )
         },
@@ -455,9 +455,8 @@ private fun WorkspaceTextField(
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = SidebarTokens.Accent,
-            unfocusedBorderColor = SidebarTokens.TextSecondary.copy(alpha = 0.16f),
-            focusedLabelColor = SidebarTokens.Accent,
-            unfocusedLabelColor = SidebarTokens.TextSecondary.copy(alpha = 0.5f),
+            unfocusedBorderColor = SidebarTokens.TextMuted.copy(alpha = 0.16f),
+            unfocusedLabelColor = SidebarTokens.TextMuted.copy(alpha = 0.5f),
             focusedTextColor = SidebarTokens.TextPrimary,
             unfocusedTextColor = SidebarTokens.TextPrimary,
             cursorColor = SidebarTokens.Accent,

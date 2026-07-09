@@ -24,9 +24,10 @@ import com.scrymechat.android.data.local.entities.*
         DmConversationEntity::class,
         MessageEntity::class,
         FriendEntity::class,
-        FriendRequestEntity::class
+        FriendRequestEntity::class,
+        NotificationEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(DatabaseConverters::class)
@@ -39,4 +40,5 @@ abstract class ScrymeDatabase : RoomDatabase() {
     abstract fun dmDao(): DmDao
     abstract fun messageDao(): MessageDao
     abstract fun friendsDao(): FriendsDao
+    abstract fun notificationDao(): NotificationDao
 }

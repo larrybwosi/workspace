@@ -144,6 +144,41 @@ fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     }
 }
 
+/**
+ * Discord-style Thread Starter separator.
+ */
+@Composable
+fun ThreadStarterDivider(palette: ChatPalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(palette.divider)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "End of Thread",
+            color = palette.textTertiary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(palette.divider)
+        )
+    }
+}
+
 private val ShapeBubble = RoundedCornerShape(14.dp)
 private val ShapeChip = RoundedCornerShape(10.dp)
 private val ShapeInputBar = RoundedCornerShape(22.dp)
@@ -225,31 +260,50 @@ fun ChatView(
     val cleanTitle = chatTitle.removePrefix("#")
 
     Column(modifier = modifier.fillMaxSize().background(palette.canvasBg)) {
-        if (isThread) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                }
-                Icon(
-                    imageVector = Icons.Default.Tag,
-                    contentDescription = null,
-                    tint = palette.accent,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = threadTitle?.removePrefix("#") ?: "Thread",
-                    color = palette.textPrimary,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+        if (chatTitle.isBlank() && messages.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = palette.accent)
             }
-            Divider(color = palette.divider)
+            return@Column
+        }
+
+        if (isThread) {
+            Surface(
+                color = palette.surface,
+                shadowElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
+                    }
+                    Icon(
+                        imageVector = Icons.Default.ChatBubbleOutline,
+                        contentDescription = null,
+                        tint = palette.accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = threadTitle?.removePrefix("#") ?: "Thread",
+                            color = palette.textPrimary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "in #$cleanTitle",
+                            color = palette.textSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
         }
 
         // Messages List Container
@@ -274,6 +328,12 @@ fun ChatView(
                     reverseLayout = true,
                     contentPadding = PaddingValues(top = 16.dp, bottom = 12.dp)
                 ) {
+                    if (isThread) {
+                        item {
+                            ThreadStarterDivider(palette = palette)
+                        }
+                    }
+
                     items(
                         count = messages.size,
                         key = { index ->
