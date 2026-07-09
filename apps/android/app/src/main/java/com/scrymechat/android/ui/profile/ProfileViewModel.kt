@@ -8,6 +8,7 @@ import com.scrymechat.android.data.local.dao.UserDao
 import com.scrymechat.android.data.repository.AuthRepository
 import com.scrymechat.android.data.repository.StorageRepository
 import com.scrymechat.android.data.remote.AuthApi
+import com.scrymechat.android.data.remote.SocialProfileDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -206,14 +207,47 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun sendFriendRequest(userId: String) {
+        viewModelScope.launch {
+            val result = friendsRepository.sendFriendRequest(userId)
+            if (result is com.scrymechat.android.common.Resource.Success) {
+                fetchUser(userId)
+            } else {
+                _errorEvents.tryEmit(result.message ?: "Failed to send friend request")
+            }
+        }
+    }
+
+    fun acceptFriendRequest(requestId: String, userId: String) {
+        viewModelScope.launch {
+            val result = friendsRepository.updateFriendRequest(requestId, "accept")
+            if (result is com.scrymechat.android.common.Resource.Success) {
+                fetchUser(userId)
+            } else {
+                _errorEvents.tryEmit(result.message ?: "Failed to accept friend request")
+            }
+        }
+    }
+
+    fun cancelFriendRequest(requestId: String, userId: String) {
+        viewModelScope.launch {
+            val result = friendsRepository.updateFriendRequest(requestId, "cancel")
+            if (result is com.scrymechat.android.common.Resource.Success) {
+                fetchUser(userId)
+            } else {
+                _errorEvents.tryEmit(result.message ?: "Failed to cancel friend request")
+            }
+        }
+    }
+
     private val _targetUser = MutableStateFlow<UserEntity?>(null)
     val targetUser: StateFlow<UserEntity?> = _targetUser.asStateFlow()
 
     private val _isLoadingTarget = MutableStateFlow(false)
     val isLoadingTarget: StateFlow<Boolean> = _isLoadingTarget.asStateFlow()
 
-    private val _socialProfile = MutableStateFlow<com.scrymechat.android.data.remote.SocialProfileDto?>(null)
-    val socialProfile: StateFlow<com.scrymechat.android.data.remote.SocialProfileDto?> = _socialProfile.asStateFlow()
+    private val _socialProfile = MutableStateFlow<SocialProfileDto?>(null)
+    val socialProfile: StateFlow<SocialProfileDto?> = _socialProfile.asStateFlow()
 
     fun fetchUser(userId: String) {
         viewModelScope.launch {
