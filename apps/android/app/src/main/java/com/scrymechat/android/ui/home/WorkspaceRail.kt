@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -27,8 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
-import com.scrymechat.android.ui.theme.ScrymeDarkAccent
-import com.scrymechat.android.ui.theme.ScrymeDarkSurface
 import com.scrymechat.android.ui.theme.ScrymeDarkSurfaceVariant
 
 @Composable
@@ -49,22 +46,6 @@ fun WorkspaceRail(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(12.dp))
-
-        // Notifications Button
-        WorkspaceIcon(
-            isSelected = false,
-            onClick = onNotificationsClick,
-            content = {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         // Home Button
         WorkspaceIcon(
@@ -130,6 +111,21 @@ fun WorkspaceRail(
             }
         }
 
+        WorkspaceIcon(
+            isSelected = false,
+            onClick = onNotificationsClick,
+            content = {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notifications",
+                    tint = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Add Workspace Button
         WorkspaceIcon(
             isSelected = false,
@@ -143,6 +139,7 @@ fun WorkspaceRail(
                 )
             }
         )
+
         Spacer(modifier = Modifier.height(12.dp))
     }
 }

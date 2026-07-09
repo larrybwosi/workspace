@@ -408,11 +408,20 @@ jobs:
         env:
           API_URL: http://localhost:3000
         run: cd apps/android && ./gradlew assembleRelease
+      - name: Determine unique Android release tag
+        id: android_tag
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            # Unique per build so we never overwrite a prior prerelease
+            echo "tag=v${{ needs.release.outputs.version }}-android.${{ github.run_number }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v${{ needs.release.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.release.outputs.version }}
-          name: v${{ needs.release.outputs.version }}
+          tag_name: ${{ steps.android_tag.outputs.tag }}
+          name: ${{ steps.android_tag.outputs.tag }}
           files: apps/android/app/build/outputs/apk/release/app-release.apk
           draft: false
           prerelease: ${{ github.ref == 'refs/heads/dev' }}
