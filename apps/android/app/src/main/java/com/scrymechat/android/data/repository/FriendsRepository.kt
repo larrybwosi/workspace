@@ -80,6 +80,19 @@ class FriendsRepository @Inject constructor(
         }
     }
 
+    suspend fun getFriendsList(): Result<List<UserDto>> {
+        return try {
+            val response = api.getFriends()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.friends.map { it.friend })
+            } else {
+                Result.failure(Exception(response.message()))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateFriendRequest(requestId: String, action: String): Resource<FriendRequestDto> {
         return try {
             val response = api.updateFriendRequest(requestId, UpdateFriendRequestDto(action))

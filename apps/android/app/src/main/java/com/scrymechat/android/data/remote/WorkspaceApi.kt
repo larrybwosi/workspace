@@ -29,4 +29,21 @@ interface WorkspaceApi {
 
     @DELETE("workspaces/{slug}")
     suspend fun deleteWorkspace(@Path("slug") slug: String): Response<Unit>
+
+    @GET("workspaces/{slug}/members")
+    suspend fun getWorkspaceMembers(
+        @Path("slug") slug: String
+    ): Response<WorkspaceMembersResponse>
 }
+
+data class WorkspaceMembersResponse(
+    val members: List<WorkspaceMemberWithUserDto>
+)
+
+data class WorkspaceMemberWithUserDto(
+    val id: String,
+    val workspaceId: String,
+    val userId: String,
+    val role: String,
+    val user: UserDto
+)
