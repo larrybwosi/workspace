@@ -118,21 +118,30 @@ fun ScrymeNavHost(
             NotificationsScreen(
                 onBack = { navController.popBackStack() },
                 onNotificationClick = { notification ->
-                    when (notification.entityType) {
-                        "channel" -> {
-                            val slug = notification.metadata?.get("workspaceSlug") as? String
-                            notification.entityId?.let { channelId ->
-                                navController.navigate(Screen.Channel.createRoute(channelId, slug))
-                            }
-                        }
-                        "direct_message" -> {
-                            notification.entityId?.let { dmId ->
-                                navController.navigate(Screen.Chat.createRoute(dmId))
-                            }
-                        }
-                        else -> {
-                            // Default back if no specific navigation
-                        }
+                    navController.navigate(Screen.NotificationDetail.createRoute(notification.id))
+                }
+            )
+        }
+        composable(
+            route = Screen.NotificationDetail.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("notificationId") {
+                    type = androidx.navigation.NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val notificationId = backStackEntry.arguments?.getString("notificationId") ?: return@composable
+            com.scrymechat.android.ui.notifications.NotificationDetailScreen(
+                notificationId = notificationId,
+                onBack = { navController.popBackStack() },
+                onNavigateToChannel = { channelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(channelId, slug)) {
+                        popUpTo(Screen.Home.route)
+                    }
+                },
+                onNavigateToDm = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId)) {
+                        popUpTo(Screen.Home.route)
                     }
                 }
             )

@@ -14,7 +14,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val repository: NotificationRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
@@ -29,6 +30,10 @@ class NotificationsViewModel @Inject constructor(
         repository.getNotificationsFlow().onEach { notifications ->
             _uiState.update { it.copy(notifications = notifications) }
         }.launchIn(viewModelScope)
+    }
+
+    fun getNotificationById(id: String): Flow<NotificationEntity?> {
+        return repository.getNotificationByIdFlow(id)
     }
 
     fun refreshNotifications() {
@@ -53,6 +58,22 @@ class NotificationsViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = sessionManager.getActiveSession()?.userId ?: return@launch
             repository.markAllRead(userId)
+        }
+    }
+
+    fun acceptFriendRequest(requestId: String, notificationId: String) {
+        viewModelScope.launch {
+            friendsRepository.updateFriendRequest(requestId, "accept")
+            repository.markAsRead(notificationId)
+            refreshNotifications()
+        }
+    }
+
+    fun declineFriendRequest(requestId: String, notificationId: String) {
+        viewModelScope.launch {
+            friendsRepository.updateFriendRequest(requestId, "decline")
+            repository.markAsRead(notificationId)
+            refreshNotifications()
         }
     }
 
