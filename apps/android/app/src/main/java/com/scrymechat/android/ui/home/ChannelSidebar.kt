@@ -80,6 +80,7 @@ fun ChannelSidebar(
     currentUser: UserEntity?,
     expandedCategories: Set<String>,
     dms: List<com.scrymechat.android.data.local.dao.DmWithUser> = emptyList(),
+    selectedDm: com.scrymechat.android.data.local.dao.DmWithUser? = null,
     onChannelClick: (ChannelEntity) -> Unit,
     onDmClick: (com.scrymechat.android.data.local.dao.DmWithUser) -> Unit = {},
     onCategoryToggle: (String) -> Unit,
@@ -119,10 +120,12 @@ fun ChannelSidebar(
                 }
 
                 items(dms, key = { it.dm.id }) { dmWithUser ->
+                    val isDmSelected = selectedDm?.dm?.id == dmWithUser.dm.id
                     SidebarItem(
                         icon = Icons.Default.ChatBubble,
                         label = dmWithUser.otherUserName ?: "Unknown User",
-                        isSelected = false,
+                        isSelected = isDmSelected,
+                        unreadCount = dmWithUser.dm.unreadCount,
                         onClick = { onDmClick(dmWithUser) }
                     )
                 }
@@ -276,14 +279,19 @@ fun ChannelItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val icon = when (channel.type) {
-        "voice" -> Icons.AutoMirrored.Filled.VolumeUp
-        else -> Icons.Default.Tag
+    val icon = if (!channel.icon.isNullOrEmpty() && channel.icon != "#") {
+        channel.icon
+    } else {
+        when (channel.type) {
+            "voice" -> Icons.AutoMirrored.Filled.VolumeUp
+            else -> Icons.Default.Tag
+        }
     }
     SidebarItem(
         icon = icon,
         label = channel.name,
         isSelected = isSelected,
+        unreadCount = channel.unreadCount,
         onClick = onClick
     )
 }
@@ -298,9 +306,10 @@ fun ChannelItem(
  */
 @Composable
 fun SidebarItem(
-    icon: ImageVector,
+    icon: Any?,
     label: String,
     isSelected: Boolean,
+    unreadCount: Int = 0,
     onClick: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
@@ -346,22 +355,57 @@ fun SidebarItem(
                 }
                 .padding(start = 12.dp, end = 10.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) SidebarTokens.Accent else SidebarTokens.TextTertiary,
-                modifier = Modifier.size(18.dp)
-            )
+            when (icon) {
+                is ImageVector -> {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = if (isSelected) SidebarTokens.Accent else SidebarTokens.TextTertiary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                is String -> {
+                    Text(
+                        text = icon,
+                        fontSize = 16.sp,
+                        modifier = Modifier.size(18.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+                else -> {
+                    Spacer(modifier = Modifier.size(18.dp))
+                }
+            }
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = label,
-                color = contentColor,
+                color = if (unreadCount > 0 && !isSelected) SidebarTokens.TextPrimary else contentColor,
                 fontSize = 15.sp,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                fontWeight = if (isSelected || unreadCount > 0) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
+            if (unreadCount > 0) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .height(18.dp)
+                        .widthIn(min = 18.dp)
+                        .clip(RoundedCornerShape(9.dp))
+                        .background(Color(0xFFF23F43))
+                        .padding(horizontal = 5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }

@@ -166,6 +166,7 @@ fun HomeScreen(
                             currentUser = uiState.currentUser,
                             expandedCategories = uiState.expandedCategories,
                             dms = uiState.dms,
+                            selectedDm = uiState.selectedDm,
                             onChannelClick = {
                                 onChannelClick(it.id, uiState.selectedWorkspace?.slug)
                                 scope.launch { drawerState.close() }
