@@ -21,7 +21,10 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val realtimeRepository: RealtimeRepository,
     private val dmRepository: com.scrymechat.android.data.repository.DmRepository,
-    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository
+    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository,
+    private val authRepository: com.scrymechat.android.data.repository.AuthRepository,
+    private val workspaceRepository: com.scrymechat.android.data.repository.WorkspaceRepository,
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -32,6 +35,9 @@ class ChatViewModel @Inject constructor(
 
     private val _loadingActions = MutableStateFlow<Set<String>>(emptySet())
     val loadingActions: StateFlow<Set<String>> = _loadingActions.asStateFlow()
+
+    private val _workspaceMembers = MutableStateFlow<List<UserDto>>(emptyList())
+    private val _friends = MutableStateFlow<List<UserDto>>(emptyList())
 
     private var currentChannelId: String? = null
     private var currentDmId: String? = null
@@ -45,6 +51,25 @@ class ChatViewModel @Inject constructor(
 
     fun setWorkspaceSlug(slug: String) {
         currentWorkspaceSlug = slug
+        loadWorkspaceMembers(slug)
+    }
+
+    private fun loadWorkspaceMembers(slug: String) {
+        viewModelScope.launch {
+            val result = workspaceRepository.getWorkspaceMembers(slug)
+            if (result is Resource.Success && result.data != null) {
+                _workspaceMembers.value = result.data.map { it.user }
+            }
+        }
+    }
+
+    private fun loadFriendsList() {
+        viewModelScope.launch {
+            val result = friendsRepository.getFriendsList()
+            if (result.isSuccess) {
+                _friends.value = result.getOrNull() ?: emptyList()
+            }
+        }
     }
 
     fun setChannel(channelId: String) {
@@ -62,6 +87,7 @@ class ChatViewModel @Inject constructor(
         loadMessages()
 
         currentWorkspaceSlug?.let { slug ->
+            loadWorkspaceMembers(slug)
             viewModelScope.launch {
                 chatRepository.markChannelRead(slug, channelId)
             }
@@ -91,9 +117,11 @@ class ChatViewModel @Inject constructor(
         currentDmId?.let { realtimeRepository.leaveRoom("dm:$it") }
         currentDmId = dmId
         currentChannelId = null
+        currentWorkspaceSlug = null
 
         realtimeRepository.joinRoom("dm:$dmId")
         loadMessages()
+        loadFriendsList()
 
         viewModelScope.launch {
             chatRepository.markDmRead(dmId)
@@ -357,6 +385,55 @@ class ChatViewModel @Inject constructor(
         _uiState.update { it.copy(activeModal = null) }
     }
 
+    fun searchUsersForMention(query: String) {
+        val listToSearch = if (currentWorkspaceSlug != null) {
+            _workspaceMembers.value
+        } else {
+            _friends.value
+        }
+
+        val filtered = if (query.isEmpty()) {
+            listToSearch
+        } else {
+            listToSearch.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                it.username?.contains(query, ignoreCase = true) == true
+            }
+        }
+
+        _uiState.update { it.copy(suggestedUsers = filtered) }
+    }
+
+    fun clearSuggestedUsers() {
+        _uiState.update { it.copy(suggestedUsers = emptyList()) }
+    }
+
+    fun navigateToUserProfile(username: String, onUserResolved: (String) -> Unit) {
+        val localList = _workspaceMembers.value + _friends.value
+        val exactLocal = localList.find {
+            it.username?.equals(username, ignoreCase = true) == true ||
+            it.name.equals(username, ignoreCase = true)
+        }
+        if (exactLocal != null) {
+            onUserResolved(exactLocal.id)
+            return
+        }
+
+        viewModelScope.launch {
+            val result = authRepository.searchUsers(username)
+            if (result.isSuccess) {
+                val users = result.getOrNull()
+                val exactMatch = users?.find {
+                    it.username?.equals(username, ignoreCase = true) == true ||
+                    it.name.equals(username, ignoreCase = true)
+                }
+                if (exactMatch != null) {
+                    onUserResolved(exactMatch.id)
+                }
+            }
+        }
+    }
+
     fun toggleReaction(messageId: String, emoji: String) {
         val channelId = currentChannelId
         val dmId = currentDmId
@@ -391,7 +468,8 @@ data class ChatUiState(
     val activeModal: ModalState? = null,
     val isThread: Boolean = false,
     val threadRootMessage: MessageEntity? = null,
-    val pendingFiles: List<PendingFile> = emptyList()
+    val pendingFiles: List<PendingFile> = emptyList(),
+    val suggestedUsers: List<UserDto> = emptyList()
 )
 
 data class PendingFile(

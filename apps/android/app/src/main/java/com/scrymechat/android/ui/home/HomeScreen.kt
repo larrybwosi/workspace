@@ -224,6 +224,20 @@ fun HomeScreen(
                 },
                 onMenuClick = { scope.launch { drawerState.open() } },
                 onAvatarClick = onUserProfileClick,
+                channels = uiState.channels,
+                suggestedUsers = chatUiState.suggestedUsers,
+                onSearchUsers = { query -> chatViewModel.searchUsersForMention(query) },
+                onClearSuggestedUsers = { chatViewModel.clearSuggestedUsers() },
+                onMentionClick = { username ->
+                    chatViewModel.navigateToUserProfile(username) { userId ->
+                        onUserProfileClick(userId)
+                    }
+                },
+                onChannelTagClick = { channelName ->
+                    uiState.channels.find { it.name.equals(channelName, ignoreCase = true) }?.let { channel ->
+                        onChannelClick(channel.id, uiState.selectedWorkspace?.slug)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -258,6 +272,12 @@ fun MainContent(
     onTyping: () -> Unit,
     onMenuClick: () -> Unit,
     onAvatarClick: (String) -> Unit = {},
+    channels: List<com.scrymechat.android.data.local.entities.ChannelEntity> = emptyList(),
+    suggestedUsers: List<com.scrymechat.android.data.remote.UserDto> = emptyList(),
+    onSearchUsers: (String) -> Unit = {},
+    onClearSuggestedUsers: () -> Unit = {},
+    onMentionClick: (String) -> Unit = {},
+    onChannelTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -370,7 +390,13 @@ fun MainContent(
                         loadingActions = loadingActions,
                         onTyping = onTyping,
                         typingUsers = chatUiState.typingUsers,
-                        onAvatarClick = onAvatarClick
+                        onAvatarClick = onAvatarClick,
+                        channels = channels,
+                        suggestedUsers = suggestedUsers,
+                        onSearchUsers = onSearchUsers,
+                        onClearSuggestedUsers = onClearSuggestedUsers,
+                        onMentionClick = onMentionClick,
+                        onChannelTagClick = onChannelTagClick
                     )
                 } else if (!isHomeSelected && selectedChannel == null && selectedWorkspace != null) {
                     WelcomeScreen(workspaceName = selectedWorkspace.name)

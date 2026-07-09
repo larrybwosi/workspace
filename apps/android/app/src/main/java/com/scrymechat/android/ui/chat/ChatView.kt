@@ -2,6 +2,9 @@ package com.scrymechat.android.ui.chat
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.ui.text.input.TextFieldValue
+import com.scrymechat.android.data.local.entities.ChannelEntity
+import com.scrymechat.android.data.remote.UserDto
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -173,6 +176,12 @@ fun ChatView(
     onRemoveFile: (PendingFile) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
     sessionManager: SessionManager? = null,
+    channels: List<ChannelEntity> = emptyList(),
+    suggestedUsers: List<UserDto> = emptyList(),
+    onSearchUsers: (String) -> Unit = {},
+    onClearSuggestedUsers: () -> Unit = {},
+    onMentionClick: (String) -> Unit = {},
+    onChannelTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
@@ -180,7 +189,7 @@ fun ChatView(
         .map { it ?: com.scrymechat.android.BuildConfig.API_URL }
         .collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
 
-    var textState by remember { mutableStateOf("") }
+    var textState by remember { mutableStateOf(TextFieldValue("")) }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
     var fullScreenImageName by remember { mutableStateOf<String?>(null) }
@@ -188,6 +197,18 @@ fun ChatView(
     var inputFocused by remember { mutableStateOf(false) }
     var reactionPickerMessage by remember { mutableStateOf<MessageEntity?>(null) }
     val listState = rememberLazyListState()
+
+    val mentionQuery = remember(textState) {
+        getMentionQuery(textState.text, textState.selection.end)
+    }
+
+    LaunchedEffect(mentionQuery) {
+        if (mentionQuery != null && mentionQuery.trigger == '@') {
+            onSearchUsers(mentionQuery.query)
+        } else {
+            onClearSuggestedUsers()
+        }
+    }
 
     // Safely scroll to bottom (item 0 in reverse layout) on message count changes
     LaunchedEffect(messages.size) {
@@ -297,6 +318,122 @@ fun ChatView(
                                 onAvatarClick = onAvatarClick,
                                 apiUrl = apiUrl
                             )
+                        }
+                    }
+                }
+            }
+
+            // Suggestions Overlay
+            val isSuggestionsVisible = (mentionQuery != null && (mentionQuery.trigger == '#' || (mentionQuery.trigger == '@' && suggestedUsers.isNotEmpty())))
+
+            if (isSuggestionsVisible) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .heightIn(max = 200.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = palette.surface,
+                    border = BorderStroke(1.dp, palette.glassBorder),
+                    tonalElevation = 6.dp
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 4.dp)
+                    ) {
+                        if (mentionQuery?.trigger == '@') {
+                            items(
+                                count = suggestedUsers.size,
+                                key = { index -> suggestedUsers[index].id }
+                            ) { index ->
+                                val user = suggestedUsers[index]
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val username = user.username ?: user.name
+                                            val replacement = "@$username "
+                                            val newText = textState.text.replaceRange(
+                                                mentionQuery.startIndex,
+                                                textState.selection.end,
+                                                replacement
+                                            )
+                                            textState = TextFieldValue(
+                                                text = newText,
+                                                selection = androidx.compose.ui.text.TextRange(mentionQuery.startIndex + replacement.length)
+                                            )
+                                            onClearSuggestedUsers()
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    UserAvatar(
+                                        name = user.name,
+                                        avatarUrl = user.avatar ?: user.image,
+                                        size = 32.dp,
+                                        borderColor = palette.glassBorder
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = user.name,
+                                            color = palette.textPrimary,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        user.username?.let {
+                                            Text(
+                                                text = "@$it",
+                                                color = palette.textSecondary,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (mentionQuery?.trigger == '#') {
+                            val matchedChannels = channels.filter {
+                                it.type != "category" && it.name.contains(mentionQuery.query, ignoreCase = true)
+                            }
+                            items(
+                                count = matchedChannels.size,
+                                key = { index -> matchedChannels[index].id }
+                            ) { index ->
+                                val channel = matchedChannels[index]
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val replacement = "#${channel.name} "
+                                            val newText = textState.text.replaceRange(
+                                                mentionQuery.startIndex,
+                                                textState.selection.end,
+                                                replacement
+                                            )
+                                            textState = TextFieldValue(
+                                                text = newText,
+                                                selection = androidx.compose.ui.text.TextRange(mentionQuery.startIndex + replacement.length)
+                                            )
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Tag,
+                                        contentDescription = null,
+                                        tint = palette.accent,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = channel.name,
+                                        color = palette.textPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -479,7 +616,7 @@ fun ChatView(
                     value = textState,
                     onValueChange = {
                         textState = it
-                        if (it.isNotEmpty()) onTyping()
+                        if (it.text.isNotEmpty()) onTyping()
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -506,7 +643,7 @@ fun ChatView(
                 )
 
                 AnimatedVisibility(
-                    visible = textState.isNotBlank() || pendingFiles.isNotEmpty() || isSending,
+                    visible = textState.text.isNotBlank() || pendingFiles.isNotEmpty() || isSending,
                     enter = scaleIn() + fadeIn(),
                     exit = scaleOut() + fadeOut()
                 ) {
@@ -517,8 +654,8 @@ fun ChatView(
                             .clip(CircleShape)
                             .background(Brush.linearGradient(palette.accentGradient))
                             .clickable(enabled = !isSending) {
-                                onSendMessage(textState, replyingTo?.id, null)
-                                textState = ""
+                                onSendMessage(textState.text, replyingTo?.id, null)
+                                textState = TextFieldValue("")
                                 replyingTo = null
                             },
                         contentAlignment = Alignment.Center
@@ -734,7 +871,9 @@ fun SwipeableMessageItem(
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
-    apiUrl: String = "http://localhost:3000"
+    apiUrl: String = "http://localhost:3000",
+    onMentionClick: (String) -> Unit = {},
+    onChannelTagClick: (String) -> Unit = {}
 ) {
     val swipeState = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
@@ -803,7 +942,9 @@ fun SwipeableMessageItem(
                     onImageClick = onImageClick,
                     onOpenThread = { onOpenThread(message) },
                     onAvatarClick = onAvatarClick,
-                    apiUrl = apiUrl
+                    apiUrl = apiUrl,
+                    onMentionClick = onMentionClick,
+                    onChannelTagClick = onChannelTagClick
                 )
 
                 DropdownMenu(
@@ -894,7 +1035,9 @@ fun MessageItem(
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
-    apiUrl: String = "http://localhost:3000"
+    apiUrl: String = "http://localhost:3000",
+    onMentionClick: (String) -> Unit = {},
+    onChannelTagClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -995,7 +1138,11 @@ fun MessageItem(
                                     isLoading = isLoading
                                 )
                             } else {
-                                MarkdownText(content = message.content.ifEmpty { " " })
+                                MarkdownText(
+                                    content = message.content.ifEmpty { " " },
+                                    onMentionClick = onMentionClick,
+                                    onChannelTagClick = onChannelTagClick
+                                )
                             }
                         } else {
                             when (message.messageType) {
@@ -1022,7 +1169,11 @@ fun MessageItem(
                                     GraphComponent(title = title, data = data, labels = labels)
                                 }
                                 else -> {
-                                    MarkdownText(content = message.content.ifEmpty { " " })
+                                    MarkdownText(
+                                        content = message.content.ifEmpty { " " },
+                                        onMentionClick = onMentionClick,
+                                        onChannelTagClick = onChannelTagClick
+                                    )
                                 }
                             }
                         }
@@ -1030,7 +1181,11 @@ fun MessageItem(
                 }
             } else {
                 if (message.content.isNotBlank()) {
-                    MarkdownText(content = message.content)
+                    MarkdownText(
+                        content = message.content,
+                        onMentionClick = onMentionClick,
+                        onChannelTagClick = onChannelTagClick
+                    )
                 }
             }
 
@@ -1174,6 +1329,27 @@ fun MessageItem(
             }
         }
     }
+}
+
+data class MentionQuery(val trigger: Char, val query: String, val startIndex: Int)
+
+fun getMentionQuery(text: String, selectionIndex: Int): MentionQuery? {
+    if (selectionIndex < 0 || selectionIndex > text.length) return null
+    var i = selectionIndex - 1
+    while (i >= 0) {
+        val char = text[i]
+        if (char == ' ' || char == '\n') {
+            break
+        }
+        if (char == '@' || char == '#') {
+            if (i == 0 || text[i - 1] == ' ' || text[i - 1] == '\n') {
+                return MentionQuery(char, text.substring(i + 1, selectionIndex), i)
+            }
+            break
+        }
+        i--
+    }
+    return null
 }
 
 private fun isWithinGroupingTimeframe(time1: String, time2: String): Boolean {
