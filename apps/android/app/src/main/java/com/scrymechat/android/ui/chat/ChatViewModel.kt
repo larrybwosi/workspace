@@ -60,6 +60,12 @@ class ChatViewModel @Inject constructor(
 
         realtimeRepository.joinRoom("channel:$channelId")
         loadMessages()
+
+        currentWorkspaceSlug?.let { slug ->
+            viewModelScope.launch {
+                chatRepository.markChannelRead(slug, channelId)
+            }
+        }
     }
 
     fun setThread(channelId: String, message: MessageEntity) {
@@ -88,6 +94,10 @@ class ChatViewModel @Inject constructor(
 
         realtimeRepository.joinRoom("dm:$dmId")
         loadMessages()
+
+        viewModelScope.launch {
+            chatRepository.markDmRead(dmId)
+        }
     }
 
     fun setDmByUser(userId: String) {
@@ -262,6 +272,19 @@ class ChatViewModel @Inject constructor(
                 if (isRelevant) {
                     // Update local messages
                     loadMessages()
+
+                    // Automatically mark as read when actively viewing
+                    if (channelId != null) {
+                        currentWorkspaceSlug?.let { slug ->
+                            viewModelScope.launch {
+                                chatRepository.markChannelRead(slug, channelId)
+                            }
+                        }
+                    } else if (dmId != null) {
+                        viewModelScope.launch {
+                            chatRepository.markDmRead(dmId)
+                        }
+                    }
                 }
             }
         }

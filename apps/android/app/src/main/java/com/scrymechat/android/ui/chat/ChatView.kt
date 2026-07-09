@@ -240,6 +240,13 @@ fun ChatView(
                     isDm = isDm
                 )
             } else {
+                // messages is sorted newest-to-oldest (index 0 is newest, index N-1 is oldest).
+                // Thus, the oldest unread message has the highest index among unread messages.
+                // messages.indexOfLast finds the largest index (oldest message) that is unread.
+                val oldestUnreadIndex = remember(messages) {
+                    messages.indexOfLast { !it.readByCurrentUser }
+                }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     state = listState,
@@ -261,30 +268,36 @@ fun ChatView(
                                            !isWithinGroupingTimeframe(prevMessage.createdAt, message.createdAt) ||
                                            message.replyToSenderName != null
 
-                        SwipeableMessageItem(
-                            message = message,
-                            isGroupHeader = isGroupHeader,
-                            palette = palette,
-                            onReply = {
-                                replyingTo = it
-                                onReply(it)
-                            },
-                            onOpenThread = onOpenThread,
-                            onForward = { onForward(it) },
-                            onDownload = onDownload,
-                            onAction = { action, formState -> onAction(message, action, formState) },
-                            onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
-                            formState = formStates[message.id] ?: emptyMap(),
-                            isLoading = loadingActions.contains(message.id),
-                            onImageClick = { attachment ->
-                                fullScreenImageUrl = attachment.url
-                                fullScreenImageName = attachment.name
-                                fullScreenImageMimeType = attachment.type
-                            },
-                            onAddReaction = { reactionPickerMessage = it },
-                            onAvatarClick = onAvatarClick,
-                            apiUrl = apiUrl
-                        )
+                        Column {
+                            if (index == oldestUnreadIndex) {
+                                NewMessagesLine(palette = palette)
+                            }
+
+                            SwipeableMessageItem(
+                                message = message,
+                                isGroupHeader = isGroupHeader,
+                                palette = palette,
+                                onReply = {
+                                    replyingTo = it
+                                    onReply(it)
+                                },
+                                onOpenThread = onOpenThread,
+                                onForward = { onForward(it) },
+                                onDownload = onDownload,
+                                onAction = { action, formState -> onAction(message, action, formState) },
+                                onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
+                                formState = formStates[message.id] ?: emptyMap(),
+                                isLoading = loadingActions.contains(message.id),
+                                onImageClick = { attachment ->
+                                    fullScreenImageUrl = attachment.url
+                                    fullScreenImageName = attachment.name
+                                    fullScreenImageMimeType = attachment.type
+                                },
+                                onAddReaction = { reactionPickerMessage = it },
+                                onAvatarClick = onAvatarClick,
+                                apiUrl = apiUrl
+                            )
+                        }
                     }
                 }
             }
@@ -1192,5 +1205,47 @@ private fun formatMessageTimestamp(createdAt: String, shortOnly: Boolean = false
         "$hour:$minute $suffix"
     } catch (e: Exception) {
         createdAt.split("T").getOrNull(0) ?: createdAt
+    }
+}
+
+/**
+ * Discord-style New Messages line separator.
+ */
+@Composable
+fun NewMessagesLine(palette: ChatPalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(Color(0xFFF23F43))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color(0xFFF23F43))
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Text(
+                text = "NEW",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .width(16.dp)
+                .height(1.dp)
+                .background(Color(0xFFF23F43))
+        )
     }
 }

@@ -26,7 +26,7 @@ import com.scrymechat.android.data.local.entities.*
         FriendEntity::class,
         FriendRequestEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(DatabaseConverters::class)
