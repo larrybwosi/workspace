@@ -150,12 +150,12 @@ export class UsersController {
         // Pending requests
         receivedFriendRequests: {
           where: { senderId: currentUser.id, status: 'pending' },
-          select: { status: true, senderId: true },
+          select: { id: true, status: true, senderId: true },
           take: 1,
         },
         sentFriendRequests: {
           where: { receiverId: currentUser.id, status: 'pending' },
-          select: { status: true, senderId: true },
+          select: { id: true, status: true, senderId: true },
           take: 1,
         },
         // Blocks

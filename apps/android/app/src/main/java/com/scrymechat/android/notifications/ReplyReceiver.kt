@@ -35,9 +35,13 @@ class ReplyReceiver : BroadcastReceiver() {
     @Inject
     lateinit var workspaceDao: WorkspaceDao
 
+    @Inject
+    lateinit var friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
+
     companion object {
         const val ACTION_REPLY = "com.scrymechat.android.action.REPLY"
         const val ACTION_MARK_READ = "com.scrymechat.android.action.MARK_READ"
+        const val ACTION_ACCEPT_FRIEND = "com.scrymechat.android.action.ACCEPT_FRIEND"
         private const val TAG = "ReplyReceiver"
     }
 
@@ -56,6 +60,7 @@ class ReplyReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_MARK_READ -> handleMarkAsRead(context, entityId, entityType, workspaceId, pendingResult)
             ACTION_REPLY -> handleReply(context, intent, entityId, entityType, workspaceId, notificationId, pendingResult)
+            ACTION_ACCEPT_FRIEND -> handleAcceptFriend(context, entityId, notificationId, pendingResult)
             else -> pendingResult.finish()
         }
     }
@@ -118,6 +123,24 @@ class ReplyReceiver : BroadcastReceiver() {
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send quick reply for $entityType $entityId", e)
                 showReplyFailed(context, notificationId, entityId, entityType, replyText)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    private fun handleAcceptFriend(
+        context: Context,
+        requestId: String,
+        notificationId: Int,
+        pendingResult: PendingResult
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                friendsRepository.updateFriendRequest(requestId, "accept")
+                NotificationManagerCompat.from(context).cancel(notificationId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to accept friend request $requestId", e)
             } finally {
                 pendingResult.finish()
             }

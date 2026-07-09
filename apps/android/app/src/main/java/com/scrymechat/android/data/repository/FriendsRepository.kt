@@ -126,6 +126,10 @@ class FriendsRepository @Inject constructor(
         receiverId = receiverId,
         status = status,
         message = message,
+        senderName = sender?.name ?: sender?.username,
+        senderAvatar = sender?.avatar ?: sender?.image,
+        receiverName = receiver?.name ?: receiver?.username,
+        receiverAvatar = receiver?.avatar ?: receiver?.image,
         createdAt = createdAt
     )
 

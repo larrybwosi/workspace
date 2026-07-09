@@ -55,6 +55,21 @@ class ChannelRepository @Inject constructor(
         return dao.getChannelById(channelId)
     }
 
+    suspend fun fetchChannelFromServer(slug: String, channelId: String): Resource<ChannelEntity> {
+        return try {
+            val response = api.getChannel(slug, channelId)
+            if (response.isSuccessful && response.body() != null) {
+                val entity = response.body()!!.toEntity()
+                dao.insertChannel(entity)
+                Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     suspend fun updateChannel(slug: String, channelId: String, request: UpdateChannelRequest): Resource<ChannelEntity> {
         return try {
             val response = api.updateChannel(slug, channelId, request)

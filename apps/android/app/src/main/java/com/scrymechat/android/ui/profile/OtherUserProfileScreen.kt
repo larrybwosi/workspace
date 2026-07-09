@@ -35,6 +35,7 @@ fun OtherUserProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val user by viewModel.targetUser.collectAsState()
+    val socialProfile by viewModel.socialProfile.collectAsState()
     val isLoading by viewModel.isLoadingTarget.collectAsState()
     val palette = profilePalette()
 
@@ -110,18 +111,15 @@ fun OtherUserProfileScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        Button(
-                            onClick = { onSendMessage(userId) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text("Send Message", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                        }
+                        SocialActionSection(
+                            userId = userId,
+                            socialProfile = socialProfile,
+                            onSendMessage = onSendMessage,
+                            onAddFriend = { viewModel.sendFriendRequest(userId) },
+                            onAcceptFriend = { requestId -> viewModel.acceptFriendRequest(requestId, userId) },
+                            onCancelRequest = { requestId -> viewModel.cancelFriendRequest(requestId, userId) },
+                            palette = palette
+                        )
                     }
                 }
             }
@@ -258,6 +256,84 @@ fun ProfileInfoSection(title: String, content: String, palette: ProfilePalette) 
             fontSize = 15.sp,
             lineHeight = 22.sp
         )
+    }
+}
+
+@Composable
+fun SocialActionSection(
+    userId: String,
+    socialProfile: com.scrymechat.android.data.remote.SocialProfileDto?,
+    onSendMessage: (String) -> Unit,
+    onAddFriend: () -> Unit,
+    onAcceptFriend: (String) -> Unit,
+    onCancelRequest: (String) -> Unit,
+    palette: ProfilePalette
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (socialProfile != null) {
+            when {
+                socialProfile.isFriend -> {
+                    Button(
+                        onClick = { onSendMessage(userId) },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Send Message", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    }
+                }
+                socialProfile.friendRequestStatus == "pending" -> {
+                    if (socialProfile.friendRequestSide == "sender") {
+                        Button(
+                            onClick = { socialProfile.friendRequestId?.let { onCancelRequest(it) } },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = palette.cardBorder, contentColor = palette.textSecondary)
+                        ) {
+                            Icon(Icons.Default.HourglassEmpty, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text("Cancel Friend Request", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        }
+                    } else {
+                        Button(
+                            onClick = { socialProfile.friendRequestId?.let { onAcceptFriend(it) } },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+                        ) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text("Accept Friend Request", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        }
+                    }
+                }
+                else -> {
+                    Button(
+                        onClick = onAddFriend,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+                    ) {
+                        Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Add Friend", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    }
+                }
+            }
+        } else {
+            Button(
+                onClick = { onSendMessage(userId) },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Send Message", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            }
+        }
     }
 }
 

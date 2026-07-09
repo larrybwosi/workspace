@@ -8,6 +8,7 @@ import com.scrymechat.android.data.local.dao.UserDao
 import com.scrymechat.android.data.repository.AuthRepository
 import com.scrymechat.android.data.repository.StorageRepository
 import com.scrymechat.android.data.remote.AuthApi
+import com.scrymechat.android.data.remote.SocialProfileDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -22,7 +23,8 @@ class ProfileViewModel @Inject constructor(
     private val storageRepository: StorageRepository,
     private val authApi: AuthApi,
     private val sessionManager: SessionManager,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -205,16 +207,59 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun sendFriendRequest(userId: String) {
+        viewModelScope.launch {
+            val result = friendsRepository.sendFriendRequest(userId)
+            if (result is com.scrymechat.android.common.Resource.Success) {
+                fetchUser(userId)
+            } else {
+                _errorEvents.tryEmit(result.message ?: "Failed to send friend request")
+            }
+        }
+    }
+
+    fun acceptFriendRequest(requestId: String, userId: String) {
+        viewModelScope.launch {
+            val result = friendsRepository.updateFriendRequest(requestId, "accept")
+            if (result is com.scrymechat.android.common.Resource.Success) {
+                fetchUser(userId)
+            } else {
+                _errorEvents.tryEmit(result.message ?: "Failed to accept friend request")
+            }
+        }
+    }
+
+    fun cancelFriendRequest(requestId: String, userId: String) {
+        viewModelScope.launch {
+            val result = friendsRepository.updateFriendRequest(requestId, "cancel")
+            if (result is com.scrymechat.android.common.Resource.Success) {
+                fetchUser(userId)
+            } else {
+                _errorEvents.tryEmit(result.message ?: "Failed to cancel friend request")
+            }
+        }
+    }
+
     private val _targetUser = MutableStateFlow<UserEntity?>(null)
     val targetUser: StateFlow<UserEntity?> = _targetUser.asStateFlow()
 
     private val _isLoadingTarget = MutableStateFlow(false)
     val isLoadingTarget: StateFlow<Boolean> = _isLoadingTarget.asStateFlow()
 
+    private val _socialProfile = MutableStateFlow<SocialProfileDto?>(null)
+    val socialProfile: StateFlow<SocialProfileDto?> = _socialProfile.asStateFlow()
+
     fun fetchUser(userId: String) {
         viewModelScope.launch {
             _isLoadingTarget.value = true
             try {
+                launch {
+                    val socialResult = authRepository.getSocialProfile(userId)
+                    socialResult.onSuccess { profile ->
+                        _socialProfile.value = profile
+                    }
+                }
+
                 val response = authApi.getUser(userId)
                 if (response.isSuccessful) {
                     val userDto = response.body()

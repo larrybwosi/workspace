@@ -383,11 +383,11 @@ fun FriendRequestsList(
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Avatar(name = request.senderId, avatarUrl = null, status = null)
+                Avatar(name = request.senderName ?: request.senderId, avatarUrl = request.senderAvatar, status = null)
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Request from ${request.senderId}",
+                        text = "Request from ${request.senderName ?: request.senderId}",
                         color = EnterpriseTokens.TextPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,

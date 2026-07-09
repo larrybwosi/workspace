@@ -152,4 +152,17 @@ class AuthRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun getSocialProfile(userId: String): Result<SocialProfileDto> {
+        return try {
+            val response = authApi.getSocialProfile(userId)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Social profile fetch failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

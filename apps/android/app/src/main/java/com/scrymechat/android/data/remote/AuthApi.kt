@@ -54,6 +54,11 @@ interface AuthApi {
         @Body request: Map<String, String>
     ): Response<Unit>
 
+    @GET("users/{id}/social-profile")
+    suspend fun getSocialProfile(
+        @retrofit2.http.Path("id") id: String
+    ): Response<SocialProfileDto>
+
     @GET("users/search")
     suspend fun searchUsers(
         @retrofit2.http.Query("query") query: String
@@ -88,4 +93,15 @@ data class DeviceTokenRequest(
     val token: String,
     val platform: String,
     val deviceInfo: Map<String, String>? = null
+)
+
+data class SocialProfileDto(
+    val isFriend: Boolean,
+    val friendRequestStatus: String?,
+    val friendRequestId: String?,
+    val friendRequestSide: String?,
+    val isBlockedByMe: Boolean,
+    val hasBlockedMe: Boolean,
+    val mutualWorkspaces: List<WorkspaceDto>,
+    val mutualFriends: List<UserDto>
 )
