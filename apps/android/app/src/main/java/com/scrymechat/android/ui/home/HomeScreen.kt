@@ -68,7 +68,7 @@ fun HomeScreen(
             viewModel.selectDmByUserId(dmUserId)
             chatViewModel.setDmByUser(dmUserId)
         } else if (channelId != null) {
-            workspaceSlug?.let { viewModel.selectWorkspaceBySlug(it) }
+            workspaceSlug?.let { viewModel.selectWorkspaceBySlug(it, channelId) }
             viewModel.selectChannelById(channelId, workspaceSlug)
             workspaceSlug?.let { chatViewModel.setWorkspaceSlug(it) }
             chatViewModel.setChannel(channelId)
@@ -77,6 +77,12 @@ fun HomeScreen(
             chatViewModel.setWorkspaceSlug(workspaceSlug)
         } else {
             viewModel.selectHome()
+        }
+    }
+
+    if (channelId != null) {
+        androidx.activity.compose.BackHandler {
+            onWorkspaceClick(workspaceSlug)
         }
     }
 
