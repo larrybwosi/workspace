@@ -59,6 +59,7 @@ object SidebarTokens {
     val TextBright = Color(0xFFFFFFFF)        // Selected / Unread label
     val TextPrimary = Color(0xFF949BA4)       // Normal channel color
     val TextCategory = Color(0xFF949BA4)      // Category titles
+    val TextMuted = Color(0xFF949BA4)
     val TextFaint = Color(0xFF80848E)         // Channel icons idle tint
 
     val PillIndicator = Color(0xFFFFFFFF)
@@ -163,9 +164,7 @@ fun ChannelSidebar(
                 }
             } else {
                 // Workspace / Server Channels View
-                val (uncategorized, groupedCategories) = remember(channels) {
-                    processChannelGrouping(channels)
-                }
+                val (uncategorized, groupedCategories) = processChannelGrouping(channels)
 
                 // Render Uncategorized Channels
                 if (uncategorized.isNotEmpty()) {

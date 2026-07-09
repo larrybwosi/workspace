@@ -78,13 +78,17 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectWorkspace(workspace: WorkspaceEntity?) {
-        _uiState.update { it.copy(selectedWorkspace = workspace, selectedChannel = null, isHomeSelected = workspace == null) }
+        _uiState.update { state ->
+            val channel = if (state.selectedWorkspace?.id == workspace?.id) state.selectedChannel else null
+            state.copy(selectedWorkspace = workspace, selectedChannel = channel, isHomeSelected = workspace == null)
+        }
         if (workspace != null) {
             loadChannels(workspace.slug)
         }
     }
 
     fun selectWorkspaceBySlug(slug: String) {
+        if (_uiState.value.selectedWorkspace?.slug == slug) return
         viewModelScope.launch {
             // First refresh workspaces to ensure we have the new one
             workspaceRepository.getWorkspaces().collect { resource ->

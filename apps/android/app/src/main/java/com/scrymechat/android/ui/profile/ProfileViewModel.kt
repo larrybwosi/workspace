@@ -82,6 +82,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun revokeSession(sessionId: String) {
+        // Placeholder for revoking a session
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
@@ -294,5 +298,6 @@ data class ProfileUiState(
     val isAuthorizingQR: Boolean = false,
     val isUploading: Boolean = false,
     val pendingAvatarUri: android.net.Uri? = null,
-    val pendingBannerUri: android.net.Uri? = null
+    val pendingBannerUri: android.net.Uri? = null,
+    val sessions: List<com.scrymechat.android.ui.profile.DeviceSession> = emptyList()
 )
