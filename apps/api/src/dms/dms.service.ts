@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class DmsService {
+  private readonly logger = new Logger(DmsService.name);
+
   constructor(private readonly notificationsService: NotificationsService) {}
   /**
    * ⚡ Performance Optimization:
@@ -206,10 +208,14 @@ export class DmsService {
       creatorId: dm.participant1Id,
     };
 
-    await publishRealtime(AblyChannels.user(targetUserId), AblyEvents.DM_RECEIVED, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the DM creation response.
+     */
+    publishRealtime(AblyChannels.user(targetUserId), AblyEvents.DM_RECEIVED, {
       dmId: dm.id,
       from: userName,
-    });
+    }).catch(err => this.logger.error('Failed to publish DM creation event:', err));
 
     return formattedDm;
   }
@@ -381,19 +387,20 @@ export class DmsService {
       messageType: 'standard',
     };
 
-    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_SENT, formattedMessage);
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing and notifications to avoid blocking the message creation response.
+     */
+    publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_SENT, formattedMessage).catch(err =>
+      this.logger.error('Failed to publish DM message sent event:', err)
+    );
 
     // Notify the other participant
     const recipientId = dm.participant1Id === userId ? dm.participant2Id : dm.participant1Id;
     if (recipientId) {
-      await this.notificationsService.notifyDM(
-        dmId,
-        userId,
-        formattedMessage.user?.name || 'Someone',
-        recipientId,
-        formattedMessage.id,
-        content
-      );
+      this.notificationsService
+        .notifyDM(dmId, userId, formattedMessage.user?.name || 'Someone', recipientId, formattedMessage.id, content)
+        .catch(err => this.logger.error('Failed to send DM notification:', err));
     }
 
     return formattedMessage;
@@ -421,7 +428,13 @@ export class DmsService {
       messageType: 'standard',
     };
 
-    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_UPDATED, formattedMessage);
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the update response.
+     */
+    publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_UPDATED, formattedMessage).catch(err =>
+      this.logger.error('Failed to publish DM message update:', err)
+    );
 
     return formattedMessage;
   }
@@ -431,7 +444,13 @@ export class DmsService {
       where: { id: messageId },
     });
 
-    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_DELETED, { id: messageId });
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the deletion response.
+     */
+    publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_DELETED, { id: messageId }).catch(err =>
+      this.logger.error('Failed to publish DM message deletion:', err)
+    );
 
     return { success: true };
   }
@@ -463,10 +482,14 @@ export class DmsService {
     }
 
     if (targetDmId) {
-      await publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
+      /**
+       * ⚡ Performance Optimization:
+       * Background the realtime publishing to avoid blocking the read receipt response.
+       */
+      publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
         dmId: targetDmId,
         messageIds,
-      });
+      }).catch(err => this.logger.error('Failed to publish DM message read event:', err));
     }
 
     return { success: true };
@@ -489,11 +512,15 @@ export class DmsService {
       },
     });
 
-    await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_REACTION, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the reaction addition response.
+     */
+    publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_REACTION, {
       messageId,
       reaction,
       action: 'add',
-    });
+    }).catch(err => this.logger.error('Failed to publish DM reaction addition:', err));
 
     return reaction;
   }
@@ -516,12 +543,16 @@ export class DmsService {
         },
       });
 
-      await publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_REACTION, {
+      /**
+       * ⚡ Performance Optimization:
+       * Background the realtime publishing to avoid blocking the reaction removal response.
+       */
+      publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_REACTION, {
         messageId,
         emoji,
         userId,
         action: 'remove',
-      });
+      }).catch(err => this.logger.error('Failed to publish DM reaction removal:', err));
     } catch (error) {
       // Prisma error code for 'Record to delete does not exist' - we ignore it here
       // to maintain idempotency and match previous behavior.

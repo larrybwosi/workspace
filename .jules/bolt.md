@@ -185,3 +185,13 @@
 
 **Learning:** Returning individual reaction records in high-traffic message lists creates massive JSON payloads and increases client-side processing. V2 was missing the server-side grouping pattern established in V1.
 **Action:** Always group reactions by emoji on the server using a `Map` before returning message lists. This reduces payload size by 30-50% for active threads and ensures consistency across API versions.
+
+## 2026-07-10 - [API/Performance] Backgrounding Non-Critical Side Effects
+
+**Learning:** Core messaging operations (send, update, delete) were blocked by external I/O (realtime publishing, push notifications, webhooks) and non-critical database writes (audit logs, asset usage). Backgrounding these using `.catch()` for error handling significantly reduces API response latency (P99) while maintaining system reliability.
+**Action:** Always background non-blocking side effects like realtime events, notifications, and audit logging in high-traffic write endpoints. Ensure a `Logger` is used in the `.catch()` block to capture background failures.
+
+## 2026-07-10 - [Testing/Async] Mocking Backgrounded Prisma Calls
+
+**Learning:** When backgrounding Prisma calls (or any promise) using `.catch()`, unit tests using Vitest/Jest mocks will fail with `TypeError: Cannot read properties of undefined (reading 'catch')` if the mock only returns `undefined`.
+**Action:** Ensure mocks for backgrounded calls return an object with a mock `.catch` method: `mockReturnValue({ catch: vi.fn() })`.

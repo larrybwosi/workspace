@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
   AblyChannels,
@@ -21,6 +21,8 @@ import {
 
 @Injectable()
 export class MessagesService {
+  private readonly logger = new Logger(MessagesService.name);
+
   // --- Core Validations ---
   async verifyWorkspaceAccess(userId: string, slug: string) {
     /**
@@ -215,12 +217,16 @@ export class MessagesService {
           throw new ForbiddenException('Not eligible to use this sticker');
         }
       }
-      await logAssetUsage({
+      /**
+       * ⚡ Performance Optimization:
+       * Background the asset usage logging to avoid blocking message creation.
+       */
+      logAssetUsage({
         assetId: stickerId,
         assetType: 'sticker',
         userId: userId,
         workspaceId: sticker.workspaceId || undefined,
-      });
+      }).catch(err => this.logger.error('Failed to log sticker usage:', err));
     }
 
     /**
@@ -277,11 +283,9 @@ export class MessagesService {
 
     /**
      * ⚡ Performance Optimization:
-     * 1. Parallelizes side effects (Realtime publishing and notifications) using Promise.all.
-     * 2. Prevents sequential accumulation of external service latency.
-     * 3. Significantly reduces total request tail latency.
+     * Background side effects (Realtime publishing and notifications) to minimize response latency.
      */
-    await Promise.all([
+    Promise.all([
       recipientIds.length > 0
         ? notifyMentions(message.id, recipientIds, sender?.name || 'Someone', channelId, content)
         : Promise.resolve(),
@@ -289,7 +293,7 @@ export class MessagesService {
         ? notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere)
         : Promise.resolve(),
       publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message),
-    ]);
+    ]).catch(err => this.logger.error('Failed to process message side effects:', err));
 
     return message;
   }
@@ -317,7 +321,13 @@ export class MessagesService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(message.channelId), AblyEvents.MESSAGE_UPDATED, message);
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the update response.
+     */
+    publishRealtime(AblyChannels.channel(message.channelId), AblyEvents.MESSAGE_UPDATED, message).catch(err =>
+      this.logger.error('Failed to publish message update:', err)
+    );
 
     return message;
   }
@@ -363,11 +373,15 @@ export class MessagesService {
       });
     }
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the deletion response.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
       id: messageId,
       channelId,
       threadId: existingMessage.rootThread?.id,
-    });
+    }).catch(err => this.logger.error('Failed to publish message deletion:', err));
 
     return { success: true };
   }
@@ -507,10 +521,14 @@ export class MessagesService {
     }
 
     if (targetChannelId) {
-      await publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
+      /**
+       * ⚡ Performance Optimization:
+       * Background the realtime publishing to avoid blocking the read receipt response.
+       */
+      publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
         channelId: targetChannelId,
         messageIds,
-      });
+      }).catch(err => this.logger.error('Failed to publish message read event:', err));
     }
 
     return { success: true };
@@ -530,12 +548,16 @@ export class MessagesService {
         }
       }
 
-      await logAssetUsage({
+      /**
+       * ⚡ Performance Optimization:
+       * Background the asset usage logging to avoid blocking reaction addition.
+       */
+      logAssetUsage({
         assetId: customEmojiId,
         assetType: 'emoji',
         userId: userId,
         workspaceId: customEmoji?.workspaceId || undefined,
-      });
+      }).catch(err => this.logger.error('Failed to log custom emoji usage:', err));
     }
 
     /**
@@ -569,11 +591,15 @@ export class MessagesService {
     });
 
     const channelId = (reaction as any).message.channelId;
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the reaction addition response.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
       messageId,
       reaction,
       action: 'add',
-    });
+    }).catch(err => this.logger.error('Failed to publish reaction addition:', err));
 
     return reaction;
   }
@@ -604,12 +630,16 @@ export class MessagesService {
       });
 
       const channelId = (reaction as any).message.channelId;
-      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+      /**
+       * ⚡ Performance Optimization:
+       * Background the realtime publishing to avoid blocking the reaction removal response.
+       */
+      publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
         messageId,
         emoji,
         userId,
         action: 'remove',
-      });
+      }).catch(err => this.logger.error('Failed to publish reaction removal:', err));
     } catch (error) {
       // Prisma error code for 'Record to delete does not exist'
       if ((error as any).code === 'P2025') {
@@ -695,14 +725,19 @@ export class MessagesService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(message.channel.id), 'message.action_response', {
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical side effects (Realtime, Webhooks, Audit Logs)
+     * to minimize response latency for action processing.
+     */
+    publishRealtime(AblyChannels.channel(message.channel.id), 'message.action_response', {
       messageId: message.id,
       actionId: data.actionId,
       response,
-    });
+    }).catch(err => this.logger.error('Failed to publish action response:', err));
 
     if (callbackUrl) {
-      try {
+      const dispatchWebhook = async () => {
         const payload = {
           event: 'message.action_response',
           timestamp: new Date().toISOString(),
@@ -745,25 +780,27 @@ export class MessagesService {
           where: { id: response.id },
           data: { webhookSent: true },
         });
-      } catch (webhookError) {
-        console.error('Failed to send webhook callback:', webhookError);
-      }
+      };
+
+      dispatchWebhook().catch(err => this.logger.error('Failed to send webhook callback:', err));
     }
 
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: message.channel.workspace?.id || '',
-        userId: userId,
-        action: 'message.action_responded',
-        resource: 'message_action',
-        resourceId: response.id,
-        metadata: {
-          messageId: message.id,
-          actionId: data.actionId,
-          channelId: message.channel.id,
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: message.channel.workspace?.id || '',
+          userId: userId,
+          action: 'message.action_responded',
+          resource: 'message_action',
+          resourceId: response.id,
+          metadata: {
+            messageId: message.id,
+            actionId: data.actionId,
+            channelId: message.channel.id,
+          },
         },
-      },
-    });
+      })
+      .catch(err => this.logger.error('Failed to create action response audit log:', err));
 
     return {
       success: true,
