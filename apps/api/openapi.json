@@ -4525,6 +4525,202 @@
         ]
       }
     },
+    "/api/v3/workspaces/{slug}/webhooks": {
+      "get": {
+        "description": "Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.",
+        "operationId": "V3WebhooksController_getWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhooks returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all webhooks in the workspace",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "post": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_createWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/webhooks/{webhookId}": {
+      "get": {
+        "description": "Requires webhooks:read scope.",
+        "operationId": "V3WebhooksController_getWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook details returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a specific webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_updateWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "delete": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_deleteWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      }
+    },
     "/api/invitations": {
       "get": {
         "operationId": "InvitationsController_getInvitations",
@@ -9733,6 +9929,58 @@
           "brandingConfig": {
             "type": "object",
             "description": "Custom branding configuration"
+          }
+        }
+      },
+      "V3CreateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "message.sent",
+              "channel.created"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "events"
+        ]
+      },
+      "V3UpdateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean"
           }
         }
       },
