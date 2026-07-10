@@ -181,7 +181,13 @@ export class ApiV3Guard implements CanActivate {
             // IP Allowlist check
             if (app.allowedIps && app.allowedIps.length > 0) {
               const clientIp = request.ip || request.socket.remoteAddress;
-              if (!clientIp || !app.allowedIps.includes(clientIp)) {
+              let normalizedIp = clientIp || '';
+              if (normalizedIp.startsWith('::ffff:')) {
+                normalizedIp = normalizedIp.substring(7);
+              }
+
+              const isAllowed = app.allowedIps.includes(normalizedIp) || (clientIp && app.allowedIps.includes(clientIp));
+              if (!isAllowed) {
                 throw new ForbiddenException('IP address not authorized');
               }
             }

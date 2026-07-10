@@ -4057,21 +4057,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "access_token": {
-                      "type": "string",
-                      "example": "oat_f3a7..."
+                    "success": {
+                      "type": "boolean",
+                      "example": true
                     },
-                    "token_type": {
-                      "type": "string",
-                      "example": "Bearer"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "access_token": {
+                          "type": "string",
+                          "example": "oat_f3a7..."
+                        },
+                        "token_type": {
+                          "type": "string",
+                          "example": "Bearer"
+                        },
+                        "expires_in": {
+                          "type": "integer",
+                          "example": 3600
+                        },
+                        "scope": {
+                          "type": "string",
+                          "example": "provisioning:workspaces messages:send"
+                        }
+                      }
                     },
-                    "expires_in": {
-                      "type": "integer",
-                      "example": 3600
-                    },
-                    "scope": {
+                    "timestamp": {
                       "type": "string",
-                      "example": "provisioning:workspaces messages:send"
+                      "example": "2026-07-10T06:25:22.704Z"
                     }
                   }
                 }
@@ -4107,29 +4120,41 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "workspaces": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "description": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "createdAt": {
-                            "type": "string"
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspaces": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            }
                           }
                         }
                       }
+                    },
+                    "timestamp": {
+                      "type": "string"
                     }
                   }
                 }
@@ -4169,7 +4194,56 @@
         },
         "responses": {
           "201": {
-            "description": "Workspace provisioned successfully."
+            "description": "Workspace provisioned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "bot": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "clientId": {
+                              "type": "string"
+                            },
+                            "clientSecret": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid input or owner not found."
@@ -4184,6 +4258,268 @@
           }
         ],
         "summary": "Provision a new workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}": {
+      "get": {
+        "description": "Retrieve details of a specific workspace by its slug.",
+        "operationId": "V3WorkspacesController_getWorkspaceBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace details returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "icon": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "industry": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "brandingConfig": {
+                              "type": "object",
+                              "nullable": true
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope or unauthorized workspace access."
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get workspace details (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "patch": {
+        "description": "Update the configuration and metadata of a specific workspace.",
+        "operationId": "V3WorkspacesController_updateWorkspace",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workspace updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "icon": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "industry": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "brandingConfig": {
+                              "type": "object",
+                              "nullable": true
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope or unauthorized access."
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Permanently deletes a specific workspace.",
+        "operationId": "V3WorkspacesController_deleteWorkspace",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope or unauthorized access."
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a workspace (Enterprise M2M)",
         "tags": [
           "V3 Workspaces"
         ]
@@ -9370,6 +9706,35 @@
           "slug",
           "ownerEmail"
         ]
+      },
+      "V3UpdateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Acme Corp Updated",
+            "description": "The display name of the workspace"
+          },
+          "icon": {
+            "type": "string",
+            "example": "building",
+            "description": "Icon identifier or URL"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description for Acme Corp",
+            "description": "A description for the workspace."
+          },
+          "industry": {
+            "type": "string",
+            "example": "Technology",
+            "description": "The industry categorization of the workspace."
+          },
+          "brandingConfig": {
+            "type": "object",
+            "description": "Custom branding configuration"
+          }
+        }
       },
       "CreateInvitationDto": {
         "type": "object",

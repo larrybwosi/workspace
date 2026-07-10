@@ -11,6 +11,14 @@ vi.mock('@repo/database', () => ({
     workspace: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    workspaceMember: {
+      findFirst: vi.fn(),
+    },
+    workspaceAuditLog: {
+      create: vi.fn(),
     },
   },
 }));
@@ -41,7 +49,7 @@ describe('V3WorkspacesController', () => {
   });
 
   describe('getWorkspaces', () => {
-    it('should list workspaces associated with context organizationId', async () => {
+    it('should list workspaces associated with context organizationId in wrapped standard response', async () => {
       const context = {
         scopes: ['provisioning:workspaces'],
         organizationId: 'org-abc',
@@ -56,9 +64,11 @@ describe('V3WorkspacesController', () => {
 
       const result = await controller.getWorkspaces(context as any);
 
-      expect(result.workspaces).toBeDefined();
-      expect(result.workspaces.length).toBe(1);
-      expect(result.workspaces[0].name).toBe('Acme');
+      expect(result.success).toBe(true);
+      expect(result.timestamp).toBeDefined();
+      expect(result.data.workspaces).toBeDefined();
+      expect(result.data.workspaces.length).toBe(1);
+      expect(result.data.workspaces[0].name).toBe('Acme');
       expect(prisma.workspace.findMany).toHaveBeenCalledWith({
         where: { organizationId: 'org-abc' },
         select: {
@@ -90,9 +100,10 @@ describe('V3WorkspacesController', () => {
 
       const result = await controller.getWorkspaces(context as any);
 
-      expect(result.workspaces).toBeDefined();
-      expect(result.workspaces.length).toBe(1);
-      expect(result.workspaces[0].name).toBe('Single');
+      expect(result.success).toBe(true);
+      expect(result.data.workspaces).toBeDefined();
+      expect(result.data.workspaces.length).toBe(1);
+      expect(result.data.workspaces[0].name).toBe('Single');
       expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
         where: { id: 'ws-single' },
         select: {
@@ -119,7 +130,7 @@ describe('V3WorkspacesController', () => {
   });
 
   describe('provisionWorkspace', () => {
-    it('should delegate to provisioningService.provisionWorkspace if scopes allow', async () => {
+    it('should delegate to provisioningService.provisionWorkspace and wrap result if scopes allow', async () => {
       const context = {
         scopes: ['provisioning:workspaces'],
         organizationId: 'org-abc',
@@ -132,16 +143,20 @@ describe('V3WorkspacesController', () => {
         ownerEmail: 'owner@acme.com',
       };
 
-      const expectedResponse = {
+      const serviceResponse = {
         success: true,
         workspace: { id: 'ws-99', slug: 'new-ws', name: 'New Workspace' },
+        bot: { id: 'bot-1', clientId: 'bot-client', clientSecret: 'bot-secret' },
       };
 
-      (provisioningService.provisionWorkspace as any).mockResolvedValue(expectedResponse);
+      (provisioningService.provisionWorkspace as any).mockResolvedValue(serviceResponse);
 
       const result = await controller.provisionWorkspace(context as any, body as any);
 
-      expect(result).toEqual(expectedResponse);
+      expect(result.success).toBe(true);
+      expect(result.timestamp).toBeDefined();
+      expect(result.data.workspace).toEqual(serviceResponse.workspace);
+      expect(result.data.bot).toEqual(serviceResponse.bot);
       expect(provisioningService.provisionWorkspace).toHaveBeenCalledWith(context, {
         name: 'New Workspace',
         slug: 'new-ws',
@@ -168,6 +183,182 @@ describe('V3WorkspacesController', () => {
       await expect(controller.provisionWorkspace(context as any, body as any)).rejects.toThrow(
         'Missing provisioning:workspaces scope'
       );
+    });
+  });
+
+  describe('getWorkspaceBySlug', () => {
+    it('should return workspace details by slug in wrapped standard response if authorized by organizationId', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        organizationId: 'org-abc',
+        userId: 'user-xyz',
+      };
+
+      const mockWorkspace = {
+        id: 'ws-123',
+        name: 'Acme',
+        slug: 'acme-slug',
+        description: 'Primary Acme',
+        icon: 'building',
+        industry: 'Software',
+        brandingConfig: null,
+        organizationId: 'org-abc',
+        createdAt: new Date(),
+      };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+      const result = await controller.getWorkspaceBySlug(context as any, 'acme-slug');
+
+      expect(result.success).toBe(true);
+      expect(result.data.workspace).toEqual({
+        id: 'ws-123',
+        name: 'Acme',
+        slug: 'acme-slug',
+        description: 'Primary Acme',
+        icon: 'building',
+        industry: 'Software',
+        brandingConfig: null,
+        createdAt: mockWorkspace.createdAt,
+      });
+      expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
+        where: { slug: 'acme-slug' },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          icon: true,
+          industry: true,
+          brandingConfig: true,
+          organizationId: true,
+          createdAt: true,
+        },
+      });
+    });
+
+    it('should throw ForbiddenException if organizationId does not match workspace organizationId', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        organizationId: 'org-another',
+        userId: 'user-xyz',
+      };
+
+      const mockWorkspace = {
+        id: 'ws-123',
+        name: 'Acme',
+        slug: 'acme-slug',
+        organizationId: 'org-abc',
+      };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+      await expect(controller.getWorkspaceBySlug(context as any, 'acme-slug')).rejects.toThrow(
+        'M2M application is not authorized to access this workspace'
+      );
+    });
+
+    it('should throw NotFoundException if workspace is not found', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        organizationId: 'org-abc',
+        userId: 'user-xyz',
+      };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(null);
+
+      await expect(controller.getWorkspaceBySlug(context as any, 'acme-slug')).rejects.toThrow(
+        'Workspace with slug "acme-slug" not found'
+      );
+    });
+  });
+
+  describe('updateWorkspace', () => {
+    it('should update workspace and return wrapped standard response', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        organizationId: 'org-abc',
+        userId: 'user-xyz',
+        clientId: 'app-client-123',
+      };
+
+      const body = {
+        name: 'Acme Updated',
+        description: 'New Description',
+      };
+
+      const mockWorkspace = {
+        id: 'ws-123',
+        organizationId: 'org-abc',
+      };
+
+      const mockUpdatedWorkspace = {
+        id: 'ws-123',
+        name: 'Acme Updated',
+        slug: 'acme-slug',
+        description: 'New Description',
+        icon: 'building',
+        industry: 'Software',
+        brandingConfig: null,
+        updatedAt: new Date(),
+      };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspace.update as any).mockResolvedValue(mockUpdatedWorkspace);
+
+      const result = await controller.updateWorkspace(context as any, 'acme-slug', body);
+
+      expect(result.success).toBe(true);
+      expect(result.data.workspace).toEqual(mockUpdatedWorkspace);
+      expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
+        where: { slug: 'acme-slug' },
+        select: { id: true, organizationId: true },
+      });
+      expect(prisma.workspace.update).toHaveBeenCalledWith({
+        where: { id: 'ws-123' },
+        data: body,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          icon: true,
+          industry: true,
+          brandingConfig: true,
+          updatedAt: true,
+        },
+      });
+      expect(prisma.workspaceAuditLog.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteWorkspace', () => {
+    it('should delete workspace and return success standard response', async () => {
+      const context = {
+        scopes: ['*'],
+        organizationId: 'org-abc',
+        userId: 'user-xyz',
+      };
+
+      const mockWorkspace = {
+        id: 'ws-123',
+        organizationId: 'org-abc',
+      };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspace.delete as any).mockResolvedValue({ id: 'ws-123' });
+
+      const result = await controller.deleteWorkspace(context as any, 'acme-slug');
+
+      expect(result.success).toBe(true);
+      expect(result.data.success).toBe(true);
+      expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
+        where: { slug: 'acme-slug' },
+        select: { id: true, organizationId: true, ownerId: true },
+      });
+      expect(prisma.workspace.delete).toHaveBeenCalledWith({
+        where: { id: 'ws-123' },
+      });
     });
   });
 });

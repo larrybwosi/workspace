@@ -236,7 +236,100 @@ export type InvitationsControllerGetInvitationsParams = {
 workspaceId?: string;
 };
 
-export type V3WorkspacesControllerGetWorkspaces200WorkspacesItem = {
+export type V3WorkspacesControllerDeleteWorkspace200Data = {
+  success?: boolean;
+};
+
+export type V3WorkspacesControllerDeleteWorkspace200 = {
+  data?: V3WorkspacesControllerDeleteWorkspace200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+/**
+ * @nullable
+ */
+export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
+
+export type V3WorkspacesControllerUpdateWorkspace200DataWorkspace = {
+  /** @nullable */
+  brandingConfig?: V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  icon?: string | null;
+  id?: string;
+  /** @nullable */
+  industry?: string | null;
+  name?: string;
+  slug?: string;
+  updatedAt?: string;
+};
+
+export type V3WorkspacesControllerUpdateWorkspace200Data = {
+  workspace?: V3WorkspacesControllerUpdateWorkspace200DataWorkspace;
+};
+
+export type V3WorkspacesControllerUpdateWorkspace200 = {
+  data?: V3WorkspacesControllerUpdateWorkspace200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+/**
+ * @nullable
+ */
+export type V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace = {
+  /** @nullable */
+  brandingConfig?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspaceBrandingConfig;
+  createdAt?: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  icon?: string | null;
+  id?: string;
+  /** @nullable */
+  industry?: string | null;
+  name?: string;
+  slug?: string;
+};
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
+  workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201DataWorkspace = {
+  id?: string;
+  name?: string;
+  slug?: string;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201Data = {
+  bot?: V3WorkspacesControllerProvisionWorkspace201DataBot;
+  workspace?: V3WorkspacesControllerProvisionWorkspace201DataWorkspace;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201 = {
+  data?: V3WorkspacesControllerProvisionWorkspace201Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
+  clientId?: string;
+  clientSecret?: string;
+  id?: string;
+};
+
+export type V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem = {
   createdAt?: string;
   /** @nullable */
   description?: string | null;
@@ -245,15 +338,27 @@ export type V3WorkspacesControllerGetWorkspaces200WorkspacesItem = {
   slug?: string;
 };
 
-export type V3WorkspacesControllerGetWorkspaces200 = {
-  workspaces?: V3WorkspacesControllerGetWorkspaces200WorkspacesItem[];
+export type V3WorkspacesControllerGetWorkspaces200Data = {
+  workspaces?: V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem[];
 };
 
-export type V3OAuthControllerGetToken200 = {
+export type V3WorkspacesControllerGetWorkspaces200 = {
+  data?: V3WorkspacesControllerGetWorkspaces200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+export type V3OAuthControllerGetToken200Data = {
   access_token?: string;
   expires_in?: number;
   scope?: string;
   token_type?: string;
+};
+
+export type V3OAuthControllerGetToken200 = {
+  data?: V3OAuthControllerGetToken200Data;
+  success?: boolean;
+  timestamp?: string;
 };
 
 export type V10ChannelsControllerGetMessagesParams = {
@@ -731,6 +836,24 @@ export interface CreateInvitationDto {
   workspaceId?: string;
 }
 
+/**
+ * Custom branding configuration
+ */
+export type V3UpdateWorkspaceDtoBrandingConfig = { [key: string]: unknown };
+
+export interface V3UpdateWorkspaceDto {
+  /** Custom branding configuration */
+  brandingConfig?: V3UpdateWorkspaceDtoBrandingConfig;
+  /** A description for the workspace. */
+  description?: string;
+  /** Icon identifier or URL */
+  icon?: string;
+  /** The industry categorization of the workspace. */
+  industry?: string;
+  /** The display name of the workspace */
+  name?: string;
+}
+
 export type V3ProvisionWorkspaceDtoInitialMembersItemRole = typeof V3ProvisionWorkspaceDtoInitialMembersItemRole[keyof typeof V3ProvisionWorkspaceDtoInitialMembersItemRole];
 
 
@@ -848,13 +971,6 @@ export const CreateIntegrationDtoService = {
   huly: 'huly',
 } as const;
 
-export interface CreateIntegrationDto {
-  config: CreateIntegrationDtoConfig;
-  description?: string;
-  name: string;
-  service: CreateIntegrationDtoService;
-}
-
 export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
 
 export type CreateIntegrationDtoConfig = {
@@ -871,6 +987,13 @@ export type CreateIntegrationDtoConfig = {
   teamId?: string;
   webhookUrl?: string;
 };
+
+export interface CreateIntegrationDto {
+  config: CreateIntegrationDtoConfig;
+  description?: string;
+  name: string;
+  service: CreateIntegrationDtoService;
+}
 
 export interface CreateIntegrationWebhookDto {
   events: string[];
@@ -8611,7 +8734,7 @@ export const v3WorkspacesControllerProvisionWorkspace = (
  options?: SecondParameter<typeof customInstance>,) => {
 
 
-      return customInstance<void>(
+      return customInstance<V3WorkspacesControllerProvisionWorkspace201>(
       {url: `/api/v3/workspaces`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: v3ProvisionWorkspaceDto
@@ -8657,6 +8780,186 @@ export const useV3WorkspacesControllerProvisionWorkspace = <TError = ErrorType<v
       > => {
 
       const mutationOptions = getV3WorkspacesControllerProvisionWorkspaceMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve details of a specific workspace by its slug.
+ * @summary Get workspace details (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetWorkspaceBySlug = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<V3WorkspacesControllerGetWorkspaceBySlug200>(
+      {url: `/api/v3/workspaces/${slug}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetWorkspaceBySlugQueryKey = (slug: string,) => {
+    return [`/api/v3/workspaces/${slug}`] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetWorkspaceBySlugQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>, TError = ErrorType<void>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetWorkspaceBySlugQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>> = ({ signal }) => v3WorkspacesControllerGetWorkspaceBySlug(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetWorkspaceBySlugQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>>
+export type V3WorkspacesControllerGetWorkspaceBySlugQueryError = ErrorType<void>
+
+/**
+ * @summary Get workspace details (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetWorkspaceBySlug = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceBySlug>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetWorkspaceBySlugQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Update the configuration and metadata of a specific workspace.
+ * @summary Update a workspace (Enterprise M2M)
+ */
+export const v3WorkspacesControllerUpdateWorkspace = (
+    slug: string,
+    v3UpdateWorkspaceDto: BodyType<V3UpdateWorkspaceDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<V3WorkspacesControllerUpdateWorkspace200>(
+      {url: `/api/v3/workspaces/${slug}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateWorkspaceDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerUpdateWorkspaceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspace>>, TError,{slug: string;data: BodyType<V3UpdateWorkspaceDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspace>>, TError,{slug: string;data: BodyType<V3UpdateWorkspaceDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspace>>, {slug: string;data: BodyType<V3UpdateWorkspaceDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  v3WorkspacesControllerUpdateWorkspace(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerUpdateWorkspaceMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspace>>>
+    export type V3WorkspacesControllerUpdateWorkspaceMutationBody = BodyType<V3UpdateWorkspaceDto>
+    export type V3WorkspacesControllerUpdateWorkspaceMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a workspace (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerUpdateWorkspace = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspace>>, TError,{slug: string;data: BodyType<V3UpdateWorkspaceDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspace>>,
+        TError,
+        {slug: string;data: BodyType<V3UpdateWorkspaceDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerUpdateWorkspaceMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Permanently deletes a specific workspace.
+ * @summary Delete a workspace (Enterprise M2M)
+ */
+export const v3WorkspacesControllerDeleteWorkspace = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<V3WorkspacesControllerDeleteWorkspace200>(
+      {url: `/api/v3/workspaces/${slug}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerDeleteWorkspaceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspace>>, TError,{slug: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspace>>, TError,{slug: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspace>>, {slug: string}> = (props) => {
+          const {slug} = props ?? {};
+
+          return  v3WorkspacesControllerDeleteWorkspace(slug,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerDeleteWorkspaceMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspace>>>
+
+    export type V3WorkspacesControllerDeleteWorkspaceMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a workspace (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerDeleteWorkspace = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspace>>, TError,{slug: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspace>>,
+        TError,
+        {slug: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerDeleteWorkspaceMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
