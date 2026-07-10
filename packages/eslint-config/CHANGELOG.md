@@ -1,5 +1,11 @@
 # @repo/eslint-config
 
+## 0.1.0-dev.21
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 0.1.0-dev.20
 
 ### Minor Changes
