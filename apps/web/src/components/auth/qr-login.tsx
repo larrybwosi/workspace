@@ -54,7 +54,8 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
         // Better Auth uses 'better-auth.session_token' cookie
         // We set it as a session cookie, but ideally the backend should set this via a secure HttpOnly cookie
         // For now, this matches the mobile-to-web handoff logic
-        document.cookie = `better-auth.session_token=${payload.token}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+        const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        document.cookie = `better-auth.session_token=${payload.token}; path=/; max-age=31536000; SameSite=Lax${isSecure ? '; Secure' : ''}`;
 
         toast.success('Successfully logged in via QR code!');
 
@@ -115,7 +116,7 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
       <div className="relative p-4 bg-white rounded-lg">
         {sessionId ? (
           <QRCodeSVG
-            value={sessionId}
+            value={`scrymechat:${sessionId}`}
             size={200}
             level="H"
             includeMargin={false}
