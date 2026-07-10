@@ -156,6 +156,9 @@ fun ScrymeNavHost(
                 },
                 onDmClick = { userId ->
                     navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
                 }
             )
         }
@@ -163,6 +166,9 @@ fun ScrymeNavHost(
             FriendsScreen(
                 onDmClick = { userId ->
                     navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
                 }
             )
         }
@@ -210,7 +216,12 @@ fun ScrymeNavHost(
                 }
             )
         }
-        composable(Screen.OtherUserProfile.route) { backStackEntry ->
+        composable(
+            route = Screen.OtherUserProfile.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("userId") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             OtherUserProfileScreen(
                 userId = userId,
