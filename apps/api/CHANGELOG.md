@@ -1,5 +1,18 @@
 # api
 
+## 2.1.0-dev.20
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/auth@0.1.0-dev.20
+  - @repo/database@0.1.0-dev.20
+  - @repo/shared@0.1.0-dev.20
+
 ## 2.1.0-dev.19
 
 ### Minor Changes
