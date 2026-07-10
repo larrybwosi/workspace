@@ -81,5 +81,5 @@ export const auth = betterAuth({
   },
 
   // Re-added 'as any' to fix type errors in CI while maintaining plugin functionality
-  plugins: [jwt(), organization(), username(), admin(), bearer()] as any,
+  plugins: [jwt(), organization(), username(), admin(), bearer()],
 });

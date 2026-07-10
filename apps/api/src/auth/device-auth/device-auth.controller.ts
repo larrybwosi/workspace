@@ -48,10 +48,7 @@ export class DeviceAuthController {
 
     if (!data) throw new NotFoundException('Session not found or expired');
     const sessionData = JSON.parse(data);
-
-    // Create a new session for the user via Better-Auth
-    // We use the auth.api.createSession which is part of Better-Auth's internal API
-    const newSession = await (auth.api as any).createSession({
+    const newSession = await auth.api.createSession({
       body: {
         userId: user.id,
       },
