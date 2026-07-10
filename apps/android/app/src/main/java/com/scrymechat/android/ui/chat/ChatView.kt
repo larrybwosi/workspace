@@ -397,7 +397,9 @@ fun ChatView(
                                 },
                                 onAddReaction = { reactionPickerMessage = it },
                                 onAvatarClick = onAvatarClick,
-                                apiUrl = apiUrl
+                                apiUrl = apiUrl,
+                                onMentionClick = onMentionClick,
+                                onChannelTagClick = onChannelTagClick
                             )
                         }
                     }

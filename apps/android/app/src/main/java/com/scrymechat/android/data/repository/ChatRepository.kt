@@ -89,7 +89,19 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.triggerMessageAction(slug, messageId, actionId, body)
             if (response.isSuccessful && response.body() != null) {
-                Resource.Success(response.body()!!)
+                val responseBody = response.body()!!
+                if (responseBody.containsKey("message")) {
+                    try {
+                        val gson = com.google.gson.Gson()
+                        val messageJson = gson.toJson(responseBody["message"])
+                        val messageDto = gson.fromJson(messageJson, MessageDto::class.java)
+                        val entity = messageDto.toEntity()
+                        dao.insertMessage(entity)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                Resource.Success(responseBody)
             } else {
                 Resource.Error(response.message())
             }

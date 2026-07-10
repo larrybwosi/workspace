@@ -37,6 +37,7 @@ fun DiscoveryScreen(
     onBack: () -> Unit,
     onNavigateToWorkspace: (String) -> Unit,
     onDmClick: (String) -> Unit,
+    onUserProfileClick: (String) -> Unit = {},
     viewModel: DiscoveryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -116,7 +117,8 @@ fun DiscoveryScreen(
                         users = uiState.users,
                         isSearching = uiState.isSearching,
                         onAddFriend = { viewModel.sendFriendRequest(it) },
-                        onMessage = onDmClick
+                        onMessage = onDmClick,
+                        onProfileClick = onUserProfileClick
                     )
                 }
 
@@ -289,7 +291,8 @@ fun UserSearchList(
     users: List<UserDto>,
     isSearching: Boolean,
     onAddFriend: (String) -> Unit,
-    onMessage: (String) -> Unit
+    onMessage: (String) -> Unit,
+    onProfileClick: (String) -> Unit = {}
 ) {
     if (isSearching && users.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -310,7 +313,8 @@ fun UserSearchList(
                 UserSearchItem(
                     user = user,
                     onAddFriend = { onAddFriend(user.id) },
-                    onMessage = { onMessage(user.id) }
+                    onMessage = { onMessage(user.id) },
+                    onProfileClick = onProfileClick
                 )
                 HorizontalDivider(color = EnterpriseTokens.Hairline, modifier = Modifier.padding(vertical = 4.dp))
             }
@@ -322,11 +326,13 @@ fun UserSearchList(
 fun UserSearchItem(
     user: UserDto,
     onAddFriend: () -> Unit,
-    onMessage: () -> Unit
+    onMessage: () -> Unit,
+    onProfileClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onProfileClick(user.id) }
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
