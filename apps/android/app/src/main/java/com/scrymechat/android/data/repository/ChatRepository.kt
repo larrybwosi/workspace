@@ -125,9 +125,38 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun updateDmMessage(conversationId: String, messageId: String, content: String): Resource<MessageEntity> {
+        return try {
+            val response = api.updateDmMessage(conversationId, messageId, UpdateMessageRequest(content))
+            if (response.isSuccessful && response.body() != null) {
+                val entity = response.body()!!.toEntity()
+                dao.insertMessage(entity)
+                Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     suspend fun deleteChannelMessage(workspaceSlug: String, channelId: String, messageId: String): Resource<Unit> {
         return try {
             val response = api.deleteChannelMessage(workspaceSlug, channelId, messageId)
+            if (response.isSuccessful) {
+                dao.deleteMessageById(messageId)
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun deleteDmMessage(conversationId: String, messageId: String): Resource<Unit> {
+        return try {
+            val response = api.deleteDmMessage(conversationId, messageId)
             if (response.isSuccessful) {
                 dao.deleteMessageById(messageId)
                 Resource.Success(Unit)

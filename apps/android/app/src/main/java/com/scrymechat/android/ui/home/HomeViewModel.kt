@@ -130,10 +130,16 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private var selectDmJob: kotlinx.coroutines.Job? = null
+
     fun selectDmByUserId(userId: String) {
-        viewModelScope.launch {
-            dmDao.getDmsWithUserInfoFlow().firstOrNull()?.find { it.dm.otherUserId == userId }?.let {
-                selectDm(it)
+        selectDmJob?.cancel()
+        selectDmJob = viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().collect { dms ->
+                val dm = dms.find { it.dm.otherUserId == userId }
+                if (dm != null) {
+                    selectDm(dm)
+                }
             }
         }
     }
@@ -236,9 +242,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectDmById(dmId: String) {
-        viewModelScope.launch {
-            dmDao.getDmsWithUserInfoFlow().firstOrNull()?.find { it.dm.id == dmId }?.let {
-                selectDm(it)
+        selectDmJob?.cancel()
+        selectDmJob = viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().collect { dms ->
+                val dm = dms.find { it.dm.id == dmId }
+                if (dm != null) {
+                    selectDm(dm)
+                }
             }
         }
     }

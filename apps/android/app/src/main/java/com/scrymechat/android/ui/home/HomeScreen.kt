@@ -167,7 +167,7 @@ fun HomeScreen(
                         WorkspaceRail(
                             workspaces = uiState.workspaces,
                             selectedWorkspace = uiState.selectedWorkspace,
-                            isHomeSelected = uiState.isHomeSelected,
+                            isHomeSelected = uiState.selectedWorkspace == null,
                             dms = uiState.dms,
                             selectedDm = uiState.selectedDm,
                             onWorkspaceClick = { onWorkspaceClick(it.slug) },
@@ -184,7 +184,7 @@ fun HomeScreen(
                             workspace = uiState.selectedWorkspace,
                             channels = uiState.channels,
                             selectedChannel = uiState.selectedChannel,
-                            isHomeSelected = uiState.isHomeSelected,
+                            isHomeSelected = uiState.selectedWorkspace == null,
                             currentUser = uiState.currentUser,
                             expandedCategories = uiState.expandedCategories,
                             dms = uiState.dms,
@@ -260,6 +260,8 @@ fun HomeScreen(
                         onChannelClick(channel.id, uiState.selectedWorkspace?.slug)
                     }
                 },
+                onEditMessage = { msg, text -> chatViewModel.editMessage(msg, text) },
+                onDeleteMessage = { msg -> chatViewModel.deleteMessage(msg) },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -300,6 +302,8 @@ fun MainContent(
     onClearSuggestedUsers: () -> Unit = {},
     onMentionClick: (String) -> Unit = {},
     onChannelTagClick: (String) -> Unit = {},
+    onEditMessage: (com.scrymechat.android.data.local.entities.MessageEntity, String) -> Unit = { _, _ -> },
+    onDeleteMessage: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -418,7 +422,10 @@ fun MainContent(
                         onSearchUsers = onSearchUsers,
                         onClearSuggestedUsers = onClearSuggestedUsers,
                         onMentionClick = onMentionClick,
-                        onChannelTagClick = onChannelTagClick
+                        onChannelTagClick = onChannelTagClick,
+                        onEditMessage = onEditMessage,
+                        onDeleteMessage = onDeleteMessage,
+                        sessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
                     )
                 } else if (!isHomeSelected && selectedChannel == null && selectedWorkspace != null) {
                     WelcomeScreen(workspaceName = selectedWorkspace.name)
