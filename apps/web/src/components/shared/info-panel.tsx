@@ -43,6 +43,7 @@ import {
   useJoinCall,
   useStartCall,
   useEndCall,
+  useLeaveCall,
   useGenerateInviteLink,
   useUserSocialProfile,
   useCurrentUser,
@@ -94,6 +95,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
   const joinCallMutation = useJoinCall();
   const startCallMutation = useStartCall();
   const endCallMutation = useEndCall();
+  const leaveCallMutation = useLeaveCall();
   const generateInviteLinkMutation = useGenerateInviteLink();
 
   const handleJoinCall = async (call: any) => {
@@ -149,6 +151,23 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
       toast.error('Failed to end call');
     }
   };
+  const handleLeaveCall = async (callId: string) => {
+    if (!workspaceSlug) return;
+    try {
+      await leaveCallMutation.mutateAsync({
+        callId,
+        workspaceSlug,
+      });
+      if (currentActiveCall?.callId === callId) {
+        setCall(null);
+      }
+      toast.success("You have left the call");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to leave call");
+    }
+  };
+
 
   const [inviteLink, setInviteLink] = useState<string>('');
 
@@ -622,16 +641,30 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                                   </span>
                                 </div>
                                 <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="flex-1 h-8 text-xs font-bold"
-                                    onClick={() => handleJoinCall(call)}
-                                  >
-                                    Join Call
-                                  </Button>
-                                  {call.participants?.some(
-                                    (p: any) => p.userId === currentUser?.id && p.role === 'host'
-                                  ) && (
+                                  {call.participants?.some((p: any) => p.userId === currentUser?.id) ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 h-8 text-xs font-bold"
+                                      onClick={() => handleLeaveCall(call.id)}
+                                      disabled={leaveCallMutation.isPending}
+                                    >
+                                      Leave Call
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      className="flex-1 h-8 text-xs font-bold"
+                                      onClick={() => handleJoinCall(call)}
+                                      disabled={joinCallMutation.isPending}
+                                    >
+                                      Join Call
+                                    </Button>
+                                  )}
+                                  {(call.initiatorId === currentUser?.id ||
+                                    call.participants?.some(
+                                      (p: any) => p.userId === currentUser?.id && p.role === "host"
+                                    )) && (
                                     <Button
                                       size="sm"
                                       variant="destructive"

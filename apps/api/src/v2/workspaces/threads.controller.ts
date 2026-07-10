@@ -92,7 +92,7 @@ export class V2ThreadsController {
         creator: { select: { id: true, name: true, avatar: true } },
         channel: { select: { id: true, name: true } },
         _count: { select: { messages: true } },
-        tags: true,
+        tags: { select: { tag: true } },
         rootMessage: { select: { id: true, content: true } },
       },
     });
