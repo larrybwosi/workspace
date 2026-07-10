@@ -18,6 +18,9 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChannel(channel: ChannelEntity)
 
+    @Query("UPDATE channels SET unreadCount = 0 WHERE id = :id")
+    suspend fun clearUnreadCount(id: String)
+
     @Query("DELETE FROM channels WHERE id = :id")
     suspend fun deleteChannelById(id: String)
 

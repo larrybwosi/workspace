@@ -24,6 +24,16 @@ export function useMessages(
   return useInfiniteQuery({
     queryKey: messageKeys.list(channelId, workspaceSlug, threadId || contextId),
     queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        const { data } = await apiClient.get<{ messages: Message[]; nextCursor: string | null }>(`/dms/${dmId}/messages`, {
+          params: { cursor: pageParam, limit: 50 },
+        });
+        return data;
+      }
+
       // Determine version prefix: default to V1 but use V2 if requested (e.g. widget)
       const prefix = isV2 ? '/v2' : '';
 
@@ -62,6 +72,14 @@ export function useSendMessage(workspaceSlug?: string, isV2?: boolean) {
 
   return useMutation({
     mutationFn: async ({ channelId, ...message }: SendMessageVariables) => {
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        const { data } = await apiClient.post<Message>(`/dms/${dmId}/messages`, message);
+        return data;
+      }
+
       const prefix = isV2 ? '/v2' : '';
 
       let url;
@@ -89,9 +107,17 @@ export function useUpdateMessage(workspaceSlug?: string) {
 
   return useMutation({
     mutationFn: async ({ id, channelId, ...updates }: Partial<Message> & { id: string; channelId: string }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
-        : `/channels/${channelId}/messages/${id}`;
+      let url;
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        url = `/dms/${dmId}/messages/${id}`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
+          : `/channels/${channelId}/messages/${id}`;
+      }
       const { data } = await apiClient.patch<Message>(url, updates);
       return { data, channelId };
     },
@@ -107,9 +133,17 @@ export function useDeleteMessage(workspaceSlug?: string) {
 
   return useMutation({
     mutationFn: async ({ id, channelId }: { id: string; channelId: string }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
-        : `/channels/${channelId}/messages/${id}`;
+      let url;
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        url = `/dms/${dmId}/messages/${id}`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${id}`
+          : `/channels/${channelId}/messages/${id}`;
+      }
       await apiClient.delete(url);
       return { id, channelId };
     },
@@ -155,6 +189,14 @@ export function useReplyToMessage(workspaceSlug?: string) {
       channelId,
       ...reply
     }: Omit<Message, 'id' | 'timestamp' | 'reactions' | 'userId'> & { messageId: string; channelId: string }) => {
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        const { data } = await apiClient.post<Message>(`/dms/${dmId}/messages`, { ...reply, replyToId: messageId });
+        return { data, channelId };
+      }
+
       const url = workspaceSlug
         ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/replies`
         : `/channels/${channelId}/messages/${messageId}/reply`;
@@ -208,9 +250,16 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
           readResolvers[channelId] = [];
 
           try {
-            const url = workspaceSlug
-              ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/read`
-              : `/channels/${channelId}/messages/read`;
+            let url;
+            if (channelId.startsWith('dm-')) {
+              const targetUserId = channelId.replace('dm-', '');
+              const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+              url = `/dms/${dm.id}/messages/read`;
+            } else {
+              url = workspaceSlug
+                ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/read`
+                : `/channels/${channelId}/messages/read`;
+            }
             const { data } = await apiClient.post(url, { messageIds: idsToMark });
             const result = { data, channelId, messageIds: idsToMark };
             resolvers.forEach(res => res.resolve(result));

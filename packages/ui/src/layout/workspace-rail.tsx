@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import { Plus, Home, Search, Settings, HelpCircle, LogOut, Moon, Sun, Building2 } from 'lucide-react';
-import { useWorkspaces } from '@repo/api-client';
-import { useParams, useRouter } from '../hooks/use-universal-router';
+import { useWorkspaces, useFriends } from '@repo/api-client';
+import { useParams, useRouter, usePathname } from '../hooks/use-universal-router';
 import { cn } from '../lib/utils';
 import { Button } from '../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/tooltip';
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
 import { useSession, authClient } from '@repo/shared';
 import { useTheme } from 'next-themes';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
+import { usePresence } from '../lib/contexts/presence-context';
 
 interface WorkspaceRailProps {
   onPlusClick?: () => void;
@@ -21,9 +22,12 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
   const { data: workspaces } = useWorkspaces();
   const { slug } = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
+  const { data: friends } = useFriends();
+  const { onlineUsers } = usePresence();
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -99,6 +103,58 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
             </TooltipTrigger>
             <TooltipContent side="right">Add Workspace</TooltipContent>
           </Tooltip>
+
+          {/* Direct Messages / Friends list in Rail */}
+          {friends && friends.length > 0 && (
+            <>
+              <div className="w-8 h-[1px] bg-sidebar-border rounded-full my-2 shrink-0" />
+              {friends.map((friend: any) => {
+                const friendUser = friend.friend || friend.user || friend;
+                const friendId = friendUser?.id || friend.friendId || friend.userId;
+                const href = `/dm/${friendId}`;
+                const isActive = pathname === href;
+                const isOnline = onlineUsers.has(friendId);
+                const displayName = friendUser?.name || friend.nickname || 'Unknown';
+
+                return (
+                  <Tooltip key={friendId}>
+                    <TooltipTrigger asChild>
+                      <div className="relative group">
+                        <div
+                          className={cn(
+                            'absolute -left-4 top-1/2 -translate-y-1/2 w-2 bg-foreground rounded-r-full transition-all duration-200',
+                            isActive ? 'h-8' : 'h-2 opacity-0 group-hover:opacity-100 group-hover:h-4'
+                          )}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            'h-12 w-12 rounded-2xl transition-all duration-200 active:scale-95 overflow-hidden border-2 relative',
+                            isActive
+                              ? 'border-foreground rounded-xl shadow-lg'
+                              : 'border-transparent hover:rounded-xl hover:bg-sidebar-accent'
+                          )}
+                          onClick={() => router.push(href)}
+                        >
+                          <Avatar className="h-full w-full rounded-2xl">
+                            <AvatarImage src={friendUser?.avatar || friendUser?.image} alt={displayName} />
+                            <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
+                              {displayName.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {isOnline && (
+                            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-sidebar bg-green-500" />
+                          )}
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{friend.nickname || displayName}</TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </>
+          )}
         </div>
 
         <div className="flex flex-col items-center gap-3 mb-4">

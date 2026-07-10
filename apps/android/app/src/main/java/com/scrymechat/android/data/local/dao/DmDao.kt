@@ -18,6 +18,9 @@ interface DmDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDm(dm: DmConversationEntity)
 
+    @Query("UPDATE dm_conversations SET unreadCount = 0 WHERE id = :id")
+    suspend fun clearUnreadCount(id: String)
+
     @Query("DELETE FROM dm_conversations WHERE id = :id")
     suspend fun deleteDmById(id: String)
 

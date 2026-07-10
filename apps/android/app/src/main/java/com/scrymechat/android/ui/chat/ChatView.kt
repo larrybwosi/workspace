@@ -306,6 +306,26 @@ fun ChatView(
             }
         }
 
+        val currentChatKey = remember(chatTitle, isThread, isDm) {
+            "${chatTitle}_${isThread}_${isDm}"
+        }
+
+        var initialOldestUnreadMessageId by remember(currentChatKey) {
+            mutableStateOf<String?>(null)
+        }
+
+        var hasCalculatedUnread by remember(currentChatKey) {
+            mutableStateOf(false)
+        }
+
+        LaunchedEffect(messages, currentChatKey) {
+            if (!hasCalculatedUnread && messages.isNotEmpty()) {
+                val oldestUnread = messages.lastOrNull { !it.readByCurrentUser }
+                initialOldestUnreadMessageId = oldestUnread?.id
+                hasCalculatedUnread = true
+            }
+        }
+
         // Messages List Container
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             if (messages.isEmpty()) {
@@ -315,11 +335,12 @@ fun ChatView(
                     isDm = isDm
                 )
             } else {
-                // messages is sorted newest-to-oldest (index 0 is newest, index N-1 is oldest).
-                // Thus, the oldest unread message has the highest index among unread messages.
-                // messages.indexOfLast finds the largest index (oldest message) that is unread.
-                val oldestUnreadIndex = remember(messages) {
-                    messages.indexOfLast { !it.readByCurrentUser }
+                val oldestUnreadIndex = remember(messages, initialOldestUnreadMessageId) {
+                    if (initialOldestUnreadMessageId != null) {
+                        messages.indexOfFirst { it.id == initialOldestUnreadMessageId }
+                    } else {
+                        -1
+                    }
                 }
 
                 LazyColumn(
@@ -376,7 +397,9 @@ fun ChatView(
                                 },
                                 onAddReaction = { reactionPickerMessage = it },
                                 onAvatarClick = onAvatarClick,
-                                apiUrl = apiUrl
+                                apiUrl = apiUrl,
+                                onMentionClick = onMentionClick,
+                                onChannelTagClick = onChannelTagClick
                             )
                         }
                     }
@@ -1083,6 +1106,74 @@ private fun SwipeActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVecto
 }
 
 @Composable
+fun BotBadge() {
+    Surface(
+        shape = RoundedCornerShape(3.dp),
+        color = Color(0xFF5865F2) // Discord Blurple
+    ) {
+        Text(
+            text = "BOT",
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.5.dp),
+            letterSpacing = 0.5.sp
+        )
+    }
+}
+
+@Composable
+fun SystemBadge() {
+    Surface(
+        shape = RoundedCornerShape(3.dp),
+        color = Color(0xFF5865F2) // Discord Blurple
+    ) {
+        Text(
+            text = "SYSTEM",
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.5.dp),
+            letterSpacing = 0.5.sp
+        )
+    }
+}
+
+@Composable
+fun AdminBadge() {
+    Surface(
+        shape = RoundedCornerShape(3.dp),
+        color = Color(0xFFF23F43) // Discord Red
+    ) {
+        Text(
+            text = "ADMIN",
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.5.dp),
+            letterSpacing = 0.5.sp
+        )
+    }
+}
+
+@Composable
+fun ModBadge() {
+    Surface(
+        shape = RoundedCornerShape(3.dp),
+        color = Color(0xFF23A55A) // Discord Green
+    ) {
+        Text(
+            text = "MOD",
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.5.dp),
+            letterSpacing = 0.5.sp
+        )
+    }
+}
+
+@Composable
 fun MessageItem(
     message: MessageEntity,
     isGroupHeader: Boolean = true,
@@ -1099,6 +1190,15 @@ fun MessageItem(
     onMentionClick: (String) -> Unit = {},
     onChannelTagClick: (String) -> Unit = {}
 ) {
+    val cleanName = remember(message.senderName) {
+        val rawName = message.senderName ?: "Unknown User"
+        if (rawName.contains("@")) {
+            rawName.substringBefore("@")
+        } else {
+            rawName
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1106,7 +1206,7 @@ fun MessageItem(
     ) {
         if (isGroupHeader) {
             UserAvatar(
-                name = message.senderName ?: "User",
+                name = cleanName,
                 avatarUrl = message.senderAvatar,
                 size = 38.dp,
                 modifier = Modifier.clickable { onAvatarClick(message.senderId) },
@@ -1132,12 +1232,51 @@ fun MessageItem(
             if (isGroupHeader) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = message.senderName ?: "Unknown User",
+                        text = cleanName,
                         color = palette.textPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                         modifier = Modifier.clickable { onAvatarClick(message.senderId) }
                     )
+
+                    val senderId = message.senderId
+                    val senderRole = message.senderRole
+                    val rawName = message.senderName ?: ""
+
+                    val isSystem = senderId == "system" ||
+                                   senderRole?.equals("system", ignoreCase = true) == true ||
+                                   rawName.equals("system", ignoreCase = true)
+
+                    val isBot = !isSystem && (
+                                   senderId.startsWith("m2m:") ||
+                                   senderRole?.equals("bot", ignoreCase = true) == true ||
+                                   rawName.contains("bot", ignoreCase = true)
+                                )
+
+                    val isAdmin = !isSystem && !isBot && (
+                                   senderRole?.equals("admin", ignoreCase = true) == true ||
+                                   senderRole?.equals("owner", ignoreCase = true) == true
+                                )
+
+                    val isMod = !isSystem && !isBot && !isAdmin && (
+                                   senderRole?.equals("moderator", ignoreCase = true) == true ||
+                                   senderRole?.equals("staff", ignoreCase = true) == true
+                                )
+
+                    if (isSystem) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        SystemBadge()
+                    } else if (isBot) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        BotBadge()
+                    } else if (isAdmin) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        AdminBadge()
+                    } else if (isMod) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        ModBadge()
+                    }
+
                     Spacer(modifier = Modifier.width(7.dp))
                     Text(
                         text = formatMessageTimestamp(message.createdAt),
@@ -1469,7 +1608,7 @@ fun NewMessagesLine(palette: ChatPalette) {
                 .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
             Text(
-                text = "NEW",
+                text = "NEW MESSAGES",
                 color = Color.White,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,

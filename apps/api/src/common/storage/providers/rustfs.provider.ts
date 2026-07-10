@@ -21,8 +21,8 @@ export class RustFSStorageProvider implements StorageProvider {
     const endPoint = process.env.RUSTFS_ENDPOINT || 'localhost';
     const port = parseInt(process.env.RUSTFS_PORT || '9000');
     const useSSL = process.env.RUSTFS_USE_SSL === 'true';
-    const accessKey = process.env.RUSTFS_ACCESS_KEY;
-    const secretKey = process.env.RUSTFS_SECRET_KEY;
+    const accessKey = process.env.RUSTFS_ACCESS_KEY || 'rustfsadmin';
+    const secretKey = process.env.RUSTFS_SECRET_KEY || 'rustfsadmin';
     this.bucketName = process.env.RUSTFS_BUCKET || 'uploads';
 
     if (accessKey && secretKey) {

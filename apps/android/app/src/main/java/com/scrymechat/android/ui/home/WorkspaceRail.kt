@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
+import com.scrymechat.android.ui.components.UserAvatar
 import com.scrymechat.android.ui.theme.ScrymeDarkSurfaceVariant
 
 @Composable
@@ -33,8 +34,11 @@ fun WorkspaceRail(
     workspaces: List<WorkspaceEntity>,
     selectedWorkspace: WorkspaceEntity?,
     isHomeSelected: Boolean,
+    dms: List<com.scrymechat.android.data.local.dao.DmWithUser> = emptyList(),
+    selectedDm: com.scrymechat.android.data.local.dao.DmWithUser? = null,
     onWorkspaceClick: (WorkspaceEntity) -> Unit,
     onHomeClick: () -> Unit,
+    onDmClick: (com.scrymechat.android.data.local.dao.DmWithUser) -> Unit = {},
     onCreateWorkspaceClick: () -> Unit,
     onNotificationsClick: () -> Unit = {}
 ) {
@@ -103,6 +107,60 @@ fun WorkspaceRail(
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold
                                 )
+                            }
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (workspaces.isNotEmpty() && dms.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(32.dp)
+                            .height(1.dp)
+                            .background(Color.White.copy(alpha = 0.15f))
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+
+            items(dms, key = { "dm_${it.dm.id}" }) { dmWithUser ->
+                val isDmSelected = selectedDm?.dm?.id == dmWithUser.dm.id
+                val displayName = dmWithUser.otherUserName ?: "Unknown User"
+                WorkspaceIcon(
+                    isSelected = isDmSelected,
+                    onClick = { onDmClick(dmWithUser) },
+                    content = {
+                        UserAvatar(
+                            name = displayName,
+                            avatarUrl = dmWithUser.otherUserAvatar,
+                            size = 48.dp,
+                            borderColor = if (isDmSelected) Color.White else SidebarTokens.Hairline
+                        )
+                        if (dmWithUser.dm.unreadCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.TopEnd
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(SidebarTokens.Danger),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (dmWithUser.dm.unreadCount > 99) "99+" else dmWithUser.dm.unreadCount.toString(),
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
