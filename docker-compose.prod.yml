@@ -25,6 +25,13 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-rustfs}
+      - REALTIME_PROVIDER=${REALTIME_PROVIDER:-socketio}
+      - NEXT_PUBLIC_REALTIME_PROVIDER=${NEXT_PUBLIC_REALTIME_PROVIDER:-socketio}
+      - RUSTFS_ENDPOINT=${RUSTFS_ENDPOINT:-rustfs}
+      - RUSTFS_PORT=${RUSTFS_PORT:-9000}
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
     networks:
       - scrymechat-network
       - dokploy-network
@@ -51,6 +58,12 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-main}?schema=public
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-rustfs}
+      - REALTIME_PROVIDER=${REALTIME_PROVIDER:-socketio}
+      - RUSTFS_ENDPOINT=${RUSTFS_ENDPOINT:-rustfs}
+      - RUSTFS_PORT=${RUSTFS_PORT:-9000}
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
     networks:
       - scrymechat-network
       - dokploy-network
