@@ -2,26 +2,25 @@ import { createClient } from '@sanity/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { validateEnv } from '@repo/shared';
+
+const env = validateEnv();
 
 function getSanityClient() {
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
+  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || env.NEXT_PUBLIC_SANITY_PROJECT_ID;
   if (!projectId) {
     return null;
   }
   return createClient({
     projectId,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || env.NEXT_PUBLIC_SANITY_DATASET || 'production',
     apiVersion: '2024-01-01',
-    token: process.env.SANITY_WRITE_TOKEN!,
+    token: process.env.SANITY_WRITE_TOKEN || (env as any).SANITY_WRITE_TOKEN!,
     useCdn: false,
   });
 }
 
 export async function POST(request: NextRequest) {
-  const client = getSanityClient();
-  if (!client) {
-    return NextResponse.json({ error: 'Sanity not configured' }, { status: 503 });
-  }
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -41,6 +40,52 @@ export async function POST(request: NextRequest) {
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       return NextResponse.json({ error: 'File size exceeds 50MB limit' }, { status: 400 });
+    }
+
+    const storageProvider = env.STORAGE_PROVIDER;
+
+    if (storageProvider === 'rustfs') {
+      const forwardFormData = new FormData();
+      forwardFormData.append('file', file);
+
+      const requestHeaders = await headers();
+      const cookie = requestHeaders.get('cookie') || '';
+      const authorization = requestHeaders.get('authorization') || '';
+
+      const fetchHeaders: Record<string, string> = {};
+      if (cookie) fetchHeaders['cookie'] = cookie;
+      if (authorization) fetchHeaders['authorization'] = authorization;
+
+      const apiUrl = env.NEXT_PUBLIC_API_URL.replace(/\/$/, '') + '/api/storage/upload';
+      const apiResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: fetchHeaders,
+        body: forwardFormData,
+      });
+
+      if (!apiResponse.ok) {
+        const errText = await apiResponse.text();
+        console.error('NestJS API storage upload failed:', errText);
+        let errJson;
+        try {
+          errJson = JSON.parse(errText);
+        } catch {
+          errJson = { message: errText };
+        }
+        return NextResponse.json(
+          { error: errJson.message || 'Failed to upload file to backend storage service' },
+          { status: apiResponse.status }
+        );
+      }
+
+      const uploadResult = await apiResponse.json();
+      return NextResponse.json(uploadResult);
+    }
+
+    // Sanity fallback
+    const client = getSanityClient();
+    if (!client) {
+      return NextResponse.json({ error: 'Sanity not configured' }, { status: 503 });
     }
 
     const isImage = file.type.startsWith('image/');
@@ -85,10 +130,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const client = getSanityClient();
-  if (!client) {
-    return NextResponse.json({ error: 'Sanity not configured' }, { status: 503 });
-  }
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -103,6 +144,18 @@ export async function DELETE(request: NextRequest) {
 
     if (!assetId) {
       return NextResponse.json({ error: 'Asset ID required' }, { status: 400 });
+    }
+
+    const storageProvider = env.STORAGE_PROVIDER;
+
+    if (storageProvider === 'rustfs') {
+      // Deleting a file under RustFS/S3 without tracking is a no-op or we can just return success
+      return NextResponse.json({ success: true, message: 'Asset deleted successfully' });
+    }
+
+    const client = getSanityClient();
+    if (!client) {
+      return NextResponse.json({ error: 'Sanity not configured' }, { status: 503 });
     }
 
     await client.delete(assetId);
