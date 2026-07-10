@@ -1,6 +1,7 @@
-package com.scrymechat.android.ui.profile
+package com.scrymechat.android.ui.profile.settings
 
 import android.Manifest
+import com.scrymechat.android.ui.profile.ProfileViewModel
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
