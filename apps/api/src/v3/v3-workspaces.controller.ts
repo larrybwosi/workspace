@@ -10,6 +10,8 @@ import {
   ForbiddenException,
   BadRequestException,
   NotFoundException,
+  Inject,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiProperty, ApiParam } from '@nestjs/swagger';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
@@ -18,6 +20,7 @@ import { ProvisioningService } from '../v2/provisioning.service';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
 import { IsString, IsOptional, IsEmail, IsArray } from 'class-validator';
+import Redis from 'ioredis';
 
 export class V3UpdateWorkspaceDto {
   @IsString()
@@ -133,7 +136,12 @@ const provisionSchema = z.object({
 @Controller('v3/workspaces')
 @UseGuards(ApiV3Guard)
 export class V3WorkspacesController {
-  constructor(private readonly provisioningService: ProvisioningService) {}
+  private readonly logger = new Logger(V3WorkspacesController.name);
+
+  constructor(
+    private readonly provisioningService: ProvisioningService,
+    @Inject('REDIS_CLIENT') private readonly redis: Redis
+  ) {}
 
   private formatResponse<T>(data: T) {
     return {
@@ -184,6 +192,24 @@ export class V3WorkspacesController {
       throw new ForbiddenException('Missing provisioning:workspaces scope');
     }
 
+    let cacheKey = '';
+    if (context.organizationId) {
+      cacheKey = `v3:org:${context.organizationId}:workspaces`;
+    } else if (context.workspaceId) {
+      cacheKey = `v3:ws:${context.workspaceId}:workspaces`;
+    }
+
+    if (cacheKey) {
+      try {
+        const cached = await this.redis.get(cacheKey);
+        if (cached) {
+          return this.formatResponse({ workspaces: JSON.parse(cached) });
+        }
+      } catch (err) {
+        this.logger.warn('Redis error in getWorkspaces (get):', err);
+      }
+    }
+
     let workspaces: any[] = [];
     if (context.organizationId) {
       workspaces = await prisma.workspace.findMany({
@@ -208,6 +234,14 @@ export class V3WorkspacesController {
         },
       });
       if (workspace) workspaces.push(workspace);
+    }
+
+    if (cacheKey && workspaces.length > 0) {
+      try {
+        await this.redis.setex(cacheKey, 600, JSON.stringify(workspaces));
+      } catch (err) {
+        this.logger.warn('Redis error in getWorkspaces (setex):', err);
+      }
     }
 
     return this.formatResponse({ workspaces });
@@ -270,6 +304,16 @@ When provisioned via M2M:
     }
 
     const result = await this.provisioningService.provisionWorkspace(context, validatedData.data);
+
+    // Invalidate list caches
+    if (context.organizationId) {
+      try {
+        await this.redis.del(`v3:org:${context.organizationId}:workspaces`);
+      } catch (err) {
+        this.logger.warn('Redis error in provisionWorkspace (del):', err);
+      }
+    }
+
     return this.formatResponse({
       workspace: result.workspace,
       bot: result.bot,
@@ -319,23 +363,43 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing provisioning:workspaces scope');
     }
 
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        icon: true,
-        industry: true,
-        brandingConfig: true,
-        organizationId: true,
-        createdAt: true,
-      },
-    });
+    const cacheKey = `v3:workspace:slug:${slug}`;
+    let workspace: any = null;
+
+    try {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        workspace = JSON.parse(cached);
+      }
+    } catch (err) {
+      this.logger.warn('Redis error in getWorkspaceBySlug (get):', err);
+    }
 
     if (!workspace) {
-      throw new NotFoundException(`Workspace with slug "${slug}" not found`);
+      workspace = await prisma.workspace.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          icon: true,
+          industry: true,
+          brandingConfig: true,
+          organizationId: true,
+          createdAt: true,
+        },
+      });
+
+      if (!workspace) {
+        throw new NotFoundException(`Workspace with slug "${slug}" not found`);
+      }
+
+      try {
+        await this.redis.setex(cacheKey, 600, JSON.stringify(workspace));
+      } catch (err) {
+        this.logger.warn('Redis error in getWorkspaceBySlug (setex):', err);
+      }
     }
 
     // Security validation
@@ -458,6 +522,19 @@ When provisioned via M2M:
       },
     });
 
+    // Invalidate caches
+    try {
+      const pipeline = this.redis.pipeline();
+      pipeline.del(`v3:workspace:slug:${slug}`);
+      if (workspace.organizationId) {
+        pipeline.del(`v3:org:${workspace.organizationId}:workspaces`);
+      }
+      pipeline.del(`v3:ws:${workspace.id}:workspaces`);
+      await pipeline.exec();
+    } catch (err) {
+      this.logger.warn('Redis error in updateWorkspace (del):', err);
+    }
+
     // Write audit log
     await prisma.workspaceAuditLog.create({
       data: {
@@ -534,6 +611,19 @@ When provisioned via M2M:
     await prisma.workspace.delete({
       where: { id: workspace.id },
     });
+
+    // Invalidate caches
+    try {
+      const pipeline = this.redis.pipeline();
+      pipeline.del(`v3:workspace:slug:${slug}`);
+      if (workspace.organizationId) {
+        pipeline.del(`v3:org:${workspace.organizationId}:workspaces`);
+      }
+      pipeline.del(`v3:ws:${workspace.id}:workspaces`);
+      await pipeline.exec();
+    } catch (err) {
+      this.logger.warn('Redis error in deleteWorkspace (del):', err);
+    }
 
     return this.formatResponse({ success: true });
   }

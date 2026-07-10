@@ -4,43 +4,60 @@ Workspaces are the top-level containers for all data in Scrymechat. Every resour
 
 ## Base URL
 
-Most workspace-related endpoints are prefixed with the workspace slug:
-`/v2/workspaces/:slug`
+- For general V2 endpoints, endpoints are prefixed with the workspace slug:
+  `/v2/workspaces/:slug`
+- For V3 (Enterprise M2M and high-performance) endpoints, the prefix is:
+  `/v3/workspaces`
 
 ---
 
-## Workspace Provisioning
+## Workspace Provisioning & Management (V3 API)
 
-Scrymechat supports two primary ways of creating workspaces: standard user-driven creation and Enterprise M2M provisioning. For multi-tenant organizations, see the [Organization M2M](/api-reference/organization-m2m) guide.
+Scrymechat V3 Workspace API provides complete CRUD capability for multi-tenant and enterprise integrations. These endpoints are highly optimized and support **Redis Caching** (10-minute TTL) with instant invalidation upon creation, updates, and deletion.
 
-### Create Workspace (User)
+### List Organization Workspaces (V3)
 
-Creates a new workspace where the authenticated user is the owner.
+Returns all workspaces associated with the authenticated organization or workspace context. This endpoint checks for `provisioning:workspaces` or `*` scope.
 
-**Endpoint:** `POST /v2/workspaces`
+**Endpoint:** `GET /v3/workspaces`
 
-**Body:**
+**Headers:**
+```http
+Authorization: Bearer <oat_...>
+```
 
+**Response:**
 ```json
 {
-  "name": "My New Workspace",
-  "slug": "my-new-workspace",
-  "description": "Optional description",
-  "industry": "Technology",
-  "isPublic": false
+  "success": true,
+  "data": {
+    "workspaces": [
+      {
+        "id": "ws_123",
+        "name": "Acme Corp",
+        "slug": "acme-corp",
+        "description": "Primary workspace",
+        "createdAt": "2026-07-10T00:00:00.000Z"
+      }
+    ]
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
 }
 ```
 
 ---
 
-### Provision Workspace (Enterprise M2M)
+### Provision Workspace (V3)
 
-For enterprise customers, workspaces can be provisioned programmatically using an M2M application with the `provisioning:workspaces` scope. This allows for automated setup of workspaces, including initial members and channels. For more details on managing M2M applications and multi-tenant setups, refer to the [Organization M2M](/api-reference/organization-m2m) documentation.
+Provisions a new workspace programmatically within your organization.
+When provisioned via M2M:
+1. A **System Bot** is automatically created with admin privileges for the workspace.
+2. Your M2M application is installed as an **Administrator** in the new workspace.
+3. The specified owner and initial members are added.
 
-**Endpoint:** `POST /v2/provisioning/workspaces`
+**Endpoint:** `POST /v3/workspaces`
 
 **Body:**
-
 ```json
 {
   "name": "Acme Corp Team",
@@ -59,6 +76,113 @@ For enterprise customers, workspaces can be provisioned programmatically using a
 }
 ```
 
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "workspace": {
+      "id": "ws_xyz",
+      "slug": "acme-corp-team",
+      "name": "Acme Corp Team"
+    },
+    "bot": {
+      "id": "bot_123",
+      "clientId": "bot_abc...",
+      "clientSecret": "sk_bot_..."
+    }
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
+}
+```
+
+---
+
+### Get Workspace Details (V3)
+
+Retrieve configuration and metadata of a specific workspace by its slug.
+
+**Endpoint:** `GET /v3/workspaces/:slug`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "workspace": {
+      "id": "ws_xyz",
+      "name": "Acme Corp Team",
+      "slug": "acme-corp-team",
+      "description": "Workspace for Acme Corp",
+      "icon": "building",
+      "industry": "Manufacturing",
+      "brandingConfig": {
+        "primaryColor": "#ff0000"
+      },
+      "createdAt": "2026-07-10T00:00:00.000Z"
+    }
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
+}
+```
+
+---
+
+### Update Workspace (V3)
+
+Update the details (name, description, industry, branding configuration) of a specific workspace. Instantly invalidates the details and list caches.
+
+**Endpoint:** `PATCH /v3/workspaces/:slug`
+
+**Body:**
+```json
+{
+  "name": "Acme Corp Updated",
+  "description": "New updated description"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "workspace": {
+      "id": "ws_xyz",
+      "name": "Acme Corp Updated",
+      "slug": "acme-corp-team",
+      "description": "New updated description",
+      "icon": "building",
+      "industry": "Manufacturing",
+      "brandingConfig": {
+        "primaryColor": "#ff0000"
+      },
+      "updatedAt": "2026-07-10T07:15:00.000Z"
+    }
+  },
+  "timestamp": "2026-07-10T07:15:00.000Z"
+}
+```
+
+---
+
+### Delete Workspace (V3)
+
+Permanently deletes a workspace and all of its associated data. Instantly invalidates the details and list caches.
+
+**Endpoint:** `DELETE /v3/workspaces/:slug`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "success": true
+  },
+  "timestamp": "2026-07-10T07:16:00.000Z"
+}
+```
+
 ---
 
 ## Workspace Members
@@ -72,7 +196,6 @@ Returns a list of all members in the workspace, including their profile details 
 **Endpoint:** `GET /v2/workspaces/:slug/members`
 
 **Response:**
-
 ```json
 {
   "members": [
@@ -103,7 +226,6 @@ Adds an existing Scrymechat user to the workspace.
 **Endpoint:** `POST /v2/workspaces/:slug/members`
 
 **Body:**
-
 ```json
 {
   "email": "newuser@example.com",
