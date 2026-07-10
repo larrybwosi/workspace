@@ -1,50 +1,128 @@
-# M2M Integration Guide
+# Machine-to-Machine (M2M) V3 API Integration Guide
 
-Machine-to-Machine (M2M) integration allows your organization's backend systems to interact with the API autonomously. This is ideal for provisioning tenants, sending system updates, and managing bots at scale.
+Machine-to-Machine (M2M) integration allows your organization's backend systems and enterprise services to interact with Skyrme Chat autonomously. This is ideal for provisioning tenants, sending system updates, managing bots, and workspace CRUD operations at scale.
 
-## Getting Started
+---
 
-### 1. Create an M2M Application
-Go to your Organization settings and create a new M2M application. You will receive a `client_id` and `client_secret`.
+## Enterprise-Grade Security & Connections
 
-### 2. Obtain an Access Token
-Exchange your credentials for a Bearer token using the OAuth2 Client Credentials grant.
+We employ strict, modern security practices to ensure that your integration is perfectly isolated and completely secure against leakages or attacks:
 
-**Available Scopes:**
-- `provisioning:workspaces`: Create and manage workspaces.
-- `messages:read`: Read messages in allowed channels.
-- `messages:send`: Send messages and trigger actions.
-- `channels:read`: List and view channel details.
-- `channels:write`: Create and manage channels.
-- `webhooks:read`: View webhook configurations.
-- `webhooks:write`: Manage webhooks.
+1. **OAuth2 Client Credentials Grant**: Secure authentication using a unique `client_id` and `client_secret`.
+2. **Timing-Safe Credential Verification**: All client secret verifications are executed in constant-time using cryptographic hashing to prevent timing attack side-channels.
+3. **Robust IP Whitelisting & Normalization**: Restricts API calls to authorized IP addresses. The system automatically normalizes and validates both native IPv4, IPv6, and IPv6-mapped IPv4 (`::ffff:x.x.x.x`) structures.
+4. **Tenant Isolation**: Secure context-bound verification checks ensure that an M2M application can only view, update, or manage workspaces belonging strictly to its authorized organization.
+
+---
+
+## Standard V3 Response Format
+
+To simplify client construction, SDK auto-generation, and standard API consuming patterns, all V3 API endpoints (with exception of some internal fallbacks) conform to a predictable wrapped JSON response model:
+
+```json
+{
+  "success": true,
+  "data": {
+    ...
+  },
+  "timestamp": "2026-07-10T06:25:22.704Z"
+}
+```
+
+If an error occurs, the standard exception filter returns a clean structure:
+```json
+{
+  "statusCode": 403,
+  "timestamp": "2026-07-10T06:25:22.704Z",
+  "path": "/api/v3/workspaces/acme",
+  "message": "Missing provisioning:workspaces scope"
+}
+```
+
+---
+
+## V3 Authentication Workflow
+
+### 1. Exchange Client Credentials for a Token
+
+Submit a `POST` request to the token endpoint to obtain a secure Bearer access token:
+
+- **Endpoint**: `/api/v3/oauth/token`
+- **Scopes**:
+  - `*`: Full access.
+  - `provisioning:workspaces`: Access to workspace list and full CRUD capabilities.
 
 ```bash
-curl -X POST https://api.yourdomain.com/api/v2/oauth/token \
+curl -X POST https://api.yourdomain.com/api/v3/oauth/token \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "client_credentials",
     "client_id": "YOUR_CLIENT_ID",
     "client_secret": "YOUR_CLIENT_SECRET",
-    "scope": "provisioning:workspaces messages:send"
+    "scope": "provisioning:workspaces"
   }'
 ```
 
-## Provisioning Workspaces
+**Standard Success Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "access_token": "oat_f3a7...",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "scope": "provisioning:workspaces"
+  },
+  "timestamp": "2026-07-10T06:25:22.704Z"
+}
+```
 
-You can provision new workspaces (tenants) for your organization. When a workspace is provisioned via M2M:
-1. A **System Bot** (Default Bot) is automatically created with admin privileges.
-2. Your M2M application is installed as an **Administrator** in the new workspace.
+---
 
-### System Bot & M2M Messaging
-When you send messages or create announcements via M2M, the platform automatically resolves the sender.
-- If your M2M application has an associated bot, it will be used as the sender.
-- Otherwise, the **System Bot** of the workspace will be used.
+## V3 Workspace CRUD APIs
 
-This ensures that system-generated content always has a valid bot author, allowing you to send announcements even if you haven't created a custom bot for your M2M application.
+All workspace CRUD operations are accessible with the `provisioning:workspaces` scope using M2M authentication.
+
+### 1. List All Workspaces
+Retrieves all workspaces belonging to the M2M application's organization.
+
+- **HTTP Method**: `GET`
+- **Endpoint**: `/api/v3/workspaces`
 
 ```bash
-curl -X POST https://api.yourdomain.com/api/v2/provisioning/workspaces \
+curl -X GET https://api.yourdomain.com/api/v3/workspaces \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "workspaces": [
+      {
+        "id": "ws_123",
+        "name": "Acme Corp",
+        "slug": "acme-corp",
+        "description": "Primary workspace for Acme Corp teams",
+        "createdAt": "2026-07-10T06:25:22.704Z"
+      }
+    ]
+  },
+  "timestamp": "2026-07-10T06:25:22.704Z"
+}
+```
+
+---
+
+### 2. Provision/Create a Workspace
+Provisions a new tenant workspace. A default System Bot is created automatically as an administrator inside the newly provisioned workspace.
+
+- **HTTP Method**: `POST`
+- **Endpoint**: `/api/v3/workspaces`
+
+```bash
+curl -X POST https://api.yourdomain.com/api/v3/workspaces \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -58,80 +136,117 @@ curl -X POST https://api.yourdomain.com/api/v2/provisioning/workspaces \
   }'
 ```
 
-### Creating an Announcement via M2M
-
-```bash
-curl -X POST https://api.yourdomain.com/v2/workspaces/acme-corp/announcements \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "departmentId": "DEPT_ID",
-    "title": "Scheduled Maintenance",
-    "content": "System will be down for maintenance on Sunday at 2 AM UTC.",
-    "priority": "high"
-  }'
-```
-
-## Interactive Messages & Actions
-
-M2M applications can send interactive messages with buttons (actions). When a user clicks a button, a callback is sent to your application.
-
-### Sending an Interactive Message
-
-```bash
-curl -X POST https://api.yourdomain.com/api/v2/workspaces/acme-corp/messages \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "channelId": "CHANNEL_ID",
-    "content": "New deployment requested. Should we proceed?",
-    "actions": [
-      { "actionId": "deploy_approve", "label": "Approve", "style": "primary" },
-      { "actionId": "deploy_reject", "label": "Reject", "style": "danger" }
-    ]
-  }'
-```
-
-### Handling Callbacks
-
-When an action is triggered, Skyrme Chat sends a POST request to your M2M application's `webhookUrl`. You can respond to this request to update the message content.
-
-**Skyrme Response Expectation:**
-If you return a JSON body with `content` or `metadata`, the original message will be updated.
-
+**Response**:
 ```json
 {
-  "content": "✅ Deployment approved by @user",
-  "metadata": { "status": "approved" }
+  "success": true,
+  "data": {
+    "workspace": {
+      "id": "ws_123",
+      "slug": "acme-corp",
+      "name": "Acme Corp"
+    },
+    "bot": {
+      "id": "app_bot_123",
+      "clientId": "bot_xyz...",
+      "clientSecret": "sec_abc..."
+    }
+  },
+  "timestamp": "2026-07-10T06:25:22.704Z"
 }
 ```
 
-## Webhooks
+---
 
-M2M applications can subscribe to workspace events to stay in sync.
+### 3. Read Workspace Details
+Retrieves detailed metadata for a specific workspace by its slug.
 
-### Verifying Webhook Signatures
+- **HTTP Method**: `GET`
+- **Endpoint**: `/api/v3/workspaces/:slug`
 
-Every webhook request includes an `X-Webhook-Signature` header. You **must** verify this signature to ensure the request came from Skyrme Chat.
+```bash
+curl -X GET https://api.yourdomain.com/api/v3/workspaces/acme-corp \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
 
-```javascript
-const crypto = require('crypto');
-
-function verifySignature(payload, signature, secret) {
-  const hmac = crypto.createHmac('sha256', secret);
-  const digest = 'sha256=' + hmac.update(payload).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "workspace": {
+      "id": "ws_123",
+      "name": "Acme Corp",
+      "slug": "acme-corp",
+      "description": "Primary workspace for Acme Corp teams",
+      "icon": "building",
+      "industry": "Technology",
+      "brandingConfig": null,
+      "createdAt": "2026-07-10T06:25:22.704Z"
+    }
+  },
+  "timestamp": "2026-07-10T06:25:22.704Z"
 }
 ```
 
-### Event List
-- `message.sent`: A new message was posted.
-- `message.action`: A user clicked an interactive button.
-- `channel.created`: A new channel was added.
+---
 
-## Security Best Practices
+### 4. Update Workspace Configuration
+Updates metadata, categorization, or branding of a specific workspace.
 
-- **IP Allowlisting**: Restrict your M2M application to specific IP addresses.
-- **Token Management**: Tokens expire after 1 hour. Implement a refresh logic by re-exchanging credentials.
-- **Secret Rotation**: Regularly rotate your `client_secret` in the organization settings.
-- **Scope Minimization**: Only request the minimum necessary scopes for each task.
+- **HTTP Method**: `PATCH`
+- **Endpoint**: `/api/v3/workspaces/:slug`
+
+```bash
+curl -X PATCH https://api.yourdomain.com/api/v3/workspaces/acme-corp \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Acme Corp International",
+    "description": "Updated international team workspace"
+  }'
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "workspace": {
+      "id": "ws_123",
+      "name": "Acme Corp International",
+      "slug": "acme-corp",
+      "description": "Updated international team workspace",
+      "icon": "building",
+      "industry": "Technology",
+      "brandingConfig": null,
+      "updatedAt": "2026-07-10T06:30:15.112Z"
+    }
+  },
+  "timestamp": "2026-07-10T06:30:15.112Z"
+}
+```
+
+---
+
+### 5. Delete Workspace
+Permanently deletes a specific workspace and its associated channels, members, and data.
+
+- **HTTP Method**: `DELETE`
+- **Endpoint**: `/api/v3/workspaces/:slug`
+
+```bash
+curl -X DELETE https://api.yourdomain.com/api/v3/workspaces/acme-corp \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "success": true
+  },
+  "timestamp": "2026-07-10T06:32:00.000Z"
+}
+```

@@ -31,7 +31,7 @@ describe('V3OAuthController', () => {
     vi.clearAllMocks();
   });
 
-  it('should issue a token with valid client credentials for organization M2M', async () => {
+  it('should issue a wrapped token response with valid client credentials for organization M2M', async () => {
     const body = {
       grant_type: 'client_credentials' as const,
       client_id: 'client-id-1',
@@ -64,14 +64,46 @@ describe('V3OAuthController', () => {
 
     const result = await controller.getToken(req, body);
 
-    expect(result.access_token).toBeDefined();
-    expect(result.access_token.startsWith('oat_')).toBe(true);
-    expect(result.token_type).toBe('Bearer');
-    expect(result.scope).toBe('provisioning:workspaces');
+    expect(result.success).toBe(true);
+    expect(result.timestamp).toBeDefined();
+    expect(result.data.access_token).toBeDefined();
+    expect(result.data.access_token.startsWith('oat_')).toBe(true);
+    expect(result.data.token_type).toBe('Bearer');
+    expect(result.data.scope).toBe('provisioning:workspaces');
     expect(prisma.botApplication.findUnique).toHaveBeenCalledWith({
       where: { clientId: 'client-id-1' },
       include: { bot: true },
     });
+  });
+
+  it('should support plain secrets if app.clientSecret is the plain secret', async () => {
+    const body = {
+      grant_type: 'client_credentials' as const,
+      client_id: 'client-id-1',
+      client_secret: 'my-plain-secret',
+    };
+
+    const req = { ip: '127.0.0.1' };
+
+    (prisma.botApplication.findUnique as any).mockResolvedValue({
+      id: 'app-1',
+      clientId: 'client-id-1',
+      clientSecret: 'my-plain-secret',
+      organizationId: 'org-1',
+      scopes: ['*'],
+      allowedIps: [],
+    });
+
+    (prisma as any).oauthAccessToken = {
+      create: vi.fn().mockResolvedValue({
+        id: 'token-id-1',
+        scopes: ['*'],
+      }),
+    };
+
+    const result = await controller.getToken(req, body);
+    expect(result.success).toBe(true);
+    expect(result.data.access_token).toBeDefined();
   });
 
   it('should throw UnauthorizedException for incorrect client credentials', async () => {
@@ -113,6 +145,35 @@ describe('V3OAuthController', () => {
     await expect(controller.getToken(req, body)).rejects.toThrow(
       /is not in the allowlist/
     );
+  });
+
+  it('should accept normalized IPv4-mapped IPv6 address when IPv4 is in allowlist', async () => {
+    const body = {
+      grant_type: 'client_credentials' as const,
+      client_id: 'client-id-1',
+      client_secret: 'secret-1',
+    };
+
+    const req = { ip: '::ffff:127.0.0.1' };
+
+    (prisma.botApplication.findUnique as any).mockResolvedValue({
+      id: 'app-1',
+      clientId: 'client-id-1',
+      clientSecret: 'secret-1',
+      allowedIps: ['127.0.0.1'],
+      organizationId: 'org-1',
+      scopes: ['*'],
+    });
+
+    (prisma as any).oauthAccessToken = {
+      create: vi.fn().mockResolvedValue({
+        id: 'token-id-1',
+        scopes: ['*'],
+      }),
+    };
+
+    const result = await controller.getToken(req, body);
+    expect(result.success).toBe(true);
   });
 
   it('should throw ForbiddenException if requested scope is not authorized', async () => {

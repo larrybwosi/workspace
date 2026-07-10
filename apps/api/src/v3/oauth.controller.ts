@@ -42,6 +42,14 @@ const tokenRequestSchema = z.object({
 @ApiTags('V3 Authentication')
 @Controller('v3/oauth')
 export class V3OAuthController {
+  private formatResponse<T>(data: T) {
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post('token')
   @ApiOperation({
     summary: 'Exchange client credentials for a V3 access token',
@@ -66,10 +74,17 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
     schema: {
       type: 'object',
       properties: {
-        access_token: { type: 'string', example: 'oat_f3a7...' },
-        token_type: { type: 'string', example: 'Bearer' },
-        expires_in: { type: 'integer', example: 3600 },
-        scope: { type: 'string', example: 'provisioning:workspaces messages:send' },
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            access_token: { type: 'string', example: 'oat_f3a7...' },
+            token_type: { type: 'string', example: 'Bearer' },
+            expires_in: { type: 'integer', example: 3600 },
+            scope: { type: 'string', example: 'provisioning:workspaces messages:send' },
+          },
+        },
+        timestamp: { type: 'string', example: '2026-07-10T06:25:22.704Z' }
       },
     },
   })
@@ -92,7 +107,15 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
     if (app) {
       const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
-      const isValid = app.clientSecret === client_secret || app.clientSecret === hashedSecret;
+
+      // Timing-safe constant-time comparison using SHA-256 hashes to prevent timing attacks
+      const providedSecretHash = crypto.createHash('sha256').update(client_secret).digest();
+      const appSecretHash = crypto.createHash('sha256').update(app.clientSecret).digest();
+      const providedSecretHashedHash = crypto.createHash('sha256').update(hashedSecret).digest();
+
+      const isPlainValid = crypto.timingSafeEqual(providedSecretHash, appSecretHash);
+      const isHashedValid = crypto.timingSafeEqual(providedSecretHashedHash, appSecretHash);
+      const isValid = isPlainValid || isHashedValid;
 
       if (!isValid) {
         throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
@@ -101,7 +124,13 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       // IP Whitelisting Check (Enterprise feature)
       if (app.allowedIps && app.allowedIps.length > 0) {
         const clientIp = req.ip || req.socket.remoteAddress;
-        if (!clientIp || !app.allowedIps.includes(clientIp)) {
+        let normalizedIp = clientIp || '';
+        if (normalizedIp.startsWith('::ffff:')) {
+          normalizedIp = normalizedIp.substring(7);
+        }
+
+        const isAllowed = app.allowedIps.includes(normalizedIp) || (clientIp && app.allowedIps.includes(clientIp));
+        if (!isAllowed) {
           throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
         }
       }
@@ -148,11 +177,11 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       },
     });
 
-    return {
+    return this.formatResponse({
       access_token: rawToken,
       token_type: 'Bearer',
       expires_in: 3600,
       scope: accessToken.scopes.join(' '),
-    };
+    });
   }
 }
