@@ -2,6 +2,8 @@ package com.scrymechat.android.data.repository
 
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.dao.MessageDao
+import com.scrymechat.android.data.local.dao.ChannelDao
+import com.scrymechat.android.data.local.dao.DmDao
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +15,9 @@ import javax.inject.Singleton
 @Singleton
 class ChatRepository @Inject constructor(
     private val api: MessageApi,
-    private val dao: MessageDao
+    private val dao: MessageDao,
+    private val channelDao: ChannelDao,
+    private val dmDao: DmDao
 ) {
     fun getChannelMessages(workspaceSlug: String, channelId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
@@ -179,6 +183,8 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.markDmRead(dmId)
             if (response.isSuccessful) {
+                dao.markDmMessagesAsRead(dmId)
+                dmDao.clearUnreadCount(dmId)
                 Resource.Success(Unit)
             } else {
                 Resource.Error(response.message())
@@ -192,6 +198,8 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.markChannelRead(workspaceSlug, channelId)
             if (response.isSuccessful) {
+                dao.markChannelMessagesAsRead(channelId)
+                channelDao.clearUnreadCount(channelId)
                 Resource.Success(Unit)
             } else {
                 Resource.Error(response.message())
@@ -257,7 +265,8 @@ class ChatRepository @Inject constructor(
             messageType = type,
             threadId = threadId,
             replyCount = replyCount,
-            isPinned = isPinned
+            isPinned = isPinned,
+            senderRole = user?.role ?: author?.role
         )
 
         if (type == "custom" || type == "approval" || type == "report") {

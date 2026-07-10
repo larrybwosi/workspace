@@ -24,6 +24,12 @@ interface MessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: MessageEntity)
 
+    @Query("UPDATE messages SET readByCurrentUser = 1 WHERE channelId = :channelId")
+    suspend fun markChannelMessagesAsRead(channelId: String)
+
+    @Query("UPDATE messages SET readByCurrentUser = 1 WHERE dmId = :dmId")
+    suspend fun markDmMessagesAsRead(dmId: String)
+
     @Query("DELETE FROM messages WHERE id = :id")
     suspend fun deleteMessageById(id: String)
 
