@@ -14,7 +14,7 @@ import com.scrymechat.android.ui.signup.SignUpScreen
 import com.scrymechat.android.ui.welcome.WelcomeScreen
 import com.scrymechat.android.ui.theme.ThemeViewModel
 import com.scrymechat.android.ui.profile.*
-import com.scrymechat.android.ui.settings.NotificationSettingsScreen
+import com.scrymechat.android.ui.profile.settings.*
 import com.scrymechat.android.ui.friends.FriendsScreen
 import com.scrymechat.android.ui.discovery.DiscoveryScreen
 import com.scrymechat.android.ui.notifications.NotificationsScreen
