@@ -246,6 +246,12 @@ export type V3WorkspacesControllerDeleteWorkspace200 = {
   timestamp?: string;
 };
 
+export type V3WorkspacesControllerUpdateWorkspace200 = {
+  data?: V3WorkspacesControllerUpdateWorkspace200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
 /**
  * @nullable
  */
@@ -268,18 +274,6 @@ export type V3WorkspacesControllerUpdateWorkspace200DataWorkspace = {
 
 export type V3WorkspacesControllerUpdateWorkspace200Data = {
   workspace?: V3WorkspacesControllerUpdateWorkspace200DataWorkspace;
-};
-
-export type V3WorkspacesControllerUpdateWorkspace200 = {
-  data?: V3WorkspacesControllerUpdateWorkspace200Data;
-  success?: boolean;
-  timestamp?: string;
-};
-
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
-  success?: boolean;
-  timestamp?: string;
 };
 
 /**
@@ -306,10 +300,22 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
   workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
 };
 
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
 export type V3WorkspacesControllerProvisionWorkspace201DataWorkspace = {
   id?: string;
   name?: string;
   slug?: string;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
+  clientId?: string;
+  clientSecret?: string;
+  id?: string;
 };
 
 export type V3WorkspacesControllerProvisionWorkspace201Data = {
@@ -321,12 +327,6 @@ export type V3WorkspacesControllerProvisionWorkspace201 = {
   data?: V3WorkspacesControllerProvisionWorkspace201Data;
   success?: boolean;
   timestamp?: string;
-};
-
-export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
-  clientId?: string;
-  clientSecret?: string;
-  id?: string;
 };
 
 export type V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem = {
@@ -834,6 +834,20 @@ export interface CreateInvitationDto {
   permissions?: CreateInvitationDtoPermissions;
   role?: string;
   workspaceId?: string;
+}
+
+export interface V3UpdateWebhookDto {
+  active?: boolean;
+  events?: string[];
+  name?: string;
+  url?: string;
+}
+
+export interface V3CreateWebhookDto {
+  active?: boolean;
+  events: string[];
+  name: string;
+  url: string;
 }
 
 /**
@@ -8960,6 +8974,315 @@ export const useV3WorkspacesControllerDeleteWorkspace = <TError = ErrorType<void
       > => {
 
       const mutationOptions = getV3WorkspacesControllerDeleteWorkspaceMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.
+ * @summary List all webhooks in the workspace
+ */
+export const v3WebhooksControllerGetWebhooks = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/webhooks`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WebhooksControllerGetWebhooksQueryKey = (slug: string,) => {
+    return [`/api/v3/workspaces/${slug}/webhooks`] as const;
+    }
+
+
+export const getV3WebhooksControllerGetWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WebhooksControllerGetWebhooksQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>> = ({ signal }) => v3WebhooksControllerGetWebhooks(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WebhooksControllerGetWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>>
+export type V3WebhooksControllerGetWebhooksQueryError = ErrorType<unknown>
+
+/**
+ * @summary List all webhooks in the workspace
+ */
+export const useV3WebhooksControllerGetWebhooks = <TData = Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WebhooksControllerGetWebhooksQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Requires webhooks:write scope.
+ * @summary Create a new webhook
+ */
+export const v3WebhooksControllerCreateWebhook = (
+    slug: string,
+    v3CreateWebhookDto: BodyType<V3CreateWebhookDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/webhooks`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateWebhookDto
+    },
+      options);
+    }
+
+
+
+export const getV3WebhooksControllerCreateWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerCreateWebhook>>, TError,{slug: string;data: BodyType<V3CreateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerCreateWebhook>>, TError,{slug: string;data: BodyType<V3CreateWebhookDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WebhooksControllerCreateWebhook>>, {slug: string;data: BodyType<V3CreateWebhookDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  v3WebhooksControllerCreateWebhook(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WebhooksControllerCreateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof v3WebhooksControllerCreateWebhook>>>
+    export type V3WebhooksControllerCreateWebhookMutationBody = BodyType<V3CreateWebhookDto>
+    export type V3WebhooksControllerCreateWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new webhook
+ */
+export const useV3WebhooksControllerCreateWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerCreateWebhook>>, TError,{slug: string;data: BodyType<V3CreateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WebhooksControllerCreateWebhook>>,
+        TError,
+        {slug: string;data: BodyType<V3CreateWebhookDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WebhooksControllerCreateWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Requires webhooks:read scope.
+ * @summary Get details of a specific webhook
+ */
+export const v3WebhooksControllerGetWebhook = (
+    slug: string,
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/webhooks/${webhookId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WebhooksControllerGetWebhookQueryKey = (slug: string,
+    webhookId: string,) => {
+    return [`/api/v3/workspaces/${slug}/webhooks/${webhookId}`] as const;
+    }
+
+
+export const getV3WebhooksControllerGetWebhookQueryOptions = <TData = Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>, TError = ErrorType<unknown>>(slug: string,
+    webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WebhooksControllerGetWebhookQueryKey(slug,webhookId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>> = ({ signal }) => v3WebhooksControllerGetWebhook(slug,webhookId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && webhookId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WebhooksControllerGetWebhookQueryResult = NonNullable<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>>
+export type V3WebhooksControllerGetWebhookQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get details of a specific webhook
+ */
+export const useV3WebhooksControllerGetWebhook = <TData = Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>, TError = ErrorType<unknown>>(
+ slug: string,
+    webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WebhooksControllerGetWebhook>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WebhooksControllerGetWebhookQueryOptions(slug,webhookId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Requires webhooks:write scope.
+ * @summary Update a webhook
+ */
+export const v3WebhooksControllerUpdateWebhook = (
+    slug: string,
+    webhookId: string,
+    v3UpdateWebhookDto: BodyType<V3UpdateWebhookDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/webhooks/${webhookId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateWebhookDto
+    },
+      options);
+    }
+
+
+
+export const getV3WebhooksControllerUpdateWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerUpdateWebhook>>, TError,{slug: string;webhookId: string;data: BodyType<V3UpdateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerUpdateWebhook>>, TError,{slug: string;webhookId: string;data: BodyType<V3UpdateWebhookDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WebhooksControllerUpdateWebhook>>, {slug: string;webhookId: string;data: BodyType<V3UpdateWebhookDto>}> = (props) => {
+          const {slug,webhookId,data} = props ?? {};
+
+          return  v3WebhooksControllerUpdateWebhook(slug,webhookId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WebhooksControllerUpdateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof v3WebhooksControllerUpdateWebhook>>>
+    export type V3WebhooksControllerUpdateWebhookMutationBody = BodyType<V3UpdateWebhookDto>
+    export type V3WebhooksControllerUpdateWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a webhook
+ */
+export const useV3WebhooksControllerUpdateWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerUpdateWebhook>>, TError,{slug: string;webhookId: string;data: BodyType<V3UpdateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WebhooksControllerUpdateWebhook>>,
+        TError,
+        {slug: string;webhookId: string;data: BodyType<V3UpdateWebhookDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WebhooksControllerUpdateWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Requires webhooks:write scope.
+ * @summary Delete a webhook
+ */
+export const v3WebhooksControllerDeleteWebhook = (
+    slug: string,
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/webhooks/${webhookId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WebhooksControllerDeleteWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerDeleteWebhook>>, TError,{slug: string;webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerDeleteWebhook>>, TError,{slug: string;webhookId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WebhooksControllerDeleteWebhook>>, {slug: string;webhookId: string}> = (props) => {
+          const {slug,webhookId} = props ?? {};
+
+          return  v3WebhooksControllerDeleteWebhook(slug,webhookId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WebhooksControllerDeleteWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof v3WebhooksControllerDeleteWebhook>>>
+
+    export type V3WebhooksControllerDeleteWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a webhook
+ */
+export const useV3WebhooksControllerDeleteWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WebhooksControllerDeleteWebhook>>, TError,{slug: string;webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WebhooksControllerDeleteWebhook>>,
+        TError,
+        {slug: string;webhookId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WebhooksControllerDeleteWebhookMutationOptions(options);
 
       return useMutation(mutationOptions);
     }

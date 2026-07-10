@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { V3OAuthController } from './oauth.controller';
 import { V3WorkspacesController } from './v3-workspaces.controller';
+import { V3WebhooksController } from './v3-webhooks.controller';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ProvisioningService } from '../v2/provisioning.service';
 import { PrismaService } from '../prisma.service';
@@ -9,6 +10,7 @@ import { PrismaService } from '../prisma.service';
   controllers: [
     V3OAuthController,
     V3WorkspacesController,
+    V3WebhooksController,
   ],
   providers: [
     ApiV3Guard,
