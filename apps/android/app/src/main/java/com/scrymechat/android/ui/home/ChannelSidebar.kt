@@ -133,34 +133,6 @@ fun ChannelSidebar(
                             onClick = onFriendsClick
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                item {
-                    SectionLabel(text = "Direct Messages", trailing = {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "New DM",
-                            tint = SidebarTokens.TextPrimary,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .clickable { /* Create DM */ }
-                        )
-                    })
-                }
-
-                items(dms, key = { it.dm.id }) { dmWithUser ->
-                    val isDmSelected = selectedDm?.dm?.id == dmWithUser.dm.id
-                    PaddingWrapper {
-                        SidebarItem(
-                            icon = Icons.Default.ChatBubble,
-                            label = dmWithUser.otherUserName ?: "Unknown User",
-                            isSelected = isDmSelected,
-                            unreadCount = dmWithUser.dm.unreadCount,
-                            onClick = { onDmClick(dmWithUser) }
-                        )
-                    }
                 }
             } else {
                 // Workspace / Server Channels View
