@@ -28,7 +28,8 @@ data class MessageEntity(
     val messageType: String? = null,
     val threadId: String? = null,
     val replyCount: Int = 0,
-    val isPinned: Boolean = false
+    val isPinned: Boolean = false,
+    val senderRole: String? = null
 ) {
     @Ignore
     var customMessage: CustomMessageDto? = null
