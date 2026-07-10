@@ -1,5 +1,16 @@
 # @repo/shared
 
+## 0.1.0-dev.18
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/database@0.1.0-dev.18
+
 ## 0.1.0-dev.17
 
 ### Minor Changes
