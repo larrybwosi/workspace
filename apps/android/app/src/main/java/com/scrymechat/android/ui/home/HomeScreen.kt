@@ -168,8 +168,14 @@ fun HomeScreen(
                             workspaces = uiState.workspaces,
                             selectedWorkspace = uiState.selectedWorkspace,
                             isHomeSelected = uiState.isHomeSelected,
+                            dms = uiState.dms,
+                            selectedDm = uiState.selectedDm,
                             onWorkspaceClick = { onWorkspaceClick(it.slug) },
                             onHomeClick = { onWorkspaceClick(null) },
+                            onDmClick = {
+                                onDmClick(it.dm.id)
+                                scope.launch { drawerState.close() }
+                            },
                             onCreateWorkspaceClick = { onDiscoveryClick() },
                             onNotificationsClick = onNotificationsClick
                         )

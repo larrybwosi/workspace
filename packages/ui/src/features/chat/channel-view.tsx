@@ -183,12 +183,20 @@ export function ChannelView({
 
   const isDm = channelId.startsWith('dm-');
 
+  const placeholderText = useMemo(() => {
+    if (replyingTo) return `Replying to @${replyingTo.userName}`;
+    if (channelId.startsWith('dm-')) {
+      return `Message @${dmUser?.name || 'User'}`;
+    }
+    return `Message #${channelData?.name || channelId || 'thread'}`;
+  }, [replyingTo, channelId, dmUser, channelData]);
+
   return (
     <div className={cn('flex h-full w-full bg-background overflow-hidden relative', isWidget && 'border-none')}>
       <div className="flex-1 flex flex-col min-w-0">
         <ChannelHeader
           isWidget={isWidget}
-          channelName={channelData?.name || channelId || 'general'}
+          channelName={channelData?.name || (channelId.startsWith('dm-') ? `@${dmUser?.name || 'User'}` : channelId) || 'general'}
           channelDescription={(channelData as any)?.description}
           memberCount={(channelData as any)?._count?.members ?? (channelData as any)?.memberCount}
           isPrivate={(channelData as any)?.isPrivate || (channelData as any)?.type === 'private'}
@@ -232,7 +240,7 @@ export function ChannelView({
         <div className="shrink-0 px-6 py-6 bg-background">
           <MessageComposer
             onSend={handleSendMessage}
-            placeholder={replyingTo ? `Replying to @${replyingTo.userName}` : `Message #${channelData?.name || channelId || 'thread'}`}
+            placeholder={placeholderText}
             replyingTo={replyingTo}
             onCancelReply={() => setReplyingTo(null)}
             channelId={channelId}
