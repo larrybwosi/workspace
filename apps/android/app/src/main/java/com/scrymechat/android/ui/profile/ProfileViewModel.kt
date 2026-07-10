@@ -299,5 +299,5 @@ data class ProfileUiState(
     val isUploading: Boolean = false,
     val pendingAvatarUri: android.net.Uri? = null,
     val pendingBannerUri: android.net.Uri? = null,
-    val sessions: List<com.scrymechat.android.ui.profile.DeviceSession> = emptyList()
+    val sessions: List<com.scrymechat.android.ui.profile.settings.DeviceSession> = emptyList()
 )

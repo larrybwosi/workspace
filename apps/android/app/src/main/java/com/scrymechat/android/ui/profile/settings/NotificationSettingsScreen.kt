@@ -1,4 +1,4 @@
-package com.scrymechat.android.ui.settings
+package com.scrymechat.android.ui.profile.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
