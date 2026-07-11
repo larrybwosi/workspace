@@ -20,16 +20,30 @@ const getEnv = (name: string) => {
 let socketioClient: Socket | null = null;
 let providerType: 'ably' | 'socketio' | null = null;
 
-async function fetchProviderType() {
-  if (providerType) return providerType;
-
-  try {
-    const baseURL =
+const getBaseURL = () => {
+  let url = '';
+  if (typeof window !== 'undefined') {
+    const customUrl = window.localStorage.getItem('CUSTOM_API_URL');
+    if (customUrl) {
+      url = customUrl;
+    }
+  }
+  if (!url) {
+    url =
       getEnv('API_URL') ||
       getEnv('NEXT_PUBLIC_API_URL') ||
       getEnv('VITE_API_URL') ||
       getEnv('EXPO_PUBLIC_API_URL') ||
       'http://localhost:3000';
+  }
+  return url;
+};
+
+async function fetchProviderType() {
+  if (providerType) return providerType;
+
+  try {
+    const baseURL = getBaseURL();
     const response = await fetch(`${baseURL.replace(/\/$/, '')}/api/config/realtime`);
     const data = await response.json();
     providerType = data.provider;
@@ -43,17 +57,24 @@ async function fetchProviderType() {
 function getSocketioClient() {
   if (typeof window === 'undefined') return null;
 
+  const baseURL = getBaseURL();
+
   if (!socketioClient) {
-    const baseURL =
-      getEnv('API_URL') ||
-      getEnv('NEXT_PUBLIC_API_URL') ||
-      getEnv('VITE_API_URL') ||
-      getEnv('EXPO_PUBLIC_API_URL') ||
-      'http://localhost:3000';
+    const token =
+      window.localStorage.getItem('better-auth.session-token') ||
+      window.localStorage.getItem('better-auth.session_token');
     socketioClient = io(baseURL, {
       withCredentials: true,
       autoConnect: true,
+      auth: token ? { token } : undefined,
     });
+  } else {
+    const token =
+      window.localStorage.getItem('better-auth.session-token') ||
+      window.localStorage.getItem('better-auth.session_token');
+    if (token) {
+      socketioClient.auth = { token };
+    }
   }
   return socketioClient;
 }
@@ -65,6 +86,15 @@ export const realtime = {
     if (type === 'socketio') {
       const socket = getSocketioClient();
       if (!socket) return;
+
+      const token =
+        window.localStorage.getItem('better-auth.session-token') ||
+        window.localStorage.getItem('better-auth.session_token');
+      if (token && (!socket.auth || !(socket.auth as any).token)) {
+        socket.auth = { token };
+        socket.disconnect().connect();
+      }
+
       socket.emit('join-room', channelName);
 
       const listener = (data: any) => {
