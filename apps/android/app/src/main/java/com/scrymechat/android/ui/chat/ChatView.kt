@@ -2,6 +2,9 @@ package com.scrymechat.android.ui.chat
 
 import android.net.Uri
 import android.widget.Toast
+import android.content.ClipboardManager
+import android.content.ClipData
+import android.content.Context
 import androidx.compose.ui.text.input.TextFieldValue
 import com.scrymechat.android.data.local.entities.ChannelEntity
 import com.scrymechat.android.data.remote.UserDto
@@ -47,6 +50,7 @@ import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.ui.components.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Duration
@@ -144,9 +148,226 @@ fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MessageContextBottomSheet(
+    message: MessageEntity,
+    currentUserId: String?,
+    onDismiss: () -> Unit,
+    onReply: () -> Unit,
+    onForward: () -> Unit,
+    onAddReaction: (String) -> Unit,
+    onCopyText: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onDownload: ((AttachmentDto) -> Unit)? = null
+) {
+    val quickEmojis = listOf("👍", "❤️", "😂", "😮", "😢", "🔥", "✅")
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        ) {
+            // Quick reactions row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                quickEmojis.forEach { emoji ->
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                onAddReaction(emoji)
+                                onDismiss()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = emoji, fontSize = 24.sp)
+                    }
+                }
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // Menu Items
+            ContextMenuItem(
+                icon = Icons.Default.Reply,
+                label = "Reply",
+                onClick = onReply
+            )
+
+            ContextMenuItem(
+                icon = Icons.Default.Forward,
+                label = "Forward",
+                onClick = onForward
+            )
+
+            ContextMenuItem(
+                icon = Icons.Default.ContentCopy,
+                label = "Copy Text",
+                onClick = onCopyText
+            )
+
+            if (onDownload != null && message.attachments.isNotEmpty()) {
+                message.attachments.forEach { attachment ->
+                    ContextMenuItem(
+                        icon = Icons.Default.Download,
+                        label = "Download ${attachment.name}",
+                        onClick = { onDownload(attachment) }
+                    )
+                }
+            }
+
+            val isOwnMessage = currentUserId != null && message.senderId == currentUserId
+
+            if (isOwnMessage) {
+                ContextMenuItem(
+                    icon = Icons.Default.Edit,
+                    label = "Edit Message",
+                    onClick = onEdit
+                )
+
+                ContextMenuItem(
+                    icon = Icons.Default.Delete,
+                    label = "Delete Message",
+                    color = MaterialTheme.colorScheme.error,
+                    onClick = onDelete
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContextMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = color,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = label,
+            color = color,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditMessageDialog(
+    initialText: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(initialText) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Message") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(text) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun DeleteMessageConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Message") },
+        text = { Text("Are you sure you want to delete this message? This cannot be undone.") },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
 /**
  * Discord-style Thread Starter separator.
  */
+@Composable
+fun ReplyConnector(color: Color) {
+    androidx.compose.foundation.Canvas(
+        modifier = Modifier
+            .width(36.dp)
+            .height(18.dp)
+    ) {
+        val path = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width, size.height * 0.5f)
+            lineTo(size.width * 0.5f + 4.dp.toPx(), size.height * 0.5f)
+            quadraticBezierTo(
+                size.width * 0.5f, size.height * 0.5f,
+                size.width * 0.5f, size.height
+            )
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 2.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        )
+    }
+}
+
 @Composable
 fun ThreadStarterDivider(palette: ChatPalette) {
     Row(
@@ -217,13 +438,19 @@ fun ChatView(
     onClearSuggestedUsers: () -> Unit = {},
     onMentionClick: (String) -> Unit = {},
     onChannelTagClick: (String) -> Unit = {},
+    onEditMessage: (MessageEntity, String) -> Unit = { _, _ -> },
+    onDeleteMessage: (MessageEntity) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
+    val currentUserId by (sessionManager?.getActiveSessionFlow() ?: flowOf(null))
+        .map { it?.userId }
+        .collectAsState(initial = null)
     val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf(com.scrymechat.android.BuildConfig.API_URL))
         .map { it ?: com.scrymechat.android.BuildConfig.API_URL }
         .collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
 
+    val scope = rememberCoroutineScope()
     var textState by remember { mutableStateOf(TextFieldValue("")) }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
@@ -370,6 +597,14 @@ fun ChatView(
                                            !isWithinGroupingTimeframe(prevMessage.createdAt, message.createdAt) ||
                                            message.replyToSenderName != null
 
+                        val repliedMessage = remember(message.replyToId, messages) {
+                            if (message.replyToId != null) {
+                                messages.find { it.id == message.replyToId }
+                            } else {
+                                null
+                            }
+                        }
+
                         Column {
                             if (index == oldestUnreadIndex) {
                                 NewMessagesLine(palette = palette)
@@ -379,6 +614,17 @@ fun ChatView(
                                 message = message,
                                 isGroupHeader = isGroupHeader,
                                 palette = palette,
+                                repliedMessage = repliedMessage,
+                                onReplyClick = { replyToId ->
+                                    val targetIndex = messages.indexOfFirst { it.id == replyToId }
+                                    if (targetIndex != -1) {
+                                        scope.launch {
+                                            try {
+                                                listState.animateScrollToItem(targetIndex)
+                                            } catch (_: Exception) {}
+                                        }
+                                    }
+                                },
                                 onReply = {
                                     replyingTo = it
                                     onReply(it)
@@ -399,7 +645,10 @@ fun ChatView(
                                 onAvatarClick = onAvatarClick,
                                 apiUrl = apiUrl,
                                 onMentionClick = onMentionClick,
-                                onChannelTagClick = onChannelTagClick
+                                onChannelTagClick = onChannelTagClick,
+                                onEditMessage = onEditMessage,
+                                onDeleteMessage = onDeleteMessage,
+                                currentUserId = currentUserId
                             )
                         }
                     }
@@ -943,6 +1192,8 @@ fun SwipeableMessageItem(
     message: MessageEntity,
     isGroupHeader: Boolean = true,
     palette: ChatPalette,
+    repliedMessage: MessageEntity? = null,
+    onReplyClick: (String) -> Unit = {},
     onReply: (MessageEntity) -> Unit,
     onOpenThread: (MessageEntity) -> Unit = {},
     onAddReaction: (MessageEntity) -> Unit = {},
@@ -956,7 +1207,10 @@ fun SwipeableMessageItem(
     onAvatarClick: (String) -> Unit = {},
     apiUrl: String = "http://localhost:3000",
     onMentionClick: (String) -> Unit = {},
-    onChannelTagClick: (String) -> Unit = {}
+    onChannelTagClick: (String) -> Unit = {},
+    onEditMessage: (MessageEntity, String) -> Unit = { _, _ -> },
+    onDeleteMessage: (MessageEntity) -> Unit = {},
+    currentUserId: String? = null
 ) {
     val swipeState = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
@@ -1001,6 +1255,9 @@ fun SwipeableMessageItem(
         }
 
         var showContextMenu by remember { mutableStateOf(false) }
+        var showEditDialog by remember { mutableStateOf(false) }
+        var showDeleteDialog by remember { mutableStateOf(false) }
+        val context = LocalContext.current
 
         Surface(
             modifier = Modifier
@@ -1017,6 +1274,8 @@ fun SwipeableMessageItem(
                     message = message,
                     isGroupHeader = isGroupHeader,
                     palette = palette,
+                    repliedMessage = repliedMessage,
+                    onReplyClick = onReplyClick,
                     onDownload = onDownload,
                     onAction = onAction,
                     onUpdateForm = onUpdateForm,
@@ -1030,55 +1289,61 @@ fun SwipeableMessageItem(
                     onChannelTagClick = onChannelTagClick
                 )
 
-                DropdownMenu(
-                    expanded = showContextMenu,
-                    onDismissRequest = { showContextMenu = false },
-                    modifier = Modifier
-                        .background(palette.surface)
-                        .border(1.dp, palette.glassBorder, RoundedCornerShape(12.dp))
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Reply", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
+                if (showContextMenu) {
+                    MessageContextBottomSheet(
+                        message = message,
+                        currentUserId = currentUserId,
+                        onDismiss = { showContextMenu = false },
+                        onReply = {
                             onReply(message)
                             showContextMenu = false
                         },
-                        leadingIcon = { Icon(Icons.Default.Reply, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Forward", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
+                        onForward = {
                             onForward(message)
                             showContextMenu = false
                         },
-                        leadingIcon = { Icon(Icons.Default.Forward, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Add Reaction", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
+                        onAddReaction = { emoji ->
                             onAddReaction(message)
+                            onAction(MessageActionDto(id = "add_reaction", label = "Reaction", handler = MessageActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
                             showContextMenu = false
                         },
-                        leadingIcon = { Icon(Icons.Default.AddReaction, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                        onCopyText = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("Message content", message.content)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                            showContextMenu = false
+                        },
+                        onEdit = {
+                            showEditDialog = true
+                            showContextMenu = false
+                        },
+                        onDelete = {
+                            showDeleteDialog = true
+                            showContextMenu = false
+                        },
+                        onDownload = onDownload
                     )
-                    if (message.attachments.isNotEmpty()) {
-                        message.attachments.forEach { attachment ->
-                            DropdownMenuItem(
-                                text = { Text("Download ${attachment.name}", color = palette.textPrimary, fontSize = 14.sp) },
-                                onClick = {
-                                    onDownload(attachment)
-                                    showContextMenu = false
-                                },
-                                leadingIcon = { Icon(Icons.Default.Download, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                            )
+                }
+
+                if (showEditDialog) {
+                    EditMessageDialog(
+                        initialText = message.content,
+                        onDismiss = { showEditDialog = false },
+                        onConfirm = { newContent ->
+                            onEditMessage(message, newContent)
+                            showEditDialog = false
                         }
-                    }
-                    DropdownMenuItem(
-                        text = { Text("Copy Text", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
+                    )
+                }
+
+                if (showDeleteDialog) {
+                    DeleteMessageConfirmationDialog(
+                        onDismiss = { showDeleteDialog = false },
+                        onConfirm = {
+                            onDeleteMessage(message)
+                            showDeleteDialog = false
+                        }
                     )
                 }
             }
@@ -1178,6 +1443,8 @@ fun MessageItem(
     message: MessageEntity,
     isGroupHeader: Boolean = true,
     palette: ChatPalette,
+    repliedMessage: MessageEntity? = null,
+    onReplyClick: (String) -> Unit = {},
     onDownload: (AttachmentDto) -> Unit = {},
     onOpenThread: () -> Unit = {},
     onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
@@ -1199,11 +1466,48 @@ fun MessageItem(
         }
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = if (isGroupHeader) 6.dp else 1.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (message.replyToId != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onReplyClick(message.replyToId) }
+                    .padding(start = 14.dp, bottom = 2.dp, top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ReplyConnector(color = palette.replyStripAccent.copy(alpha = 0.4f))
+                Spacer(modifier = Modifier.width(4.dp))
+                UserAvatar(
+                    name = message.replyToSenderName ?: "User",
+                    avatarUrl = repliedMessage?.senderAvatar,
+                    size = 16.dp,
+                    borderColor = Color.Transparent
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "@${message.replyToSenderName ?: "User"}",
+                    color = palette.replyStripAccent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = repliedMessage?.content ?: "Original message",
+                    color = palette.textSecondary,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = if (isGroupHeader) 6.dp else 1.dp)
+        ) {
         if (isGroupHeader) {
             UserAvatar(
                 name = cleanName,
@@ -1290,25 +1594,6 @@ fun MessageItem(
                             contentDescription = "Pinned",
                             tint = palette.accent,
                             modifier = Modifier.size(12.dp)
-                        )
-                    }
-                }
-
-                if (message.replyToSenderName != null) {
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .width(2.dp)
-                                .height(13.dp)
-                                .background(palette.replyStripAccent, RoundedCornerShape(1.dp))
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Replying to ${message.replyToSenderName}",
-                            color = palette.replyStripAccent,
-                            fontSize = 12.sp,
-                            fontStyle = FontStyle.Italic
                         )
                     }
                 }
@@ -1528,6 +1813,7 @@ fun MessageItem(
             }
         }
     }
+}
 }
 
 data class MentionQuery(val trigger: Char, val query: String, val startIndex: Int)

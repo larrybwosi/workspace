@@ -65,6 +65,13 @@ object SidebarTokens {
     val PillIndicator = Color(0xFFFFFFFF)
 }
 
+fun presenceColor(status: String?): Color = when (status?.lowercase()) {
+    "online" -> Color(0xFF23A55A)
+    "idle", "away" -> Color(0xFFF0B232)
+    "dnd", "busy" -> Color(0xFFF23F43)
+    else -> Color(0xFF80848E)
+}
+
 /** Helper data structure for category grouping */
 private data class ChannelCategoryGroup(
     val categoryId: String,
@@ -129,8 +136,29 @@ fun ChannelSidebar(
                         SidebarItem(
                             icon = Icons.Default.Person,
                             label = "Friends",
-                            isSelected = false,
+                            isSelected = selectedDm == null,
                             onClick = onFriendsClick
+                        )
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SectionLabel(text = "Direct Messages")
+                }
+
+                items(dms, key = { "sidebar_dm_${it.dm.id}" }) { dmWithUser ->
+                    val isSelected = selectedDm?.dm?.id == dmWithUser.dm.id
+                    val displayName = dmWithUser.otherUserName ?: "Unknown User"
+                    PaddingWrapper {
+                        SidebarItem(
+                            icon = null,
+                            label = displayName,
+                            isSelected = isSelected,
+                            unreadCount = dmWithUser.dm.unreadCount,
+                            avatarUrl = dmWithUser.otherUserAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${dmWithUser.dm.otherUserId}",
+                            status = dmWithUser.otherUserStatus,
+                            onClick = { onDmClick(dmWithUser) }
                         )
                     }
                 }
@@ -423,6 +451,8 @@ fun SidebarItem(
     label: String,
     isSelected: Boolean,
     unreadCount: Int = 0,
+    avatarUrl: String? = null,
+    status: String? = null,
     onClick: () -> Unit
 ) {
     val isUnread = unreadCount > 0 && !isSelected
@@ -491,21 +521,49 @@ fun SidebarItem(
                     .fillMaxSize()
                     .padding(horizontal = 8.dp)
             ) {
-                when (icon) {
-                    is ImageVector -> Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    is String -> Text(
-                        text = icon,
-                        color = iconColor,
-                        fontSize = 16.sp,
-                        modifier = Modifier.size(18.dp),
-                        textAlign = TextAlign.Center
-                    )
-                    else -> Spacer(modifier = Modifier.size(18.dp))
+                if (avatarUrl != null) {
+                    Box(modifier = Modifier.size(24.dp)) {
+                        UserAvatar(
+                            name = label,
+                            avatarUrl = avatarUrl,
+                            size = 24.dp,
+                            borderColor = Color.Transparent
+                        )
+                        if (status != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(9.dp)
+                                    .align(Alignment.BottomEnd)
+                                    .clip(CircleShape)
+                                    .background(SidebarTokens.SurfaceBase)
+                                    .padding(1.5.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(presenceColor(status))
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    when (icon) {
+                        is ImageVector -> Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        is String -> Text(
+                            text = icon,
+                            color = iconColor,
+                            fontSize = 16.sp,
+                            modifier = Modifier.size(18.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        else -> Spacer(modifier = Modifier.size(18.dp))
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))

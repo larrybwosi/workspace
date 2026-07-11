@@ -221,6 +221,42 @@ class ChatViewModel @Inject constructor(
         _uiState.update { it.copy(pendingFiles = it.pendingFiles - pendingFile) }
     }
 
+    fun editMessage(message: MessageEntity, newContent: String) {
+        val slug = currentWorkspaceSlug
+        val channelId = currentChannelId
+        val dmId = currentDmId
+        viewModelScope.launch {
+            val result = when {
+                channelId != null && slug != null -> chatRepository.updateChannelMessage(slug, channelId, message.id, newContent)
+                dmId != null -> chatRepository.updateDmMessage(dmId, message.id, newContent)
+                else -> return@launch
+            }
+            if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            } else {
+                loadMessages()
+            }
+        }
+    }
+
+    fun deleteMessage(message: MessageEntity) {
+        val slug = currentWorkspaceSlug
+        val channelId = currentChannelId
+        val dmId = currentDmId
+        viewModelScope.launch {
+            val result = when {
+                channelId != null && slug != null -> chatRepository.deleteChannelMessage(slug, channelId, message.id)
+                dmId != null -> chatRepository.deleteDmMessage(dmId, message.id)
+                else -> return@launch
+            }
+            if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            } else {
+                loadMessages()
+            }
+        }
+    }
+
     fun onBack() {
         currentChannelId?.let { setChannel(it) }
     }
