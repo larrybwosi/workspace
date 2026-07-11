@@ -20,13 +20,13 @@ import { publishRealtime, AblyChannels } from '@repo/shared/server';
 import { IsEnum } from 'class-validator';
 
 class UpdateMemberRoleDto {
-  @IsEnum(['owner', 'admin', 'member', 'guest'])
-  @ApiProperty({ enum: ['owner', 'admin', 'member', 'guest'], example: 'admin' })
-  role: 'owner' | 'admin' | 'member' | 'guest';
+  @IsEnum(['owner', 'admin', 'moderator', 'member', 'guest'])
+  @ApiProperty({ enum: ['owner', 'admin', 'moderator', 'member', 'guest'], example: 'admin' })
+  role: 'owner' | 'admin' | 'moderator' | 'member' | 'guest';
 }
 
 const updateMemberSchema = z.object({
-  role: z.enum(['owner', 'admin', 'member', 'guest']),
+  role: z.enum(['owner', 'admin', 'moderator', 'member', 'guest']),
 });
 
 @ApiTags('Members')

@@ -10,6 +10,9 @@ vi.mock('@repo/database', () => ({
       findMany: vi.fn(),
       update: vi.fn(),
     },
+    channel: {
+      findUnique: vi.fn(),
+    },
     message: {
       create: vi.fn(),
       update: vi.fn(),
@@ -53,6 +56,12 @@ describe('MessagesService', () => {
   });
 
   it('should call publishRealtime when creating a message', async () => {
+    (prisma.channel.findUnique as any).mockResolvedValue({
+      id: 'chan-1',
+      isPrivate: false,
+      type: 'public',
+      members: [],
+    });
     const mockMessage = { id: 'msg-1', channelId: 'chan-1', user: { name: 'Test' } };
     (prisma.message.create as any).mockResolvedValue(mockMessage);
     (prisma.user.update as any).mockResolvedValue({});
@@ -64,5 +73,33 @@ describe('MessagesService', () => {
       'message:sent',
       mockMessage
     );
+  });
+
+  it('should allow sending a message to a private channel if user is a member of that channel', async () => {
+    (prisma.channel.findUnique as any).mockResolvedValue({
+      id: 'chan-2',
+      isPrivate: true,
+      type: 'private',
+      members: [{ userId: 'user-1' }],
+    });
+    const mockMessage = { id: 'msg-2', channelId: 'chan-2', user: { name: 'Test' } };
+    (prisma.message.create as any).mockResolvedValue(mockMessage);
+    (prisma.user.update as any).mockResolvedValue({});
+
+    const result = await service.createMessage('user-1', { channelId: 'chan-2', content: 'private hello' });
+    expect(result).toEqual(mockMessage);
+  });
+
+  it('should throw ForbiddenException when sending a message to a private channel if user is not a member', async () => {
+    (prisma.channel.findUnique as any).mockResolvedValue({
+      id: 'chan-2',
+      isPrivate: true,
+      type: 'private',
+      members: [],
+    });
+
+    await expect(
+      service.createMessage('user-1', { channelId: 'chan-2', content: 'hack' })
+    ).rejects.toThrow('You do not have permission to send messages to this private channel');
   });
 });

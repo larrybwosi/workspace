@@ -172,6 +172,30 @@ export class MessagesService {
       throw new BadRequestException('Channel ID required');
     }
 
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        isPrivate: true,
+        type: true,
+        members: {
+          where: { userId },
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    if (channel.isPrivate || channel.type === 'private') {
+      const isMember = channel.members.length > 0;
+      if (!isMember) {
+        throw new ForbiddenException('You do not have permission to send messages to this private channel');
+      }
+    }
+
     const userMentions = extractUserMentions(content || '');
     const channelMentions = extractChannelMentions(content || '');
     const mentionsAll = hasSpecialMention(content || '', 'all');

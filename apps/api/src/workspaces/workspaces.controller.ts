@@ -276,6 +276,81 @@ export class WorkspacesController {
     });
   }
 
+  @Get('roles')
+  @ApiOperation({ summary: 'Get all well-defined workspace roles' })
+  @ApiResponse({ status: 200, description: 'List of workspace roles' })
+  async getWorkspaceRoles(): Promise<any> {
+    return [
+      {
+        key: 'owner',
+        name: 'Owner',
+        description: 'Full administrative control over the workspace, including deletion.',
+        permissions: ['*'],
+        isAdministrative: true,
+        hierarchy: 100,
+      },
+      {
+        key: 'admin',
+        name: 'Admin',
+        description: 'Administrative access to manage settings, members, channels, and integrations.',
+        permissions: ['manage_settings', 'manage_members', 'manage_channels', 'manage_integrations'],
+        isAdministrative: true,
+        hierarchy: 80,
+      },
+      {
+        key: 'moderator',
+        name: 'Moderator',
+        description: 'Ability to moderate member content, delete messages, and assist in workspace administration.',
+        permissions: ['moderate_members', 'delete_messages'],
+        isAdministrative: true,
+        hierarchy: 60,
+      },
+      {
+        key: 'member',
+        name: 'Member',
+        description: 'Standard member with ability to join public channels and send messages.',
+        permissions: ['send_messages', 'view_channels'],
+        isAdministrative: false,
+        hierarchy: 40,
+      },
+      {
+        key: 'guest',
+        name: 'Guest',
+        description: 'Restricted member with limited read-only or single-channel access.',
+        permissions: ['view_channels'],
+        isAdministrative: false,
+        hierarchy: 20,
+      },
+    ];
+  }
+
+  @Get(':slug/roles')
+  @ApiOperation({ summary: 'Get roles defined for a specific workspace' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of workspace roles' })
+  async getWorkspaceSlugRoles(@CurrentUser() user: User, @Param('slug') slug: string): Promise<any> {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
+      throw new ForbiddenException('You are not a member of this workspace');
+    }
+
+    return this.getWorkspaceRoles();
+  }
+
   @Get('discover')
   @ApiOperation({ summary: 'Discover public workspaces' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query for workspace name or slug' })

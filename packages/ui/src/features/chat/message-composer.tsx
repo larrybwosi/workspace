@@ -53,11 +53,21 @@ export function MessageComposer({
 
   const { handleKeyPress, stopTyping } = useTypingNotifier(channelId || '', currentUser);
 
+  const isPrivate = !channelId?.startsWith('dm-') && (channel?.isPrivate || channel?.type === 'private');
+  const isChannelMember = useMemo(() => {
+    if (!isPrivate) return true;
+    if (!channel || !currentUser) return false;
+    return channel.members?.some((m: any) => m.userId === currentUser.id) ?? false;
+  }, [channel, currentUser, isPrivate]);
+
+  const hasSendPermission = isChannelMember;
+
   const dynamicPlaceholder = useMemo(() => {
+    if (!hasSendPermission) return 'You do not have permission to send messages to this private channel';
     if (replyingTo) return `Replying to @${replyingTo.userName}`;
     if (channel) return `Message #${channel.name}`;
     return placeholder;
-  }, [channel, replyingTo, placeholder]);
+  }, [channel, replyingTo, placeholder, hasSendPermission]);
 
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
@@ -315,8 +325,9 @@ export function MessageComposer({
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
               placeholder={dynamicPlaceholder}
-              className="w-full bg-transparent border-none focus:ring-0 resize-none px-4 py-3 text-sm min-h-[44px] relative z-10 placeholder:text-muted-foreground/50"
+              className="w-full bg-transparent border-none focus:ring-0 resize-none px-4 py-3 text-sm min-h-[44px] relative z-10 placeholder:text-muted-foreground/50 disabled:opacity-50 disabled:cursor-not-allowed"
               maxRows={15}
+              disabled={!hasSendPermission || isUploading}
             />
           </div>
 
@@ -359,11 +370,12 @@ export function MessageComposer({
             <div className="flex items-center gap-1">
               <TooltipProvider delayDuration={300}>
                 <div className="flex items-center bg-muted/30 rounded-xl px-1">
-                  <CustomEmojiPicker onEmojiSelect={insertEmoji}>
+                  <CustomEmojiPicker onEmojiSelect={insertEmoji} disabled={!hasSendPermission}>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg"
+                      disabled={!hasSendPermission}
                     >
                       <Smile className="h-4 w-4" />
                     </Button>
@@ -373,6 +385,7 @@ export function MessageComposer({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg"
                     onClick={triggerMention}
+                    disabled={!hasSendPermission}
                   >
                     <AtSign className="h-4 w-4" />
                   </Button>
@@ -381,7 +394,7 @@ export function MessageComposer({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent rounded-lg"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
+                    disabled={!hasSendPermission || isUploading}
                   >
                     {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
                   </Button>
@@ -395,6 +408,7 @@ export function MessageComposer({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground rounded-lg"
                     onClick={() => wrapSelection('**')}
+                    disabled={!hasSendPermission}
                   >
                     <Bold className="h-3.5 w-3.5" />
                   </Button>
@@ -403,6 +417,7 @@ export function MessageComposer({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground rounded-lg"
                     onClick={() => wrapSelection('_')}
+                    disabled={!hasSendPermission}
                   >
                     <Italic className="h-3.5 w-3.5" />
                   </Button>
@@ -411,6 +426,7 @@ export function MessageComposer({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground rounded-lg"
                     onClick={() => wrapSelection('`')}
+                    disabled={!hasSendPermission}
                   >
                     <Code className="h-3.5 w-3.5" />
                   </Button>
@@ -426,6 +442,7 @@ export function MessageComposer({
                   setMessage('');
                   setAttachments([]);
                 }}
+                disabled={!hasSendPermission}
                 className="h-8 text-xs font-bold text-muted-foreground hover:text-foreground"
               >
                 Discard
@@ -433,7 +450,7 @@ export function MessageComposer({
               <Button
                 size="sm"
                 onClick={handleSend}
-                disabled={(!message.trim() && attachments.length === 0) || isUploading}
+                disabled={!hasSendPermission || (!message.trim() && attachments.length === 0) || isUploading}
                 className="h-9 px-4 rounded-xl font-bold bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-95"
               >
                 {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
