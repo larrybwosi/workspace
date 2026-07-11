@@ -48,7 +48,7 @@ export class DeviceAuthController {
 
     if (!data) throw new NotFoundException('Session not found or expired');
     const sessionData = JSON.parse(data);
-    const newSession = await auth.api.createSession({
+    const newSession = await (auth.api as any).createSession({
       body: {
         userId: user.id,
       },

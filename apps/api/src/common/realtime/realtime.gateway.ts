@@ -33,8 +33,14 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     try {
       // Socket.io authentication using better-auth
       // We expect the session cookie or authorization header to be present in the handshake
+      const headers = { ...client.handshake.headers };
+      const token = client.handshake.auth?.token;
+      if (token && !headers.authorization && !headers.Authorization) {
+        headers.authorization = `Bearer ${token}`;
+      }
+
       const session = await auth.api.getSession({
-        headers: client.handshake.headers as any,
+        headers: headers as any,
       });
 
       if (session) {

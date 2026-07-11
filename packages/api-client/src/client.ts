@@ -16,7 +16,16 @@ const getEnv = (name: string) => {
 };
 
 const getBaseURL = () => {
-  const url = getEnv('API_URL') || 'http://localhost:3000';
+  let url = '';
+  if (typeof window !== 'undefined') {
+    const customUrl = window.localStorage.getItem('CUSTOM_API_URL');
+    if (customUrl) {
+      url = customUrl;
+    }
+  }
+  if (!url) {
+    url = getEnv('API_URL') || 'http://localhost:3000';
+  }
   return url.replace(/\/$/, '') + '/api';
 };
 
@@ -25,4 +34,16 @@ export const apiClient = axios.create({
   baseURL: getBaseURL(),
   timeout: 10000,
   withCredentials: true,
+});
+
+apiClient.interceptors.request.use(config => {
+  if (typeof window !== 'undefined') {
+    const token =
+      window.localStorage.getItem('better-auth.session-token') ||
+      window.localStorage.getItem('better-auth.session_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
 });
