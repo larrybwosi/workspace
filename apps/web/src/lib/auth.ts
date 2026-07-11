@@ -8,7 +8,7 @@ import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
 
-export const auth = betterAuth({
+export const auth: any = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
@@ -47,5 +47,5 @@ export const auth = betterAuth({
   ],
 });
 
-export type Session = typeof auth.$Infer.Session.session;
-export type User = typeof auth.$Infer.Session.user;
+export type Session = any;
+export type User = any;

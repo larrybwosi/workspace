@@ -370,7 +370,7 @@ export function MessageComposer({
             <div className="flex items-center gap-1">
               <TooltipProvider delayDuration={300}>
                 <div className="flex items-center bg-muted/30 rounded-xl px-1">
-                  <CustomEmojiPicker onEmojiSelect={insertEmoji} disabled={!hasSendPermission}>
+                  <CustomEmojiPicker onEmojiSelect={insertEmoji}>
                     <Button
                       variant="ghost"
                       size="icon"

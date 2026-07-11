@@ -30,6 +30,11 @@
       "@repo/shared/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "../../packages/ui/**/*",
+    "../../packages/api-client/**/*",
+    "../../packages/shared/**/*"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

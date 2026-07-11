@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "rootDir": "src",
     "paths": {
       "@repo/ui/components/*": [

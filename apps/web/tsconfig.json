@@ -78,7 +78,10 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "../../packages/ui/**/*",
+    "../../packages/api-client/**/*",
+    "../../packages/shared/**/*"
   ],
   "exclude": [
     "node_modules"
