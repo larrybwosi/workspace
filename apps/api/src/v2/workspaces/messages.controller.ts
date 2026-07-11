@@ -687,32 +687,32 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
     let activeThreadId = threadId;
     let senderId = context.userId;
 
-    // M2M Support: Use the M2M app's bot as sender if available, else fallback to workspace default bot
-    if (senderId.startsWith('m2m:')) {
-      if (context.m2mClientId) {
-        const m2mApp = await prisma.botApplication.findUnique({
-          where: { clientId: context.m2mClientId },
-          select: { botId: true },
-        });
-        if (m2mApp?.botId) {
-          senderId = m2mApp.botId;
-        }
+    let isM2mSender = senderId.startsWith('m2m:');
+    if (!isM2mSender) {
+      // Check if senderId is an Organization ID (M2M)
+      const isOrg = await prisma.organization.findUnique({
+        where: { id: senderId },
+        select: { id: true },
+      });
+      if (isOrg) {
+        isM2mSender = true;
       }
+    }
 
-      if (senderId.startsWith('m2m:')) {
-        const defaultBot = await prisma.botApplication.findFirst({
-          where: {
-            workspaceId: context.workspaceId,
-            botId: { not: null },
-          },
-          select: { botId: true },
-        });
+    // M2M Support: Use the workspace default bot
+    if (isM2mSender) {
+      const defaultBot = await prisma.botApplication.findFirst({
+        where: {
+          workspaceId: context.workspaceId,
+          botId: { not: null },
+        },
+        select: { botId: true },
+      });
 
-        if (defaultBot?.botId) {
-          senderId = defaultBot.botId;
-        } else {
-          throw new BadRequestException('M2M requires a bot to be provisioned in this workspace to send messages.');
-        }
+      if (defaultBot?.botId) {
+        senderId = defaultBot.botId;
+      } else {
+        throw new BadRequestException('M2M requires a bot to be provisioned in this workspace to send messages.');
       }
     }
 
@@ -763,7 +763,7 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
             ...((metadata as any) || {}),
             isBot: context.isBot || false,
             tokenId: context.tokenId || null,
-            m2mClientId: context.m2mClientId || null,
+            m2mClientId: context.clientId || null,
           },
           actions: actions
             ? {

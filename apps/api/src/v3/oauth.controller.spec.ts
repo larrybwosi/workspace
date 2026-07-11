@@ -6,7 +6,7 @@ import * as crypto from 'crypto';
 
 vi.mock('@repo/database', () => ({
   prisma: {
-    botApplication: {
+    organization: {
       findUnique: vi.fn(),
     },
     oauthAccessToken: {
@@ -45,12 +45,11 @@ describe('V3OAuthController', () => {
 
     const hashedSecret = crypto.createHash('sha256').update(body.client_secret).digest('hex');
 
-    (prisma.botApplication.findUnique as any).mockResolvedValue({
-      id: 'app-1',
-      name: 'M2M Test App',
+    (prisma.organization.findUnique as any).mockResolvedValue({
+      id: 'org-1',
+      name: 'M2M Test Organization',
       clientId: 'client-id-1',
       clientSecret: hashedSecret,
-      organizationId: 'org-1',
       scopes: ['provisioning:workspaces'],
       allowedIps: [],
     });
@@ -70,13 +69,12 @@ describe('V3OAuthController', () => {
     expect(result.data.access_token.startsWith('oat_')).toBe(true);
     expect(result.data.token_type).toBe('Bearer');
     expect(result.data.scope).toBe('provisioning:workspaces');
-    expect(prisma.botApplication.findUnique).toHaveBeenCalledWith({
+    expect(prisma.organization.findUnique).toHaveBeenCalledWith({
       where: { clientId: 'client-id-1' },
-      include: { bot: true },
     });
   });
 
-  it('should support plain secrets if app.clientSecret is the plain secret', async () => {
+  it('should support plain secrets if org.clientSecret is the plain secret', async () => {
     const body = {
       grant_type: 'client_credentials' as const,
       client_id: 'client-id-1',
@@ -85,11 +83,10 @@ describe('V3OAuthController', () => {
 
     const req = { ip: '127.0.0.1' };
 
-    (prisma.botApplication.findUnique as any).mockResolvedValue({
-      id: 'app-1',
+    (prisma.organization.findUnique as any).mockResolvedValue({
+      id: 'org-1',
       clientId: 'client-id-1',
       clientSecret: 'my-plain-secret',
-      organizationId: 'org-1',
       scopes: ['*'],
       allowedIps: [],
     });
@@ -115,8 +112,8 @@ describe('V3OAuthController', () => {
 
     const req = { ip: '127.0.0.1' };
 
-    (prisma.botApplication.findUnique as any).mockResolvedValue({
-      id: 'app-1',
+    (prisma.organization.findUnique as any).mockResolvedValue({
+      id: 'org-1',
       clientId: 'client-id-1',
       clientSecret: crypto.createHash('sha256').update('right-secret').digest('hex'),
     });
@@ -135,8 +132,8 @@ describe('V3OAuthController', () => {
 
     const req = { ip: '192.168.1.1' };
 
-    (prisma.botApplication.findUnique as any).mockResolvedValue({
-      id: 'app-1',
+    (prisma.organization.findUnique as any).mockResolvedValue({
+      id: 'org-1',
       clientId: 'client-id-1',
       clientSecret: 'secret-1',
       allowedIps: ['127.0.0.1'],
@@ -156,12 +153,11 @@ describe('V3OAuthController', () => {
 
     const req = { ip: '::ffff:127.0.0.1' };
 
-    (prisma.botApplication.findUnique as any).mockResolvedValue({
-      id: 'app-1',
+    (prisma.organization.findUnique as any).mockResolvedValue({
+      id: 'org-1',
       clientId: 'client-id-1',
       clientSecret: 'secret-1',
       allowedIps: ['127.0.0.1'],
-      organizationId: 'org-1',
       scopes: ['*'],
     });
 
@@ -186,8 +182,8 @@ describe('V3OAuthController', () => {
 
     const req = { ip: '127.0.0.1' };
 
-    (prisma.botApplication.findUnique as any).mockResolvedValue({
-      id: 'app-1',
+    (prisma.organization.findUnique as any).mockResolvedValue({
+      id: 'org-1',
       clientId: 'client-id-1',
       clientSecret: 'secret-1',
       scopes: ['messages:read'],

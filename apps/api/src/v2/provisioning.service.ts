@@ -98,24 +98,7 @@ export class ProvisioningService {
           }
         }
 
-        // 4. If M2M, Install the provisioning app into the new workspace
-        if (context.m2mClientId) {
-          const app = await tx.botApplication.findUnique({
-            where: { clientId: context.m2mClientId },
-          });
-
-          if (app && app.botId) {
-            await tx.workspaceMember.create({
-              data: {
-                workspaceId: workspace.id,
-                userId: app.botId,
-                role: 'admin', // M2M apps are admins by default in provisioned workspaces
-              },
-            });
-          }
-        }
-
-        // 5. Create Default Bot (System Bot)
+        // 4. Create Default Bot (System Bot)
         const botId = `bot_${crypto.randomBytes(8).toString('hex')}`;
         const botUser = await tx.user.create({
           data: {
@@ -151,7 +134,7 @@ export class ProvisioningService {
           },
         });
 
-        // 6. Audit Log
+        // 5. Audit Log
         await tx.workspaceAuditLog.create({
           data: {
             workspaceId: workspace.id,

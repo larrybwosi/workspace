@@ -168,39 +168,45 @@ export class ApiV3Guard implements CanActivate {
           tokenId: oauthToken.id,
         };
 
+        let org = null;
         if (context.userId.startsWith('m2m:')) {
           context.organizationId = context.userId.split(':')[1];
-          context.m2mClientId = context.clientId;
-
-          // Enterprise Feature: IP Whitelisting & Scope Enforcement
-          const app = await prisma.botApplication.findUnique({
-            where: { clientId: context.m2mClientId },
+          org = await prisma.organization.findUnique({
+            where: { id: context.organizationId },
           });
+        } else {
+          org = await prisma.organization.findUnique({
+            where: { id: context.userId },
+          });
+          if (org) {
+            context.organizationId = org.id;
+          }
+        }
 
-          if (app) {
-            // IP Allowlist check
-            if (app.allowedIps && app.allowedIps.length > 0) {
-              const clientIp = request.ip || request.socket.remoteAddress;
-              let normalizedIp = clientIp || '';
-              if (normalizedIp.startsWith('::ffff:')) {
-                normalizedIp = normalizedIp.substring(7);
-              }
-
-              const isAllowed = app.allowedIps.includes(normalizedIp) || (clientIp && app.allowedIps.includes(clientIp));
-              if (!isAllowed) {
-                throw new ForbiddenException('IP address not authorized');
-              }
+        if (org) {
+          // Enterprise Feature: IP Whitelisting & Scope Enforcement
+          // IP Allowlist check
+          if (org.allowedIps && org.allowedIps.length > 0) {
+            const clientIp = request.ip || request.socket.remoteAddress;
+            let normalizedIp = clientIp || '';
+            if (normalizedIp.startsWith('::ffff:')) {
+              normalizedIp = normalizedIp.substring(7);
             }
 
-            // Scope Check
-            const requestedScopes = context.scopes;
-            const allowedScopes = app.scopes;
+            const isAllowed = org.allowedIps.includes(normalizedIp) || (clientIp && org.allowedIps.includes(clientIp));
+            if (!isAllowed) {
+              throw new ForbiddenException('IP address not authorized');
+            }
+          }
 
-            if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
-              const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
-              if (unauthorizedScopes.length > 0) {
-                throw new ForbiddenException(`Unauthorized scopes for this M2M client: ${unauthorizedScopes.join(', ')}`);
-              }
+          // Scope Check
+          const requestedScopes = context.scopes;
+          const allowedScopes = org.scopes;
+
+          if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
+            const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
+            if (unauthorizedScopes.length > 0) {
+              throw new ForbiddenException(`Unauthorized scopes for this organization: ${unauthorizedScopes.join(', ')}`);
             }
           }
         }

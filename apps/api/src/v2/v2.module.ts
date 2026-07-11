@@ -1,6 +1,5 @@
 import { ProvisioningService } from './provisioning.service';
 import { ProvisioningController } from './provisioning.controller';
-import { M2mController } from './m2m/m2m.controller';
 import { OrganizationsController } from './organizations.controller';
 import { Module } from '@nestjs/common';
 import { V2WorkspacesController } from './workspaces/workspaces.controller';
@@ -39,7 +38,6 @@ import { PrismaService } from '../prisma.service';
     V2OAuthController,
     V2ApplicationsController,
     V2ContactController,
-    M2mController,
     ProvisioningController,
     OrganizationsController,
   ],

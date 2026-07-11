@@ -99,22 +99,21 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
     const { client_id, client_secret, scope } = validatedData.data;
 
-    // Find Bot / M2M application by clientId
-    const app = await prisma.botApplication.findUnique({
+    // Find Organization by clientId
+    const org = await prisma.organization.findUnique({
       where: { clientId: client_id },
-      include: { bot: true },
     });
 
-    if (app) {
+    if (org) {
       const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
 
       // Timing-safe constant-time comparison using SHA-256 hashes to prevent timing attacks
       const providedSecretHash = crypto.createHash('sha256').update(client_secret).digest();
-      const appSecretHash = crypto.createHash('sha256').update(app.clientSecret).digest();
+      const orgSecretHash = crypto.createHash('sha256').update(org.clientSecret || '').digest();
       const providedSecretHashedHash = crypto.createHash('sha256').update(hashedSecret).digest();
 
-      const isPlainValid = crypto.timingSafeEqual(providedSecretHash, appSecretHash);
-      const isHashedValid = crypto.timingSafeEqual(providedSecretHashedHash, appSecretHash);
+      const isPlainValid = crypto.timingSafeEqual(providedSecretHash, orgSecretHash);
+      const isHashedValid = crypto.timingSafeEqual(providedSecretHashedHash, orgSecretHash);
       const isValid = isPlainValid || isHashedValid;
 
       if (!isValid) {
@@ -122,14 +121,14 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       }
 
       // IP Whitelisting Check (Enterprise feature)
-      if (app.allowedIps && app.allowedIps.length > 0) {
+      if (org.allowedIps && org.allowedIps.length > 0) {
         const clientIp = req.ip || req.socket.remoteAddress;
         let normalizedIp = clientIp || '';
         if (normalizedIp.startsWith('::ffff:')) {
           normalizedIp = normalizedIp.substring(7);
         }
 
-        const isAllowed = app.allowedIps.includes(normalizedIp) || (clientIp && app.allowedIps.includes(clientIp));
+        const isAllowed = org.allowedIps.includes(normalizedIp) || (clientIp && org.allowedIps.includes(clientIp));
         if (!isAllowed) {
           throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
         }
@@ -137,7 +136,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
       // Scope Check
       const requestedScopes = scope ? scope.split(' ') : [];
-      const allowedScopes = app.scopes;
+      const allowedScopes = org.scopes;
 
       if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
         const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
@@ -148,13 +147,8 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
       const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
 
-      if (app.organizationId) {
-        // Issue token for Machine-to-Machine context
-        return this.issueToken(client_id, `m2m:${app.organizationId}`, scopesToIssue);
-      } else {
-        // Issue token for User/Bot context
-        return this.issueToken(client_id, app.botId!, scopesToIssue);
-      }
+      // Issue token for Organization M2M context
+      return this.issueToken(client_id, org.id, scopesToIssue);
     }
 
     throw new UnauthorizedException('Invalid client credentials');

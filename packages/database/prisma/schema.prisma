@@ -1580,7 +1580,6 @@ model LiveChatSession {
 }
 
 model Organization {
-  botApplications BotApplication[]
   workspaces      Workspace[]
   id        String   @id @default(cuid())
   name      String
@@ -1592,6 +1591,13 @@ model Organization {
 
   members     Member[]
   invitations OrganizationInvitation[]
+
+  clientId      String?   @unique
+  clientSecret  String?
+  scopes        String[]
+  allowedIps    String[]
+  webhookUrl    String?
+  webhookSecret String?
 
   @@map("organizations")
 }
@@ -1737,15 +1743,6 @@ model BotApplication {
 
   workspaceId String?
   workspace   Workspace? @relation(fields: [workspaceId], references: [id])
-
-  // Unified M2M fields
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  scopes         String[]
-  allowedIps     String[]
-  webhookUrl     String?
-  webhookSecret  String?
-  metadata       Json?
 
   @@map("bot_applications")
 }
