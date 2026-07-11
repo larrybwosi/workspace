@@ -5,6 +5,9 @@ import { vi, describe, beforeEach, it, expect } from 'vitest';
 
 vi.mock('@repo/database', () => ({
   prisma: {
+    channel: {
+      findUnique: vi.fn(),
+    },
     message: {
       findMany: vi.fn(),
       create: vi.fn(),
@@ -74,6 +77,12 @@ describe('MessagesService - Threads', () => {
   });
 
   it('should persist threadId in createMessage', async () => {
+    (prisma.channel.findUnique as any).mockResolvedValue({
+      id: 'chan-1',
+      isPrivate: false,
+      type: 'public',
+      members: [],
+    });
     const mockMessage = { id: 'msg-1', channelId: 'chan-1', user: { name: 'Test' } };
     (prisma.message.create as any).mockResolvedValue(mockMessage);
     (prisma.user.update as any).mockResolvedValue({});
