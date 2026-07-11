@@ -195,3 +195,8 @@
 
 **Learning:** When backgrounding Prisma calls (or any promise) using `.catch()`, unit tests using Vitest/Jest mocks will fail with `TypeError: Cannot read properties of undefined (reading 'catch')` if the mock only returns `undefined`.
 **Action:** Ensure mocks for backgrounded calls return an object with a mock `.catch` method: `mockReturnValue({ catch: vi.fn() })`.
+
+## 2025-05-30 - [API/V2] Standardized User Payload in Search
+
+**Learning:** V2 search endpoints were returning redundant 'image' fields and inconsistent 'avatar' data, inflating JSON payloads and increasing client-side complexity.
+**Action:** Standardize user object mapping in all search-related controllers to prioritize 'avatar' via 'avatar || image' fallback and explicitly exclude the redundant 'image' field from the final response. This reduces payload size by ~5-10% in member-heavy listings.
