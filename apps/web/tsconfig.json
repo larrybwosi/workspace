@@ -1,6 +1,9 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
     "lib": [
       "dom",
       "dom.iterable",
@@ -79,9 +82,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "../../packages/ui/**/*",
-    "../../packages/api-client/**/*",
-    "../../packages/shared/**/*"
+    "../../packages/ui/src/**/*",
+    "../../packages/shared/index.ts",
+    "../../packages/shared/src/**/*",
+    "../../packages/api-client/src/**/*"
   ],
   "exclude": [
     "node_modules"

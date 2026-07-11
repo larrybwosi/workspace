@@ -1,6 +1,9 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
@@ -32,9 +35,10 @@
   },
   "include": [
     "src",
-    "../../packages/ui/**/*",
-    "../../packages/api-client/**/*",
-    "../../packages/shared/**/*"
+    "../../packages/ui/src/**/*",
+    "../../packages/shared/index.ts",
+    "../../packages/shared/src/**/*",
+    "../../packages/api-client/src/**/*"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
