@@ -141,7 +141,7 @@ export async function notifyMentions(
     where: { id: channelId },
     include: {
       workspace: {
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, name: true },
       },
       members: {
         where: { userId: { in: mentionedUserIds } },
@@ -210,6 +210,9 @@ export async function notifyMentions(
         channelName: channel.name,
         messageId,
         type: 'mention',
+        workspaceId,
+        workspaceName: channel.workspace?.name,
+        workspaceSlug: channel.workspace?.slug,
       },
     });
   }
@@ -236,7 +239,7 @@ export async function notifyReply(
       channel: {
         include: {
           workspace: {
-            select: { id: true, slug: true },
+            select: { id: true, slug: true, name: true },
           },
         },
       },
@@ -292,6 +295,9 @@ export async function notifyReply(
       parentMessageId,
       replyMessageId,
       type: 'reply',
+      workspaceId,
+      workspaceName: channel.workspace?.name,
+      workspaceSlug: channel.workspace?.slug,
     },
   });
 }
@@ -314,7 +320,7 @@ export async function notifyChannel(
     where: { id: channelId },
     include: {
       workspace: {
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, name: true },
       },
       members: {
         select: { userId: true, notificationPreference: true },
@@ -374,6 +380,9 @@ export async function notifyChannel(
       metadata: {
         messageId,
         sentBy,
+        workspaceId,
+        workspaceName: channel.workspace?.name,
+        workspaceSlug: channel.workspace?.slug,
       },
     });
   }
@@ -471,7 +480,7 @@ export async function notifyNewMessage(
     where: { id: channelId },
     include: {
       workspace: {
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, name: true },
       },
       members: {
         where: { userId: { not: senderId } },
@@ -536,6 +545,9 @@ export async function notifyNewMessage(
         messageId,
         senderId,
         type: 'channel_alert',
+        workspaceId,
+        workspaceName: channel.workspace?.name,
+        workspaceSlug: channel.workspace?.slug,
       },
     });
   }

@@ -108,7 +108,7 @@ interface MessageApi {
         @Path("slug") slug: String,
         @Path("messageId") messageId: String,
         @Path("actionId") actionId: String,
-        @Body body: Map<String, Any>
+        @Body body: Map<String, @JvmSuppressWildcards Any>
     ): Response<Map<String, Any>>
 
     // Thread Messages

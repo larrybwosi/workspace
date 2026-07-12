@@ -1,6 +1,7 @@
 package com.scrymechat.android.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -25,8 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
-import com.scrymechat.android.ui.theme.ScrymeDarkAccent
-import com.scrymechat.android.ui.theme.ScrymeDarkSurface
+import com.scrymechat.android.ui.components.UserAvatar
 import com.scrymechat.android.ui.theme.ScrymeDarkSurfaceVariant
 
 @Composable
@@ -34,15 +34,19 @@ fun WorkspaceRail(
     workspaces: List<WorkspaceEntity>,
     selectedWorkspace: WorkspaceEntity?,
     isHomeSelected: Boolean,
+    dms: List<com.scrymechat.android.data.local.dao.DmWithUser> = emptyList(),
+    selectedDm: com.scrymechat.android.data.local.dao.DmWithUser? = null,
     onWorkspaceClick: (WorkspaceEntity) -> Unit,
     onHomeClick: () -> Unit,
-    onCreateWorkspaceClick: () -> Unit
+    onDmClick: (com.scrymechat.android.data.local.dao.DmWithUser) -> Unit = {},
+    onCreateWorkspaceClick: () -> Unit,
+    onNotificationsClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .width(72.dp)
             .fillMaxHeight()
-            .background(ScrymeDarkBackground),
+            .background(Color(0xFF1E1F22)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(12.dp))
@@ -94,16 +98,12 @@ fun WorkspaceRail(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .background(
-                                        Brush.linearGradient(
-                                            listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
-                                        )
-                                    ),
+                                    .border(1.dp, SidebarTokens.Hairline, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = workspace.name.take(1).uppercase(),
-                                    color = Color.White,
+                                    color = SidebarTokens.TextPrimary,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -113,7 +113,76 @@ fun WorkspaceRail(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
+            if (workspaces.isNotEmpty() && dms.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(32.dp)
+                            .height(1.dp)
+                            .background(Color.White.copy(alpha = 0.15f))
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+
+            items(dms, key = { "dm_${it.dm.id}" }) { dmWithUser ->
+                val isDmSelected = selectedDm?.dm?.id == dmWithUser.dm.id
+                val displayName = dmWithUser.otherUserName ?: "Unknown User"
+                WorkspaceIcon(
+                    isSelected = isDmSelected,
+                    onClick = { onDmClick(dmWithUser) },
+                    content = {
+                        UserAvatar(
+                            name = displayName,
+                            avatarUrl = dmWithUser.otherUserAvatar,
+                            size = 48.dp,
+                            borderColor = if (isDmSelected) Color.White else SidebarTokens.Hairline
+                        )
+                        if (dmWithUser.dm.unreadCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.TopEnd
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(SidebarTokens.Danger),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (dmWithUser.dm.unreadCount > 99) "99+" else dmWithUser.dm.unreadCount.toString(),
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
+
+        WorkspaceIcon(
+            isSelected = false,
+            onClick = onNotificationsClick,
+            content = {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notifications",
+                    tint = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Add Workspace Button
         WorkspaceIcon(
@@ -128,6 +197,7 @@ fun WorkspaceRail(
                 )
             }
         )
+
         Spacer(modifier = Modifier.height(12.dp))
     }
 }
@@ -160,8 +230,13 @@ fun WorkspaceIcon(
         Surface(
             modifier = Modifier
                 .size(48.dp)
-                .clip(if (isSelected) RoundedCornerShape(16.dp) else CircleShape),
-            color = if (isSelected) ScrymeDarkAccent else ScrymeDarkSurfaceVariant
+                .clip(if (isSelected) RoundedCornerShape(16.dp) else CircleShape)
+                .border(
+                    width = 1.dp,
+                    color = if (isSelected) Color.White else SidebarTokens.Hairline,
+                    shape = if (isSelected) RoundedCornerShape(16.dp) else CircleShape
+                ),
+            color = Color.Transparent
         ) {
             Box(contentAlignment = Alignment.Center) {
                 content()
@@ -172,4 +247,4 @@ fun WorkspaceIcon(
     }
 }
 
-val ScrymeDarkBackground = Color(0xFF000000)
+val ScrymeDarkBackground = Color(0xFF1E1F22)

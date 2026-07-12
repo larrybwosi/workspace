@@ -28,6 +28,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideNotificationApi(retrofit: Retrofit): NotificationApi {
+        return retrofit.create(NotificationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideInvitationsApi(retrofit: Retrofit): InvitationsApi {
         return retrofit.create(InvitationsApi::class.java)
     }
@@ -105,7 +111,7 @@ object NetworkModule {
         val options = IO.Options()
         options.callFactory = okHttpClient
         options.webSocketFactory = okHttpClient
-        options.path = "/api/socket.io"
+        options.path = "/socket.io"
         options.auth = mapOf("token" to sessionManager.getToken())
 
         val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL

@@ -128,11 +128,12 @@ class MainActivity : ComponentActivity() {
             when (type) {
                 "direct_message" -> navigate(Screen.Chat.createRoute(entityId))
                 "channel_alert" -> navigate(Screen.Channel.createRoute(entityId))
+                "friend_request" -> navigate(Screen.Friends.route)
                 "mention" -> {
                     val entityType = intent.getStringExtra("entityType")
                     if (entityType == "channel") {
                         navigate(Screen.Channel.createRoute(entityId))
-                    } else if (entityType == "direct_message") {
+                    } else if (entityType == "direct_message" || entityType == "dm") {
                         navigate(Screen.Chat.createRoute(entityId))
                     }
                 }

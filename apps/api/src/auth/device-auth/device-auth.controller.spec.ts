@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
 import { DeviceAuthController } from './device-auth.controller';
 
-// Mock nanoid to return a predictable value
-vi.mock('nanoid', () => ({
-  nanoid: vi.fn(() => 'test-session-id-123'),
-}));
-
-// Mock Better-Auth
-const { mockCreateSession } = vi.hoisted(() => ({
-  mockCreateSession: vi.fn(),
+// Mock Better-Auth API methods
+const { mockDeviceCode, mockDeviceToken, mockDeviceApprove, mockDeviceDeny } = vi.hoisted(() => ({
+  mockDeviceCode: vi.fn(),
+  mockDeviceToken: vi.fn(),
+  mockDeviceApprove: vi.fn(),
+  mockDeviceDeny: vi.fn(),
 }));
 
 vi.mock('@repo/auth', () => ({
   auth: {
     api: {
-      getSession: vi.fn(),
-      createSession: mockCreateSession,
+      deviceCode: mockDeviceCode,
+      deviceToken: mockDeviceToken,
+      deviceApprove: mockDeviceApprove,
+      deviceDeny: mockDeviceDeny,
     },
   },
 }));
@@ -33,27 +33,12 @@ vi.mock('@repo/shared/server', () => ({
 
 describe('DeviceAuthController', () => {
   let controller: DeviceAuthController;
-  let mockRedis: {
-    set: ReturnType<typeof vi.fn>;
-    get: ReturnType<typeof vi.fn>;
-  };
 
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    mockRedis = {
-      set: vi.fn().mockResolvedValue('OK'),
-      get: vi.fn().mockResolvedValue(null),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DeviceAuthController],
-      providers: [
-        {
-          provide: 'REDIS_CLIENT',
-          useValue: mockRedis,
-        },
-      ],
     }).compile();
 
     controller = module.get<DeviceAuthController>(DeviceAuthController);
@@ -64,133 +49,198 @@ describe('DeviceAuthController', () => {
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // generateQR – Redis-backed session
+  // generateQR
   // ─────────────────────────────────────────────────────────────────────────────
-  describe('generateQR - Redis session creation', () => {
-    it('should return a sessionId', async () => {
+  describe('generateQR', () => {
+    it('should return device auth details from Better-Auth', async () => {
+      mockDeviceCode.mockResolvedValue({
+        device_code: 'mock-dev-code',
+        user_code: 'mock-user-code',
+        verification_uri: 'http://localhost/device',
+        verification_uri_complete: 'http://localhost/device?user_code=mock-user-code',
+        expires_in: 120,
+        interval: 5,
+      });
+
       const result = await controller.generateQR();
 
-      expect(result).toHaveProperty('sessionId');
-      expect(typeof result.sessionId).toBe('string');
-    });
-
-    it('should store the session in Redis with status: pending', async () => {
-      await controller.generateQR();
-
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.stringContaining('qr-session:'),
-        JSON.stringify({ status: 'pending' }),
-        'EX',
-        120
-      );
-    });
-
-    it('should use key format qr-session:{sessionId}', async () => {
-      const result = await controller.generateQR();
-
-      expect(mockRedis.set).toHaveBeenCalledWith('qr-session:' + result.sessionId, expect.any(String), 'EX', 120);
+      expect(mockDeviceCode).toHaveBeenCalledWith({
+        body: { client_id: 'desktop-app' },
+      });
+      expect(result).toEqual({
+        deviceCode: 'mock-dev-code',
+        userCode: 'mock-user-code',
+        verificationUri: 'http://localhost/device',
+        verificationUriComplete: 'http://localhost/device?user_code=mock-user-code',
+        expiresIn: 120,
+        interval: 5,
+      });
     });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // checkStatus – Redis-backed status
+  // checkStatus
   // ─────────────────────────────────────────────────────────────────────────────
-  describe('checkStatus - Redis lookup', () => {
-    it("should return { status: 'expired' } when session not found in Redis", async () => {
-      mockRedis.get.mockResolvedValue(null);
+  describe('checkStatus', () => {
+    it("should return status 'authorized' with token when access_token is present", async () => {
+      mockDeviceToken.mockResolvedValue({
+        access_token: 'mock-access-token',
+      });
 
-      const result = await controller.checkStatus('nonexistent-session');
+      const result = await controller.checkStatus('my-device-code');
 
+      expect(mockDeviceToken).toHaveBeenCalledWith({
+        body: {
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+          device_code: 'my-device-code',
+          client_id: 'desktop-app',
+        },
+      });
+      expect(result).toEqual({ status: 'authorized', token: 'mock-access-token' });
+    });
+
+    it("should return status 'pending' when access_token is not returned", async () => {
+      mockDeviceToken.mockResolvedValue(null);
+
+      const result = await controller.checkStatus('my-device-code');
+      expect(result).toEqual({ status: 'pending' });
+    });
+
+    it("should return status 'pending' on authorization_pending error", async () => {
+      mockDeviceToken.mockRejectedValue({
+        error: 'authorization_pending',
+      });
+
+      const result = await controller.checkStatus('my-device-code');
+      expect(result).toEqual({ status: 'pending' });
+    });
+
+    it("should return status 'pending' with slowDown: true on slow_down error", async () => {
+      mockDeviceToken.mockRejectedValue({
+        error: 'slow_down',
+      });
+
+      const result = await controller.checkStatus('my-device-code');
+      expect(result).toEqual({ status: 'pending', slowDown: true });
+    });
+
+    it("should return status 'denied' on access_denied error", async () => {
+      mockDeviceToken.mockRejectedValue({
+        error: 'access_denied',
+      });
+
+      const result = await controller.checkStatus('my-device-code');
+      expect(result).toEqual({ status: 'denied' });
+    });
+
+    it("should return status 'expired' on expired_token error", async () => {
+      mockDeviceToken.mockRejectedValue({
+        error: 'expired_token',
+      });
+
+      const result = await controller.checkStatus('my-device-code');
       expect(result).toEqual({ status: 'expired' });
     });
 
-    it('should look up session using key format qr-session:{sessionId}', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
+    it('should throw BadRequestException on unknown errors', async () => {
+      mockDeviceToken.mockRejectedValue({
+        error: 'invalid_client',
+        body: { error_description: 'Client is invalid' },
+      });
 
-      await controller.checkStatus('my-session-id');
-
-      expect(mockRedis.get).toHaveBeenCalledWith('qr-session:my-session-id');
+      await expect(controller.checkStatus('my-device-code')).rejects.toThrow(BadRequestException);
     });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // authorize – Better-Auth session creation + Redis update + Realtime notification
+  // authorize
   // ─────────────────────────────────────────────────────────────────────────────
-  describe('authorize - Better-Auth session + Redis + Realtime', () => {
-    const mockUser = { id: 'user-1', email: 'user@example.com' };
+  describe('authorize', () => {
+    const mockRequest = {
+      headers: { host: 'localhost' },
+    } as any;
 
-    it('should throw NotFoundException when session not found in Redis', async () => {
-      mockRedis.get.mockResolvedValue(null);
-
-      await expect(controller.authorize({ sessionId: 'invalid-session' }, mockUser)).rejects.toThrow(NotFoundException);
+    it('should throw BadRequestException when userCode is missing', async () => {
+      await expect(controller.authorize({ userCode: '' }, mockRequest)).rejects.toThrow(BadRequestException);
     });
 
-    it("should call auth.api.createSession with the user's id", async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue({ token: 'new-token', id: 'sess-1' });
+    it('should call deviceApprove and publishRealtime on success', async () => {
+      mockDeviceApprove.mockResolvedValue(undefined);
       mockPublishRealtime.mockResolvedValue(undefined);
 
-      await controller.authorize({ sessionId: 'valid-session' }, mockUser);
+      const result = await controller.authorize({ userCode: 'ABCD-1234' }, mockRequest);
 
-      expect(mockCreateSession).toHaveBeenCalledWith(
+      expect(mockDeviceApprove).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: {
-            userId: 'user-1',
-          },
+          body: { userCode: 'ABCD-1234' },
         })
       );
-    });
-
-    it('should update Redis with authorized status, userId, and token', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      const newSession = { token: 'new-auth-token', id: 'sess-new' };
-      mockCreateSession.mockResolvedValue(newSession);
-      mockPublishRealtime.mockResolvedValue(undefined);
-
-      await controller.authorize({ sessionId: 'my-session' }, mockUser);
-
-      expect(mockRedis.set).toHaveBeenCalledWith('qr-session:my-session', expect.any(String), 'EX', 120);
-
-      const updatedDataArg = mockRedis.set.mock.calls[0][1];
-      const updatedData = JSON.parse(updatedDataArg);
-      expect(updatedData.status).toBe('authorized');
-      expect(updatedData.userId).toBe('user-1');
-      expect(updatedData.token).toBe('new-auth-token');
-    });
-
-    it("should publish to Realtime channel qr-session:{sessionId} with 'authorized' event", async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
-      mockPublishRealtime.mockResolvedValue(undefined);
-
-      await controller.authorize({ sessionId: 'ably-session' }, mockUser);
-
       expect(mockPublishRealtime).toHaveBeenCalledWith(
-        'qr-session:ably-session',
+        'qr-session:ABCD-1234',
         'authorized',
-        expect.objectContaining({
-          status: 'authorized',
-          userId: 'user-1',
-        })
+        { status: 'authorized' }
       );
+      expect(result).toEqual({ success: true });
     });
 
-    it('should update Redis before publishing to Realtime', async () => {
-      const callOrder: string[] = [];
-      mockRedis.get.mockResolvedValue(JSON.stringify({ status: 'pending' }));
-      mockCreateSession.mockResolvedValue({ token: 'auth-token', id: 'sess-1' });
-      mockRedis.set.mockImplementation(async () => {
-        callOrder.push('redis-set');
-        return 'OK';
-      });
-      mockPublishRealtime.mockImplementation(async () => {
-        callOrder.push('realtime-publish');
+    it('should throw BadRequestException on 404 or invalid_grant', async () => {
+      mockDeviceApprove.mockRejectedValue({
+        status: 404,
       });
 
-      await controller.authorize({ sessionId: 'my-session' }, mockUser);
+      await expect(controller.authorize({ userCode: 'ABCD-1234' }, mockRequest)).rejects.toThrow(BadRequestException);
+    });
 
-      expect(callOrder[0]).toBe('redis-set');
-      expect(callOrder[1]).toBe('realtime-publish');
+    it('should throw ForbiddenException on 403 or access_denied', async () => {
+      mockDeviceApprove.mockRejectedValue({
+        status: 403,
+      });
+
+      await expect(controller.authorize({ userCode: 'ABCD-1234' }, mockRequest)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw InternalServerErrorException on other errors', async () => {
+      mockDeviceApprove.mockRejectedValue(new Error('DB connection failed'));
+
+      await expect(controller.authorize({ userCode: 'ABCD-1234' }, mockRequest)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // deny
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe('deny', () => {
+    const mockRequest = {
+      headers: { host: 'localhost' },
+    } as any;
+
+    it('should throw BadRequestException when userCode is missing', async () => {
+      await expect(controller.deny({ userCode: '' }, mockRequest)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should call deviceDeny and publishRealtime on success', async () => {
+      mockDeviceDeny.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
+
+      const result = await controller.deny({ userCode: 'ABCD-1234' }, mockRequest);
+
+      expect(mockDeviceDeny).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: { userCode: 'ABCD-1234' },
+        })
+      );
+      expect(mockPublishRealtime).toHaveBeenCalledWith(
+        'qr-session:ABCD-1234',
+        'denied',
+        { status: 'denied' }
+      );
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw BadRequestException on errors during deny', async () => {
+      mockDeviceDeny.mockRejectedValue(new Error('Not found'));
+
+      await expect(controller.deny({ userCode: 'ABCD-1234' }, mockRequest)).rejects.toThrow(BadRequestException);
     });
   });
 });

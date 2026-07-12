@@ -1,6 +1,9 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
     "types": ["node"],
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -27,7 +30,13 @@
       "next/dynamic": ["./src/hooks/use-dynamic-shim.tsx"],
     },
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "../../packages/ui/src/**/*",
+    "../../packages/shared/index.ts",
+    "../../packages/shared/src/**/*",
+    "../../packages/api-client/src/**/*"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json",

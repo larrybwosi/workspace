@@ -62,6 +62,22 @@ export const getCustomApiUrl = () => {
 
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
+  fetchOptions: {
+    onRequest: async (context: any) => {
+      if (typeof window !== 'undefined') {
+        const token =
+          window.localStorage.getItem('better-auth.session-token') ||
+          window.localStorage.getItem('better-auth.session_token');
+        if (token) {
+          context.headers = {
+            ...context.headers,
+            Authorization: `Bearer ${token}`,
+          };
+        }
+      }
+      return context;
+    },
+  },
 });
 
 export const { signIn, signOut, signUp, useSession } = authClient;

@@ -5,76 +5,153 @@ import {
   Body,
   UseGuards,
   Param,
-  Inject,
-  NotFoundException,
-  UnauthorizedException,
+  Req,
+  BadRequestException,
+  ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { fromNodeHeaders } from 'better-auth/node';
 import { AuthGuard } from '../auth.guard';
-import { CurrentUser } from '../current-user.decorator';
-import { nanoid } from 'nanoid';
-import Redis from 'ioredis';
 import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
 
+/**
+ * OAuth client id for the desktop app. If you want to restrict which
+ * clients can request device codes, add a `validateClient` check for
+ * this value on the `deviceAuthorization` plugin config in `@repo/auth`.
+ */
+const DEVICE_CLIENT_ID = 'desktop-app';
+
 @Controller('device-auth')
 export class DeviceAuthController {
-  constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
-
+  /**
+   * Called by the desktop app to start the flow. Returns a device_code
+   * (kept private, used only for polling) and a user_code (safe to embed
+   * in the QR code / show on screen for the user to confirm).
+   */
   @Post('qr/generate')
   async generateQR() {
-    const sessionId = nanoid();
-    const key = `qr-session:${sessionId}`;
-
-    await this.redis.set(key, JSON.stringify({ status: 'pending' }), 'EX', 120);
-
-    return { sessionId };
-  }
-
-  @Get('qr/status/:sessionId')
-  async checkStatus(@Param('sessionId') sessionId: string) {
-    const key = `qr-session:${sessionId}`;
-    const data = await this.redis.get(key);
-
-    if (!data) return { status: 'expired' };
-
-    return JSON.parse(data);
-  }
-
-  @Post('qr/authorize')
-  @UseGuards(AuthGuard)
-  async authorize(@Body() body: { sessionId: string }, @CurrentUser() user: any) {
-    const key = `qr-session:${body.sessionId}`;
-    const data = await this.redis.get(key);
-
-    if (!data) throw new NotFoundException('Session not found or expired');
-    const sessionData = JSON.parse(data);
-
-    // Create a new session for the user via Better-Auth
-    // We use the auth.api.createSession which is part of Better-Auth's internal API
-    const newSession = await (auth.api as any).createSession({
-      body: {
-        userId: user.id,
-      },
+    const data = await auth.api.deviceCode({
+      body: { client_id: DEVICE_CLIENT_ID },
     });
 
-    if (!newSession) {
-      throw new UnauthorizedException('Could not create session');
+    return {
+      deviceCode: data.device_code,
+      userCode: data.user_code,
+      verificationUri: data.verification_uri,
+      verificationUriComplete: data.verification_uri_complete,
+      expiresIn: data.expires_in,
+      interval: data.interval ?? 5,
+    };
+  }
+
+  /**
+   * Polled by the desktop app using the device_code from qr/generate.
+   * Mirrors RFC 8628 error codes so the caller knows whether to keep
+   * polling, back off, or stop.
+   */
+  @Get('qr/status/:deviceCode')
+  async checkStatus(@Param('deviceCode') deviceCode: string) {
+    try {
+      const data = await auth.api.deviceToken({
+        body: {
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+          device_code: deviceCode,
+          client_id: DEVICE_CLIENT_ID,
+        },
+      });
+
+      if (data?.access_token) {
+        return { status: 'authorized', token: data.access_token };
+      }
+      return { status: 'pending' };
+    } catch (error: any) {
+      const code = error?.body?.error ?? error?.error;
+      switch (code) {
+        case 'authorization_pending':
+          return { status: 'pending' };
+        case 'slow_down':
+          return { status: 'pending', slowDown: true };
+        case 'access_denied':
+          return { status: 'denied' };
+        case 'expired_token':
+          return { status: 'expired' };
+        default:
+          throw new BadRequestException(error?.body?.error_description ?? 'Invalid or unknown device code');
+      }
+    }
+  }
+
+  /**
+   * Called by the authenticated mobile client after scanning the QR code
+   * (or typing the user_code). Approves the pending device code so the
+   * desktop app's next poll returns an access token.
+   */
+  @Post('qr/authorize')
+  @UseGuards(AuthGuard)
+  async authorize(@Body() body: { userCode: string }, @Req() req: FastifyRequest) {
+    if (!body?.userCode) {
+      throw new BadRequestException('userCode is required');
     }
 
-    const payload = {
-      status: 'authorized',
-      userId: user.id,
-      token: newSession.token,
-      session: newSession,
-    };
-
-    await this.redis.set(key, JSON.stringify(payload), 'EX', 120);
-
-    // Notify desktop client via Realtime for instant update
     try {
-      await publishRealtime(`qr-session:${body.sessionId}`, 'authorized', payload);
+      await auth.api.deviceApprove({
+        body: { userCode: body.userCode },
+        // Fastify normalizes headers into a plain incoming headers object,
+        // which matches what fromNodeHeaders expects.
+        headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
+      });
+    } catch (error: any) {
+      if (error?.status === 404 || error?.body?.error === 'invalid_grant') {
+        throw new BadRequestException('Session not found or expired');
+      }
+      if (error?.status === 403 || error?.body?.error === 'access_denied') {
+        throw new ForbiddenException('This code belongs to another user');
+      }
+      throw new InternalServerErrorException('Could not authorize device');
+    }
+
+    // Notify the desktop client instantly, in addition to its own
+    // polling. Keyed by userCode since that's the only identifier the
+    // mobile client has.
+    try {
+      await publishRealtime(`qr-session:${body.userCode}`, 'authorized', {
+        status: 'authorized',
+      });
     } catch (e) {
-      console.error('Failed to publish realtime notification for QR auth', e);
+      console.error('Failed to publish realtime notification for device auth', e);
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Optional: lets the user explicitly reject a device instead of just
+   * ignoring the prompt until it expires.
+   */
+  @Post('qr/deny')
+  @UseGuards(AuthGuard)
+  async deny(@Body() body: { userCode: string }, @Req() req: FastifyRequest) {
+    if (!body?.userCode) {
+      throw new BadRequestException('userCode is required');
+    }
+
+    try {
+      await auth.api.deviceDeny({
+        body: { userCode: body.userCode },
+        headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
+      });
+    } catch {
+      throw new BadRequestException('Session not found or expired');
+    }
+
+    try {
+      await publishRealtime(`qr-session:${body.userCode}`, 'denied', {
+        status: 'denied',
+      });
+    } catch (e) {
+      console.error('Failed to publish realtime notification for device auth', e);
     }
 
     return { success: true };

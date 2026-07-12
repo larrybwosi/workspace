@@ -135,6 +135,23 @@ export class ChannelsController {
             createdAt: true,
             updatedAt: true,
             _count: { select: { messages: true } },
+            messages: {
+              where: {
+                readBy: {
+                  none: {
+                    userId: user.id,
+                  },
+                },
+              },
+              select: {
+                id: true,
+                mentions: {
+                  select: {
+                    mention: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: {
             name: 'asc',
@@ -153,7 +170,26 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    return workspace.channels;
+    return workspace.channels.map(channel => {
+      const messagesList = (channel as any).messages || [];
+      const unreadCount = messagesList.length;
+      const mentionCount = messagesList.filter((m: any) =>
+        m.mentions?.some(
+          (mention: any) =>
+            mention.mention === `@${user.name}` ||
+            mention.mention === `@${user.username}` ||
+            mention.mention === '@all' ||
+            mention.mention === '@here'
+        )
+      ).length;
+
+      const { messages, ...rest } = channel as any;
+      return {
+        ...rest,
+        unreadCount,
+        mentionCount,
+      };
+    });
   }
 
   @Post()

@@ -2,6 +2,8 @@ package com.scrymechat.android.data.repository
 
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.dao.MessageDao
+import com.scrymechat.android.data.local.dao.ChannelDao
+import com.scrymechat.android.data.local.dao.DmDao
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import kotlinx.coroutines.flow.Flow
@@ -13,23 +15,27 @@ import javax.inject.Singleton
 @Singleton
 class ChatRepository @Inject constructor(
     private val api: MessageApi,
-    private val dao: MessageDao
+    private val dao: MessageDao,
+    private val channelDao: ChannelDao,
+    private val dmDao: DmDao
 ) {
     fun getChannelMessages(workspaceSlug: String, channelId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getChannelMessages(workspaceSlug, channelId, cursor)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertMessages(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     fun getChannelMessagesFlow(channelId: String): Flow<List<MessageEntity>> = dao.getMessagesForChannelFlow(channelId)
@@ -85,7 +91,19 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.triggerMessageAction(slug, messageId, actionId, body)
             if (response.isSuccessful && response.body() != null) {
-                Resource.Success(response.body()!!)
+                val responseBody = response.body()!!
+                if (responseBody.containsKey("message")) {
+                    try {
+                        val gson = com.google.gson.Gson()
+                        val messageJson = gson.toJson(responseBody["message"])
+                        val messageDto = gson.fromJson(messageJson, MessageDto::class.java)
+                        val entity = messageDto.toEntity()
+                        dao.insertMessage(entity)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                Resource.Success(responseBody)
             } else {
                 Resource.Error(response.message())
             }
@@ -97,6 +115,21 @@ class ChatRepository @Inject constructor(
     suspend fun updateChannelMessage(workspaceSlug: String, channelId: String, messageId: String, content: String): Resource<MessageEntity> {
         return try {
             val response = api.updateChannelMessage(workspaceSlug, channelId, messageId, UpdateMessageRequest(content))
+            if (response.isSuccessful && response.body() != null) {
+                val entity = response.body()!!.toEntity()
+                dao.insertMessage(entity)
+                Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun updateDmMessage(conversationId: String, messageId: String, content: String): Resource<MessageEntity> {
+        return try {
+            val response = api.updateDmMessage(conversationId, messageId, UpdateMessageRequest(content))
             if (response.isSuccessful && response.body() != null) {
                 val entity = response.body()!!.toEntity()
                 dao.insertMessage(entity)
@@ -123,21 +156,37 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteDmMessage(conversationId: String, messageId: String): Resource<Unit> {
+        return try {
+            val response = api.deleteDmMessage(conversationId, messageId)
+            if (response.isSuccessful) {
+                dao.deleteMessageById(messageId)
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     fun getDmMessages(conversationId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getDmMessages(conversationId, cursor)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertMessages(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     fun getDmMessagesFlow(dmId: String): Flow<List<MessageEntity>> = dao.getMessagesForDmFlow(dmId)
@@ -145,19 +194,21 @@ class ChatRepository @Inject constructor(
 
     fun getThreadMessages(workspaceSlug: String, channelId: String, threadId: String): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getThreadMessages(workspaceSlug, channelId, threadId)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertMessages(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun sendDmMessage(conversationId: String, content: String, replyToId: String? = null, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {
@@ -179,6 +230,8 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.markDmRead(dmId)
             if (response.isSuccessful) {
+                dao.markDmMessagesAsRead(dmId)
+                dmDao.clearUnreadCount(dmId)
                 Resource.Success(Unit)
             } else {
                 Resource.Error(response.message())
@@ -192,6 +245,8 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.markChannelRead(workspaceSlug, channelId)
             if (response.isSuccessful) {
+                dao.markChannelMessagesAsRead(channelId)
+                channelDao.clearUnreadCount(channelId)
                 Resource.Success(Unit)
             } else {
                 Resource.Error(response.message())
@@ -243,10 +298,10 @@ class ChatRepository @Inject constructor(
             channelId = channelId,
             dmId = dmId,
             senderId = senderId ?: authorId ?: userId ?: "",
-            senderName = user?.name ?: author?.name,
-            senderAvatar = user?.avatar ?: author?.avatar,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
+            senderName = user?.name ?: author?.name ?: user?.username ?: author?.username,
+            senderAvatar = user?.avatar ?: author?.avatar ?: user?.image ?: author?.image,
+            createdAt = createdAt ?: timestamp ?: "",
+            updatedAt = updatedAt ?: createdAt ?: timestamp ?: "",
             isEdited = isEdited,
             replyToId = replyToId,
             replyToSenderName = replyTo?.sender?.name,
@@ -257,7 +312,8 @@ class ChatRepository @Inject constructor(
             messageType = type,
             threadId = threadId,
             replyCount = replyCount,
-            isPinned = isPinned
+            isPinned = isPinned,
+            senderRole = user?.role ?: author?.role
         )
 
         if (type == "custom" || type == "approval" || type == "report") {

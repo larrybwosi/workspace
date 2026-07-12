@@ -18,7 +18,9 @@
     "lint:web": "cd apps/web && pnpm run lint",
     "version:ci": "changeset version && node scripts/update-version.js && pnpm install --no-frozen-lockfile",
     "version:auto": "node scripts/auto-changeset.js && changeset version && node scripts/update-version.js && pnpm install --no-frozen-lockfile",
-    "start:dev": "docker compose -f docker-compose.dev.yml up -d"
+    "start:dev": "docker compose -f docker-compose.dev.yml up -d",
+    "setup:prod": "node scripts/setup-prod.js",
+    "setup:env": "node scripts/setup-env.js"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

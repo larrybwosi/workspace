@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.remote.UserDto
 import com.scrymechat.android.data.remote.WorkspaceDto
+import com.scrymechat.android.ui.home.CreateWorkspaceDialog
 import com.scrymechat.android.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +37,7 @@ fun DiscoveryScreen(
     onBack: () -> Unit,
     onNavigateToWorkspace: (String) -> Unit,
     onDmClick: (String) -> Unit,
+    onUserProfileClick: (String) -> Unit = {},
     viewModel: DiscoveryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -54,6 +56,11 @@ fun DiscoveryScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.setCreateWorkspaceDialogOpen(true) }) {
+                        Icon(Icons.Default.Add, contentDescription = "Create Workspace")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -110,7 +117,8 @@ fun DiscoveryScreen(
                         users = uiState.users,
                         isSearching = uiState.isSearching,
                         onAddFriend = { viewModel.sendFriendRequest(it) },
-                        onMessage = onDmClick
+                        onMessage = onDmClick,
+                        onProfileClick = onUserProfileClick
                     )
                 }
 
@@ -123,6 +131,14 @@ fun DiscoveryScreen(
                 }
             }
         }
+    }
+
+    if (uiState.isCreateWorkspaceDialogOpen) {
+        CreateWorkspaceDialog(
+            onDismiss = { viewModel.setCreateWorkspaceDialogOpen(false) },
+            onCreate = { viewModel.createWorkspace(it) },
+            isLoading = uiState.isCreatingWorkspace
+        )
     }
 }
 
@@ -275,7 +291,8 @@ fun UserSearchList(
     users: List<UserDto>,
     isSearching: Boolean,
     onAddFriend: (String) -> Unit,
-    onMessage: (String) -> Unit
+    onMessage: (String) -> Unit,
+    onProfileClick: (String) -> Unit = {}
 ) {
     if (isSearching && users.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -296,7 +313,8 @@ fun UserSearchList(
                 UserSearchItem(
                     user = user,
                     onAddFriend = { onAddFriend(user.id) },
-                    onMessage = { onMessage(user.id) }
+                    onMessage = { onMessage(user.id) },
+                    onProfileClick = onProfileClick
                 )
                 HorizontalDivider(color = EnterpriseTokens.Hairline, modifier = Modifier.padding(vertical = 4.dp))
             }
@@ -308,11 +326,13 @@ fun UserSearchList(
 fun UserSearchItem(
     user: UserDto,
     onAddFriend: () -> Unit,
-    onMessage: () -> Unit
+    onMessage: () -> Unit,
+    onProfileClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onProfileClick(user.id) }
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

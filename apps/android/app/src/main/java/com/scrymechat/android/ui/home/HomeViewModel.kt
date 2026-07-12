@@ -51,6 +51,118 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Atomically and sequentially selects a workspace and a channel within it.
+     * This avoids race conditions between parallel async operations that can result
+     * in the selected channel being wiped out, which would cause the workspace
+     * welcome screen to be shown instead of the chat view.
+     */
+    fun selectWorkspaceAndChannel(workspaceSlug: String, channelId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isChannelLoading = true) }
+
+            // 1. Try to fetch/render from local cache/database first to avoid any layout flash
+            val localWorkspaces = _uiState.value.workspaces
+            val workspace = localWorkspaces.find { it.slug == workspaceSlug }
+                ?: workspaceRepository.getWorkspaceBySlug(workspaceSlug)
+            val channel = channelRepository.getChannel(channelId)
+
+            if (workspace != null && channel != null) {
+                _uiState.update { state ->
+                    state.copy(
+                        selectedWorkspace = workspace,
+                        selectedChannel = channel,
+                        selectedDm = null,
+                        isHomeSelected = false
+                    )
+                }
+            }
+
+            // 2. Fetch/refresh workspaces from server
+            try {
+                val workspaceResource = workspaceRepository.getWorkspaces()
+                    .first { it !is Resource.Loading }
+
+                if (workspaceResource is Resource.Success) {
+                    val workspaces = workspaceResource.data ?: emptyList()
+                    _uiState.update { it.copy(workspaces = workspaces) }
+
+                    val updatedWorkspace = workspaces.find { it.slug == workspaceSlug }
+                        ?: workspaceRepository.getWorkspaceBySlug(workspaceSlug)
+
+                    if (updatedWorkspace != null) {
+                        // 3. Fetch channels of the selected workspace
+                        val channelsResource = channelRepository.getWorkspaceChannels(workspaceSlug)
+                            .first { it !is Resource.Loading }
+
+                        if (channelsResource is Resource.Success) {
+                            val channels = channelsResource.data ?: emptyList()
+
+                            // Find the target channel from the list, database, or server
+                            val updatedChannel = channels.find { it.id == channelId }
+                                ?: channelRepository.getChannel(channelId)
+                                ?: channelRepository.fetchChannelFromServer(workspaceSlug, channelId).let {
+                                    if (it is Resource.Success) it.data else null
+                                }
+
+                            _uiState.update { state ->
+                                state.copy(
+                                    selectedWorkspace = updatedWorkspace,
+                                    channels = channels,
+                                    selectedChannel = updatedChannel,
+                                    selectedDm = null,
+                                    isHomeSelected = false,
+                                    isChannelLoading = false
+                                )
+                            }
+                        } else {
+                            _uiState.update { it.copy(isChannelLoading = false, error = channelsResource.message) }
+                        }
+                    } else {
+                        _uiState.update { it.copy(isChannelLoading = false, error = "Workspace not found") }
+                    }
+                } else {
+                    _uiState.update { it.copy(isChannelLoading = false, error = workspaceResource.message) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isChannelLoading = false, error = e.localizedMessage ?: "Failed to load channel") }
+            }
+        }
+    }
+
+    private var selectDmJob: kotlinx.coroutines.Job? = null
+
+    fun selectDmByUserId(userId: String) {
+        _uiState.update { it.copy(isHomeSelected = false, selectedChannel = null) }
+        selectDmJob?.cancel()
+        selectDmJob = viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().collect { dms ->
+                val dm = dms.find { it.dm.otherUserId == userId }
+                if (dm != null) {
+                    selectDm(dm)
+                } else {
+                    val fallbackDm = DmWithUser(
+                        dm = DmConversationEntity(
+                            id = "",
+                            creatorId = "",
+                            otherUserId = userId,
+                            lastMessageAt = ""
+                        ),
+                        otherUserName = "User",
+                        otherUserAvatar = null
+                    )
+                    _uiState.update { state ->
+                        if (state.selectedDm == null || state.selectedDm.dm.otherUserId != userId) {
+                            state.copy(selectedDm = fallbackDm, selectedChannel = null, isHomeSelected = false)
+                        } else {
+                            state
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun loadWorkspaces() {
         viewModelScope.launch {
             workspaceRepository.getWorkspaces().collect { resource ->
@@ -69,14 +181,24 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun selectWorkspace(workspace: WorkspaceEntity?) {
-        _uiState.update { it.copy(selectedWorkspace = workspace, selectedChannel = null, isHomeSelected = workspace == null) }
+    fun selectWorkspace(workspace: WorkspaceEntity?, keepChannelId: String? = null) {
+        _uiState.update { state ->
+            val channel = if (state.selectedChannel?.id == keepChannelId && keepChannelId != null) {
+                state.selectedChannel
+            } else if (state.selectedWorkspace?.id == workspace?.id) {
+                state.selectedChannel
+            } else {
+                null
+            }
+            state.copy(selectedWorkspace = workspace, selectedChannel = channel, isHomeSelected = workspace == null)
+        }
         if (workspace != null) {
             loadChannels(workspace.slug)
         }
     }
 
-    fun selectWorkspaceBySlug(slug: String) {
+    fun selectWorkspaceBySlug(slug: String, keepChannelId: String? = null) {
+        if (_uiState.value.selectedWorkspace?.slug == slug) return
         viewModelScope.launch {
             // First refresh workspaces to ensure we have the new one
             workspaceRepository.getWorkspaces().collect { resource ->
@@ -86,7 +208,7 @@ class HomeViewModel @Inject constructor(
 
                     val workspace = workspaces.find { it.slug == slug }
                     if (workspace != null) {
-                        selectWorkspace(workspace)
+                        selectWorkspace(workspace, keepChannelId)
                     }
                 }
             }
@@ -112,11 +234,62 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectChannel(channel: ChannelEntity) {
-        _uiState.update { it.copy(selectedChannel = channel, selectedDm = null, isHomeSelected = false) }
+        _uiState.update { it.copy(selectedChannel = channel, selectedDm = null, isHomeSelected = false, isChannelLoading = false) }
+    }
+
+    fun selectChannelById(channelId: String, slug: String? = null) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isChannelLoading = true) }
+            val channel = channelRepository.getChannel(channelId)
+            if (channel != null) {
+                selectChannel(channel)
+            } else if (slug != null) {
+                val result = channelRepository.fetchChannelFromServer(slug, channelId)
+                if (result is Resource.Success && result.data != null) {
+                    selectChannel(result.data)
+                } else {
+                    _uiState.update { it.copy(isChannelLoading = false) }
+                }
+            } else {
+                _uiState.update { it.copy(isChannelLoading = false) }
+            }
+        }
     }
 
     fun selectDm(dm: DmWithUser) {
         _uiState.update { it.copy(selectedDm = dm, selectedChannel = null, isHomeSelected = false) }
+    }
+
+    fun selectDmById(dmId: String) {
+        _uiState.update { it.copy(isHomeSelected = false, selectedChannel = null) }
+        selectDmJob?.cancel()
+        selectDmJob = viewModelScope.launch {
+            dmDao.getDmsWithUserInfoFlow().collect { dms ->
+                val dm = dms.find { it.dm.id == dmId }
+                if (dm != null) {
+                    selectDm(dm)
+                } else {
+                    val dmEntity = dmDao.getDmById(dmId)
+                    val fallbackDm = DmWithUser(
+                        dm = dmEntity ?: DmConversationEntity(
+                            id = dmId,
+                            creatorId = "",
+                            otherUserId = "",
+                            lastMessageAt = ""
+                        ),
+                        otherUserName = "User",
+                        otherUserAvatar = null
+                    )
+                    _uiState.update { state ->
+                        if (state.selectedDm == null || state.selectedDm.dm.id != dmId) {
+                            state.copy(selectedDm = fallbackDm, selectedChannel = null, isHomeSelected = false)
+                        } else {
+                            state
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun selectHome() {
@@ -216,5 +389,6 @@ data class HomeUiState(
     val isCreateWorkspaceDialogOpen: Boolean = false,
     val isCreateChannelDialogOpen: Boolean = false,
     val isCreatingWorkspace: Boolean = false,
-    val isCreatingChannel: Boolean = false
+    val isCreatingChannel: Boolean = false,
+    val isChannelLoading: Boolean = false
 )

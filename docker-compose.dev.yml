@@ -21,6 +21,25 @@ services:
     networks:
       - app-network
 
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: scryme-chat-rustfs
+    restart: always
+    environment:
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
+    ports:
+      - '9000:9000'
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || wget --spider -q http://localhost:9000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
   redis:
     image: redis:7-alpine
     container_name: scryme-chat-redis
@@ -38,14 +57,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: >
-        sh -c "
-          if [ -n \"$REDIS_PASSWORD\" ]; then
-            redis-cli -a \"$REDIS_PASSWORD\" ping
-          else
-            redis-cli -a myredispassword ping
-          fi
-        "
+      test: ["CMD-SHELL", "if [ -n \"$REDIS_PASSWORD\" ]; then redis-cli -a \"$REDIS_PASSWORD\" ping; else redis-cli -a myredispassword ping; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -55,6 +67,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  rustfs_data:
 
 networks:
   app-network:

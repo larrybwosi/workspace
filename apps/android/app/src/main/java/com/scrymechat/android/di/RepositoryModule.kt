@@ -39,8 +39,10 @@ object RepositoryModule {
     @Singleton
     fun provideChatRepository(
         api: MessageApi,
-        dao: MessageDao
-    ): ChatRepository = ChatRepository(api, dao)
+        dao: MessageDao,
+        channelDao: ChannelDao,
+        dmDao: DmDao
+    ): ChatRepository = ChatRepository(api, dao, channelDao, dmDao)
 
     @Provides
     @Singleton

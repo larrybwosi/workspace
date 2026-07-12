@@ -74,7 +74,7 @@ export class FriendsController {
       body.receiverId,
       body.message
     );
-    return { request };
+    return request;
   }
 
   @Patch('requests/:requestId')
@@ -88,7 +88,7 @@ export class FriendsController {
     @Body() body: UpdateFriendRequestDto
   ) {
     const request = await this.friendsService.updateFriendRequest(user.id, requestId, body.action);
-    return { request };
+    return request;
   }
 
   @Delete('requests/:requestId')
