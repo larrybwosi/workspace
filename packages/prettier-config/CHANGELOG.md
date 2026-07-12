@@ -1,5 +1,11 @@
 # @repo/prettier-config
 
+## 0.1.0-dev.30
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 0.1.0-dev.29
 
 ### Minor Changes
