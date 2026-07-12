@@ -195,3 +195,8 @@
 
 **Learning:** When backgrounding Prisma calls (or any promise) using `.catch()`, unit tests using Vitest/Jest mocks will fail with `TypeError: Cannot read properties of undefined (reading 'catch')` if the mock only returns `undefined`.
 **Action:** Ensure mocks for backgrounded calls return an object with a mock `.catch` method: `mockReturnValue({ catch: vi.fn() })`.
+
+## 2026-07-11 - [Prisma/Performance] Optimizing Write Paths & Public API Contracts
+
+**Learning:** Re-architecting single database mutating queries (such as Prisma's `update` or `delete`) to include a pre-read query to verify owner/workspace details degrades write path throughput from 1 RTT to 2 RTT. Using Prisma's support for extra non-unique filters inside the `where` clause (e.g. `where: { id, workspaceId }`) combines unique primary key lookups and security checks into a single atomic DB-level round-trip. Additionally, never append metadata fields (like `source: 'cache'`) to public API responses, as doing so violates response schemas and public-facing consumer contracts.
+**Action:** Maintain single-query database mutations using extra where filters instead of split read-then-write sequences. Strictly return unmodified payload schemas to satisfy public API contracts.
