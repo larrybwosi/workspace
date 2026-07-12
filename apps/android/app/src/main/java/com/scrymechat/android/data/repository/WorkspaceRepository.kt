@@ -20,19 +20,21 @@ class WorkspaceRepository @Inject constructor(
 ) {
     fun getWorkspaces(): Flow<Resource<List<WorkspaceEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getWorkspaces()
             if (response.isSuccessful) {
                 val dtos = response.body() ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertWorkspaces(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun getWorkspaceBySlug(slug: String): WorkspaceEntity? {
@@ -101,16 +103,18 @@ class WorkspaceRepository @Inject constructor(
 
     fun discoverWorkspaces(query: String? = null): Flow<Resource<List<WorkspaceDto>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.discoverWorkspaces(query)
             if (response.isSuccessful) {
-                emit(Resource.Success(response.body() ?: emptyList()))
+                Resource.Success(response.body() ?: emptyList())
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun joinWorkspace(slug: String): Resource<Unit> {

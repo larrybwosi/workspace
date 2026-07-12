@@ -21,19 +21,21 @@ class ChatRepository @Inject constructor(
 ) {
     fun getChannelMessages(workspaceSlug: String, channelId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getChannelMessages(workspaceSlug, channelId, cursor)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertMessages(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     fun getChannelMessagesFlow(channelId: String): Flow<List<MessageEntity>> = dao.getMessagesForChannelFlow(channelId)
@@ -170,19 +172,21 @@ class ChatRepository @Inject constructor(
 
     fun getDmMessages(conversationId: String, cursor: String? = null): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getDmMessages(conversationId, cursor)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertMessages(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     fun getDmMessagesFlow(dmId: String): Flow<List<MessageEntity>> = dao.getMessagesForDmFlow(dmId)
@@ -190,19 +194,21 @@ class ChatRepository @Inject constructor(
 
     fun getThreadMessages(workspaceSlug: String, channelId: String, threadId: String): Flow<Resource<List<MessageEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getThreadMessages(workspaceSlug, channelId, threadId)
             if (response.isSuccessful) {
                 val dtos = response.body()?.messages ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertMessages(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun sendDmMessage(conversationId: String, content: String, replyToId: String? = null, attachments: List<CreateAttachmentRequest>? = null): Resource<MessageEntity> {

@@ -19,7 +19,7 @@ class ChannelRepository @Inject constructor(
 ) {
     fun getWorkspaceChannels(slug: String): Flow<Resource<List<ChannelEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getWorkspaceChannels(slug)
             if (response.isSuccessful) {
                 val dtos = response.body() ?: emptyList()
@@ -27,13 +27,15 @@ class ChannelRepository @Inject constructor(
                 // We might want to clear old channels for this workspace first if needed
                 // But for now, we just insert/replace
                 dao.insertChannels(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun createChannel(slug: String, request: CreateChannelRequest): Resource<ChannelEntity> {
