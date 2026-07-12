@@ -20,26 +20,7 @@
     "@repo/ui": "0.0.772"
   },
   "changesets": [
-    "auto-release-081e31b1",
-    "auto-release-0c960b36",
-    "auto-release-2189ae86",
-    "auto-release-305d623d",
-    "auto-release-31336c0e",
-    "auto-release-416096e0",
-    "auto-release-47bdbaef",
-    "auto-release-4f2c49f4",
-    "auto-release-5a96d993",
-    "auto-release-6755a638",
-    "auto-release-793f4bb4",
-    "auto-release-7c34ef2c",
-    "auto-release-7d974a84",
-    "auto-release-7f5bcce0",
-    "auto-release-96f9c517",
-    "auto-release-9fd92559",
-    "auto-release-a7765acf",
-    "auto-release-b8652a58",
-    "auto-release-d0397a25",
-    "auto-release-d7ed541c",
-    "auto-release-e76027d7"
+    "auto-release-871e0744",
+    "modern-guests-cheer"
   ]
 }

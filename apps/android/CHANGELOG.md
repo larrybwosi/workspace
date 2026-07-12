@@ -1,5 +1,12 @@
 # android
 
+## 2.1.0-dev.27
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+- 08b7011: update
+
 ## 2.1.0-dev.26
 
 ### Minor Changes
