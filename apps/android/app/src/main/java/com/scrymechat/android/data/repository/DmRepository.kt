@@ -19,7 +19,7 @@ class DmRepository @Inject constructor(
 ) {
     fun getDms(): Flow<Resource<List<DmConversationEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getDms()
             if (response.isSuccessful) {
                 val dtos = response.body() ?: emptyList()
@@ -31,13 +31,15 @@ class DmRepository @Inject constructor(
                 }
 
                 dao.insertDms(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun createDm(userId: String): Resource<DmConversationEntity> {

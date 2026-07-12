@@ -133,12 +133,31 @@ class HomeViewModel @Inject constructor(
     private var selectDmJob: kotlinx.coroutines.Job? = null
 
     fun selectDmByUserId(userId: String) {
+        _uiState.update { it.copy(isHomeSelected = false, selectedChannel = null) }
         selectDmJob?.cancel()
         selectDmJob = viewModelScope.launch {
             dmDao.getDmsWithUserInfoFlow().collect { dms ->
                 val dm = dms.find { it.dm.otherUserId == userId }
                 if (dm != null) {
                     selectDm(dm)
+                } else {
+                    val fallbackDm = DmWithUser(
+                        dm = DmConversationEntity(
+                            id = "",
+                            creatorId = "",
+                            otherUserId = userId,
+                            lastMessageAt = ""
+                        ),
+                        otherUserName = "User",
+                        otherUserAvatar = null
+                    )
+                    _uiState.update { state ->
+                        if (state.selectedDm == null || state.selectedDm.dm.otherUserId != userId) {
+                            state.copy(selectedDm = fallbackDm, selectedChannel = null, isHomeSelected = false)
+                        } else {
+                            state
+                        }
+                    }
                 }
             }
         }
@@ -242,12 +261,32 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectDmById(dmId: String) {
+        _uiState.update { it.copy(isHomeSelected = false, selectedChannel = null) }
         selectDmJob?.cancel()
         selectDmJob = viewModelScope.launch {
             dmDao.getDmsWithUserInfoFlow().collect { dms ->
                 val dm = dms.find { it.dm.id == dmId }
                 if (dm != null) {
                     selectDm(dm)
+                } else {
+                    val dmEntity = dmDao.getDmById(dmId)
+                    val fallbackDm = DmWithUser(
+                        dm = dmEntity ?: DmConversationEntity(
+                            id = dmId,
+                            creatorId = "",
+                            otherUserId = "",
+                            lastMessageAt = ""
+                        ),
+                        otherUserName = "User",
+                        otherUserAvatar = null
+                    )
+                    _uiState.update { state ->
+                        if (state.selectedDm == null || state.selectedDm.dm.id != dmId) {
+                            state.copy(selectedDm = fallbackDm, selectedChannel = null, isHomeSelected = false)
+                        } else {
+                            state
+                        }
+                    }
                 }
             }
         }

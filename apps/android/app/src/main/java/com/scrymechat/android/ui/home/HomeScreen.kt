@@ -120,10 +120,15 @@ fun HomeScreen(
 
     if (uiState.isCreateChannelDialogOpen) {
         CreateChannelDialog(
-            categories = uiState.channels.filter { it.type == "category" },
             isLoading = uiState.isCreatingChannel,
             onDismiss = { viewModel.setCreateChannelDialogOpen(false) },
-            onCreate = { request, categoryId -> viewModel.createChannel(request, categoryId) }
+            onCreate = { request, iconSelection ->
+                val iconStr = when (iconSelection) {
+                    is ChannelIconSelection.Preset -> iconSelection.label
+                    is ChannelIconSelection.Custom -> iconSelection.uri.toString()
+                }
+                viewModel.createChannel(request.copy(icon = iconStr), null)
+            }
         )
     }
 

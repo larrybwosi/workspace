@@ -32,6 +32,11 @@ services:
       - '9000:9000'
     volumes:
       - rustfs_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || wget --spider -q http://localhost:9000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
@@ -52,14 +57,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: >
-        sh -c "
-          if [ -n \"$REDIS_PASSWORD\" ]; then
-            redis-cli -a \"$REDIS_PASSWORD\" ping
-          else
-            redis-cli -a myredispassword ping
-          fi
-        "
+      test: ["CMD-SHELL", "if [ -n \"$REDIS_PASSWORD\" ]; then redis-cli -a \"$REDIS_PASSWORD\" ping; else redis-cli -a myredispassword ping; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
