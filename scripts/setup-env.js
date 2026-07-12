@@ -15,7 +15,7 @@ const rootDir = path.resolve(__dirname, '..');
 const envExamplePath = path.join(rootDir, '.env.example');
 const envPath = path.join(rootDir, '.env');
 
-console.log('🚀 Starting Production Setup Script...');
+console.log('🚀 Starting Environment Setup Script...');
 
 // 1. Create .env if it does not exist
 if (!fs.existsSync(envPath)) {
@@ -131,12 +131,3 @@ for (let i = 0; i < finalLines.length; i++) {
 
 fs.writeFileSync(envPath, finalLines.join('\n'), 'utf8');
 console.log('✅ .env file successfully configured with secure secrets and evaluated environment variables!');
-
-// Create docker network dokploy-network
-console.log('Checking/creating external docker network: dokploy-network...');
-try {
-  execSync('docker network create dokploy-network', { stdio: 'ignore' });
-  console.log('✅ Docker network dokploy-network created successfully!');
-} catch (error) {
-  console.log('ℹ️ Docker network dokploy-network already exists or Docker daemon is not running.');
-}
