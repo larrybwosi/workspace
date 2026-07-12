@@ -217,28 +217,9 @@ jobs:
           API_URL: http://localhost:3000
         run: cd apps/android && ./gradlew test
 
-  all-tests-passed:
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check results
-        run: |
-          lint="${{ needs.lint-and-typecheck.result }}"
-          unit="${{ needs.unit-tests.result }}"
-          api="${{ needs.api-e2e.result }}"
-          web="${{ needs.web-e2e.result }}"
-          android="${{ needs.native-android-test.result }}"
-
-          if [[ "$lint" != "success" ]]; then exit 1; fi
-          if [[ "$unit" != "success" ]]; then exit 1; fi
-          if [[ "$api" != "success" ]]; then exit 1; fi
-          if [[ "$web" != "success" && "$web" != "skipped" ]]; then exit 1; fi
-          if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
-
   desktop-verify:
-    if: github.event_name == 'pull_request' && needs.changes.outputs.desktop == 'true'
-    needs: [changes, all-tests-passed]
+    needs: [changes]
+    if: needs.changes.outputs.desktop == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -276,6 +257,27 @@ jobs:
         run: cargo fmt --all -- --check
         working-directory: apps/desktop/src-tauri
 
+  all-tests-passed:
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test, desktop-verify]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          lint="${{ needs.lint-and-typecheck.result }}"
+          unit="${{ needs.unit-tests.result }}"
+          api="${{ needs.api-e2e.result }}"
+          web="${{ needs.web-e2e.result }}"
+          android="${{ needs.native-android-test.result }}"
+          desktop="${{ needs.desktop-verify.result }}"
+
+          if [[ "$lint" != "success" ]]; then exit 1; fi
+          if [[ "$unit" != "success" ]]; then exit 1; fi
+          if [[ "$api" != "success" ]]; then exit 1; fi
+          if [[ "$web" != "success" && "$web" != "skipped" ]]; then exit 1; fi
+          if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
+          if [[ "$desktop" != "success" && "$desktop" != "skipped" ]]; then exit 1; fi
+
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -304,7 +306,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Handle Prerelease Mode
+      - name: Handle Changeset Release Mode
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
             if [ ! -f .changeset/pre.json ]; then
@@ -314,12 +316,26 @@ jobs:
             if [ -f .changeset/pre.json ]; then
               pnpm changeset pre exit
             fi
+
+            # Ensure pushing/merging to main produces a major release
+            existing=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null)
+            if [ -n "$existing" ]; then
+              echo "Promoting existing changesets to major release for main..."
+              sed -i 's/: patch/: major/g' .changeset/*.md 2>/dev/null || true
+              sed -i 's/: minor/: major/g' .changeset/*.md 2>/dev/null || true
+            else
+              echo "No changeset found on main; generating automatic major changeset."
+              PKG_NAME=$(node -p "require('./package.json').name || 'root'")
+              cat > .changeset/auto-major-$(date +%s).md << EOF
+---
+"$PKG_NAME": major
+---
+
+Automated major release triggered on push to main.
+EOF
+            fi
           fi
 
-      # Ensures a dev push that only touches the Android app still gets a
-      # prerelease version bump, even if nobody wrote a changeset for it.
-      # main is untouched by this and continues to rely solely on authored
-      # changesets.
       - name: Auto-changeset for Android-only prerelease (dev)
         if: github.ref == 'refs/heads/dev' && needs.changes.outputs.android == 'true'
         run: |
@@ -327,12 +343,12 @@ jobs:
           if [ -z "$existing" ]; then
             echo "No changeset found for this push; generating an automatic patch changeset for the android package."
             cat > .changeset/auto-android-$(date +%s).md << EOF
-          ---
-          "android": patch
-          ---
+---
+"android": patch
+---
 
-          Automated prerelease version bump triggered by Android app changes.
-          EOF
+Automated prerelease version bump triggered by Android app changes.
+EOF
           else
             echo "Changeset(s) already present, skipping auto-generation."
           fi
@@ -342,8 +358,10 @@ jobs:
         run: |
           pnpm version:auto
           git add .
-          git commit -m "chore: release [skip ci]"
-          git push origin ${{ github.ref_name }}
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: release [skip ci]"
+            git push origin ${{ github.ref_name }}
+          fi
           echo "published=true" >> $GITHUB_OUTPUT
 
       - name: Create and Push Tags
@@ -420,7 +438,6 @@ jobs:
         id: android_tag
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            # Unique per build so we never overwrite a prior prerelease
             echo "tag=v${{ needs.release.outputs.version }}-android.${{ github.run_number }}" >> $GITHUB_OUTPUT
           else
             echo "tag=v${{ needs.release.outputs.version }}" >> $GITHUB_OUTPUT
