@@ -1,5 +1,11 @@
 # @repo/database
 
+## 0.1.0-dev.29
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 0.1.0-dev.28
 
 ### Minor Changes
