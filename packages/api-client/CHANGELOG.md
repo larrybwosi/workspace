@@ -1,5 +1,17 @@
 # @repo/api-client
 
+## 0.1.0-dev.28
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/shared@0.1.0-dev.28
+  - @repo/types@0.1.0-dev.28
+
 ## 0.1.0-dev.27
 
 ### Minor Changes
