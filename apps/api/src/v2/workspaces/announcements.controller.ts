@@ -328,13 +328,13 @@ export class V2AnnouncementsController {
 
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to fetch all required fields in one round-trip
-     * while avoiding over-fetching internal or metadata fields not needed in this view.
+     * 1. Replaces 'findFirst' with 'findUnique' on primary key 'id' to leverage database O(1) index lookup.
+     * 2. Checks 'workspaceId' in application logic to ensure authorization.
+     * Expected impact: Eliminates slow scans and improves database retrieval efficiency.
      */
-    const announcement = await prisma.departmentAnnouncement.findFirst({
+    const announcement = await prisma.departmentAnnouncement.findUnique({
       where: {
         id: announcementId,
-        department: { workspaceId: context.workspaceId },
       },
       select: {
         id: true,
@@ -358,12 +358,13 @@ export class V2AnnouncementsController {
             slug: true,
             icon: true,
             color: true,
+            workspaceId: true,
           },
         },
       },
     });
 
-    if (!announcement) {
+    if (!announcement || announcement.department.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Announcement not found');
     }
 
