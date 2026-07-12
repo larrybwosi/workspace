@@ -303,8 +303,6 @@ class ChatRepository @Inject constructor(
             Resource.Error(e.message ?: "An unknown error occurred")
         }
     }
-<<<<<<< HEAD
-=======
 
     private fun MessageDto.toEntity(): MessageEntity {
         val type = (metadata?.get("type") as? String) ?: "standard"
@@ -342,5 +340,4 @@ class ChatRepository @Inject constructor(
         }
         return entity
     }
->>>>>>> main
 }
