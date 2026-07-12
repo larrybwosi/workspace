@@ -42,8 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -59,9 +57,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_UNIT }}
+          POSTGRES_USER: runner_u
+          POSTGRES_PASSWORD: runner_p
+          POSTGRES_DB: db_unit
         ports:
           - 5432:5432
         options: >-
@@ -80,8 +78,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -104,9 +100,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_E2E }}
+          POSTGRES_USER: runner_u
+          POSTGRES_PASSWORD: runner_p
+          POSTGRES_DB: db_e2e
         ports:
           - 5432:5432
         options: >-
@@ -125,8 +121,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -151,9 +145,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_E2E }}
+          POSTGRES_USER: runner_u
+          POSTGRES_PASSWORD: runner_p
+          POSTGRES_DB: db_e2e
         ports:
           - 5432:5432
         options: >-
@@ -172,8 +166,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -223,8 +215,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -283,6 +273,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes, all-tests-passed]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    outputs:
+      published: ${{ steps.versioning.outputs.published }}
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -308,11 +301,11 @@ jobs:
 
       - name: Handle Changeset Release Mode
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
             if [ ! -f .changeset/pre.json ]; then
               pnpm changeset pre enter dev
             fi
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             if [ -f .changeset/pre.json ]; then
               pnpm changeset pre exit
             fi
@@ -327,12 +320,12 @@ jobs:
               echo "No changeset found on main; generating automatic major changeset."
               PKG_NAME=$(node -p "require('./package.json').name || 'root'")
               cat > .changeset/auto-major-$(date +%s).md << EOF
----
-"$PKG_NAME": major
----
+          ---
+          "$PKG_NAME": major
+          ---
 
-Automated major release triggered on push to main.
-EOF
+          Automated major release triggered on push to main.
+          EOF
             fi
           fi
 
@@ -343,12 +336,12 @@ EOF
           if [ -z "$existing" ]; then
             echo "No changeset found for this push; generating an automatic patch changeset for the android package."
             cat > .changeset/auto-android-$(date +%s).md << EOF
----
-"android": patch
----
+          ---
+          "android": patch
+          ---
 
-Automated prerelease version bump triggered by Android app changes.
-EOF
+          Automated prerelease version bump triggered by Android app changes.
+          EOF
           else
             echo "Changeset(s) already present, skipping auto-generation."
           fi
@@ -360,11 +353,14 @@ EOF
           git add .
           if ! git diff --staged --quiet; then
             git commit -m "chore: release [skip ci]"
-            git push origin ${{ github.ref_name }}
+            git push origin "$GITHUB_REF_NAME"
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "published=false" >> $GITHUB_OUTPUT
           fi
-          echo "published=true" >> $GITHUB_OUTPUT
 
       - name: Create and Push Tags
+        if: steps.versioning.outputs.published == 'true'
         run: |
           pnpm changeset tag
           git push --tags
@@ -372,9 +368,6 @@ EOF
       - name: Get current version
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-    outputs:
-      published: ${{ steps.versioning.outputs.published }}
-      version: ${{ steps.get_version.outputs.version }}
 
   docker-publish:
     if: needs.release.outputs.published == 'true' && github.ref == 'refs/heads/main'
@@ -437,7 +430,7 @@ EOF
       - name: Determine unique Android release tag
         id: android_tag
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
             echo "tag=v${{ needs.release.outputs.version }}-android.${{ github.run_number }}" >> $GITHUB_OUTPUT
           else
             echo "tag=v${{ needs.release.outputs.version }}" >> $GITHUB_OUTPUT
