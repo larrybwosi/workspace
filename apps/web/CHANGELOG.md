@@ -1,5 +1,20 @@
 # web
 
+## 2.1.0-dev.27
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+- 08b7011: update
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/api-client@0.1.0-dev.27
+  - @repo/database@0.1.0-dev.27
+  - @repo/types@0.1.0-dev.27
+  - @repo/ui@0.1.0-dev.27
+
 ## 2.1.0-dev.26
 
 ### Minor Changes
