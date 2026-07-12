@@ -78,3 +78,40 @@ data class MessagesResponse(
     val nextCursor: String?,
     val hasMore: Boolean
 )
+
+fun MessageDto.toEntity(): com.scrymechat.android.data.local.entities.MessageEntity {
+    val type = (metadata?.get("type") as? String) ?: "standard"
+    val entity = com.scrymechat.android.data.local.entities.MessageEntity(
+        id = id,
+        content = content,
+        channelId = channelId ?: "",
+        dmId = dmId,
+        senderId = senderId ?: authorId ?: userId ?: "",
+        senderName = user?.name ?: author?.name ?: user?.username ?: author?.username,
+        senderAvatar = user?.avatar ?: author?.avatar ?: user?.image ?: author?.image,
+        createdAt = createdAt ?: timestamp ?: "",
+        updatedAt = updatedAt ?: createdAt ?: timestamp ?: "",
+        isEdited = isEdited,
+        replyToId = replyToId,
+        replyToSenderName = replyTo?.sender?.name,
+        readByCurrentUser = readByCurrentUser,
+        attachments = attachments,
+        metadata = metadata,
+        reactions = reactions,
+        messageType = type,
+        threadId = threadId,
+        replyCount = replyCount,
+        isPinned = isPinned,
+        senderRole = user?.role ?: author?.role
+    )
+
+    if (type == "custom" || type == "approval" || type == "report") {
+        try {
+            val json = com.google.gson.Gson().toJson(metadata)
+            entity.customMessage = com.google.gson.Gson().fromJson(json, com.scrymechat.android.data.remote.CustomMessageDto::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    return entity
+}
