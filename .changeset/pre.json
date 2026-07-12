@@ -19,10 +19,5 @@
     "@repo/typescript-config": "0.0.772",
     "@repo/ui": "0.0.772"
   },
-  "changesets": [
-    "auto-release-73fd1c77",
-    "auto-release-871e0744",
-    "auto-release-a996f609",
-    "auto-release-d482dc3f"
-  ]
+  "changesets": []
 }

@@ -584,6 +584,10 @@ fun MutualWorkspacesCard(
     }
 }
 
+// -----------------------------------------------------------------------------------------------
+// Actions — primary / tonal / outlined button hierarchy
+// -----------------------------------------------------------------------------------------------
+
 @Composable
 fun MutualFriendsCard(
     mutualFriends: List<com.scrymechat.android.data.remote.UserDto>?,
