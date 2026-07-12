@@ -25,11 +25,10 @@ fun MyAccountScreen(
     val user = uiState.currentUser
 
     var name by remember(user) { mutableStateOf(user?.name ?: "") }
-    var email by remember(user) { mutableStateOf(user?.email ?: "") }
+    val email = user?.email ?: ""
     var showChangePasswordDialog by remember { mutableStateOf(false) }
 
-    val hasChanges = name != (user?.name ?: "") || email != (user?.email ?: "")
-    val isEmailValid = email.isBlank() || android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val hasChanges = name.isNotBlank() && name != (user?.name ?: "")
 
     Scaffold(
         topBar = { SettingsTopBar("My Account", palette, onBack) },
@@ -59,23 +58,33 @@ fun MyAccountScreen(
                         Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { email = it },
+                            onValueChange = {},
                             label = { Text("Email Address") },
                             singleLine = true,
-                            isError = !isEmailValid,
+                            readOnly = true,
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "Locked",
+                                    tint = palette.textTertiary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
                             supportingText = {
-                                if (!isEmailValid) {
-                                    Text("Enter a valid email address", color = MaterialTheme.colorScheme.error)
-                                }
+                                Text(
+                                    "To change your email address, please contact your organization administrator.",
+                                    color = palette.textTertiary,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = standardTextFieldColors(palette)
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
-                            onClick = { viewModel.updateProfile(mapOf("name" to name, "email" to email)) },
+                            onClick = { viewModel.updateProfile(mapOf("name" to name)) },
                             modifier = Modifier.fillMaxWidth().height(44.dp),
-                            enabled = hasChanges && isEmailValid,
+                            enabled = hasChanges,
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
                         ) {
