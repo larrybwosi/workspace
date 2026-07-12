@@ -200,3 +200,7 @@
 
 **Learning:** V2 search endpoints were returning redundant 'image' fields and inconsistent 'avatar' data, inflating JSON payloads and increasing client-side complexity.
 **Action:** Standardize user object mapping in all search-related controllers to prioritize 'avatar' via 'avatar || image' fallback and explicitly exclude the redundant 'image' field from the final response. This reduces payload size by ~5-10% in member-heavy listings.
+## 2026-07-11 - [Prisma/Performance] Optimizing Write Paths & Public API Contracts
+
+**Learning:** Re-architecting single database mutating queries (such as Prisma's `update` or `delete`) to include a pre-read query to verify owner/workspace details degrades write path throughput from 1 RTT to 2 RTT. Using Prisma's support for extra non-unique filters inside the `where` clause (e.g. `where: { id, workspaceId }`) combines unique primary key lookups and security checks into a single atomic DB-level round-trip. Additionally, never append metadata fields (like `source: 'cache'`) to public API responses, as doing so violates response schemas and public-facing consumer contracts.
+**Action:** Maintain single-query database mutations using extra where filters instead of split read-then-write sequences. Strictly return unmodified payload schemas to satisfy public API contracts.
