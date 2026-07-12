@@ -228,13 +228,20 @@ class ChatRepository @Inject constructor(
 
     suspend fun markDmRead(dmId: String): Resource<Unit> {
         return try {
-            val response = api.markDmRead(dmId)
-            if (response.isSuccessful) {
+            val unreadIds = dao.getUnreadMessageIdsForDm(dmId)
+            if (unreadIds.isNotEmpty()) {
+                val response = api.markDmRead(dmId, mapOf("messageIds" to unreadIds))
+                if (response.isSuccessful) {
+                    dao.markDmMessagesAsRead(dmId)
+                    dmDao.clearUnreadCount(dmId)
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error(response.message())
+                }
+            } else {
                 dao.markDmMessagesAsRead(dmId)
                 dmDao.clearUnreadCount(dmId)
                 Resource.Success(Unit)
-            } else {
-                Resource.Error(response.message())
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
@@ -243,13 +250,20 @@ class ChatRepository @Inject constructor(
 
     suspend fun markChannelRead(workspaceSlug: String, channelId: String): Resource<Unit> {
         return try {
-            val response = api.markChannelRead(workspaceSlug, channelId)
-            if (response.isSuccessful) {
+            val unreadIds = dao.getUnreadMessageIdsForChannel(channelId)
+            if (unreadIds.isNotEmpty()) {
+                val response = api.markChannelRead(workspaceSlug, channelId, mapOf("messageIds" to unreadIds))
+                if (response.isSuccessful) {
+                    dao.markChannelMessagesAsRead(channelId)
+                    channelDao.clearUnreadCount(channelId)
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error(response.message())
+                }
+            } else {
                 dao.markChannelMessagesAsRead(channelId)
                 channelDao.clearUnreadCount(channelId)
                 Resource.Success(Unit)
-            } else {
-                Resource.Error(response.message())
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
@@ -288,42 +302,5 @@ class ChatRepository @Inject constructor(
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
         }
-    }
-
-    private fun MessageDto.toEntity(): MessageEntity {
-        val type = (metadata?.get("type") as? String) ?: "standard"
-        val entity = MessageEntity(
-            id = id,
-            content = content,
-            channelId = channelId,
-            dmId = dmId,
-            senderId = senderId ?: authorId ?: userId ?: "",
-            senderName = user?.name ?: author?.name ?: user?.username ?: author?.username,
-            senderAvatar = user?.avatar ?: author?.avatar ?: user?.image ?: author?.image,
-            createdAt = createdAt ?: timestamp ?: "",
-            updatedAt = updatedAt ?: createdAt ?: timestamp ?: "",
-            isEdited = isEdited,
-            replyToId = replyToId,
-            replyToSenderName = replyTo?.sender?.name,
-            readByCurrentUser = readByCurrentUser,
-            attachments = attachments,
-            metadata = metadata,
-            reactions = reactions,
-            messageType = type,
-            threadId = threadId,
-            replyCount = replyCount,
-            isPinned = isPinned,
-            senderRole = user?.role ?: author?.role
-        )
-
-        if (type == "custom" || type == "approval" || type == "report") {
-            try {
-                val json = com.google.gson.Gson().toJson(metadata)
-                entity.customMessage = com.google.gson.Gson().fromJson(json, CustomMessageDto::class.java)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        return entity
     }
 }

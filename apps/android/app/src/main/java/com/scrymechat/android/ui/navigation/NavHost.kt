@@ -227,7 +227,7 @@ fun ScrymeNavHost(
                 userId = userId,
                 onBack = { navController.popBackStack() },
                 onSendMessage = { id ->
-                    navController.navigate(Screen.Chat.createRoute(id)) {
+                    navController.navigate(Screen.Chat.createRoute(id, isUserId = true)) {
                         popUpTo(Screen.Home.route)
                     }
                 }
