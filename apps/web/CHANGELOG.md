@@ -1,5 +1,19 @@
 # web
 
+## 2.1.0-dev.26
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/api-client@0.1.0-dev.26
+  - @repo/database@0.1.0-dev.26
+  - @repo/types@0.1.0-dev.26
+  - @repo/ui@0.1.0-dev.26
+
 ## 2.1.0-dev.25
 
 ### Minor Changes

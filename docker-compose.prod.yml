@@ -1,17 +1,8 @@
 services:
   web:
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
     container_name: scrymechat-web
     restart: always
-    # Published directly to the host port only as a local/manual-testing
-    # fallback. Once this sits behind Traefik/Caddy on Dokploy or Coolify,
-    # routing goes through the proxy network + labels below instead, so
-    # feel free to drop this block if you don't need direct host access.
-    ports:
-      - '${WEB_PORT:-3001}:3001'
     expose:
       - '3001'
     healthcheck:
@@ -61,16 +52,8 @@ services:
 
   api:
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
     container_name: scrymechat-api
     restart: always
-    # Same note as web: this direct host port publish is only a
-    # local/manual-testing fallback — the Traefik labels below are what
-    # actually route production traffic once deployed behind a proxy.
-    ports:
-      - '${API_PORT:-3000}:3000'
     expose:
       - '3000'
     healthcheck:
