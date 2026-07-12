@@ -6,8 +6,12 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: scrymechat-web
     restart: always
+    # Published directly to the host port only as a local/manual-testing
+    # fallback. Once this sits behind Traefik/Caddy on Dokploy or Coolify,
+    # routing goes through the proxy network + labels below instead, so
+    # feel free to drop this block if you don't need direct host access.
     ports:
-      - "${WEB_PORT:-3001}:3001"
+      - '${WEB_PORT:-3001}:3001'
     expose:
       - '3001'
     healthcheck:
@@ -38,15 +42,22 @@ services:
       - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://api:3000}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3001}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://api:3000}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3001}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://${WEB_DOMAIN:-scrymechat.local}}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://${WEB_DOMAIN:-scrymechat.local}}
       - BOT_TOKEN_SECRET=${BOT_TOKEN_SECRET}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
     networks:
       - scrymechat-network
-      - dokploy-network
+      - proxy
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=${PROXY_NETWORK:-dokploy-network}'
+      - 'traefik.http.routers.scrymechat-web.rule=Host(`${WEB_DOMAIN:-scrymechat.local}`)'
+      - 'traefik.http.routers.scrymechat-web.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}'
+      - 'traefik.http.routers.scrymechat-web.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}'
+      - 'traefik.http.services.scrymechat-web.loadbalancer.server.port=3001'
 
   api:
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
@@ -55,8 +66,11 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: scrymechat-api
     restart: always
+    # Same note as web: this direct host port publish is only a
+    # local/manual-testing fallback — the Traefik labels below are what
+    # actually route production traffic once deployed behind a proxy.
     ports:
-      - "${API_PORT:-3000}:3000"
+      - '${API_PORT:-3000}:3000'
     expose:
       - '3000'
     healthcheck:
@@ -82,15 +96,22 @@ services:
       - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://api:3000}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3001}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://api:3000}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3001}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://${WEB_DOMAIN:-scrymechat.local}}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://${WEB_DOMAIN:-scrymechat.local}}
       - BOT_TOKEN_SECRET=${BOT_TOKEN_SECRET}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
     networks:
       - scrymechat-network
-      - dokploy-network
+      - proxy
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=${PROXY_NETWORK:-dokploy-network}'
+      - 'traefik.http.routers.scrymechat-api.rule=Host(`${API_DOMAIN:-api.scrymechat.local}`)'
+      - 'traefik.http.routers.scrymechat-api.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}'
+      - 'traefik.http.routers.scrymechat-api.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}'
+      - 'traefik.http.services.scrymechat-api.loadbalancer.server.port=3000'
 
   db:
     image: postgres:17-alpine
@@ -127,6 +148,9 @@ services:
       - rustfs_data:/data
     networks:
       - scrymechat-network
+    # Internal-only by design: api/web reach it over scrymechat-network.
+    # If you want its console/API reachable from outside, add it to the
+    # `proxy` network and give it traefik labels the same way as web/api.
 
   redis:
     image: redis:7-alpine
@@ -169,5 +193,12 @@ networks:
     name: scrymechat-network
     driver: bridge
     attachable: true
-  dokploy-network:
+
+  # The platform-managed proxy network. Dokploy creates "dokploy-network",
+  # Coolify creates "coolify" (run `docker network ls` after installing the
+  # platform to confirm the exact name) — set PROXY_NETWORK in your .env to
+  # match. It must already exist; that's why it's external rather than
+  # created here.
+  proxy:
+    name: ${PROXY_NETWORK:-dokploy-network}
     external: true
