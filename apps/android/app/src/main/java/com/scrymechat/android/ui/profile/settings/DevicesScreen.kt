@@ -348,6 +348,7 @@ private fun getDeviceIcon(type: DeviceType): ImageVector = when (type) {
 
 // --- Camera View ---
 
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun QRScannerView(onCodeScanned: (String) -> Unit) {
     val context = LocalContext.current
