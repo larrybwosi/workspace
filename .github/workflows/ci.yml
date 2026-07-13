@@ -319,13 +319,7 @@ jobs:
             else
               echo "No changeset found on main; generating automatic major changeset."
               PKG_NAME=$(node -p "require('./package.json').name || 'root'")
-              cat > .changeset/auto-major-$(date +%s).md << EOF
-          ---
-          "$PKG_NAME": major
-          ---
-
-          Automated major release triggered on push to main.
-          EOF
+              printf -- "---\n\"%s\": major\n---\n\nAutomated major release triggered on push to main.\n" "$PKG_NAME" > ".changeset/auto-major-$(date +%s).md"
             fi
           fi
 
@@ -335,13 +329,7 @@ jobs:
           existing=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null)
           if [ -z "$existing" ]; then
             echo "No changeset found for this push; generating an automatic patch changeset for the android package."
-            cat > .changeset/auto-android-$(date +%s).md << EOF
-          ---
-          "android": patch
-          ---
-
-          Automated prerelease version bump triggered by Android app changes.
-          EOF
+            printf -- "---\n\"android\": patch\n---\n\nAutomated prerelease version bump triggered by Android app changes.\n" > ".changeset/auto-android-$(date +%s).md"
           else
             echo "Changeset(s) already present, skipping auto-generation."
           fi
