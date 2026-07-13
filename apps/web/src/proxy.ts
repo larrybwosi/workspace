@@ -5,7 +5,7 @@ import { validateEnv } from '@repo/shared';
 const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health'];
 const authPrefix = '/api/auth';
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
