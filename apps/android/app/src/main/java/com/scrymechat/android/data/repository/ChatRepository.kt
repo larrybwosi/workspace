@@ -228,13 +228,20 @@ class ChatRepository @Inject constructor(
 
     suspend fun markDmRead(dmId: String): Resource<Unit> {
         return try {
-            val response = api.markDmRead(dmId)
-            if (response.isSuccessful) {
+            val unreadIds = dao.getUnreadMessageIdsForDm(dmId)
+            if (unreadIds.isNotEmpty()) {
+                val response = api.markDmRead(dmId, mapOf("messageIds" to unreadIds))
+                if (response.isSuccessful) {
+                    dao.markDmMessagesAsRead(dmId)
+                    dmDao.clearUnreadCount(dmId)
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error(response.message())
+                }
+            } else {
                 dao.markDmMessagesAsRead(dmId)
                 dmDao.clearUnreadCount(dmId)
                 Resource.Success(Unit)
-            } else {
-                Resource.Error(response.message())
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
@@ -243,13 +250,20 @@ class ChatRepository @Inject constructor(
 
     suspend fun markChannelRead(workspaceSlug: String, channelId: String): Resource<Unit> {
         return try {
-            val response = api.markChannelRead(workspaceSlug, channelId)
-            if (response.isSuccessful) {
+            val unreadIds = dao.getUnreadMessageIdsForChannel(channelId)
+            if (unreadIds.isNotEmpty()) {
+                val response = api.markChannelRead(workspaceSlug, channelId, mapOf("messageIds" to unreadIds))
+                if (response.isSuccessful) {
+                    dao.markChannelMessagesAsRead(channelId)
+                    channelDao.clearUnreadCount(channelId)
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error(response.message())
+                }
+            } else {
                 dao.markChannelMessagesAsRead(channelId)
                 channelDao.clearUnreadCount(channelId)
                 Resource.Success(Unit)
-            } else {
-                Resource.Error(response.message())
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")

@@ -1,5 +1,29 @@
 # @repo/typescript-config
 
+## 0.1.0-dev.31
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 0.1.0-dev.30
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 0.1.0-dev.29
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 0.1.0-dev.28
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 0.1.0-dev.27
 
 ### Minor Changes

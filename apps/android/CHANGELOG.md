@@ -1,5 +1,33 @@
 # android
 
+## 2.1.0-dev.31
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Automated prerelease version bump triggered by Android app changes.
+
+## 2.1.0-dev.30
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 2.1.0-dev.29
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+## 2.1.0-dev.28
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
 ## 2.1.0-dev.27
 
 ### Minor Changes

@@ -10,7 +10,6 @@
 "@repo/auth": minor
 "@repo/database": minor
 "@repo/eslint-config": minor
-"@repo/prettier-config": minor
 "@repo/shared": minor
 "@repo/types": minor
 "@repo/typescript-config": minor

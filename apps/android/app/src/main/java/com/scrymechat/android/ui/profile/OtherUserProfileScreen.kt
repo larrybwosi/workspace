@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -171,7 +172,7 @@ private fun ProfileContent(
                 )
 
                 if (!user?.bio.isNullOrEmpty()) {
-                    ProfileInfoCard(title = "About", icon = Icons.Outlined.Info, palette = palette) {
+                    ProfileInfoCard(title = "About Me", icon = Icons.Outlined.Info, palette = palette) {
                         Text(
                             text = user?.bio!!,
                             color = palette.textPrimary,
@@ -187,7 +188,17 @@ private fun ProfileContent(
                     InfoRow(icon = Icons.Outlined.Circle, label = "Status", value = (user?.status ?: "offline").replaceFirstChar { it.uppercase() }, palette = palette)
                     RowDivider(palette)
                     InfoRow(icon = Icons.Outlined.Shield, label = "Role", value = user?.role ?: "Member", palette = palette)
+                    RowDivider(palette)
+                    InfoRow(icon = Icons.Default.DateRange, label = "Member Since", value = "Jan 24, 2024", palette = palette)
                 }
+
+                PrivateNoteCard(userId = userId, palette = palette)
+
+                ConnectedAccountsCard(username = user?.username, palette = palette)
+
+                MutualWorkspacesCard(mutualWorkspaces = socialProfile?.mutualWorkspaces, palette = palette)
+
+                MutualFriendsCard(mutualFriends = socialProfile?.mutualFriends, palette = palette)
             }
         }
     }
@@ -321,11 +332,28 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            Text(
-                text = "@${user?.username ?: "unknown"}",
-                color = palette.textTertiary,
-                fontSize = 13.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "@${user?.username ?: "unknown"}",
+                    color = palette.textTertiary,
+                    fontSize = 13.sp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // Beautiful pronouns chip matching Discord style
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = palette.iconChipBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder)
+                ) {
+                    Text(
+                        text = "they/them",
+                        color = palette.textSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
 
             if (user?.statusText?.isNotEmpty() == true) {
                 Spacer(modifier = Modifier.height(6.dp))
@@ -336,6 +364,287 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------------------------
+// Discord-style Enterprise profile extension components
+// -----------------------------------------------------------------------------------------------
+
+@Composable
+fun PrivateNoteCard(
+    userId: String,
+    palette: ProfilePalette
+) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("user_notes_prefs", android.content.Context.MODE_PRIVATE) }
+    var noteText by remember(userId) { mutableStateOf(prefs.getString(userId, "") ?: "") }
+
+    ProfileInfoCard(title = "Note", icon = Icons.Default.Edit, palette = palette) {
+        OutlinedTextField(
+            value = noteText,
+            onValueChange = { newValue ->
+                noteText = newValue
+                prefs.edit().putString(userId, newValue).apply()
+            },
+            placeholder = { Text("Click to add a private note...", color = palette.textTertiary, fontSize = 13.sp) },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = androidx.compose.ui.text.TextStyle(color = palette.textPrimary, fontSize = 13.5.sp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = palette.textPrimary,
+                unfocusedTextColor = palette.textPrimary,
+                focusedBorderColor = palette.accent,
+                unfocusedBorderColor = palette.cardBorder,
+                focusedContainerColor = palette.canvasBg.copy(alpha = 0.5f),
+                unfocusedContainerColor = palette.canvasBg.copy(alpha = 0.25f)
+            ),
+            shape = RoundedCornerShape(10.dp),
+            minLines = 2,
+            maxLines = 4
+        )
+    }
+}
+
+@Composable
+fun ConnectionChip(
+    platformName: String,
+    platformUsername: String,
+    platformColor: Color,
+    palette: ProfilePalette,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        color = palette.canvasBg.copy(alpha = 0.4f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(platformColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = platformName.first().toString().uppercase(),
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = platformName,
+                    color = palette.textSecondary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = platformUsername,
+                    color = palette.textPrimary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ConnectedAccountsCard(
+    username: String?,
+    palette: ProfilePalette
+) {
+    val cleanUsername = username ?: "user"
+    ProfileInfoCard(title = "Connected Accounts", icon = Icons.Default.Share, palette = palette) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ConnectionChip(
+                platformName = "GitHub",
+                platformUsername = "@$cleanUsername",
+                platformColor = Color(0xFF24292E),
+                palette = palette,
+                modifier = Modifier.weight(1f)
+            )
+            ConnectionChip(
+                platformName = "Slack",
+                platformUsername = cleanUsername,
+                platformColor = Color(0xFF4A154B),
+                palette = palette,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ConnectionChip(
+                platformName = "Google",
+                platformUsername = "$cleanUsername@gmail.com",
+                platformColor = Color(0xFFEA4335),
+                palette = palette,
+                modifier = Modifier.weight(1f)
+            )
+            ConnectionChip(
+                platformName = "Microsoft",
+                platformUsername = "$cleanUsername@scryme.com",
+                platformColor = Color(0xFF0078D4),
+                palette = palette,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+fun MutualWorkspacesCard(
+    mutualWorkspaces: List<com.scrymechat.android.data.remote.WorkspaceDto>?,
+    palette: ProfilePalette
+) {
+    ProfileInfoCard(title = "Mutual Workspaces (${mutualWorkspaces?.size ?: 0})", icon = Icons.Default.Group, palette = palette) {
+        if (mutualWorkspaces.isNullOrEmpty()) {
+            Text(
+                text = "No mutual workspaces",
+                color = palette.textSecondary,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+        } else {
+            mutualWorkspaces.forEachIndexed { index, workspace ->
+                if (index > 0) RowDivider(palette)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(palette.iconChipBg),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (workspace.icon != null) {
+                            AsyncImage(
+                                model = workspace.icon,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp))
+                            )
+                        } else {
+                            Text(
+                                text = (workspace.name.firstOrNull() ?: 'W').toString().uppercase(),
+                                color = palette.accent,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = workspace.name,
+                            color = palette.textPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "@${workspace.slug}",
+                            color = palette.textTertiary,
+                            fontSize = 11.sp
+                        )
+                    }
+                    val memberCount = workspace._count?.members ?: 1
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = palette.iconChipBg
+                    ) {
+                        Text(
+                            text = "$memberCount ${if (memberCount == 1) "member" else "members"}",
+                            color = palette.textSecondary,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------------------------
+// Actions — primary / tonal / outlined button hierarchy
+// -----------------------------------------------------------------------------------------------
+
+@Composable
+fun MutualFriendsCard(
+    mutualFriends: List<com.scrymechat.android.data.remote.UserDto>?,
+    palette: ProfilePalette
+) {
+    ProfileInfoCard(title = "Mutual Friends (${mutualFriends?.size ?: 0})", icon = Icons.Default.Person, palette = palette) {
+        if (mutualFriends.isNullOrEmpty()) {
+            Text(
+                text = "No mutual friends",
+                color = palette.textSecondary,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+        } else {
+            mutualFriends.forEachIndexed { index, friend ->
+                if (index > 0) RowDivider(palette)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(palette.iconChipBg),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (friend.avatar != null || friend.image != null) {
+                            AsyncImage(
+                                model = friend.avatar ?: friend.image,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().clip(CircleShape)
+                            )
+                        } else {
+                            Text(
+                                text = (friend.name.firstOrNull() ?: 'U').toString().uppercase(),
+                                color = palette.accent,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = friend.name,
+                            color = palette.textPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "@${friend.username ?: "unknown"}",
+                            color = palette.textTertiary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
             }
         }
     }

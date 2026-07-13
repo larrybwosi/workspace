@@ -1,5 +1,57 @@
 # api
 
+## 2.1.0-dev.31
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/auth@0.1.0-dev.31
+  - @repo/database@0.1.0-dev.31
+  - @repo/shared@0.1.0-dev.31
+
+## 2.1.0-dev.30
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/auth@0.1.0-dev.30
+  - @repo/database@0.1.0-dev.30
+  - @repo/shared@0.1.0-dev.30
+
+## 2.1.0-dev.29
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/auth@0.1.0-dev.29
+  - @repo/database@0.1.0-dev.29
+  - @repo/shared@0.1.0-dev.29
+
+## 2.1.0-dev.28
+
+### Minor Changes
+
+- Automatic minor release for branch dev
+
+### Patch Changes
+
+- Updated dependencies
+  - @repo/auth@0.1.0-dev.28
+  - @repo/database@0.1.0-dev.28
+  - @repo/shared@0.1.0-dev.28
+
 ## 2.1.0-dev.27
 
 ### Minor Changes
