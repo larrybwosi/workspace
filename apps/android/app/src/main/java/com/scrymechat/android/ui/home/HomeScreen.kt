@@ -402,6 +402,7 @@ fun MainContent(
                     ChatView(
                         chatTitle = title,
                         messages = chatUiState.messages,
+                        isLoading = chatUiState.isLoading,
                         onSendMessage = onSendMessage,
                         onReply = onReply,
                         onOpenThread = onOpenThread,

@@ -148,6 +148,76 @@ fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     }
 }
 
+/**
+ * Animated pulse skeleton placeholder for messages.
+ */
+@Composable
+fun MessageSkeleton(palette: ChatPalette) {
+    val infiniteTransition = rememberInfiniteTransition(label = "skeleton")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        // Avatar skeleton
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(palette.textSecondary.copy(alpha = alpha))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Name skeleton
+                Box(
+                    modifier = Modifier
+                        .size(width = 80.dp, height = 14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(palette.textSecondary.copy(alpha = alpha))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // Timestamp skeleton
+                Box(
+                    modifier = Modifier
+                        .size(width = 40.dp, height = 10.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(palette.textTertiary.copy(alpha = alpha))
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Text line 1
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(palette.textSecondary.copy(alpha = alpha))
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            // Text line 2
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.55f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(palette.textSecondary.copy(alpha = alpha))
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessageContextBottomSheet(
@@ -380,6 +450,7 @@ private val ShapeInputBar = RoundedCornerShape(22.dp)
 fun ChatView(
     chatTitle: String = "",
     messages: List<MessageEntity>,
+    isLoading: Boolean = false,
     onSendMessage: (String, String?, List<CreateAttachmentRequest>?) -> Unit,
     onReply: (MessageEntity) -> Unit,
     onOpenThread: (MessageEntity) -> Unit = {},
@@ -525,7 +596,17 @@ fun ChatView(
 
         // Messages List Container
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            if (messages.isEmpty()) {
+            if (isLoading && messages.isEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    reverseLayout = true,
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 12.dp)
+                ) {
+                    items(5) {
+                        MessageSkeleton(palette = palette)
+                    }
+                }
+            } else if (messages.isEmpty()) {
                 EmptyChatState(
                     chatTitle = cleanTitle,
                     palette = palette,
