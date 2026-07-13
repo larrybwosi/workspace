@@ -10,6 +10,7 @@ vi.mock('@repo/database', () => ({
     departmentAnnouncement: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -70,6 +71,49 @@ describe('V2AnnouncementsController', () => {
       expect(prisma.departmentAnnouncement.findMany).toHaveBeenCalled();
       expect(redisMock.setex).toHaveBeenCalledWith('v2:announcements:ws-1', 600, JSON.stringify(dbData));
       expect(result).toEqual({ announcements: dbData, source: 'database' });
+    });
+  });
+
+  describe('getAnnouncement', () => {
+    it('should return announcement if found and belongs to context workspace', async () => {
+      const context: any = { workspaceId: 'ws-1', scopes: ['*'] };
+      const mockAnnouncement = {
+        id: 'ann-1',
+        title: 'Mock Title',
+        department: { workspaceId: 'ws-1' },
+      };
+      (prisma.departmentAnnouncement.findUnique as any).mockResolvedValue(mockAnnouncement);
+
+      const result = await controller.getAnnouncement(context, 'ann-1');
+
+      expect(prisma.departmentAnnouncement.findUnique).toHaveBeenCalledWith({
+        where: { id: 'ann-1' },
+        select: expect.any(Object),
+      });
+      expect(result).toEqual({ announcement: mockAnnouncement });
+    });
+
+    it('should throw NotFoundException if announcement is not found', async () => {
+      const context: any = { workspaceId: 'ws-1', scopes: ['*'] };
+      (prisma.departmentAnnouncement.findUnique as any).mockResolvedValue(null);
+
+      await expect(controller.getAnnouncement(context, 'ann-1')).rejects.toThrow(
+        'Announcement not found'
+      );
+    });
+
+    it('should throw NotFoundException if announcement belongs to another workspace', async () => {
+      const context: any = { workspaceId: 'ws-1', scopes: ['*'] };
+      const mockAnnouncement = {
+        id: 'ann-1',
+        title: 'Mock Title',
+        department: { workspaceId: 'ws-different' },
+      };
+      (prisma.departmentAnnouncement.findUnique as any).mockResolvedValue(mockAnnouncement);
+
+      await expect(controller.getAnnouncement(context, 'ann-1')).rejects.toThrow(
+        'Announcement not found'
+      );
     });
   });
 });
