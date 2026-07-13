@@ -32,6 +32,15 @@ if (!fs.existsSync(changesetDir)) {
   fs.mkdirSync(changesetDir, { recursive: true });
 }
 
+const existingChangesets = fs.existsSync(changesetDir)
+  ? fs.readdirSync(changesetDir).filter(file => file.endsWith('.md') && file !== 'README.md')
+  : [];
+
+if (existingChangesets.length > 0) {
+  console.log('Existing changeset(s) found, skipping automatic generation.');
+  process.exit(0);
+}
+
 const filename = `auto-release-${crypto.randomBytes(4).toString('hex')}.md`;
 fs.writeFileSync(path.join(changesetDir, filename), changesetContent);
 
