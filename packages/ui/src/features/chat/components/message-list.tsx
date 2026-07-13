@@ -9,7 +9,7 @@ import { MessageItem } from '../message-item';
 import { cn } from '../../../lib/utils';
 import type { Message } from '@repo/types';
 
-const MessageSkeleton = memo(function MessageSkeleton() {
+export const MessageSkeleton = memo(function MessageSkeleton() {
   return (
     <div className="flex items-start gap-3 py-0.5 px-4 w-full">
       <Skeleton className="h-10 w-10 rounded-full shrink-0 mt-0.5" />
@@ -24,6 +24,8 @@ const MessageSkeleton = memo(function MessageSkeleton() {
     </div>
   );
 });
+
+MessageSkeleton.displayName = 'MessageSkeleton';
 
 const DateDivider = memo(function DateDivider({ date }: { date: Date }) {
   const isToday = new Date().toDateString() === date.toDateString();
@@ -81,7 +83,7 @@ const LoadMoreButton = memo(({ hasNextPage, fetchNextPage, isFetchingNextPage }:
 
 LoadMoreButton.displayName = 'LoadMoreButton';
 
-const MessageSkeletons = memo(() => (
+export const MessageSkeletons = memo(() => (
   <div className="space-y-3">
     {[1, 2, 3, 4, 5].map(i => (
       <MessageSkeleton key={i} />

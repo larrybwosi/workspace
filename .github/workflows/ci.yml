@@ -318,8 +318,7 @@ jobs:
               sed -i 's/: minor/: major/g' .changeset/*.md 2>/dev/null || true
             else
               echo "No changeset found on main; generating automatic major changeset."
-              PKG_NAME=$(node -p "require('./package.json').name || 'root'")
-              printf -- "---\n\"%s\": major\n---\n\nAutomated major release triggered on push to main.\n" "$PKG_NAME" > ".changeset/auto-major-$(date +%s).md"
+              GITHUB_REF_NAME=main node scripts/auto-changeset.js
             fi
           fi
 
