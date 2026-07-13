@@ -19,5 +19,8 @@
     "@repo/typescript-config": "0.0.772",
     "@repo/ui": "0.0.772"
   },
-  "changesets": []
+  "changesets": [
+    "auto-android-1783928864",
+    "auto-release-92baf775"
+  ]
 }
