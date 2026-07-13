@@ -353,7 +353,7 @@ jobs:
           git add .
           if ! git diff --staged --quiet; then
             git commit -m "chore: release [skip ci]"
-            git push origin "$GITHUB_REF_NAME"
+            git push origin HEAD:"$GITHUB_REF_NAME"
             echo "published=true" >> $GITHUB_OUTPUT
           else
             echo "published=false" >> $GITHUB_OUTPUT
