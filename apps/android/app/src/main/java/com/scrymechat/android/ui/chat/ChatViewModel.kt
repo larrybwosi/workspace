@@ -81,7 +81,7 @@ class ChatViewModel @Inject constructor(
         currentDmId = null
         currentThreadId = null
 
-        _uiState.update { it.copy(isThread = false, threadRootMessage = null) }
+        _uiState.update { it.copy(isThread = false, threadRootMessage = null, messages = emptyList(), isLoading = true) }
 
         realtimeRepository.joinRoom("channel:$channelId")
         loadMessages()
@@ -105,7 +105,7 @@ class ChatViewModel @Inject constructor(
         currentThreadId = threadId
         currentDmId = null
 
-        _uiState.update { it.copy(isThread = true, threadRootMessage = message) }
+        _uiState.update { it.copy(isThread = true, threadRootMessage = message, messages = emptyList(), isLoading = true) }
 
         realtimeRepository.joinRoom("thread:$threadId")
         loadMessages()
@@ -118,6 +118,8 @@ class ChatViewModel @Inject constructor(
         currentDmId = dmId
         currentChannelId = null
         currentWorkspaceSlug = null
+
+        _uiState.update { it.copy(messages = emptyList(), isLoading = true) }
 
         realtimeRepository.joinRoom("dm:$dmId")
         loadMessages()
@@ -145,16 +147,26 @@ class ChatViewModel @Inject constructor(
         val threadId = currentThreadId
         val slug = currentWorkspaceSlug
 
+        _uiState.update { it.copy(isLoading = true) }
+
         viewModelScope.launch {
-            when {
-                threadId != null && channelId != null && slug != null -> chatRepository.getThreadMessages(slug, channelId, threadId).collect { resource ->
-                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
-                }
-                channelId != null && slug != null -> chatRepository.getChannelMessages(slug, channelId).collect { resource ->
-                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
-                }
-                dmId != null -> chatRepository.getDmMessages(dmId).collect { resource ->
-                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
+            val flow = when {
+                threadId != null && channelId != null && slug != null -> chatRepository.getThreadMessages(slug, channelId, threadId)
+                channelId != null && slug != null -> chatRepository.getChannelMessages(slug, channelId)
+                dmId != null -> chatRepository.getDmMessages(dmId)
+                else -> null
+            }
+            flow?.collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(error = resource.message, isLoading = false) }
+                    }
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
                 }
             }
         }
@@ -168,7 +180,13 @@ class ChatViewModel @Inject constructor(
             }
 
             flow.collect { messages ->
-                _uiState.update { it.copy(messages = messages, isLoading = false) }
+                _uiState.update { state ->
+                    val shouldSetLoadingFalse = messages.isNotEmpty() || !state.isLoading
+                    state.copy(
+                        messages = messages,
+                        isLoading = if (shouldSetLoadingFalse) false else state.isLoading
+                    )
+                }
             }
         }
     }
