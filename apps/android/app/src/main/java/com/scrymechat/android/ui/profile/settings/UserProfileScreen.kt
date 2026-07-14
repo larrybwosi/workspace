@@ -47,6 +47,8 @@ fun UserProfileScreen(
     var name by remember(user) { mutableStateOf(user?.name ?: "") }
     var username by remember(user) { mutableStateOf(user?.username ?: "") }
     var statusText by remember(user) { mutableStateOf(user?.statusText ?: "") }
+    var github by remember(user) { mutableStateOf(user?.github ?: "") }
+    var slack by remember(user) { mutableStateOf(user?.slack ?: "") }
 
     LaunchedEffect(Unit) {
         viewModel.errorEvents.collect { error ->
@@ -199,13 +201,33 @@ fun UserProfileScreen(
                         minLines = 3,
                         colors = standardTextFieldColors(palette)
                     )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = github,
+                        onValueChange = { github = it },
+                        label = { Text("GitHub Handle") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = slack,
+                        onValueChange = { slack = it },
+                        label = { Text("Slack Handle") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
                         onClick = {
                             viewModel.saveProfile(mapOf(
                                 "name" to name,
                                 "username" to username,
-                                "statusText" to statusText
+                                "statusText" to statusText,
+                                "github" to github,
+                                "slack" to slack
                             ), context)
                         },
                         modifier = Modifier.fillMaxWidth().height(44.dp),

@@ -42,6 +42,13 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = com.scrymechat.android.R.drawable.ic_logo),
+                contentDescription = "Scrymechat Logo",
+                tint = Color.Unspecified,
+                modifier = Modifier.size(110.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "SCRYMECHAT",
                 style = MaterialTheme.typography.displaySmall.copy(
@@ -50,7 +57,7 @@ fun SplashScreen(
                     letterSpacing = 4.sp
                 )
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             CircularProgressIndicator(
                 color = Color.White.copy(alpha = 0.5f),
                 strokeWidth = 2.dp,

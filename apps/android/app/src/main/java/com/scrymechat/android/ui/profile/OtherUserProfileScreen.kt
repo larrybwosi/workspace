@@ -1,5 +1,7 @@
 package com.scrymechat.android.ui.profile
 
+import com.scrymechat.android.R
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -213,7 +215,12 @@ private fun ProfileContent(
 
                 PrivateNoteCard(userId = userId, palette = palette)
 
-                ConnectedAccountsCard(username = user?.username, palette = palette)
+                ConnectedAccountsCard(
+                    github = user?.github,
+                    slack = user?.slack,
+                    username = user?.username,
+                    palette = palette
+                )
 
                 MutualWorkspacesCard(mutualWorkspaces = socialProfile?.mutualWorkspaces, palette = palette)
 
@@ -555,6 +562,7 @@ fun ConnectionChip(
     platformUsername: String,
     platformColor: Color,
     palette: ProfilePalette,
+    iconResId: Int? = null,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -574,12 +582,21 @@ fun ConnectionChip(
                     .background(platformColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = platformName.first().toString().uppercase(),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (iconResId != null) {
+                    Icon(
+                        painter = androidx.compose.ui.res.painterResource(id = iconResId),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(14.dp)
+                    )
+                } else {
+                    Text(
+                        text = platformName.first().toString().uppercase(),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
@@ -604,10 +621,15 @@ fun ConnectionChip(
 
 @Composable
 fun ConnectedAccountsCard(
+    github: String?,
+    slack: String?,
     username: String?,
     palette: ProfilePalette
 ) {
     val cleanUsername = username ?: "user"
+    val displayGithub = if (!github.isNullOrBlank()) github else "@$cleanUsername"
+    val displaySlack = if (!slack.isNullOrBlank()) slack else cleanUsername
+
     ProfileInfoCard(title = "Connected Accounts", icon = Icons.Default.Share, palette = palette) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -615,16 +637,18 @@ fun ConnectedAccountsCard(
         ) {
             ConnectionChip(
                 platformName = "GitHub",
-                platformUsername = "@$cleanUsername",
+                platformUsername = displayGithub,
                 platformColor = Color(0xFF24292E),
                 palette = palette,
+                iconResId = R.drawable.ic_github,
                 modifier = Modifier.weight(1f)
             )
             ConnectionChip(
                 platformName = "Slack",
-                platformUsername = cleanUsername,
-                platformColor = Color(0xFF4A154B),
+                platformUsername = displaySlack,
+                platformColor = Color(0xFF1F1F24), // sleek dark for Slack container with multi-color SVG icon
                 palette = palette,
+                iconResId = R.drawable.ic_slack,
                 modifier = Modifier.weight(1f)
             )
         }
