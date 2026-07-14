@@ -1,0 +1,183 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: scrymechat-web
+    restart: always
+    expose:
+      - '3001'
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      api:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-main}?schema=public
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-rustfs}
+      - REALTIME_PROVIDER=${REALTIME_PROVIDER:-socketio}
+      - NEXT_PUBLIC_REALTIME_PROVIDER=${NEXT_PUBLIC_REALTIME_PROVIDER:-socketio}
+      - RUSTFS_ENDPOINT=${RUSTFS_ENDPOINT:-rustfs}
+      - RUSTFS_PORT=${RUSTFS_PORT:-9000}
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://${WEB_DOMAIN:-scrymechat.local}}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://${WEB_DOMAIN:-scrymechat.local}}
+      - BOT_TOKEN_SECRET=${BOT_TOKEN_SECRET}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+    networks:
+      - scrymechat-network
+      - proxy
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=${PROXY_NETWORK:-dokploy-network}'
+      - 'traefik.http.routers.scrymechat-web.rule=Host(`${WEB_DOMAIN:-scrymechat.local}`)'
+      - 'traefik.http.routers.scrymechat-web.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}'
+      - 'traefik.http.routers.scrymechat-web.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}'
+      - 'traefik.http.services.scrymechat-web.loadbalancer.server.port=3001'
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: scrymechat-api
+    restart: always
+    expose:
+      - '3000'
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-main}?schema=public
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-rustfs}
+      - REALTIME_PROVIDER=${REALTIME_PROVIDER:-socketio}
+      - RUSTFS_ENDPOINT=${RUSTFS_ENDPOINT:-rustfs}
+      - RUSTFS_PORT=${RUSTFS_PORT:-9000}
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://${WEB_DOMAIN:-scrymechat.local}}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://${WEB_DOMAIN:-scrymechat.local}}
+      - BOT_TOKEN_SECRET=${BOT_TOKEN_SECRET}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+    networks:
+      - scrymechat-network
+      - proxy
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=${PROXY_NETWORK:-dokploy-network}'
+      - 'traefik.http.routers.scrymechat-api.rule=Host(`${API_DOMAIN:-api.scrymechat.local}`)'
+      - 'traefik.http.routers.scrymechat-api.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}'
+      - 'traefik.http.routers.scrymechat-api.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}'
+      - 'traefik.http.services.scrymechat-api.loadbalancer.server.port=3000'
+
+  db:
+    image: postgres:17-alpine
+    container_name: scrymechat-postgres
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-main}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-main}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scrymechat-network
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: scrymechat-rustfs
+    restart: always
+    expose:
+      - '9000'
+    env_file:
+      - .env
+    environment:
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || wget --spider -q http://localhost:9000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scrymechat-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: scrymechat-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    env_file:
+      - .env
+    command: >
+      sh -c "
+        if [ -n \"$REDIS_PASSWORD\" ]; then
+          exec redis-server --requirepass \"$REDIS_PASSWORD\"
+        else
+          exec redis-server
+        fi
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$REDIS_PASSWORD\" ]; then redis-cli -a \"$REDIS_PASSWORD\" ping; else redis-cli ping; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scrymechat-network
+
+volumes:
+  db_data:
+  redis_data:
+  rustfs_data:
+
+networks:
+  scrymechat-network:
+    name: scrymechat-network
+    driver: bridge
+    attachable: true
+
+  proxy:
+    name: ${PROXY_NETWORK:-dokploy-network}
+    external: true
