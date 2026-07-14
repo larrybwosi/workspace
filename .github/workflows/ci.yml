@@ -295,6 +295,7 @@ jobs:
         with:
           title: 'chore: version packages'
           commit: 'chore: version packages'
+          version: pnpm version:ci
           publish: pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -303,7 +304,10 @@ jobs:
       - name: Update Version (Dev)
         if: github.ref == 'refs/heads/dev'
         id: update_version_dev
-        run: node scripts/update-version.js
+        run: |
+          npm version patch --no-git-tag-version
+          pnpm install --no-frozen-lockfile
+          node scripts/update-version.js
 
       - name: Commit and Push Version Update (Dev)
         if: github.ref == 'refs/heads/dev'
