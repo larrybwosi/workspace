@@ -121,7 +121,9 @@ class ProfileViewModel @Inject constructor(
                                 banner = body.banner ?: currentUser.banner,
                                 statusText = body.statusText ?: currentUser.statusText,
                                 statusEmoji = body.statusEmoji ?: currentUser.statusEmoji,
-                                bio = body.bio ?: currentUser.bio
+                                bio = body.bio ?: currentUser.bio,
+                                github = (finalUpdates["github"] as? String) ?: currentUser.github,
+                                slack = (finalUpdates["slack"] as? String) ?: currentUser.slack
                             )
                             userDao.insertUser(updatedUser)
                         }
