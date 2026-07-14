@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- Outer Glow / Background Gradient Aura -->
+    <path
+        android:pathData="M100,20 C144,20 180,56 180,100 C180,144 144,180 100,180 C56,180 20,144 20,100 C20,56 56,20 100,20 Z"
+        android:fillColor="#151A3C"
+        android:fillAlpha="0.15"/>
+    <!-- Sleek Rounded Hexagon Base Shield -->
+    <path
+        android:pathData="M100,30 L160,65 L160,135 L100,170 L40,135 L40,65 Z"
+        android:strokeColor="#6366F1"
+        android:strokeWidth="4"
+        android:fillColor="#0D0E15"/>
+    <!-- Inner Chat Bubble / Brand Shape -->
+    <path
+        android:pathData="M100,55 C122,55 140,71 140,92 C140,113 122,130 100,130 C92,130 85,127 79,123 L60,133 L65,115 C58,109 55,101 55,92 C55,71 73,55 100,55 Z"
+        android:fillColor="#8B5CF6"
+        android:fillAlpha="0.85"/>
+    <!-- Stylized Futuristics "S" Branding Mark in Center -->
+    <path
+        android:pathData="M100,70 C108,70 113,74 113,80 L97,80 C97,78 95,76 92,76 C89,76 87,78 87,81 C87,84 89,86 94,88 C102,91 108,94 108,101 C108,107 101,111 93,111 C84,111 78,107 78,101 L94,101 C94,104 96,105 99,105 C102,105 104,104 104,101 C104,98 102,96 97,94 C89,91 83,88 83,81 C83,75 89,70 100,70 Z"
+        android:fillColor="#FFFFFF"/>
+</vector>
