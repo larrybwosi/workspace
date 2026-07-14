@@ -305,7 +305,9 @@ jobs:
         if: github.ref == 'refs/heads/dev'
         id: update_version_dev
         run: |
+          git fetch --tags || true
           npm version patch --no-git-tag-version
+          node scripts/ensure-unique-version.js
           pnpm install --no-frozen-lockfile
           node scripts/update-version.js
 
