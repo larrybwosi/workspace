@@ -26,13 +26,19 @@ echo "$MIGRATE_OUTPUT"
 if [ $MIGRATE_STATUS -ne 0 ]; then
     # Check if the output indicates P3009 or a failed migration
     if echo "$MIGRATE_OUTPUT" | grep -q "P3009" || echo "$MIGRATE_OUTPUT" | grep -q "failed migrations"; then
-        echo "Detected failed migration in database. Resolving 0_init as applied..."
+        # Parse the migration name that failed
+        FAILED_MIGRATION=$(echo "$MIGRATE_OUTPUT" | sed -n "s/.*The [\`'\"]\([^'\`\" ]*\)[\`'\"] migration.*/\1/p")
+        if [ -z "$FAILED_MIGRATION" ]; then
+            FAILED_MIGRATION="0_init"
+        fi
+
+        echo "Detected failed migration in database. Resolving $FAILED_MIGRATION as applied..."
         if command -v prisma > /dev/null 2>&1; then
-            prisma migrate resolve --applied "0_init"
+            prisma migrate resolve --applied "$FAILED_MIGRATION"
         elif [ -f "./node_modules/.bin/prisma" ]; then
-            ./node_modules/.bin/prisma migrate resolve --applied "0_init"
+            ./node_modules/.bin/prisma migrate resolve --applied "$FAILED_MIGRATION"
         else
-            npx prisma migrate resolve --applied "0_init"
+            npx prisma migrate resolve --applied "$FAILED_MIGRATION"
         fi
 
         echo "Retrying database migrations..."
