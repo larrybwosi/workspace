@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Inject,
   ForbiddenException,
   NotFoundException,
   BadRequestException,
@@ -20,6 +21,7 @@ import { V2AuditService } from '../v2-audit.service';
 import { z } from 'zod';
 import * as crypto from 'crypto';
 import { IsString, IsOptional, IsNumber, IsObject } from 'class-validator';
+import Redis from 'ioredis';
 
 class CreateTokenDto {
   @IsString()
@@ -106,7 +108,10 @@ const createTokenSchema = z.object({
 export class V2ApiTokensController {
   private readonly logger = new Logger(V2ApiTokensController.name);
 
-  constructor(private readonly auditService: V2AuditService) {}
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly auditService: V2AuditService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List all API tokens in the workspace', description: 'Requires tokens:read scope.' })
@@ -117,6 +122,25 @@ export class V2ApiTokensController {
       throw new ForbiddenException('Forbidden: Missing tokens:read scope');
     }
 
+    const cacheKey = `v2:tokens:${context.workspaceId}`;
+    let cachedTokens: string | null = null;
+
+    try {
+      cachedTokens = await this.redis.get(cacheKey);
+    } catch (error) {
+      this.logger.warn('Redis error in getTokens:', error);
+    }
+
+    if (cachedTokens) {
+      this.auditService.log(context, 'tokens.list', 'api_token').catch(err => this.logger.error('Audit log error:', err));
+      return { tokens: JSON.parse(cachedTokens) };
+    }
+
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Implement Redis caching to reduce database load and improve response times.
+     * Expected impact: Reduces DB query load and latency.
+     */
     const tokens = await prisma.workspaceApiToken.findMany({
       where: { workspaceId: context.workspaceId },
       select: {
@@ -132,6 +156,12 @@ export class V2ApiTokensController {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(tokens));
+    } catch (error) {
+      this.logger.warn('Redis error in getTokens (setex):', error);
+    }
 
     this.auditService.log(context, 'tokens.list', 'api_token').catch(err => this.logger.error('Audit log error:', err));
 
@@ -169,6 +199,12 @@ export class V2ApiTokensController {
       },
     });
 
+    try {
+      await this.redis.del(`v2:tokens:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in createToken (del):', error);
+    }
+
     this.auditService
       .log(context, 'tokens.create', 'api_token', apiToken.id, { name: data.name })
       .catch(err => this.logger.error('Audit log error:', err));
@@ -186,17 +222,28 @@ export class V2ApiTokensController {
       throw new ForbiddenException('Forbidden: Missing tokens:write scope');
     }
 
-    const token = await prisma.workspaceApiToken.findUnique({
-      where: { id: tokenId, workspaceId: context.workspaceId },
-    });
-
-    if (!token) {
-      throw new NotFoundException('Token not found');
+    /**
+     * ⚡ Performance Optimization:
+     * Performs a single delete database query specifying both id and workspaceId.
+     * This avoids any read-before-write latency and runs in exactly 1 database RTT.
+     */
+    let token;
+    try {
+      token = await prisma.workspaceApiToken.delete({
+        where: { id: tokenId, workspaceId: context.workspaceId },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Token not found');
+      }
+      throw error;
     }
 
-    await prisma.workspaceApiToken.delete({
-      where: { id: tokenId },
-    });
+    try {
+      await this.redis.del(`v2:tokens:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in deleteToken (del):', error);
+    }
 
     this.auditService
       .log(context, 'tokens.delete', 'api_token', tokenId, { name: token.name })
@@ -218,27 +265,38 @@ export class V2ApiTokensController {
       throw new ForbiddenException('Forbidden: Missing tokens:write scope');
     }
 
-    const existingToken = await prisma.workspaceApiToken.findUnique({
-      where: { id: tokenId, workspaceId: context.workspaceId },
-    });
-
-    if (!existingToken) {
-      throw new NotFoundException('Token not found');
-    }
-
     const rawToken = `wst_${crypto.randomBytes(32).toString('hex')}`;
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
-    const updatedToken = await prisma.workspaceApiToken.update({
-      where: { id: tokenId },
-      data: {
-        token: hashedToken,
-        updatedAt: new Date(),
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Performs a single update database query specifying both id and workspaceId.
+     * This avoids any read-before-write latency and runs in exactly 1 database RTT.
+     */
+    let updatedToken;
+    try {
+      updatedToken = await prisma.workspaceApiToken.update({
+        where: { id: tokenId, workspaceId: context.workspaceId },
+        data: {
+          token: hashedToken,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Token not found');
+      }
+      throw error;
+    }
+
+    try {
+      await this.redis.del(`v2:tokens:${context.workspaceId}`);
+    } catch (error) {
+      this.logger.warn('Redis error in rotateToken (del):', error);
+    }
 
     this.auditService
-      .log(context, 'tokens.rotate', 'api_token', tokenId, { name: existingToken.name })
+      .log(context, 'tokens.rotate', 'api_token', tokenId, { name: updatedToken.name })
       .catch(err => this.logger.error('Audit log error:', err));
 
     return { ...updatedToken, token: rawToken };
