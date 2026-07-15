@@ -166,7 +166,7 @@ fun HomeScreen(
                 ModalDrawerSheet(
                     drawerContainerColor = Color.Transparent,
                     drawerTonalElevation = 0.dp,
-                    modifier = Modifier.width(312.dp) // 72 + 240
+                    modifier = Modifier.width(352.dp) // 72 + 280
                 ) {
                     Row(modifier = Modifier.fillMaxSize()) {
                         WorkspaceRail(
@@ -175,8 +175,13 @@ fun HomeScreen(
                             isHomeSelected = uiState.selectedWorkspace == null,
                             dms = uiState.dms,
                             selectedDm = uiState.selectedDm,
-                            onWorkspaceClick = { onWorkspaceClick(it.slug) },
-                            onHomeClick = { onWorkspaceClick(null) },
+                            onWorkspaceClick = {
+                                viewModel.selectWorkspace(it)
+                                chatViewModel.setWorkspaceSlug(it.slug)
+                            },
+                            onHomeClick = {
+                                viewModel.selectHome()
+                            },
                             onDmClick = {
                                 onDmClick(it.dm.id)
                                 scope.launch { drawerState.close() }

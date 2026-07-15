@@ -36,11 +36,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.ChannelEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
@@ -146,15 +148,19 @@ fun ChannelSidebar(
 
     Column(
         modifier = Modifier
-            .width(240.dp)
+            .width(280.dp)
             .fillMaxHeight()
             .background(SidebarTokens.SurfaceBase)
     ) {
         // --- 1. Top Header ---
-        SidebarHeader(
-            title = if (isHomeSelected) "Direct Messages" else (workspace?.name ?: "Server"),
-            subtitle = null
-        )
+        if (isHomeSelected) {
+            SidebarHeader(
+                title = "Direct Messages",
+                subtitle = null
+            )
+        } else {
+            WorkspaceBanner(workspace = workspace)
+        }
 
         HorizontalDivider(color = SidebarTokens.Hairline, thickness = 1.dp)
 
@@ -308,6 +314,76 @@ private fun processChannelGrouping(channels: List<ChannelEntity>): Pair<List<Cha
 private fun PaddingWrapper(content: @Composable () -> Unit) {
     Box(modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 1.dp, bottom = 1.dp)) {
         content()
+    }
+}
+
+@Composable
+fun WorkspaceBanner(workspace: WorkspaceEntity?) {
+    if (workspace == null) return
+
+    val gradientColors = remember(workspace.name) {
+        val hash = workspace.name.hashCode()
+        val colors = listOf(
+            listOf(Color(0xFF5865F2), Color(0xFF2C2F33)),
+            listOf(Color(0xFFEC407A), Color(0xFF3F51B5)),
+            listOf(Color(0xFF26A69A), Color(0xFF1A237E)),
+            listOf(Color(0xFFAB47BC), Color(0xFF212121)),
+            listOf(Color(0xFFFF7043), Color(0xFF3E2723))
+        )
+        colors[Math.abs(hash) % colors.size]
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .background(Brush.verticalGradient(gradientColors))
+    ) {
+        if (workspace.icon != null && workspace.icon.startsWith("http")) {
+            AsyncImage(
+                model = workspace.icon,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.4f
+            )
+        }
+
+        // Bottom dark gradient overlay for text readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f))
+                    )
+                )
+        )
+
+        // Workspace Name Overlay
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(12.dp)
+        ) {
+            Text(
+                text = workspace.name,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (!workspace.description.isNullOrBlank()) {
+                Text(
+                    text = workspace.description,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 11.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 
