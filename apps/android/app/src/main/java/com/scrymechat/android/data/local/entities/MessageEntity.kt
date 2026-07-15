@@ -29,8 +29,19 @@ data class MessageEntity(
     val threadId: String? = null,
     val replyCount: Int = 0,
     val isPinned: Boolean = false,
-    val senderRole: String? = null
+    val senderRole: String? = null,
+    val forwardedMessages: List<ForwardedSnapshot> = emptyList()
 ) {
     @Ignore
     var customMessage: CustomMessageDto? = null
 }
+
+data class ForwardedSnapshot(
+    val id: String,
+    val senderName: String?,
+    val senderAvatar: String?,
+    val content: String,
+    val createdAt: String,
+    val attachments: List<AttachmentDto> = emptyList(),
+    val messageType: String = "text"
+)

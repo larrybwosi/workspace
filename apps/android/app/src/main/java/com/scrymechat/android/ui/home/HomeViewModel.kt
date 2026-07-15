@@ -31,7 +31,8 @@ class HomeViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val dmDao: DmDao,
     private val channelDao: ChannelDao,
-    private val messageDao: MessageDao
+    private val messageDao: MessageDao,
+    private val userDao: com.scrymechat.android.data.local.dao.UserDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -42,6 +43,7 @@ class HomeViewModel @Inject constructor(
         loadDms()
         observeCurrentUser()
         observeRealtimeMessages()
+        observePresence()
     }
 
     private fun observeCurrentUser() {
@@ -51,6 +53,32 @@ class HomeViewModel @Inject constructor(
                     sessionManager.getUserFlow(userId).collect { user ->
                         _uiState.update { it.copy(currentUser = user) }
                     }
+                }
+            }
+        }
+    }
+
+    private fun observePresence() {
+        viewModelScope.launch {
+            sessionManager.getActiveSessionFlow().collect { session ->
+                session?.userId?.let { userId ->
+                    // Join the global-presence room and notify others that we are online
+                    realtimeRepository.joinRoom("global-presence")
+                    realtimeRepository.enterPresence("global-presence", userId, mapOf("status" to "online"))
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            realtimeRepository.observePresence().collect { presenceEvent ->
+                try {
+                    val user = userDao.getUserById(presenceEvent.userId)
+                    if (user != null) {
+                        val updatedUser = user.copy(status = if (presenceEvent.isOnline) "online" else "offline")
+                        userDao.insertUser(updatedUser)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
         }
