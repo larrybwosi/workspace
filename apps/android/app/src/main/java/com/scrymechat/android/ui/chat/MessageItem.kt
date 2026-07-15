@@ -52,6 +52,32 @@ private val GutterStart = 14.dp
 private val AvatarSize = 38.dp
 private val GutterSpacer = 12.dp
 private val ReplyAvatarSize = 16.dp
+private val ForwardAvatarSize = 22.dp
+
+// ---------------------------------------------------------------------------------
+// FORWARDED MESSAGES — DATA MODEL NOTE
+// ---------------------------------------------------------------------------------
+// This file assumes MessageEntity gains a field to carry the snapshot(s) of whatever
+// was forwarded into it (Discord lets you forward one or several messages at once,
+// each rendered as a small quoted card). Add to MessageEntity (or wherever it's
+// defined, e.g. MessageEntity.kt):
+//
+//   val forwardedMessages: List<ForwardedSnapshot> = emptyList()
+//
+// and populate it wherever messages are mapped from your API/DB layer. A message is
+// treated as "forwarded" purely by forwardedMessages being non-empty — no separate
+// boolean is required. If forwardedMessages is empty (the default for every existing
+// call site), rendering is identical to before this change.
+// ---------------------------------------------------------------------------------
+data class ForwardedSnapshot(
+    val id: String,
+    val senderName: String?,
+    val senderAvatar: String?,
+    val content: String,
+    val createdAt: String,
+    val attachments: List<AttachmentDto> = emptyList(),
+    val messageType: String = "text"
+)
 
 @Composable
 fun BotBadge() {
@@ -151,6 +177,186 @@ private fun ReplyConnector(color: Color, modifier: Modifier = Modifier) {
                 cap = androidx.compose.ui.graphics.StrokeCap.Round
             )
         )
+    }
+}
+
+/**
+ * Discord-style "Forwarded" label — a small forward icon + italic caption sitting
+ * directly above the quoted snapshot card(s), never above the avatar/name row.
+ */
+@Composable
+private fun ForwardedHeader(palette: ChatPalette) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            Icons.Default.Forward,
+            contentDescription = null,
+            tint = palette.textTertiary,
+            modifier = Modifier.size(13.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "Forwarded",
+            color = palette.textTertiary,
+            fontSize = 12.5.sp,
+            fontStyle = FontStyle.Italic,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+/**
+ * A single quoted "snapshot" card inside a forwarded message — mini avatar, sender
+ * name, timestamp, the original text (if any), and any attachments, all rendered at
+ * a smaller scale than a normal message so it reads as an embedded quote.
+ */
+@Composable
+private fun ForwardedSnapshotCard(
+    snapshot: ForwardedSnapshot,
+    palette: ChatPalette,
+    onImageClick: (AttachmentDto) -> Unit,
+    onDownload: (AttachmentDto) -> Unit
+) {
+    val context = LocalContext.current
+    val senderName = snapshot.senderName ?: "Unknown User"
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        UserAvatar(
+            name = senderName,
+            avatarUrl = snapshot.senderAvatar,
+            size = ForwardAvatarSize,
+            borderColor = Color.Transparent
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = senderName,
+                    color = palette.textPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.5.sp
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = formatMessageTimestamp(snapshot.createdAt),
+                    color = palette.textTertiary,
+                    fontSize = 10.5.sp
+                )
+            }
+
+            if (snapshot.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                MarkdownText(
+                    content = snapshot.content,
+                    onMentionClick = {},
+                    onChannelTagClick = {}
+                )
+            } else if (snapshot.attachments.isEmpty()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Original message was deleted or unavailable",
+                    color = palette.textTertiary,
+                    fontSize = 13.sp,
+                    fontStyle = FontStyle.Italic
+                )
+            }
+
+            snapshot.attachments.forEach { attachment ->
+                if (attachment.type.startsWith("image/")) {
+                    Box(modifier = Modifier.padding(top = 6.dp)) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, palette.bubbleBorder)
+                        ) {
+                            AsyncImage(
+                                model = attachment.url,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 180.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onImageClick(attachment) },
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 6.dp)
+                            .fillMaxWidth()
+                            .clip(ShapeChip)
+                            .background(palette.attachmentChipBg)
+                            .border(1.dp, palette.bubbleBorder, ShapeChip)
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                            .clickable {
+                                Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
+                                onDownload(attachment)
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.FilePresent,
+                            contentDescription = null,
+                            tint = palette.accent,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = attachment.name,
+                            color = palette.textPrimary,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The bordered container holding one or more ForwardedSnapshotCards, stacked with a
+ * divider between them when several messages were forwarded together.
+ */
+@Composable
+private fun ForwardedMessageBlock(
+    snapshots: List<ForwardedSnapshot>,
+    palette: ChatPalette,
+    onImageClick: (AttachmentDto) -> Unit,
+    onDownload: (AttachmentDto) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        ForwardedHeader(palette = palette)
+        Spacer(modifier = Modifier.height(4.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(palette.bubbleSurface)
+                .border(1.dp, palette.bubbleBorder, RoundedCornerShape(8.dp))
+                .padding(10.dp)
+        ) {
+            snapshots.forEachIndexed { index, snapshot ->
+                ForwardedSnapshotCard(
+                    snapshot = snapshot,
+                    palette = palette,
+                    onImageClick = onImageClick,
+                    onDownload = onDownload
+                )
+                if (index != snapshots.lastIndex) {
+                    Divider(
+                        color = palette.bubbleBorder,
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -375,16 +581,24 @@ fun MessageItem(
     }
 
     val isReply = message.replyToId != null
+    val isForwarded = message.forwardedMessages.isNotEmpty()
     // Discord always breaks a run and shows the full header (avatar + name) on a
-    // message that's a reply, even if it directly follows the same author.
-    val showHeader = isGroupHeader || isReply
+    // message that's a reply or a forward, even if it directly follows the same author.
+    val showHeader = isGroupHeader || isReply || isForwarded
 
     Column(modifier = Modifier.fillMaxWidth()) {
         if (isReply) {
             val repliedName = message.replyToSenderName ?: repliedMessage?.senderName ?: "Unknown User"
             val hasContent = !repliedMessage?.content.isNullOrBlank()
-            val previewText = repliedMessage?.content?.takeIf { it.isNotBlank() }
-                ?: "Original message was deleted or unavailable"
+            val hasAttachmentOnly = !hasContent && repliedMessage?.attachments?.isNotEmpty() == true
+            val previewText = when {
+                hasContent -> repliedMessage!!.content
+                hasAttachmentOnly -> {
+                    val attachment = repliedMessage!!.attachments.first()
+                    if (attachment.type.startsWith("image/")) "\uD83D\uDCF7 Photo" else "\uD83D\uDCCE ${attachment.name}"
+                }
+                else -> "Original message was deleted or unavailable"
+            }
 
             Row(
                 modifier = Modifier
@@ -604,6 +818,18 @@ fun MessageItem(
                             onChannelTagClick = onChannelTagClick
                         )
                     }
+                }
+
+                // Forwarded message(s) — rendered as quoted snapshot card(s) below any
+                // comment the sender added, exactly like Discord's forward embed.
+                if (isForwarded) {
+                    ForwardedMessageBlock(
+                        snapshots = message.forwardedMessages,
+                        palette = palette,
+                        onImageClick = onImageClick,
+                        onDownload = onDownload,
+                        modifier = Modifier.padding(top = if (message.content.isNotBlank()) 8.dp else 0.dp)
+                    )
                 }
 
                 val context = LocalContext.current
