@@ -801,10 +801,21 @@ fun ChatView(
         }
 
         LaunchedEffect(messages, currentChatKey) {
-            if (!hasCalculatedUnread && messages.isNotEmpty()) {
+            if (messages.isNotEmpty()) {
                 val oldestUnread = messages.lastOrNull { !it.readByCurrentUser }
-                initialOldestUnreadMessageId = oldestUnread?.id
-                hasCalculatedUnread = true
+                if (oldestUnread == null) {
+                    initialOldestUnreadMessageId = null
+                } else if (!hasCalculatedUnread) {
+                    initialOldestUnreadMessageId = oldestUnread.id
+                    hasCalculatedUnread = true
+                } else {
+                    val isStillUnread = messages.any { it.id == initialOldestUnreadMessageId && !it.readByCurrentUser }
+                    if (!isStillUnread) {
+                        initialOldestUnreadMessageId = null
+                    }
+                }
+            } else {
+                initialOldestUnreadMessageId = null
             }
         }
 

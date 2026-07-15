@@ -381,8 +381,15 @@ class ChatViewModel @Inject constructor(
                 }
 
                 if (isRelevant) {
-                    // Update local messages
-                    loadMessages()
+                    // Convert and save to database
+                    viewModelScope.launch {
+                        try {
+                            val entity = messageDto.toEntity().copy(readByCurrentUser = true)
+                            chatRepository.insertMessage(entity)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
 
                     // Automatically mark as read when actively viewing
                     if (channelId != null) {

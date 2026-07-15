@@ -134,12 +134,35 @@ fun WorkspaceRail(
                     isSelected = isDmSelected,
                     onClick = { onDmClick(dmWithUser) },
                     content = {
-                        UserAvatar(
-                            name = displayName,
-                            avatarUrl = dmWithUser.otherUserAvatar,
-                            size = 48.dp,
-                            borderColor = if (isDmSelected) Color.White else SidebarTokens.Hairline
-                        )
+                        Box(modifier = Modifier.size(48.dp)) {
+                            UserAvatar(
+                                name = displayName,
+                                avatarUrl = dmWithUser.otherUserAvatar,
+                                size = 48.dp,
+                                borderColor = if (isDmSelected) Color.White else SidebarTokens.Hairline
+                            )
+                            val statusColor = when (dmWithUser.otherUserStatus?.lowercase()) {
+                                "online" -> Color(0xFF23A55A)
+                                "idle", "away" -> Color(0xFFF0B232)
+                                "dnd", "busy" -> Color(0xFFF23F43)
+                                else -> Color(0xFF80848E)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .align(Alignment.BottomEnd)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF1E1F22))
+                                    .padding(2.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(statusColor)
+                                )
+                            }
+                        }
                         if (dmWithUser.dm.unreadCount > 0) {
                             Box(
                                 modifier = Modifier

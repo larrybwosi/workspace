@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.scrymechat.android.data.remote.AttachmentDto
 import com.scrymechat.android.data.remote.ReactionGroupDto
+import com.scrymechat.android.data.local.entities.ForwardedSnapshot
 
 class DatabaseConverters {
     private val gson = Gson()
@@ -39,6 +40,17 @@ class DatabaseConverters {
     @TypeConverter
     fun toReactionGroupList(value: String?): List<ReactionGroupDto>? {
         val listType = object : TypeToken<List<ReactionGroupDto>>() {}.type
+        return gson.fromJson(value, listType)
+    }
+
+    @TypeConverter
+    fun fromForwardedSnapshotList(value: List<ForwardedSnapshot>?): String? {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toForwardedSnapshotList(value: String?): List<ForwardedSnapshot>? {
+        val listType = object : TypeToken<List<ForwardedSnapshot>>() {}.type
         return gson.fromJson(value, listType)
     }
 }

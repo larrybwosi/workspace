@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scrymechat.android.data.local.entities.MessageEntity
+import com.scrymechat.android.data.local.entities.ForwardedSnapshot
 import com.scrymechat.android.data.remote.AttachmentDto
 import com.scrymechat.android.data.remote.MessageActionDto
 import com.scrymechat.android.data.remote.MessageActionHandlerDto
@@ -53,31 +54,6 @@ private val AvatarSize = 38.dp
 private val GutterSpacer = 12.dp
 private val ReplyAvatarSize = 16.dp
 private val ForwardAvatarSize = 22.dp
-
-// ---------------------------------------------------------------------------------
-// FORWARDED MESSAGES — DATA MODEL NOTE
-// ---------------------------------------------------------------------------------
-// This file assumes MessageEntity gains a field to carry the snapshot(s) of whatever
-// was forwarded into it (Discord lets you forward one or several messages at once,
-// each rendered as a small quoted card). Add to MessageEntity (or wherever it's
-// defined, e.g. MessageEntity.kt):
-//
-//   val forwardedMessages: List<ForwardedSnapshot> = emptyList()
-//
-// and populate it wherever messages are mapped from your API/DB layer. A message is
-// treated as "forwarded" purely by forwardedMessages being non-empty — no separate
-// boolean is required. If forwardedMessages is empty (the default for every existing
-// call site), rendering is identical to before this change.
-// ---------------------------------------------------------------------------------
-data class ForwardedSnapshot(
-    val id: String,
-    val senderName: String?,
-    val senderAvatar: String?,
-    val content: String,
-    val createdAt: String,
-    val attachments: List<AttachmentDto> = emptyList(),
-    val messageType: String = "text"
-)
 
 @Composable
 fun BotBadge() {
