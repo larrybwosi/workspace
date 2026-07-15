@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -68,6 +69,7 @@ fun CreateChannelDialog(
     var type by remember { mutableStateOf("public") }
     var selectedIcon by remember { mutableStateOf<ChannelIconSelection>(PRESET_CHANNEL_ICONS.first()) }
     var showIconPicker by remember { mutableStateOf(false) }
+    var dropdownExpanded by remember { mutableStateOf(false) }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = SidebarTokens.Accent,
@@ -145,24 +147,78 @@ fun CreateChannelDialog(
                     }
                 }
 
-                // Channel Type — selectable rows, mirroring Discord's own
-                // Text/Voice channel-type chooser rather than two squeezed
-                // toggle buttons.
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ChannelTypeRow(
-                        icon = Icons.Rounded.Tag,
-                        title = "Public Channel",
-                        subtitle = "Anyone in the workspace can join",
-                        isSelected = type == "public",
-                        onClick = { type = "public" }
+                // Channel Type Dropdown Menu Selection
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = if (type == "public") "Public Channel" else "Private Channel",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Channel Type") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (type == "private") Icons.Rounded.Lock else Icons.Rounded.Tag,
+                                contentDescription = null,
+                                tint = SidebarTokens.TextMuted
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { dropdownExpanded = true }) {
+                                Icon(
+                                    imageVector = if (dropdownExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                    contentDescription = "Expand",
+                                    tint = SidebarTokens.TextMuted
+                                )
+                            }
+                        },
+                        colors = fieldColors,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { dropdownExpanded = true },
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = true
                     )
-                    ChannelTypeRow(
-                        icon = Icons.Rounded.Lock,
-                        title = "Private Channel",
-                        subtitle = "Only invited members can see it",
-                        isSelected = type == "private",
-                        onClick = { type = "private" }
+
+                    // Invisible overlay to intercept clicks and open the dropdown
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { dropdownExpanded = true }
                     )
+
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .background(SidebarTokens.SurfaceBase)
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text("Public Channel", color = SidebarTokens.TextBright, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Anyone in the workspace can join", color = SidebarTokens.TextMuted, fontSize = 11.sp)
+                                }
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Tag, contentDescription = null, tint = SidebarTokens.TextMuted) },
+                            onClick = {
+                                type = "public"
+                                dropdownExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text("Private Channel", color = SidebarTokens.TextBright, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Only invited members can see it", color = SidebarTokens.TextMuted, fontSize = 11.sp)
+                                }
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null, tint = SidebarTokens.TextMuted) },
+                            onClick = {
+                                type = "private"
+                                dropdownExpanded = false
+                            }
+                        )
+                    }
                 }
 
                 OutlinedTextField(

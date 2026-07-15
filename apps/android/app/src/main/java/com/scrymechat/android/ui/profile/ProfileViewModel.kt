@@ -153,12 +153,14 @@ class ProfileViewModel @Inject constructor(
             try {
                 val finalUpdates = updates.toMutableMap()
 
-                // Upload avatar if pending
+                // Upload avatar if pending using StorageRepository
                 _uiState.value.pendingAvatarUri?.let { uri ->
+                    android.util.Log.d("ProfileViewModel", "Uploading pending avatar file: $uri")
                     val file = uriToFile(uri, context)
                     val result = storageRepository.uploadFile(file)
                     result.onSuccess { response ->
                         finalUpdates["avatar"] = response.url
+                        android.util.Log.d("ProfileViewModel", "Avatar uploaded successfully: ${response.url}")
                     }.onFailure { e ->
                         _errorEvents.tryEmit("Avatar upload failed: ${e.localizedMessage}")
                         _uiState.update { it.copy(isUploading = false) }
@@ -166,12 +168,14 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
 
-                // Upload banner if pending
+                // Upload banner if pending using StorageRepository
                 _uiState.value.pendingBannerUri?.let { uri ->
+                    android.util.Log.d("ProfileViewModel", "Uploading pending banner file: $uri")
                     val file = uriToFile(uri, context)
                     val result = storageRepository.uploadFile(file)
                     result.onSuccess { response ->
                         finalUpdates["banner"] = response.url
+                        android.util.Log.d("ProfileViewModel", "Banner uploaded successfully: ${response.url}")
                     }.onFailure { e ->
                         _errorEvents.tryEmit("Banner upload failed: ${e.localizedMessage}")
                         _uiState.update { it.copy(isUploading = false) }
