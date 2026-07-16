@@ -138,6 +138,27 @@ If the message was sent by an M2M application, triggering an action will:
     const m2mClientId = (message.metadata as any)?.m2mClientId;
     if (!m2mClientId) return null;
 
+    // Try looking up Organization first (new design)
+    const org = await this.prisma.client.organization.findUnique({
+      where: { clientId: m2mClientId },
+    });
+
+    if (org) {
+      const m2mResponse = await this.webhooksService.dispatchM2mCallback(
+        org,
+        'message.action',
+        eventData,
+        message.channel.workspaceId!
+      );
+
+      if (m2mResponse && (m2mResponse.metadata || m2mResponse.content)) {
+        const updatedMessage = await this.applyM2mUpdate(message.id, message.channelId, message.metadata, m2mResponse);
+        return { message: updatedMessage };
+      }
+      return null;
+    }
+
+    // Fallback to botApplication (legacy)
     const m2mApp = await this.prisma.client.botApplication.findUnique({
       where: { clientId: m2mClientId },
     });

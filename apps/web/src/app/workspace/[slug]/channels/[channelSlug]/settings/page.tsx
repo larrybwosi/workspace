@@ -281,7 +281,7 @@ export default async function ChannelSettingsPage({
           </TabsContent>
 
           <TabsContent value="webhooks" className="space-y-6">
-            <ChannelWebhooksTab channelId={channelId} />
+            <ChannelWebhooksTab channelId={channelId} workspaceSlug={slug} />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">

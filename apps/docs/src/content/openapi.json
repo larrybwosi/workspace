@@ -3,7 +3,7 @@
   "paths": {
     "/api/health": {
       "get": {
-        "operationId": "AppController_getHello",
+        "operationId": "AppController_getHealth",
         "parameters": [],
         "responses": {
           "200": {
@@ -11,6 +11,21 @@
           }
         },
         "summary": "Check health",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Hello",
         "tags": [
           "Health"
         ]
@@ -31,6 +46,35 @@
         ]
       }
     },
+    "/api/users/search": {
+      "get": {
+        "operationId": "UsersController_searchUsers",
+        "parameters": [
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search for users by username or name",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/api/users/me": {
       "get": {
         "operationId": "UsersController_getMe",
@@ -46,6 +90,244 @@
           }
         ],
         "summary": "Get current user profile",
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user profile",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "operationId": "UsersController_getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile details"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a user profile by ID",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/users/{id}/social-profile": {
+      "get": {
+        "operationId": "UsersController_getSocialProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The target user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Social profile details"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get social profile between current user and target user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/users/{id}/block": {
+      "post": {
+        "operationId": "UsersController_blockUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The user ID to block",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User blocked successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Block a user",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_unblockUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The user ID to unblock",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User unblocked successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unblock a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/users/me/device-tokens": {
+      "post": {
+        "operationId": "UsersController_registerDeviceToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "platform"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "platform": {
+                    "type": "string",
+                    "enum": [
+                      "web",
+                      "ios",
+                      "android",
+                      "desktop"
+                    ]
+                  },
+                  "deviceInfo": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Device token registered"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a device token for push notifications",
+        "tags": [
+          "Users"
+        ]
+      },
+      "get": {
+        "operationId": "UsersController_getDeviceTokens",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of active device tokens"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get active device tokens for the current user",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_deleteDeviceToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device token deactivated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate a device token",
         "tags": [
           "Users"
         ]
@@ -515,7 +797,7 @@
         ]
       },
       "post": {
-        "description": "Requires messages:send scope. Supports multipart/form-data for file uploads.",
+        "description": "\nRequires messages:send scope. Supports multipart/form-data for file uploads.\n\n**M2M Behavior:**\n- If the request is made by an M2M application, the message is sent by the app's associated bot.\n- If no app bot exists, it falls back to the workspace's **Default Bot**.\n- You can include `actions` to create interactive buttons that trigger webhooks.\n    ",
         "operationId": "V2MessagesController_sendMessage",
         "parameters": [
           {
@@ -796,7 +1078,7 @@
     },
     "/api/v2/workspaces/{slug}/webhooks": {
       "get": {
-        "description": "Requires webhooks:read scope.",
+        "description": "\nRequires webhooks:read scope.\nList all webhooks configured for this workspace.\n\n**Supported Events:**\n- `message.sent`: Triggered when a new message is sent.\n- `message.updated`: Triggered when a message is edited or updated by a callback.\n- `message.action`: Triggered when a user clicks an interactive button on a message.\n- `channel.created`: Triggered when a new channel is created.\n- `channel.updated`: Triggered when channel details change.\n- `member.joined`: Triggered when a new member joins the workspace.\n- `member.left`: Triggered when a member leaves the workspace.\n    ",
         "operationId": "V2WebhooksController_getWebhooks",
         "parameters": [
           {
@@ -1117,9 +1399,9 @@
         ]
       }
     },
-    "/api/v2/messages/{messageId}/actions/{actionId}": {
+    "/api/v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}": {
       "post": {
-        "description": "Requires messages:send scope.",
+        "description": "\nTriggers a custom action associated with a message.\n\n**M2M Interactivity:**\nIf the message was sent by an M2M application, triggering an action will:\n1. Dispatch a **Callback** to the M2M application's configured `webhookUrl`.\n2. The callback includes the `formState` and `payload` provided in the request.\n3. The M2M application can respond to the callback to **update the message** content or metadata in real-time.\n    ",
         "operationId": "V2MessageActionsController_handleAction",
         "parameters": [
           {
@@ -1139,8 +1421,35 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {}
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "formState": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Action triggered successfully."
@@ -1717,7 +2026,7 @@
     },
     "/api/v2/oauth/token": {
       "post": {
-        "description": "Used for bot and integration authentication.",
+        "description": "\nUsed for bot, integration, and M2M authentication.\n\n**Scopes available:**\n- `*`: Full access (only for internal system bots).\n- `provisioning:workspaces`: Ability to create and manage workspaces.\n- `messages:read`: Read messages in allowed channels.\n- `messages:send`: Send messages and trigger actions.\n- `channels:read`: List and view channel details.\n- `channels:write`: Create and manage channels.\n- `webhooks:read`: View webhook configurations.\n- `webhooks:write`: Manage webhooks.\n    ",
         "operationId": "V2OAuthController_getToken",
         "parameters": [],
         "requestBody": {
@@ -1732,10 +2041,38 @@
         },
         "responses": {
           "200": {
-            "description": "Access token returned successfully."
+            "description": "Access token returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string",
+                      "example": "oat_..."
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "example": "Bearer"
+                    },
+                    "expires_in": {
+                      "type": "integer",
+                      "example": 3600
+                    },
+                    "scope": {
+                      "type": "string",
+                      "example": "provisioning:workspaces messages:send"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Invalid client credentials."
+          },
+          "403": {
+            "description": "IP not allowed or unauthorized scopes."
           }
         },
         "summary": "Exchange client credentials for an access token",
@@ -1746,7 +2083,7 @@
     },
     "/api/v2/applications": {
       "post": {
-        "description": "Requires an authenticated user.",
+        "description": "Requires an authenticated user or M2M app.",
         "operationId": "V2ApplicationsController_createApplication",
         "parameters": [],
         "requestBody": {
@@ -1787,7 +2124,7 @@
             "bearer": []
           }
         ],
-        "summary": "List all bot applications owned by the user",
+        "summary": "List all bot applications owned by the user or organization",
         "tags": [
           "Bot Applications"
         ]
@@ -1999,6 +2336,141 @@
         "summary": "Submit a contact form",
         "tags": [
           "General"
+        ]
+      }
+    },
+    "/api/v2/provisioning/workspaces": {
+      "post": {
+        "description": "\nProvisions a new workspace within your organization.\nWhen provisioned via M2M:\n1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.\n2. Your M2M application is installed as an **Administrator** in the new workspace.\n3. The specified owner and initial members are added (must belong to the same organization).\n\nThe System Bot acts as the default sender for messages and announcements sent via M2M if no application-specific bot is configured.\n    ",
+        "operationId": "ProvisioningController_provisionWorkspace",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workspace provisioned successfully."
+          },
+          "400": {
+            "description": "Invalid input or owner not found."
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Provision a new workspace (Enterprise M2M)",
+        "tags": [
+          "Provisioning"
+        ]
+      }
+    },
+    "/api/organizations/{orgSlug}/workspaces": {
+      "get": {
+        "operationId": "OrganizationsController_getOrganizationWorkspaces",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List workspaces for an organization",
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/api/organizations/{orgSlug}": {
+      "get": {
+        "operationId": "OrganizationsController_getOrganization",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get organization details",
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "OrganizationsController_updateOrganization",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update organization details",
+        "tags": [
+          "Organizations"
         ]
       }
     },
@@ -3455,6 +3927,1039 @@
         ]
       }
     },
+    "/api/v3/oauth/token": {
+      "post": {
+        "description": "\nGenerates a bearer token for Machine-to-Machine (M2M) communication.\n\n**Supported Scopes:**\n- `*`: Full access\n- `provisioning:workspaces`: Manage organizations and workspaces\n- `messages:read`: Read messages\n- `messages:send`: Send messages\n- `channels:read`: Read channel listings\n- `channels:write`: Create or update channels\n- `webhooks:read`: Query webhook registries\n- `webhooks:write`: Provision or configure webhooks\n    ",
+        "operationId": "V3OAuthController_getToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3TokenRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OAuth2 access token generated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "access_token": {
+                          "type": "string",
+                          "example": "oat_f3a7..."
+                        },
+                        "token_type": {
+                          "type": "string",
+                          "example": "Bearer"
+                        },
+                        "expires_in": {
+                          "type": "integer",
+                          "example": 3600
+                        },
+                        "scope": {
+                          "type": "string",
+                          "example": "provisioning:workspaces messages:send"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "example": "2026-07-10T06:25:22.704Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload or missing arguments."
+          },
+          "401": {
+            "description": "Invalid client credentials."
+          },
+          "403": {
+            "description": "Access denied due to IP allowlist or scope constraints."
+          }
+        },
+        "summary": "Exchange client credentials for a V3 access token",
+        "tags": [
+          "V3 Authentication"
+        ]
+      }
+    },
+    "/api/v3/workspaces": {
+      "get": {
+        "description": "Retrieve all workspaces associated with the authenticated organization or workspace context.",
+        "operationId": "V3WorkspacesController_getWorkspaces",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of workspaces returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspaces": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List organization workspaces (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "\nProvisions a new workspace within your organization.\nWhen provisioned via M2M:\n1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.\n2. Your M2M application is installed as an **Administrator** in the new workspace.\n3. The specified owner and initial members are added.\n    ",
+        "operationId": "V3WorkspacesController_provisionWorkspace",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3ProvisionWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workspace provisioned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "bot": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "clientId": {
+                              "type": "string"
+                            },
+                            "clientSecret": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or owner not found."
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Provision a new workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}": {
+      "get": {
+        "description": "Retrieve details of a specific workspace by its slug.",
+        "operationId": "V3WorkspacesController_getWorkspaceBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace details returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "icon": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "industry": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "brandingConfig": {
+                              "type": "object",
+                              "nullable": true
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope or unauthorized workspace access."
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get workspace details (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "patch": {
+        "description": "Update the configuration and metadata of a specific workspace.",
+        "operationId": "V3WorkspacesController_updateWorkspace",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workspace updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "icon": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "industry": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "brandingConfig": {
+                              "type": "object",
+                              "nullable": true
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope or unauthorized access."
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Permanently deletes a specific workspace.",
+        "operationId": "V3WorkspacesController_deleteWorkspace",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden: Missing provisioning:workspaces scope or unauthorized access."
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/webhooks": {
+      "get": {
+        "description": "Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.",
+        "operationId": "V3WebhooksController_getWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhooks returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all webhooks in the workspace",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "post": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_createWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/webhooks/{webhookId}": {
+      "get": {
+        "description": "Requires webhooks:read scope.",
+        "operationId": "V3WebhooksController_getWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook details returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a specific webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_updateWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "delete": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_deleteWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/incoming-webhooks": {
+      "get": {
+        "description": "Requires webhooks:read scope. Retrieves all incoming webhooks configured for this channel.",
+        "operationId": "V3ChannelIncomingWebhooksController_getChannelWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of incoming webhooks returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List incoming webhooks for a channel",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      },
+      "post": {
+        "description": "Requires webhooks:write scope. Generates a new webhook token and secret.",
+        "operationId": "V3ChannelIncomingWebhooksController_createChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Incoming webhook created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an incoming webhook for a channel",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/incoming-webhooks/{webhookId}": {
+      "get": {
+        "description": "Requires webhooks:read scope.",
+        "operationId": "V3ChannelIncomingWebhooksController_getChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook details returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a channel incoming webhook",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3ChannelIncomingWebhooksController_updateChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a channel incoming webhook",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      },
+      "delete": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3ChannelIncomingWebhooksController_deleteChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a channel incoming webhook",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
+    "/api/v3/webhooks/incoming/{token}": {
+      "post": {
+        "description": "Trigger a webhook using its unique token directly in the URL path. No authentication header required.",
+        "operationId": "V3ChannelIncomingWebhooksController_executeWebhookByUrlToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "description": "The unique webhook token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook message posted successfully."
+          }
+        },
+        "summary": "Execute a channel incoming webhook (Token in URL)",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
+    "/api/v3/channels/{channelId}/webhooks/incoming": {
+      "post": {
+        "description": "Trigger a webhook targeting a specific channel ID. The webhook token must be supplied in the `x-webhook-token` header, the `token` query param, or signature query param.",
+        "operationId": "V3ChannelIncomingWebhooksController_executeWebhookByChannelId",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-token",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "required": false,
+            "in": "query",
+            "description": "The unique webhook token (can alternatively use x-webhook-token header)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook message posted successfully."
+          }
+        },
+        "summary": "Execute a channel incoming webhook (Channel in URL)",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
     "/api/invitations": {
       "get": {
         "operationId": "InvitationsController_getInvitations",
@@ -3578,6 +5083,16 @@
       "post": {
         "operationId": "CallsController_startCall",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartCallDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Call started"
@@ -3608,6 +5123,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCallDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Call updated"
@@ -3716,6 +5241,16 @@
       "post": {
         "operationId": "CallsController_scheduleCall",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleCallDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Call scheduled"
@@ -3736,6 +5271,16 @@
       "post": {
         "operationId": "CallsController_playSoundboardSound",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoundboardSoundDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Sound played"
@@ -4098,6 +5643,35 @@
           }
         ],
         "summary": "Remove a reaction from a message",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/share": {
+      "post": {
+        "operationId": "ChannelsController_shareChannel",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Share a channel with another workspace",
         "tags": [
           "Channels"
         ]
@@ -5087,7 +6661,17 @@
     "/api/workspaces/discover": {
       "get": {
         "operationId": "WorkspacesController_discoverWorkspaces",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search query for workspace name or slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of discoverable workspaces"
@@ -6075,6 +7659,15 @@
             }
           },
           {
+            "name": "threadId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by thread ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -6972,7 +8565,61 @@
         ]
       }
     },
-    "/api/auth/device/qr/generate": {
+    "/api/workspaces/{slug}/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter: all | messages | channels | members | files",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "The search query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unified search results"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unified workspace search (messages, channels, members, files)",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/device-auth/qr/generate": {
       "post": {
         "operationId": "DeviceAuthController_generateQR",
         "parameters": [],
@@ -6986,7 +8633,7 @@
         ]
       }
     },
-    "/api/auth/device/qr/status/{sessionId}": {
+    "/api/device-auth/qr/status/{sessionId}": {
       "get": {
         "operationId": "DeviceAuthController_checkStatus",
         "parameters": [
@@ -7009,7 +8656,7 @@
         ]
       }
     },
-    "/api/auth/device/qr/authorize": {
+    "/api/device-auth/qr/authorize": {
       "post": {
         "operationId": "DeviceAuthController_authorize",
         "parameters": [],
@@ -7020,6 +8667,113 @@
         },
         "tags": [
           "DeviceAuth"
+        ]
+      }
+    },
+    "/api/android-auth/me": {
+      "get": {
+        "operationId": "AndroidAuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/check-username": {
+      "get": {
+        "operationId": "AndroidAuthController_checkUsername",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/login": {
+      "post": {
+        "operationId": "AndroidAuthController_login",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/signup": {
+      "post": {
+        "operationId": "AndroidAuthController_signup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/social/google": {
+      "post": {
+        "operationId": "AndroidAuthController_googleLogin",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/social/github": {
+      "post": {
+        "operationId": "AndroidAuthController_githubLogin",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/refresh": {
+      "post": {
+        "operationId": "AndroidAuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
         ]
       }
     },
@@ -7183,12 +8937,213 @@
           "Assets"
         ]
       }
+    },
+    "/api/support/tickets": {
+      "post": {
+        "operationId": "SupportController_createTicket",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a support ticket",
+        "tags": [
+          "Support"
+        ]
+      },
+      "get": {
+        "operationId": "SupportController_getTickets",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get support tickets",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/support/live-chat": {
+      "post": {
+        "operationId": "SupportController_startLiveChat",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a live chat session",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/support/live-chat/{sessionId}/end": {
+      "patch": {
+        "operationId": "SupportController_endLiveChat",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End a live chat session",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/support/tickets/{ticketId}/status": {
+      "patch": {
+        "operationId": "SupportController_updateTicketStatus",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update ticket status",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/support/tickets/{ticketId}/assign": {
+      "patch": {
+        "operationId": "SupportController_assignTicket",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assign ticket to an agent",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/support/customers": {
+      "post": {
+        "operationId": "SupportController_createCustomerProfile",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or update customer profile",
+        "tags": [
+          "Support"
+        ]
+      },
+      "get": {
+        "operationId": "SupportController_getCustomerProfiles",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get customer profiles",
+        "tags": [
+          "Support"
+        ]
+      }
     }
   },
   "info": {
-    "title": "Scrymechat API",
-    "description": "Comprehensive API documentation for Scrymechat V2. This documentation is used by developers and for Bot API integration.",
-    "version": "2.0",
+    "title": "Skyrme Chat API",
+    "description": "Comprehensive API documentation for Skyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.",
+    "version": "3.0",
     "contact": {}
   },
   "tags": [
@@ -7235,6 +9190,22 @@
     {
       "name": "Bot Applications",
       "description": "Create and manage bot integrations."
+    },
+    {
+      "name": "V3 Authentication",
+      "description": "OAuth token acquisition for Enterprise V3 M2M clients with IP allowlist validation."
+    },
+    {
+      "name": "V3 Workspaces",
+      "description": "Enterprise workspace provisioning and metadata CRUD management with multi-tenant isolation and 10-minute Redis caching."
+    },
+    {
+      "name": "V3 Webhooks",
+      "description": "High-performance Redis-cached workspace outgoing webhooks with automatic cache invalidation."
+    },
+    {
+      "name": "V3 Channel Incoming Webhooks",
+      "description": "Discord-style incoming webhooks targeting channels via secure paths or tokens."
     }
   ],
   "servers": [],
@@ -7696,7 +9667,7 @@
           },
           "scope": {
             "type": "string",
-            "example": "messages:send channels:read"
+            "example": "provisioning:workspaces"
           }
         },
         "required": [
@@ -7713,6 +9684,34 @@
             "example": "My Bot"
           },
           "description": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string",
+            "description": "Optional workspace ID to link the bot to"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "scopes": {
+            "example": [
+              "*"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedIps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "webhookUrl": {
+            "type": "string"
+          },
+          "webhookSecret": {
             "type": "string"
           }
         },
@@ -7731,6 +9730,115 @@
           },
           "channelDefinitions": {
             "type": "object"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedIps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "webhookUrl": {
+            "type": "string"
+          },
+          "webhookSecret": {
+            "type": "string"
+          }
+        }
+      },
+      "ProvisionWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Acme Corp",
+            "description": "The display name of the workspace"
+          },
+          "slug": {
+            "type": "string",
+            "example": "acme-corp",
+            "description": "Unique slug for the workspace URL"
+          },
+          "ownerEmail": {
+            "type": "string",
+            "example": "admin@acme.com",
+            "description": "The email of the workspace owner. Must exist in the organization."
+          },
+          "industry": {
+            "type": "string",
+            "example": "Technology"
+          },
+          "description": {
+            "type": "string",
+            "example": "Primary workspace for Acme Corp teams"
+          },
+          "icon": {
+            "type": "string",
+            "example": "building",
+            "description": "Icon identifier"
+          },
+          "brandingConfig": {
+            "type": "object",
+            "description": "Custom branding configuration"
+          },
+          "channels": {
+            "example": [
+              "general",
+              "engineering"
+            ],
+            "description": "Initial channels to create",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "initialMembers": {
+            "type": "array",
+            "description": "Initial members to add to the workspace",
+            "items": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "user@acme.com"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "member",
+                  "enum": [
+                    "admin",
+                    "member"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "ownerEmail"
+        ]
+      },
+      "UpdateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Organization Name"
+          },
+          "logo": {
+            "type": "string",
+            "example": "https://example.com/logo.png"
+          },
+          "banner": {
+            "type": "string",
+            "example": "https://example.com/banner.png"
           }
         }
       },
@@ -7903,6 +10011,260 @@
           "isRead"
         ]
       },
+      "V3TokenRequestDto": {
+        "type": "object",
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "example": "client_credentials",
+            "enum": [
+              "client_credentials"
+            ],
+            "description": "The OAuth2 grant type. Must be client_credentials."
+          },
+          "client_id": {
+            "type": "string",
+            "example": "your_client_id",
+            "description": "The unique Client ID for your M2M application."
+          },
+          "client_secret": {
+            "type": "string",
+            "example": "your_client_secret",
+            "description": "The Client Secret for authentication."
+          },
+          "scope": {
+            "type": "string",
+            "example": "provisioning:workspaces",
+            "description": "Space-separated list of scopes requested."
+          }
+        },
+        "required": [
+          "grant_type",
+          "client_id",
+          "client_secret"
+        ]
+      },
+      "V3ProvisionWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Acme Corp",
+            "description": "The display name of the workspace"
+          },
+          "slug": {
+            "type": "string",
+            "example": "acme-corp",
+            "description": "Unique slug for the workspace URL"
+          },
+          "ownerEmail": {
+            "type": "string",
+            "example": "admin@acme.com",
+            "description": "The email of the workspace owner. Must exist in the organization."
+          },
+          "industry": {
+            "type": "string",
+            "example": "Technology",
+            "description": "The industry categorization of the workspace."
+          },
+          "description": {
+            "type": "string",
+            "example": "Primary workspace for Acme Corp teams",
+            "description": "A description for the workspace."
+          },
+          "icon": {
+            "type": "string",
+            "example": "building",
+            "description": "Icon identifier"
+          },
+          "brandingConfig": {
+            "type": "object",
+            "description": "Custom branding configuration"
+          },
+          "channels": {
+            "example": [
+              "general",
+              "engineering"
+            ],
+            "description": "Initial channels to create",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "initialMembers": {
+            "type": "array",
+            "description": "Initial members to add to the workspace",
+            "items": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "user@acme.com"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "member",
+                  "enum": [
+                    "admin",
+                    "member"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "ownerEmail"
+        ]
+      },
+      "V3UpdateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Acme Corp Updated",
+            "description": "The display name of the workspace"
+          },
+          "icon": {
+            "type": "string",
+            "example": "building",
+            "description": "Icon identifier or URL"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description for Acme Corp",
+            "description": "A description for the workspace."
+          },
+          "industry": {
+            "type": "string",
+            "example": "Technology",
+            "description": "The industry categorization of the workspace."
+          },
+          "brandingConfig": {
+            "type": "object",
+            "description": "Custom branding configuration"
+          }
+        }
+      },
+      "V3CreateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "message.sent",
+              "channel.created"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "events"
+        ]
+      },
+      "V3UpdateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateChannelIncomingWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Incoming Webhook"
+          },
+          "description": {
+            "type": "string",
+            "example": "Receives alerts from external monitoring system"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateChannelIncomingWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ExecuteChannelIncomingWebhookDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Deploy successful!"
+          },
+          "username": {
+            "type": "string",
+            "example": "Deploy Bot"
+          },
+          "name": {
+            "type": "string",
+            "example": "Deploy Bot"
+          },
+          "avatar_url": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
       "CreateInvitationDto": {
         "type": "object",
         "properties": {
@@ -7929,6 +10291,33 @@
         "required": [
           "email"
         ]
+      },
+      "StartCallDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "voice",
+              "video"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "UpdateCallDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ScheduleCallDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SoundboardSoundDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreateDmDto": {
         "type": "object",
@@ -8022,14 +10411,17 @@
             "type": "string",
             "example": "https://example.com/icon.png"
           },
+          "banner": {
+            "type": "string",
+            "example": "https://example.com/banner.png"
+          },
           "description": {
             "type": "string",
             "example": "A workspace for our team"
           }
         },
         "required": [
-          "name",
-          "slug"
+          "name"
         ]
       },
       "UpdateWorkspaceDto": {
@@ -8057,6 +10449,18 @@
               "pro",
               "enterprise"
             ]
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "customDomain": {
+            "type": "string"
+          },
+          "brandingConfig": {
+            "type": "object"
+          },
+          "industry": {
+            "type": "string"
           }
         }
       },

@@ -18,9 +18,9 @@ async function generate() {
   const config = new DocumentBuilder()
     .setTitle('Skyrme Chat API')
     .setDescription(
-      'Comprehensive API documentation for Skyrme Chat V2. This documentation is used by developers and for Bot API integration.'
+      'Comprehensive API documentation for Skyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.'
     )
-    .setVersion('2.0')
+    .setVersion('3.0')
     .addBearerAuth()
     .addTag('Authentication', 'Bot and integration authentication using OAuth2 client credentials.')
     .addTag('Members', 'Manage workspace members and their roles.')
@@ -33,6 +33,10 @@ async function generate() {
     .addTag('Search', 'Search for messages and members.')
     .addTag('API Tokens', 'Manage long-lived workspace API tokens.')
     .addTag('Bot Applications', 'Create and manage bot integrations.')
+    .addTag('V3 Authentication', 'OAuth token acquisition for Enterprise V3 M2M clients with IP allowlist validation.')
+    .addTag('V3 Workspaces', 'Enterprise workspace provisioning and metadata CRUD management with multi-tenant isolation and 10-minute Redis caching.')
+    .addTag('V3 Webhooks', 'High-performance Redis-cached workspace outgoing webhooks with automatic cache invalidation.')
+    .addTag('V3 Channel Incoming Webhooks', 'Discord-style incoming webhooks targeting channels via secure paths or tokens.')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

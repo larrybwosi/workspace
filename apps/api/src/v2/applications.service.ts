@@ -10,29 +10,10 @@ export class V2ApplicationsService {
       name: string;
       description?: string;
       workspaceId?: string;
-      organizationId?: string;
-      scopes?: string[];
-      allowedIps?: string[];
-      webhookUrl?: string;
-      webhookSecret?: string;
-    },
-    organizationId?: string
-  ) {
-    let finalOwnerId = ownerId;
-
-    if ((organizationId || data.organizationId) && (ownerId.startsWith('m2m:') || !ownerId)) {
-      const org = await prisma.organization.findUnique({
-        where: { id: organizationId || data.organizationId },
-        include: { members: { where: { role: 'owner' }, take: 1 } },
-      });
-      if (org?.members[0]) {
-        finalOwnerId = org.members[0].userId;
-      }
     }
-
-    const clientId = data.organizationId || organizationId ? `m2m_${crypto.randomBytes(12).toString('hex')}` : crypto.randomBytes(8).toString('hex');
+  ) {
+    const clientId = crypto.randomBytes(8).toString('hex');
     const clientSecret = crypto.randomBytes(32).toString('hex');
-    const hashedSecret = crypto.createHash('sha256').update(clientSecret).digest('hex');
     const verifyKey = crypto.randomBytes(32).toString('hex');
 
     const botId = crypto.randomUUID();
@@ -50,15 +31,10 @@ export class V2ApplicationsService {
         name: data.name,
         description: data.description,
         clientId,
-        clientSecret: data.organizationId || organizationId ? hashedSecret : clientSecret,
+        clientSecret,
         verifyKey,
-        owner: { connect: { id: finalOwnerId } },
+        owner: { connect: { id: ownerId } },
         workspace: data.workspaceId ? { connect: { id: data.workspaceId } } : undefined,
-        organization: organizationId || data.organizationId ? { connect: { id: organizationId || data.organizationId } } : undefined,
-        scopes: data.scopes || [],
-        allowedIps: data.allowedIps || [],
-        webhookUrl: data.webhookUrl,
-        webhookSecret: data.webhookSecret,
         bot: {
           create: {
             id: botId,

@@ -231,32 +231,32 @@ export class V2AnnouncementsController {
 
     let authorId = context.userId;
 
-    // M2M Support: Resolve author to a valid bot user
-    if (authorId.startsWith('m2m:')) {
-      if (context.m2mClientId) {
-        const m2mApp = await prisma.botApplication.findUnique({
-          where: { clientId: context.m2mClientId },
-          select: { botId: true },
-        });
-        if (m2mApp?.botId) {
-          authorId = m2mApp.botId;
-        }
+    let isM2mAuthor = authorId.startsWith('m2m:');
+    if (!isM2mAuthor) {
+      // Check if authorId is an Organization ID (M2M)
+      const isOrg = await prisma.organization.findUnique({
+        where: { id: authorId },
+        select: { id: true },
+      });
+      if (isOrg) {
+        isM2mAuthor = true;
       }
+    }
 
-      if (authorId.startsWith('m2m:')) {
-        const defaultBot = await prisma.botApplication.findFirst({
-          where: {
-            workspaceId: context.workspaceId,
-            botId: { not: null },
-          },
-          select: { botId: true },
-        });
+    // M2M Support: Resolve author to a valid bot user
+    if (isM2mAuthor) {
+      const defaultBot = await prisma.botApplication.findFirst({
+        where: {
+          workspaceId: context.workspaceId,
+          botId: { not: null },
+        },
+        select: { botId: true },
+      });
 
-        if (defaultBot?.botId) {
-          authorId = defaultBot.botId;
-        } else {
-          throw new BadRequestException('M2M requires a bot to be provisioned in this workspace to create announcements.');
-        }
+      if (defaultBot?.botId) {
+        authorId = defaultBot.botId;
+      } else {
+        throw new BadRequestException('M2M requires a bot to be provisioned in this workspace to create announcements.');
       }
     }
 
