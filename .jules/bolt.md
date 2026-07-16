@@ -204,3 +204,7 @@
 
 **Learning:** Re-architecting single database mutating queries (such as Prisma's `update` or `delete`) to include a pre-read query to verify owner/workspace details degrades write path throughput from 1 RTT to 2 RTT. Using Prisma's support for extra non-unique filters inside the `where` clause (e.g. `where: { id, workspaceId }`) combines unique primary key lookups and security checks into a single atomic DB-level round-trip. Additionally, never append metadata fields (like `source: 'cache'`) to public API responses, as doing so violates response schemas and public-facing consumer contracts.
 **Action:** Maintain single-query database mutations using extra where filters instead of split read-then-write sequences. Strictly return unmodified payload schemas to satisfy public API contracts.
+
+## 2026-07-14 - [API/Search] Standardized User Payload in Search
+**Learning:** V1 search endpoints were missing the standard user mapping established in V2, leading to redundant 'image' payload serialization and rendering inconsistencies when 'avatar' is null but 'image' is populated.
+**Action:** In all workspace-scoped search controllers (V1 and V2), fetch both 'avatar' and 'image' from Prisma, map 'avatar' to 'avatar || image', and explicitly exclude 'image' in the final payload to reduce payload size and guarantee client-side avatar display.

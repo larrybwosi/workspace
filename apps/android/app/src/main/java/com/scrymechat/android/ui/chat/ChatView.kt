@@ -409,6 +409,214 @@ fun DeleteMessageConfirmationDialog(
     )
 }
 
+/**
+ * Discord-style "Forward Message" bottom sheet. Shows a mini preview of the message
+ * being forwarded, a searchable/multi-select list of destination channels, an
+ * optional comment field, and a confirm button — matching Discord's forward flow
+ * (select a message → Forward → pick one or more channels/DMs → optionally add a
+ * comment → Forward).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ForwardPickerBottomSheet(
+    message: MessageEntity,
+    channels: List<ChannelEntity>,
+    palette: ChatPalette,
+    onDismiss: () -> Unit,
+    onConfirm: (List<ChannelEntity>, String) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val selectedChannelIds = remember { mutableStateListOf<String>() }
+    var comment by remember { mutableStateOf(TextFieldValue("")) }
+
+    val filteredChannels = remember(channels, searchQuery) {
+        channels.filter {
+            it.type != "category" && it.name.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = palette.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp)
+        ) {
+            Text(
+                text = "Forward Message",
+                color = palette.textPrimary,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Mini preview of the message being forwarded
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(palette.attachmentChipBg)
+                    .padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                UserAvatar(
+                    name = message.senderName ?: "Unknown User",
+                    avatarUrl = message.senderAvatar,
+                    size = 28.dp,
+                    borderColor = Color.Transparent
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = message.senderName ?: "Unknown User",
+                        color = palette.textPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    val preview = message.content.takeIf { it.isNotBlank() }
+                        ?: message.attachments.firstOrNull()?.let { attachment ->
+                            if (attachment.type.startsWith("image/")) "\uD83D\uDCF7 Photo" else "\uD83D\uDCCE ${attachment.name}"
+                        }
+                        ?: "Message"
+                    Text(
+                        text = preview,
+                        color = palette.textSecondary,
+                        fontSize = 12.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text("Find a channel...", color = palette.textTertiary, fontSize = 13.sp) },
+                singleLine = true,
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = palette.textTertiary, modifier = Modifier.size(18.dp))
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = palette.inputFieldBorderFocused,
+                    unfocusedBorderColor = palette.inputFieldBorder,
+                    focusedTextColor = palette.textPrimary,
+                    unfocusedTextColor = palette.textPrimary
+                )
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            LazyColumn(modifier = Modifier.heightIn(max = 260.dp)) {
+                items(
+                    count = filteredChannels.size,
+                    key = { index -> filteredChannels[index].id }
+                ) { index ->
+                    val channel = filteredChannels[index]
+                    val isSelected = selectedChannelIds.contains(channel.id)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (isSelected) selectedChannelIds.remove(channel.id)
+                                else selectedChannelIds.add(channel.id)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tag,
+                            contentDescription = null,
+                            tint = palette.textTertiary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = channel.name,
+                            color = palette.textPrimary,
+                            fontSize = 14.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(if (isSelected) palette.accent else Color.Transparent)
+                                .border(1.5.dp, if (isSelected) palette.accent else palette.textTertiary, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                            }
+                        }
+                    }
+                }
+
+                if (filteredChannels.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No channels found",
+                            color = palette.textTertiary,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            OutlinedTextField(
+                value = comment,
+                onValueChange = { comment = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text("Add a comment...", color = palette.textTertiary, fontSize = 13.sp) },
+                shape = RoundedCornerShape(10.dp),
+                maxLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = palette.inputFieldBorderFocused,
+                    unfocusedBorderColor = palette.inputFieldBorder,
+                    focusedTextColor = palette.textPrimary,
+                    unfocusedTextColor = palette.textPrimary
+                )
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = {
+                    val selectedChannels = channels.filter { selectedChannelIds.contains(it.id) }
+                    onConfirm(selectedChannels, comment.text)
+                },
+                enabled = selectedChannelIds.isNotEmpty(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = palette.accent)
+            ) {
+                Text(
+                    text = if (selectedChannelIds.size > 1) "Forward to ${selectedChannelIds.size} channels" else "Forward",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun ThreadStarterDivider(palette: ChatPalette) {
     Row(
@@ -455,6 +663,10 @@ fun ChatView(
     onReply: (MessageEntity) -> Unit,
     onOpenThread: (MessageEntity) -> Unit = {},
     onForward: (MessageEntity) -> Unit,
+    // Fires once the user picks destination channel(s) (and optional comment) from the
+    // Discord-style forward sheet. Defaults to calling the legacy onForward once per
+    // message for callers that haven't wired up multi-channel forwarding yet.
+    onForwardToChannels: (MessageEntity, List<ChannelEntity>, String) -> Unit = { message, _, _ -> onForward(message) },
     onBack: () -> Unit = {},
     isThread: Boolean = false,
     threadTitle: String? = null,
@@ -483,6 +695,7 @@ fun ChatView(
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
+    val context = LocalContext.current
     val currentUserId by (sessionManager?.getActiveSessionFlow() ?: flowOf(null))
         .map { it?.userId }
         .collectAsState(initial = null)
@@ -493,6 +706,7 @@ fun ChatView(
     val scope = rememberCoroutineScope()
     var textState by remember { mutableStateOf(TextFieldValue("")) }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
+    var forwardingMessage by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
     var fullScreenImageName by remember { mutableStateOf<String?>(null) }
     var fullScreenImageMimeType by remember { mutableStateOf<String?>(null) }
@@ -587,10 +801,21 @@ fun ChatView(
         }
 
         LaunchedEffect(messages, currentChatKey) {
-            if (!hasCalculatedUnread && messages.isNotEmpty()) {
+            if (messages.isNotEmpty()) {
                 val oldestUnread = messages.lastOrNull { !it.readByCurrentUser }
-                initialOldestUnreadMessageId = oldestUnread?.id
-                hasCalculatedUnread = true
+                if (oldestUnread == null) {
+                    initialOldestUnreadMessageId = null
+                } else if (!hasCalculatedUnread) {
+                    initialOldestUnreadMessageId = oldestUnread.id
+                    hasCalculatedUnread = true
+                } else {
+                    val isStillUnread = messages.any { it.id == initialOldestUnreadMessageId && !it.readByCurrentUser }
+                    if (!isStillUnread) {
+                        initialOldestUnreadMessageId = null
+                    }
+                }
+            } else {
+                initialOldestUnreadMessageId = null
             }
         }
 
@@ -686,7 +911,11 @@ fun ChatView(
                                     onReply(it)
                                 },
                                 onOpenThread = onOpenThread,
-                                onForward = { onForward(it) },
+                                // Swipe-to-forward and the context menu's "Forward" item both land
+                                // here first — this opens the Discord-style channel picker sheet
+                                // rather than forwarding immediately, so the user can choose where
+                                // it goes (and optionally add a comment) before anything is sent.
+                                onForward = { forwardingMessage = it },
                                 onDownload = onDownload,
                                 onAction = { action, formState -> onAction(message, action, formState) },
                                 onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
@@ -1078,6 +1307,28 @@ fun ChatView(
                 }
             },
             onDismiss = { reactionPickerMessage = null }
+        )
+    }
+
+    // Forward Picker — Discord-style destination sheet, shown whenever a message is
+    // swiped or long-pressed to forward. Sending only happens once the user confirms
+    // a destination here; nothing is forwarded implicitly on swipe alone.
+    forwardingMessage?.let { message ->
+        ForwardPickerBottomSheet(
+            message = message,
+            channels = channels,
+            palette = palette,
+            onDismiss = { forwardingMessage = null },
+            onConfirm = { selectedChannels, comment ->
+                onForwardToChannels(message, selectedChannels, comment)
+                val confirmationText = if (selectedChannels.size > 1) {
+                    "Forwarded to ${selectedChannels.size} channels"
+                } else {
+                    "Forwarded to #${selectedChannels.firstOrNull()?.name ?: "channel"}"
+                }
+                Toast.makeText(context, confirmationText, Toast.LENGTH_SHORT).show()
+                forwardingMessage = null
+            }
         )
     }
 

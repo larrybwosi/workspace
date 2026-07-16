@@ -4,6 +4,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "jsx": "react-jsx",
+    "incremental": true,
     "types": [
       "node"
     ]

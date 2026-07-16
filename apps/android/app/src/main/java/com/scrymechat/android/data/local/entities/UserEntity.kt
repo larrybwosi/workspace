@@ -15,5 +15,14 @@ data class UserEntity(
     val statusEmoji: String?,
     val bio: String?,
     val role: String,
-    val status: String
+    val status: String,
+    val jobTitle: String? = null,
+    val department: String? = null,
+    val officeLocation: String? = null,
+    val managerId: String? = null,
+    val managerName: String? = null,
+    val managerTitle: String? = null,
+    val managerAvatar: String? = null,
+    val github: String? = null,
+    val slack: String? = null
 )

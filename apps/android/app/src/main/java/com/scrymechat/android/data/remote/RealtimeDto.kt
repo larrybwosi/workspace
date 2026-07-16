@@ -7,7 +7,7 @@ data class SocketEvent<T>(
 
 data class PresenceDto(
     val userId: String,
-    val channel: String,
+    val channel: String?,
     val data: Map<String, Any>? = null
 )
 

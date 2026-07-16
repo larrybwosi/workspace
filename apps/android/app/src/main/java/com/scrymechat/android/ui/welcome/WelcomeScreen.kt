@@ -340,6 +340,14 @@ fun PageContent(page: WelcomePage) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start
     ) {
+        // Premium Brand Logo
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(id = com.scrymechat.android.R.drawable.ic_logo),
+            contentDescription = "Scrymechat Logo",
+            tint = Color.Unspecified,
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         // Eyebrow label
         Text(
             text  = page.eyebrow,

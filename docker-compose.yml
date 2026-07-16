@@ -1,8 +1,6 @@
 services:
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/web:${APP_VERSION:-latest}
     container_name: scrymechat-web
     restart: always
     expose:
@@ -53,9 +51,7 @@ services:
       - 'traefik.http.services.scrymechat-web.loadbalancer.server.port=3001'
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-larrybwosi}/${REPO_NAME:-workspace}/api:${APP_VERSION:-latest}
     container_name: scrymechat-api
     restart: always
     expose:
@@ -142,6 +138,9 @@ services:
       retries: 5
     networks:
       - scrymechat-network
+    # Internal-only by design: api/web reach it over scrymechat-network.
+    # If you want its console/API reachable from outside, add it to the
+    # `proxy` network and give it traefik labels the same way as web/api.
 
   redis:
     image: redis:7-alpine
@@ -178,6 +177,11 @@ networks:
     driver: bridge
     attachable: true
 
+  # The platform-managed proxy network. Dokploy creates "dokploy-network",
+  # Coolify creates "coolify" (run `docker network ls` after installing the
+  # platform to confirm the exact name) — set PROXY_NETWORK in your .env to
+  # match. It must already exist; that's why it's external rather than
+  # created here.
   proxy:
     name: ${PROXY_NETWORK:-dokploy-network}
     external: true

@@ -33,16 +33,24 @@ class RealtimeRepository @Inject constructor(
         }
     }
 
-    fun observePresence(): Flow<PresenceDto> = callbackFlow {
+    fun observePresence(): Flow<PresenceEvent> = callbackFlow {
         val enterListener = Emitter.Listener { args ->
-            val data = args[0].toString()
-            val presence = gson.fromJson(data, PresenceDto::class.java)
-            trySend(presence)
+            try {
+                val data = args[0].toString()
+                val dto = gson.fromJson(data, PresenceDto::class.java)
+                trySend(PresenceEvent(userId = dto.userId, isOnline = true))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         val leaveListener = Emitter.Listener { args ->
-            val data = args[0].toString()
-            val presence = gson.fromJson(data, PresenceDto::class.java)
-            trySend(presence)
+            try {
+                val data = args[0].toString()
+                val dto = gson.fromJson(data, PresenceDto::class.java)
+                trySend(PresenceEvent(userId = dto.userId, isOnline = false))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         socket.on("presence:enter", enterListener)
         socket.on("presence:leave", leaveListener)
@@ -119,4 +127,9 @@ data class TypingEvent(
     val userId: String,
     val userName: String,
     val room: String
+)
+
+data class PresenceEvent(
+    val userId: String,
+    val isOnline: Boolean
 )

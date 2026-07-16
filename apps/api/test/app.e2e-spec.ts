@@ -24,6 +24,8 @@ describe('AppController (e2e)', () => {
   it('/health (GET)', async () => {
     const response = await request(app.getHttpServer()).get('/health');
     // Basic connectivity check
-    expect([200, 401, 'OK']).toContain(response.status === 200 ? response.text : response.status);
+    expect(response.status).toBe(200);
+    const body = response.body && typeof response.body === 'object' ? response.body : JSON.parse(response.text);
+    expect(body.status).toBe('ok');
   });
 });

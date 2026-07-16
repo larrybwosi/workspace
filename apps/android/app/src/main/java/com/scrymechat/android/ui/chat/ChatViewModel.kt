@@ -43,6 +43,7 @@ class ChatViewModel @Inject constructor(
     private var currentDmId: String? = null
     private var currentThreadId: String? = null
     private var currentWorkspaceSlug: String? = null
+    private var currentDmUserId: String? = null
 
     init {
         observeRealtimeMessages()
@@ -118,6 +119,7 @@ class ChatViewModel @Inject constructor(
         currentDmId = dmId
         currentChannelId = null
         currentWorkspaceSlug = null
+        currentDmUserId = null
 
         _uiState.update { it.copy(messages = emptyList(), isLoading = true) }
 
@@ -131,12 +133,21 @@ class ChatViewModel @Inject constructor(
     }
 
     fun setDmByUser(userId: String) {
+        if (currentDmUserId == userId) return
+
+        currentDmUserId = userId
+        currentDmId = null
+        currentChannelId = null
+        currentWorkspaceSlug = null
+
+        _uiState.update { it.copy(messages = emptyList(), isLoading = true) }
+
         viewModelScope.launch {
             val result = dmRepository.createDm(userId)
             if (result is Resource.Success && result.data != null) {
                 setDm(result.data.id)
             } else if (result is Resource.Error) {
-                _uiState.update { it.copy(error = result.message) }
+                _uiState.update { it.copy(error = result.message, isLoading = false) }
             }
         }
     }
@@ -281,7 +292,7 @@ class ChatViewModel @Inject constructor(
 
     fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null, context: Context) {
         val channelId = targetChannelId ?: currentChannelId
-        val dmId = currentDmId
+        val initialDmId = currentDmId
         val threadId = currentThreadId
         val slug = currentWorkspaceSlug
         val pendingFiles = _uiState.value.pendingFiles
@@ -289,6 +300,24 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSending = true, error = null) }
             try {
+                var dmId = initialDmId
+                // Dynamic DM creation if dmId is null/empty but we have a target user ID
+                val targetDmUserId = currentDmUserId
+                if ((dmId == null || dmId.isEmpty()) && targetDmUserId != null) {
+                    val createResult = dmRepository.createDm(targetDmUserId)
+                    if (createResult is Resource.Success && createResult.data != null) {
+                        val newDmId = createResult.data.id
+                        currentDmId = newDmId
+                        dmId = newDmId
+                        realtimeRepository.joinRoom("dm:$newDmId")
+                        loadMessages()
+                    } else {
+                        val errMsg = (createResult as? Resource.Error)?.message ?: "Failed to start DM conversation"
+                        _uiState.update { it.copy(error = errMsg, isSending = false) }
+                        return@launch
+                    }
+                }
+
                 val uploadedAttachments = mutableListOf<CreateAttachmentRequest>()
 
                 // Sequential upload of pending files
@@ -319,7 +348,7 @@ class ChatViewModel @Inject constructor(
                 val result = when {
                     threadId != null && channelId != null && slug != null -> chatRepository.sendThreadMessage(slug, channelId, threadId, content, uploadedAttachments)
                     channelId != null && slug != null -> chatRepository.sendChannelMessage(slug, channelId, content, replyToId, uploadedAttachments)
-                    dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, uploadedAttachments)
+                    dmId != null && dmId.isNotEmpty() -> chatRepository.sendDmMessage(dmId, content, replyToId, uploadedAttachments)
                     else -> {
                         _uiState.update { it.copy(isSending = false) }
                         return@launch
@@ -352,8 +381,15 @@ class ChatViewModel @Inject constructor(
                 }
 
                 if (isRelevant) {
-                    // Update local messages
-                    loadMessages()
+                    // Convert and save to database
+                    viewModelScope.launch {
+                        try {
+                            val entity = messageDto.toEntity().copy(readByCurrentUser = true)
+                            chatRepository.insertMessage(entity)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
 
                     // Automatically mark as read when actively viewing
                     if (channelId != null) {

@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
 import { validateEnv } from '@repo/shared';
 
 const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health'];
@@ -14,6 +13,10 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Load auth dynamically so that public routes (like /api/health) and simple routes
+  // do not trigger Better Auth / Database connection failures or environment validations.
+  const { auth } = await import('@/lib/auth');
+
   const session = await auth.api.getSession({
     headers: request.headers,
   });
@@ -26,5 +29,5 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/health).*)'],
 };

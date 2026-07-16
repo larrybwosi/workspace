@@ -82,7 +82,7 @@ export class SearchController {
               ],
             },
             take: limit,
-            select: { id: true, name: true, email: true, avatar: true, status: true, role: true },
+            select: { id: true, name: true, email: true, avatar: true, image: true, status: true, role: true },
           })
         : Promise.resolve([]),
 
@@ -100,7 +100,7 @@ export class SearchController {
               timestamp: true,
               channelId: true,
               threadId: true,
-              user: { select: { id: true, name: true, avatar: true } },
+              user: { select: { id: true, name: true, avatar: true, image: true } },
               channel: { select: { id: true, name: true, slug: true } },
             },
           })
@@ -129,6 +129,31 @@ export class SearchController {
         : Promise.resolve([]),
     ]);
 
-    return { query: q, results: { channels, members, messages, files } };
+    /**
+     * ⚡ Performance Optimization:
+     * Standardizes user avatar fallback logic and removes redundant image field in V1 search.
+     * Prevents over-fetching and avoids passing redundant image property on public payload.
+     */
+    const formattedMembers = members.map(member => ({
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      avatar: member.avatar || member.image,
+      status: member.status,
+      role: member.role,
+    }));
+
+    const formattedMessages = messages.map(msg => ({
+      ...msg,
+      user: msg.user
+        ? {
+            id: msg.user.id,
+            name: msg.user.name,
+            avatar: msg.user.avatar || msg.user.image,
+          }
+        : undefined,
+    }));
+
+    return { query: q, results: { channels, members: formattedMembers, messages: formattedMessages, files } };
   }
 }

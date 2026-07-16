@@ -1,10 +1,13 @@
 package com.scrymechat.android.ui.profile
 
+import com.scrymechat.android.R
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +41,19 @@ import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.remote.SocialProfileDto
 
 // -----------------------------------------------------------------------------------------------
+// NOTE ON DATA: this screen now surfaces organization info (title / department / manager).
+// UserEntity is expected to expose these nullable fields — add them if not already present:
+//   val jobTitle: String?
+//   val department: String?
+//   val officeLocation: String?
+//   val managerId: String?
+//   val managerName: String?
+//   val managerTitle: String?
+//   val managerAvatar: String?
+// Every read below is null-safe and the section simply hides itself when nothing is set.
+// -----------------------------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------------------------
 // Screen
 // -----------------------------------------------------------------------------------------------
 
@@ -47,6 +63,7 @@ fun OtherUserProfileScreen(
     userId: String,
     onBack: () -> Unit,
     onSendMessage: (String) -> Unit,
+    onViewProfile: (String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val user by viewModel.targetUser.collectAsState()
@@ -103,6 +120,7 @@ fun OtherUserProfileScreen(
                 user = user,
                 socialProfile = socialProfile,
                 onSendMessage = onSendMessage,
+                onViewProfile = onViewProfile,
                 viewModel = viewModel,
                 palette = palette,
                 padding = padding
@@ -141,6 +159,7 @@ private fun ProfileContent(
     user: UserEntity?,
     socialProfile: SocialProfileDto?,
     onSendMessage: (String) -> Unit,
+    onViewProfile: (String) -> Unit,
     viewModel: ProfileViewModel,
     palette: ProfilePalette,
     padding: PaddingValues
@@ -182,6 +201,8 @@ private fun ProfileContent(
                     }
                 }
 
+                OrganizationCard(user = user, onManagerClick = onViewProfile, palette = palette)
+
                 ProfileInfoCard(title = "Details", icon = Icons.Outlined.Badge, palette = palette) {
                     InfoRow(icon = Icons.Outlined.AlternateEmail, label = "Username", value = user?.username?.let { "@$it" } ?: "unknown", palette = palette)
                     RowDivider(palette)
@@ -194,7 +215,12 @@ private fun ProfileContent(
 
                 PrivateNoteCard(userId = userId, palette = palette)
 
-                ConnectedAccountsCard(username = user?.username, palette = palette)
+                ConnectedAccountsCard(
+                    github = user?.github,
+                    slack = user?.slack,
+                    username = user?.username,
+                    palette = palette
+                )
 
                 MutualWorkspacesCard(mutualWorkspaces = socialProfile?.mutualWorkspaces, palette = palette)
 
@@ -330,6 +356,24 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
                 }
             }
 
+            // Job title · department, shown right under the name — the first thing a
+            // colleague looks for on an enterprise profile, before status or bio.
+            val orgLine = listOfNotNull(
+                user?.jobTitle?.takeIf { it.isNotBlank() },
+                user?.department?.takeIf { it.isNotBlank() }
+            ).joinToString(" · ")
+            if (orgLine.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = orgLine,
+                    color = palette.textSecondary,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
             Spacer(modifier = Modifier.height(2.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -338,21 +382,6 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
                     color = palette.textTertiary,
                     fontSize = 13.sp
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                // Beautiful pronouns chip matching Discord style
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = palette.iconChipBg,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder)
-                ) {
-                    Text(
-                        text = "they/them",
-                        color = palette.textSecondary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
             }
 
             if (user?.statusText?.isNotEmpty() == true) {
@@ -366,6 +395,126 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
                 )
             }
         }
+    }
+}
+
+// -----------------------------------------------------------------------------------------------
+// Organization — title, department, office, and reporting line
+// -----------------------------------------------------------------------------------------------
+
+@Composable
+fun OrganizationCard(
+    user: UserEntity?,
+    onManagerClick: (String) -> Unit,
+    palette: ProfilePalette
+) {
+    val hasTitle = !user?.jobTitle.isNullOrBlank()
+    val hasDepartment = !user?.department.isNullOrBlank()
+    val hasLocation = !user?.officeLocation.isNullOrBlank()
+    val hasManager = !user?.managerName.isNullOrBlank()
+
+    if (!hasTitle && !hasDepartment && !hasLocation && !hasManager) return
+
+    ProfileInfoCard(title = "Organization", icon = Icons.Default.Business, palette = palette) {
+        var rowsShown = 0
+
+        if (hasTitle) {
+            InfoRow(icon = Icons.Outlined.Badge, label = "Title", value = user?.jobTitle!!, palette = palette)
+            rowsShown++
+        }
+        if (hasDepartment) {
+            if (rowsShown > 0) RowDivider(palette)
+            InfoRow(icon = Icons.Default.Business, label = "Department", value = user?.department!!, palette = palette)
+            rowsShown++
+        }
+        if (hasLocation) {
+            if (rowsShown > 0) RowDivider(palette)
+            InfoRow(icon = Icons.Default.LocationOn, label = "Location", value = user?.officeLocation!!, palette = palette)
+            rowsShown++
+        }
+        if (hasManager) {
+            if (rowsShown > 0) RowDivider(palette)
+            Column(modifier = Modifier.padding(top = if (rowsShown > 0) 2.dp else 0.dp)) {
+                Text(
+                    text = "REPORTS TO",
+                    color = palette.textTertiary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.6.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                ManagerRow(
+                    managerName = user?.managerName!!,
+                    managerTitle = user?.managerTitle,
+                    managerAvatar = user?.managerAvatar,
+                    onClick = { user?.managerId?.let(onManagerClick) },
+                    palette = palette
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManagerRow(
+    managerName: String,
+    managerTitle: String?,
+    managerAvatar: String?,
+    onClick: () -> Unit,
+    palette: ProfilePalette
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(palette.iconChipBg),
+            contentAlignment = Alignment.Center
+        ) {
+            if (managerAvatar != null) {
+                AsyncImage(
+                    model = managerAvatar,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                )
+            } else {
+                Text(
+                    text = managerName.firstOrNull()?.uppercase() ?: "M",
+                    color = palette.accent,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = managerName,
+                color = palette.textPrimary,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Medium
+            )
+            if (!managerTitle.isNullOrBlank()) {
+                Text(
+                    text = managerTitle,
+                    color = palette.textTertiary,
+                    fontSize = 11.5.sp
+                )
+            }
+        }
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = "View profile",
+            tint = palette.textTertiary,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
@@ -413,6 +562,7 @@ fun ConnectionChip(
     platformUsername: String,
     platformColor: Color,
     palette: ProfilePalette,
+    iconResId: Int? = null,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -432,12 +582,21 @@ fun ConnectionChip(
                     .background(platformColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = platformName.first().toString().uppercase(),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (iconResId != null) {
+                    Icon(
+                        painter = androidx.compose.ui.res.painterResource(id = iconResId),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(14.dp)
+                    )
+                } else {
+                    Text(
+                        text = platformName.first().toString().uppercase(),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
@@ -462,10 +621,15 @@ fun ConnectionChip(
 
 @Composable
 fun ConnectedAccountsCard(
+    github: String?,
+    slack: String?,
     username: String?,
     palette: ProfilePalette
 ) {
     val cleanUsername = username ?: "user"
+    val displayGithub = if (!github.isNullOrBlank()) github else "@$cleanUsername"
+    val displaySlack = if (!slack.isNullOrBlank()) slack else cleanUsername
+
     ProfileInfoCard(title = "Connected Accounts", icon = Icons.Default.Share, palette = palette) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -473,16 +637,18 @@ fun ConnectedAccountsCard(
         ) {
             ConnectionChip(
                 platformName = "GitHub",
-                platformUsername = "@$cleanUsername",
+                platformUsername = displayGithub,
                 platformColor = Color(0xFF24292E),
                 palette = palette,
+                iconResId = R.drawable.ic_github,
                 modifier = Modifier.weight(1f)
             )
             ConnectionChip(
                 platformName = "Slack",
-                platformUsername = cleanUsername,
-                platformColor = Color(0xFF4A154B),
+                platformUsername = displaySlack,
+                platformColor = Color(0xFF1F1F24), // sleek dark for Slack container with multi-color SVG icon
                 palette = palette,
+                iconResId = R.drawable.ic_slack,
                 modifier = Modifier.weight(1f)
             )
         }
