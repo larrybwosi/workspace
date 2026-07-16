@@ -77,6 +77,20 @@ export const authClient: any = createAuthClient({
       }
       return context;
     },
+    onSuccess: async (context: any) => {
+      if (typeof window !== 'undefined') {
+        const token = context.response.headers.get('set-auth-token');
+        if (token) {
+          window.localStorage.setItem('better-auth.session-token', token);
+        }
+        // If it's a sign-out request, clear the stored tokens
+        if (context.request.url.includes('/sign-out')) {
+          window.localStorage.removeItem('better-auth.session-token');
+          window.localStorage.removeItem('better-auth.session_token');
+        }
+      }
+      return context;
+    },
   },
 });
 
