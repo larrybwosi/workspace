@@ -92,15 +92,17 @@ interface MessageApi {
         @Path("emoji") emoji: String
     ): Response<Unit>
 
-    @POST("dms/{conversationId}/read")
+    @POST("dms/{conversationId}/messages/read")
     suspend fun markDmRead(
-        @Path("conversationId") conversationId: String
+        @Path("conversationId") conversationId: String,
+        @Body request: Map<String, List<String>>
     ): Response<Unit>
 
-    @POST("workspaces/{slug}/channels/{channelId}/read")
+    @POST("workspaces/{slug}/channels/{channelId}/messages/read")
     suspend fun markChannelRead(
         @Path("slug") slug: String,
-        @Path("channelId") channelId: String
+        @Path("channelId") channelId: String,
+        @Body request: Map<String, List<String>>
     ): Response<Unit>
 
     @POST("v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}")
@@ -108,7 +110,7 @@ interface MessageApi {
         @Path("slug") slug: String,
         @Path("messageId") messageId: String,
         @Path("actionId") actionId: String,
-        @Body body: Map<String, Any>
+        @Body body: Map<String, @JvmSuppressWildcards Any>
     ): Response<Map<String, Any>>
 
     // Thread Messages

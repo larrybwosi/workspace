@@ -20,7 +20,7 @@ class FriendsRepository @Inject constructor(
 ) {
     fun getFriends(search: String? = null): Flow<Resource<List<FriendEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getFriends(search)
             if (response.isSuccessful) {
                 val dtos = response.body()?.friends ?: emptyList()
@@ -32,18 +32,20 @@ class FriendsRepository @Inject constructor(
                 }
 
                 friendsDao.insertFriends(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     fun getFriendRequests(type: String? = null, status: String? = null): Flow<Resource<List<FriendRequestEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getFriendRequests(type, status)
             if (response.isSuccessful) {
                 val dtos = response.body()?.requests ?: emptyList()
@@ -56,13 +58,15 @@ class FriendsRepository @Inject constructor(
                 }
 
                 friendsDao.insertFriendRequests(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun sendFriendRequest(receiverId: String, message: String? = null): Resource<FriendRequestEntity> {
@@ -77,6 +81,19 @@ class FriendsRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun getFriendsList(): Result<List<UserDto>> {
+        return try {
+            val response = api.getFriends()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.friends.map { it.friend })
+            } else {
+                Result.failure(Exception(response.message()))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -126,6 +143,10 @@ class FriendsRepository @Inject constructor(
         receiverId = receiverId,
         status = status,
         message = message,
+        senderName = sender?.name ?: sender?.username,
+        senderAvatar = sender?.avatar ?: sender?.image,
+        receiverName = receiver?.name ?: receiver?.username,
+        receiverAvatar = receiver?.avatar ?: receiver?.image,
         createdAt = createdAt
     )
 

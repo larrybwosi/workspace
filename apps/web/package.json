@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "2.0.0",
+  "version": "2.1.0-dev.31",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001 --webpack",
@@ -33,6 +33,7 @@
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
     "next-mdx-remote": "latest",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "server-only": "^0.0.1",

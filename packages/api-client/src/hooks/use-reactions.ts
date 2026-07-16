@@ -23,9 +23,17 @@ export function useAddReaction() {
       customEmojiId?: string;
       workspaceSlug?: string;
     }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions`
-        : `/channels/${channelId}/messages/${messageId}/reactions`;
+      let url;
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        url = `/dms/${dmId}/messages/${messageId}/reactions`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions`
+          : `/channels/${channelId}/messages/${messageId}/reactions`;
+      }
       const { data } = await apiClient.post(url, { emoji, isCustom, customEmojiId });
       return { data, channelId, workspaceSlug };
     },
@@ -91,9 +99,17 @@ export function useRemoveReaction() {
       channelId: string;
       workspaceSlug?: string;
     }) => {
-      const url = workspaceSlug
-        ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`
-        : `/channels/${channelId}/messages/${messageId}/reactions/${emoji}`;
+      let url;
+      if (channelId.startsWith('dm-')) {
+        const targetUserId = channelId.replace('dm-', '');
+        const { data: dm } = await apiClient.post<{ id: string }>('/dms', { userId: targetUserId });
+        const dmId = dm.id;
+        url = `/dms/${dmId}/messages/${messageId}/reactions/${emoji}`;
+      } else {
+        url = workspaceSlug
+          ? `/workspaces/${workspaceSlug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`
+          : `/channels/${channelId}/messages/${messageId}/reactions/${emoji}`;
+      }
       await apiClient.delete(url);
       return { messageId, emoji, channelId, workspaceSlug };
     },

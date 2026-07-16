@@ -96,15 +96,20 @@ If the message was sent by an M2M application, triggering an action will:
   }
 
   private async validateActionRequest(context: ApiV2Context, messageId: string, actionId: string) {
-    const message = await this.prisma.client.message.findFirst({
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Replaces 'findFirst' with 'findUnique' on primary key 'id' to leverage database O(1) index lookup.
+     * 2. Checks 'workspaceId' in application logic to ensure authorization.
+     * Expected impact: Reduces database lookup latency and avoids slower scan queries.
+     */
+    const message = await this.prisma.client.message.findUnique({
       where: {
         id: messageId,
-        channel: { workspaceId: context.workspaceId },
       },
       include: { actions: true, channel: true },
     });
 
-    if (!message) {
+    if (!message || message.channel.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Message not found or access denied');
     }
 

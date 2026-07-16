@@ -150,12 +150,12 @@ export class UsersController {
         // Pending requests
         receivedFriendRequests: {
           where: { senderId: currentUser.id, status: 'pending' },
-          select: { status: true, senderId: true },
+          select: { id: true, status: true, senderId: true },
           take: 1,
         },
         sentFriendRequests: {
           where: { receiverId: currentUser.id, status: 'pending' },
-          select: { status: true, senderId: true },
+          select: { id: true, status: true, senderId: true },
           take: 1,
         },
         // Blocks
@@ -301,7 +301,17 @@ export class UsersController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated' })
   async updateMe(@CurrentUser() user: User, @Body() body: any) {
-    const { name, avatar, image, banner, statusText, statusEmoji, bio, notificationPreferences } = body;
+    const {
+      name,
+      username,
+      avatar,
+      image,
+      banner,
+      statusText,
+      statusEmoji,
+      bio,
+      notificationPreferences,
+    } = body;
 
     const profileImage = avatar || image;
 
@@ -309,6 +319,7 @@ export class UsersController {
       where: { id: user.id },
       data: {
         name,
+        username,
         avatar: profileImage,
         image: profileImage,
         banner,

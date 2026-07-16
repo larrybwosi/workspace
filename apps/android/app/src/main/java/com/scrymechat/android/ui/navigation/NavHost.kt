@@ -14,17 +14,34 @@ import com.scrymechat.android.ui.signup.SignUpScreen
 import com.scrymechat.android.ui.welcome.WelcomeScreen
 import com.scrymechat.android.ui.theme.ThemeViewModel
 import com.scrymechat.android.ui.profile.*
-import com.scrymechat.android.ui.settings.NotificationSettingsScreen
+import com.scrymechat.android.ui.profile.settings.*
 import com.scrymechat.android.ui.friends.FriendsScreen
 import com.scrymechat.android.ui.discovery.DiscoveryScreen
+import com.scrymechat.android.ui.notifications.NotificationsScreen
 
 @Composable
 fun ScrymeNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route,
-    themeViewModel: ThemeViewModel = hiltViewModel()
+    startDestination: String = Screen.Splash.route,
+    themeViewModel: ThemeViewModel = hiltViewModel(),
+    sessionManager: com.scrymechat.android.data.local.SessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Screen.Splash.route) {
+            com.scrymechat.android.ui.welcome.SplashScreen(
+                sessionManager = sessionManager,
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.createRoute(null)) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToWelcome = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Welcome.route) {
             val apiUrl by themeViewModel.apiUrl.collectAsState()
             WelcomeScreen(
@@ -80,6 +97,52 @@ fun ScrymeNavHost(
                 },
                 onUserProfileClick = { userId ->
                     navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                },
+                onWorkspaceClick = { slug ->
+                    navController.navigate(Screen.Home.createRoute(slug)) {
+                        popUpTo(Screen.Splash.route)
+                    }
+                },
+                onChannelClick = { channelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(channelId, slug))
+                },
+                onDmClick = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId))
+                },
+                onNotificationsClick = {
+                    navController.navigate(Screen.NotificationsPage.route)
+                }
+            )
+        }
+        composable(Screen.NotificationsPage.route) {
+            NotificationsScreen(
+                onBack = { navController.popBackStack() },
+                onNotificationClick = { notification ->
+                    navController.navigate(Screen.NotificationDetail.createRoute(notification.id))
+                }
+            )
+        }
+        composable(
+            route = Screen.NotificationDetail.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("notificationId") {
+                    type = androidx.navigation.NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val notificationId = backStackEntry.arguments?.getString("notificationId") ?: return@composable
+            com.scrymechat.android.ui.notifications.NotificationDetailScreen(
+                notificationId = notificationId,
+                onBack = { navController.popBackStack() },
+                onNavigateToChannel = { channelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(channelId, slug)) {
+                        popUpTo(Screen.Home.route)
+                    }
+                },
+                onNavigateToDm = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId)) {
+                        popUpTo(Screen.Home.route)
+                    }
                 }
             )
         }
@@ -92,59 +155,129 @@ fun ScrymeNavHost(
                     }
                 },
                 onDmClick = { userId ->
-                    navController.navigate(Screen.Chat.createRoute(userId))
+                    navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
                 }
             )
         }
         composable(Screen.Friends.route) {
             FriendsScreen(
                 onDmClick = { userId ->
-                    // Navigate to Chat with user (which should handle DM creation/selection)
-                    navController.navigate(Screen.Chat.createRoute(userId))
+                    navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
                 }
             )
         }
-        composable(Screen.Chat.route) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-            val chatViewModel: com.scrymechat.android.ui.chat.ChatViewModel = hiltViewModel()
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("id") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("isUserId") {
+                    type = androidx.navigation.NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: return@composable
+            val isUserId = backStackEntry.arguments?.getBoolean("isUserId") ?: false
 
-            LaunchedEffect(userId) {
-                chatViewModel.setDmByUser(userId)
-            }
-
-            val chatUiState by chatViewModel.uiState.collectAsState()
-
-            com.scrymechat.android.ui.chat.ChatView(
-                messages = chatUiState.messages,
-                onSendMessage = { content, replyToId, attachments -> chatViewModel.sendMessage(content, replyToId, null, attachments) },
-                onReply = { /* TODO */ },
-                onForward = { /* TODO */ },
-                onDownload = { attachment -> chatViewModel.downloadAttachment(attachment.url, attachment.name, attachment.type) },
-                onTyping = { /* TODO */ },
-                typingUsers = chatUiState.typingUsers,
-                pendingAttachments = chatUiState.pendingAttachments,
-                onAttach = { uri -> chatViewModel.uploadFile(uri, navController.context) },
-                onRemoveAttachment = { chatViewModel.removePendingAttachment(it) },
-                onAvatarClick = { id ->
-                    navController.navigate(Screen.OtherUserProfile.createRoute(id))
+            HomeScreen(
+                dmId = if (!isUserId) id else null,
+                dmUserId = if (isUserId) id else null,
+                onNotificationsClick = {
+                    navController.navigate(Screen.NotificationsPage.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onFriendsClick = {
+                    navController.navigate(Screen.Friends.route)
+                },
+                onDiscoveryClick = {
+                    navController.navigate(Screen.Discovery.route)
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                },
+                onWorkspaceClick = { slug ->
+                    navController.navigate(Screen.Home.createRoute(slug)) {
+                        popUpTo(Screen.Splash.route)
+                    }
+                },
+                onChannelClick = { channelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(channelId, slug))
+                },
+                onDmClick = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId))
                 }
             )
         }
-        composable(Screen.OtherUserProfile.route) { backStackEntry ->
+        composable(
+            route = Screen.OtherUserProfile.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("userId") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             OtherUserProfileScreen(
                 userId = userId,
                 onBack = { navController.popBackStack() },
                 onSendMessage = { id ->
-                    navController.navigate(Screen.Chat.createRoute(id)) {
+                    navController.navigate(Screen.Chat.createRoute(id, isUserId = true)) {
                         popUpTo(Screen.Home.route)
                     }
                 }
             )
         }
-        composable(Screen.Channel.route) { backStackEntry ->
-            val channelId = backStackEntry.arguments?.getString("channelId")
-            // Placeholder for Channel screen
+        composable(
+            route = Screen.Channel.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("channelId") {
+                    type = androidx.navigation.NavType.StringType
+                },
+                androidx.navigation.navArgument("slug") {
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
+            val workspaceSlug = backStackEntry.arguments?.getString("slug")
+
+            HomeScreen(
+                workspaceSlug = workspaceSlug,
+                channelId = channelId,
+                onNotificationsClick = {
+                    navController.navigate(Screen.NotificationsPage.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onFriendsClick = {
+                    navController.navigate(Screen.Friends.route)
+                },
+                onDiscoveryClick = {
+                    navController.navigate(Screen.Discovery.route)
+                },
+                onUserProfileClick = { userId ->
+                    navController.navigate(Screen.OtherUserProfile.createRoute(userId))
+                },
+                onWorkspaceClick = { slug ->
+                    navController.navigate(Screen.Home.createRoute(slug)) {
+                        popUpTo(Screen.Splash.route)
+                    }
+                },
+                onChannelClick = { newChannelId, slug ->
+                    navController.navigate(Screen.Channel.createRoute(newChannelId, slug))
+                },
+                onDmClick = { dmId ->
+                    navController.navigate(Screen.Chat.createRoute(dmId))
+                }
+            )
         }
         composable(Screen.Profile.route) {
             ProfileScreen(

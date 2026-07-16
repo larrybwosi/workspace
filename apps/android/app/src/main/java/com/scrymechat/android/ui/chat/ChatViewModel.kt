@@ -21,7 +21,10 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val realtimeRepository: RealtimeRepository,
     private val dmRepository: com.scrymechat.android.data.repository.DmRepository,
-    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository
+    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository,
+    private val authRepository: com.scrymechat.android.data.repository.AuthRepository,
+    private val workspaceRepository: com.scrymechat.android.data.repository.WorkspaceRepository,
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -32,6 +35,9 @@ class ChatViewModel @Inject constructor(
 
     private val _loadingActions = MutableStateFlow<Set<String>>(emptySet())
     val loadingActions: StateFlow<Set<String>> = _loadingActions.asStateFlow()
+
+    private val _workspaceMembers = MutableStateFlow<List<UserDto>>(emptyList())
+    private val _friends = MutableStateFlow<List<UserDto>>(emptyList())
 
     private var currentChannelId: String? = null
     private var currentDmId: String? = null
@@ -45,6 +51,25 @@ class ChatViewModel @Inject constructor(
 
     fun setWorkspaceSlug(slug: String) {
         currentWorkspaceSlug = slug
+        loadWorkspaceMembers(slug)
+    }
+
+    private fun loadWorkspaceMembers(slug: String) {
+        viewModelScope.launch {
+            val result = workspaceRepository.getWorkspaceMembers(slug)
+            if (result is Resource.Success && result.data != null) {
+                _workspaceMembers.value = result.data.map { it.user }
+            }
+        }
+    }
+
+    private fun loadFriendsList() {
+        viewModelScope.launch {
+            val result = friendsRepository.getFriendsList()
+            if (result.isSuccess) {
+                _friends.value = result.getOrNull() ?: emptyList()
+            }
+        }
     }
 
     fun setChannel(channelId: String) {
@@ -56,10 +81,17 @@ class ChatViewModel @Inject constructor(
         currentDmId = null
         currentThreadId = null
 
-        _uiState.update { it.copy(isThread = false, threadRootMessage = null) }
+        _uiState.update { it.copy(isThread = false, threadRootMessage = null, messages = emptyList(), isLoading = true) }
 
         realtimeRepository.joinRoom("channel:$channelId")
         loadMessages()
+
+        currentWorkspaceSlug?.let { slug ->
+            loadWorkspaceMembers(slug)
+            viewModelScope.launch {
+                chatRepository.markChannelRead(slug, channelId)
+            }
+        }
     }
 
     fun setThread(channelId: String, message: MessageEntity) {
@@ -73,7 +105,7 @@ class ChatViewModel @Inject constructor(
         currentThreadId = threadId
         currentDmId = null
 
-        _uiState.update { it.copy(isThread = true, threadRootMessage = message) }
+        _uiState.update { it.copy(isThread = true, threadRootMessage = message, messages = emptyList(), isLoading = true) }
 
         realtimeRepository.joinRoom("thread:$threadId")
         loadMessages()
@@ -85,9 +117,17 @@ class ChatViewModel @Inject constructor(
         currentDmId?.let { realtimeRepository.leaveRoom("dm:$it") }
         currentDmId = dmId
         currentChannelId = null
+        currentWorkspaceSlug = null
+
+        _uiState.update { it.copy(messages = emptyList(), isLoading = true) }
 
         realtimeRepository.joinRoom("dm:$dmId")
         loadMessages()
+        loadFriendsList()
+
+        viewModelScope.launch {
+            chatRepository.markDmRead(dmId)
+        }
     }
 
     fun setDmByUser(userId: String) {
@@ -107,16 +147,26 @@ class ChatViewModel @Inject constructor(
         val threadId = currentThreadId
         val slug = currentWorkspaceSlug
 
+        _uiState.update { it.copy(isLoading = true) }
+
         viewModelScope.launch {
-            when {
-                threadId != null && channelId != null && slug != null -> chatRepository.getThreadMessages(slug, channelId, threadId).collect { resource ->
-                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
-                }
-                channelId != null && slug != null -> chatRepository.getChannelMessages(slug, channelId).collect { resource ->
-                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
-                }
-                dmId != null -> chatRepository.getDmMessages(dmId).collect { resource ->
-                    if (resource is Resource.Error) _uiState.update { it.copy(error = resource.message) }
+            val flow = when {
+                threadId != null && channelId != null && slug != null -> chatRepository.getThreadMessages(slug, channelId, threadId)
+                channelId != null && slug != null -> chatRepository.getChannelMessages(slug, channelId)
+                dmId != null -> chatRepository.getDmMessages(dmId)
+                else -> null
+            }
+            flow?.collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(error = resource.message, isLoading = false) }
+                    }
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
                 }
             }
         }
@@ -130,7 +180,13 @@ class ChatViewModel @Inject constructor(
             }
 
             flow.collect { messages ->
-                _uiState.update { it.copy(messages = messages, isLoading = false) }
+                _uiState.update { state ->
+                    val shouldSetLoadingFalse = messages.isNotEmpty() || !state.isLoading
+                    state.copy(
+                        messages = messages,
+                        isLoading = if (shouldSetLoadingFalse) false else state.isLoading
+                    )
+                }
             }
         }
     }
@@ -161,73 +217,122 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun uploadFile(uri: Uri, context: Context) {
+    fun addPendingFile(uri: Uri, context: Context) {
+        var fileName = "file"
+        var fileSize = 0L
+        var mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (cursor.moveToFirst()) {
+                if (nameIndex != -1) fileName = cursor.getString(nameIndex)
+                if (sizeIndex != -1) fileSize = cursor.getLong(sizeIndex)
+            }
+        }
+
+        val pendingFile = PendingFile(uri, fileName, mimeType, fileSize)
+        _uiState.update { it.copy(pendingFiles = it.pendingFiles + pendingFile) }
+    }
+
+    fun removePendingFile(pendingFile: PendingFile) {
+        _uiState.update { it.copy(pendingFiles = it.pendingFiles - pendingFile) }
+    }
+
+    fun editMessage(message: MessageEntity, newContent: String) {
+        val slug = currentWorkspaceSlug
+        val channelId = currentChannelId
+        val dmId = currentDmId
         viewModelScope.launch {
-            try {
-                var fileName = "file"
-                var fileSize = 0L
-                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-                    if (cursor.moveToFirst()) {
-                        fileName = cursor.getString(nameIndex)
-                        fileSize = cursor.getLong(sizeIndex)
-                    }
-                }
-
-                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
-                val tempFile = java.io.File.createTempFile("upload", null, context.cacheDir)
-                tempFile.outputStream().use { outputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-
-                val result = storageRepository.uploadFile(tempFile)
-                if (result.isSuccess) {
-                    val uploadResponse = result.getOrThrow()
-                    val attachment = CreateAttachmentRequest(
-                        name = uploadResponse.name,
-                        type = uploadResponse.type,
-                        url = uploadResponse.url,
-                        size = uploadResponse.size.toInt()
-                    )
-                    _uiState.update { it.copy(pendingAttachments = it.pendingAttachments + attachment) }
-                } else {
-                    _uiState.update { it.copy(error = result.exceptionOrNull()?.message ?: "Upload failed") }
-                }
-                tempFile.delete()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "An error occurred during upload") }
+            val result = when {
+                channelId != null && slug != null -> chatRepository.updateChannelMessage(slug, channelId, message.id, newContent)
+                dmId != null -> chatRepository.updateDmMessage(dmId, message.id, newContent)
+                else -> return@launch
+            }
+            if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            } else {
+                loadMessages()
             }
         }
     }
 
-    fun removePendingAttachment(attachment: CreateAttachmentRequest) {
-        _uiState.update { it.copy(pendingAttachments = it.pendingAttachments - attachment) }
+    fun deleteMessage(message: MessageEntity) {
+        val slug = currentWorkspaceSlug
+        val channelId = currentChannelId
+        val dmId = currentDmId
+        viewModelScope.launch {
+            val result = when {
+                channelId != null && slug != null -> chatRepository.deleteChannelMessage(slug, channelId, message.id)
+                dmId != null -> chatRepository.deleteDmMessage(dmId, message.id)
+                else -> return@launch
+            }
+            if (result is Resource.Error) {
+                _uiState.update { it.copy(error = result.message) }
+            } else {
+                loadMessages()
+            }
+        }
     }
 
     fun onBack() {
         currentChannelId?.let { setChannel(it) }
     }
 
-    fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null, attachments: List<CreateAttachmentRequest>? = null) {
+    fun sendMessage(content: String, replyToId: String? = null, targetChannelId: String? = null, context: Context) {
         val channelId = targetChannelId ?: currentChannelId
         val dmId = currentDmId
         val threadId = currentThreadId
         val slug = currentWorkspaceSlug
-        val finalAttachments = attachments ?: _uiState.value.pendingAttachments
+        val pendingFiles = _uiState.value.pendingFiles
 
         viewModelScope.launch {
-            val result = when {
-                threadId != null && channelId != null && slug != null -> chatRepository.sendThreadMessage(slug, channelId, threadId, content, finalAttachments)
-                channelId != null && slug != null -> chatRepository.sendChannelMessage(slug, channelId, content, replyToId, finalAttachments)
-                dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, finalAttachments)
-                else -> return@launch
-            }
+            _uiState.update { it.copy(isSending = true, error = null) }
+            try {
+                val uploadedAttachments = mutableListOf<CreateAttachmentRequest>()
 
-            if (result is Resource.Error) {
-                _uiState.update { it.copy(error = result.message) }
-            } else {
-                _uiState.update { it.copy(pendingAttachments = emptyList()) }
+                // Sequential upload of pending files
+                for (pending in pendingFiles) {
+                    val inputStream = context.contentResolver.openInputStream(pending.uri) ?: continue
+                    val tempFile = java.io.File.createTempFile("upload", null, context.cacheDir)
+                    tempFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+
+                    val result = storageRepository.uploadFile(tempFile)
+                    if (result.isSuccess) {
+                        val uploadResponse = result.getOrThrow()
+                        uploadedAttachments.add(CreateAttachmentRequest(
+                            name = uploadResponse.name,
+                            type = uploadResponse.type,
+                            url = uploadResponse.url,
+                            size = uploadResponse.size.toInt()
+                        ))
+                    } else {
+                        _uiState.update { it.copy(error = "Failed to upload ${pending.name}", isSending = false) }
+                        tempFile.delete()
+                        return@launch
+                    }
+                    tempFile.delete()
+                }
+
+                val result = when {
+                    threadId != null && channelId != null && slug != null -> chatRepository.sendThreadMessage(slug, channelId, threadId, content, uploadedAttachments)
+                    channelId != null && slug != null -> chatRepository.sendChannelMessage(slug, channelId, content, replyToId, uploadedAttachments)
+                    dmId != null -> chatRepository.sendDmMessage(dmId, content, replyToId, uploadedAttachments)
+                    else -> {
+                        _uiState.update { it.copy(isSending = false) }
+                        return@launch
+                    }
+                }
+
+                if (result is Resource.Error) {
+                    _uiState.update { it.copy(error = result.message, isSending = false) }
+                } else {
+                    _uiState.update { it.copy(pendingFiles = emptyList(), isSending = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message ?: "An error occurred", isSending = false) }
             }
         }
     }
@@ -249,6 +354,19 @@ class ChatViewModel @Inject constructor(
                 if (isRelevant) {
                     // Update local messages
                     loadMessages()
+
+                    // Automatically mark as read when actively viewing
+                    if (channelId != null) {
+                        currentWorkspaceSlug?.let { slug ->
+                            viewModelScope.launch {
+                                chatRepository.markChannelRead(slug, channelId)
+                            }
+                        }
+                    } else if (dmId != null) {
+                        viewModelScope.launch {
+                            chatRepository.markDmRead(dmId)
+                        }
+                    }
                 }
             }
         }
@@ -321,6 +439,55 @@ class ChatViewModel @Inject constructor(
         _uiState.update { it.copy(activeModal = null) }
     }
 
+    fun searchUsersForMention(query: String) {
+        val listToSearch = if (currentWorkspaceSlug != null) {
+            _workspaceMembers.value
+        } else {
+            _friends.value
+        }
+
+        val filtered = if (query.isEmpty()) {
+            listToSearch
+        } else {
+            listToSearch.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                it.username?.contains(query, ignoreCase = true) == true
+            }
+        }
+
+        _uiState.update { it.copy(suggestedUsers = filtered) }
+    }
+
+    fun clearSuggestedUsers() {
+        _uiState.update { it.copy(suggestedUsers = emptyList()) }
+    }
+
+    fun navigateToUserProfile(username: String, onUserResolved: (String) -> Unit) {
+        val localList = _workspaceMembers.value + _friends.value
+        val exactLocal = localList.find {
+            it.username?.equals(username, ignoreCase = true) == true ||
+            it.name.equals(username, ignoreCase = true)
+        }
+        if (exactLocal != null) {
+            onUserResolved(exactLocal.id)
+            return
+        }
+
+        viewModelScope.launch {
+            val result = authRepository.searchUsers(username)
+            if (result.isSuccess) {
+                val users = result.getOrNull()
+                val exactMatch = users?.find {
+                    it.username?.equals(username, ignoreCase = true) == true ||
+                    it.name.equals(username, ignoreCase = true)
+                }
+                if (exactMatch != null) {
+                    onUserResolved(exactMatch.id)
+                }
+            }
+        }
+    }
+
     fun toggleReaction(messageId: String, emoji: String) {
         val channelId = currentChannelId
         val dmId = currentDmId
@@ -349,12 +516,21 @@ class ChatViewModel @Inject constructor(
 data class ChatUiState(
     val messages: List<MessageEntity> = emptyList(),
     val isLoading: Boolean = false,
+    val isSending: Boolean = false,
     val error: String? = null,
     val typingUsers: List<String> = emptyList(),
     val activeModal: ModalState? = null,
     val isThread: Boolean = false,
     val threadRootMessage: MessageEntity? = null,
-    val pendingAttachments: List<CreateAttachmentRequest> = emptyList()
+    val pendingFiles: List<PendingFile> = emptyList(),
+    val suggestedUsers: List<UserDto> = emptyList()
+)
+
+data class PendingFile(
+    val uri: Uri,
+    val name: String,
+    val type: String,
+    val size: Long
 )
 
 data class ModalState(

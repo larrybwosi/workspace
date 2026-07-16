@@ -1,12 +1,16 @@
 package com.scrymechat.android.notifications
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
+import androidx.core.content.ContextCompat
 import com.scrymechat.android.R
 import com.scrymechat.android.data.local.dao.WorkspaceDao
 import com.scrymechat.android.data.repository.ChatRepository
@@ -35,9 +39,13 @@ class ReplyReceiver : BroadcastReceiver() {
     @Inject
     lateinit var workspaceDao: WorkspaceDao
 
+    @Inject
+    lateinit var friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
+
     companion object {
         const val ACTION_REPLY = "com.scrymechat.android.action.REPLY"
         const val ACTION_MARK_READ = "com.scrymechat.android.action.MARK_READ"
+        const val ACTION_ACCEPT_FRIEND = "com.scrymechat.android.action.ACCEPT_FRIEND"
         private const val TAG = "ReplyReceiver"
     }
 
@@ -56,6 +64,7 @@ class ReplyReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_MARK_READ -> handleMarkAsRead(context, entityId, entityType, workspaceId, pendingResult)
             ACTION_REPLY -> handleReply(context, intent, entityId, entityType, workspaceId, notificationId, pendingResult)
+            ACTION_ACCEPT_FRIEND -> handleAcceptFriend(context, entityId, notificationId, pendingResult)
             else -> pendingResult.finish()
         }
     }
@@ -124,6 +133,24 @@ class ReplyReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun handleAcceptFriend(
+        context: Context,
+        requestId: String,
+        notificationId: Int,
+        pendingResult: PendingResult
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                friendsRepository.updateFriendRequest(requestId, "accept")
+                NotificationManagerCompat.from(context).cancel(notificationId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to accept friend request $requestId", e)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
     /** Briefly confirms the reply went out, then lets the next push update replace it. */
     private fun acknowledgeReplySent(context: Context, notificationId: Int) {
         val notificationManager = NotificationManagerCompat.from(context)
@@ -151,6 +178,16 @@ class ReplyReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .build()
 
-        NotificationManagerCompat.from(context).notify(notificationId, notification)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        ) {
+            try {
+                NotificationManagerCompat.from(context).notify(notificationId, notification)
+            } catch (e: SecurityException) {
+                Log.e(TAG, "SecurityException while displaying reply-failed notification", e)
+            }
+        } else {
+            Log.w(TAG, "Cannot show notification: POST_NOTIFICATIONS permission not granted")
+        }
     }
 }

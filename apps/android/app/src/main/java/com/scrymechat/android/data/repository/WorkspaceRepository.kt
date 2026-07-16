@@ -7,6 +7,7 @@ import com.scrymechat.android.data.remote.CreateWorkspaceRequest
 import com.scrymechat.android.data.remote.UpdateWorkspaceRequest
 import com.scrymechat.android.data.remote.WorkspaceApi
 import com.scrymechat.android.data.remote.WorkspaceDto
+import com.scrymechat.android.data.remote.WorkspaceMemberWithUserDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -19,19 +20,25 @@ class WorkspaceRepository @Inject constructor(
 ) {
     fun getWorkspaces(): Flow<Resource<List<WorkspaceEntity>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.getWorkspaces()
             if (response.isSuccessful) {
                 val dtos = response.body() ?: emptyList()
                 val entities = dtos.map { it.toEntity() }
                 dao.insertWorkspaces(entities)
-                emit(Resource.Success(entities))
+                Resource.Success(entities)
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
+    }
+
+    suspend fun getWorkspaceBySlug(slug: String): WorkspaceEntity? {
+        return dao.getWorkspaceBySlug(slug)
     }
 
     suspend fun createWorkspace(request: CreateWorkspaceRequest): Resource<WorkspaceEntity> {
@@ -41,6 +48,19 @@ class WorkspaceRepository @Inject constructor(
                 val entity = response.body()!!.toEntity()
                 dao.insertWorkspace(entity)
                 Resource.Success(entity)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun getWorkspaceMembers(slug: String): Resource<List<WorkspaceMemberWithUserDto>> {
+        return try {
+            val response = api.getWorkspaceMembers(slug)
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!.members)
             } else {
                 Resource.Error(response.message())
             }
@@ -83,16 +103,18 @@ class WorkspaceRepository @Inject constructor(
 
     fun discoverWorkspaces(query: String? = null): Flow<Resource<List<WorkspaceDto>>> = flow {
         emit(Resource.Loading())
-        try {
+        val result = try {
             val response = api.discoverWorkspaces(query)
             if (response.isSuccessful) {
-                emit(Resource.Success(response.body() ?: emptyList()))
+                Resource.Success(response.body() ?: emptyList())
             } else {
-                emit(Resource.Error(response.message()))
+                Resource.Error(response.message())
             }
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "An unknown error occurred"))
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Resource.Error(e.message ?: "An unknown error occurred")
         }
+        emit(result)
     }
 
     suspend fun joinWorkspace(slug: String): Resource<Unit> {

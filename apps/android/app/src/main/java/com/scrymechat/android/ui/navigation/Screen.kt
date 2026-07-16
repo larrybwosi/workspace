@@ -1,6 +1,7 @@
 package com.scrymechat.android.ui.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Welcome : Screen("welcome")
     object SignUp : Screen("signup")
     object Login : Screen("login")
@@ -9,14 +10,16 @@ sealed class Screen(val route: String) {
     }
     object Discovery : Screen("discovery")
     object Friends : Screen("friends")
-    object Chat : Screen("chat/{userId}") {
-        fun createRoute(userId: String) = "chat/$userId"
+    object Chat : Screen("chat/{id}?isUserId={isUserId}") {
+        fun createRoute(id: String, isUserId: Boolean = false) =
+            "chat/$id?isUserId=$isUserId"
     }
     object OtherUserProfile : Screen("user_profile/{userId}") {
         fun createRoute(userId: String) = "user_profile/$userId"
     }
-    object Channel : Screen("channel/{channelId}") {
-        fun createRoute(channelId: String) = "channel/$channelId"
+    object Channel : Screen("channel/{channelId}?slug={slug}") {
+        fun createRoute(channelId: String, slug: String? = null) =
+            if (slug != null) "channel/$channelId?slug=$slug" else "channel/$channelId"
     }
     object Profile : Screen("profile")
     object MyAccount : Screen("profile/account")
@@ -25,6 +28,10 @@ sealed class Screen(val route: String) {
     object Devices : Screen("profile/devices")
     object Appearance : Screen("profile/appearance")
     object Notifications : Screen("profile/notifications")
+    object NotificationsPage : Screen("notifications")
+    object NotificationDetail : Screen("notification_detail/{notificationId}") {
+        fun createRoute(notificationId: String) = "notification_detail/$notificationId"
+    }
     object Voice : Screen("profile/voice")
     object Language : Screen("profile/language")
     object AuthorizedApps : Screen("profile/apps")

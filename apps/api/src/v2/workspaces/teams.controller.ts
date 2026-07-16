@@ -229,12 +229,14 @@ export class V2TeamsController {
 
     /**
      * ⚡ Performance Optimization:
-     * 1. Uses targeted 'select' instead of broad 'include' to reduce DB payload and memory usage.
-     * 2. Specifically excludes the 'permissions' (BigInt) field from the members relation.
-     * Expected impact: Reduces JSON payload size and avoids BigInt serialization overhead.
+     * 1. Replaces 'findFirst' with 'findUnique' on primary key 'id' to leverage database O(1) index lookup.
+     * 2. Uses targeted 'select' instead of broad 'include' to reduce DB payload and memory usage.
+     * 3. Specifically excludes the 'permissions' (BigInt) field from the members relation.
+     * 4. Checks 'workspaceId' in application logic to ensure authorization.
+     * Expected impact: Reduces database lookup latency, JSON payload size, and avoids BigInt serialization overhead.
      */
-    const team = await prisma.workspaceTeam.findFirst({
-      where: { id: teamId, workspaceId: context.workspaceId },
+    const team = await prisma.workspaceTeam.findUnique({
+      where: { id: teamId },
       select: {
         id: true,
         workspaceId: true,
@@ -264,7 +266,7 @@ export class V2TeamsController {
       },
     });
 
-    if (!team) {
+    if (!team || team.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Team not found');
     }
 

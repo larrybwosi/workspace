@@ -23,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       android: ${{ steps.filter.outputs.android }}
+      web: ${{ steps.filter.outputs.web }}
+      desktop: ${{ steps.filter.outputs.desktop }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -31,13 +33,15 @@ jobs:
           filters: |
             android:
               - 'apps/android/**'
+            web:
+              - 'apps/web/**'
+            desktop:
+              - 'apps/desktop/**'
 
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -53,9 +57,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_UNIT }}
+          POSTGRES_USER: runner_u
+          POSTGRES_PASSWORD: runner_p
+          POSTGRES_DB: db_unit
         ports:
           - 5432:5432
         options: >-
@@ -74,8 +78,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -98,9 +100,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_E2E }}
+          POSTGRES_USER: runner_u
+          POSTGRES_PASSWORD: runner_p
+          POSTGRES_DB: db_e2e
         ports:
           - 5432:5432
         options: >-
@@ -119,8 +121,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -137,15 +137,17 @@ jobs:
         run: pnpm turbo run test:e2e --filter=api
 
   web-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.web == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: ${{ env.PG_U }}
-          POSTGRES_PASSWORD: ${{ env.PG_P }}
-          POSTGRES_DB: ${{ env.PG_D_E2E }}
+          POSTGRES_USER: runner_u
+          POSTGRES_PASSWORD: runner_p
+          POSTGRES_DB: db_e2e
         ports:
           - 5432:5432
         options: >-
@@ -164,8 +166,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -209,33 +209,12 @@ jobs:
           API_URL: http://localhost:3000
         run: cd apps/android && ./gradlew test
 
-  all-tests-passed:
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check results
-        run: |
-          lint="${{ needs.lint-and-typecheck.result }}"
-          unit="${{ needs.unit-tests.result }}"
-          api="${{ needs.api-e2e.result }}"
-          web="${{ needs.web-e2e.result }}"
-          android="${{ needs.native-android-test.result }}"
-
-          if [[ "$lint" != "success" ]]; then exit 1; fi
-          if [[ "$unit" != "success" ]]; then exit 1; fi
-          if [[ "$api" != "success" ]]; then exit 1; fi
-          if [[ "$web" != "success" ]]; then exit 1; fi
-          if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
-
   desktop-verify:
-    if: github.event_name == 'pull_request'
-    needs: [all-tests-passed]
+    needs: [changes]
+    if: needs.changes.outputs.desktop == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -268,11 +247,35 @@ jobs:
         run: cargo fmt --all -- --check
         working-directory: apps/desktop/src-tauri
 
+  all-tests-passed:
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test, desktop-verify]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          lint="${{ needs.lint-and-typecheck.result }}"
+          unit="${{ needs.unit-tests.result }}"
+          api="${{ needs.api-e2e.result }}"
+          web="${{ needs.web-e2e.result }}"
+          android="${{ needs.native-android-test.result }}"
+          desktop="${{ needs.desktop-verify.result }}"
+
+          if [[ "$lint" != "success" ]]; then exit 1; fi
+          if [[ "$unit" != "success" ]]; then exit 1; fi
+          if [[ "$api" != "success" ]]; then exit 1; fi
+          if [[ "$web" != "success" && "$web" != "skipped" ]]; then exit 1; fi
+          if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
+          if [[ "$desktop" != "success" && "$desktop" != "skipped" ]]; then exit 1; fi
+
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [all-tests-passed]
+    needs: [changes, all-tests-passed]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    outputs:
+      published: ${{ steps.versioning.outputs.published }}
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -296,16 +299,38 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Handle Prerelease Mode
+      - name: Handle Changeset Release Mode
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
             if [ ! -f .changeset/pre.json ]; then
               pnpm changeset pre enter dev
             fi
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             if [ -f .changeset/pre.json ]; then
               pnpm changeset pre exit
             fi
+
+            # Ensure pushing/merging to main produces a major release
+            existing=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null)
+            if [ -n "$existing" ]; then
+              echo "Promoting existing changesets to major release for main..."
+              sed -i 's/: patch/: major/g' .changeset/*.md 2>/dev/null || true
+              sed -i 's/: minor/: major/g' .changeset/*.md 2>/dev/null || true
+            else
+              echo "No changeset found on main; generating automatic major changeset."
+              GITHUB_REF_NAME=main node scripts/auto-changeset.js
+            fi
+          fi
+
+      - name: Auto-changeset for Android-only prerelease (dev)
+        if: github.ref == 'refs/heads/dev' && needs.changes.outputs.android == 'true'
+        run: |
+          existing=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null)
+          if [ -z "$existing" ]; then
+            echo "No changeset found for this push; generating an automatic patch changeset for the android package."
+            printf -- "---\n\"android\": patch\n---\n\nAutomated prerelease version bump triggered by Android app changes.\n" > ".changeset/auto-android-$(date +%s).md"
+          else
+            echo "Changeset(s) already present, skipping auto-generation."
           fi
 
       - name: Version and Commit
@@ -313,11 +338,16 @@ jobs:
         run: |
           pnpm version:auto
           git add .
-          git commit -m "chore: release [skip ci]"
-          git push origin ${{ github.ref_name }}
-          echo "published=true" >> $GITHUB_OUTPUT
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: release [skip ci]"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create and Push Tags
+        if: steps.versioning.outputs.published == 'true'
         run: |
           pnpm changeset tag
           git push --tags
@@ -325,9 +355,6 @@ jobs:
       - name: Get current version
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-    outputs:
-      published: ${{ steps.versioning.outputs.published }}
-      version: ${{ steps.get_version.outputs.version }}
 
   docker-publish:
     if: needs.release.outputs.published == 'true' && github.ref == 'refs/heads/main'
@@ -387,11 +414,19 @@ jobs:
         env:
           API_URL: http://localhost:3000
         run: cd apps/android && ./gradlew assembleRelease
+      - name: Determine unique Android release tag
+        id: android_tag
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
+            echo "tag=v${{ needs.release.outputs.version }}-android.${{ github.run_number }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v${{ needs.release.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.release.outputs.version }}
-          name: v${{ needs.release.outputs.version }}
+          tag_name: ${{ steps.android_tag.outputs.tag }}
+          name: ${{ steps.android_tag.outputs.tag }}
           files: apps/android/app/build/outputs/apk/release/app-release.apk
           draft: false
           prerelease: ${{ github.ref == 'refs/heads/dev' }}

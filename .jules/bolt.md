@@ -185,3 +185,22 @@
 
 **Learning:** Returning individual reaction records in high-traffic message lists creates massive JSON payloads and increases client-side processing. V2 was missing the server-side grouping pattern established in V1.
 **Action:** Always group reactions by emoji on the server using a `Map` before returning message lists. This reduces payload size by 30-50% for active threads and ensures consistency across API versions.
+
+## 2026-07-10 - [API/Performance] Backgrounding Non-Critical Side Effects
+
+**Learning:** Core messaging operations (send, update, delete) were blocked by external I/O (realtime publishing, push notifications, webhooks) and non-critical database writes (audit logs, asset usage). Backgrounding these using `.catch()` for error handling significantly reduces API response latency (P99) while maintaining system reliability.
+**Action:** Always background non-blocking side effects like realtime events, notifications, and audit logging in high-traffic write endpoints. Ensure a `Logger` is used in the `.catch()` block to capture background failures.
+
+## 2026-07-10 - [Testing/Async] Mocking Backgrounded Prisma Calls
+
+**Learning:** When backgrounding Prisma calls (or any promise) using `.catch()`, unit tests using Vitest/Jest mocks will fail with `TypeError: Cannot read properties of undefined (reading 'catch')` if the mock only returns `undefined`.
+**Action:** Ensure mocks for backgrounded calls return an object with a mock `.catch` method: `mockReturnValue({ catch: vi.fn() })`.
+
+## 2025-05-30 - [API/V2] Standardized User Payload in Search
+
+**Learning:** V2 search endpoints were returning redundant 'image' fields and inconsistent 'avatar' data, inflating JSON payloads and increasing client-side complexity.
+**Action:** Standardize user object mapping in all search-related controllers to prioritize 'avatar' via 'avatar || image' fallback and explicitly exclude the redundant 'image' field from the final response. This reduces payload size by ~5-10% in member-heavy listings.
+## 2026-07-11 - [Prisma/Performance] Optimizing Write Paths & Public API Contracts
+
+**Learning:** Re-architecting single database mutating queries (such as Prisma's `update` or `delete`) to include a pre-read query to verify owner/workspace details degrades write path throughput from 1 RTT to 2 RTT. Using Prisma's support for extra non-unique filters inside the `where` clause (e.g. `where: { id, workspaceId }`) combines unique primary key lookups and security checks into a single atomic DB-level round-trip. Additionally, never append metadata fields (like `source: 'cache'`) to public API responses, as doing so violates response schemas and public-facing consumer contracts.
+**Action:** Maintain single-query database mutations using extra where filters instead of split read-then-write sequences. Strictly return unmodified payload schemas to satisfy public API contracts.

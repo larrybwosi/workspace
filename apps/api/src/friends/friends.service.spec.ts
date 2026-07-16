@@ -153,7 +153,11 @@ describe('FriendsService', () => {
       expect(mockPrisma.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            OR: [{ email: 'bob@example.com' }, { username: 'bob@example.com' }],
+            OR: [
+              { id: 'bob@example.com' },
+              { email: 'bob@example.com' },
+              { username: 'bob@example.com' },
+            ],
           },
           select: expect.objectContaining({
             id: true,
@@ -188,7 +192,11 @@ describe('FriendsService', () => {
       expect(mockPrisma.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            OR: [{ email: 'bob_username' }, { username: 'bob_username' }],
+            OR: [
+              { id: 'bob_username' },
+              { email: 'bob_username' },
+              { username: 'bob_username' },
+            ],
           },
         })
       );

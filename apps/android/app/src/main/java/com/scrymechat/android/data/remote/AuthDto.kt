@@ -33,6 +33,7 @@ data class UserDto(
     val name: String,
     val username: String?,
     val avatar: String?,
+    val image: String? = null,
     val banner: String? = null,
     val statusText: String? = null,
     val statusEmoji: String? = null,

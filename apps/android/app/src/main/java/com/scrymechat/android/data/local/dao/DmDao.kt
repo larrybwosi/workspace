@@ -18,6 +18,12 @@ interface DmDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDm(dm: DmConversationEntity)
 
+    @Query("UPDATE dm_conversations SET unreadCount = 0 WHERE id = :id")
+    suspend fun clearUnreadCount(id: String)
+
+    @Query("UPDATE dm_conversations SET unreadCount = unreadCount + 1 WHERE id = :id")
+    suspend fun incrementUnreadCount(id: String)
+
     @Query("DELETE FROM dm_conversations WHERE id = :id")
     suspend fun deleteDmById(id: String)
 
@@ -26,7 +32,7 @@ interface DmDao {
 
     @Transaction
     @Query("""
-        SELECT dm_conversations.*, users.name as otherUserName, users.avatar as otherUserAvatar
+        SELECT dm_conversations.*, users.name as otherUserName, users.avatar as otherUserAvatar, users.status as otherUserStatus, users.statusText as otherUserStatusText, users.statusEmoji as otherUserStatusEmoji
         FROM dm_conversations
         JOIN users ON dm_conversations.otherUserId = users.id
         ORDER BY lastMessageAt DESC
@@ -37,5 +43,8 @@ interface DmDao {
 data class DmWithUser(
     @Embedded val dm: DmConversationEntity,
     val otherUserName: String?,
-    val otherUserAvatar: String?
+    val otherUserAvatar: String?,
+    val otherUserStatus: String? = null,
+    val otherUserStatusText: String? = null,
+    val otherUserStatusEmoji: String? = null
 )

@@ -122,6 +122,26 @@ class DiscoveryViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    fun setCreateWorkspaceDialogOpen(isOpen: Boolean) {
+        _uiState.update { it.copy(isCreateWorkspaceDialogOpen = isOpen) }
+    }
+
+    fun createWorkspace(request: com.scrymechat.android.data.remote.CreateWorkspaceRequest) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCreatingWorkspace = true, error = null) }
+            val result = workspaceRepository.createWorkspace(request)
+            if (result is Resource.Success && result.data != null) {
+                _uiState.update { it.copy(
+                    isCreatingWorkspace = false,
+                    isCreateWorkspaceDialogOpen = false,
+                    joinedWorkspaceSlug = result.data.slug
+                ) }
+            } else {
+                _uiState.update { it.copy(isCreatingWorkspace = false, error = result.message) }
+            }
+        }
+    }
 }
 
 data class DiscoveryUiState(
@@ -133,5 +153,7 @@ data class DiscoveryUiState(
     val isSearching: Boolean = false,
     val isJoining: Boolean = false,
     val joinedWorkspaceSlug: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isCreateWorkspaceDialogOpen: Boolean = false,
+    val isCreatingWorkspace: Boolean = false
 )

@@ -31,6 +31,7 @@ import com.scrymechat.android.ui.theme.*
 @Composable
 fun FriendsScreen(
     onDmClick: (String) -> Unit,
+    onUserProfileClick: (String) -> Unit = {},
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -147,7 +148,8 @@ fun FriendsScreen(
                         FriendRequestsList(
                             requests = uiState.requests,
                             onAccept = { viewModel.acceptRequest(it) },
-                            onDecline = { viewModel.declineRequest(it) }
+                            onDecline = { viewModel.declineRequest(it) },
+                            onProfileClick = onUserProfileClick
                         )
                     }
                 } else if (displayList.isEmpty()) {
@@ -167,7 +169,7 @@ fun FriendsScreen(
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(displayList, key = { it.id }) { friend ->
-                            FriendItem(user = friend, onDmClick = onDmClick)
+                            FriendItem(user = friend, onDmClick = onDmClick, onProfileClick = onUserProfileClick)
                         }
                     }
                 }
@@ -284,8 +286,8 @@ private fun presenceColor(status: String): Color = when (status.lowercase()) {
 }
 
 @Composable
-private fun Avatar(name: String, avatarUrl: String?, status: String?, size: androidx.compose.ui.unit.Dp = 40.dp) {
-    Box(modifier = Modifier.size(size)) {
+private fun Avatar(name: String, avatarUrl: String?, status: String?, size: androidx.compose.ui.unit.Dp = 40.dp, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(size)) {
         if (avatarUrl != null) {
             AsyncImage(
                 model = avatarUrl,
@@ -333,12 +335,12 @@ private fun Avatar(name: String, avatarUrl: String?, status: String?, size: andr
 }
 
 @Composable
-fun FriendItem(user: UserEntity, onDmClick: (String) -> Unit) {
+fun FriendItem(user: UserEntity, onDmClick: (String) -> Unit, onProfileClick: (String) -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(EnterpriseTokens.RadiusInner))
-            .clickable { /* Profile */ }
+            .clickable { onProfileClick(user.id) }
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -373,7 +375,8 @@ fun FriendItem(user: UserEntity, onDmClick: (String) -> Unit) {
 fun FriendRequestsList(
     requests: List<FriendRequestEntity>,
     onAccept: (String) -> Unit,
-    onDecline: (String) -> Unit
+    onDecline: (String) -> Unit,
+    onProfileClick: (String) -> Unit = {}
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(requests, key = { it.id }) { request ->
@@ -383,11 +386,16 @@ fun FriendRequestsList(
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Avatar(name = request.senderId, avatarUrl = null, status = null)
+                Avatar(
+                    name = request.senderName ?: request.senderId,
+                    avatarUrl = request.senderAvatar,
+                    status = null,
+                    modifier = Modifier.clickable { onProfileClick(request.senderId) }
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Request from ${request.senderId}",
+                        text = "Request from ${request.senderName ?: request.senderId}",
                         color = EnterpriseTokens.TextPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,

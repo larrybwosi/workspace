@@ -86,12 +86,6 @@ export class EmojisController {
   @ApiBody({ type: CreateEmojiDto })
   @ApiResponse({ status: 201, description: 'Emoji created successfully' })
   async createEmoji(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateEmojiDto) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace existence check and role-based authorization into a single query.
-     * 2. Uses targeted 'select' to minimize database payload and memory overhead.
-     * 3. Prevents O(N) membership filtering in the API by using database-level filtering.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {

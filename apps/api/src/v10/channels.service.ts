@@ -1,10 +1,12 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import { publishRealtime, AblyChannels, AblyEvents, notifyAppExclusive } from '@repo/shared/server';
 import { hasPermission, Permissions } from '../common/permissions';
 
 @Injectable()
 export class V10ChannelsService {
+  private readonly logger = new Logger(V10ChannelsService.name);
+
   async getChannel(id: string) {
     /**
      * ⚡ Performance Optimization:
@@ -147,7 +149,11 @@ export class V10ChannelsService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the update response.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, {
       message: {
         ...updatedMessage,
         user: {
@@ -157,7 +163,7 @@ export class V10ChannelsService {
           isBot: true,
         },
       },
-    });
+    }).catch(err => this.logger.error('Failed to publish message update:', err));
 
     return {
       id: updatedMessage.id,
@@ -230,10 +236,14 @@ export class V10ChannelsService {
       where: { id: messageId },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background the realtime publishing to avoid blocking the deletion response.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
       messageId,
       channelId,
-    });
+    }).catch(err => this.logger.error('Failed to publish message deletion:', err));
 
     return null;
   }
@@ -296,31 +306,38 @@ export class V10ChannelsService {
     });
 
     // Log action
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: channel.workspaceId!,
-        userId: bot.id,
-        action: 'BOT_MESSAGE_CREATE',
-        resource: 'message',
-        resourceId: message.id,
-        metadata: { channelId },
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical side effects (Audit Logs, Realtime, Notifications)
+     * to minimize response latency for Discord-compatible message creation.
+     */
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: channel.workspaceId!,
+          userId: bot.id,
+          action: 'BOT_MESSAGE_CREATE',
+          resource: 'message',
+          resourceId: message.id,
+          metadata: { channelId },
+        },
+      })
+      .catch(err => this.logger.error('Failed to create bot message audit log:', err));
 
     // Handle exclusive notification if requested
     if (exclusive_notification && channel.appId) {
-      await notifyAppExclusive(
+      notifyAppExclusive(
         channelId,
         exclusive_notification.title || `New announcement from ${bot.name}`,
         exclusive_notification.message || content || 'Click to view details',
         exclusive_notification.linkUrl ||
           `/workspace/${channel.workspace?.slug || 'default'}/channels/${channel.slug || channelId}?messageId=${message.id}`,
         { botId: bot.id, appId: channel.appId }
-      );
+      ).catch(err => this.logger.error('Failed to send app exclusive notification:', err));
     }
 
     // Notify clients
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, {
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, {
       message: {
         ...message,
         user: {
@@ -331,7 +348,7 @@ export class V10ChannelsService {
           isBot: true,
         },
       },
-    });
+    }).catch(err => this.logger.error('Failed to publish bot message sent event:', err));
 
     return {
       id: message.id,

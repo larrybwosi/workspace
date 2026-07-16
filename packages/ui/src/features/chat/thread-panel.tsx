@@ -5,6 +5,7 @@ import { Button } from '../../components/button';
 import { ScrollArea } from '../../components/scroll-area';
 import { MessageItem } from './message-item';
 import { MessageComposer } from './message-composer';
+import { MessageSkeletons } from './components/message-list';
 import { useMessages, useSendMessage } from '@repo/api-client';
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
@@ -163,17 +164,8 @@ export function ThreadPanel({
 
           {/* Replies */}
           {isLoading && messages.length === 0 ? (
-            <div className="space-y-4 px-4 py-2">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-3 w-3/4" />
-                  </div>
-                </div>
-              ))}
+            <div className="px-4 py-2">
+              <MessageSkeletons />
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-4">

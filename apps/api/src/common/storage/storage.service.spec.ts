@@ -1,26 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from './storage.service';
-import { MinioStorageProvider } from './providers/minio.provider';
+import { RustFSStorageProvider } from './providers/rustfs.provider';
 import { SanityStorageProvider } from './providers/sanity.provider';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
 
 vi.mock('@repo/shared', () => ({
   validateEnv: () => ({
-    STORAGE_PROVIDER: 'minio',
+    STORAGE_PROVIDER: 'rustfs',
   }),
 }));
 
 describe('StorageService', () => {
   let service: StorageService;
-  let minioProvider: MinioStorageProvider;
+  let rustfsProvider: RustFSStorageProvider;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StorageService,
         {
-          provide: MinioStorageProvider,
-          useValue: { uploadFile: vi.fn().mockResolvedValue({ url: 'http://minio/file.png' }) },
+          provide: RustFSStorageProvider,
+          useValue: { uploadFile: vi.fn().mockResolvedValue({ url: 'http://rustfs/file.png' }) },
         },
         {
           provide: SanityStorageProvider,
@@ -30,14 +30,14 @@ describe('StorageService', () => {
     }).compile();
 
     service = module.get<StorageService>(StorageService);
-    minioProvider = module.get<MinioStorageProvider>(MinioStorageProvider);
+    rustfsProvider = module.get<RustFSStorageProvider>(RustFSStorageProvider);
   });
 
-  it('should call minioProvider when STORAGE_PROVIDER is minio', async () => {
+  it('should call rustfsProvider when STORAGE_PROVIDER is rustfs', async () => {
     const file: any = { buffer: Buffer.from('test'), originalname: 'test.png', mimetype: 'image/png', size: 4 };
     const result = await service.uploadFile(file);
 
-    expect(minioProvider.uploadFile).toHaveBeenCalledWith(file);
-    expect(result.url).toBe('http://minio/file.png');
+    expect(rustfsProvider.uploadFile).toHaveBeenCalledWith(file);
+    expect(result.url).toBe('http://rustfs/file.png');
   });
 });

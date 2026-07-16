@@ -1,63 +1,37 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "declaration": true,
+    "declarationMap": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
-    "target": "esnext",
-    "sourceMap": true,
+    "jsx": "react-jsx",
+    "sourceMap": false,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": ".",
     "incremental": true,
+    "composite": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "disableSourceOfProjectReferenceRedirect": true,
     "isolatedModules": false,
-    "verbatimModuleSyntax": false,
-    "noEmit": false,
     "skipLibCheck": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "types": [
-      "node"
-    ],
-    "esModuleInterop": true,
+    "strict": false,
+    "downlevelIteration": true,
+    "types": ["node", "vitest/globals"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@repo/shared": [
-        "../../packages/shared/index.ts"
-      ],
-      "@repo/auth": [
-        "../../packages/auth.ts"
-      ],
-      "@repo/shared/*": [
-        "../../packages/shared/src/*"
-      ],
-      "@repo/types": [
-        "../../packages/types/src/index.ts"
-      ],
-      "@repo/types/*": [
-        "../../packages/types/src/*"
-      ],
-      "@repo/database": [
-        "../../packages/database/index.ts"
-      ],
-      "@repo/database/*": [
-        "../../packages/database/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "eslint.config.mjs",
-    "**/*.spec.ts",
-    "test"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**", "**/__mocks__/**"]
 }

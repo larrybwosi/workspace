@@ -1,6 +1,15 @@
 package com.scrymechat.android.ui.chat
 
+import android.net.Uri
 import android.widget.Toast
+import android.content.ClipboardManager
+import android.content.ClipData
+import android.content.Context
+import androidx.compose.ui.text.input.TextFieldValue
+import com.scrymechat.android.data.local.entities.ChannelEntity
+import com.scrymechat.android.data.remote.UserDto
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -10,7 +19,6 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +28,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
@@ -31,24 +38,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.scrymechat.android.ui.components.UserAvatar
+import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.local.entities.MessageEntity
 import com.scrymechat.android.data.remote.*
 import com.scrymechat.android.ui.components.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import java.time.Duration
+import java.time.Instant
 import kotlin.math.roundToInt
 
 // ─── Theme-aware palette ─────────────────────────────────────────────────────
-// Mirrors the premium direction used on the login screen: rich gradients,
-// glass surfaces, and distinct light/dark variants rather than a single
-// shared dark-only palette (the original hardcoded ScrymeDark* tokens).
 
 data class ChatPalette(
     val isDark: Boolean,
@@ -83,8 +92,8 @@ fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     return if (isDark) {
         ChatPalette(
             isDark = true,
-            canvasBg = Color(0xFF0A0B10),
-            surface = Color(0xFF15171F),
+            canvasBg = Color(0xFF313338),
+            surface = Color(0xFF2B2D31),
             surfaceVariant = Color(0xFF0E0F16),
             glassSurface = Color.White.copy(alpha = 0.05f),
             glassBorder = Color.White.copy(alpha = 0.09f),
@@ -139,17 +148,309 @@ fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
     }
 }
 
-private val ShapeBubble = RoundedCornerShape(14.dp)
-private val ShapeChip = RoundedCornerShape(10.dp)
+/**
+ * Animated pulse skeleton placeholder for messages.
+ */
+@Composable
+fun MessageSkeleton(palette: ChatPalette) {
+    val infiniteTransition = rememberInfiniteTransition(label = "skeleton")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        // Avatar skeleton
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(palette.textSecondary.copy(alpha = alpha))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Name skeleton
+                Box(
+                    modifier = Modifier
+                        .size(width = 80.dp, height = 14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(palette.textSecondary.copy(alpha = alpha))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // Timestamp skeleton
+                Box(
+                    modifier = Modifier
+                        .size(width = 40.dp, height = 10.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(palette.textTertiary.copy(alpha = alpha))
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Text line 1
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(palette.textSecondary.copy(alpha = alpha))
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            // Text line 2
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.55f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(palette.textSecondary.copy(alpha = alpha))
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MessageContextBottomSheet(
+    message: MessageEntity,
+    currentUserId: String?,
+    onDismiss: () -> Unit,
+    onReply: () -> Unit,
+    onForward: () -> Unit,
+    onAddReaction: (String) -> Unit,
+    onCopyText: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onDownload: ((AttachmentDto) -> Unit)? = null
+) {
+    val quickEmojis = listOf("👍", "❤️", "😂", "😮", "😢", "🔥", "✅")
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        ) {
+            // Quick reactions row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                quickEmojis.forEach { emoji ->
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                onAddReaction(emoji)
+                                onDismiss()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = emoji, fontSize = 24.sp)
+                    }
+                }
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // Menu Items
+            ContextMenuItem(
+                icon = Icons.Default.Reply,
+                label = "Reply",
+                onClick = onReply
+            )
+
+            ContextMenuItem(
+                icon = Icons.Default.Forward,
+                label = "Forward",
+                onClick = onForward
+            )
+
+            ContextMenuItem(
+                icon = Icons.Default.ContentCopy,
+                label = "Copy Text",
+                onClick = onCopyText
+            )
+
+            if (onDownload != null && message.attachments.isNotEmpty()) {
+                message.attachments.forEach { attachment ->
+                    ContextMenuItem(
+                        icon = Icons.Default.Download,
+                        label = "Download ${attachment.name}",
+                        onClick = { onDownload(attachment) }
+                    )
+                }
+            }
+
+            val isOwnMessage = currentUserId != null && message.senderId == currentUserId
+
+            if (isOwnMessage) {
+                ContextMenuItem(
+                    icon = Icons.Default.Edit,
+                    label = "Edit Message",
+                    onClick = onEdit
+                )
+
+                ContextMenuItem(
+                    icon = Icons.Default.Delete,
+                    label = "Delete Message",
+                    color = MaterialTheme.colorScheme.error,
+                    onClick = onDelete
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContextMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = color,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = label,
+            color = color,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditMessageDialog(
+    initialText: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(initialText) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Message") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(text) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun DeleteMessageConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Message") },
+        text = { Text("Are you sure you want to delete this message? This cannot be undone.") },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun ThreadStarterDivider(palette: ChatPalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(palette.divider)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "End of Thread",
+            color = palette.textTertiary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(palette.divider)
+        )
+    }
+}
+
 private val ShapeInputBar = RoundedCornerShape(22.dp)
 
 // ──────────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChatView(
     chatTitle: String = "",
     messages: List<MessageEntity>,
+    isLoading: Boolean = false,
     onSendMessage: (String, String?, List<CreateAttachmentRequest>?) -> Unit,
     onReply: (MessageEntity) -> Unit,
     onOpenThread: (MessageEntity) -> Unit = {},
@@ -157,6 +458,7 @@ fun ChatView(
     onBack: () -> Unit = {},
     isThread: Boolean = false,
     threadTitle: String? = null,
+    isDm: Boolean = false,
     onDownload: (AttachmentDto) -> Unit = {},
     onAction: (MessageEntity, MessageActionDto, Map<String, Any>) -> Unit = { _, _, _ -> },
     onUpdateForm: (String, String, Any) -> Unit = { _, _, _ -> },
@@ -164,83 +466,364 @@ fun ChatView(
     loadingActions: Set<String> = emptySet(),
     onTyping: () -> Unit = {},
     typingUsers: List<String>,
-    pendingAttachments: List<CreateAttachmentRequest> = emptyList(),
+    pendingFiles: List<PendingFile> = emptyList(),
+    isSending: Boolean = false,
     onAttach: (Uri) -> Unit = {},
-    onRemoveAttachment: (CreateAttachmentRequest) -> Unit = {},
+    onRemoveFile: (PendingFile) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
+    sessionManager: SessionManager? = null,
+    channels: List<ChannelEntity> = emptyList(),
+    suggestedUsers: List<UserDto> = emptyList(),
+    onSearchUsers: (String) -> Unit = {},
+    onClearSuggestedUsers: () -> Unit = {},
+    onMentionClick: (String) -> Unit = {},
+    onChannelTagClick: (String) -> Unit = {},
+    onEditMessage: (MessageEntity, String) -> Unit = { _, _ -> },
+    onDeleteMessage: (MessageEntity) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
-    var textState by remember { mutableStateOf("") }
+    val currentUserId by (sessionManager?.getActiveSessionFlow() ?: flowOf(null))
+        .map { it?.userId }
+        .collectAsState(initial = null)
+    val apiUrl by (sessionManager?.getApiUrlFlow() ?: flowOf(com.scrymechat.android.BuildConfig.API_URL))
+        .map { it ?: com.scrymechat.android.BuildConfig.API_URL }
+        .collectAsState(initial = com.scrymechat.android.BuildConfig.API_URL)
+
+    val scope = rememberCoroutineScope()
+    var textState by remember { mutableStateOf(TextFieldValue("")) }
     var replyingTo by remember { mutableStateOf<MessageEntity?>(null) }
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
     var fullScreenImageName by remember { mutableStateOf<String?>(null) }
     var fullScreenImageMimeType by remember { mutableStateOf<String?>(null) }
     var inputFocused by remember { mutableStateOf(false) }
     var reactionPickerMessage by remember { mutableStateOf<MessageEntity?>(null) }
+    var highlightedMessageId by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(0)
+    val mentionQuery = remember(textState) {
+        getMentionQuery(textState.text, textState.selection.end)
+    }
+
+    LaunchedEffect(mentionQuery) {
+        if (mentionQuery != null && mentionQuery.trigger == '@') {
+            onSearchUsers(mentionQuery.query)
+        } else {
+            onClearSuggestedUsers()
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(palette.canvasBg)) {
-        if (isThread) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
-                }
-                Text(
-                    text = threadTitle ?: "Thread",
-                    color = palette.textPrimary,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+    // Safely scroll to bottom (item 0 in reverse layout) on message count changes
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            try {
+                listState.animateScrollToItem(0)
+            } catch (_: Exception) {
+                // Ignore scroll exceptions during rapid layout updates
             }
-            Divider(color = palette.divider)
+        }
+    }
+
+    // Clean channel title without duplicate '#' prefix
+    val cleanTitle = chatTitle.removePrefix("#")
+
+    Column(modifier = modifier.fillMaxSize().background(palette.canvasBg)) {
+        if (chatTitle.isBlank() && messages.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = palette.accent)
+            }
+            return@Column
         }
 
-        // Messages List
+        if (isThread) {
+            Surface(
+                color = palette.surface,
+                shadowElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = palette.textPrimary)
+                    }
+                    Icon(
+                        imageVector = Icons.Default.ChatBubbleOutline,
+                        contentDescription = null,
+                        tint = palette.accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = threadTitle?.removePrefix("#") ?: "Thread",
+                            color = palette.textPrimary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "in #$cleanTitle",
+                            color = palette.textSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
+
+        val currentChatKey = remember(chatTitle, isThread, isDm) {
+            "${chatTitle}_${isThread}_${isDm}"
+        }
+
+        var initialOldestUnreadMessageId by remember(currentChatKey) {
+            mutableStateOf<String?>(null)
+        }
+
+        var hasCalculatedUnread by remember(currentChatKey) {
+            mutableStateOf(false)
+        }
+
+        LaunchedEffect(messages, currentChatKey) {
+            if (!hasCalculatedUnread && messages.isNotEmpty()) {
+                val oldestUnread = messages.lastOrNull { !it.readByCurrentUser }
+                initialOldestUnreadMessageId = oldestUnread?.id
+                hasCalculatedUnread = true
+            }
+        }
+
+        // Messages List Container
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            if (messages.isEmpty()) {
-                EmptyChatState(chatTitle = chatTitle, palette = palette, isDm = !chatTitle.startsWith("#") && !isThread)
+            if (isLoading && messages.isEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    reverseLayout = true,
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 12.dp)
+                ) {
+                    items(5) {
+                        MessageSkeleton(palette = palette)
+                    }
+                }
+            } else if (messages.isEmpty()) {
+                EmptyChatState(
+                    chatTitle = cleanTitle,
+                    palette = palette,
+                    isDm = isDm
+                )
             } else {
+                val oldestUnreadIndex = remember(messages, initialOldestUnreadMessageId) {
+                    if (initialOldestUnreadMessageId != null) {
+                        messages.indexOfFirst { it.id == initialOldestUnreadMessageId }
+                    } else {
+                        -1
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     state = listState,
                     reverseLayout = true,
-                    contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 12.dp)
                 ) {
-                    items(messages, key = { it.id }) { message ->
-                        SwipeableMessageItem(
-                            message = message,
-                            palette = palette,
-                            onReply = {
-                                replyingTo = it
-                                onReply(it)
-                            },
-                            onOpenThread = onOpenThread,
-                            onForward = { onForward(it) },
-                            onDownload = onDownload,
-                            onAction = { action, formState -> onAction(message, action, formState) },
-                            onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
-                            formState = formStates[message.id] ?: emptyMap(),
-                            isLoading = loadingActions.contains(message.id),
-                            onImageClick = { attachment ->
-                                fullScreenImageUrl = attachment.url
-                                fullScreenImageName = attachment.name
-                                fullScreenImageMimeType = attachment.type
-                            },
-                            onAddReaction = { reactionPickerMessage = it },
-                            onAvatarClick = onAvatarClick
-                        )
+                    if (isThread) {
+                        item {
+                            ThreadStarterDivider(palette = palette)
+                        }
+                    }
+
+                    items(
+                        count = messages.size,
+                        key = { index ->
+                            val msgId = messages[index].id
+                            if (msgId.isNotBlank()) "${msgId}_$index" else "msg_$index"
+                        }
+                    ) { index ->
+                        val message = messages[index]
+                        val prevMessage = if (index + 1 < messages.size) messages[index + 1] else null
+
+                        val isGroupHeader = prevMessage == null ||
+                                           prevMessage.senderId != message.senderId ||
+                                           !isWithinGroupingTimeframe(prevMessage.createdAt, message.createdAt) ||
+                                           message.replyToSenderName != null
+
+                        val repliedMessage = remember(message.replyToId, messages) {
+                            if (message.replyToId != null) {
+                                messages.find { it.id == message.replyToId }
+                            } else {
+                                null
+                            }
+                        }
+
+                        Column {
+                            if (index == oldestUnreadIndex) {
+                                NewMessagesLine(palette = palette)
+                            }
+
+                            SwipeableMessageItem(
+                                message = message,
+                                isGroupHeader = isGroupHeader,
+                                palette = palette,
+                                repliedMessage = repliedMessage,
+                                onReplyClick = { replyToId ->
+                                    val targetIndex = messages.indexOfFirst { it.id == replyToId }
+                                    if (targetIndex != -1) {
+                                        highlightedMessageId = replyToId
+                                        scope.launch {
+                                            try {
+                                                listState.animateScrollToItem(targetIndex)
+                                            } catch (_: Exception) {}
+                                            kotlinx.coroutines.delay(1500)
+                                            if (highlightedMessageId == replyToId) {
+                                                highlightedMessageId = null
+                                            }
+                                        }
+                                    }
+                                },
+                                onReply = {
+                                    replyingTo = it
+                                    onReply(it)
+                                },
+                                onOpenThread = onOpenThread,
+                                onForward = { onForward(it) },
+                                onDownload = onDownload,
+                                onAction = { action, formState -> onAction(message, action, formState) },
+                                onUpdateForm = { fieldId, value -> onUpdateForm(message.id, fieldId, value) },
+                                formState = formStates[message.id] ?: emptyMap(),
+                                isLoading = loadingActions.contains(message.id),
+                                onImageClick = { attachment ->
+                                    fullScreenImageUrl = attachment.url
+                                    fullScreenImageName = attachment.name
+                                    fullScreenImageMimeType = attachment.type
+                                },
+                                onAddReaction = { reactionPickerMessage = it },
+                                onAvatarClick = onAvatarClick,
+                                apiUrl = apiUrl,
+                                onMentionClick = onMentionClick,
+                                onChannelTagClick = onChannelTagClick,
+                                onEditMessage = onEditMessage,
+                                onDeleteMessage = onDeleteMessage,
+                                currentUserId = currentUserId,
+                                highlightedMessageId = highlightedMessageId
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Suggestions Overlay
+            val isSuggestionsVisible = (mentionQuery != null && (mentionQuery.trigger == '#' || (mentionQuery.trigger == '@' && suggestedUsers.isNotEmpty())))
+
+            if (isSuggestionsVisible) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .heightIn(max = 200.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = palette.surface,
+                    border = BorderStroke(1.dp, palette.glassBorder),
+                    tonalElevation = 6.dp
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 4.dp)
+                    ) {
+                        if (mentionQuery?.trigger == '@') {
+                            items(
+                                count = suggestedUsers.size,
+                                key = { index -> suggestedUsers[index].id }
+                            ) { index ->
+                                val user = suggestedUsers[index]
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val username = user.username ?: user.name
+                                            val replacement = "@$username "
+                                            val newText = textState.text.replaceRange(
+                                                mentionQuery.startIndex,
+                                                textState.selection.end,
+                                                replacement
+                                            )
+                                            textState = TextFieldValue(
+                                                text = newText,
+                                                selection = androidx.compose.ui.text.TextRange(mentionQuery.startIndex + replacement.length)
+                                            )
+                                            onClearSuggestedUsers()
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    UserAvatar(
+                                        name = user.name,
+                                        avatarUrl = user.avatar ?: user.image,
+                                        size = 32.dp,
+                                        borderColor = palette.glassBorder
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = user.name,
+                                            color = palette.textPrimary,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        user.username?.let {
+                                            Text(
+                                                text = "@$it",
+                                                color = palette.textSecondary,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (mentionQuery?.trigger == '#') {
+                            val matchedChannels = channels.filter {
+                                it.type != "category" && it.name.contains(mentionQuery.query, ignoreCase = true)
+                            }
+                            items(
+                                count = matchedChannels.size,
+                                key = { index -> matchedChannels[index].id }
+                            ) { index ->
+                                val channel = matchedChannels[index]
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val replacement = "#${channel.name} "
+                                            val newText = textState.text.replaceRange(
+                                                mentionQuery.startIndex,
+                                                textState.selection.end,
+                                                replacement
+                                            )
+                                            textState = TextFieldValue(
+                                                text = newText,
+                                                selection = androidx.compose.ui.text.TextRange(mentionQuery.startIndex + replacement.length)
+                                            )
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Tag,
+                                        contentDescription = null,
+                                        tint = palette.accent,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = channel.name,
+                                        color = palette.textPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -264,7 +847,7 @@ fun ChatView(
             ) {
                 TypingDots(color = palette.accent)
                 Text(
-                    text = if (typingUsers.size == 1) "${typingUsers[0]} is typing" else "${typingUsers.size} people are typing",
+                    text = if (typingUsers.size == 1) "${typingUsers[0]} is typing..." else "${typingUsers.size} people are typing...",
                     color = palette.textSecondary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -286,7 +869,7 @@ fun ChatView(
                 .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
             AnimatedVisibility(
-                visible = pendingAttachments.isNotEmpty(),
+                visible = pendingFiles.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -297,41 +880,58 @@ fun ChatView(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    pendingAttachments.forEach { attachment ->
+                    pendingFiles.forEach { pending ->
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(12.dp),
                             color = palette.attachmentChipBg,
                             border = BorderStroke(1.dp, palette.bubbleBorder)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (attachment.type.startsWith("image/")) Icons.Default.Image else Icons.Default.FilePresent,
-                                    contentDescription = null,
-                                    tint = palette.accent,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = attachment.name,
-                                    color = palette.textPrimary,
-                                    fontSize = 12.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.widthIn(max = 100.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                IconButton(
-                                    onClick = { onRemoveAttachment(attachment) },
-                                    modifier = Modifier.size(18.dp)
+                            Box(modifier = Modifier.width(100.dp).height(100.dp)) {
+                                if (pending.type.startsWith("image/")) {
+                                    AsyncImage(
+                                        model = pending.uri,
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.FilePresent,
+                                            contentDescription = null,
+                                            tint = palette.accent,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = pending.name,
+                                            color = palette.textPrimary,
+                                            fontSize = 10.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.4f))
+                                        .clickable { onRemoveFile(pending) },
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         Icons.Default.Close,
                                         contentDescription = "Remove",
-                                        tint = palette.textTertiary,
-                                        modifier = Modifier.size(12.dp)
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -405,12 +1005,18 @@ fun ChatView(
                     value = textState,
                     onValueChange = {
                         textState = it
-                        if (it.isNotEmpty()) onTyping()
+                        if (it.text.isNotEmpty()) onTyping()
                     },
                     modifier = Modifier
                         .weight(1f)
                         .onFocusChanged { inputFocused = it.isFocused },
-                    placeholder = { Text("Message", color = palette.textTertiary, fontSize = 14.sp) },
+                    placeholder = {
+                        Text(
+                            text = if (isDm) "Message @$cleanTitle" else "Message #$cleanTitle",
+                            color = palette.textTertiary,
+                            fontSize = 14.sp
+                        )
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -426,7 +1032,7 @@ fun ChatView(
                 )
 
                 AnimatedVisibility(
-                    visible = textState.isNotBlank() || pendingAttachments.isNotEmpty(),
+                    visible = textState.text.isNotBlank() || pendingFiles.isNotEmpty() || isSending,
                     enter = scaleIn() + fadeIn(),
                     exit = scaleOut() + fadeOut()
                 ) {
@@ -436,19 +1042,27 @@ fun ChatView(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(Brush.linearGradient(palette.accentGradient))
-                            .clickable {
-                                onSendMessage(textState, replyingTo?.id, pendingAttachments)
-                                textState = ""
+                            .clickable(enabled = !isSending) {
+                                onSendMessage(textState.text, replyingTo?.id, null)
+                                textState = TextFieldValue("")
                                 replyingTo = null
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.Send,
-                            contentDescription = "Send",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        if (isSending) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.Send,
+                                contentDescription = "Send",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -460,7 +1074,7 @@ fun ChatView(
         ReactionPicker(
             onEmojiSelected = { emoji ->
                 reactionPickerMessage?.let { msg ->
-                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = com.scrymechat.android.data.remote.MessageActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
+                    onAction(msg, MessageActionDto(id = "add_reaction", label = "Reaction", handler = MessageActionHandlerDto("CALLBACK")), mapOf("emoji" to emoji))
                 }
             },
             onDismiss = { reactionPickerMessage = null }
@@ -478,13 +1092,15 @@ fun ChatView(
                 onClose = { fullScreenImageUrl = null },
                 onDownload = {
                     fullScreenImageUrl?.let { url ->
-                        onDownload(AttachmentDto(
-                            id = "",
-                            name = fullScreenImageName ?: "image.jpg",
-                            url = url,
-                            type = fullScreenImageMimeType ?: "image/jpeg",
-                            size = 0
-                        ))
+                        onDownload(
+                            AttachmentDto(
+                                id = "",
+                                name = fullScreenImageName ?: "image.jpg",
+                                url = url,
+                                type = fullScreenImageMimeType ?: "image/jpeg",
+                                size = 0
+                            )
+                        )
                     }
                 }
             )
@@ -492,19 +1108,28 @@ fun ChatView(
     }
 }
 
+/**
+ * Discord-style Empty State component for Channels and Direct Messages.
+ */
 @Composable
-fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = false) {
+fun EmptyChatState(
+    chatTitle: String,
+    palette: ChatPalette,
+    isDm: Boolean = false
+) {
+    val cleanTitle = chatTitle.removePrefix("#")
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 32.dp),
+            .padding(horizontal = 24.dp, vertical = 28.dp),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.Start
     ) {
-        // Large distinctive icon for the channel/DM
+        // Large Discord-style round icon header
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(72.dp)
                 .clip(CircleShape)
                 .background(palette.accentSoft),
             contentAlignment = Alignment.Center
@@ -513,60 +1138,78 @@ fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = fals
                 imageVector = if (isDm) Icons.Default.Person else Icons.Default.Tag,
                 contentDescription = null,
                 tint = palette.accent,
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Large, bold welcome header
-        Text(
-            text = if (isDm) chatTitle else "Welcome to #$chatTitle!",
-            color = palette.textPrimary,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = (-0.5).sp
-        )
+        // Discord-style welcome title
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (!isDm) {
+                Icon(
+                    imageVector = Icons.Default.Tag,
+                    contentDescription = null,
+                    tint = palette.textPrimary,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .padding(end = 4.dp)
+                )
+            }
+            Text(
+                text = if (isDm) cleanTitle else "Welcome to #$cleanTitle!",
+                color = palette.textPrimary,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
+            )
+        }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Descriptive subtext explaining the beginning of the conversation
+        // Discord-style explanatory subtitle
         Text(
             text = if (isDm) {
-                "This is the beginning of your direct message history with @$chatTitle. Keep it friendly and respectful!"
+                "This is the beginning of your direct message history with @$cleanTitle. Keep it friendly and respectful!"
             } else {
-                "This is the start of the #$chatTitle channel. Why not send a message to say hello?"
+                "This is the start of the #$cleanTitle channel."
             },
             color = palette.textSecondary,
-            fontSize = 16.sp,
+            fontSize = 15.5.sp,
             lineHeight = 22.sp,
-            modifier = Modifier.fillMaxWidth(0.85f)
+            modifier = Modifier.fillMaxWidth(0.9f)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         if (!isDm) {
-            // Affordance for channel settings/editing (Visual only)
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { /* Could open channel settings */ }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = palette.accentSoft,
+                border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.2f)),
+                modifier = Modifier.clickable { /* Channel edit/settings action */ }
             ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = palette.accent,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Edit Channel",
-                    color = palette.accent,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = palette.accent,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Edit Channel",
+                        color = palette.accent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -575,7 +1218,10 @@ fun EmptyChatState(chatTitle: String, palette: ChatPalette, isDm: Boolean = fals
 @Composable
 private fun TypingDots(color: Color) {
     val infinite = rememberInfiniteTransition(label = "typing")
-    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         repeat(3) { index ->
             val delay = index * 150
             val scale by infinite.animateFloat(
@@ -597,451 +1243,65 @@ private fun TypingDots(color: Color) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable
-fun SwipeableMessageItem(
-    message: MessageEntity,
-    palette: ChatPalette,
-    onReply: (MessageEntity) -> Unit,
-    onOpenThread: (MessageEntity) -> Unit = {},
-    onAddReaction: (MessageEntity) -> Unit = {},
-    onForward: (MessageEntity) -> Unit,
-    onDownload: (AttachmentDto) -> Unit = {},
-    onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
-    onUpdateForm: (String, Any) -> Unit = { _, _ -> },
-    formState: Map<String, Any> = emptyMap(),
-    isLoading: Boolean = false,
-    onImageClick: (AttachmentDto) -> Unit = {},
-    onAvatarClick: (String) -> Unit = {}
-) {
-    // Swipe-to-action. Kept lightweight (drag offset + threshold) per the
-    // original approach, but with spring-back animation and a clearer,
-    // theme-aware reveal so the affordance reads as intentional rather than
-    // a layout glitch mid-drag.
-    val swipeState = remember { mutableStateOf(0f) }
-    val density = LocalDensity.current
-    val threshold = with(density) { 80.dp.toPx() }
-    val animatedOffset by animateFloatAsState(
-        targetValue = swipeState.value,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "swipeOffset"
-    )
-    val swipeProgress = (kotlin.math.abs(swipeState.value) / threshold).coerceIn(0f, 1f)
+data class MentionQuery(val trigger: Char, val query: String, val startIndex: Int)
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .draggable(
-                state = rememberDraggableState { delta: Float ->
-                    swipeState.value = (swipeState.value + delta).coerceIn(-threshold, threshold)
-                },
-                orientation = Orientation.Horizontal,
-                onDragStopped = {
-                    if (swipeState.value >= threshold * 0.7f) {
-                        onReply(message)
-                    } else if (swipeState.value <= -threshold * 0.7f) {
-                        onForward(message)
-                    }
-                    swipeState.value = 0f
-                }
-            )
-    ) {
-        // Background Actions — scale + fade in as the swipe approaches threshold
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
-            horizontalArrangement = if (animatedOffset > 0) Arrangement.Start else Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (animatedOffset > 4f) {
-                SwipeActionIcon(icon = Icons.Default.Reply, palette = palette, progress = swipeProgress)
-            } else if (animatedOffset < -4f) {
-                SwipeActionIcon(icon = Icons.Default.Forward, palette = palette, progress = swipeProgress)
-            }
+fun getMentionQuery(text: String, selectionIndex: Int): MentionQuery? {
+    if (selectionIndex < 0 || selectionIndex > text.length) return null
+    var i = selectionIndex - 1
+    while (i >= 0) {
+        val char = text[i]
+        if (char == ' ' || char == '\n') {
+            break
         }
-
-        // Message Content
-        var showContextMenu by remember { mutableStateOf(false) }
-
-        Surface(
-            modifier = Modifier
-                .offset { IntOffset(animatedOffset.roundToInt(), 0) }
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { },
-                    onLongClick = { showContextMenu = true }
-                ),
-            color = Color.Transparent
-        ) {
-            Box {
-                MessageItem(
-                    message = message,
-                    palette = palette,
-                    onDownload = onDownload,
-                    onAction = onAction,
-                    onUpdateForm = onUpdateForm,
-                    formState = formState,
-                    isLoading = isLoading,
-                    onImageClick = onImageClick,
-                    onOpenThread = { onOpenThread(message) },
-                    onAvatarClick = onAvatarClick
-                )
-
-                DropdownMenu(
-                    expanded = showContextMenu,
-                    onDismissRequest = { showContextMenu = false },
-                    modifier = Modifier
-                        .background(palette.surface)
-                        .border(1.dp, palette.glassBorder, RoundedCornerShape(12.dp))
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Reply", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
-                            onReply(message)
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Default.Reply, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Forward", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
-                            onForward(message)
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Default.Forward, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Add Reaction", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
-                            onAddReaction(message)
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Default.AddReaction, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                    )
-                    if (message.attachments.isNotEmpty()) {
-                        message.attachments.forEach { attachment ->
-                            DropdownMenuItem(
-                                text = { Text("Download ${attachment.name}", color = palette.textPrimary, fontSize = 14.sp) },
-                                onClick = {
-                                    onDownload(attachment)
-                                    showContextMenu = false
-                                },
-                                leadingIcon = { Icon(Icons.Default.Download, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                            )
-                        }
-                    }
-                    DropdownMenuItem(
-                        text = { Text("Copy Text", color = palette.textPrimary, fontSize = 14.sp) },
-                        onClick = {
-                            // TODO: Implement copy to clipboard
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null, tint = palette.textSecondary, modifier = Modifier.size(18.dp)) }
-                    )
-                }
+        if (char == '@' || char == '#') {
+            if (i == 0 || text[i - 1] == ' ' || text[i - 1] == '\n') {
+                return MentionQuery(char, text.substring(i + 1, selectionIndex), i)
             }
+            break
         }
+        i--
     }
-}
-
-@Composable
-private fun SwipeActionIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, palette: ChatPalette, progress: Float) {
-    val scale = 0.7f + 0.3f * progress
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .alpha(0.4f + 0.6f * progress)
-            .clip(CircleShape)
-            .background(palette.accentSoft),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = palette.accent,
-            modifier = Modifier.size(16.dp)
-        )
-    }
-}
-
-@Composable
-fun MessageItem(
-    message: MessageEntity,
-    palette: ChatPalette,
-    onDownload: (AttachmentDto) -> Unit = {},
-    onOpenThread: () -> Unit = {},
-    onAction: (MessageActionDto, Map<String, Any>) -> Unit = { _, _ -> },
-    onUpdateForm: (String, Any) -> Unit = { _, _ -> },
-    formState: Map<String, Any> = emptyMap(),
-    isLoading: Boolean = false,
-    onImageClick: (AttachmentDto) -> Unit = {},
-    onAvatarClick: (String) -> Unit = {}
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 6.dp)
-    ) {
-        AsyncImage(
-            model = message.senderAvatar ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderId}",
-            contentDescription = null,
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .border(1.dp, palette.glassBorder, CircleShape)
-                .background(palette.surfaceVariant)
-                .clickable { onAvatarClick(message.senderId) },
-            contentScale = ContentScale.Crop
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = message.senderName ?: "Unknown User",
-                    color = palette.textPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.5.sp,
-                    modifier = Modifier.clickable { onAvatarClick(message.senderId) }
-                )
-                Spacer(modifier = Modifier.width(7.dp))
-                Text(
-                    text = formatMessageTimestamp(message.createdAt),
-                    color = palette.textTertiary,
-                    fontSize = 11.5.sp
-                )
-                if (message.isPinned) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        Icons.Default.PushPin,
-                        contentDescription = "Pinned",
-                        tint = palette.accent,
-                        modifier = Modifier.size(12.dp)
-                    )
-                }
-            }
-
-            if (message.replyToSenderName != null) {
-                Spacer(modifier = Modifier.height(3.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .width(2.dp)
-                            .height(13.dp)
-                            .background(palette.replyStripAccent, RoundedCornerShape(1.dp))
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Replying to ${message.replyToSenderName}",
-                        color = palette.replyStripAccent,
-                        fontSize = 12.sp,
-                        fontStyle = FontStyle.Italic
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Render message content based on type — wrapped in a subtle
-            // bubble surface for richer, more "designed" message cards,
-            // while plain text stays unboxed for a lighter conversational feel.
-            val isRichContent = message.messageType in setOf("custom", "approval", "report", "poll", "graph")
-
-            if (isRichContent) {
-                Surface(
-                    shape = ShapeBubble,
-                    color = palette.bubbleSurface,
-                    border = BorderStroke(1.dp, palette.bubbleBorder)
-                ) {
-                    Box(modifier = Modifier.padding(2.dp)) {
-                        if (message.messageType == "custom" || message.messageType == "approval" || message.messageType == "report") {
-                            val customMessage = message.customMessage
-                            if (customMessage != null) {
-                                CustomMessageRenderer(
-                                    customMessage = customMessage,
-                                    formState = formState,
-                                    onUpdateForm = onUpdateForm,
-                                    onActionTriggered = { action -> onAction(action, formState) },
-                                    isLoading = isLoading
-                                )
-                            } else {
-                                MarkdownText(content = message.content)
-                            }
-                        } else {
-                            when (message.messageType) {
-                                "poll" -> {
-                                    val question = message.metadata?.get("question") as? String ?: "Poll"
-                                    val optionsMap = message.metadata?.get("options") as? List<Map<String, Any>> ?: emptyList()
-                                    val options = optionsMap.map {
-                                        PollOption(it["id"] as String, it["text"] as String, (it["votes"] as? Number)?.toInt() ?: 0)
-                                    }
-                                    val totalVotes = options.sumOf { it.votes }
-                                    val selectedOptionId = message.metadata?.get("userVote") as? String
-                                    PollComponent(
-                                        question = question,
-                                        options = options,
-                                        totalVotes = totalVotes,
-                                        selectedOptionId = selectedOptionId,
-                                        onOptionClick = {}
-                                    )
-                                }
-                                "graph" -> {
-                                    val title = message.metadata?.get("title") as? String ?: "Graph"
-                                    val data = (message.metadata?.get("data") as? List<Number>)?.map { it.toFloat() } ?: emptyList()
-                                    val labels = message.metadata?.get("labels") as? List<String> ?: emptyList()
-                                    GraphComponent(title = title, data = data, labels = labels)
-                                }
-                                else -> {
-                                    MarkdownText(content = message.content)
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                MarkdownText(content = message.content)
-            }
-
-            // Attachments
-            val context = LocalContext.current
-            message.attachments.forEach { attachment ->
-                if (attachment.type.startsWith("image/")) {
-                    Box(modifier = Modifier.padding(top = 8.dp)) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, palette.bubbleBorder)
-                        ) {
-                            AsyncImage(
-                                model = attachment.url,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 300.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onImageClick(attachment) },
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
-                                onDownload(attachment)
-                            },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(6.dp)
-                                .size(30.dp)
-                                .clip(CircleShape)
-                                .background(palette.scrimOverImage)
-                        ) {
-                            Icon(
-                                Icons.Default.Download,
-                                contentDescription = "Download",
-                                tint = Color.White,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth()
-                            .clip(ShapeChip)
-                            .background(palette.attachmentChipBg)
-                            .border(1.dp, palette.bubbleBorder, ShapeChip)
-                            .padding(horizontal = 10.dp, vertical = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(RoundedCornerShape(7.dp))
-                                .background(palette.accentSoft),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.FilePresent, contentDescription = null, tint = palette.accent, modifier = Modifier.size(15.dp))
-                        }
-                        Spacer(modifier = Modifier.width(9.dp))
-                        Text(
-                            text = attachment.name,
-                            color = palette.textPrimary,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(
-                            onClick = {
-                                Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
-                                onDownload(attachment)
-                            },
-                            modifier = Modifier.size(30.dp)
-                        ) {
-                            Icon(Icons.Default.Download, contentDescription = "Download", tint = palette.textSecondary, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                }
-            }
-
-            if (message.replyCount > 0 || message.threadId != null) {
-                TextButton(
-                    onClick = onOpenThread,
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.heightIn(min = 32.dp)
-                ) {
-                    Text(
-                        text = if (message.replyCount > 0) "${message.replyCount} ${if (message.replyCount == 1) "reply" else "replies"}" else "View thread",
-                        color = palette.accent,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // Reactions
-            if (message.reactions.isNotEmpty()) {
-                Row(
-                    modifier = Modifier.padding(top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    message.reactions.forEach { reaction ->
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(palette.reactionChipBg)
-                                .border(1.dp, palette.reactionChipBorder, RoundedCornerShape(50))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = reaction.emoji, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = reaction.count.toString(), color = palette.textSecondary, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    return null
 }
 
 /**
- * Formats an ISO-ish createdAt string into a short, human-friendly time.
- * Falls back to the original date-only behavior if parsing fails, so this
- * is a pure visual upgrade with no risk of crashing on unexpected formats.
+ * Discord-style New Messages line separator.
  */
-private fun formatMessageTimestamp(createdAt: String): String {
-    return try {
-        val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
-        val hhmm = timePart.substringBefore(".").substringBefore("Z")
-        val parts = hhmm.split(":")
-        if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
-        var hour = parts[0].toIntOrNull() ?: return hhmm
-        val minute = parts[1]
-        val suffix = if (hour >= 12) "PM" else "AM"
-        if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
-        "$hour:$minute $suffix"
-    } catch (e: Exception) {
-        createdAt.split("T").getOrNull(0) ?: createdAt
+@Composable
+fun NewMessagesLine(palette: ChatPalette) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(Color(0xFFF23F43))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color(0xFFF23F43))
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Text(
+                text = "NEW MESSAGES",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .width(16.dp)
+                .height(1.dp)
+                .background(Color(0xFFF23F43))
+        )
     }
 }

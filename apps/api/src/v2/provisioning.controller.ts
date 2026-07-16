@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { ApiV2Guard, ApiV2Context } from '../auth/api-v2.guard';
+import { ApiV2Guard, type ApiV2Context } from '../auth/api-v2.guard';
 import { V2Context } from '../auth/v2-context.decorator';
 import { ProvisioningService } from './provisioning.service';
 import { z } from 'zod';
@@ -16,7 +16,10 @@ class ProvisionWorkspaceDto {
   slug: string;
 
   @IsEmail()
-  @ApiProperty({ example: 'admin@acme.com', description: 'The email of the workspace owner. Must exist in the organization.' })
+  @ApiProperty({
+    example: 'admin@acme.com',
+    description: 'The email of the workspace owner. Must exist in the organization.',
+  })
   ownerEmail: string;
 
   @IsString()
