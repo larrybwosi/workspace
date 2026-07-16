@@ -7,7 +7,9 @@
     "dev": "vite --port 3006",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives "
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives ",
+    "test": "vitest run",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -26,14 +28,17 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.19.17",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.27",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.9",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
-    "vite": "^8.0.8"
+    "vite": "^8.0.8",
+    "vitest": "^4.1.10"
   }
 }
