@@ -1,0 +1,25 @@
+# Skyrme Chat V3 Enterprise API & Documentation
+
+Skyrme Chat is a next-generation, high-performance, secure communication platform built for enterprises. This is the primary directory for the V3 API designed for Machine-to-Machine (M2M) automation, bot provisioning, custom message rendering, and secure tenant orchestration.
+
+## Key Capabilities
+
+- **Enterprise-Grade Security**: Fully isolated tenants, OAuth2 Client Credentials grant, timing-safe credential hashing, and robust IP allowlisting with IPv4/IPv6 normalization.
+- **V3 Workspace CRUD & Provisioning**: Complete high-performance API for creating and managing tenant workspaces at scale, featuring a 10-minute Redis cache with automated instant cache invalidation.
+- **Enterprise Webhooks**: Secure outgoing workspace webhooks with automatic invalidation and Redis caching.
+- **Channel Incoming Webhooks**: Fully-featured Discord-style incoming webhooks for posting messages, files, and rich layouts via secure token URL endpoints.
+- **Custom Messages (v1)**: Node-based recursive JSON structure for rich, interactive, form-submitting, dynamic in-chat user interfaces with conditional rendering and client-side validation.
+- **Model Context Protocol (MCP)**: Out-of-the-box MCP server for seamless AI agent and IDE context discovery.
+
+## Documentation Map
+
+- [M2M Integration Guide](/user-guide/m2m-integration): Enterprise M2M security model, standard V3 response wrapper formats, and OAuth2 flow.
+- [Workspace & Member Provisioning Reference](/api-reference/workspaces): Complete V3 workspace CRUD specifications, default bot behavior, and member management.
+- [Enterprise Webhooks Reference](/api-reference/webhooks): Redis-cached outgoing webhook CRUD, event subscriptions, and signature verification.
+- [Channel Incoming Webhooks Reference](/api-reference/real-time): Discord-style incoming webhook creation, update, and trigger execution models with signature verification.
+- [Custom Messages UI Schema](/user-guide/custom-messages): Structure of interactive in-chat forms, recursive layouts, inputs, display components, conditional visibility, variables, and action callbacks.
+- [Model Context Protocol Server](/user-guide/mcp): Complete guide to launching and configuring the built-in MCP server for AI models.
+- [Interactive API Explorer](/api-reference/explorer): Live interactive playground running on port 3006.
+
+## Full Consolidated Reference
+If you are an AI assistant or LLM, you can obtain the complete consolidated reference containing all guides, schemas, and specifications in a single query from [/llms-full.txt](/llms-full.txt).

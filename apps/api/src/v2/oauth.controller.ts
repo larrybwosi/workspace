@@ -83,7 +83,7 @@ Used for bot, integration, and M2M authentication.
 
     const { client_id, client_secret, scope } = validatedData.data;
 
-    // 1. Try Bot / M2M Application
+    // 1. Try Bot Application first (which no longer has organizationId/M2M fields)
     const app = await prisma.botApplication.findUnique({
       where: { clientId: client_id },
       include: { bot: true },
@@ -98,16 +98,53 @@ Used for bot, integration, and M2M authentication.
       }
 
       // Enterprise Feature: IP Whitelisting
-      if (app.allowedIps && app.allowedIps.length > 0) {
+      // (Since bot applications might not use IP lists, we keep this block for bots)
+      const allowedIps = (app as any).allowedIps || [];
+      if (allowedIps.length > 0) {
         const clientIp = req.ip || req.socket.remoteAddress;
-        if (!clientIp || !app.allowedIps.includes(clientIp)) {
+        if (!clientIp || !allowedIps.includes(clientIp)) {
           throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist for this application.`);
         }
       }
 
       // Check scopes
       const requestedScopes = scope ? scope.split(' ') : [];
-      const allowedScopes = app.scopes;
+      const allowedScopes = (app as any).scopes || [];
+
+      if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
+        const unauthorizedScopes = requestedScopes.filter((s: string) => !allowedScopes.includes(s));
+        if (unauthorizedScopes.length > 0) {
+          throw new ForbiddenException(`Unauthorized scopes: ${unauthorizedScopes.join(', ')}`);
+        }
+      }
+
+      return this.issueToken(client_id, app.botId!, scope || '*', 'bot');
+    }
+
+    // 2. Try Organization (new Organization-level M2M)
+    const org = await prisma.organization.findUnique({
+      where: { clientId: client_id },
+    });
+
+    if (org) {
+      const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
+      const isValid = org.clientSecret === client_secret || org.clientSecret === hashedSecret;
+
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
+      }
+
+      // Enterprise Feature: IP Whitelisting
+      if (org.allowedIps && org.allowedIps.length > 0) {
+        const clientIp = req.ip || req.socket.remoteAddress;
+        if (!clientIp || !org.allowedIps.includes(clientIp)) {
+          throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist for this application.`);
+        }
+      }
+
+      // Check scopes
+      const requestedScopes = scope ? scope.split(' ') : [];
+      const allowedScopes = org.scopes;
 
       if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
         const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
@@ -116,13 +153,7 @@ Used for bot, integration, and M2M authentication.
         }
       }
 
-      if (app.organizationId) {
-        // M2M Application
-        return this.issueToken(client_id, `m2m:${app.organizationId}`, scope || (allowedScopes.length ? allowedScopes.join(' ') : '*'), 'm2m');
-      } else {
-        // Regular Bot Application
-        return this.issueToken(client_id, app.botId!, scope || '*', 'bot');
-      }
+      return this.issueToken(client_id, org.id, scope || (allowedScopes.length ? allowedScopes.join(' ') : '*'), 'm2m');
     }
 
     throw new UnauthorizedException('Invalid client credentials');

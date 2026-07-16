@@ -20,6 +20,9 @@ vi.mock('@repo/database', () => ({
     botApplication: {
       findFirst: vi.fn(),
     },
+    organization: {
+      findUnique: vi.fn(),
+    },
     thread: {
       findFirst: vi.fn(),
     },

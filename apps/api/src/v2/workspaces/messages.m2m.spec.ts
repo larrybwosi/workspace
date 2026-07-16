@@ -19,6 +19,9 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
     },
+    organization: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -46,11 +49,11 @@ describe('V2MessagesController M2M', () => {
     controller = module.get<V2MessagesController>(V2MessagesController);
   });
 
-  it('should use workspace default bot for M2M if no app bot exists', async () => {
+  it('should use workspace default bot for M2M if legacy m2m user is used', async () => {
     const context: any = {
       workspaceId: 'ws-1',
       userId: 'm2m:org-1',
-      m2mClientId: 'm2m-client-1',
+      clientId: 'm2m-client-1',
       organizationId: 'org-1',
       scopes: ['*']
     };
@@ -58,7 +61,7 @@ describe('V2MessagesController M2M', () => {
     const req: any = { isMultipart: () => false, body };
 
     (prisma.channel.findUnique as any).mockResolvedValue({ id: 'chan-1', workspaceId: 'ws-1' });
-    (prisma.botApplication.findUnique as any).mockResolvedValue(null); // No app-specific bot
+    (prisma.organization.findUnique as any).mockResolvedValue(null);
     (prisma.botApplication.findFirst as any).mockResolvedValue({ botId: 'system-bot-id' }); // Workspace default bot
     (prisma.message.create as any).mockImplementation((args: any) => Promise.resolve({ id: 'msg-1', ...args.data }));
 
@@ -70,11 +73,11 @@ describe('V2MessagesController M2M', () => {
     }));
   });
 
-  it('should use application specific bot for M2M if it exists', async () => {
+  it('should use workspace default bot for M2M if organization ID user is used', async () => {
     const context: any = {
       workspaceId: 'ws-1',
-      userId: 'm2m:org-1',
-      m2mClientId: 'm2m-client-1',
+      userId: 'org-1',
+      clientId: 'org-client-1',
       organizationId: 'org-1',
       scopes: ['*']
     };
@@ -82,14 +85,16 @@ describe('V2MessagesController M2M', () => {
     const req: any = { isMultipart: () => false, body };
 
     (prisma.channel.findUnique as any).mockResolvedValue({ id: 'chan-1', workspaceId: 'ws-1' });
-    (prisma.botApplication.findUnique as any).mockResolvedValue({ botId: 'app-bot-id' });
+    (prisma.organization.findUnique as any).mockResolvedValue({ id: 'org-1' });
+    (prisma.botApplication.findFirst as any).mockResolvedValue({ botId: 'system-bot-id' });
     (prisma.message.create as any).mockImplementation((args: any) => Promise.resolve({ id: 'msg-1', ...args.data }));
 
     const result = await controller.sendMessage(context, req);
 
-    expect(result.message.userId).toBe('app-bot-id');
-    expect(prisma.botApplication.findUnique).toHaveBeenCalledWith(expect.objectContaining({
-      where: { clientId: 'm2m-client-1' }
-    }));
+    expect(result.message.userId).toBe('system-bot-id');
+    expect(prisma.organization.findUnique).toHaveBeenCalledWith({
+      where: { id: 'org-1' },
+      select: { id: true }
+    });
   });
 });

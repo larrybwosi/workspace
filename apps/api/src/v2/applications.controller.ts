@@ -98,7 +98,7 @@ export class V2ApplicationsController {
   @ApiBody({ type: CreateApplicationDto })
   @ApiResponse({ status: 201, description: 'Application created successfully.' })
   async createApplication(@V2Context() context: ApiV2Context, @Body() body: CreateApplicationDto) {
-    return this.applicationsService.createApplication(context.userId, body, context.organizationId);
+    return this.applicationsService.createApplication(context.userId, body);
   }
 
   @Get()
