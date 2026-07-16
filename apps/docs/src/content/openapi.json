@@ -2339,113 +2339,6 @@
         ]
       }
     },
-    "/api/organizations/{orgSlug}/m2m": {
-      "get": {
-        "operationId": "M2mController_getM2mApplications",
-        "parameters": [
-          {
-            "name": "orgSlug",
-            "required": true,
-            "in": "path",
-            "description": "The organization slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List M2M applications for an organization",
-        "tags": [
-          "M2M Applications"
-        ]
-      },
-      "post": {
-        "operationId": "M2mController_createM2mApplication",
-        "parameters": [
-          {
-            "name": "orgSlug",
-            "required": true,
-            "in": "path",
-            "description": "The organization slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateM2mApplicationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new M2M application",
-        "tags": [
-          "M2M Applications"
-        ]
-      }
-    },
-    "/api/organizations/{orgSlug}/m2m/{id}": {
-      "delete": {
-        "operationId": "M2mController_deleteM2mApplication",
-        "parameters": [
-          {
-            "name": "orgSlug",
-            "required": true,
-            "in": "path",
-            "description": "The organization slug",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The application ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete an M2M application",
-        "tags": [
-          "M2M Applications"
-        ]
-      }
-    },
     "/api/v2/provisioning/workspaces": {
       "post": {
         "description": "\nProvisions a new workspace within your organization.\nWhen provisioned via M2M:\n1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.\n2. Your M2M application is installed as an **Administrator** in the new workspace.\n3. The specified owner and initial members are added (must belong to the same organization).\n\nThe System Bot acts as the default sender for messages and announcements sent via M2M if no application-specific bot is configured.\n    ",
@@ -4522,6 +4415,548 @@
         "summary": "Delete a workspace (Enterprise M2M)",
         "tags": [
           "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/webhooks": {
+      "get": {
+        "description": "Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.",
+        "operationId": "V3WebhooksController_getWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhooks returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all webhooks in the workspace",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "post": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_createWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/webhooks/{webhookId}": {
+      "get": {
+        "description": "Requires webhooks:read scope.",
+        "operationId": "V3WebhooksController_getWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook details returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a specific webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_updateWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      },
+      "delete": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3WebhooksController_deleteWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook",
+        "tags": [
+          "V3 Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/incoming-webhooks": {
+      "get": {
+        "description": "Requires webhooks:read scope. Retrieves all incoming webhooks configured for this channel.",
+        "operationId": "V3ChannelIncomingWebhooksController_getChannelWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of incoming webhooks returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List incoming webhooks for a channel",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      },
+      "post": {
+        "description": "Requires webhooks:write scope. Generates a new webhook token and secret.",
+        "operationId": "V3ChannelIncomingWebhooksController_createChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Incoming webhook created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an incoming webhook for a channel",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/incoming-webhooks/{webhookId}": {
+      "get": {
+        "description": "Requires webhooks:read scope.",
+        "operationId": "V3ChannelIncomingWebhooksController_getChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook details returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a channel incoming webhook",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3ChannelIncomingWebhooksController_updateChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a channel incoming webhook",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      },
+      "delete": {
+        "description": "Requires webhooks:write scope.",
+        "operationId": "V3ChannelIncomingWebhooksController_deleteChannelWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a channel incoming webhook",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
+    "/api/v3/webhooks/incoming/{token}": {
+      "post": {
+        "description": "Trigger a webhook using its unique token directly in the URL path. No authentication header required.",
+        "operationId": "V3ChannelIncomingWebhooksController_executeWebhookByUrlToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "description": "The unique webhook token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook message posted successfully."
+          }
+        },
+        "summary": "Execute a channel incoming webhook (Token in URL)",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
+        ]
+      }
+    },
+    "/api/v3/channels/{channelId}/webhooks/incoming": {
+      "post": {
+        "description": "Trigger a webhook targeting a specific channel ID. The webhook token must be supplied in the `x-webhook-token` header, the `token` query param, or signature query param.",
+        "operationId": "V3ChannelIncomingWebhooksController_executeWebhookByChannelId",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-token",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "required": false,
+            "in": "query",
+            "description": "The unique webhook token (can alternatively use x-webhook-token header)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-webhook-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteChannelIncomingWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook message posted successfully."
+          }
+        },
+        "summary": "Execute a channel incoming webhook (Channel in URL)",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
         ]
       }
     },
@@ -8707,8 +9142,8 @@
   },
   "info": {
     "title": "Skyrme Chat API",
-    "description": "Comprehensive API documentation for Skyrme Chat V2. This documentation is used by developers and for Bot API integration.",
-    "version": "2.0",
+    "description": "Comprehensive API documentation for Skyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.",
+    "version": "3.0",
     "contact": {}
   },
   "tags": [
@@ -8755,6 +9190,22 @@
     {
       "name": "Bot Applications",
       "description": "Create and manage bot integrations."
+    },
+    {
+      "name": "V3 Authentication",
+      "description": "OAuth token acquisition for Enterprise V3 M2M clients with IP allowlist validation."
+    },
+    {
+      "name": "V3 Workspaces",
+      "description": "Enterprise workspace provisioning and metadata CRUD management with multi-tenant isolation and 10-minute Redis caching."
+    },
+    {
+      "name": "V3 Webhooks",
+      "description": "High-performance Redis-cached workspace outgoing webhooks with automatic cache invalidation."
+    },
+    {
+      "name": "V3 Channel Incoming Webhooks",
+      "description": "Discord-style incoming webhooks targeting channels via secure paths or tokens."
     }
   ],
   "servers": [],
@@ -9300,44 +9751,6 @@
           }
         }
       },
-      "CreateM2mApplicationDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Provisioning App"
-          },
-          "scopes": {
-            "example": [
-              "provisioning:workspaces"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "allowedIps": {
-            "example": [
-              "127.0.0.1"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "webhookUrl": {
-            "type": "string",
-            "example": "https://api.example.com/webhook"
-          },
-          "webhookSecret": {
-            "type": "string",
-            "example": "your-webhook-secret"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
       "ProvisionWorkspaceDto": {
         "type": "object",
         "properties": {
@@ -9735,6 +10148,122 @@
             "description": "Custom branding configuration"
           }
         }
+      },
+      "V3CreateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "message.sent",
+              "channel.created"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "events"
+        ]
+      },
+      "V3UpdateWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateChannelIncomingWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Incoming Webhook"
+          },
+          "description": {
+            "type": "string",
+            "example": "Receives alerts from external monitoring system"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateChannelIncomingWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ExecuteChannelIncomingWebhookDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Deploy successful!"
+          },
+          "username": {
+            "type": "string",
+            "example": "Deploy Bot"
+          },
+          "name": {
+            "type": "string",
+            "example": "Deploy Bot"
+          },
+          "avatar_url": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "content"
+        ]
       },
       "CreateInvitationDto": {
         "type": "object",

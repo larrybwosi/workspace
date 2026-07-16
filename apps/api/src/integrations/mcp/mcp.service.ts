@@ -34,9 +34,9 @@ export class McpService {
     );
 
     // Paths relative to apps/api
-    this.docsPath = path.resolve(process.cwd(), '../docs/src/content/docs');
-    this.apiDocsPath = path.resolve(process.cwd(), '../docs/src/content/api');
-    this.openApiSchemaPath = path.resolve(process.cwd(), '../docs/src/content/openapi.json');
+    this.docsPath = path.resolve(process.cwd(), '../v3-docs/src/content/docs');
+    this.apiDocsPath = path.resolve(process.cwd(), '../v3-docs/src/content/api');
+    this.openApiSchemaPath = path.resolve(process.cwd(), '../v3-docs/src/content/openapi.json');
 
     this.setupHandlers();
   }

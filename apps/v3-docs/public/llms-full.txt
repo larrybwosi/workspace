@@ -1,0 +1,211 @@
+# Skyrme Chat V3 API - Full Consolidated Enterprise Reference
+
+This file compiles all documentation, guides, schemas, and API references for the Skyrme Chat V3 platform. It is designed to provide AI models and developers with complete context in a single scan.
+
+---
+
+## 1. Overview & Enterprise Security Architecture
+
+Skyrme Chat V3 is built on enterprise-grade pillars, ensuring absolute tenant isolation, robust access controls, and resistance against side-channel attacks.
+
+### OAuth2 Client Credentials Grant
+M2M (Machine-to-Machine) systems authenticate by presenting credentials to the token exchange endpoint to obtain a secure Bearer token prefixing with `oat_`:
+- **Endpoint**: `/api/v3/oauth/token`
+- **Scopes**: Scope-based authorization is checked at every endpoint. Available scopes are:
+  - `*`: Full access
+  - `provisioning:workspaces`: Manage workspaces and members
+  - `messages:read` / `messages:send`: Interact with chat channels
+  - `channels:read` / `channels:write`: List, create, or modify channels
+  - `webhooks:read` / `webhooks:write`: Manage outgoing webhooks
+
+### Timing-Safe Constant-Time Secret Verification
+To prevent side-channel timing attacks, all M2M client secret verifications are executed in constant time. The system hashes both the provided secret and the database secret using SHA-256, and then performs a comparison using `crypto.timingSafeEqual`. This ensures that execution time does not reveal partial secrets.
+
+### Robust IP Normalization and Allowlisting
+M2M clients can be locked down to specific IP address ranges or explicit addresses. To prevent security bypasses, the authorization guard automatically normalizes client IP addresses, properly recognizing and matching standard IPv4, native IPv6, and IPv6-mapped IPv4 addresses (e.g., `::ffff:x.x.x.x`).
+
+### Secure Multi-Tenant Context Isolation
+The `ApiV3Guard` enforces tenant boundaries at the framework level. Even if an authenticated M2M application attempts to access a workspace, it must belong strictly to the authorized organization associated with the client credentials. Unauthorized access requests result in immediate `403 Forbidden` exceptions.
+
+---
+
+## 2. Standard Wrapped V3 Responses
+
+All V3 API resource endpoints return a consistent JSON response wrapper. This standardizes client-side parsing and SDK code generation:
+
+### Success Response Format
+```json
+{
+  "success": true,
+  "data": {
+    "key": "value"
+  },
+  "timestamp": "2026-07-10T06:25:22.704Z"
+}
+```
+
+### Error Response Format
+```json
+{
+  "statusCode": 403,
+  "timestamp": "2026-07-10T06:25:22.704Z",
+  "path": "/api/v3/workspaces/acme-corp",
+  "message": "Missing provisioning:workspaces scope"
+}
+```
+
+---
+
+## 3. Workspace Provisioning & CRUD API Reference
+
+These endpoints require the `provisioning:workspaces` scope and context isolation.
+
+### Endpoints:
+- `GET /api/v3/workspaces`: Lists all workspaces belonging to the M2M application's organization.
+- `POST /api/v3/workspaces`: Provisions a new workspace.
+- `GET /api/v3/workspaces/:slug`: Retrieves configuration and metadata for a specific workspace.
+- `PATCH /api/v3/workspaces/:slug`: Updates details of a specific workspace.
+- `DELETE /api/v3/workspaces/:slug`: Permanently deletes a specific workspace.
+
+### Workspace Provisioning Automation
+When a workspace is created via `POST /api/v3/workspaces`:
+1. The platform automatically creates a default **System Bot** with workspace admin privileges.
+2. The M2M application is installed as an **Administrator** in the new workspace.
+3. The newly provisioned workspace is linked directly to the parent organization via `organizationId`, completely eliminating separate and manual M2M bot application setups.
+
+### Performance Caching Architecture
+The workspaces API features robust **Redis Caching** with a 10-minute (600-second) TTL.
+- **Cache Keys**:
+  - `v3:org:<organizationId>:workspaces` (Lists of workspaces at organization level)
+  - `v3:ws:<workspaceId>:workspaces` (Workspace-bound listings)
+  - `v3:workspace:slug:<slug>` (Workspace metadata lookups)
+- **Automatic Cache Invalidation**: Caches are instantly invalidated during creation (`POST`), updating (`PATCH`), and deletion (`DELETE`) mutations to guarantee data consistency.
+
+---
+
+## 4. Enterprise Workspace Webhooks API Reference
+
+These endpoints enable management of outgoing webhooks for automated external integration.
+Requires `webhooks:read` or `webhooks:write` scope.
+
+### Endpoints:
+- `GET /api/v3/workspaces/:slug/webhooks`: Lists all configured webhooks in the workspace.
+- `POST /api/v3/workspaces/:slug/webhooks`: Registers a new outgoing webhook. Returns a `secret` used for signature verification.
+- `GET /api/v3/workspaces/:slug/webhooks/:webhookId`: Retrieves details and logs of a specific webhook.
+- `PATCH /api/v3/workspaces/:slug/webhooks/:webhookId`: Updates an existing webhook (e.g. events, status, URL).
+- `DELETE /api/v3/workspaces/:slug/webhooks/:webhookId`: Permanently deletes a webhook.
+
+### Caching Mechanism
+Outgoing webhooks are cached with Redis (10-minute TTL) under the key `v3:workspace:<workspaceId>:webhooks`. Caches are automatically invalidated upon any webhook creation, update, or deletion.
+
+---
+
+## 5. Discord-Style Channel Incoming Webhooks System
+
+The channel incoming webhooks system allows external monitoring platforms or servers to publish messages directly into specific chat channels.
+
+### Management (CRUD) Endpoints (Requires `webhooks:read` / `webhooks:write` scopes):
+- `GET /api/v3/workspaces/:slug/channels/:channelId/incoming-webhooks`: Lists incoming webhooks for a channel.
+- `POST /api/v3/workspaces/:slug/channels/:channelId/incoming-webhooks`: Creates an incoming webhook (generates `token` and `secret`).
+- `GET /api/v3/workspaces/:slug/channels/:channelId/incoming-webhooks/:webhookId`: Retrieves details and logs.
+- `PATCH /api/v3/workspaces/:slug/channels/:channelId/incoming-webhooks/:webhookId`: Updates name, description, or status.
+- `DELETE /api/v3/workspaces/:slug/channels/:channelId/incoming-webhooks/:webhookId`: Deletes a webhook.
+
+### Execution/Trigger Endpoints (No Auth Header required, public endpoints):
+1. **Token in URL Path**:
+   `POST /api/v3/webhooks/incoming/:token`
+2. **Channel in URL Path**:
+   `POST /api/v3/channels/:channelId/webhooks/incoming` (Token must be supplied in `x-webhook-token` header, `token` query param, or signature query param).
+
+### Payload Schema:
+```json
+{
+  "content": "Alert: Database latency high!",
+  "username": "Monitoring Bot",
+  "avatar_url": "https://example.com/avatar.png",
+  "attachments": [
+    {
+      "name": "graph.png",
+      "type": "image/png",
+      "url": "https://example.com/graph.png"
+    }
+  ]
+}
+```
+
+### Signature Verification Protocol
+If the external service includes an `x-webhook-signature` header, the system computes the HMAC SHA-256 signature of the raw JSON body signed with the webhook's `secret` and performs a timing-safe verification before executing the request.
+
+---
+
+## 6. Custom Message (v1) UI Schema Specification
+
+The Custom Message system enables backends and bots to build rich, interactive, form-based interfaces directly inside Scryme Chat conversations. It utilizes a node-based recursive JSON structure within the message's `metadata`.
+
+### Message Envelope Structure
+```json
+{
+  "version": "v1",
+  "type": "SURVEY",
+  "context": {
+    "title": "Feedback Survey",
+    "description": "Tell us what you think",
+    "icon": "Info",
+    "priority": "normal"
+  },
+  "root": {
+    "type": "Layout.Card",
+    "children": [ ... ]
+  },
+  "actions": [ ... ],
+  "data": { ... }
+}
+```
+
+### UI Component Nodes
+
+#### 1. Layout Components
+- **`Layout.Card`**: A contained boxed layout with padding and borders.
+- **`Layout.Stack`**: A vertical flex container.
+- **`Layout.Grid`**: A grid container supporting custom column numbers (`properties.columns`).
+
+#### 2. Display Components
+- **`Text.Heading` / `Text.Paragraph`**: Basic and markdown text rendering.
+- **`Display.Field`**: Standard labeled read-only data fields.
+- **`Data.StatsGrid` & `Data.Stat`**: Dashboard metric grids.
+
+#### 3. Input Components
+- **`Input.Text`**: Text box or textarea input.
+- **`Input.Checkbox`**: Boolean checkbox.
+- **`Input.Select`**: Selection dropdown. Supports dynamic data sources (`properties.dataSource`):
+  - `STATIC`: Key-value array of `{ label, value }`.
+  - `API`: Dynamic fetching from a backend URL.
+  - `VARIABLE`: Resolved directly from the message's local `data` context.
+
+### Dynamic Variable Interpolation
+Values inside components can dynamically reference properties in the `data` payload or active client-side `formState` using the `{{variable_name}}` syntax.
+
+### Conditional Visibility Rules
+Any UI node can define a `condition` block to control its visibility based on input values or variables.
+- **Operators supported**: `EQUALS`, `NOT_EQUALS`, `CONTAINS`, `GREATER_THAN`, `LESS_THAN`, `EXISTS`, `NOT_EXISTS`.
+
+Example of conditional input showing up only when a rejection action is active:
+```json
+"condition": {
+  "field": "action_type",
+  "operator": "EQUALS",
+  "value": "reject"
+}
+```
+
+### Client-Side Validation
+Input components validate content before submission:
+- `required`: Boolean.
+- `pattern`: Regex pattern.
+- `minLength` / `maxLength`.
+- `errorMessage`: Custom string on failure.
+
+### Interactive Actions
+Buttons rendered at the footer of custom messages trigger a callback dispatch:
+- **Callback Payload**: Contains custom static fields, and if `includeFormState` is enabled, all active input fields' form state is merged and dispatched.
+- **Webhook Callbacks**: When interactive actions are clicked, callbacks are dispatched to the organization's `webhookUrl`. The request includes an `x-m2m-signature` header (HMAC SHA-256 of payload signed with the organization's `client_secret`) for security verification.
