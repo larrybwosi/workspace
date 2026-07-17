@@ -1792,3 +1792,13 @@ model SystemAnnouncement {
   @@map("system_announcements")
 }
 
+model ShortUrl {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  original  String   @db.Text
+  key       String?
+  mimeType  String?
+  createdAt DateTime @default(now())
+
+  @@map("short_urls")
+}
