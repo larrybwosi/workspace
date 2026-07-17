@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 
 export const AXIOS_INSTANCE = axios.create({
-  baseURL: typeof window !== 'undefined' ? '/api' : 'http://localhost:3000/api',
+  baseURL: typeof window !== 'undefined' ? '/api' : 'https://api.chat.scryme.tech/api',
 });
 
 export const customInstance = <T>(

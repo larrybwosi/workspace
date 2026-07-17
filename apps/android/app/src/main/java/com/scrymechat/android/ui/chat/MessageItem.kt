@@ -355,7 +355,7 @@ fun SwipeableMessageItem(
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
-    apiUrl: String = "http://localhost:3000",
+    apiUrl: String = "https://api.chat.scryme.tech",
     onMentionClick: (String) -> Unit = {},
     onChannelTagClick: (String) -> Unit = {},
     onEditMessage: (MessageEntity, String) -> Unit = { _, _ -> },
@@ -543,7 +543,7 @@ fun MessageItem(
     isLoading: Boolean = false,
     onImageClick: (AttachmentDto) -> Unit = {},
     onAvatarClick: (String) -> Unit = {},
-    apiUrl: String = "http://localhost:3000",
+    apiUrl: String = "https://api.chat.scryme.tech",
     onMentionClick: (String) -> Unit = {},
     onChannelTagClick: (String) -> Unit = {}
 ) {

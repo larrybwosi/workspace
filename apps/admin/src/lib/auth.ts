@@ -11,12 +11,13 @@ const getEnv = (name: string) => {
 };
 
 const getBaseURL = () => {
+  const isProd = getEnv('NODE_ENV') === 'production';
   const url =
     getEnv('API_URL') ||
     getEnv('NEXT_PUBLIC_API_URL') ||
     getEnv('VITE_API_URL') ||
     getEnv('EXPO_PUBLIC_API_URL') ||
-    'http://localhost:3000';
+    (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   if (url.includes('/api/auth')) {
     return url;
   }

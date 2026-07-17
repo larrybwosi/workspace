@@ -140,7 +140,7 @@ For organizations managing multiple tenants, you can use a single M2M applicatio
 
 ```bash
 # 1. Provision Tenant A
-curl -X POST https://api.scrymechat.com/v3/workspaces \
+curl -X POST https://api.chat.scryme.tech/v3/workspaces \
   -H "Authorization: Bearer <m2m_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -150,7 +150,7 @@ curl -X POST https://api.scrymechat.com/v3/workspaces \
   }'
 
 # 2. Provision Tenant B
-curl -X POST https://api.scrymechat.com/v3/workspaces \
+curl -X POST https://api.chat.scryme.tech/v3/workspaces \
   -H "Authorization: Bearer <m2m_token>" \
   -H "Content-Type: application/json" \
   -d '{
