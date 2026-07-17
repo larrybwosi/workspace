@@ -15,8 +15,10 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseFilters,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty, ApiQuery } from '@nestjs/swagger';
+import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
 import { prisma } from '@repo/database';
@@ -116,6 +118,7 @@ const executeWebhookSchema = z.object({
 
 @ApiTags('V3 Channel Incoming Webhooks')
 @Controller()
+@UseFilters(V3ExceptionFilter)
 export class V3ChannelIncomingWebhooksController {
   private readonly logger = new Logger(V3ChannelIncomingWebhooksController.name);
 

@@ -75,7 +75,7 @@ Once you have an M2M application with the `provisioning:workspaces` scope, you c
 1. **Obtain Token**: Use your `client_id` and `client_secret` to get an OAuth access token (see [Authentication](/api-reference/authentication)).
 2. **Call Provisioning API**: Use the token to create a new workspace.
 
-**Endpoint:** `POST /v3/provisioning/workspaces`
+**Endpoint:** `POST /v3/workspaces`
 
 **Body:**
 
@@ -140,7 +140,7 @@ For organizations managing multiple tenants, you can use a single M2M applicatio
 
 ```bash
 # 1. Provision Tenant A
-curl -X POST https://api.scrymechat.com/v3/provisioning/workspaces \
+curl -X POST https://api.scrymechat.com/v3/workspaces \
   -H "Authorization: Bearer <m2m_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -150,7 +150,7 @@ curl -X POST https://api.scrymechat.com/v3/provisioning/workspaces \
   }'
 
 # 2. Provision Tenant B
-curl -X POST https://api.scrymechat.com/v3/provisioning/workspaces \
+curl -X POST https://api.scrymechat.com/v3/workspaces \
   -H "Authorization: Bearer <m2m_token>" \
   -H "Content-Type: application/json" \
   -d '{
