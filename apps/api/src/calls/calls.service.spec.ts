@@ -235,23 +235,30 @@ describe('CallsService', () => {
       );
     });
 
-    it('should look up workspace by both id and slug using OR query', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'resolved-ws-id' });
+    it('should look up workspace by id first and then by slug using findUnique', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'resolved-ws-id' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'my-slug');
 
-      expect(mockPrisma.workspace.findFirst).toHaveBeenCalledWith(
+      expect(mockPrisma.workspace.findUnique).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
-          where: {
-            OR: [{ id: 'my-slug' }, { slug: 'my-slug' }],
-          },
+          where: { id: 'my-slug' },
+          select: { id: true },
+        })
+      );
+      expect(mockPrisma.workspace.findUnique).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          where: { slug: 'my-slug' },
+          select: { id: true },
         })
       );
     });
 
     it('should use resolved workspace id when calling findMany for calls', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'resolved-id' });
+      mockPrisma.workspace.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'resolved-id' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'my-slug');
@@ -264,7 +271,7 @@ describe('CallsService', () => {
     });
 
     it('should fall back to original value as workspaceId if workspace lookup returns null', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue(null);
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'direct-ws-id');
@@ -277,7 +284,7 @@ describe('CallsService', () => {
     });
 
     it("should filter by status: 'scheduled'", async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -287,7 +294,7 @@ describe('CallsService', () => {
     });
 
     it('should filter by scheduledFor >= now', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -298,7 +305,7 @@ describe('CallsService', () => {
     });
 
     it('should order results by scheduledFor asc', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -308,7 +315,7 @@ describe('CallsService', () => {
     });
 
     it('should include initiator in query', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -322,7 +329,7 @@ describe('CallsService', () => {
         { id: 'call-1', status: 'scheduled', initiator: { id: 'user-1' } },
         { id: 'call-2', status: 'scheduled', initiator: { id: 'user-2' } },
       ];
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
       mockPrisma.call.findMany.mockResolvedValue(mockCalls);
 
       const result = await service.getScheduledCalls(mockUser, 'ws-1');
@@ -331,7 +338,7 @@ describe('CallsService', () => {
     });
 
     it('should handle real slug lookup (value differs from resolved id)', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({ id: 'uuid-123' });
+      mockPrisma.workspace.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'uuid-123' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'my-workspace-slug');

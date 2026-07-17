@@ -21,11 +21,21 @@ import {
 @Injectable()
 export class CallsService {
   private async resolveWorkspaceId(workspaceIdOrSlug: string): Promise<string> {
-    const workspace = await prisma.workspace.findFirst({
-      where: {
-        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces findFirst with OR filter with serial findUnique queries.
+     * Since 'id' is the primary key and 'slug' has a unique constraint,
+     * querying them individually with findUnique leverages direct database O(1) primary/unique key index optimization.
+     * This avoids a full scan or complex OR search and is much faster.
+     * Retaining only 'id' selection further reduces payload and memory overhead.
+     */
+    const workspace = (await prisma.workspace.findUnique({
+      where: { id: workspaceIdOrSlug },
+      select: { id: true },
+    })) || (await prisma.workspace.findUnique({
+      where: { slug: workspaceIdOrSlug },
+      select: { id: true },
+    }));
 
     if (workspace) return workspace.id;
     return workspaceIdOrSlug;
@@ -672,11 +682,21 @@ export class CallsService {
       throw new BadRequestException('Workspace ID or Slug required');
     }
 
-    const workspace = await prisma.workspace.findFirst({
-      where: {
-        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces findFirst with OR filter with serial findUnique queries.
+     * Since 'id' is the primary key and 'slug' has a unique constraint,
+     * querying them individually with findUnique leverages direct database O(1) primary/unique key index optimization.
+     * This avoids a full scan or complex OR search and is much faster.
+     * Retaining only 'id' selection further reduces payload and memory overhead.
+     */
+    const workspace = (await prisma.workspace.findUnique({
+      where: { id: workspaceIdOrSlug },
+      select: { id: true },
+    })) || (await prisma.workspace.findUnique({
+      where: { slug: workspaceIdOrSlug },
+      select: { id: true },
+    }));
     const workspaceId = workspace?.id || workspaceIdOrSlug;
 
     return prisma.call.findMany({
