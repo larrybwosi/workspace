@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       android: ${{ steps.filter.outputs.android }}
+      admin: ${{ steps.filter.outputs.admin }}
+      docs: ${{ steps.filter.outputs.docs }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -29,6 +31,11 @@ jobs:
           filters: |
             android:
               - 'apps/android/**'
+            admin:
+              - 'apps/admin/**'
+            docs:
+              - 'apps/docs/**'
+              - 'apps/v3-docs/**'
 
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -207,8 +214,44 @@ jobs:
           API_URL: http://localhost:3000
         run: cd apps/android && ./gradlew test
 
+  admin-tests:
+    needs: [changes]
+    if: needs.changes.outputs.admin == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Admin Tests
+        run: pnpm --filter admin test
+
+  docs-tests:
+    needs: [changes]
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Docs Tests
+        run: |
+          pnpm --filter v3-docs test
+          pnpm --filter docs test
+
   all-tests-passed:
-    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test]
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test, admin-tests, docs-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -219,12 +262,16 @@ jobs:
           api="${{ needs.api-e2e.result }}"
           web="${{ needs.web-e2e.result }}"
           android="${{ needs.native-android-test.result }}"
+          admin="${{ needs.admin-tests.result }}"
+          docs="${{ needs.docs-tests.result }}"
 
           if [[ "$lint" != "success" ]]; then exit 1; fi
           if [[ "$unit" != "success" ]]; then exit 1; fi
           if [[ "$api" != "success" ]]; then exit 1; fi
           if [[ "$web" != "success" ]]; then exit 1; fi
           if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
+          if [[ "$admin" != "success" && "$admin" != "skipped" ]]; then exit 1; fi
+          if [[ "$docs" != "success" && "$docs" != "skipped" ]]; then exit 1; fi
 
   desktop-verify:
     if: github.event_name == 'pull_request'
