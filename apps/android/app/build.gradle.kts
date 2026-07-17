@@ -26,7 +26,7 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
 
-        val apiUrl = System.getenv("API_URL") ?: "http://localhost:3000"
+        val apiUrl = System.getenv("API_URL") ?: "https://api.chat.scryme.tech"
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
 

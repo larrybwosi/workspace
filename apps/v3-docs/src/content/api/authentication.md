@@ -20,7 +20,7 @@ To interact with the API, you first need to exchange your `client_id` and `clien
 ### Example Request
 
 ```bash
-curl -X POST https://api.scrymechat.com/v3/oauth/token \
+curl -X POST https://api.chat.scryme.tech/v3/oauth/token \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "client_credentials",
@@ -36,7 +36,7 @@ curl -X POST https://api.scrymechat.com/v3/oauth/token \
 import axios from 'axios';
 
 async function getAccessToken() {
-  const response = await axios.post('https://api.scrymechat.com/v3/oauth/token', {
+  const response = await axios.post('https://api.chat.scryme.tech/v3/oauth/token', {
     grant_type: 'client_credentials',
     client_id: 'your_client_id',
     client_secret: 'your_client_secret',
@@ -53,7 +53,7 @@ async function getAccessToken() {
 import requests
 
 def get_access_token():
-    url = "https://api.scrymechat.com/v3/oauth/token"
+    url = "https://api.chat.scryme.tech/v3/oauth/token"
     payload = {
         "grant_type": "client_credentials",
         "client_id": "your_client_id",

@@ -24,7 +24,8 @@ const getBaseURL = () => {
     }
   }
   if (!url) {
-    url = getEnv('API_URL') || 'http://localhost:3000';
+    const isProd = getEnv('NODE_ENV') === 'production';
+    url = getEnv('API_URL') || (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   }
   return url.replace(/\/$/, '') + '/api';
 };

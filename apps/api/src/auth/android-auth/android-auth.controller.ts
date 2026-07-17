@@ -84,7 +84,7 @@ export class AndroidAuthController {
   async signup(@Body() body: any) {
     this.validateSignupInput(body);
     try {
-      const response = await auth.api.signUpEmail({
+      const signUpResponse = await auth.api.signUpEmail({
         body: {
           email: body.email,
           password: body.password,
@@ -94,7 +94,14 @@ export class AndroidAuthController {
           bio: body.bio,
         } as any,
       });
-      return await this.handleAuthResponse(response, 'Failed to create account');
+
+      if (!signUpResponse || !signUpResponse.user) {
+        throw new BadRequestException('Failed to create account');
+      }
+
+      // Automatically log the user in after a successful signup to generate
+      // the required session token and retrieve standard LoginResponse properties.
+      return await this.performLogin(body.email, body.password);
     } catch (error: any) {
       this.handleAuthError(error, 'Signup failed');
     }
