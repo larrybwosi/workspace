@@ -13,11 +13,31 @@ export const auth: any = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
+  trustedOrigins: [
+    '*.scryme.tech',
+    'https://scryme.tech',
+    'https://app.scryme.tech',
+    'https://chat.scryme.tech',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
   },
-  baseURL: env.BETTER_AUTH_URL || env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
+  baseURL: {
+    allowedHosts: [
+      'localhost:*',
+      'scryme.tech',
+      'app.scryme.tech',
+      'crm.scryme.tech',
+      'api.scryme.tech',
+      '*.scryme.tech',
+    ],
+    protocol: env.NODE_ENV === 'development' ? 'http' : 'https',
+    fallback:
+      env.BETTER_AUTH_URL || (env.NODE_ENV === 'production' ? 'https://chat.scryme.tech' : 'http://localhost:3000'),
+  },
   trustedOrigins: allowedOrigins,
   plugins: [
     admin({
