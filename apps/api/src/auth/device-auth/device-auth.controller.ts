@@ -23,6 +23,26 @@ import { publishRealtime } from '@repo/shared/server';
  */
 const DEVICE_CLIENT_ID = 'desktop-app';
 
+function extractUserCode(input: string): string {
+  if (!input) return '';
+  if (input.startsWith('http://') || input.startsWith('https://')) {
+    try {
+      const url = new URL(input);
+      const code = url.searchParams.get('user_code') || url.searchParams.get('userCode');
+      if (code) return code;
+
+      const parts = url.pathname.split('/');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart && lastPart.length >= 4) {
+        return lastPart;
+      }
+    } catch (e) {
+      console.error('Failed to parse user code from URL', e);
+    }
+  }
+  return input;
+}
+
 @Controller('device-auth')
 export class DeviceAuthController {
   /**
@@ -90,14 +110,20 @@ export class DeviceAuthController {
    */
   @Post('qr/authorize')
   @UseGuards(AuthGuard)
-  async authorize(@Body() body: { userCode: string }, @Req() req: FastifyRequest) {
-    if (!body?.userCode) {
+  async authorize(
+    @Body() body: { userCode?: string; sessionId?: string },
+    @Req() req: FastifyRequest
+  ) {
+    const rawCode = body?.userCode || body?.sessionId;
+    if (!rawCode) {
       throw new BadRequestException('userCode is required');
     }
 
+    const userCode = extractUserCode(rawCode);
+
     try {
       await auth.api.deviceApprove({
-        body: { userCode: body.userCode },
+        body: { userCode },
         // Fastify normalizes headers into a plain incoming headers object,
         // which matches what fromNodeHeaders expects.
         headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
@@ -116,7 +142,7 @@ export class DeviceAuthController {
     // polling. Keyed by userCode since that's the only identifier the
     // mobile client has.
     try {
-      await publishRealtime(`qr-session:${body.userCode}`, 'authorized', {
+      await publishRealtime(`qr-session:${userCode}`, 'authorized', {
         status: 'authorized',
       });
     } catch (e) {
@@ -132,14 +158,20 @@ export class DeviceAuthController {
    */
   @Post('qr/deny')
   @UseGuards(AuthGuard)
-  async deny(@Body() body: { userCode: string }, @Req() req: FastifyRequest) {
-    if (!body?.userCode) {
+  async deny(
+    @Body() body: { userCode?: string; sessionId?: string },
+    @Req() req: FastifyRequest
+  ) {
+    const rawCode = body?.userCode || body?.sessionId;
+    if (!rawCode) {
       throw new BadRequestException('userCode is required');
     }
 
+    const userCode = extractUserCode(rawCode);
+
     try {
       await auth.api.deviceDeny({
-        body: { userCode: body.userCode },
+        body: { userCode },
         headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
       });
     } catch {
@@ -147,7 +179,7 @@ export class DeviceAuthController {
     }
 
     try {
-      await publishRealtime(`qr-session:${body.userCode}`, 'denied', {
+      await publishRealtime(`qr-session:${userCode}`, 'denied', {
         status: 'denied',
       });
     } catch (e) {
