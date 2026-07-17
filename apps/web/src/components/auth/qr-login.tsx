@@ -15,6 +15,7 @@ interface QRLoginProps {
 export function QRLogin({ inviteToken }: QRLoginProps) {
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [deviceCode, setDeviceCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'pending' | 'authorized' | 'expired'>('pending');
@@ -28,7 +29,8 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
       });
       if (!response.ok) throw new Error('Failed to generate QR code');
       const data = await response.json();
-      setSessionId(data.sessionId);
+      setSessionId(data.userCode);
+      setDeviceCode(data.deviceCode);
       setStatus('pending');
     } catch (err) {
       setError('Could not load QR code. Please try again.');
@@ -57,6 +59,10 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
         const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
         document.cookie = `better-auth.session_token=${payload.token}; path=/; max-age=31536000; SameSite=Lax${isSecure ? '; Secure' : ''}`;
 
+        // Also populate localStorage to ensure robust authentication across all app scopes
+        localStorage.setItem('better-auth.session_token', payload.token);
+        localStorage.setItem('better-auth.session-token', payload.token);
+
         toast.success('Successfully logged in via QR code!');
 
         const callbackURL = inviteToken ? `/invite/${inviteToken}` : '/';
@@ -64,12 +70,34 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
       }
     };
 
-    realtime.subscribe(channel, 'authorized', handleAuthorized);
+    const handleRealtimeAuthorized = async (payload: any) => {
+      if (payload.status === 'authorized') {
+        if (payload.token) {
+          handleAuthorized(payload);
+        } else if (deviceCode) {
+          // Immediately fetch status to obtain the access token and login without waiting for poll interval
+          try {
+            const response = await fetch(`/api/device-auth/qr/status/${deviceCode}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.status === 'authorized' && data.token) {
+                handleAuthorized(data);
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching status after realtime authorize', err);
+          }
+        }
+      }
+    };
+
+    realtime.subscribe(channel, 'authorized', handleRealtimeAuthorized);
 
     // Also poll as a fallback every 5 seconds
     const interval = setInterval(async () => {
+      if (!deviceCode) return;
       try {
-        const response = await fetch(`/api/device-auth/qr/status/${sessionId}`);
+        const response = await fetch(`/api/device-auth/qr/status/${deviceCode}`);
         if (response.ok) {
           const data = await response.json();
           if (data.status === 'authorized') {
@@ -85,10 +113,10 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
     }, 5000);
 
     return () => {
-      realtime.unsubscribe(channel, 'authorized', handleAuthorized);
+      realtime.unsubscribe(channel, 'authorized', handleRealtimeAuthorized);
       clearInterval(interval);
     };
-  }, [sessionId, inviteToken, router]);
+  }, [sessionId, deviceCode, inviteToken, router]);
 
   if (isLoading) {
     return (

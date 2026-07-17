@@ -20,6 +20,7 @@ export const auth: any = betterAuth({
     'https://chat.scryme.tech',
     'http://localhost:3000',
     'http://localhost:3001',
+    ...allowedOrigins,
   ],
   emailAndPassword: {
     enabled: true,
@@ -38,7 +39,6 @@ export const auth: any = betterAuth({
     fallback:
       env.BETTER_AUTH_URL || (env.NODE_ENV === 'production' ? 'https://chat.scryme.tech' : 'http://localhost:3000'),
   },
-  trustedOrigins: allowedOrigins,
   plugins: [
     admin({
       defaultRole: 'Member',
