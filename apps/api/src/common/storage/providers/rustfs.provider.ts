@@ -54,6 +54,21 @@ export class RustFSStorageProvider implements StorageProvider {
     return getSignedUrl(this.s3Client, command, { expiresIn: 7 * 24 * 60 * 60 });
   }
 
+  async getFileStream(key: string): Promise<{ stream: any; contentLength?: number }> {
+    if (!this.s3Client) {
+      throw new InternalServerErrorException('RustFS client not configured');
+    }
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    const response = await this.s3Client.send(command);
+    return {
+      stream: response.Body,
+      contentLength: response.ContentLength,
+    };
+  }
+
   private async ensureBucketExists() {
     try {
       await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucketName }));
@@ -126,28 +141,6 @@ export class RustFSStorageProvider implements StorageProvider {
       });
       const url = await getSignedUrl(this.s3Client, command, { expiresIn: 7 * 24 * 60 * 60 });
 
-      // Generate a short URL code and save mapping in database
-      let code = randomBytes(4).toString('hex');
-      let attempts = 0;
-      while (attempts < 5) {
-        const existing = await prisma.shortUrl.findUnique({ where: { code } });
-        if (!existing) break;
-        code = randomBytes(4).toString('hex');
-        attempts++;
-      }
-
-      await prisma.shortUrl.create({
-        data: {
-          code,
-          original: url,
-          key: fileName,
-          mimeType: mimetype,
-        },
-      });
-
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
-      const shortUrl = `${baseUrl}/s/${code}`;
-
       const formatSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -158,7 +151,7 @@ export class RustFSStorageProvider implements StorageProvider {
 
       return {
         id: fileName,
-        url: shortUrl,
+        url,
         name: originalname,
         type: mimetype,
         size: formatSize(buffer.length),
