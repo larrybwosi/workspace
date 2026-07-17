@@ -1,11 +1,9 @@
-# Workspaces & Members
+# Workspaces & Members (V3)
 
 Workspaces are the top-level containers for all data in Scrymechat. Every resource (channels, messages, members) belongs to a workspace.
 
 ## Base URL
 
-- For general V2 endpoints, endpoints are prefixed with the workspace slug:
-  `/v2/workspaces/:slug`
 - For V3 (Enterprise M2M and high-performance) endpoints, the prefix is:
   `/v3/workspaces`
 
@@ -185,7 +183,7 @@ Permanently deletes a workspace and all of its associated data. Instantly invali
 
 ---
 
-## Workspace Members
+## Workspace Members (V3)
 
 Manage the users who have access to your Scrymechat workspace.
 
@@ -193,27 +191,30 @@ Manage the users who have access to your Scrymechat workspace.
 
 Returns a list of all members in the workspace, including their profile details and status.
 
-**Endpoint:** `GET /v2/workspaces/:slug/members`
+**Endpoint:** `GET /v3/workspaces/:slug/members`
 
 **Response:**
 ```json
 {
-  "members": [
-    {
-      "id": "user_123",
-      "userId": "user_123",
-      "workspaceId": "ws_456",
-      "role": "member",
-      "user": {
+  "success": true,
+  "data": {
+    "members": [
+      {
         "id": "user_123",
-        "name": "Jane Doe",
-        "email": "jane@example.com",
-        "avatar": "https://...",
-        "status": "online"
+        "userId": "user_123",
+        "workspaceId": "ws_456",
+        "role": "member",
+        "user": {
+          "id": "user_123",
+          "name": "Jane Doe",
+          "email": "jane@example.com",
+          "avatar": "https://...",
+          "status": "online"
+        }
       }
-    }
-  ],
-  "source": "database"
+    ]
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
 }
 ```
 
@@ -223,7 +224,7 @@ Returns a list of all members in the workspace, including their profile details 
 
 Adds an existing Scrymechat user to the workspace.
 
-**Endpoint:** `POST /v2/workspaces/:slug/members`
+**Endpoint:** `POST /v3/workspaces/:slug/members`
 
 **Body:**
 ```json
@@ -233,13 +234,94 @@ Adds an existing Scrymechat user to the workspace.
 }
 ```
 
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "member": {
+      "id": "member_123",
+      "userId": "user_123",
+      "workspaceId": "ws_456",
+      "role": "member",
+      "joinedAt": "2026-07-10T00:00:00.000Z",
+      "user": {
+        "id": "user_123",
+        "name": "Jane Doe",
+        "email": "newuser@example.com"
+      }
+    }
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
+}
+```
+
 ---
 
 ### Get Member Details
 
 Retrieve detailed information about a specific workspace member.
 
-**Endpoint:** `GET /v2/workspaces/:slug/members/:userId`
+**Endpoint:** `GET /v3/workspaces/:slug/members/:userId`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "member": {
+      "id": "member_123",
+      "userId": "user_123",
+      "workspaceId": "ws_456",
+      "role": "member",
+      "joinedAt": "2026-07-10T00:00:00.000Z",
+      "user": {
+        "id": "user_123",
+        "name": "Jane Doe",
+        "email": "jane@example.com"
+      }
+    }
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
+}
+```
+
+---
+
+### Update Member Role
+
+Update the workspace role of a specific member.
+
+**Endpoint:** `PATCH /v3/workspaces/:slug/members/:userId`
+
+**Body:**
+```json
+{
+  "role": "admin"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "member": {
+      "id": "member_123",
+      "userId": "user_123",
+      "workspaceId": "ws_456",
+      "role": "admin",
+      "joinedAt": "2026-07-10T00:00:00.000Z",
+      "user": {
+        "id": "user_123",
+        "name": "Jane Doe",
+        "email": "jane@example.com"
+      }
+    }
+  },
+  "timestamp": "2026-07-10T07:16:00.000Z"
+}
+```
 
 ---
 
@@ -247,18 +329,29 @@ Retrieve detailed information about a specific workspace member.
 
 Removes a user from the workspace. Note: The workspace owner cannot be removed.
 
-**Endpoint:** `DELETE /v2/workspaces/:slug/members/:userId`
+**Endpoint:** `DELETE /v3/workspaces/:slug/members/:userId`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "success": true
+  },
+  "timestamp": "2026-07-10T07:17:00.000Z"
+}
+```
 
 ---
 
-## Organization
+## Organization (V3)
 
 Scrymechat workspaces can be further organized into **Departments** and **Teams** to reflect your company's structure.
 
 ### List Departments
 
-`GET /v2/workspaces/:slug/departments`
+`GET /v3/workspaces/:slug/departments`
 
 ### List Teams
 
-`GET /v2/workspaces/:slug/teams`
+`GET /v3/workspaces/:slug/teams`

@@ -8,11 +8,11 @@ Departments represent the high-level organizational units (e.g., "Engineering", 
 
 ### List Departments
 
-**Endpoint:** `GET /v2/workspaces/:slug/departments`
+**Endpoint:** `GET /v3/workspaces/:slug/departments`
 
 ### Create Department
 
-**Endpoint:** `POST /v2/workspaces/:slug/departments`
+**Endpoint:** `POST /v3/workspaces/:slug/departments`
 
 **Body:**
 
@@ -30,11 +30,11 @@ Teams are specific groups within or across departments (e.g., "Frontend", "SRE")
 
 ### List Teams
 
-**Endpoint:** `GET /v2/workspaces/:slug/teams`
+**Endpoint:** `GET /v3/workspaces/:slug/teams`
 
 ### Create Team
 
-**Endpoint:** `POST /v2/workspaces/:slug/teams`
+**Endpoint:** `POST /v3/workspaces/:slug/teams`
 
 **Body:**
 
@@ -50,7 +50,7 @@ Teams are specific groups within or across departments (e.g., "Frontend", "SRE")
 
 Teams track their members, allowing you to manage permissions and notifications at a granular level.
 
-**Endpoint:** `GET /v2/workspaces/:slug/teams/:teamId`
+**Endpoint:** `GET /v3/workspaces/:slug/teams/:teamId`
 
 The response includes the `members` array with user profiles.
 

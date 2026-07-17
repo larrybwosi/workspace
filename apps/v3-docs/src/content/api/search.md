@@ -6,7 +6,7 @@ The Search API allows you to find members and messages within a workspace using 
 
 Find workspace members by name or email.
 
-**Endpoint:** `GET /v2/workspaces/:slug/search/members`
+**Endpoint:** `GET /v3/workspaces/:slug/search/members`
 
 **Query Parameters:**
 
@@ -16,14 +16,14 @@ Find workspace members by name or email.
 **Example:**
 
 ```http
-GET /v2/workspaces/acme/search/members?q=john
+GET /v3/workspaces/acme/search/members?q=john
 ```
 
 ## Message Search
 
 Search for messages containing specific text. Results can be filtered by channel.
 
-**Endpoint:** `GET /v2/workspaces/:slug/search/messages`
+**Endpoint:** `GET /v3/workspaces/:slug/search/messages`
 
 **Query Parameters:**
 
@@ -34,7 +34,7 @@ Search for messages containing specific text. Results can be filtered by channel
 **Example:**
 
 ```http
-GET /v2/workspaces/acme/search/messages?q=deployment&channelId=chan_123
+GET /v3/workspaces/acme/search/messages?q=deployment&channelId=chan_123
 ```
 
 ---
