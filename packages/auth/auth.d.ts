@@ -1431,7 +1431,7 @@ export declare const auth: import("better-auth", { with: { "resolution-mode": "i
                     $Infer: {
                         body: {
                             permissions: {
-                                readonly user?: ("list" | "update" | "delete" | "get" | "create" | "set-role" | "ban" | "impersonate" | "impersonate-admins" | "set-password" | "set-email")[] | undefined;
+                                readonly user?: ("list" | "create" | "update" | "delete" | "set-role" | "ban" | "impersonate" | "impersonate-admins" | "set-password" | "set-email" | "get")[] | undefined;
                                 readonly session?: ("list" | "delete" | "revoke")[] | undefined;
                             };
                         } & {
