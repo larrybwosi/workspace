@@ -19,7 +19,7 @@ import { V3Context } from '../auth/v3-context.decorator';
 import { ProvisioningService } from '../v2/provisioning.service';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
-import { IsString, IsOptional, IsEmail, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsArray, IsEnum } from 'class-validator';
 import Redis from 'ioredis';
 
 export class V3UpdateWorkspaceDto {
@@ -129,6 +129,32 @@ const provisionSchema = z.object({
     )
     .optional()
     .default([]),
+});
+
+export class V3AddMemberDto {
+  @IsEmail()
+  @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
+  email: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'member', description: 'The role of the member', required: false, default: 'member' })
+  role?: string;
+}
+
+const addMemberSchema = z.object({
+  email: z.string().email(),
+  role: z.string().optional().default('member'),
+});
+
+export class V3UpdateMemberRoleDto {
+  @IsEnum(['owner', 'admin', 'moderator', 'member', 'guest'])
+  @ApiProperty({ enum: ['owner', 'admin', 'moderator', 'member', 'guest'], example: 'admin' })
+  role: 'owner' | 'admin' | 'moderator' | 'member' | 'guest';
+}
+
+const updateMemberSchema = z.object({
+  role: z.enum(['owner', 'admin', 'moderator', 'member', 'guest']),
 });
 
 @ApiTags('V3 Workspaces')
@@ -623,6 +649,339 @@ When provisioned via M2M:
       await pipeline.exec();
     } catch (err) {
       this.logger.warn('Redis error in deleteWorkspace (del):', err);
+    }
+
+    return this.formatResponse({ success: true });
+  }
+
+  @Get(':slug/members')
+  @ApiOperation({
+    summary: 'List all workspace members (Enterprise M2M)',
+    description: 'Retrieve all members of a specific workspace. Requires members:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of members returned successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
+  async getWorkspaceMembers(@V3Context() context: ApiV3Context, @Param('slug') slug: string) {
+    if (!context.scopes.includes('members:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing members:read scope');
+    }
+
+    const workspaceId = context.workspaceId;
+    if (!workspaceId) {
+      throw new BadRequestException('Workspace context is missing');
+    }
+
+    const cacheKey = `v3:members:${workspaceId}`;
+    try {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        return this.formatResponse({ members: JSON.parse(cached) });
+      }
+    } catch (err) {
+      this.logger.warn('Redis error in getWorkspaceMembers (get):', err);
+    }
+
+    const members = await prisma.workspaceMember.findMany({
+      where: { workspaceId },
+      select: {
+        id: true,
+        workspaceId: true,
+        userId: true,
+        departmentId: true,
+        role: true,
+        memberType: true,
+        joinedAt: true,
+        notificationPreference: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(members));
+    } catch (err) {
+      this.logger.warn('Redis error in getWorkspaceMembers (setex):', err);
+    }
+
+    return this.formatResponse({ members });
+  }
+
+  @Post(':slug/members')
+  @ApiOperation({
+    summary: 'Add a member to the workspace (Enterprise M2M)',
+    description: 'Add a new member to a specific workspace. Requires members:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: V3AddMemberDto })
+  @ApiResponse({ status: 201, description: 'Member added successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
+  async addWorkspaceMember(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Body() body: V3AddMemberDto
+  ) {
+    if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing members:write scope');
+    }
+
+    const workspaceId = context.workspaceId;
+    if (!workspaceId) {
+      throw new BadRequestException('Workspace context is missing');
+    }
+
+    const validatedData = addMemberSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+
+    const { email, role } = validatedData.data;
+
+    try {
+      const membership = await prisma.workspaceMember.create({
+        data: {
+          workspace: {
+            connect: { id: workspaceId },
+          },
+          role,
+          user: {
+            connect: { email },
+          },
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      // Invalidate caches
+      try {
+        await this.redis.del(`v3:members:${workspaceId}`);
+        await this.redis.del(`v2:members:${workspaceId}`);
+      } catch (err) {
+        this.logger.warn('Redis error in addWorkspaceMember (del):', err);
+      }
+
+      return this.formatResponse({ member: membership });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('User not found');
+      }
+      if (error.code === 'P2002') {
+        throw new BadRequestException('User is already a member of this workspace');
+      }
+      throw error;
+    }
+  }
+
+  @Get(':slug/members/:userId')
+  @ApiOperation({
+    summary: 'Get details of a specific workspace member (Enterprise M2M)',
+    description: 'Retrieve details of a specific workspace member by userId. Requires members:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiResponse({ status: 200, description: 'Member details returned successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
+  @ApiResponse({ status: 404, description: 'Member not found.' })
+  async getWorkspaceMember(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('userId') userId: string
+  ) {
+    if (!context.scopes.includes('members:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing members:read scope');
+    }
+
+    const workspaceId = context.workspaceId;
+    if (!workspaceId) {
+      throw new BadRequestException('Workspace context is missing');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+      select: {
+        id: true,
+        workspaceId: true,
+        userId: true,
+        departmentId: true,
+        role: true,
+        memberType: true,
+        joinedAt: true,
+        notificationPreference: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            status: true,
+            role: true,
+          },
+        },
+        department: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
+    return this.formatResponse({ member });
+  }
+
+  @Patch(':slug/members/:userId')
+  @ApiOperation({
+    summary: 'Update a workspace member role (Enterprise M2M)',
+    description: 'Update the role of a specific workspace member. Requires members:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiBody({ type: V3UpdateMemberRoleDto })
+  @ApiResponse({ status: 200, description: 'Member updated successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
+  async updateWorkspaceMember(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('userId') userId: string,
+    @Body() body: V3UpdateMemberRoleDto
+  ) {
+    if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing members:write scope');
+    }
+
+    const workspaceId = context.workspaceId;
+    if (!workspaceId) {
+      throw new BadRequestException('Workspace context is missing');
+    }
+
+    const validatedData = updateMemberSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+    const { role } = validatedData.data;
+
+    // Retrieve target member to verify existence
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
+    const updatedMember = await prisma.workspaceMember.update({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+      data: { role },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    // Invalidate caches
+    try {
+      await this.redis.del(`v3:members:${workspaceId}`);
+      await this.redis.del(`v2:members:${workspaceId}`);
+    } catch (err) {
+      this.logger.warn('Redis error in updateWorkspaceMember (del):', err);
+    }
+
+    return this.formatResponse({ member: updatedMember });
+  }
+
+  @Delete(':slug/members/:userId')
+  @ApiOperation({
+    summary: 'Remove a member from the workspace (Enterprise M2M)',
+    description: 'Remove a workspace member by userId. Requires members:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiResponse({ status: 200, description: 'Member removed successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
+  @ApiResponse({ status: 404, description: 'Member not found.' })
+  async deleteWorkspaceMember(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('userId') userId: string
+  ) {
+    if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing members:write scope');
+    }
+
+    const workspaceId = context.workspaceId;
+    if (!workspaceId) {
+      throw new BadRequestException('Workspace context is missing');
+    }
+
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        ownerId: true,
+        members: {
+          where: { userId },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
+    if (workspace.ownerId === userId) {
+      throw new BadRequestException('Cannot remove workspace owner');
+    }
+
+    await prisma.workspaceMember.delete({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+    });
+
+    // Invalidate caches
+    try {
+      await this.redis.del(`v3:members:${workspaceId}`);
+      await this.redis.del(`v2:members:${workspaceId}`);
+    } catch (err) {
+      this.logger.warn('Redis error in deleteWorkspaceMember (del):', err);
     }
 
     return this.formatResponse({ success: true });

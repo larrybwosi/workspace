@@ -4,7 +4,7 @@ Announcements are high-priority broadcast messages sent to specific departments 
 
 ## Creating an Announcement
 
-**Endpoint:** `POST /v2/workspaces/:slug/announcements`
+**Endpoint:** `POST /v3/workspaces/:slug/announcements`
 
 **Body Fields:**
 
@@ -23,7 +23,7 @@ Announcements are visible to all members of the target department and its sub-de
 
 ### List Announcements
 
-**Endpoint:** `GET /v2/workspaces/:slug/announcements`
+**Endpoint:** `GET /v3/workspaces/:slug/announcements`
 
 ---
 

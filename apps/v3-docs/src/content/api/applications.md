@@ -6,7 +6,7 @@ Bot Applications are the foundation for building integrations with Scrymechat. T
 
 You can manage your bot applications via the Developer Portal in your Scrymechat account or programmatically via the API.
 
-**Endpoint:** `POST /v2/applications`
+**Endpoint:** `POST /v3/applications`
 
 **Body:**
 
@@ -25,7 +25,7 @@ You can manage your bot applications via the Developer Portal in your Scrymechat
 
 Returns a list of all bot applications owned by the authenticated user.
 
-**Endpoint:** `GET /v2/applications`
+**Endpoint:** `GET /v3/applications`
 
 ---
 
@@ -33,7 +33,7 @@ Returns a list of all bot applications owned by the authenticated user.
 
 Retrieve detailed information about a specific bot application.
 
-**Endpoint:** `GET /v2/applications/:id`
+**Endpoint:** `GET /v3/applications/:id`
 
 ---
 
@@ -41,7 +41,7 @@ Retrieve detailed information about a specific bot application.
 
 Update the name, description, or channel definitions for an application.
 
-**Endpoint:** `POST /v2/applications/:id`
+**Endpoint:** `POST /v3/applications/:id`
 
 **Body:**
 
@@ -58,7 +58,7 @@ Update the name, description, or channel definitions for an application.
 
 Revokes the current bot token and generates a new one. Use this if your token has been compromised.
 
-**Endpoint:** `POST /v2/applications/:id/reset-token`
+**Endpoint:** `POST /v3/applications/:id/reset-token`
 
 ---
 
@@ -66,7 +66,7 @@ Revokes the current bot token and generates a new one. Use this if your token ha
 
 Permanently deletes the bot application and its associated bot user.
 
-**Endpoint:** `POST /v2/applications/:id/delete`
+**Endpoint:** `POST /v3/applications/:id/delete`
 
 ### Bot Token vs OAuth
 
@@ -77,7 +77,7 @@ Permanently deletes the bot application and its associated bot user.
 
 A bot must be "installed" into a workspace before it can access its resources. Installation creates a bot user member within that workspace.
 
-**Endpoint:** `POST /v2/applications/:id/install`
+**Endpoint:** `POST /v3/applications/:id/install`
 
 **Body:**
 

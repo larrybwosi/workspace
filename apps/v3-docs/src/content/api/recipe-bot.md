@@ -1,10 +1,10 @@
 # How to Build a Bot
 
-Building a bot for Scrymechat is simple and powerful. You can choose between using our native **V2 REST API** with Webhooks/Ably, or our **Discord V10 Compatibility Layer**.
+Building a bot for Scrymechat is simple and powerful. You can choose between using our native **V3 REST API** with Webhooks/Ably, or our **Discord V10 Compatibility Layer**.
 
-## Native V2 API (Recommended)
+## Native V3 API (Recommended)
 
-The V2 API is designed specifically for Scrymechat features like Workspaces, Teams, and Departments.
+The V3 API is designed specifically for Scrymechat features like Workspaces, Teams, and Departments.
 
 ### 1. Create a Bot Application
 
@@ -15,7 +15,7 @@ Go to your **Workspace Settings > Developer Portal** and create a new applicatio
 Use the `client_credentials` flow to get an access token.
 
 ```bash
-curl -X POST https://api.skyrme.chat/v2/oauth/token \
+curl -X POST https://api.skyrme.chat/v3/oauth/token \
   -d '{"grant_type":"client_credentials","client_id":"...","client_secret":"..."}'
 ```
 
@@ -31,7 +31,7 @@ You have two options for receiving real-time events:
 Use the messages endpoint to send replies.
 
 ```bash
-curl -X POST https://api.skyrme.chat/v2/workspaces/my-workspace/channels/general/messages \
+curl -X POST https://api.skyrme.chat/v3/workspaces/my-workspace/channels/general/messages \
   -H "Authorization: Bearer <token>" \
   -d '{"content": "Hello from my bot!"}'
 ```
