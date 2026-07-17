@@ -208,7 +208,9 @@ async function bootstrap() {
     app.useWebSocketAdapter(new WsAdapter(app));
   }
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: ['s/:code'],
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = new DocumentBuilder()

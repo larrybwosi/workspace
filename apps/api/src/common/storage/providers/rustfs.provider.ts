@@ -9,7 +9,8 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
 import { FileData, StorageProvider, UploadResult } from '../storage.interface';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
+import { prisma } from '@repo/database';
 
 @Injectable()
 export class RustFSStorageProvider implements StorageProvider {
@@ -40,6 +41,17 @@ export class RustFSStorageProvider implements StorageProvider {
     } else {
       this.logger.warn('RustFS client not configured. Access key or secret key missing.');
     }
+  }
+
+  async getPresignedUrl(key: string): Promise<string> {
+    if (!this.s3Client) {
+      throw new InternalServerErrorException('RustFS client not configured');
+    }
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    return getSignedUrl(this.s3Client, command, { expiresIn: 7 * 24 * 60 * 60 });
   }
 
   private async ensureBucketExists() {
@@ -107,12 +119,34 @@ export class RustFSStorageProvider implements StorageProvider {
         })
       );
 
-      // Generate a signed URL (valid for 7 days)
+      // Generate a signed URL (valid for 7 days) as a fallback
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
         Key: fileName,
       });
       const url = await getSignedUrl(this.s3Client, command, { expiresIn: 7 * 24 * 60 * 60 });
+
+      // Generate a short URL code and save mapping in database
+      let code = randomBytes(4).toString('hex');
+      let attempts = 0;
+      while (attempts < 5) {
+        const existing = await prisma.shortUrl.findUnique({ where: { code } });
+        if (!existing) break;
+        code = randomBytes(4).toString('hex');
+        attempts++;
+      }
+
+      await prisma.shortUrl.create({
+        data: {
+          code,
+          original: url,
+          key: fileName,
+          mimeType: mimetype,
+        },
+      });
+
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const shortUrl = `${baseUrl}/s/${code}`;
 
       const formatSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -124,7 +158,7 @@ export class RustFSStorageProvider implements StorageProvider {
 
       return {
         id: fileName,
-        url: url,
+        url: shortUrl,
         name: originalname,
         type: mimetype,
         size: formatSize(buffer.length),
