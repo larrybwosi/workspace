@@ -8,6 +8,7 @@ import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
 
+const allowedOrigins = env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',').map((origin: string) => origin.trim()) : [];
 export const auth: any = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
@@ -17,6 +18,7 @@ export const auth: any = betterAuth({
     requireEmailVerification: false,
   },
   baseURL: env.BETTER_AUTH_URL || env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
+  trustedOrigins: allowedOrigins,
   plugins: [
     admin({
       defaultRole: 'Member',
