@@ -11,11 +11,24 @@ import { Injectable, Logger } from '@nestjs/common';
 import { auth } from '@repo/auth';
 import { setSocketioProvider, RealtimeProvider } from '@repo/shared/server';
 
+const getAllowedOrigins = (): string[] => {
+  const envOrigins = process.env.ALLOWED_ORIGINS;
+  if (envOrigins) {
+    return envOrigins.split(',').map(o => o.trim());
+  }
+  return [
+    'http://localhost:3001',
+    'http://localhost:3000',
+    'https://chat.scryme.tech',
+    'https://api.chat.scryme.tech',
+  ];
+};
+
 @Injectable()
 @WebSocketGateway({
   path: '/socket.io',
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3001',
+    origin: getAllowedOrigins(),
     credentials: true,
   },
 })

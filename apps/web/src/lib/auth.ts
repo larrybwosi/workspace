@@ -14,10 +14,12 @@ export const auth: any = betterAuth({
     provider: 'postgresql',
   }),
   trustedOrigins: [
+    ...allowedOrigins,
     '*.scryme.tech',
     'https://scryme.tech',
     'https://app.scryme.tech',
     'https://chat.scryme.tech',
+    'https://api.chat.scryme.tech',
     'http://localhost:3000',
     'http://localhost:3001',
   ],
@@ -32,13 +34,14 @@ export const auth: any = betterAuth({
       'app.scryme.tech',
       'crm.scryme.tech',
       'api.scryme.tech',
+      'chat.scryme.tech',
+      'api.chat.scryme.tech',
       '*.scryme.tech',
     ],
     protocol: env.NODE_ENV === 'development' ? 'http' : 'https',
     fallback:
       env.BETTER_AUTH_URL || (env.NODE_ENV === 'production' ? 'https://chat.scryme.tech' : 'http://localhost:3000'),
   },
-  trustedOrigins: allowedOrigins,
   plugins: [
     admin({
       defaultRole: 'Member',
