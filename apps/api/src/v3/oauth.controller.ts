@@ -6,8 +6,10 @@ import {
   UnauthorizedException,
   BadRequestException,
   ForbiddenException,
+  UseFilters,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty } from '@nestjs/swagger';
+import { V3ExceptionFilter } from './v3-exception.filter';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import { z } from 'zod';
@@ -41,6 +43,7 @@ const tokenRequestSchema = z.object({
 
 @ApiTags('V3 Authentication')
 @Controller('v3/oauth')
+@UseFilters(V3ExceptionFilter)
 export class V3OAuthController {
   private formatResponse<T>(data: T) {
     return {
