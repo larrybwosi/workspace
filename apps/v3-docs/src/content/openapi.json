@@ -4418,6 +4418,223 @@
         ]
       }
     },
+    "/api/v3/workspaces/{slug}/members": {
+      "get": {
+        "description": "Retrieve all members of a specific workspace. Requires members:read scope.",
+        "operationId": "V3WorkspacesController_getWorkspaceMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of members returned successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing scope or unauthorized."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all workspace members (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "Add a new member to a specific workspace. Requires members:write scope.",
+        "operationId": "V3WorkspacesController_addWorkspaceMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3AddMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member added successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing scope or unauthorized."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a member to the workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/members/{userId}": {
+      "get": {
+        "description": "Retrieve details of a specific workspace member by userId. Requires members:read scope.",
+        "operationId": "V3WorkspacesController_getWorkspaceMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member details returned successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing scope or unauthorized."
+          },
+          "404": {
+            "description": "Member not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a specific workspace member (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "patch": {
+        "description": "Update the role of a specific workspace member. Requires members:write scope.",
+        "operationId": "V3WorkspacesController_updateWorkspaceMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateMemberRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member updated successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing scope or unauthorized."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a workspace member role (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Remove a workspace member by userId. Requires members:write scope.",
+        "operationId": "V3WorkspacesController_deleteWorkspaceMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing scope or unauthorized."
+          },
+          "404": {
+            "description": "Member not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a member from the workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
     "/api/v3/workspaces/{slug}/webhooks": {
       "get": {
         "description": "Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.",
@@ -6658,6 +6875,56 @@
         ]
       }
     },
+    "/api/workspaces/roles": {
+      "get": {
+        "operationId": "WorkspacesController_getWorkspaceRoles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of workspace roles"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all well-defined workspace roles",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/roles": {
+      "get": {
+        "operationId": "WorkspacesController_getWorkspaceSlugRoles",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of workspace roles"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get roles defined for a specific workspace",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
     "/api/workspaces/discover": {
       "get": {
         "operationId": "WorkspacesController_discoverWorkspaces",
@@ -8633,12 +8900,12 @@
         ]
       }
     },
-    "/api/device-auth/qr/status/{sessionId}": {
+    "/api/device-auth/qr/status/{deviceCode}": {
       "get": {
         "operationId": "DeviceAuthController_checkStatus",
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "deviceCode",
             "required": true,
             "in": "path",
             "schema": {
@@ -8670,12 +8937,40 @@
         ]
       }
     },
+    "/api/device-auth/qr/deny": {
+      "post": {
+        "operationId": "DeviceAuthController_deny",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DeviceAuth"
+        ]
+      }
+    },
     "/api/android-auth/me": {
       "get": {
         "operationId": "AndroidAuthController_getProfile",
         "parameters": [],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AndroidAuth"
+        ]
+      }
+    },
+    "/api/android-auth/change-password": {
+      "post": {
+        "operationId": "AndroidAuthController_changePassword",
+        "parameters": [],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -10149,6 +10444,44 @@
           }
         }
       },
+      "V3AddMemberDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "The email of the user to add"
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "description": "The role of the member",
+            "default": "member"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "V3UpdateMemberRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "moderator",
+              "member",
+              "guest"
+            ],
+            "example": "admin"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
       "V3CreateWebhookDto": {
         "type": "object",
         "properties": {
@@ -10472,6 +10805,7 @@
             "enum": [
               "owner",
               "admin",
+              "moderator",
               "member",
               "guest"
             ],
@@ -10758,6 +11092,10 @@
           "content": {
             "type": "string",
             "example": "Hello world!"
+          },
+          "replyToId": {
+            "type": "string",
+            "example": "msg_123"
           },
           "threadId": {
             "type": "string",

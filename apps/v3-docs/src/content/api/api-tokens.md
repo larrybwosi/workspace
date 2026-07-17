@@ -22,7 +22,7 @@ When creating a token, you must specify granular permissions.
 
 ### Create Token
 
-**Endpoint:** `POST /v2/workspaces/:slug/api-tokens`
+**Endpoint:** `POST /v3/workspaces/:slug/api-tokens`
 
 **Request:**
 
@@ -40,7 +40,7 @@ When creating a token, you must specify granular permissions.
 
 If a token is compromised, you can rotate it to generate a new value while keeping the same permissions and ID.
 
-**Endpoint:** `POST /v2/workspaces/:slug/api-tokens/:tokenId/rotate`
+**Endpoint:** `POST /v3/workspaces/:slug/api-tokens/:tokenId/rotate`
 
 ## Usage
 

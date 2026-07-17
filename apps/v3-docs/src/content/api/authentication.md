@@ -1,12 +1,12 @@
 # Authentication
 
-The Scrymechat API (V2) uses an OAuth2-inspired `client_credentials` flow for bot, integration, and Machine-to-Machine (M2M) authentication. This allows your application to authenticate as itself rather than as a specific user.
+The Scrymechat API (V3) uses an OAuth2-inspired `client_credentials` flow for bot, integration, and Machine-to-Machine (M2M) authentication. This allows your application to authenticate as itself rather than as a specific user.
 
 ## Getting an Access Token
 
 To interact with the API, you first need to exchange your `client_id` and `client_secret` for an access token. These credentials can be obtained from the Developer Portal in your Scrymechat workspace settings (for Bots) or Organization settings (for M2M).
 
-**Endpoint:** `POST /v2/oauth/token`
+**Endpoint:** `POST /v3/oauth/token`
 
 ### Request Body
 
@@ -20,7 +20,7 @@ To interact with the API, you first need to exchange your `client_id` and `clien
 ### Example Request
 
 ```bash
-curl -X POST https://api.scrymechat.com/v2/oauth/token \
+curl -X POST https://api.scrymechat.com/v3/oauth/token \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "client_credentials",
@@ -36,7 +36,7 @@ curl -X POST https://api.scrymechat.com/v2/oauth/token \
 import axios from 'axios';
 
 async function getAccessToken() {
-  const response = await axios.post('https://api.scrymechat.com/v2/oauth/token', {
+  const response = await axios.post('https://api.scrymechat.com/v3/oauth/token', {
     grant_type: 'client_credentials',
     client_id: 'your_client_id',
     client_secret: 'your_client_secret',
@@ -53,7 +53,7 @@ async function getAccessToken() {
 import requests
 
 def get_access_token():
-    url = "https://api.scrymechat.com/v2/oauth/token"
+    url = "https://api.scrymechat.com/v3/oauth/token"
     payload = {
         "grant_type": "client_credentials",
         "client_id": "your_client_id",

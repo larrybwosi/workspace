@@ -595,6 +595,7 @@ export interface CreateMessageDto {
   attachments?: CreateMessageDtoAttachmentsItem[];
   content: string;
   metadata?: CreateMessageDtoMetadata;
+  replyToId?: string;
   stickerId?: string;
   threadId?: string;
 }
@@ -726,6 +727,7 @@ export type UpdateMemberRoleDtoRole = typeof UpdateMemberRoleDtoRole[keyof typeo
 export const UpdateMemberRoleDtoRole = {
   owner: 'owner',
   admin: 'admin',
+  moderator: 'moderator',
   member: 'member',
   guest: 'guest',
 } as const;
@@ -864,6 +866,29 @@ export interface V3CreateWebhookDto {
   events: string[];
   name: string;
   url: string;
+}
+
+export type V3UpdateMemberRoleDtoRole = typeof V3UpdateMemberRoleDtoRole[keyof typeof V3UpdateMemberRoleDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3UpdateMemberRoleDtoRole = {
+  owner: 'owner',
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+  guest: 'guest',
+} as const;
+
+export interface V3UpdateMemberRoleDto {
+  role: V3UpdateMemberRoleDtoRole;
+}
+
+export interface V3AddMemberDto {
+  /** The email of the user to add */
+  email: string;
+  /** The role of the member */
+  role?: string;
 }
 
 /**
@@ -3033,6 +3058,80 @@ const v3WorkspacesControllerDeleteWorkspace = (
     }
 
 /**
+ * Retrieve all members of a specific workspace. Requires members:read scope.
+ * @summary List all workspace members (Enterprise M2M)
+ */
+const v3WorkspacesControllerGetWorkspaceMembers = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Add a new member to a specific workspace. Requires members:write scope.
+ * @summary Add a member to the workspace (Enterprise M2M)
+ */
+const v3WorkspacesControllerAddWorkspaceMember = (
+    slug: string,
+    v3AddMemberDto: BodyType<V3AddMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3AddMemberDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve details of a specific workspace member by userId. Requires members:read scope.
+ * @summary Get details of a specific workspace member (Enterprise M2M)
+ */
+const v3WorkspacesControllerGetWorkspaceMember = (
+    slug: string,
+    userId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Update the role of a specific workspace member. Requires members:write scope.
+ * @summary Update a workspace member role (Enterprise M2M)
+ */
+const v3WorkspacesControllerUpdateWorkspaceMember = (
+    slug: string,
+    userId: string,
+    v3UpdateMemberRoleDto: BodyType<V3UpdateMemberRoleDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateMemberRoleDto
+    },
+      options);
+    }
+
+/**
+ * Remove a workspace member by userId. Requires members:write scope.
+ * @summary Remove a member from the workspace (Enterprise M2M)
+ */
+const v3WorkspacesControllerDeleteWorkspaceMember = (
+    slug: string,
+    userId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
  * Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.
  * @summary List all webhooks in the workspace
  */
@@ -3902,6 +4001,30 @@ const workspacesControllerCreateWorkspace = (
     }
 
 /**
+ * @summary Get all well-defined workspace roles
+ */
+const workspacesControllerGetWorkspaceRoles = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/roles`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get roles defined for a specific workspace
+ */
+const workspacesControllerGetWorkspaceSlugRoles = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/roles`, method: 'GET'
+    },
+      options);
+    }
+
+/**
  * @summary Discover public workspaces
  */
 const workspacesControllerDiscoverWorkspaces = (
@@ -4558,10 +4681,10 @@ const deviceAuthControllerGenerateQR = (
     }
 
 const deviceAuthControllerCheckStatus = (
-    sessionId: string,
+    deviceCode: string,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/device-auth/qr/status/${sessionId}`, method: 'GET'
+      {url: `/api/device-auth/qr/status/${deviceCode}`, method: 'GET'
     },
       options);
     }
@@ -4575,11 +4698,29 @@ const deviceAuthControllerAuthorize = (
       options);
     }
 
+const deviceAuthControllerDeny = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/device-auth/qr/deny`, method: 'POST'
+    },
+      options);
+    }
+
 const androidAuthControllerGetProfile = (
 
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/android-auth/me`, method: 'GET'
+    },
+      options);
+    }
+
+const androidAuthControllerChangePassword = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/android-auth/change-password`, method: 'POST'
     },
       options);
     }
@@ -4803,7 +4944,7 @@ const supportControllerGetCustomerProfiles = (
       options);
     }
 
-return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,usersControllerSearchUsers,usersControllerGetMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v2WorkspacesControllerGetMembers,v2WorkspacesControllerAddMember,v2WorkspacesControllerGetMember,v2WorkspacesControllerRemoveMember,v2MessagesControllerGetChannels,v2MessagesControllerCreateChannel,v2MessagesControllerUploadChannelIcon,v2MessagesControllerGetChannel,v2MessagesControllerUpdateChannel,v2MessagesControllerDeleteChannel,v2MessagesControllerGetMessages,v2MessagesControllerSendMessage,v2SearchControllerSearchMembers,v2SearchControllerSearchMessages,v2ApiTokensControllerGetTokens,v2ApiTokensControllerCreateToken,v2ApiTokensControllerDeleteToken,v2ApiTokensControllerRotateToken,v2WebhooksControllerGetWebhooks,v2WebhooksControllerCreateWebhook,v2WebhooksControllerGetWebhook,v2WebhooksControllerUpdateWebhook,v2WebhooksControllerDeleteWebhook,v2ThreadsControllerGetThreads,v2ThreadsControllerGetThreadMessages,v2ThreadsControllerGetThreadByContext,v2MessageActionsControllerHandleAction,v2DepartmentsControllerGetDepartments,v2DepartmentsControllerCreateDepartment,v2DepartmentsControllerGetDepartment,v2DepartmentsControllerUpdateDepartment,v2DepartmentsControllerDeleteDepartment,v2TeamsControllerGetTeams,v2TeamsControllerCreateTeam,v2TeamsControllerGetTeam,v2TeamsControllerUpdateTeam,v2TeamsControllerDeleteTeam,v2AnnouncementsControllerGetAnnouncements,v2AnnouncementsControllerCreateAnnouncement,v2AnnouncementsControllerGetAnnouncement,v2AnnouncementsControllerUpdateAnnouncement,v2AnnouncementsControllerDeleteAnnouncement,v2OAuthControllerGetToken,v2ApplicationsControllerCreateApplication,v2ApplicationsControllerGetApplications,v2ApplicationsControllerGetApplication,v2ApplicationsControllerUpdateApplication,v2ApplicationsControllerDeleteApplication,v2ApplicationsControllerResetBotToken,v2ApplicationsControllerInstallBot,v2ContactControllerSubmitContactForm,provisioningControllerProvisionWorkspace,organizationsControllerGetOrganizationWorkspaces,organizationsControllerGetOrganization,organizationsControllerUpdateOrganization,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,notificationsControllerGetNotifications,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,ablyControllerGetToken,storageControllerUploadFile,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,androidAuthControllerGetProfile,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
+return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,usersControllerSearchUsers,usersControllerGetMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v2WorkspacesControllerGetMembers,v2WorkspacesControllerAddMember,v2WorkspacesControllerGetMember,v2WorkspacesControllerRemoveMember,v2MessagesControllerGetChannels,v2MessagesControllerCreateChannel,v2MessagesControllerUploadChannelIcon,v2MessagesControllerGetChannel,v2MessagesControllerUpdateChannel,v2MessagesControllerDeleteChannel,v2MessagesControllerGetMessages,v2MessagesControllerSendMessage,v2SearchControllerSearchMembers,v2SearchControllerSearchMessages,v2ApiTokensControllerGetTokens,v2ApiTokensControllerCreateToken,v2ApiTokensControllerDeleteToken,v2ApiTokensControllerRotateToken,v2WebhooksControllerGetWebhooks,v2WebhooksControllerCreateWebhook,v2WebhooksControllerGetWebhook,v2WebhooksControllerUpdateWebhook,v2WebhooksControllerDeleteWebhook,v2ThreadsControllerGetThreads,v2ThreadsControllerGetThreadMessages,v2ThreadsControllerGetThreadByContext,v2MessageActionsControllerHandleAction,v2DepartmentsControllerGetDepartments,v2DepartmentsControllerCreateDepartment,v2DepartmentsControllerGetDepartment,v2DepartmentsControllerUpdateDepartment,v2DepartmentsControllerDeleteDepartment,v2TeamsControllerGetTeams,v2TeamsControllerCreateTeam,v2TeamsControllerGetTeam,v2TeamsControllerUpdateTeam,v2TeamsControllerDeleteTeam,v2AnnouncementsControllerGetAnnouncements,v2AnnouncementsControllerCreateAnnouncement,v2AnnouncementsControllerGetAnnouncement,v2AnnouncementsControllerUpdateAnnouncement,v2AnnouncementsControllerDeleteAnnouncement,v2OAuthControllerGetToken,v2ApplicationsControllerCreateApplication,v2ApplicationsControllerGetApplications,v2ApplicationsControllerGetApplication,v2ApplicationsControllerUpdateApplication,v2ApplicationsControllerDeleteApplication,v2ApplicationsControllerResetBotToken,v2ApplicationsControllerInstallBot,v2ContactControllerSubmitContactForm,provisioningControllerProvisionWorkspace,organizationsControllerGetOrganizationWorkspaces,organizationsControllerGetOrganization,organizationsControllerUpdateOrganization,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,notificationsControllerGetNotifications,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,ablyControllerGetToken,storageControllerUploadFile,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
 export type AppControllerGetHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHealth']>>>
 export type AppControllerGetHelloResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHello']>>>
 export type AppControllerGetRealtimeConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetRealtimeConfig']>>>
@@ -4928,6 +5069,11 @@ export type V3WorkspacesControllerProvisionWorkspaceResult = NonNullable<Awaited
 export type V3WorkspacesControllerGetWorkspaceBySlugResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetWorkspaceBySlug']>>>
 export type V3WorkspacesControllerUpdateWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateWorkspace']>>>
 export type V3WorkspacesControllerDeleteWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteWorkspace']>>>
+export type V3WorkspacesControllerGetWorkspaceMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetWorkspaceMembers']>>>
+export type V3WorkspacesControllerAddWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerAddWorkspaceMember']>>>
+export type V3WorkspacesControllerGetWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetWorkspaceMember']>>>
+export type V3WorkspacesControllerUpdateWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateWorkspaceMember']>>>
+export type V3WorkspacesControllerDeleteWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteWorkspaceMember']>>>
 export type V3WebhooksControllerGetWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerGetWebhooks']>>>
 export type V3WebhooksControllerCreateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerCreateWebhook']>>>
 export type V3WebhooksControllerGetWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerGetWebhook']>>>
@@ -4991,6 +5137,8 @@ export type FriendsControllerUpdateFriendRequestResult = NonNullable<Awaited<Ret
 export type FriendsControllerDeleteFriendRequestResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['friendsControllerDeleteFriendRequest']>>>
 export type WorkspacesControllerGetWorkspacesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerGetWorkspaces']>>>
 export type WorkspacesControllerCreateWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerCreateWorkspace']>>>
+export type WorkspacesControllerGetWorkspaceRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerGetWorkspaceRoles']>>>
+export type WorkspacesControllerGetWorkspaceSlugRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerGetWorkspaceSlugRoles']>>>
 export type WorkspacesControllerDiscoverWorkspacesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerDiscoverWorkspaces']>>>
 export type WorkspacesControllerJoinWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerJoinWorkspace']>>>
 export type WorkspacesControllerGetWorkspaceBySlugResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspacesControllerGetWorkspaceBySlug']>>>
@@ -5040,7 +5188,9 @@ export type SearchControllerSearchResult = NonNullable<Awaited<ReturnType<Return
 export type DeviceAuthControllerGenerateQRResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['deviceAuthControllerGenerateQR']>>>
 export type DeviceAuthControllerCheckStatusResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['deviceAuthControllerCheckStatus']>>>
 export type DeviceAuthControllerAuthorizeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['deviceAuthControllerAuthorize']>>>
+export type DeviceAuthControllerDenyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['deviceAuthControllerDeny']>>>
 export type AndroidAuthControllerGetProfileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['androidAuthControllerGetProfile']>>>
+export type AndroidAuthControllerChangePasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['androidAuthControllerChangePassword']>>>
 export type AndroidAuthControllerCheckUsernameResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['androidAuthControllerCheckUsername']>>>
 export type AndroidAuthControllerLoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['androidAuthControllerLogin']>>>
 export type AndroidAuthControllerSignupResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['androidAuthControllerSignup']>>>
