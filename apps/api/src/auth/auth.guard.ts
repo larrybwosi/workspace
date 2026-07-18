@@ -1,11 +1,12 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { auth } from '@repo/auth';
+import { fromNodeHeaders } from 'better-auth/node';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const headers = this.normalize(request.headers);
+    const headers = fromNodeHeaders(request.headers);
     this.inject(headers);
 
     const session = await auth.api.getSession({ headers });
@@ -16,20 +17,14 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private normalize(raw: Record<string, any>): Record<string, string> {
-    const headers: Record<string, string> = {};
-    Object.keys(raw).forEach(k => {
-      headers[k] = Array.isArray(raw[k]) ? raw[k].join(', ') : String(raw[k] ?? '');
-    });
-    return headers;
-  }
-
-  private inject(headers: Record<string, string>): void {
-    const h = headers.authorization || headers.Authorization || '';
+  private inject(headers: Headers): void {
+    const h = headers.get('authorization') || '';
     if (!h.startsWith('Bearer ')) return;
     const t = h.split(' ')[1];
     const k = 'better-auth.session_token';
-    if (!t || (headers.cookie && headers.cookie.includes(k))) return;
-    headers.cookie = headers.cookie ? `${headers.cookie}; ${k}=${t}` : `${k}=${t}`;
+    const cookie = headers.get('cookie') || '';
+    if (!t || cookie.includes(k)) return;
+    const updatedCookie = cookie ? `${cookie}; ${k}=${t}` : `${k}=${t}`;
+    headers.set('cookie', updatedCookie);
   }
 }

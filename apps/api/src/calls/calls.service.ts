@@ -6,6 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { prisma } from '@repo/database';
+import type { User } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import { StartCallDto, UpdateCallDto, ScheduleCallDto, SoundboardSoundDto } from './dto/call-operations.dto';
 import {
