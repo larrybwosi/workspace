@@ -28,8 +28,11 @@ const getBaseURL = () => {
     }
   }
   if (!url) {
-    const isProd = getEnv('NODE_ENV') === 'production';
-    url = getEnv('API_URL') || (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
+    const isProd =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') ||
+      getEnv('NODE_ENV') === 'production' ||
+      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+    url = getEnv('API_URL') || getEnv('NEXT_PUBLIC_API_URL') || (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   }
   return url.replace(/\/$/, '') + '/api';
 };

@@ -1,10 +1,12 @@
 import { Controller, Post, Req } from '@nestjs/common';
 import { auth } from '@repo/auth';
 import { getAblyRest } from '@repo/shared/server';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 
 @Controller('ably')
 export class AblyController {
   @Post('token')
+  @AllowAnonymous()
   async getToken(@Req() request: any) {
     const headers = this.normalize(request.headers);
     this.inject(headers);
