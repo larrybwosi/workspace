@@ -4,7 +4,7 @@ import { validateEnv } from '@repo/shared';
 const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health'];
 const authPrefix = '/api/auth';
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
@@ -17,19 +17,16 @@ export default async function proxy(request: NextRequest) {
   // do not trigger Better Auth / Database connection failures or environment validations.
   const { auth } = await import('@/lib/auth');
 
-  // Convert request.headers to a plain object of headers to allow mutation
-  const headers: Record<string, string> = {};
-  request.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
+  // Clone request headers into standard Web Headers to allow mutation
+  const headers = new Headers(request.headers);
 
-  // Extract the Authorization header (supporting both lowercase and uppercase variations)
-  const authHeader = headers['authorization'] || headers['Authorization'] || '';
+  // Extract the Authorization header (Web Headers handles case-insensitivity automatically)
+  const authHeader = headers.get('authorization') || '';
   if (authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     if (token) {
-      console.info(`[Proxy] Bearer token detected. Injecting better-auth session cookies.`);
-      const cookieValue = headers['cookie'] || '';
+      console.info(`[Middleware] Bearer token detected. Injecting better-auth session cookies.`);
+      const cookieValue = headers.get('cookie') || '';
       const cookieNameUnderscore = 'better-auth.session_token';
       const cookieNameHyphen = 'better-auth.session-token';
 
@@ -41,7 +38,7 @@ export default async function proxy(request: NextRequest) {
       if (!cookieValue.includes(cookieNameHyphen)) {
         updatedCookie = updatedCookie ? `${updatedCookie}; ${cookieNameHyphen}=${token}` : `${cookieNameHyphen}=${token}`;
       }
-      headers['cookie'] = updatedCookie;
+      headers.set('cookie', updatedCookie);
     }
   }
 
@@ -50,14 +47,14 @@ export default async function proxy(request: NextRequest) {
   });
 
   if (!session) {
-    console.warn(`[Proxy] Session verification failed for path: ${pathname}`);
+    console.warn(`[Middleware] Session verification failed for path: ${pathname}`);
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  console.info(`[Proxy] Session verified successfully for path: ${pathname}`);
+  console.info(`[Middleware] Session verified successfully for path: ${pathname}`);
   return NextResponse.next();
 }
 
