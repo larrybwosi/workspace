@@ -2,7 +2,11 @@ import axios from 'axios';
 
 // Helper to safely access env variables across Vite, Next.js and React Native
 const getEnv = (name: string) => {
-  const g = globalThis as typeof globalThis & { process?: { env?: Record<string, string> }; import?: { meta?: { env?: Record<string, string> } }; __env__?: Record<string, string>; };
+  const g = globalThis as typeof globalThis & {
+    process?: { env?: Record<string, string> };
+    import?: { meta?: { env?: Record<string, string> } };
+    __env__?: Record<string, string>;
+  };
 
   // Try various common locations for env variables
   // Avoid explicit import.meta to prevent TS1470
@@ -24,14 +28,14 @@ const getBaseURL = () => {
     }
   }
   if (!url) {
-    url = getEnv('API_URL') || 'http://localhost:3000';
+    url = getEnv('API_URL') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   }
   return url.replace(/\/$/, '') + '/api';
 };
 
 // Create axios instance with default config
 export const apiClient = axios.create({
-  baseURL: getBaseURL(),
+  baseURL: 'https://api.chat.scryme.tech',
   timeout: 10000,
   withCredentials: true,
 });
