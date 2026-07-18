@@ -5,7 +5,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { type User, type Call, type CallParticipant, prisma } from '@repo/database';
+import { prisma } from '@repo/database';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import { StartCallDto, UpdateCallDto, ScheduleCallDto, SoundboardSoundDto } from './dto/call-operations.dto';
 import {
@@ -21,21 +21,15 @@ import {
 @Injectable()
 export class CallsService {
   private async resolveWorkspaceId(workspaceIdOrSlug: string): Promise<string> {
-    /**
-     * ⚡ Performance Optimization:
-     * Replaces findFirst with OR filter with serial findUnique queries.
-     * Since 'id' is the primary key and 'slug' has a unique constraint,
-     * querying them individually with findUnique leverages direct database O(1) primary/unique key index optimization.
-     * This avoids a full scan or complex OR search and is much faster.
-     * Retaining only 'id' selection further reduces payload and memory overhead.
-     */
-    const workspace = (await prisma.workspace.findUnique({
-      where: { id: workspaceIdOrSlug },
-      select: { id: true },
-    })) || (await prisma.workspace.findUnique({
-      where: { slug: workspaceIdOrSlug },
-      select: { id: true },
-    }));
+    const workspace =
+      (await prisma.workspace.findUnique({
+        where: { id: workspaceIdOrSlug },
+        select: { id: true },
+      })) ||
+      (await prisma.workspace.findUnique({
+        where: { slug: workspaceIdOrSlug },
+        select: { id: true },
+      }));
 
     if (workspace) return workspace.id;
     return workspaceIdOrSlug;
@@ -155,16 +149,11 @@ export class CallsService {
         data: {
           callId: call.id,
           userId: user.id,
-          role: "host",
+          role: 'host',
           joinedAt: new Date(),
         },
       });
 
-      /**
-       * ⚡ Performance Optimization:
-       * 1. Parallelizes all Ably event publishing for call initiation.
-       * 2. Avoids O(N) sequential round-trips for multi-user notifications.
-       */
       const initiationSideEffects: Promise<any>[] = [];
 
       if (recipientId) {
@@ -253,7 +242,7 @@ export class CallsService {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
-    let token = "mock-token";
+    let token = 'mock-token';
     if (agoraConfig.appId && agoraConfig.appCertificate) {
       token = RtcTokenBuilder.buildTokenWithUid(
         agoraConfig.appId,
@@ -279,7 +268,7 @@ export class CallsService {
     return {
       callId: call.id,
       token,
-      appId: agoraConfig.appId || "mock-app-id",
+      appId: agoraConfig.appId || 'mock-app-id',
       channelName: agoraChannelName,
       uid,
       type: call.type,
@@ -690,13 +679,15 @@ export class CallsService {
      * This avoids a full scan or complex OR search and is much faster.
      * Retaining only 'id' selection further reduces payload and memory overhead.
      */
-    const workspace = (await prisma.workspace.findUnique({
-      where: { id: workspaceIdOrSlug },
-      select: { id: true },
-    })) || (await prisma.workspace.findUnique({
-      where: { slug: workspaceIdOrSlug },
-      select: { id: true },
-    }));
+    const workspace =
+      (await prisma.workspace.findUnique({
+        where: { id: workspaceIdOrSlug },
+        select: { id: true },
+      })) ||
+      (await prisma.workspace.findUnique({
+        where: { slug: workspaceIdOrSlug },
+        select: { id: true },
+      }));
     const workspaceId = workspace?.id || workspaceIdOrSlug;
 
     return prisma.call.findMany({
@@ -726,10 +717,7 @@ export class CallsService {
      */
     const workspace = await prisma.workspace.findFirst({
       where: {
-        OR: [
-          { id: incomingWorkspaceId || undefined },
-          { slug: workspaceSlug || undefined },
-        ],
+        OR: [{ id: incomingWorkspaceId || undefined }, { slug: workspaceSlug || undefined }],
       },
       select: {
         id: true,
@@ -771,7 +759,8 @@ export class CallsService {
     });
 
     const currentUserMember = workspace?.members.find(m => m.userId === user.id);
-    const isAdminOrOwner = currentUserMember && (currentUserMember.role === 'admin' || currentUserMember.role === 'owner');
+    const isAdminOrOwner =
+      currentUserMember && (currentUserMember.role === 'admin' || currentUserMember.role === 'owner');
 
     /**
      * ⚡ Performance Optimization:

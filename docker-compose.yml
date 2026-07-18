@@ -179,7 +179,6 @@ networks:
   scrymechat-network:
     name: scrymechat-network
     driver: bridge
-    attachable: true
 
   proxy:
     name: ${PROXY_NETWORK:-dokploy-network}
