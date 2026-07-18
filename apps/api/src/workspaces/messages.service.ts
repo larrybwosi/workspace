@@ -146,8 +146,34 @@ export class MessagesService {
         group.users.push(r.userId);
       });
 
+      // Standardize user object avatar and remove redundant image field to reduce payload size
+      // while fully preserving all other user fields via spreading.
+      const formattedUser = msg.user
+        ? {
+            ...msg.user,
+            avatar: msg.user.avatar || msg.user.image,
+            image: undefined,
+          }
+        : null;
+
+      // Standardize replyTo user object if present while fully preserving all other fields via spreading.
+      const formattedReplyTo = msg.replyTo
+        ? {
+            ...msg.replyTo,
+            user: msg.replyTo.user
+              ? {
+                  ...msg.replyTo.user,
+                  avatar: msg.replyTo.user.avatar || msg.replyTo.user.image,
+                  image: undefined,
+                }
+              : null,
+          }
+        : null;
+
       return {
         ...msg,
+        user: formattedUser,
+        replyTo: formattedReplyTo,
         reactions: Array.from(reactionGroups.values()),
         mentions: msg.mentions.map(m => m.mention),
         readByCurrentUser: msg.readBy.length > 0,
