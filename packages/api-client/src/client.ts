@@ -46,9 +46,25 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(config => {
   if (typeof window !== 'undefined') {
-    const token =
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    let token =
       window.localStorage.getItem('better-auth.session-token') ||
       window.localStorage.getItem('better-auth.session_token');
+
+    if (!token) {
+      token = getCookie('better-auth.session_token') || getCookie('better-auth.session-token');
+      if (token) {
+        window.localStorage.setItem('better-auth.session_token', token);
+        window.localStorage.setItem('better-auth.session-token', token);
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
