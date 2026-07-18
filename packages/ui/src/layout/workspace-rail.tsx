@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Home, Search, Settings, HelpCircle, LogOut, Moon, Sun, Building2 } from 'lucide-react';
+import { Plus, Home, Search, Settings, HelpCircle, LogOut, Moon, Sun, Building2, Download } from 'lucide-react';
 import { useWorkspaces, useFriends } from '@repo/api-client';
+import { usePWAInstall } from '../hooks/use-pwa';
 import { useParams, useRouter, usePathname } from '../hooks/use-universal-router';
 import { cn } from '../lib/utils';
 import { Button } from '../components/button';
@@ -18,6 +19,7 @@ interface WorkspaceRailProps {
 }
 
 export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
+  const { isInstallable, install } = usePWAInstall();
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const { data: workspaces } = useWorkspaces();
   const { slug } = useParams();
@@ -184,6 +186,23 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
 
         {/* Bottom Actions */}
         <div className="flex flex-col items-center gap-3 mt-4">
+          {isInstallable && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-sidebar-accent animate-pulse"
+                  onClick={install}
+                  aria-label="Add to Desktop"
+                >
+                  <Download className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Add to Desktop</TooltipContent>
+            </Tooltip>
+          )}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

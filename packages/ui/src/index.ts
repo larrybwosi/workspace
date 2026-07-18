@@ -77,6 +77,7 @@ export * from './layout/search-view';
 export * from './layout/command-palette';
 export * from './layout/command-palette-provider';
 export * from './hooks/use-recent-searches';
+export * from './hooks/use-pwa';
 export * from './layout/workspace-sidebar';
 export * from './layout/workspace-rail';
 export * from './layout/mobile-nav';
