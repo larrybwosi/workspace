@@ -4,7 +4,7 @@ import { validateEnv } from '@repo/shared';
 const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health'];
 const authPrefix = '/api/auth';
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
@@ -25,7 +25,7 @@ export default async function middleware(request: NextRequest) {
   if (authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     if (token) {
-      console.info(`[Middleware] Bearer token detected. Injecting better-auth session cookies.`);
+      console.info(`[Proxy] Bearer token detected. Injecting better-auth session cookies.`);
       const cookieValue = headers.get('cookie') || '';
       const cookieNameUnderscore = 'better-auth.session_token';
       const cookieNameHyphen = 'better-auth.session-token';
@@ -47,14 +47,14 @@ export default async function middleware(request: NextRequest) {
   });
 
   if (!session) {
-    console.warn(`[Middleware] Session verification failed for path: ${pathname}`);
+    console.warn(`[Proxy] Session verification failed for path: ${pathname}`);
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  console.info(`[Middleware] Session verified successfully for path: ${pathname}`);
+  console.info(`[Proxy] Session verified successfully for path: ${pathname}`);
   return NextResponse.next();
 }
 
