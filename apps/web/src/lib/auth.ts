@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { admin, jwt, organization } from 'better-auth/plugins';
+import { admin, jwt, organization, bearer } from 'better-auth/plugins';
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { prisma } from '@/lib/db/prisma';
 import { validateEnv } from '@repo/shared';
@@ -49,6 +49,7 @@ export const auth: any = betterAuth({
     }),
     jwt(),
     organization(),
+    bearer(),
     oauthProvider({
       loginPage: '/login',
       consentPage: '/consent',
