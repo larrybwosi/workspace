@@ -6,7 +6,13 @@ import { z } from 'zod';
 export const baseEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   NEXT_PUBLIC_APP_URL: z.url().default('http://localhost:3001'),
-  NEXT_PUBLIC_API_URL: z.url().default('https://api.chat.scryme.tech'),
+  NEXT_PUBLIC_API_URL: z
+    .url()
+    .default(
+      typeof process !== 'undefined' && process.env?.NODE_ENV === 'production'
+        ? 'https://api.chat.scryme.tech'
+        : 'http://localhost:3000'
+    ),
   NEXT_PUBLIC_SANITY_PROJECT_ID: z.string().optional(),
   NEXT_PUBLIC_SANITY_DATASET: z.string().default('production'),
   NEXT_PUBLIC_AGORA_APP_ID: z.string().optional(),

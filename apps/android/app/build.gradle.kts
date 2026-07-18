@@ -14,7 +14,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.0.781"
+        versionName = "0.0.783"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -26,7 +26,7 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
 
-        val apiUrl = System.getenv("API_URL") ?: "http://localhost:3000"
+        val apiUrl = System.getenv("API_URL") ?: "https://api.chat.scryme.tech"
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
 

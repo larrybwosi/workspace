@@ -183,6 +183,69 @@ describe('DeviceAuthController', () => {
       expect(result).toEqual({ success: true });
     });
 
+    it('should fallback to sessionId if userCode is missing in the body', async () => {
+      mockDeviceApprove.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
+
+      const result = await controller.authorize({ sessionId: 'SESS-1234' }, mockRequest);
+
+      expect(mockDeviceApprove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: { userCode: 'SESS-1234' },
+        })
+      );
+      expect(mockPublishRealtime).toHaveBeenCalledWith(
+        'qr-session:SESS-1234',
+        'authorized',
+        { status: 'authorized' }
+      );
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should parse userCode from standard URL query parameters', async () => {
+      mockDeviceApprove.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
+
+      const result = await controller.authorize(
+        { userCode: 'https://example.com/device?user_code=QUERY-1234' },
+        mockRequest
+      );
+
+      expect(mockDeviceApprove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: { userCode: 'QUERY-1234' },
+        })
+      );
+      expect(mockPublishRealtime).toHaveBeenCalledWith(
+        'qr-session:QUERY-1234',
+        'authorized',
+        { status: 'authorized' }
+      );
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should parse userCode from URL trailing pathname segment', async () => {
+      mockDeviceApprove.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
+
+      const result = await controller.authorize(
+        { userCode: 'https://example.com/device/PATH-1234' },
+        mockRequest
+      );
+
+      expect(mockDeviceApprove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: { userCode: 'PATH-1234' },
+        })
+      );
+      expect(mockPublishRealtime).toHaveBeenCalledWith(
+        'qr-session:PATH-1234',
+        'authorized',
+        { status: 'authorized' }
+      );
+      expect(result).toEqual({ success: true });
+    });
+
     it('should throw BadRequestException on 404 or invalid_grant', async () => {
       mockDeviceApprove.mockRejectedValue({
         status: 404,
@@ -231,6 +294,28 @@ describe('DeviceAuthController', () => {
       );
       expect(mockPublishRealtime).toHaveBeenCalledWith(
         'qr-session:ABCD-1234',
+        'denied',
+        { status: 'denied' }
+      );
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should fallback to sessionId and parse URL in deny endpoint', async () => {
+      mockDeviceDeny.mockResolvedValue(undefined);
+      mockPublishRealtime.mockResolvedValue(undefined);
+
+      const result = await controller.deny(
+        { sessionId: 'http://localhost/device?user_code=DENY-1234' },
+        mockRequest
+      );
+
+      expect(mockDeviceDeny).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: { userCode: 'DENY-1234' },
+        })
+      );
+      expect(mockPublishRealtime).toHaveBeenCalledWith(
+        'qr-session:DENY-1234',
         'denied',
         { status: 'denied' }
       );

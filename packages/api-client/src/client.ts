@@ -28,14 +28,15 @@ const getBaseURL = () => {
     }
   }
   if (!url) {
-    url = getEnv('API_URL') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const isProd = getEnv('NODE_ENV') === 'production';
+    url = getEnv('API_URL') || (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   }
   return url.replace(/\/$/, '') + '/api';
 };
 
 // Create axios instance with default config
 export const apiClient = axios.create({
-  baseURL: 'https://api.chat.scryme.tech',
+  baseURL: getBaseURL(),
   timeout: 10000,
   withCredentials: true,
 });
