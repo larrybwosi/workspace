@@ -1,6 +1,6 @@
 export declare const auth: import("better-auth", { with: { "resolution-mode": "import" } }).Auth<{
     database: (options: import("better-auth", { with: { "resolution-mode": "import" } }).BetterAuthOptions) => import("better-auth", { with: { "resolution-mode": "import" } }).DBAdapter<import("better-auth", { with: { "resolution-mode": "import" } }).BetterAuthOptions>;
-    baseURL: string;
+    baseURL: any;
     emailAndPassword: {
         enabled: true;
     };
@@ -18,7 +18,7 @@ export declare const auth: import("better-auth", { with: { "resolution-mode": "i
             clientSecret: string;
         } | undefined;
     };
-    trustedOrigins: any;
+    trustedOrigins: any[];
     user: {
         additionalFields: {
             bio: {
@@ -1431,7 +1431,7 @@ export declare const auth: import("better-auth", { with: { "resolution-mode": "i
                     $Infer: {
                         body: {
                             permissions: {
-                                readonly user?: ("list" | "create" | "update" | "delete" | "set-role" | "ban" | "impersonate" | "impersonate-admins" | "set-password" | "set-email" | "get")[] | undefined;
+                                readonly user?: ("list" | "update" | "delete" | "get" | "create" | "set-role" | "ban" | "impersonate" | "impersonate-admins" | "set-password" | "set-email")[] | undefined;
                                 readonly session?: ("list" | "delete" | "revoke")[] | undefined;
                             };
                         } & {
