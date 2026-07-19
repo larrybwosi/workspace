@@ -2,6 +2,8 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@repo/database';
 import { admin, bearer, deviceAuthorization, jwt, organization, username } from 'better-auth/plugins';
+import { oauthProvider } from '@better-auth/oauth-provider';
+import { nextCookies } from 'better-auth/next-js';
 import { validateEnv } from '@repo/shared';
 
 const env = validateEnv();
@@ -38,6 +40,7 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: false,
   },
 
   socialProviders: {
@@ -86,5 +89,35 @@ export const auth = betterAuth({
   },
 
   // Re-added 'as any' to fix type errors in CI while maintaining plugin functionality
-  plugins: [jwt(), organization(), username(), admin(), bearer(), deviceAuthorization({ verificationUri: '/device' })],
+  plugins: [
+    jwt(),
+    organization(),
+    username(),
+    admin({
+      defaultRole: 'Member',
+    }),
+    bearer(),
+    deviceAuthorization({ verificationUri: '/device' }),
+    oauthProvider({
+      loginPage: '/login',
+      consentPage: '/consent',
+      allowDynamicClientRegistration: true,
+      silenceWarnings: {
+        oauthAuthServerConfig: true,
+      },
+      scopes: [
+        'openid',
+        'profile',
+        'email',
+        'offline_access',
+        'channels:read',
+        'channels:write',
+        'members:read',
+        'members:write',
+        'messages:send',
+        'workspaces:read',
+      ],
+    }),
+    nextCookies(),
+  ],
 });

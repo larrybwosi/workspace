@@ -3,8 +3,8 @@
   "version": "2.1.0-dev.31",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001 --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev --port 3001 --turbo",
+    "build": "next build --turbo",
     "start": "node .next/standalone/apps/web/server.js || next start",
     "test": "jest --passWithNoTests",
     "test:e2e": "playwright test",
@@ -16,6 +16,7 @@
     "@better-auth/oauth-provider": "^1.5.6",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@repo/api-client": "workspace:*",
+    "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
