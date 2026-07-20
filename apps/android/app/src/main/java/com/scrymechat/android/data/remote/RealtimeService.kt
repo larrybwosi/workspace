@@ -69,6 +69,9 @@ class RealtimeService : LifecycleService() {
                 Log.d("RealtimeService", "Socket transport opened")
             }
 
+            // Dynamically assign authorization token to socket options
+            socket.opts?.auth = mapOf("token" to token)
+
             socket.connect()
             Log.d("RealtimeService", "Socket connecting...")
         } else {
