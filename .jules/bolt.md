@@ -208,3 +208,8 @@
 ## 2026-07-14 - [API/Search] Standardized User Payload in Search
 **Learning:** V1 search endpoints were missing the standard user mapping established in V2, leading to redundant 'image' payload serialization and rendering inconsistencies when 'avatar' is null but 'image' is populated.
 **Action:** In all workspace-scoped search controllers (V1 and V2), fetch both 'avatar' and 'image' from Prisma, map 'avatar' to 'avatar || image', and explicitly exclude 'image' in the final payload to reduce payload size and guarantee client-side avatar display.
+
+## 2026-07-20 - [Prisma/Performance] O(1) Compound Lookup & Primary Key Optimization in v3 Controllers
+
+**Learning:** Querying a uniquely indexed record (such as `WorkspaceMember` via `workspaceId_userId` or `ChannelIncomingWebhook` via `id`) using `findFirst` instead of `findUnique` causes the database to perform full table or index scans instead of utilizing highly optimized O(1) point lookups. Additionally, splitting out verification filters (like `channelId` matching) to the application logic allows the primary query to leverage direct O(1) lookups, while targeted `select` prevents database payload over-fetching.
+**Action:** Always prefer `findUnique` over `findFirst` on unique constraints and primary keys. Handle relational validation in application logic where beneficial, and use targeted `select` to minimize payload sizes.

@@ -363,6 +363,60 @@ describe('V3WorkspacesController', () => {
         'Workspace with slug "acme-slug" not found'
       );
     });
+
+    it('should allow user who is a workspace member to retrieve workspace details', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        userId: 'user-xyz',
+      };
+
+      const mockWorkspace = {
+        id: 'ws-123',
+        name: 'Acme',
+        slug: 'acme-slug',
+        organizationId: 'org-abc',
+        createdAt: new Date(),
+      };
+
+      redisClient.get.mockResolvedValue(null);
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'member-123' });
+
+      const result = await controller.getWorkspaceBySlug(context as any, 'acme-slug');
+
+      expect(result.success).toBe(true);
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: {
+          workspaceId_userId: {
+            workspaceId: 'ws-123',
+            userId: 'user-xyz',
+          },
+        },
+        select: { id: true },
+      });
+    });
+
+    it('should throw ForbiddenException if user is not a workspace member', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        userId: 'user-xyz',
+      };
+
+      const mockWorkspace = {
+        id: 'ws-123',
+        name: 'Acme',
+        slug: 'acme-slug',
+        organizationId: 'org-abc',
+      };
+
+      redisClient.get.mockResolvedValue(null);
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
+
+      await expect(controller.getWorkspaceBySlug(context as any, 'acme-slug')).rejects.toThrow(
+        'You are not a member of this workspace'
+      );
+    });
   });
 
   describe('updateWorkspace', () => {
@@ -428,6 +482,51 @@ describe('V3WorkspacesController', () => {
       expect(pipeline.del).toHaveBeenCalledWith('v3:org:org-abc:workspaces');
       expect(pipeline.del).toHaveBeenCalledWith('v3:ws:ws-123:workspaces');
       expect(pipeline.exec).toHaveBeenCalled();
+    });
+
+    it('should allow user who is workspace admin/owner to update the workspace', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        userId: 'user-xyz',
+      };
+
+      const body = { name: 'Acme Updated' };
+      const mockWorkspace = { id: 'ws-123', organizationId: 'org-abc' };
+      const mockUpdatedWorkspace = { id: 'ws-123', name: 'Acme Updated' };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'member-123', role: 'admin' });
+      (prisma.workspace.update as any).mockResolvedValue(mockUpdatedWorkspace);
+
+      const result = await controller.updateWorkspace(context as any, 'acme-slug', body);
+
+      expect(result.success).toBe(true);
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: {
+          workspaceId_userId: {
+            workspaceId: 'ws-123',
+            userId: 'user-xyz',
+          },
+        },
+        select: { id: true, role: true },
+      });
+    });
+
+    it('should throw ForbiddenException if user is not admin or owner', async () => {
+      const context = {
+        scopes: ['provisioning:workspaces'],
+        userId: 'user-xyz',
+      };
+
+      const body = { name: 'Acme Updated' };
+      const mockWorkspace = { id: 'ws-123', organizationId: 'org-abc' };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'member-123', role: 'member' });
+
+      await expect(controller.updateWorkspace(context as any, 'acme-slug', body)).rejects.toThrow(
+        'You do not have permission to update this workspace'
+      );
     });
   });
 
