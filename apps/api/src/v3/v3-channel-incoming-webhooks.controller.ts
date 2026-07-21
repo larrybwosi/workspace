@@ -291,12 +291,6 @@ export class V3ChannelIncomingWebhooksController {
     if (!channel || channel.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Channel not found in this workspace');
     }
-
-    /**
-     * ⚡ Performance Optimization:
-     * Replaces 'findFirst' with 'findUnique' on the primary key 'id' to leverage direct O(1) index lookup.
-     * Checks 'channelId' subsequently in application logic.
-     */
     const webhook = await prisma.channelIncomingWebhook.findUnique({
       where: { id: webhookId },
       include: { logs: { take: 10, orderBy: { createdAt: 'desc' } } },
@@ -351,11 +345,6 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    /**
-     * ⚡ Performance Optimization:
-     * Replaces 'findFirst' with 'findUnique' on the primary key 'id' to leverage direct O(1) index lookup.
-     * Checks 'channelId' subsequently in application logic.
-     */
     const existing = await prisma.channelIncomingWebhook.findUnique({
       where: { id: webhookId },
       select: { id: true, channelId: true },
@@ -424,11 +413,6 @@ export class V3ChannelIncomingWebhooksController {
       throw new NotFoundException('Channel not found in this workspace');
     }
 
-    /**
-     * ⚡ Performance Optimization:
-     * Replaces 'findFirst' with 'findUnique' on the primary key 'id' to leverage direct O(1) index lookup.
-     * Checks 'channelId' subsequently in application logic.
-     */
     const webhook = await prisma.channelIncomingWebhook.findUnique({
       where: { id: webhookId },
       select: { id: true, channelId: true, name: true },

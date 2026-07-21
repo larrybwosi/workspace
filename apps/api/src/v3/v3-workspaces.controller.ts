@@ -441,11 +441,6 @@ When provisioned via M2M:
         throw new ForbiddenException('Token is not authorized for this workspace');
       }
     } else {
-      /**
-       * ⚡ Performance Optimization:
-       * Replaces 'findFirst' with 'findUnique' on the compound unique index 'workspaceId_userId'
-       * to leverage direct O(1) database index lookup instead of a scan.
-       */
       const member = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: {
@@ -538,11 +533,6 @@ When provisioned via M2M:
         throw new ForbiddenException('Token is not authorized for this workspace');
       }
     } else {
-      /**
-       * ⚡ Performance Optimization:
-       * Replaces 'findFirst' with 'findUnique' on the compound unique index 'workspaceId_userId'
-       * to leverage direct O(1) database index lookup instead of a scan.
-       */
       const member = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: {
