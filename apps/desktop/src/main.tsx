@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 // @ts-ignore
 import '@repo/ui/styles/globals.css';
+import './fonts.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

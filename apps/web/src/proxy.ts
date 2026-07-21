@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateEnv } from '@repo/shared';
 
-const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health'];
+const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health', '/api/device-auth'];
 const authPrefix = '/api/auth';
 
 export default async function proxy(request: NextRequest) {
