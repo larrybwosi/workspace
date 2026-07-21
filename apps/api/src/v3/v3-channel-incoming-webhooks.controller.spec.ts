@@ -167,7 +167,7 @@ describe('V3ChannelIncomingWebhooksController', () => {
       const mockWebhook = { id: 'wh-1', name: 'Hook 1', channelId: 'ch-1' };
 
       (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findFirst as any).mockResolvedValue(mockWebhook);
+      (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
 
       const result = await controller.getChannelWebhook(context as any, 'acme-slug', 'ch-1', 'wh-1');
 
@@ -190,7 +190,7 @@ describe('V3ChannelIncomingWebhooksController', () => {
       const updatedWebhook = { id: 'wh-1', name: 'New Hook', channelId: 'ch-1' };
 
       (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findFirst as any).mockResolvedValue(mockWebhook);
+      (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
       (prisma.channelIncomingWebhook.update as any).mockResolvedValue(updatedWebhook);
 
       const result = await controller.updateChannelWebhook(context as any, 'acme-slug', 'ch-1', 'wh-1', {
@@ -217,7 +217,7 @@ describe('V3ChannelIncomingWebhooksController', () => {
       const mockWebhook = { id: 'wh-1', name: 'Hook to Delete', channelId: 'ch-1' };
 
       (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findFirst as any).mockResolvedValue(mockWebhook);
+      (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
 
       const result = await controller.deleteChannelWebhook(context as any, 'acme-slug', 'ch-1', 'wh-1');
 
