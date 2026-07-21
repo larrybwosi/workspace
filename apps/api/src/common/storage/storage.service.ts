@@ -64,7 +64,9 @@ export class StorageService {
       await this.redis.set(redisKey, JSON.stringify(cacheData));
 
       // Construct and override URL with the proxy URL
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const isProd = process.env.NODE_ENV === 'production';
+      const fallbackUrl = isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000';
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || fallbackUrl).replace(/\/$/, '');
       uploadResult.url = `${baseUrl}/s/${code}`;
     } catch (err: any) {
       this.logger.error(`Failed to create short URL / cache for file: ${err.message}`, err.stack);

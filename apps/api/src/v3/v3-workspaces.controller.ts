@@ -441,20 +441,13 @@ When provisioned via M2M:
         throw new ForbiddenException('Token is not authorized for this workspace');
       }
     } else {
-      /**
-       * ⚡ Performance Optimization:
-       * 1. Replaces 'findFirst' with 'findUnique' using the compound unique index 'workspaceId_userId' for O(1) lookup.
-       * 2. Uses targeted 'select' for only 'id' to minimize database payload.
-       * Expected impact: Direct O(1) primary/unique index lookup, avoiding full table scans.
-       */
       const member = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: {
             workspaceId: workspace.id,
-            userId: context.userId,
+            userId: context.userId!,
           },
         },
-        select: { id: true },
       });
       if (!member) {
         throw new ForbiddenException('You are not a member of this workspace');
@@ -540,20 +533,13 @@ When provisioned via M2M:
         throw new ForbiddenException('Token is not authorized for this workspace');
       }
     } else {
-      /**
-       * ⚡ Performance Optimization:
-       * 1. Replaces 'findFirst' with 'findUnique' using the compound unique index 'workspaceId_userId' for O(1) lookup.
-       * 2. Uses targeted 'select' for only 'id' and 'role' to minimize database payload.
-       * Expected impact: Direct O(1) primary/unique index lookup, avoiding full table scans.
-       */
       const member = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: {
             workspaceId: workspace.id,
-            userId: context.userId,
+            userId: context.userId!,
           },
         },
-        select: { id: true, role: true },
       });
       if (!member || !['owner', 'admin'].includes(member.role)) {
         throw new ForbiddenException('You do not have permission to update this workspace');

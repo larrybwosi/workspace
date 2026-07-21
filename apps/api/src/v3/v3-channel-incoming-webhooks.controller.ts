@@ -291,13 +291,6 @@ export class V3ChannelIncomingWebhooksController {
     if (!channel || channel.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Channel not found in this workspace');
     }
-
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces 'findFirst' with 'findUnique' on primary key 'id' to leverage database O(1) index lookup.
-     * 2. Handles 'channelId' mismatch verification in application logic subsequently.
-     * Expected impact: Significant reduction in query execution time and DB CPU overhead.
-     */
     const webhook = await prisma.channelIncomingWebhook.findUnique({
       where: { id: webhookId },
       include: { logs: { take: 10, orderBy: { createdAt: 'desc' } } },
@@ -352,13 +345,6 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces 'findFirst' with 'findUnique' on primary key 'id' to leverage database O(1) index lookup.
-     * 2. Uses targeted 'select' to retrieve only 'id' and 'channelId' to minimize DB payload and memory usage.
-     * 3. Handles 'channelId' mismatch verification in application logic subsequently.
-     * Expected impact: Drastically reduces query execution time and avoids over-fetching columns.
-     */
     const existing = await prisma.channelIncomingWebhook.findUnique({
       where: { id: webhookId },
       select: { id: true, channelId: true },
@@ -427,13 +413,6 @@ export class V3ChannelIncomingWebhooksController {
       throw new NotFoundException('Channel not found in this workspace');
     }
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces 'findFirst' with 'findUnique' on primary key 'id' to leverage database O(1) index lookup.
-     * 2. Uses targeted 'select' to retrieve only 'id', 'channelId', and 'name' (used in audit log) to minimize DB payload and memory usage.
-     * 3. Handles 'channelId' mismatch verification in application logic subsequently.
-     * Expected impact: Drastically reduces query execution time and avoids over-fetching columns.
-     */
     const webhook = await prisma.channelIncomingWebhook.findUnique({
       where: { id: webhookId },
       select: { id: true, channelId: true, name: true },

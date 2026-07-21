@@ -69,6 +69,17 @@ class RealtimeService : LifecycleService() {
                 Log.d("RealtimeService", "Socket transport opened")
             }
 
+            // Dynamically assign authorization token to socket options via reflection as opts is private in Manager
+            try {
+                val manager = socket.io()
+                val optsField = manager.javaClass.getDeclaredField("opts")
+                optsField.isAccessible = true
+                val opts = optsField.get(manager) as io.socket.client.IO.Options
+                opts.auth = mapOf("token" to token)
+            } catch (e: Exception) {
+                Log.e("RealtimeService", "Failed to dynamically set auth options on Socket.io", e)
+            }
+
             socket.connect()
             Log.d("RealtimeService", "Socket connecting...")
         } else {

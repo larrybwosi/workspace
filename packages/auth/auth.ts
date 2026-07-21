@@ -9,7 +9,9 @@ import { validateEnv } from '@repo/shared';
 const env = validateEnv();
 
 const getBaseURL = () => {
-  const url = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const isProd = process.env.NODE_ENV === 'production';
+  const fallback = isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000';
+  const url = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_API_URL || fallback;
   return url.includes('/api/auth') ? url : url.replace(/\/$/, '') + '/api/auth';
 };
 
