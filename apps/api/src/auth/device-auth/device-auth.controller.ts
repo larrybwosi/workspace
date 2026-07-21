@@ -15,6 +15,7 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { AuthGuard } from '../auth.guard';
 import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
+import { prisma } from '@repo/database';
 
 /**
  * OAuth client id for the desktop app. If you want to restrict which
@@ -52,6 +53,27 @@ export class DeviceAuthController {
    */
   @Post('qr/generate')
   async generateQR() {
+    try {
+      const existingClient = await prisma.oAuthClient.findUnique({
+        where: { clientId: DEVICE_CLIENT_ID },
+      });
+      if (!existingClient) {
+        await prisma.oAuthClient.create({
+          data: {
+            clientId: DEVICE_CLIENT_ID,
+            name: 'Desktop App',
+            clientSecret: null,
+            redirectUris: ['http://localhost:3001', 'http://localhost:3000', 'https://chat.scryme.tech'],
+            public: true,
+            scopes: ['openid', 'profile', 'email', 'offline_access'],
+            grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'],
+          },
+        });
+      }
+    } catch (e) {
+      console.error('Failed to ensure oAuthClient desktop-app exists', e);
+    }
+
     const data = await auth.api.deviceCode({
       body: { client_id: DEVICE_CLIENT_ID },
     });

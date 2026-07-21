@@ -155,47 +155,8 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
 
-  const allowedOrigins = env.ALLOWED_ORIGINS
-    ? env.ALLOWED_ORIGINS.split(',').map((origin: string) => origin.trim())
-    : [
-        'http://localhost:3001',
-        'http://localhost:3000',
-        'https://chat.scryme.tech',
-        'https://api.chat.scryme.tech',
-      ];
-
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, etc.)
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      const isAllowed = allowedOrigins.some((allowed) => {
-        if (allowed === '*') return true;
-        if (allowed.startsWith('*.')) {
-          const suffix = allowed.slice(2);
-          return origin.endsWith(suffix) || origin === `https://${suffix}` || origin === `http://${suffix}`;
-        }
-        return allowed === origin;
-      });
-
-      if (isAllowed) {
-        callback(null, true);
-      } else {
-        // Fallback to checking if it's localhost or subdomains of scryme.tech
-        if (
-          origin.startsWith('http://localhost:') ||
-          origin.endsWith('.scryme.tech') ||
-          origin === 'https://scryme.tech'
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'), false);
-        }
-      }
-    },
+    origin: true,
     credentials: true,
     allowedHeaders: [
       'Origin',

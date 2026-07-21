@@ -448,6 +448,7 @@ When provisioned via M2M:
             userId: context.userId!,
           },
         },
+        select: { id: true },
       });
       if (!member) {
         throw new ForbiddenException('You are not a member of this workspace');
@@ -540,6 +541,7 @@ When provisioned via M2M:
             userId: context.userId!,
           },
         },
+        select: { id: true, role: true },
       });
       if (!member || !['owner', 'admin'].includes(member.role)) {
         throw new ForbiddenException('You do not have permission to update this workspace');
