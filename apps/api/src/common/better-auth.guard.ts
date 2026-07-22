@@ -8,6 +8,12 @@ export class BetterAuthGuard implements CanActivate {
     const http = context.switchToHttp();
     const request = http.getRequest();
 
+    // Scaling Optimization: If the global guard already validated the session and attached user details,
+    // reuse it to avoid redundant database calls.
+    if (request.session && request.user) {
+      return true;
+    }
+
     // 1. Safely parse headers using better-auth node utilities
     const headers = fromNodeHeaders(request.headers);
 

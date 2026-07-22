@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -30,6 +30,7 @@ import { DeviceAuthModule } from './auth/device-auth/device-auth.module';
 import { AndroidAuthModule } from './auth/android-auth/android-auth.module';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { auth } from '@repo/auth';
+import { AuthHeaderMiddleware } from './common/auth-header.middleware';
 
 @Module({
   imports: [
@@ -90,4 +91,8 @@ import { auth } from '@repo/auth';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthHeaderMiddleware).forRoutes('*');
+  }
+}

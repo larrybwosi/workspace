@@ -68,6 +68,7 @@ describe('AndroidAuthController', () => {
       expect(auth.api.getSession).toHaveBeenCalledWith({
         headers: {
           authorization: `Bearer ${mockToken}`,
+          cookie: `better-auth.session_token=${mockToken}`,
         },
       });
 

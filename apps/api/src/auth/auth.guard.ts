@@ -6,6 +6,13 @@ import { fromNodeHeaders } from 'better-auth/node';
 export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+
+    // Scaling Optimization: If the global guard already validated the session and attached user details,
+    // reuse it to avoid redundant database calls.
+    if (request.session && request.user) {
+      return true;
+    }
+
     const headers = fromNodeHeaders(request.headers);
     this.inject(headers);
 
@@ -21,10 +28,19 @@ export class AuthGuard implements CanActivate {
     const h = headers.get('authorization') || '';
     if (!h.startsWith('Bearer ')) return;
     const t = h.split(' ')[1];
-    const k = 'better-auth.session_token';
+
+    const keys = ['better-auth.session_token', 'better-auth.session-token'];
     const cookie = headers.get('cookie') || '';
-    if (!t || cookie.includes(k)) return;
-    const updatedCookie = cookie ? `${cookie}; ${k}=${t}` : `${k}=${t}`;
-    headers.set('cookie', updatedCookie);
+
+    let updatedCookie = cookie;
+    for (const k of keys) {
+      if (t && !cookie.includes(k)) {
+        updatedCookie = updatedCookie ? `${updatedCookie}; ${k}=${t}` : `${k}=${t}`;
+      }
+    }
+
+    if (updatedCookie !== cookie) {
+      headers.set('cookie', updatedCookie);
+    }
   }
 }
