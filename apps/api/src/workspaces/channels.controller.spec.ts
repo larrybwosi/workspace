@@ -19,6 +19,9 @@ vi.mock('@repo/database', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    message: {
+      groupBy: vi.fn(),
+    },
     workspaceAuditLog: {
       create: vi.fn(),
     },
@@ -307,6 +310,10 @@ describe('ChannelsController - NestJS module', () => {
   let controller: ChannelsController;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
+    const mockPrisma = prisma as any;
+    mockPrisma.message.groupBy.mockResolvedValue([]);
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ChannelsController],
     })
@@ -363,5 +370,61 @@ describe('ChannelsController - NestJS module', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('ch-1');
+  });
+
+  it('should correctly query and map unread and mention counts from groupBy', async () => {
+    const mockPrisma = prisma as any;
+    mockPrisma.workspace.findUnique.mockResolvedValue({
+      id: "ws-1",
+      members: [{ role: "member" }],
+      channels: [
+        {
+          id: "ch-1",
+          name: "general",
+          _count: { messages: 5 },
+        },
+        {
+          id: "ch-2",
+          name: "random",
+          _count: { messages: 10 },
+        },
+      ],
+    });
+
+    mockPrisma.message.groupBy.mockImplementation(async ({ where }) => {
+      // If querying mentions:
+      if (where.mentions) {
+        return [
+          {
+            channelId: 'ch-1',
+            _count: { id: 2 },
+          },
+        ];
+      }
+      // If querying all unread messages:
+      return [
+        {
+          channelId: 'ch-1',
+          _count: { id: 5 },
+        },
+        {
+          channelId: 'ch-2',
+          _count: { id: 8 },
+        },
+      ];
+    });
+
+    const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
+    const result = await controller.getWorkspaceChannels(user, 'my-workspace');
+
+    expect(result).toHaveLength(2);
+
+    expect(result[0].id).toBe('ch-1');
+    expect(result[0].unreadCount).toBe(5);
+    expect(result[0].mentionCount).toBe(2);
+
+    expect(result[1].id).toBe('ch-2');
+    expect(result[1].unreadCount).toBe(8);
+    expect(result[1].mentionCount).toBe(0);
   });
 });

@@ -213,3 +213,8 @@
 
 **Learning:** Querying a uniquely indexed record (such as `WorkspaceMember` via `workspaceId_userId` or `ChannelIncomingWebhook` via `id`) using `findFirst` instead of `findUnique` causes the database to perform full table or index scans instead of utilizing highly optimized O(1) point lookups. Additionally, splitting out verification filters (like `channelId` matching) to the application logic allows the primary query to leverage direct O(1) lookups, while targeted `select` prevents database payload over-fetching.
 **Action:** Always prefer `findUnique` over `findFirst` on unique constraints and primary keys. Handle relational validation in application logic where beneficial, and use targeted `select` to minimize payload sizes.
+
+## 2026-07-22 - [API] Database-Level Aggregation for Unread & Mention Counts
+
+**Learning:** Pulling all unread message records and their mentions to count and filter them in JavaScript scales terribly with active workspaces (causing memory spikes and slow JSON serialization). Delegating these aggregations to native DB-level `prisma.message.groupBy` queries reduces network and Node.js memory overhead to O(1) per channel.
+**Action:** Always prefer database-level count/groupBy aggregations over pulling and mapping relation lists in memory for lists, dashboards, and metrics.
