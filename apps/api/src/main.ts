@@ -169,7 +169,7 @@ async function bootstrap() {
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
   });
-  // app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
   // Log every incoming request: method, path, status code, and response time
