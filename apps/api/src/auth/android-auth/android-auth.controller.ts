@@ -84,7 +84,7 @@ export class AndroidAuthController {
   async signup(@Body() body: any) {
     this.validateSignupInput(body);
     try {
-      const response = await auth.api.signUpEmail({
+      const signUpResponse = await auth.api.signUpEmail({
         body: {
           email: body.email,
           password: body.password,
@@ -94,7 +94,14 @@ export class AndroidAuthController {
           bio: body.bio,
         } as any,
       });
-      return await this.handleAuthResponse(response, 'Failed to create account');
+
+      if (!signUpResponse || !signUpResponse.user) {
+        throw new BadRequestException('Failed to create account');
+      }
+
+      // Automatically log the user in after a successful signup to generate
+      // the required session token and retrieve standard LoginResponse properties.
+      return await this.performLogin(body.email, body.password);
     } catch (error: any) {
       this.handleAuthError(error, 'Signup failed');
     }
@@ -161,7 +168,8 @@ export class AndroidAuthController {
           user: response.user,
           session: response.session,
         },
-        'Failed to refresh session'
+        'Failed to refresh session',
+        token
       );
     } catch (error: any) {
       this.handleAuthError(error, 'Refresh failed');
@@ -202,7 +210,7 @@ export class AndroidAuthController {
     }
   }
 
-  private async handleAuthResponse(response: any, errorMessage: string) {
+  private async handleAuthResponse(response: any, errorMessage: string, fallbackToken?: string) {
     if (!response || !response.user) {
       throw new BadRequestException(errorMessage);
     }
@@ -213,7 +221,7 @@ export class AndroidAuthController {
     };
 
     let session = response.session;
-    let token = response.token || response.session?.token;
+    let token = response.token || response.session?.token || fallbackToken;
 
     // If session is missing but we have a token, try to fetch it
     if (!session && token) {
@@ -221,6 +229,7 @@ export class AndroidAuthController {
         const sessionData = await auth.api.getSession({
           headers: {
             authorization: `Bearer ${token}`,
+            cookie: `better-auth.session_token=${token}`,
           },
         });
         session = sessionData?.session;
@@ -269,7 +278,7 @@ export class AndroidAuthController {
       session: session
         ? {
             ...session,
-            token: session.token || token, // Ensure token is present in session object
+            token: session.token || token || fallbackToken, // Ensure token is present in session object
           }
         : null,
       memberships: serializedMemberships,

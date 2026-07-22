@@ -15,8 +15,10 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseFilters,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty, ApiQuery } from '@nestjs/swagger';
+import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
 import { prisma } from '@repo/database';
@@ -116,6 +118,7 @@ const executeWebhookSchema = z.object({
 
 @ApiTags('V3 Channel Incoming Webhooks')
 @Controller()
+@UseFilters(V3ExceptionFilter)
 export class V3ChannelIncomingWebhooksController {
   private readonly logger = new Logger(V3ChannelIncomingWebhooksController.name);
 
@@ -163,22 +166,27 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
-    // Verify channel belongs to workspace
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates channel existence/workspace verification and incoming webhooks retrieval into a single query.
+     * 2. Reduces database round-trips (RTT) from 2 to 1.
+     * 3. Uses 'select' to fetch only essential fields to minimize payload and memory overhead.
+     */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
-      select: { id: true, workspaceId: true },
+      select: {
+        workspaceId: true,
+        incomingWebhooks: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!channel || channel.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Channel not found in this workspace');
     }
 
-    const webhooks = await prisma.channelIncomingWebhook.findMany({
-      where: { channelId },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return this.formatResponse({ webhooks });
+    return this.formatResponse({ webhooks: channel.incomingWebhooks });
   }
 
   @Post('v3/workspaces/:slug/channels/:channelId/incoming-webhooks')
@@ -279,26 +287,34 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
-    // Verify channel belongs to workspace
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: { id: true, workspaceId: true },
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates both channel-to-workspace checks and webhook retrieval into a single database query.
+     * 2. Uses nested 'select' inside 'include' to only fetch 'workspaceId' on the channel relation, reducing database RTT from 2 to 1.
+     * 3. Leverages direct O(1) findUnique point lookup on the primary key `id` (webhookId) while automatically including all webhook scalar fields.
+     */
+    const webhook = await prisma.channelIncomingWebhook.findUnique({
+      where: { id: webhookId },
+      include: {
+        channel: {
+          select: {
+            workspaceId: true,
+          },
+        },
+        logs: {
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
-    if (!channel || channel.workspaceId !== context.workspaceId) {
-      throw new NotFoundException('Channel not found in this workspace');
-    }
-
-    const webhook = await prisma.channelIncomingWebhook.findFirst({
-      where: { id: webhookId, channelId },
-      include: { logs: { take: 10, orderBy: { createdAt: 'desc' } } },
-    });
-
-    if (!webhook) {
+    if (!webhook || webhook.channelId !== channelId || webhook.channel?.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Incoming webhook not found');
     }
 
-    return this.formatResponse({ webhook });
+    const { channel, ...webhookData } = webhook;
+
+    return this.formatResponse({ webhook: webhookData });
   }
 
   @Patch('v3/workspaces/:slug/channels/:channelId/incoming-webhooks/:webhookId')
@@ -328,26 +344,31 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
-    // Verify channel belongs to workspace
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: { id: true, workspaceId: true },
-    });
-
-    if (!channel || channel.workspaceId !== context.workspaceId) {
-      throw new NotFoundException('Channel not found in this workspace');
-    }
-
     const validatedData = updateWebhookSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const existing = await prisma.channelIncomingWebhook.findFirst({
-      where: { id: webhookId, channelId },
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates channel-to-workspace checks and webhook retrieval into a single database query.
+     * 2. Reduces database round-trips (RTT) from 3 to 2 (1 verification query + 1 update mutation).
+     * 3. Uses 'select' with nested properties to retrieve workspaceId of the channel for validation.
+     */
+    const existing = await prisma.channelIncomingWebhook.findUnique({
+      where: { id: webhookId },
+      select: {
+        id: true,
+        channelId: true,
+        channel: {
+          select: {
+            workspaceId: true,
+          },
+        },
+      },
     });
 
-    if (!existing) {
+    if (!existing || existing.channelId !== channelId || existing.channel?.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Incoming webhook not found');
     }
 
@@ -400,21 +421,27 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
-    // Verify channel belongs to workspace
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: { id: true, workspaceId: true },
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Consolidates channel-to-workspace checks and webhook retrieval into a single database query.
+     * 2. Reduces database round-trips (RTT) from 3 to 2 (1 verification query + 1 delete mutation).
+     * 3. Uses 'select' with nested properties to retrieve workspaceId of the channel for validation.
+     */
+    const webhook = await prisma.channelIncomingWebhook.findUnique({
+      where: { id: webhookId },
+      select: {
+        id: true,
+        channelId: true,
+        name: true,
+        channel: {
+          select: {
+            workspaceId: true,
+          },
+        },
+      },
     });
 
-    if (!channel || channel.workspaceId !== context.workspaceId) {
-      throw new NotFoundException('Channel not found in this workspace');
-    }
-
-    const webhook = await prisma.channelIncomingWebhook.findFirst({
-      where: { id: webhookId, channelId },
-    });
-
-    if (!webhook) {
+    if (!webhook || webhook.channelId !== channelId || webhook.channel?.workspaceId !== context.workspaceId) {
       throw new NotFoundException('Incoming webhook not found');
     }
 

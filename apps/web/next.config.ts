@@ -16,9 +16,6 @@ const nextConfig = {
     unoptimized: true,
   },
   turbopack: {},
-  webpack: (config: any) => {
-    return config;
-  },
   output: (process.env.NEXT_STANDALONE === 'true' ? 'standalone' : undefined) as any,
   async rewrites() {
     return [

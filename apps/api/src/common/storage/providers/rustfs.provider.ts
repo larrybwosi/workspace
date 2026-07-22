@@ -9,7 +9,8 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
 import { FileData, StorageProvider, UploadResult } from '../storage.interface';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
+import { prisma } from '@repo/database';
 
 @Injectable()
 export class RustFSStorageProvider implements StorageProvider {
@@ -40,6 +41,32 @@ export class RustFSStorageProvider implements StorageProvider {
     } else {
       this.logger.warn('RustFS client not configured. Access key or secret key missing.');
     }
+  }
+
+  async getPresignedUrl(key: string): Promise<string> {
+    if (!this.s3Client) {
+      throw new InternalServerErrorException('RustFS client not configured');
+    }
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    return getSignedUrl(this.s3Client, command, { expiresIn: 7 * 24 * 60 * 60 });
+  }
+
+  async getFileStream(key: string): Promise<{ stream: any; contentLength?: number }> {
+    if (!this.s3Client) {
+      throw new InternalServerErrorException('RustFS client not configured');
+    }
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    const response = await this.s3Client.send(command);
+    return {
+      stream: response.Body,
+      contentLength: response.ContentLength,
+    };
   }
 
   private async ensureBucketExists() {
@@ -107,7 +134,7 @@ export class RustFSStorageProvider implements StorageProvider {
         })
       );
 
-      // Generate a signed URL (valid for 7 days)
+      // Generate a signed URL (valid for 7 days) as a fallback
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
         Key: fileName,
@@ -124,7 +151,7 @@ export class RustFSStorageProvider implements StorageProvider {
 
       return {
         id: fileName,
-        url: url,
+        url,
         name: originalname,
         type: mimetype,
         size: formatSize(buffer.length),

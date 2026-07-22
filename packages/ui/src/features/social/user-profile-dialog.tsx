@@ -1,6 +1,7 @@
 'use client';
-import { Mail, Phone, MapPin, Calendar, Edit2, LogOut, MessageSquare } from 'lucide-react';
+import { Mail, Phone, MapPin, Calendar, Edit2, LogOut, MessageSquare, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { usePWAInstall } from '../../hooks/use-pwa';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
@@ -20,6 +21,7 @@ interface UserProfileDialogProps {
 }
 
 export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialogProps) {
+  const { isInstallable, install } = usePWAInstall();
   const [editOpen, setEditOpen] = useState(false);
   const { data: session } = useSession();
   const isCurrentUser = session?.user?.id === user.id;
@@ -150,26 +152,38 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                   </Button>
                 </div>
                 {isCurrentUser && (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 gap-2 bg-muted/50 h-10 border-none hover:bg-muted"
-                      onClick={() => setEditOpen(true)}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                      Edit Profile
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 gap-2 bg-muted/50 h-10 border-none text-destructive hover:bg-destructive/10"
-                      onClick={() => {
-                        window.location.href = '/api/auth/sign-out';
-                      }}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </div>
+                  <>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 gap-2 bg-muted/50 h-10 border-none hover:bg-muted"
+                        onClick={() => setEditOpen(true)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        Edit Profile
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 gap-2 bg-muted/50 h-10 border-none text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          window.location.href = '/api/auth/sign-out';
+                        }}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </Button>
+                    </div>
+                    {isInstallable && (
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 bg-primary/15 text-primary hover:bg-primary/25 h-10 border-none font-semibold transition-all"
+                        onClick={install}
+                      >
+                        <Download className="h-4 w-4" />
+                        Add to Desktop
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

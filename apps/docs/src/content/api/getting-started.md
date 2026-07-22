@@ -22,19 +22,19 @@ The Scrymechat API is a RESTful API that uses JSON for requests and responses. I
 2. **Get Credentials**: Copy your `Client ID` and `Client Secret` from the app details page.
 3. **Authenticate**: Exchange your credentials for an access token.
    ```bash
-   curl -X POST https://api.scrymechat.com/v2/oauth/token \
+   curl -X POST https://api.chat.scryme.tech/v2/oauth/token \
      -d '{"grant_type":"client_credentials","client_id":"...","client_secret":"..."}'
    ```
 4. **Make your first call**: List the channels in your workspace.
    ```bash
-   curl https://api.scrymechat.com/v2/workspaces/my-workspace/channels \
+   curl https://api.chat.scryme.tech/v2/workspaces/my-workspace/channels \
      -H "Authorization: Bearer <your_token>"
    ```
 
 ## Base URL
 
 All API requests should be made to:
-`https://api.scrymechat.com`
+`https://api.chat.scryme.tech`
 
 ---
 

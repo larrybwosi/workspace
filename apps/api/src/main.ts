@@ -156,10 +156,20 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
 
   app.enableCors({
-    credentials: true,
     origin: true,
+    credentials: true,
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'set-cookie',
+      'cookie',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
   });
-  // app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
   // Log every incoming request: method, path, status code, and response time
@@ -208,7 +218,9 @@ async function bootstrap() {
     app.useWebSocketAdapter(new WsAdapter(app));
   }
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: ['s/:code'],
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = new DocumentBuilder()

@@ -14,7 +14,7 @@ Every workspace provisioned via the M2M API automatically includes a **System Bo
 To create a new bot specifically for a tenant's workspace, use the Applications API:
 
 ```bash
-curl -X POST https://api.yourdomain.com/v2/applications \
+curl -X POST https://api.yourdomain.com/v3/applications \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -29,7 +29,7 @@ curl -X POST https://api.yourdomain.com/v2/applications \
 You can define slash commands that your bot will respond to. Commands can be global or workspace-specific.
 
 ```bash
-curl -X POST https://api.yourdomain.com/v2/applications/BOT_ID/commands \
+curl -X POST https://api.yourdomain.com/v3/applications/BOT_ID/commands \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -51,7 +51,7 @@ curl -X POST https://api.yourdomain.com/v2/applications/BOT_ID/commands \
 Bots created by M2M applications for a specific `workspaceId` are automatically "installed" into that workspace. If you want to install a bot into another workspace within your organization:
 
 ```bash
-curl -X POST https://api.yourdomain.com/v2/applications/BOT_ID/install \
+curl -X POST https://api.yourdomain.com/v3/applications/BOT_ID/install \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

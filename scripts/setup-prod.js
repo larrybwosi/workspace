@@ -88,8 +88,10 @@ for (let i = 0; i < finalLines.length; i++) {
           let newVal;
           if (key === 'DB_PASSWORD' || key === 'REDIS_PASSWORD') {
             newVal = generatePassword(16);
-          } else if (key === 'RUSTFS_ACCESS_KEY' || key === 'RUSTFS_SECRET_KEY') {
-            newVal = 'rustfs' + 'admin';
+          } else if (key === 'RUSTFS_ACCESS_KEY') {
+            newVal = crypto.randomBytes(10).toString('hex');
+          } else if (key === 'RUSTFS_SECRET_KEY') {
+            newVal = crypto.randomBytes(20).toString('hex');
           } else {
             newVal = generateSecret(32);
           }

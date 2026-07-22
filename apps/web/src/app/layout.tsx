@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description: 'Your personal dashboard to manage your account and settings.',
   icons: {
     icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
   appleWebApp: {

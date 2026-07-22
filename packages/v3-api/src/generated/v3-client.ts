@@ -608,6 +608,7 @@ export interface CreateMessageDto {
   attachments?: CreateMessageDtoAttachmentsItem[];
   content: string;
   metadata?: CreateMessageDtoMetadata;
+  replyToId?: string;
   stickerId?: string;
   threadId?: string;
 }
@@ -739,6 +740,7 @@ export type UpdateMemberRoleDtoRole = typeof UpdateMemberRoleDtoRole[keyof typeo
 export const UpdateMemberRoleDtoRole = {
   owner: 'owner',
   admin: 'admin',
+  moderator: 'moderator',
   member: 'member',
   guest: 'guest',
 } as const;
@@ -877,6 +879,29 @@ export interface V3CreateWebhookDto {
   events: string[];
   name: string;
   url: string;
+}
+
+export type V3UpdateMemberRoleDtoRole = typeof V3UpdateMemberRoleDtoRole[keyof typeof V3UpdateMemberRoleDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3UpdateMemberRoleDtoRole = {
+  owner: 'owner',
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+  guest: 'guest',
+} as const;
+
+export interface V3UpdateMemberRoleDto {
+  role: V3UpdateMemberRoleDtoRole;
+}
+
+export interface V3AddMemberDto {
+  /** The email of the user to add */
+  email: string;
+  /** The role of the member */
+  role?: string;
 }
 
 /**
@@ -8822,6 +8847,315 @@ export const useV3WorkspacesControllerDeleteWorkspace = <TError = ErrorType<void
     }
 
 /**
+ * Retrieve all members of a specific workspace. Requires members:read scope.
+ * @summary List all workspace members (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetWorkspaceMembers = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetWorkspaceMembersQueryKey = (slug: string,) => {
+    return [`/api/v3/workspaces/${slug}/members`] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetWorkspaceMembersQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>, TError = ErrorType<void>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetWorkspaceMembersQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>> = ({ signal }) => v3WorkspacesControllerGetWorkspaceMembers(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetWorkspaceMembersQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>>
+export type V3WorkspacesControllerGetWorkspaceMembersQueryError = ErrorType<void>
+
+/**
+ * @summary List all workspace members (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetWorkspaceMembers = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetWorkspaceMembersQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Add a new member to a specific workspace. Requires members:write scope.
+ * @summary Add a member to the workspace (Enterprise M2M)
+ */
+export const v3WorkspacesControllerAddWorkspaceMember = (
+    slug: string,
+    v3AddMemberDto: BodyType<V3AddMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3AddMemberDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerAddWorkspaceMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddWorkspaceMember>>, TError,{slug: string;data: BodyType<V3AddMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddWorkspaceMember>>, TError,{slug: string;data: BodyType<V3AddMemberDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerAddWorkspaceMember>>, {slug: string;data: BodyType<V3AddMemberDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  v3WorkspacesControllerAddWorkspaceMember(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerAddWorkspaceMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerAddWorkspaceMember>>>
+    export type V3WorkspacesControllerAddWorkspaceMemberMutationBody = BodyType<V3AddMemberDto>
+    export type V3WorkspacesControllerAddWorkspaceMemberMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a member to the workspace (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerAddWorkspaceMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddWorkspaceMember>>, TError,{slug: string;data: BodyType<V3AddMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerAddWorkspaceMember>>,
+        TError,
+        {slug: string;data: BodyType<V3AddMemberDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerAddWorkspaceMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve details of a specific workspace member by userId. Requires members:read scope.
+ * @summary Get details of a specific workspace member (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetWorkspaceMember = (
+    slug: string,
+    userId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetWorkspaceMemberQueryKey = (slug: string,
+    userId: string,) => {
+    return [`/api/v3/workspaces/${slug}/members/${userId}`] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetWorkspaceMemberQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError = ErrorType<void>>(slug: string,
+    userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetWorkspaceMemberQueryKey(slug,userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>> = ({ signal }) => v3WorkspacesControllerGetWorkspaceMember(slug,userId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetWorkspaceMemberQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>>
+export type V3WorkspacesControllerGetWorkspaceMemberQueryError = ErrorType<void>
+
+/**
+ * @summary Get details of a specific workspace member (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetWorkspaceMember = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError = ErrorType<void>>(
+ slug: string,
+    userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetWorkspaceMemberQueryOptions(slug,userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Update the role of a specific workspace member. Requires members:write scope.
+ * @summary Update a workspace member role (Enterprise M2M)
+ */
+export const v3WorkspacesControllerUpdateWorkspaceMember = (
+    slug: string,
+    userId: string,
+    v3UpdateMemberRoleDto: BodyType<V3UpdateMemberRoleDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateMemberRoleDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerUpdateWorkspaceMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, {slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}> = (props) => {
+          const {slug,userId,data} = props ?? {};
+
+          return  v3WorkspacesControllerUpdateWorkspaceMember(slug,userId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerUpdateWorkspaceMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>>
+    export type V3WorkspacesControllerUpdateWorkspaceMemberMutationBody = BodyType<V3UpdateMemberRoleDto>
+    export type V3WorkspacesControllerUpdateWorkspaceMemberMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a workspace member role (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerUpdateWorkspaceMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>,
+        TError,
+        {slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerUpdateWorkspaceMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Remove a workspace member by userId. Requires members:write scope.
+ * @summary Remove a member from the workspace (Enterprise M2M)
+ */
+export const v3WorkspacesControllerDeleteWorkspaceMember = (
+    slug: string,
+    userId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerDeleteWorkspaceMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;userId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, {slug: string;userId: string}> = (props) => {
+          const {slug,userId} = props ?? {};
+
+          return  v3WorkspacesControllerDeleteWorkspaceMember(slug,userId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerDeleteWorkspaceMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>>
+
+    export type V3WorkspacesControllerDeleteWorkspaceMemberMutationError = ErrorType<void>
+
+    /**
+ * @summary Remove a member from the workspace (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerDeleteWorkspaceMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>,
+        TError,
+        {slug: string;userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerDeleteWorkspaceMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
  * Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.
  * @summary List all webhooks in the workspace
  */
@@ -12607,6 +12941,130 @@ export const useWorkspacesControllerCreateWorkspace = <TError = ErrorType<void>,
     }
 
 /**
+ * @summary Get all well-defined workspace roles
+ */
+export const workspacesControllerGetWorkspaceRoles = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/roles`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getWorkspacesControllerGetWorkspaceRolesQueryKey = () => {
+    return [`/api/workspaces/roles`] as const;
+    }
+
+
+export const getWorkspacesControllerGetWorkspaceRolesQueryOptions = <TData = Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspacesControllerGetWorkspaceRolesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>> = ({ signal }) => workspacesControllerGetWorkspaceRoles(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type WorkspacesControllerGetWorkspaceRolesQueryResult = NonNullable<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>>
+export type WorkspacesControllerGetWorkspaceRolesQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all well-defined workspace roles
+ */
+export const useWorkspacesControllerGetWorkspaceRoles = <TData = Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceRoles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getWorkspacesControllerGetWorkspaceRolesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get roles defined for a specific workspace
+ */
+export const workspacesControllerGetWorkspaceSlugRoles = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/roles`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getWorkspacesControllerGetWorkspaceSlugRolesQueryKey = (slug: string,) => {
+    return [`/api/workspaces/${slug}/roles`] as const;
+    }
+
+
+export const getWorkspacesControllerGetWorkspaceSlugRolesQueryOptions = <TData = Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspacesControllerGetWorkspaceSlugRolesQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>> = ({ signal }) => workspacesControllerGetWorkspaceSlugRoles(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type WorkspacesControllerGetWorkspaceSlugRolesQueryResult = NonNullable<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>>
+export type WorkspacesControllerGetWorkspaceSlugRolesQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get roles defined for a specific workspace
+ */
+export const useWorkspacesControllerGetWorkspaceSlugRoles = <TData = Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspacesControllerGetWorkspaceSlugRoles>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getWorkspacesControllerGetWorkspaceSlugRolesQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * @summary Discover public workspaces
  */
 export const workspacesControllerDiscoverWorkspaces = (
@@ -15463,50 +15921,50 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
     }
 
 export const deviceAuthControllerCheckStatus = (
-    sessionId: string,
+    deviceCode: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
       return customInstance<void>(
-      {url: `/api/device-auth/qr/status/${sessionId}`, method: 'GET', signal
+      {url: `/api/device-auth/qr/status/${deviceCode}`, method: 'GET', signal
     },
       options);
     }
 
 
-export const getDeviceAuthControllerCheckStatusQueryKey = (sessionId: string,) => {
-    return [`/api/device-auth/qr/status/${sessionId}`] as const;
+export const getDeviceAuthControllerCheckStatusQueryKey = (deviceCode: string,) => {
+    return [`/api/device-auth/qr/status/${deviceCode}`] as const;
     }
 
 
-export const getDeviceAuthControllerCheckStatusQueryOptions = <TData = Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError = ErrorType<unknown>>(sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getDeviceAuthControllerCheckStatusQueryOptions = <TData = Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError = ErrorType<unknown>>(deviceCode: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getDeviceAuthControllerCheckStatusQueryKey(sessionId);
+  const queryKey =  queryOptions?.queryKey ?? getDeviceAuthControllerCheckStatusQueryKey(deviceCode);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>> = ({ signal }) => deviceAuthControllerCheckStatus(sessionId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>> = ({ signal }) => deviceAuthControllerCheckStatus(deviceCode, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: !!(sessionId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(deviceCode), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type DeviceAuthControllerCheckStatusQueryResult = NonNullable<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>>
 export type DeviceAuthControllerCheckStatusQueryError = ErrorType<unknown>
 
 export const useDeviceAuthControllerCheckStatus = <TData = Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError = ErrorType<unknown>>(
- sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ deviceCode: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deviceAuthControllerCheckStatus>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 
   ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 
-  const queryOptions = getDeviceAuthControllerCheckStatusQueryOptions(sessionId,options)
+  const queryOptions = getDeviceAuthControllerCheckStatusQueryOptions(deviceCode,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -15568,6 +16026,56 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
       return useMutation(mutationOptions);
     }
 
+export const deviceAuthControllerDeny = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/device-auth/qr/deny`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getDeviceAuthControllerDenyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deviceAuthControllerDeny>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deviceAuthControllerDeny>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deviceAuthControllerDeny>>, void> = () => {
+
+
+          return  deviceAuthControllerDeny(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeviceAuthControllerDenyMutationResult = NonNullable<Awaited<ReturnType<typeof deviceAuthControllerDeny>>>
+
+    export type DeviceAuthControllerDenyMutationError = ErrorType<unknown>
+
+    export const useDeviceAuthControllerDeny = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deviceAuthControllerDeny>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof deviceAuthControllerDeny>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getDeviceAuthControllerDenyMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
 export const androidAuthControllerGetProfile = (
 
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
@@ -15623,6 +16131,56 @@ export const useAndroidAuthControllerGetProfile = <TData = Awaited<ReturnType<ty
 
 
 
+
+export const androidAuthControllerChangePassword = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/android-auth/change-password`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getAndroidAuthControllerChangePasswordMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof androidAuthControllerChangePassword>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof androidAuthControllerChangePassword>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof androidAuthControllerChangePassword>>, void> = () => {
+
+
+          return  androidAuthControllerChangePassword(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AndroidAuthControllerChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof androidAuthControllerChangePassword>>>
+
+    export type AndroidAuthControllerChangePasswordMutationError = ErrorType<unknown>
+
+    export const useAndroidAuthControllerChangePassword = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof androidAuthControllerChangePassword>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof androidAuthControllerChangePassword>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getAndroidAuthControllerChangePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
 
 export const androidAuthControllerCheckUsername = (
     params: AndroidAuthControllerCheckUsernameParams,

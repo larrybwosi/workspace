@@ -68,6 +68,7 @@ describe('AndroidAuthController', () => {
       expect(auth.api.getSession).toHaveBeenCalledWith({
         headers: {
           authorization: `Bearer ${mockToken}`,
+          cookie: `better-auth.session_token=${mockToken}`,
         },
       });
 
@@ -111,17 +112,17 @@ describe('AndroidAuthController', () => {
   });
 
   describe('signup', () => {
-    it('should handle signup and fetch session if needed', async () => {
+    it('should handle signup and automatically log the user in', async () => {
       const mockToken = 'signup-token';
       const mockUser = { id: 'user-2', email: 'new@example.com', name: 'New User' };
       const mockSession = { id: 'session-2', token: mockToken };
 
       (auth.api.signUpEmail as any).mockResolvedValue({
-        token: mockToken,
         user: mockUser,
       });
 
-      (auth.api.getSession as any).mockResolvedValue({
+      (auth.api.signInEmail as any).mockResolvedValue({
+        token: mockToken,
         user: mockUser,
         session: mockSession,
       });
@@ -136,7 +137,12 @@ describe('AndroidAuthController', () => {
       const result = await controller.signup(signupData);
 
       expect(auth.api.signUpEmail).toHaveBeenCalled();
-      expect(auth.api.getSession).toHaveBeenCalled();
+      expect(auth.api.signInEmail).toHaveBeenCalledWith({
+        body: {
+          email: signupData.email,
+          password: signupData.password,
+        },
+      });
       expect(result.session).toEqual(mockSession);
       expect(result.token).toBe(mockToken);
       expect(result.memberships).toEqual([]);

@@ -17,10 +17,10 @@ Ensure your Bot App has the `members:read` and `members:write` scopes.
 
 ### 2. Fetch Existing Members
 
-Use the `GET /v2/workspaces/:slug/members` endpoint.
+Use the `GET /v3/workspaces/:slug/members` endpoint.
 
 ```javascript
-const response = await axios.get(`https://api.skyrme.chat/v2/workspaces/${SLUG}/members`, {
+const response = await axios.get(`https://api.skyrme.chat/v3/workspaces/${SLUG}/members`, {
   headers: { Authorization: `Bearer ${TOKEN}` },
 });
 const currentMembers = response.data.members;
@@ -47,7 +47,7 @@ const toRemove = currentMembers.filter(m => !hrUsers.find(u => u.email === m.use
 ```javascript
 for (const user of toAdd) {
   await axios.post(
-    `https://api.skyrme.chat/v2/workspaces/${SLUG}/members`,
+    `https://api.skyrme.chat/v3/workspaces/${SLUG}/members`,
     {
       email: user.email,
       role: 'member',
@@ -61,7 +61,7 @@ for (const user of toAdd) {
 
 ```javascript
 for (const member of toRemove) {
-  await axios.delete(`https://api.skyrme.chat/v2/workspaces/${SLUG}/members/${member.user.id}`, {
+  await axios.delete(`https://api.skyrme.chat/v3/workspaces/${SLUG}/members/${member.user.id}`, {
     headers: { Authorization: `Bearer ${TOKEN}` },
   });
 }

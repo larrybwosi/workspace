@@ -15,6 +15,7 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { AuthGuard } from '../auth.guard';
 import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
+import { prisma } from '@repo/database';
 
 /**
  * OAuth client id for the desktop app. If you want to restrict which
@@ -22,6 +23,26 @@ import { publishRealtime } from '@repo/shared/server';
  * this value on the `deviceAuthorization` plugin config in `@repo/auth`.
  */
 const DEVICE_CLIENT_ID = 'desktop-app';
+
+function extractUserCode(input: string): string {
+  if (!input) return '';
+  if (input.startsWith('http://') || input.startsWith('https://')) {
+    try {
+      const url = new URL(input);
+      const code = url.searchParams.get('user_code') || url.searchParams.get('userCode');
+      if (code) return code;
+
+      const parts = url.pathname.split('/');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart && lastPart.length >= 4) {
+        return lastPart;
+      }
+    } catch (e) {
+      console.error('Failed to parse user code from URL', e);
+    }
+  }
+  return input;
+}
 
 @Controller('device-auth')
 export class DeviceAuthController {
@@ -32,6 +53,27 @@ export class DeviceAuthController {
    */
   @Post('qr/generate')
   async generateQR() {
+    try {
+      const existingClient = await prisma.oAuthClient.findUnique({
+        where: { clientId: DEVICE_CLIENT_ID },
+      });
+      if (!existingClient) {
+        await prisma.oAuthClient.create({
+          data: {
+            clientId: DEVICE_CLIENT_ID,
+            name: 'Desktop App',
+            clientSecret: null,
+            redirectUris: ['http://localhost:3001', 'http://localhost:3000', 'https://chat.scryme.tech'],
+            public: true,
+            scopes: ['openid', 'profile', 'email', 'offline_access'],
+            grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'],
+          },
+        });
+      }
+    } catch (e) {
+      console.error('Failed to ensure oAuthClient desktop-app exists', e);
+    }
+
     const data = await auth.api.deviceCode({
       body: { client_id: DEVICE_CLIENT_ID },
     });
@@ -90,14 +132,20 @@ export class DeviceAuthController {
    */
   @Post('qr/authorize')
   @UseGuards(AuthGuard)
-  async authorize(@Body() body: { userCode: string }, @Req() req: FastifyRequest) {
-    if (!body?.userCode) {
+  async authorize(
+    @Body() body: { userCode?: string; sessionId?: string },
+    @Req() req: FastifyRequest
+  ) {
+    const rawCode = body?.userCode || body?.sessionId;
+    if (!rawCode) {
       throw new BadRequestException('userCode is required');
     }
 
+    const userCode = extractUserCode(rawCode);
+
     try {
       await auth.api.deviceApprove({
-        body: { userCode: body.userCode },
+        body: { userCode },
         // Fastify normalizes headers into a plain incoming headers object,
         // which matches what fromNodeHeaders expects.
         headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
@@ -116,7 +164,7 @@ export class DeviceAuthController {
     // polling. Keyed by userCode since that's the only identifier the
     // mobile client has.
     try {
-      await publishRealtime(`qr-session:${body.userCode}`, 'authorized', {
+      await publishRealtime(`qr-session:${userCode}`, 'authorized', {
         status: 'authorized',
       });
     } catch (e) {
@@ -132,14 +180,20 @@ export class DeviceAuthController {
    */
   @Post('qr/deny')
   @UseGuards(AuthGuard)
-  async deny(@Body() body: { userCode: string }, @Req() req: FastifyRequest) {
-    if (!body?.userCode) {
+  async deny(
+    @Body() body: { userCode?: string; sessionId?: string },
+    @Req() req: FastifyRequest
+  ) {
+    const rawCode = body?.userCode || body?.sessionId;
+    if (!rawCode) {
       throw new BadRequestException('userCode is required');
     }
 
+    const userCode = extractUserCode(rawCode);
+
     try {
       await auth.api.deviceDeny({
-        body: { userCode: body.userCode },
+        body: { userCode },
         headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
       });
     } catch {
@@ -147,7 +201,7 @@ export class DeviceAuthController {
     }
 
     try {
-      await publishRealtime(`qr-session:${body.userCode}`, 'denied', {
+      await publishRealtime(`qr-session:${userCode}`, 'denied', {
         status: 'denied',
       });
     } catch (e) {

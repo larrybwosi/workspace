@@ -2,7 +2,11 @@ import axios from 'axios';
 
 // Helper to safely access env variables across Vite, Next.js and React Native
 const getEnv = (name: string) => {
-  const g = globalThis as typeof globalThis & { process?: { env?: Record<string, string> }; import?: { meta?: { env?: Record<string, string> } }; __env__?: Record<string, string>; };
+  const g = globalThis as typeof globalThis & {
+    process?: { env?: Record<string, string> };
+    import?: { meta?: { env?: Record<string, string> } };
+    __env__?: Record<string, string>;
+  };
 
   // Try various common locations for env variables
   // Avoid explicit import.meta to prevent TS1470
@@ -24,7 +28,11 @@ const getBaseURL = () => {
     }
   }
   if (!url) {
-    url = getEnv('API_URL') || 'http://localhost:3000';
+    const isProd =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') ||
+      getEnv('NODE_ENV') === 'production' ||
+      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+    url = getEnv('API_URL') || getEnv('NEXT_PUBLIC_API_URL') || (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   }
   return url.replace(/\/$/, '') + '/api';
 };
@@ -38,9 +46,25 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(config => {
   if (typeof window !== 'undefined') {
-    const token =
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    let token =
       window.localStorage.getItem('better-auth.session-token') ||
       window.localStorage.getItem('better-auth.session_token');
+
+    if (!token) {
+      token = getCookie('better-auth.session_token') || getCookie('better-auth.session-token');
+      if (token) {
+        window.localStorage.setItem('better-auth.session_token', token);
+        window.localStorage.setItem('better-auth.session-token', token);
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

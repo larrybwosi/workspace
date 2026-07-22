@@ -76,23 +76,25 @@ describe('V3ChannelIncomingWebhooksController', () => {
         userId: 'user-xyz',
       };
 
-      const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
-      const mockWebhooks = [{ id: 'wh-1', name: 'My Hook', channelId: 'ch-1' }];
+      const mockChannel = {
+        workspaceId: 'ws-123',
+        incomingWebhooks: [{ id: 'wh-1', name: 'My Hook', channelId: 'ch-1' }],
+      };
 
       (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findMany as any).mockResolvedValue(mockWebhooks);
 
       const result = await controller.getChannelWebhooks(context as any, 'acme-slug', 'ch-1');
 
       expect(result.success).toBe(true);
-      expect(result.data.webhooks).toEqual(mockWebhooks);
+      expect(result.data.webhooks).toEqual(mockChannel.incomingWebhooks);
       expect(prisma.channel.findUnique).toHaveBeenCalledWith({
         where: { id: 'ch-1' },
-        select: { id: true, workspaceId: true },
-      });
-      expect(prisma.channelIncomingWebhook.findMany).toHaveBeenCalledWith({
-        where: { channelId: 'ch-1' },
-        orderBy: { createdAt: 'desc' },
+        select: {
+          workspaceId: true,
+          incomingWebhooks: {
+            orderBy: { createdAt: 'desc' },
+          },
+        },
       });
     });
 
@@ -163,16 +165,20 @@ describe('V3ChannelIncomingWebhooksController', () => {
         userId: 'user-xyz',
       };
 
-      const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
-      const mockWebhook = { id: 'wh-1', name: 'Hook 1', channelId: 'ch-1' };
+      const mockWebhook = {
+        id: 'wh-1',
+        name: 'Hook 1',
+        channelId: 'ch-1',
+        channel: { workspaceId: 'ws-123' },
+      };
 
-      (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findFirst as any).mockResolvedValue(mockWebhook);
+      (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
 
       const result = await controller.getChannelWebhook(context as any, 'acme-slug', 'ch-1', 'wh-1');
 
       expect(result.success).toBe(true);
-      expect(result.data.webhook).toEqual(mockWebhook);
+      const { channel, ...webhookData } = mockWebhook;
+      expect(result.data.webhook).toEqual(webhookData);
     });
   });
 
@@ -185,12 +191,15 @@ describe('V3ChannelIncomingWebhooksController', () => {
         clientId: 'client-999',
       };
 
-      const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
-      const mockWebhook = { id: 'wh-1', name: 'Old Hook', channelId: 'ch-1' };
+      const mockWebhook = {
+        id: 'wh-1',
+        name: 'Old Hook',
+        channelId: 'ch-1',
+        channel: { workspaceId: 'ws-123' },
+      };
       const updatedWebhook = { id: 'wh-1', name: 'New Hook', channelId: 'ch-1' };
 
-      (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findFirst as any).mockResolvedValue(mockWebhook);
+      (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
       (prisma.channelIncomingWebhook.update as any).mockResolvedValue(updatedWebhook);
 
       const result = await controller.updateChannelWebhook(context as any, 'acme-slug', 'ch-1', 'wh-1', {
@@ -213,11 +222,14 @@ describe('V3ChannelIncomingWebhooksController', () => {
         clientId: 'client-999',
       };
 
-      const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
-      const mockWebhook = { id: 'wh-1', name: 'Hook to Delete', channelId: 'ch-1' };
+      const mockWebhook = {
+        id: 'wh-1',
+        name: 'Hook to Delete',
+        channelId: 'ch-1',
+        channel: { workspaceId: 'ws-123' },
+      };
 
-      (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-      (prisma.channelIncomingWebhook.findFirst as any).mockResolvedValue(mockWebhook);
+      (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
 
       const result = await controller.deleteChannelWebhook(context as any, 'acme-slug', 'ch-1', 'wh-1');
 

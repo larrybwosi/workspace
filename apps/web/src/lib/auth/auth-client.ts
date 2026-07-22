@@ -32,6 +32,18 @@ const getBaseURL = () => {
 
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
+  fetchOptions: {
+    onResponse: async ({ response }) => {
+      const res = response as any;
+      if (response.ok && res._data) {
+        const data = res._data;
+        if (data && data.session && data.session.token) {
+          localStorage.setItem('better-auth.session_token', data.session.token);
+          localStorage.setItem('better-auth.session-token', data.session.token);
+        }
+      }
+    },
+  },
 });
 
 export const { signIn, signUp } = authClient;
