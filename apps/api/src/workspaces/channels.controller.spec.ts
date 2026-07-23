@@ -22,6 +22,9 @@ vi.mock('@repo/database', () => ({
     workspaceAuditLog: {
       create: vi.fn(),
     },
+    message: {
+      groupBy: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -345,6 +348,7 @@ describe('ChannelsController - NestJS module', () => {
 
   it('should return channels when successful', async () => {
     const mockPrisma = prisma as any;
+    mockPrisma.message.groupBy.mockResolvedValue([]);
     // Updated mock to match optimized select structure
     mockPrisma.workspace.findUnique.mockResolvedValue({
       id: "ws-1",
@@ -363,5 +367,46 @@ describe('ChannelsController - NestJS module', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('ch-1');
+  });
+
+  it('should return channels with correctly mapped unread and mention counts from groupBy', async () => {
+    const mockPrisma = prisma as any;
+    mockPrisma.workspace.findUnique.mockResolvedValue({
+      id: "ws-1",
+      members: [{ role: "member" }],
+      channels: [
+        {
+          id: "ch-1",
+          name: "general",
+          _count: { messages: 5 },
+        },
+        {
+          id: "ch-2",
+          name: "random",
+          _count: { messages: 12 },
+        },
+      ],
+    });
+
+    mockPrisma.message.groupBy
+      .mockResolvedValueOnce([
+        { channelId: 'ch-1', _count: { _all: 3 } },
+        { channelId: 'ch-2', _count: { _all: 5 } },
+      ]) // first call for unread counts
+      .mockResolvedValueOnce([
+        { channelId: 'ch-1', _count: { _all: 1 } },
+      ]); // second call for mention counts
+
+    const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
+    const result = await controller.getWorkspaceChannels(user, 'my-workspace');
+
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe('ch-1');
+    expect(result[0].unreadCount).toBe(3);
+    expect(result[0].mentionCount).toBe(1);
+
+    expect(result[1].id).toBe('ch-2');
+    expect(result[1].unreadCount).toBe(5);
+    expect(result[1].mentionCount).toBe(0);
   });
 });
