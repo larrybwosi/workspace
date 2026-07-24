@@ -98,7 +98,10 @@ export class ChannelsController {
      * 1. Consolidates workspace lookup, membership verification, and channel retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations (like message counts).
      * 3. Reduces database round-trips from 2 down to 1 while maintaining access control.
-     * Expected impact: Faster response times for channel list loading.
+     * 4. Removes messages list overfetching (which scales poorly and causes garbage collection/serialization overhead).
+     * 5. Uses targeted database-level 'prisma.message.groupBy' queries to retrieve aggregated unread/mention counts.
+     * 6. Maps counts in-memory with O(1) Map lookups.
+     * Expected impact: Faster response times for channel list loading and significantly reduced database payload size.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -135,23 +138,6 @@ export class ChannelsController {
             createdAt: true,
             updatedAt: true,
             _count: { select: { messages: true } },
-            messages: {
-              where: {
-                readBy: {
-                  none: {
-                    userId: user.id,
-                  },
-                },
-              },
-              select: {
-                id: true,
-                mentions: {
-                  select: {
-                    mention: true,
-                  },
-                },
-              },
-            },
           },
           orderBy: {
             name: 'asc',
@@ -170,24 +156,68 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    return workspace.channels.map(channel => {
-      const messagesList = (channel as any).messages || [];
-      const unreadCount = messagesList.length;
-      const mentionCount = messagesList.filter((m: any) =>
-        m.mentions?.some(
-          (mention: any) =>
-            mention.mention === `@${user.name}` ||
-            mention.mention === `@${user.username}` ||
-            mention.mention === '@all' ||
-            mention.mention === '@here'
-        )
-      ).length;
+    const channelIds = workspace.channels.map(channel => channel.id);
+    const unreadMap = new Map<string, number>();
+    const mentionMap = new Map<string, number>();
 
-      const { messages, ...rest } = channel as any;
+    if (channelIds.length > 0) {
+      const [unreadCounts, mentionCounts] = await Promise.all([
+        prisma.message.groupBy({
+          by: ['channelId'],
+          where: {
+            channelId: { in: channelIds },
+            readBy: {
+              none: {
+                userId: user.id,
+              },
+            },
+          },
+          _count: {
+            _all: true,
+          },
+        }),
+        prisma.message.groupBy({
+          by: ['channelId'],
+          where: {
+            channelId: { in: channelIds },
+            readBy: {
+              none: {
+                userId: user.id,
+              },
+            },
+            mentions: {
+              some: {
+                mention: {
+                  in: [
+                    '@all',
+                    '@here',
+                    user.name ? `@${user.name}` : '',
+                    user.username ? `@${user.username}` : '',
+                  ].filter(Boolean),
+                },
+              },
+            },
+          },
+          _count: {
+            _all: true,
+          },
+        }),
+      ]);
+
+      unreadCounts.forEach(item => {
+        unreadMap.set(item.channelId, item._count._all);
+      });
+
+      mentionCounts.forEach(item => {
+        mentionMap.set(item.channelId, item._count._all);
+      });
+    }
+
+    return workspace.channels.map(channel => {
       return {
-        ...rest,
-        unreadCount,
-        mentionCount,
+        ...channel,
+        unreadCount: unreadMap.get(channel.id) || 0,
+        mentionCount: mentionMap.get(channel.id) || 0,
       };
     });
   }
