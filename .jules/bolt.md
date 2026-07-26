@@ -213,3 +213,8 @@
 
 **Learning:** Querying a uniquely indexed record (such as `WorkspaceMember` via `workspaceId_userId` or `ChannelIncomingWebhook` via `id`) using `findFirst` instead of `findUnique` causes the database to perform full table or index scans instead of utilizing highly optimized O(1) point lookups. Additionally, splitting out verification filters (like `channelId` matching) to the application logic allows the primary query to leverage direct O(1) lookups, while targeted `select` prevents database payload over-fetching.
 **Action:** Always prefer `findUnique` over `findFirst` on unique constraints and primary keys. Handle relational validation in application logic where beneficial, and use targeted `select` to minimize payload sizes.
+
+## 2026-07-26 - [Prisma/Performance] O(1) Short-Circuiting Point Lookups on Unique Keys
+
+**Learning:** When looking up a single database record by either its primary key (e.g., `id`) or a unique constraint (e.g., `slug`), using `findFirst` with an `OR` condition forces database index or table scans. Replacing it with sequential short-circuiting `findUnique` queries leveraging direct key point lookups is significantly faster and more resource-efficient.
+**Action:** Prefer chaining sequential `findUnique` calls (e.g., `(id ? findUnique({ id }) : null) || (slug ? findUnique({ slug }) : null)`) instead of `findFirst` with `OR` for multi-key point lookups.
