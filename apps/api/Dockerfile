@@ -92,9 +92,9 @@ COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma.config
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/package.json ./packages/database/package.json
 
 # Copy entrypoint script safely from the pruner stage root
-COPY --from=pruner /app/entrypoint.sh ./entrypoint.sh
+COPY --from=pruner /app/docker-entrypoint.sh ./docker-entrypoint.sh
 USER root
-RUN chmod +x ./entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 USER nestjs
 
@@ -103,5 +103,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/api/v2/health || exit 1
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/main"]

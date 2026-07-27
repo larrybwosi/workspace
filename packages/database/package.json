@@ -3,6 +3,9 @@
   "version": "0.1.0-dev.31",
   "private": true,
   "main": "./index.ts",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "type-check": "tsc --noEmit",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
