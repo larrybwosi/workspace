@@ -711,14 +711,6 @@ export class CallsService {
   async scheduleCall(user: User, body: ScheduleCallDto) {
     const { title, description, type, scheduledFor, workspaceId: incomingWorkspaceId, workspaceSlug, channelId } = body;
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Replaces findFirst with OR filter with serial findUnique queries.
-     * 2. Since 'id' is the primary key and 'slug' has a unique constraint,
-     *    querying them individually with findUnique leverages direct database O(1) primary/unique key index optimization.
-     * 3. Consolidates workspace lookup, membership verification, and member retrieval into single point lookups.
-     * Expected impact: Direct O(1) point lookups, avoiding index or table scans, and minimal payload.
-     */
     const workspace =
       (incomingWorkspaceId
         ? await prisma.workspace.findUnique({
