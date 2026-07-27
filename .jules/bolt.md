@@ -218,3 +218,7 @@
 
 **Learning:** Querying bot user profiles (using primary key `id`) via `findFirst` is an anti-pattern when it filters other non-indexed fields (like `isBot` or `botToken`) at the database layer. Replacing `findFirst` with a direct primary key `findUnique` lookup and handling the additional filters in application memory allows the query planner to utilize O(1) point lookup optimizations and enables Prisma's query engine to utilize query batching/DataLoader.
 **Action:** Prefer `findUnique` on primary key and check supplemental conditions in-memory where possible for critical high-frequency lookup operations (such as in gateway and authentication guards).
+## 2026-07-22 - [API] Database-Level Aggregation for Unread & Mention Counts
+
+**Learning:** Pulling all unread message records and their mentions to count and filter them in JavaScript scales terribly with active workspaces (causing memory spikes and slow JSON serialization). Delegating these aggregations to native DB-level `prisma.message.groupBy` queries reduces network and Node.js memory overhead to O(1) per channel.
+**Action:** Always prefer database-level count/groupBy aggregations over pulling and mapping relation lists in memory for lists, dashboards, and metrics.
