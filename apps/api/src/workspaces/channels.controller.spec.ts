@@ -339,7 +339,6 @@ describe('ChannelsController - NestJS module', () => {
 
   it('should throw ForbiddenException when user is not a workspace member', async () => {
     const mockPrisma = prisma as any;
-    // Updated mock to match optimized select structure
     mockPrisma.workspace.findUnique.mockResolvedValue({
       id: 'ws-1',
       members: [],
@@ -352,14 +351,14 @@ describe('ChannelsController - NestJS module', () => {
 
   it('should return channels when successful', async () => {
     const mockPrisma = prisma as any;
-    // Updated mock to match optimized select structure
+    mockPrisma.message.groupBy.mockResolvedValue([]);
     mockPrisma.workspace.findUnique.mockResolvedValue({
-      id: "ws-1",
-      members: [{ role: "member" }],
+      id: 'ws-1',
+      members: [{ role: 'member' }],
       channels: [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           _count: { messages: 5 },
         },
       ],
@@ -375,17 +374,17 @@ describe('ChannelsController - NestJS module', () => {
   it('should correctly query and map unread and mention counts from groupBy', async () => {
     const mockPrisma = prisma as any;
     mockPrisma.workspace.findUnique.mockResolvedValue({
-      id: "ws-1",
-      members: [{ role: "member" }],
+      id: 'ws-1',
+      members: [{ role: 'member' }],
       channels: [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           _count: { messages: 5 },
         },
         {
-          id: "ch-2",
-          name: "random",
+          id: 'ch-2',
+          name: 'random',
           _count: { messages: 10 },
         },
       ],

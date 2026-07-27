@@ -98,9 +98,9 @@ export class ChannelsController {
      * 1. Consolidates workspace lookup, membership verification, and channel retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations (like message counts).
      * 3. Reduces database round-trips from 2 down to 1 while maintaining access control.
-     * 4. Rather than pulling thousands of message/mention records from the DB and filtering/counting in Node memory,
-     *    we fetch counts directly using database-level `groupBy` aggregation.
-     * Expected impact: Eliminates memory overhead, avoids slow JSON serialization, and drops CPU utilization to O(1) database-side lookups.
+     * 4. Fetches unread/mention counts directly using database-level `groupBy` aggregation rather than fetching full records into Node memory.
+     * 5. Maps counts in-memory with O(1) Map lookups.
+     * Expected impact: Faster response times for channel list loading and significantly reduced database payload size.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -155,8 +155,7 @@ export class ChannelsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channelIds = workspace.channels.map(c => c.id);
-
+    const channelIds = workspace.channels.map(channel => channel.id);
     const unreadMap = new Map<string, number>();
     const mentionMap = new Map<string, number>();
 
@@ -189,10 +188,10 @@ export class ChannelsController {
               some: {
                 mention: {
                   in: [
-                    `@${user.name}`,
-                    user.username ? `@${user.username}` : '',
                     '@all',
                     '@here',
+                    user.name ? `@${user.name}` : '',
+                    user.username ? `@${user.username}` : '',
                   ].filter(Boolean),
                 },
               },
@@ -214,13 +213,10 @@ export class ChannelsController {
     }
 
     return workspace.channels.map(channel => {
-      const unreadCount = unreadMap.get(channel.id) || 0;
-      const mentionCount = mentionMap.get(channel.id) || 0;
-
       return {
         ...channel,
-        unreadCount,
-        mentionCount,
+        unreadCount: unreadMap.get(channel.id) || 0,
+        mentionCount: mentionMap.get(channel.id) || 0,
       };
     });
   }
