@@ -42,9 +42,8 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  const plainHeaders = Object.fromEntries(headers.entries());
   const session = await auth.api.getSession({
-    headers: plainHeaders,
+    headers,
   });
 
   if (!session) {
