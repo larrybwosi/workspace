@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.scrymechat.android.data.local.entities.NotificationEntity
-import com.scrymechat.android.ui.theme.*
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -39,24 +38,24 @@ fun NotificationsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Notifications", color = ScrymeDarkTextPrimary) },
+                title = { Text("Notifications", color = MaterialTheme.colorScheme.onBackground) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.markAllAsRead() }) {
-                        Icon(Icons.Default.DoneAll, contentDescription = "Mark all as read", tint = ScrymeDarkTextPrimary)
+                        Icon(Icons.Default.DoneAll, contentDescription = "Mark all as read", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ScrymeDarkSurface,
-                    titleContentColor = ScrymeDarkTextPrimary
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         },
-        containerColor = ScrymeDarkSurface
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         if (uiState.notifications.isEmpty() && !uiState.isLoading) {
             EmptyNotifications(modifier = Modifier.padding(padding))
@@ -85,8 +84,8 @@ fun NotificationsScreen(
                                 onNotificationClick(notification)
                             }
                         )
-                        Divider(
-                            color = ScrymeDarkDivider,
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant,
                             thickness = 0.5.dp,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
@@ -102,13 +101,13 @@ fun WorkspaceHeader(name: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ScrymeDarkSurfaceVariant)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = name.uppercase(),
             style = MaterialTheme.typography.labelMedium,
-            color = ScrymeDarkTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp
         )
@@ -127,13 +126,13 @@ fun NotificationItem(
         else -> Icons.Default.Notifications
     }
 
-    val iconColor = if (notification.isRead) ScrymeDarkTextSecondary else ScrymeDarkAccent
+    val iconColor = if (notification.isRead) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .background(if (notification.isRead) Color.Transparent else ScrymeDarkAccent.copy(alpha = 0.05f))
+            .background(if (notification.isRead) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
             .padding(16.dp),
         verticalAlignment = Alignment.Top
     ) {
@@ -141,7 +140,7 @@ fun NotificationItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(if (notification.isRead) ScrymeDarkSurfaceVariant else ScrymeDarkAccent.copy(alpha = 0.1f)),
+                .background(if (notification.isRead) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -163,7 +162,7 @@ fun NotificationItem(
                 Text(
                     text = notification.title,
                     style = MaterialTheme.typography.titleSmall,
-                    color = if (notification.isRead) ScrymeDarkTextPrimary else Color.White,
+                    color = if (notification.isRead) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground,
                     fontWeight = if (notification.isRead) FontWeight.Medium else FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -171,7 +170,7 @@ fun NotificationItem(
                 Text(
                     text = formatTimestamp(notification.createdAt),
                     style = MaterialTheme.typography.bodySmall,
-                    color = ScrymeDarkTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -180,7 +179,7 @@ fun NotificationItem(
             Text(
                 text = notification.message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = ScrymeDarkTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -192,7 +191,7 @@ fun NotificationItem(
                     .padding(start = 8.dp, top = 4.dp)
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(ScrymeDarkAccent)
+                    .background(MaterialTheme.colorScheme.primary)
             )
         }
     }
@@ -208,19 +207,19 @@ fun EmptyNotifications(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Default.NotificationsNone,
             contentDescription = null,
-            tint = ScrymeDarkTextSecondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(64.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "No notifications yet",
             style = MaterialTheme.typography.titleMedium,
-            color = ScrymeDarkTextPrimary
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = "We'll let you know when something happens.",
             style = MaterialTheme.typography.bodyMedium,
-            color = ScrymeDarkTextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

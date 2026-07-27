@@ -31,7 +31,8 @@ fun ScrymeNavHost(
             com.scrymechat.android.ui.welcome.SplashScreen(
                 sessionManager = sessionManager,
                 onNavigateToHome = {
-                    navController.navigate(Screen.Home.createRoute(null)) {
+                    val pending = sessionManager.getPendingDeepLinkRoute()
+                    navController.navigate(pending ?: Screen.Home.createRoute(null)) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 },
@@ -54,7 +55,8 @@ fun ScrymeNavHost(
         composable(Screen.SignUp.route) {
             SignUpScreen(
                 onSignUpSuccess = {
-                    navController.navigate(Screen.Home.createRoute(null)) {
+                    val pending = sessionManager.getPendingDeepLinkRoute()
+                    navController.navigate(pending ?: Screen.Home.createRoute(null)) {
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
                 },
@@ -65,7 +67,8 @@ fun ScrymeNavHost(
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.Home.createRoute(null)) {
+                    val pending = sessionManager.getPendingDeepLinkRoute()
+                    navController.navigate(pending ?: Screen.Home.createRoute(null)) {
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
                 },
@@ -327,6 +330,16 @@ fun ScrymeNavHost(
         }
         composable(Screen.Language.route) {
             LanguageSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.Share.route) {
+            com.scrymechat.android.ui.share.ShareScreen(
+                onBack = { navController.popBackStack() },
+                onShareSuccess = {
+                    navController.navigate(Screen.Home.createRoute(null)) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Screen.AuthorizedApps.route) {
             AuthorizedAppsScreen(onBack = { navController.popBackStack() })

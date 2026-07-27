@@ -16,41 +16,38 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+val LocalThemeIsDark = androidx.compose.runtime.staticCompositionLocalOf { false }
+
 private val DarkColorScheme = darkColorScheme(
-    primary = ScrymeDarkAccent,
-    secondary = ScrymeDarkSurfaceVariant,
+    primary = DiscordBrandBlurple,
+    secondary = DiscordChannelSidebarBg,
     tertiary = Pink80,
-    background = ScrymeDarkBackground,
-    surface = ScrymeDarkSurface,
+    background = DiscordMainBackground,
+    surface = DiscordSurfaceInputAndDialogs,
     onPrimary = Color.White,
-    onSecondary = ScrymeDarkTextPrimary,
+    onSecondary = DiscordTextPrimary,
     onTertiary = Color.White,
-    onBackground = ScrymeDarkTextPrimary,
-    onSurface = ScrymeDarkTextPrimary,
-    surfaceVariant = ScrymeDarkSurfaceVariant,
-    onSurfaceVariant = ScrymeDarkTextSecondary
+    onBackground = DiscordTextPrimary,
+    onSurface = DiscordTextPrimary,
+    surfaceVariant = DiscordChannelSidebarBg,
+    onSurfaceVariant = DiscordTextSecondary,
+    outlineVariant = DiscordDivider
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = ScrymechatPrimary,
-    secondary = ScrymechatSecondary,
+    primary = DiscordBrandBlurple,
+    secondary = Color(0xFFF2F3F5),
     tertiary = Pink40,
-    background = ScrymechatBackground,
+    background = Color(0xFFFFFFFF),
     surface = Color.White,
     onPrimary = Color.White,
-    onSecondary = Color.White,
+    onSecondary = Color(0xFF313338),
     onTertiary = Color.White,
-    onBackground = Color.Black,
-    onSurface = Color.Black
-
-    /* Other default colors to override
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    onBackground = Color(0xFF313338),
+    onSurface = Color(0xFF313338),
+    surfaceVariant = Color(0xFFF2F3F5),
+    onSurfaceVariant = Color(0xFF4E5058),
+    outlineVariant = Color(0xFFE3E5E8)
 )
 
 @Composable
@@ -61,8 +58,8 @@ fun ScrymechatTheme(
         "light" -> false
         else -> isSystemInDarkTheme()
     },
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color is disabled by default to ensure custom Discord theme is used
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -79,13 +76,15 @@ fun ScrymechatTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    androidx.compose.runtime.CompositionLocalProvider(LocalThemeIsDark provides darkTheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

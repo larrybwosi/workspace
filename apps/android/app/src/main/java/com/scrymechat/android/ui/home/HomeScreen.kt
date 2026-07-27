@@ -319,7 +319,7 @@ fun MainContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(ScrymeDarkSurfaceVariant)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             val title = when {
@@ -331,7 +331,7 @@ fun MainContent(
 
             // Top Bar — slightly taller, with a subtle elevation line instead of a flat divider
             Surface(
-                color = ScrymeDarkSurfaceVariant,
+                color = MaterialTheme.colorScheme.background,
                 shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -346,7 +346,7 @@ fun MainContent(
                         Icon(
                             Icons.Default.Menu,
                             contentDescription = "Menu",
-                            tint = ScrymeDarkTextPrimary,
+                            tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -363,7 +363,7 @@ fun MainContent(
                         Icon(
                             it,
                             contentDescription = null,
-                            tint = ScrymeDarkTextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -382,7 +382,7 @@ fun MainContent(
 
                     Text(
                         text = title,
-                        color = ScrymeDarkTextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp,
                         letterSpacing = 0.1.sp
@@ -463,13 +463,13 @@ private fun EmptyStateScreen(
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
-                .background(ScrymeDarkAccent.copy(alpha = 0.12f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
                 contentDescription = null,
-                tint = ScrymeDarkAccent,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -478,7 +478,7 @@ private fun EmptyStateScreen(
 
         Text(
             text = title,
-            color = ScrymeDarkTextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 19.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
@@ -488,7 +488,7 @@ private fun EmptyStateScreen(
 
         Text(
             text = subtitle,
-            color = ScrymeDarkTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 14.sp,
             lineHeight = 20.sp,
             textAlign = TextAlign.Center,
@@ -508,7 +508,7 @@ fun WelcomeScreen(workspaceName: String) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        ScrymeDarkAccent.copy(alpha = 0.06f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
                         Color.Transparent
                     ),
                     endY = 480f
@@ -527,13 +527,13 @@ fun WelcomeScreen(workspaceName: String) {
                 Box(
                     modifier = Modifier
                         .size(64.dp)
-                        .shadow(8.dp, CircleShape, spotColor = ScrymeDarkAccent)
+                        .shadow(8.dp, CircleShape, spotColor = MaterialTheme.colorScheme.primary)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    ScrymeDarkAccent,
-                                    ScrymeDarkAccent.copy(alpha = 0.7f)
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                                 )
                             )
                         ),
@@ -551,7 +551,7 @@ fun WelcomeScreen(workspaceName: String) {
 
                 Text(
                     text = "Welcome to $workspaceName",
-                    color = ScrymeDarkTextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -562,7 +562,7 @@ fun WelcomeScreen(workspaceName: String) {
 
                 Text(
                     text = "This is the beginning of your $workspaceName workspace. Open the menu to select a channel and start the conversation.",
-                    color = ScrymeDarkTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
                     textAlign = TextAlign.Center,
@@ -575,7 +575,7 @@ fun WelcomeScreen(workspaceName: String) {
                     onClick = { /* Could open a channel picker or something */ },
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ScrymeDarkAccent),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     elevation = ButtonDefaults.buttonElevation(
                         defaultElevation = 0.dp,
                         pressedElevation = 0.dp
