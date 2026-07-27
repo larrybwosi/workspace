@@ -234,11 +234,14 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
       return;
     }
 
-    const bot = await prisma.user.findFirst({
-      where: { id: botId, isBot: true, botToken: token },
+    // ⚡ Performance Optimization:
+    // Leverages direct O(1) primary key lookup on 'id' instead of slower 'findFirst' table/index scan,
+    // handling additional property checks in application logic.
+    const bot = await prisma.user.findUnique({
+      where: { id: botId },
     });
 
-    if (!bot) {
+    if (!bot || !bot.isBot || bot.botToken !== token) {
       this.sendOp(client, 9, false); // Invalid Session
       client.close();
       return;

@@ -19,11 +19,11 @@ vi.mock('@repo/database', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    message: {
+      groupBy: vi.fn(),
+    },
     workspaceAuditLog: {
       create: vi.fn(),
-    },
-    message: {
-      groupBy: vi.fn().mockResolvedValue([]),
     },
   },
 }));
@@ -310,6 +310,10 @@ describe('ChannelsController - NestJS module', () => {
   let controller: ChannelsController;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
+    const mockPrisma = prisma as any;
+    mockPrisma.message.groupBy.mockResolvedValue([]);
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ChannelsController],
     })
@@ -335,7 +339,6 @@ describe('ChannelsController - NestJS module', () => {
 
   it('should throw ForbiddenException when user is not a workspace member', async () => {
     const mockPrisma = prisma as any;
-    // Updated mock to match optimized select structure
     mockPrisma.workspace.findUnique.mockResolvedValue({
       id: 'ws-1',
       members: [],
@@ -349,14 +352,13 @@ describe('ChannelsController - NestJS module', () => {
   it('should return channels when successful', async () => {
     const mockPrisma = prisma as any;
     mockPrisma.message.groupBy.mockResolvedValue([]);
-    // Updated mock to match optimized select structure
     mockPrisma.workspace.findUnique.mockResolvedValue({
-      id: "ws-1",
-      members: [{ role: "member" }],
+      id: 'ws-1',
+      members: [{ role: 'member' }],
       channels: [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           _count: { messages: 5 },
         },
       ],
@@ -369,44 +371,59 @@ describe('ChannelsController - NestJS module', () => {
     expect(result[0].id).toBe('ch-1');
   });
 
-  it('should return channels with correctly mapped unread and mention counts from groupBy', async () => {
+  it('should correctly query and map unread and mention counts from groupBy', async () => {
     const mockPrisma = prisma as any;
     mockPrisma.workspace.findUnique.mockResolvedValue({
-      id: "ws-1",
-      members: [{ role: "member" }],
+      id: 'ws-1',
+      members: [{ role: 'member' }],
       channels: [
         {
-          id: "ch-1",
-          name: "general",
+          id: 'ch-1',
+          name: 'general',
           _count: { messages: 5 },
         },
         {
-          id: "ch-2",
-          name: "random",
-          _count: { messages: 12 },
+          id: 'ch-2',
+          name: 'random',
+          _count: { messages: 10 },
         },
       ],
     });
 
-    mockPrisma.message.groupBy
-      .mockResolvedValueOnce([
-        { channelId: 'ch-1', _count: { _all: 3 } },
-        { channelId: 'ch-2', _count: { _all: 5 } },
-      ]) // first call for unread counts
-      .mockResolvedValueOnce([
-        { channelId: 'ch-1', _count: { _all: 1 } },
-      ]); // second call for mention counts
+    mockPrisma.message.groupBy.mockImplementation(async ({ where }) => {
+      // If querying mentions:
+      if (where.mentions) {
+        return [
+          {
+            channelId: 'ch-1',
+            _count: { id: 2 },
+          },
+        ];
+      }
+      // If querying all unread messages:
+      return [
+        {
+          channelId: 'ch-1',
+          _count: { id: 5 },
+        },
+        {
+          channelId: 'ch-2',
+          _count: { id: 8 },
+        },
+      ];
+    });
 
     const user = { id: 'user-1', name: 'Alice', username: 'alice' } as any;
     const result = await controller.getWorkspaceChannels(user, 'my-workspace');
 
     expect(result).toHaveLength(2);
+
     expect(result[0].id).toBe('ch-1');
-    expect(result[0].unreadCount).toBe(3);
-    expect(result[0].mentionCount).toBe(1);
+    expect(result[0].unreadCount).toBe(5);
+    expect(result[0].mentionCount).toBe(2);
 
     expect(result[1].id).toBe('ch-2');
-    expect(result[1].unreadCount).toBe(5);
+    expect(result[1].unreadCount).toBe(8);
     expect(result[1].mentionCount).toBe(0);
   });
 });

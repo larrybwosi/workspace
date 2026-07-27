@@ -218,3 +218,15 @@
 
 **Learning:** Fetching nested list of unread messages and their mentions in-memory to calculate channel unread and mention counts scales very poorly with message history growth. Replacing this in-memory list filtering with parallelized database-level `prisma.message.groupBy` queries reduces JSON serialization overhead, eliminates garbage collection spikes, and significantly shrinks DB network payload.
 **Action:** Consistently replace nested list-fetching with targeted database-level `groupBy` or aggregation queries, and use in-memory Map lookups to map aggregates to the parent records.
+## 2026-07-26 - [Prisma/Performance] O(1) Short-Circuiting Point Lookups on Unique Keys
+
+**Learning:** When looking up a single database record by either its primary key (e.g., `id`) or a unique constraint (e.g., `slug`), using `findFirst` with an `OR` condition forces database index or table scans. Replacing it with sequential short-circuiting `findUnique` queries leveraging direct key point lookups is significantly faster and more resource-efficient.
+**Action:** Prefer chaining sequential `findUnique` calls (e.g., `(id ? findUnique({ id }) : null) || (slug ? findUnique({ slug }) : null)`) instead of `findFirst` with `OR` for multi-key point lookups.
+## 2026-07-25 - [Prisma/Performance] O(1) Bot User Point Lookup Optimization
+
+**Learning:** Querying bot user profiles (using primary key `id`) via `findFirst` is an anti-pattern when it filters other non-indexed fields (like `isBot` or `botToken`) at the database layer. Replacing `findFirst` with a direct primary key `findUnique` lookup and handling the additional filters in application memory allows the query planner to utilize O(1) point lookup optimizations and enables Prisma's query engine to utilize query batching/DataLoader.
+**Action:** Prefer `findUnique` on primary key and check supplemental conditions in-memory where possible for critical high-frequency lookup operations (such as in gateway and authentication guards).
+## 2026-07-22 - [API] Database-Level Aggregation for Unread & Mention Counts
+
+**Learning:** Pulling all unread message records and their mentions to count and filter them in JavaScript scales terribly with active workspaces (causing memory spikes and slow JSON serialization). Delegating these aggregations to native DB-level `prisma.message.groupBy` queries reduces network and Node.js memory overhead to O(1) per channel.
+**Action:** Always prefer database-level count/groupBy aggregations over pulling and mapping relation lists in memory for lists, dashboards, and metrics.

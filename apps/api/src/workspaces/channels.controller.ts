@@ -98,9 +98,8 @@ export class ChannelsController {
      * 1. Consolidates workspace lookup, membership verification, and channel retrieval into a single query.
      * 2. Uses nested 'select' to fetch only required fields and relations (like message counts).
      * 3. Reduces database round-trips from 2 down to 1 while maintaining access control.
-     * 4. Removes messages list overfetching (which scales poorly and causes garbage collection/serialization overhead).
-     * 5. Uses targeted database-level 'prisma.message.groupBy' queries to retrieve aggregated unread/mention counts.
-     * 6. Maps counts in-memory with O(1) Map lookups.
+     * 4. Fetches unread/mention counts directly using database-level `groupBy` aggregation rather than fetching full records into Node memory.
+     * 5. Maps counts in-memory with O(1) Map lookups.
      * Expected impact: Faster response times for channel list loading and significantly reduced database payload size.
      */
     const workspace = await prisma.workspace.findUnique({
@@ -173,7 +172,7 @@ export class ChannelsController {
             },
           },
           _count: {
-            _all: true,
+            id: true,
           },
         }),
         prisma.message.groupBy({
@@ -199,18 +198,18 @@ export class ChannelsController {
             },
           },
           _count: {
-            _all: true,
+            id: true,
           },
         }),
       ]);
 
-      unreadCounts.forEach(item => {
-        unreadMap.set(item.channelId, item._count._all);
-      });
+      for (const item of unreadCounts) {
+        unreadMap.set(item.channelId, item._count.id);
+      }
 
-      mentionCounts.forEach(item => {
-        mentionMap.set(item.channelId, item._count._all);
-      });
+      for (const item of mentionCounts) {
+        mentionMap.set(item.channelId, item._count.id);
+      }
     }
 
     return workspace.channels.map(channel => {
