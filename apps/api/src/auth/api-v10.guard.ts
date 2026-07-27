@@ -18,12 +18,15 @@ export class ApiV10Guard implements CanActivate {
       throw new UnauthorizedException('Invalid bot token');
     }
 
-    const bot = await prisma.user.findFirst({
-      where: { id: userId, isBot: true, botToken: token },
+    // ⚡ Performance Optimization:
+    // Leverages direct O(1) primary key lookup on 'id' instead of slower 'findFirst' table/index scan,
+    // handling additional property checks in application logic.
+    const bot = await prisma.user.findUnique({
+      where: { id: userId },
       include: { botApplication: true },
     });
 
-    if (!bot) {
+    if (!bot || !bot.isBot || bot.botToken !== token) {
       throw new UnauthorizedException('Bot not found or token mismatch');
     }
 

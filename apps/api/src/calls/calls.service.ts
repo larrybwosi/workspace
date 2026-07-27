@@ -711,24 +711,33 @@ export class CallsService {
   async scheduleCall(user: User, body: ScheduleCallDto) {
     const { title, description, type, scheduledFor, workspaceId: incomingWorkspaceId, workspaceSlug, channelId } = body;
 
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and member retrieval into a single query.
-     * 2. Reduces database round-trips from 3 down to 1 for initial setup.
-     */
-    const workspace = await prisma.workspace.findFirst({
-      where: {
-        OR: [{ id: incomingWorkspaceId || undefined }, { slug: workspaceSlug || undefined }],
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        members: {
-          select: { userId: true, role: true },
-        },
-      },
-    });
+    const workspace =
+      (incomingWorkspaceId
+        ? await prisma.workspace.findUnique({
+            where: { id: incomingWorkspaceId },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              members: {
+                select: { userId: true, role: true },
+              },
+            },
+          })
+        : null) ||
+      (workspaceSlug
+        ? await prisma.workspace.findUnique({
+            where: { slug: workspaceSlug },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              members: {
+                select: { userId: true, role: true },
+              },
+            },
+          })
+        : null);
 
     let workspaceId = workspace?.id || incomingWorkspaceId || workspaceSlug;
     const workspaceName = workspace?.name || 'the workspace';

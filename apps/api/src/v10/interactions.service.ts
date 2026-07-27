@@ -147,12 +147,15 @@ export class V10InteractionsService {
       throw new UnauthorizedException('Interaction token expired');
     }
 
-    const bot = await prisma.user.findFirst({
-      where: { id: botId, isBot: true },
+    // ⚡ Performance Optimization:
+    // Leverages direct O(1) primary key lookup on 'id' instead of slower 'findFirst' table/index scan,
+    // handling additional property checks in application logic.
+    const bot = await prisma.user.findUnique({
+      where: { id: botId },
       include: { botApplication: true },
     });
 
-    if (!bot || !bot.botApplication) {
+    if (!bot || !bot.isBot || !bot.botApplication) {
       throw new UnauthorizedException('Unauthorized');
     }
 
