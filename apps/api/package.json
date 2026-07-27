@@ -3,9 +3,6 @@
   "version": "2.1.0-dev.31",
   "private": true,
   "type": "module",
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",

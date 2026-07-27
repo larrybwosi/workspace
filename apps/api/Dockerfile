@@ -62,7 +62,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=3000
 ENV NODE_OPTIONS="--max-old-space-size=768"
 
 # Create a system user to run the application securely
@@ -87,11 +87,10 @@ COPY --from=installer --chown=nestjs:nodejs /app/packages/env ./packages/env
 
 # Maintain original root paths expected by entrypoint.sh/prisma commands
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma ./prisma
-COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma/seed.ts ./prisma/seed.ts
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/prisma.config.ts ./prisma.config.ts
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database/package.json ./packages/database/package.json
 
-# Copy entrypoint script safely from the pruner stage root
+# Copy entrypoint script safely from the pruner stage root seed
 COPY --from=pruner /app/docker-entrypoint.sh ./docker-entrypoint.sh
 USER root
 RUN chmod +x ./docker-entrypoint.sh

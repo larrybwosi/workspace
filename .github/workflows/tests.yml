@@ -1,0 +1,268 @@
+name: Tests
+
+on:
+  workflow_call:
+
+env:
+  PG_U: runner_u
+  PG_P: runner_p
+  PG_D_UNIT: db_unit
+  PG_D_E2E: db_e2e
+  RD_PORT: 6379
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      admin: ${{ steps.filter.outputs.admin }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            android:
+              - 'apps/android/**'
+            admin:
+              - 'apps/admin/**'
+            docs:
+              - 'apps/docs/**'
+              - 'apps/v3-docs/**'
+
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - run: pnpm run lint
+      - run: pnpm run tsc
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_UNIT }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_UNIT }}?schema=public
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+        run: pnpm run test
+
+  api-e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_E2E }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Run API E2E tests
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+        run: pnpm turbo run test:e2e --filter=api
+
+  web-e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ${{ env.PG_U }}
+          POSTGRES_PASSWORD: ${{ env.PG_P }}
+          POSTGRES_DB: ${{ env.PG_D_E2E }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Run Web E2E tests
+        env:
+          DATABASE_URL: postgresql://${{ env.PG_U }}:${{ env.PG_P }}@localhost:5432/${{ env.PG_D_E2E }}?schema=public
+          REDIS_URL: redis://localhost:${{ env.RD_PORT }}
+          BETTER_AUTH_SECRET: dummy_auth_val_ci_long_enough_for_better_auth
+          PORT: 3001
+        run: pnpm turbo run test:e2e --filter=web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-web
+          path: apps/web/playwright-report/
+          retention-days: 30
+
+  native-android-test:
+    needs: [changes]
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x apps/android/gradlew
+      - name: Run Tests
+        env:
+          API_URL: http://localhost:3000
+        run: cd apps/android && ./gradlew test
+
+  admin-tests:
+    needs: [changes]
+    if: needs.changes.outputs.admin == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Admin Tests
+        run: pnpm --filter admin test
+
+  docs-tests:
+    needs: [changes]
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Docs Tests
+        run: |
+          pnpm --filter v3-docs test
+          pnpm --filter docs test
+
+  all-tests-passed:
+    needs: [lint-and-typecheck, unit-tests, api-e2e, web-e2e, native-android-test, admin-tests, docs-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          lint="${{ needs.lint-and-typecheck.result }}"
+          unit="${{ needs.unit-tests.result }}"
+          api="${{ needs.api-e2e.result }}"
+          web="${{ needs.web-e2e.result }}"
+          android="${{ needs.native-android-test.result }}"
+          admin="${{ needs.admin-tests.result }}"
+          docs="${{ needs.docs-tests.result }}"
+
+          if [[ "$lint" != "success" ]]; then exit 1; fi
+          if [[ "$unit" != "success" ]]; then exit 1; fi
+          if [[ "$api" != "success" ]]; then exit 1; fi
+          if [[ "$web" != "success" ]]; then exit 1; fi
+          if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
+          if [[ "$admin" != "success" && "$admin" != "skipped" ]]; then exit 1; fi
+          if [[ "$docs" != "success" && "$docs" != "skipped" ]]; then exit 1; fi

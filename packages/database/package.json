@@ -12,7 +12,8 @@
     "db:push": "dotenv -e .env -- prisma db push",
     "prepare": "[ -f prisma/schema.prisma ] && pnpm db:generate || echo 'Schema not found, skipping generation'",
     "test": "echo 'No tests for database'",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "generate": "prisma generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.8.0",
