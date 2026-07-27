@@ -16,7 +16,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.scrymechat.android.ui.theme.LocalThemeIsDark
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -88,7 +88,7 @@ data class ChatPalette(
 )
 
 @Composable
-fun chatPalette(isDark: Boolean = isSystemInDarkTheme()): ChatPalette {
+fun chatPalette(isDark: Boolean = LocalThemeIsDark.current): ChatPalette {
     return if (isDark) {
         ChatPalette(
             isDark = true,

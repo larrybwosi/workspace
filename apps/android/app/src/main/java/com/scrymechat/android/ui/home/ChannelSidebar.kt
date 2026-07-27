@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.scrymechat.android.ui.theme.LocalThemeIsDark
 import com.scrymechat.android.data.local.entities.ChannelEntity
 import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
@@ -54,35 +55,41 @@ import com.scrymechat.android.ui.components.UserAvatar
  * Discord fakes with layered blurs.
  */
 object SidebarTokens {
-    val SurfaceBase = Color(0xFF2B2D31)       // Channel list container
-    val SurfaceRaised = Color(0xFF313338)     // Header / Raised chrome
-    val SurfaceSelected = Color(0xFF3F4248)   // Active channel row (slightly lifted vs stock Discord)
-    val SurfaceHover = Color(0xFF34363C)      // Hover/Pressed state
-    val SurfaceFooter = Color(0xFF232428)     // User bar at the bottom
-    val SurfaceIconIdle = Color(0xFF232428)   // Idle icon chip background
+    val SurfaceBase: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF2B2D31) else Color(0xFFF2F3F5)
+    val SurfaceRaised: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF313338) else Color(0xFFFFFFFF)
+    val SurfaceSelected: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF3F4248) else Color(0xFFE3E5E8)
+    val SurfaceHover: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF34363C) else Color(0xFFEBEDF0)
+    val SurfaceFooter: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF232428) else Color(0xFFEBEDF0)
+    val SurfaceIconIdle: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF232428) else Color(0xFFE3E5E8)
 
-    val Hairline = Color(0x33000000)
-    val HairlineStrong = Color(0x24FFFFFF)
+    val Hairline: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x33000000) else Color(0x1F000000)
+    val HairlineStrong: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x24FFFFFF) else Color(0x0F000000)
 
     val Accent = Color(0xFF5865F2)            // Blurple
-    val AccentSoft = Color(0x335865F2)        // Blurple glow
+    val AccentSoft: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x335865F2) else Color(0x1F5865F2)
     val Online = Color(0xFF23A55A)            // Status Green
     val Danger = Color(0xFFF23F43)            // Notification Badge Red
 
-    val TextBright = Color(0xFFFFFFFF)        // Selected / Unread label
-    val TextPrimary = Color(0xFFA6ABB4)       // Normal channel color (slightly brighter for contrast)
-    val TextCategory = Color(0xFF96999E)      // Category titles
-    val TextMuted = Color(0xFF949BA4)
-    val TextFaint = Color(0xFF84898F)         // Channel icons idle tint
+    val TextBright: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFFFFFFF) else Color(0xFF060607)
+    val TextPrimary: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFA6ABB4) else Color(0xFF4E5058)
+    val TextCategory: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF96999E) else Color(0xFF5C5E66)
+    val TextMuted: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF949BA4) else Color(0xFF5C5E66)
+    val TextFaint: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF84898F) else Color(0xFF6D6F78)
 
-    val PillIndicator = Color(0xFFFFFFFF)
+    val PillIndicator: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFFFFFFF) else Color(0xFF060607)
 
-    val HeaderGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFF35373C), Color(0xFF2F3136))
-    )
-    val FooterGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFF232428), Color(0xFF1E1F22))
-    )
+    val HeaderGradient: Brush @Composable get() {
+        val dark = LocalThemeIsDark.current
+        return Brush.verticalGradient(
+            colors = if (dark) listOf(Color(0xFF35373C), Color(0xFF2F3136)) else listOf(Color(0xFFFFFFFF), Color(0xFFF2F3F5))
+        )
+    }
+    val FooterGradient: Brush @Composable get() {
+        val dark = LocalThemeIsDark.current
+        return Brush.verticalGradient(
+            colors = if (dark) listOf(Color(0xFF232428), Color(0xFF1E1F22)) else listOf(Color(0xFFF2F3F5), Color(0xFFE3E5E8))
+        )
+    }
 }
 
 fun presenceColor(status: String?): Color = when (status?.lowercase()) {

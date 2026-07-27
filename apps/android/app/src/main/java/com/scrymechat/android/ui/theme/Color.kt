@@ -22,3 +22,13 @@ val ScrymeDarkTextPrimary = Color(0xFFFFFFFF)
 val ScrymeDarkTextSecondary = Color(0xFF949BA4)
 val ScrymeDarkAccent = Color(0xFF5865F2) // Keep the accent for brand recognition
 val ScrymeDarkDivider = Color(0xFF1F1F1F)
+
+// Discord Exact Theme Palette
+val DiscordWorkspaceRailBg = Color(0xFF1E1F22)
+val DiscordChannelSidebarBg = Color(0xFF2B2D31)
+val DiscordMainBackground = Color(0xFF313338)
+val DiscordSurfaceInputAndDialogs = Color(0xFF2B2D31)
+val DiscordBrandBlurple = Color(0xFF5865F2)
+val DiscordTextPrimary = Color(0xFFF2F3F5)
+val DiscordTextSecondary = Color(0xFF949BA4)
+val DiscordDivider = Color(0xFF3F4147)

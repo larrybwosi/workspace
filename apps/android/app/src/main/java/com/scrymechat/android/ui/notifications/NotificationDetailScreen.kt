@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.scrymechat.android.data.local.entities.NotificationEntity
-import com.scrymechat.android.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,23 +43,23 @@ fun NotificationDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Notification Details", color = ScrymeDarkTextPrimary) },
+                title = { Text("Notification Details", color = MaterialTheme.colorScheme.onBackground) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = ScrymeDarkTextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ScrymeDarkSurface,
-                    titleContentColor = ScrymeDarkTextPrimary
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         },
-        containerColor = ScrymeDarkSurface
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         val currentNotification = notification
 
@@ -71,7 +70,7 @@ fun NotificationDetailScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = ScrymeDarkAccent)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
@@ -96,13 +95,13 @@ fun NotificationDetailScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(ScrymeDarkAccent.copy(alpha = 0.15f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = ScrymeDarkAccent,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -123,7 +122,7 @@ fun NotificationDetailScreen(
                 // Message Body inside a Discord-style Card
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = ScrymeDarkSurfaceVariant,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp)
@@ -136,7 +135,7 @@ fun NotificationDetailScreen(
                             text = currentNotification.message,
                             fontSize = 15.sp,
                             lineHeight = 22.sp,
-                            color = ScrymeDarkTextPrimary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -163,7 +162,7 @@ fun NotificationDetailScreen(
                                 .height(50.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ScrymeDarkAccent
+                                containerColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
                             Text(
@@ -224,7 +223,7 @@ fun NotificationDetailScreen(
                             .height(50.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ScrymeDarkAccent
+                            containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         Text(

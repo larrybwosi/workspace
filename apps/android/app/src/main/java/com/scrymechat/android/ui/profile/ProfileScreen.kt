@@ -4,7 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.scrymechat.android.ui.theme.LocalThemeIsDark
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -58,7 +58,7 @@ data class ProfilePalette(
 )
 
 @Composable
-fun profilePalette(isDark: Boolean = isSystemInDarkTheme()): ProfilePalette {
+fun profilePalette(isDark: Boolean = LocalThemeIsDark.current): ProfilePalette {
     return if (isDark) {
         ProfilePalette(
             isDark = true,

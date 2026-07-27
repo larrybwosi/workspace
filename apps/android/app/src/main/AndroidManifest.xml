@@ -46,6 +46,42 @@
                     android:host="auth"
                     android:scheme="scrymechat" />
             </intent-filter>
+
+            <!-- Deep linking for chat.scryme.tech channels and dms -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="chat.scryme.tech" />
+                <data android:pathPrefix="/channels" />
+            </intent-filter>
+
+            <!-- Deep linking for chat.scryme.tech root -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="chat.scryme.tech" />
+                <data android:pathPattern="/" />
+            </intent-filter>
+
+            <!-- Share target for single items (text, images, video, document) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- Share target for multiple items (e.g., gallery images) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
         </activity>
 
         <service

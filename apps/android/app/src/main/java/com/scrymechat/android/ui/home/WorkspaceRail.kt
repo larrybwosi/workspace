@@ -42,11 +42,16 @@ fun WorkspaceRail(
     onCreateWorkspaceClick: () -> Unit,
     onNotificationsClick: () -> Unit = {}
 ) {
+    val isDark = com.scrymechat.android.ui.theme.LocalThemeIsDark.current
+    val railBg = if (isDark) Color(0xFF1E1F22) else Color(0xFFE3E5E8)
+    val indicatorColor = if (isDark) Color.White else Color(0xFF313338)
+    val iconTint = if (isDark) Color.White else Color(0xFF313338)
+
     Column(
         modifier = Modifier
             .width(72.dp)
             .fillMaxHeight()
-            .background(Color(0xFF1E1F22)),
+            .background(railBg),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(12.dp))
@@ -55,11 +60,12 @@ fun WorkspaceRail(
         WorkspaceIcon(
             isSelected = isHomeSelected,
             onClick = onHomeClick,
+            indicatorColor = indicatorColor,
             content = {
                 Icon(
                     imageVector = Icons.Default.Home,
                     contentDescription = "Home",
-                    tint = Color.White,
+                    tint = iconTint,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -70,7 +76,7 @@ fun WorkspaceRail(
             modifier = Modifier
                 .width(32.dp)
                 .height(2.dp)
-                .background(ScrymeDarkSurfaceVariant, RoundedCornerShape(1.dp))
+                .background(if (isDark) Color(0xFF2B2D31) else Color(0xFFD5DAE8), RoundedCornerShape(1.dp))
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -85,6 +91,7 @@ fun WorkspaceRail(
                 WorkspaceIcon(
                     isSelected = selectedWorkspace?.id == workspace.id,
                     onClick = { onWorkspaceClick(workspace) },
+                    indicatorColor = indicatorColor,
                     content = {
                         if (workspace.icon != null && workspace.icon.startsWith("http")) {
                             AsyncImage(
@@ -121,7 +128,7 @@ fun WorkspaceRail(
                         modifier = Modifier
                             .width(32.dp)
                             .height(1.dp)
-                            .background(Color.White.copy(alpha = 0.15f))
+                            .background(if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f))
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -133,13 +140,14 @@ fun WorkspaceRail(
                 WorkspaceIcon(
                     isSelected = isDmSelected,
                     onClick = { onDmClick(dmWithUser) },
+                    indicatorColor = indicatorColor,
                     content = {
                         Box(modifier = Modifier.size(48.dp)) {
                             UserAvatar(
                                 name = displayName,
                                 avatarUrl = dmWithUser.otherUserAvatar,
                                 size = 48.dp,
-                                borderColor = if (isDmSelected) Color.White else SidebarTokens.Hairline
+                                borderColor = if (isDmSelected) indicatorColor else SidebarTokens.Hairline
                             )
                             val statusColor = when (dmWithUser.otherUserStatus?.lowercase()) {
                                 "online" -> Color(0xFF23A55A)
@@ -152,7 +160,7 @@ fun WorkspaceRail(
                                     .size(14.dp)
                                     .align(Alignment.BottomEnd)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF1E1F22))
+                                    .background(railBg)
                                     .padding(2.dp)
                             ) {
                                 Box(
@@ -195,11 +203,12 @@ fun WorkspaceRail(
         WorkspaceIcon(
             isSelected = false,
             onClick = onNotificationsClick,
+            indicatorColor = indicatorColor,
             content = {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Notifications",
-                    tint = Color.White.copy(alpha = 0.8f),
+                    tint = iconTint.copy(alpha = 0.8f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -211,6 +220,7 @@ fun WorkspaceRail(
         WorkspaceIcon(
             isSelected = false,
             onClick = onCreateWorkspaceClick,
+            indicatorColor = indicatorColor,
             content = {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -229,6 +239,7 @@ fun WorkspaceRail(
 fun WorkspaceIcon(
     isSelected: Boolean,
     onClick: () -> Unit,
+    indicatorColor: Color = Color.White,
     content: @Composable () -> Unit
 ) {
     Row(
@@ -244,7 +255,7 @@ fun WorkspaceIcon(
                 .width(4.dp)
                 .height(if (isSelected) 40.dp else 0.dp)
                 .clip(RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
-                .background(Color.White)
+                .background(indicatorColor)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -256,7 +267,7 @@ fun WorkspaceIcon(
                 .clip(if (isSelected) RoundedCornerShape(16.dp) else CircleShape)
                 .border(
                     width = 1.dp,
-                    color = if (isSelected) Color.White else SidebarTokens.Hairline,
+                    color = if (isSelected) indicatorColor else SidebarTokens.Hairline,
                     shape = if (isSelected) RoundedCornerShape(16.dp) else CircleShape
                 ),
             color = Color.Transparent
