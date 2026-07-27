@@ -42,11 +42,14 @@ export class V10GatewayController {
       throw new UnauthorizedException('Unauthorized');
     }
 
-    const bot = await prisma.user.findFirst({
-      where: { id: userId, isBot: true, botToken: token },
+    // ⚡ Performance Optimization:
+    // Leverages direct O(1) primary key lookup on 'id' instead of slower 'findFirst' table/index scan,
+    // handling additional property checks in application logic.
+    const bot = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!bot) {
+    if (!bot || !bot.isBot || bot.botToken !== token) {
       throw new UnauthorizedException('Unauthorized');
     }
 
