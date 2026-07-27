@@ -469,7 +469,7 @@ describe('CallsService', () => {
     });
 
     it('should resolve workspaceId from workspaceSlug', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({
+      mockPrisma.workspace.findUnique.mockResolvedValue({
         id: 'resolved-ws-id',
         name: 'My WS',
         slug: 'my-ws',
@@ -491,17 +491,15 @@ describe('CallsService', () => {
       };
       await service.scheduleCall(mockUser, body);
 
-      expect(mockPrisma.workspace.findFirst).toHaveBeenCalledWith(
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            OR: expect.arrayContaining([expect.objectContaining({ slug: 'my-ws' })]),
-          }),
+          where: { slug: 'my-ws' },
         })
       );
     });
 
     it('should still perform workspace lookup when workspaceId is already present (for member role check)', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({
+      mockPrisma.workspace.findUnique.mockResolvedValue({
         id: 'direct-ws-id',
         members: [{ userId: 'user-1', role: 'member' }],
       });
@@ -522,17 +520,15 @@ describe('CallsService', () => {
       };
       await service.scheduleCall(mockUser, body);
 
-      expect(mockPrisma.workspace.findFirst).toHaveBeenCalledWith(
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            OR: expect.arrayContaining([expect.objectContaining({ id: 'direct-ws-id' })]),
-          }),
+          where: { id: 'direct-ws-id' },
         })
       );
     });
 
     it('should use resolved workspace id in call.create', async () => {
-      mockPrisma.workspace.findFirst.mockResolvedValue({
+      mockPrisma.workspace.findUnique.mockResolvedValue({
         id: 'resolved-id',
         members: [{ userId: 'user-1', role: 'member' }],
       });
