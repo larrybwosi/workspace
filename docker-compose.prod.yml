@@ -26,6 +26,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - API_URL=http://api:3000
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-main}?schema=public
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
       - STORAGE_PROVIDER=${STORAGE_PROVIDER:-rustfs}

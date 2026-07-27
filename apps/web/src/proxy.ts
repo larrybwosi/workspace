@@ -13,10 +13,6 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Load auth dynamically so that public routes (like /api/health) and simple routes
-  // do not trigger Better Auth / Database connection failures or environment validations.
-  const { auth } = await import('@/lib/auth');
-
   // Clone request headers into standard Web Headers to allow mutation
   const headers = new Headers(request.headers);
 
@@ -42,9 +38,26 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  const session = await auth.api.getSession({
-    headers,
-  });
+  let session = null;
+  try {
+    // Load auth dynamically so that public routes (like /api/health) and simple routes
+    // do not trigger Better Auth / Database connection failures or environment validations.
+    const { auth } = await import('@/lib/auth');
+
+    session = await auth.api.getSession({
+      headers,
+    });
+  } catch (err) {
+    console.error(`[Proxy] Session retrieval error on path ${pathname}:`, err);
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Service Unavailable', details: 'Database or authentication connection failed' },
+        { status: 503 }
+      );
+    }
+    // For non-API routes, let's redirect to login if database or auth is down
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   if (!session) {
     console.warn(`[Proxy] Session verification failed for path: ${pathname}`);
@@ -55,7 +68,11 @@ export default async function proxy(request: NextRequest) {
   }
 
   console.info(`[Proxy] Session verified successfully for path: ${pathname}`);
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers,
+    },
+  });
 }
 
 export const config = {
