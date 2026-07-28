@@ -143,7 +143,7 @@ jobs:
       pull-requests: write
     outputs:
       version: ${{ steps.get_version.outputs.version }}
-      published: ${{ steps.changesets.outputs.published }}
+      published: ${{ steps.check_release.outputs.published }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -169,6 +169,29 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Check if release is needed
+        id: check_release
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Current package version: v$VERSION"
+          git fetch --tags
+          if git rev-parse "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            TAG_EXISTS=true
+          else
+            TAG_EXISTS=false
+          fi
+
+          HAS_CHANGESETS="${{ steps.changesets.outputs.hasChangesets }}"
+          echo "Has changesets: $HAS_CHANGESETS"
+          echo "Tag exists: $TAG_EXISTS"
+
+          if [ "$HAS_CHANGESETS" != "true" ] && [ "$TAG_EXISTS" = "false" ]; then
+            echo "A new release is needed!"
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "No release is needed."
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
 
   docker-publish:
     needs: [test, version-main]
