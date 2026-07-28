@@ -16,17 +16,57 @@ const getBaseURL = () => {
 };
 
 const getBaseURLConfig = () => {
+  const hosts = [
+    'localhost:*',
+    'scryme.tech',
+    'app.scryme.tech',
+    'crm.scryme.tech',
+    'api.scryme.tech',
+    'chat.scryme.tech',
+    'api.chat.scryme.tech',
+    '*.scryme.tech',
+    'scrymechat.local',
+    'api.scrymechat.local',
+    '*.scrymechat.local',
+    'api',
+    'api:*',
+    'web',
+    'web:*',
+  ];
+
+  // Dynamically add hosts from environment variables
+  const envUrls = [
+    process.env.BETTER_AUTH_URL,
+    process.env.NEXT_PUBLIC_API_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.ALLOWED_ORIGINS,
+  ];
+
+  for (const urlStr of envUrls) {
+    if (!urlStr) continue;
+    const parts = urlStr.split(',');
+    for (const part of parts) {
+      try {
+        const trimmed = part.trim();
+        if (trimmed) {
+          const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+          if (url.host) {
+            hosts.push(url.host);
+            if (url.hostname && url.hostname.includes('.')) {
+              hosts.push(`*.${url.hostname}`);
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+  }
+
+  const uniqueHosts = Array.from(new Set(hosts));
+
   return {
-    allowedHosts: [
-      'localhost:*',
-      'scryme.tech',
-      'app.scryme.tech',
-      'crm.scryme.tech',
-      'api.scryme.tech',
-      'chat.scryme.tech',
-      'api.chat.scryme.tech',
-      '*.scryme.tech',
-    ],
+    allowedHosts: uniqueHosts,
     protocol: env.NODE_ENV === 'development' ? 'http' : 'https',
     fallback: getBaseURL(),
   };

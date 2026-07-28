@@ -504,7 +504,7 @@ fun AddFriendDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
                 Text("Cancel", color = EnterpriseTokens.TextSecondary)
             }
         },
-        containerColor = ScrymeDarkSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = EnterpriseTokens.TextPrimary,
         textContentColor = EnterpriseTokens.TextSecondary
     )
@@ -564,7 +564,7 @@ fun InviteUserDialog(onDismiss: () -> Unit, onInvite: (String) -> Unit) {
                 Text("Cancel", color = EnterpriseTokens.TextSecondary)
             }
         },
-        containerColor = ScrymeDarkSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = EnterpriseTokens.TextPrimary,
         textContentColor = EnterpriseTokens.TextSecondary
     )

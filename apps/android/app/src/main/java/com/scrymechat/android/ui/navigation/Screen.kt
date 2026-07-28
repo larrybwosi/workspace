@@ -21,6 +21,7 @@ sealed class Screen(val route: String) {
         fun createRoute(channelId: String, slug: String? = null) =
             if (slug != null) "channel/$channelId?slug=$slug" else "channel/$channelId"
     }
+    object Share : Screen("share")
     object Profile : Screen("profile")
     object MyAccount : Screen("profile/account")
     object UserProfile : Screen("profile/user")

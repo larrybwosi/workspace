@@ -36,6 +36,18 @@ class SessionManager @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
+    private var pendingDeepLinkRoute: String? = null
+
+    fun savePendingDeepLinkRoute(route: String?) {
+        pendingDeepLinkRoute = route
+    }
+
+    fun getPendingDeepLinkRoute(): String? {
+        val route = pendingDeepLinkRoute
+        pendingDeepLinkRoute = null
+        return route
+    }
+
     fun saveToken(token: String) {
         sharedPreferences.edit().putString("auth_token", token).apply()
     }

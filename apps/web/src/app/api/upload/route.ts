@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
       if (cookie) fetchHeaders['cookie'] = cookie;
       if (authorization) fetchHeaders['authorization'] = authorization;
 
-      const apiUrl = env.NEXT_PUBLIC_API_URL.replace(/\/$/, '') + '/api/storage/upload';
+      const isProd = process.env.NODE_ENV === 'production';
+      const baseApiUrl = process.env.API_URL || (isProd ? 'http://api:3000' : env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+      const apiUrl = baseApiUrl.replace(/\/$/, '') + '/api/storage/upload';
       const apiResponse = await fetch(apiUrl, {
         method: 'POST',
         headers: fetchHeaders,

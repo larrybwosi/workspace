@@ -34,10 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.scrymechat.android.data.local.entities.ChannelEntity
 import com.scrymechat.android.data.local.entities.MessageEntity
-import com.scrymechat.android.ui.theme.ScrymeDarkSurface
-import com.scrymechat.android.ui.theme.ScrymeDarkTextPrimary
-import com.scrymechat.android.ui.theme.ScrymeDarkTextSecondary
-
 /**
  * Forward-to-channel dialog.
  *
@@ -70,19 +66,19 @@ fun ForwardMessageDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = ScrymeDarkSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
         title = {
             Column {
                 Text(
                     text = "Forward Message",
-                    color = ScrymeDarkTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
                 Text(
                     text = "Choose a channel to share this with",
-                    color = ScrymeDarkTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(top = 2.dp)
                 )
@@ -99,18 +95,18 @@ fun ForwardMessageDialog(
                             Icon(
                                 imageVector = Icons.Outlined.Search,
                                 contentDescription = null,
-                                tint = ScrymeDarkTextSecondary
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = ScrymeDarkTextPrimary,
-                            unfocusedTextColor = ScrymeDarkTextPrimary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                             cursorColor = MaterialTheme.colorScheme.primary,
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = ScrymeDarkTextSecondary.copy(alpha = 0.3f)
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -143,7 +139,7 @@ fun ForwardMessageDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "Cancel",
-                    color = ScrymeDarkTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -163,7 +159,7 @@ private fun ChannelRow(
 
     val rowBackground = when {
         isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-        isPressed -> ScrymeDarkTextSecondary.copy(alpha = 0.08f)
+        isPressed -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
         else -> androidx.compose.ui.graphics.Color.Transparent
     }
 
@@ -205,7 +201,7 @@ private fun ChannelRow(
 
         Text(
             text = channel.name,
-            color = ScrymeDarkTextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 15.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(1f)
@@ -233,13 +229,13 @@ private fun EmptyChannelState() {
         Icon(
             imageVector = Icons.Outlined.SearchOff,
             contentDescription = null,
-            tint = ScrymeDarkTextSecondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(28.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "No channels match your search",
-            color = ScrymeDarkTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 13.sp
         )
     }

@@ -35,6 +35,12 @@
     "db:push": {
       "cache": false
     },
+    "generate": {
+      "dependsOn": ["^generate"],
+      "inputs": ["prisma/schema.prisma", "prisma.config.ts"],
+      "outputs": ["generated/**"],
+      "cache": true
+    },
 
     "dev": {
       "cache": false,

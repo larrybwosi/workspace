@@ -1,6 +1,6 @@
 {
   "name": "workspace",
-  "version": "0.0.800",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -20,6 +20,7 @@
     "version:auto": "node scripts/auto-changeset.js && changeset version && node scripts/update-version.js && pnpm install --no-frozen-lockfile",
     "start:dev": "docker compose -f docker-compose.dev.yml up -d",
     "setup:prod": "node scripts/setup-prod.js",
+    "generate": "turbo run generate",
     "setup:env": "node scripts/setup-env.js"
   },
   "devDependencies": {

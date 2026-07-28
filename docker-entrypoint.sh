@@ -6,53 +6,57 @@ set -e
 # Run migrations if database is ready
 echo "Running database migrations..."
 
-# Run migrate deploy, capture its output and exit code
-# We avoid "set -e" exiting the script by using standard error handling.
-set +e
-MIGRATE_OUTPUT=$(
-    if command -v prisma > /dev/null 2>&1; then
-        prisma migrate deploy 2>&1
-    elif [ -f "./node_modules/.bin/prisma" ]; then
-        ./node_modules/.bin/prisma migrate deploy 2>&1
-    else
-        npx prisma migrate deploy 2>&1
+if [ -f "dist/main.js" ] || [ -f "dist/main" ]; then
+  echo "Detected NestJS API environment..."
+
+  SCHEMA_PATH="./prisma/schema"
+
+  wait_for_db() {
+    echo "Waiting for database to be ready..."
+    MAX_RETRIES=60
+    COUNT=0
+
+    # Determine which prisma binary to use
+    PRISMA_BIN="./node_modules/.bin/prisma"
+    if [ ! -f "$PRISMA_BIN" ]; then
+      if command -v prisma > /dev/null 2>&1; then
+        PRISMA_BIN="prisma"
+      else
+        echo "Error: Prisma binary not found."
+        exit 1
+      fi
     fi
-)
-MIGRATE_STATUS=$?
-set -e
 
-echo "$MIGRATE_OUTPUT"
+    # Check if database is ready by executing a simple SELECT 1
+    until echo "SELECT 1;" | $PRISMA_BIN db execute --stdin > /dev/null 2>&1 || [ $COUNT -eq $MAX_RETRIES ]; do
+      sleep 2
+      COUNT=$((COUNT + 1))
+      echo "Retry $COUNT/$MAX_RETRIES: Database not yet available..."
+    done
 
-if [ $MIGRATE_STATUS -ne 0 ]; then
-    # Check if the output indicates P3009 or a failed migration
-    if echo "$MIGRATE_OUTPUT" | grep -q "P3009" || echo "$MIGRATE_OUTPUT" | grep -q "failed migrations"; then
-        # Parse the migration name that failed
-        FAILED_MIGRATION=$(echo "$MIGRATE_OUTPUT" | sed -n "s/.*The [\`'\"]\([^'\`\" ]*\)[\`'\"] migration.*/\1/p")
-        if [ -z "$FAILED_MIGRATION" ]; then
-            FAILED_MIGRATION="0_init"
-        fi
-
-        echo "Detected failed migration in database. Resolving $FAILED_MIGRATION as applied..."
-        if command -v prisma > /dev/null 2>&1; then
-            prisma migrate resolve --applied "$FAILED_MIGRATION"
-        elif [ -f "./node_modules/.bin/prisma" ]; then
-            ./node_modules/.bin/prisma migrate resolve --applied "$FAILED_MIGRATION"
-        else
-            npx prisma migrate resolve --applied "$FAILED_MIGRATION"
-        fi
-
-        echo "Retrying database migrations..."
-        if command -v prisma > /dev/null 2>&1; then
-            prisma migrate deploy
-        elif [ -f "./node_modules/.bin/prisma" ]; then
-            ./node_modules/.bin/prisma migrate deploy
-        else
-            npx prisma migrate deploy
-        fi
-    else
-        echo "Database migration failed with exit code $MIGRATE_STATUS"
-        exit $MIGRATE_STATUS
+    if [ $COUNT -eq $MAX_RETRIES ]; then
+      echo "❌ Database is not ready after $MAX_RETRIES retries. Exiting."
+      exit 1
     fi
+    echo "✅ Database is ready!"
+  }
+
+  if [ -n "$DATABASE_URL" ]; then
+    wait_for_db
+    echo "Deploying database migrations..."
+
+    PRISMA_BIN="./node_modules/.bin/prisma"
+    if [ ! -f "$PRISMA_BIN" ]; then
+      PRISMA_BIN="prisma"
+    fi
+
+    $PRISMA_BIN migrate deploy
+
+    echo "Seeding database..."
+    $PRISMA_BIN db seed
+  else
+    echo "⚠️ DATABASE_URL not set, skipping migrations."
+  fi
 fi
 
 # Start the application
