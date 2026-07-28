@@ -1,8 +1,9 @@
 export declare const auth: import("better-auth", { with: { "resolution-mode": "import" } }).Auth<{
-    database: (options: import("better-auth", { with: { "resolution-mode": "import" } }).BetterAuthOptions) => import("better-auth", { with: { "resolution-mode": "import" } }).DBAdapter<import("better-auth", { with: { "resolution-mode": "import" } }).BetterAuthOptions>;
+    database: (options: import("@better-auth/core", { with: { "resolution-mode": "import" } }).BetterAuthOptions) => import(".pnpm/@better-auth+core@1.6.22_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.1_@openteleme_8f6197c307fb8d809d03f60ae83b1857/node_modules/@better-auth/core/db/adapter", { with: { "resolution-mode": "import" } }).DBAdapter<import("@better-auth/core", { with: { "resolution-mode": "import" } }).BetterAuthOptions>;
     baseURL: any;
     emailAndPassword: {
         enabled: true;
+        requireEmailVerification: false;
     };
     socialProviders: {
         instagram?: {
@@ -1506,7 +1507,9 @@ export declare const auth: import("better-auth", { with: { "resolution-mode": "i
                 };
             };
         };
-        options: NoInfer<import("better-auth/plugins", { with: { "resolution-mode": "import" } }).AdminOptions>;
+        options: NoInfer<{
+            defaultRole: string;
+        }>;
     }, {
         id: "bearer";
         version: string;
@@ -1892,5 +1895,2086 @@ export declare const auth: import("better-auth", { with: { "resolution-mode": "i
             onDeviceAuthRequest?: ((clientId: string, scope: string | undefined) => void | Promise<void>) | undefined;
             verificationUri?: string | undefined;
         }>;
+    }, {
+        id: "oauth-provider";
+        version: string;
+        options: NoInfer<{
+            loginPage: string;
+            consentPage: string;
+            allowDynamicClientRegistration: true;
+            silenceWarnings: {
+                oauthAuthServerConfig: true;
+            };
+            scopes: ("email" | "openid" | "profile" | "offline_access" | "channels:read" | "channels:write" | "members:read" | "members:write" | "messages:send" | "workspaces:read")[];
+        }>;
+        init: (ctx: import("better-auth", { with: { "resolution-mode": "import" } }).AuthContext) => void;
+        onRequest: (request: Request, ctx: import("better-auth", { with: { "resolution-mode": "import" } }).AuthContext) => Promise<{
+            response: Response;
+        } | {
+            request: Request;
+        } | void>;
+        hooks: {
+            before: {
+                matcher(ctx: import("better-auth", { with: { "resolution-mode": "import" } }).HookEndpointContext): any;
+                handler: (inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<void>;
+            }[];
+            after: {
+                matcher(ctx: import("better-auth", { with: { "resolution-mode": "import" } }).HookEndpointContext): boolean;
+                handler: (inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    redirect: boolean;
+                    url: string;
+                } | undefined>;
+            }[];
+        };
+        endpoints: {
+            getOAuthServerConfig: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/.well-known/oauth-authorization-server", {
+                method: "GET";
+                metadata: {
+                    SERVER_ONLY: true;
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).AuthServerMetadata>;
+            getOpenIdConfig: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/.well-known/openid-configuration", {
+                method: "GET";
+                metadata: {
+                    SERVER_ONLY: true;
+                };
+            }, Omit<import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OIDCMetadata, "id_token_signing_alg_values_supported"> & {
+                id_token_signing_alg_values_supported: import("better-auth/plugins", { with: { "resolution-mode": "import" } }).JWSAlgorithms[] | ["HS256"];
+            }>;
+            oauth2Authorize: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/authorize", {
+                method: "GET";
+                query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    response_type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        code: "code";
+                    }>>;
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    redirect_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>;
+                    scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    state: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    request_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    code_challenge: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    code_challenge_method: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        S256: "S256";
+                    }>>;
+                    nonce: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    prompt: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        none: "none";
+                        consent: "consent";
+                        login: "login";
+                        create: "create";
+                        select_account: "select_account";
+                        "login consent": "login consent";
+                        "select_account consent": "select_account consent";
+                    }>>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                        parameters: ({
+                            name: string;
+                            in: "query";
+                            required: false;
+                            schema: {
+                                type: "string";
+                                format?: undefined;
+                            };
+                            description: string;
+                        } | {
+                            name: string;
+                            in: "query";
+                            required: true;
+                            schema: {
+                                type: "string";
+                                format?: undefined;
+                            };
+                            description: string;
+                        } | {
+                            name: string;
+                            in: "query";
+                            required: false;
+                            schema: {
+                                type: "string";
+                                format: string;
+                            };
+                            description: string;
+                        })[];
+                        responses: {
+                            "302": {
+                                description: string;
+                                headers: {
+                                    Location: {
+                                        description: string;
+                                        schema: {
+                                            type: string;
+                                            format: string;
+                                        };
+                                    };
+                                };
+                            };
+                            "400": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                error: {
+                                                    type: string;
+                                                };
+                                                error_description: {
+                                                    type: string;
+                                                };
+                                                state: {
+                                                    type: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, {
+                redirect: boolean;
+                url: string;
+            }>;
+            oauth2Consent: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/consent", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    accept: import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean;
+                    scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    oauth_query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                }, import("zod/v4/core").$strip>;
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                metadata: {
+                    openapi: {
+                        description: string;
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                redirect_uri: {
+                                                    type: string;
+                                                    format: string;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, {
+                redirect: boolean;
+                url: string;
+            } | {
+                redirect: boolean;
+                url: string;
+            }>;
+            oauth2Continue: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/continue", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    selected: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                    created: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                    postLogin: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                    oauth_query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                }, import("zod/v4/core").$strip>;
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                metadata: {
+                    openapi: {
+                        description: string;
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                redirect_uri: {
+                                                    type: string;
+                                                    format: string;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, {
+                redirect: boolean;
+                url: string;
+            }>;
+            oauth2Token: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/token", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    grant_type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        authorization_code: "authorization_code";
+                        client_credentials: "client_credentials";
+                        refresh_token: "refresh_token";
+                    }>;
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_secret: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    code: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    code_verifier: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    redirect_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>;
+                    refresh_token: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    resource: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    allowedMediaTypes: string[];
+                    openapi: {
+                        description: string;
+                        requestBody: {
+                            required: boolean;
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object";
+                                        properties: {
+                                            grant_type: {
+                                                type: string;
+                                                enum: string[];
+                                                description: string;
+                                            };
+                                            client_id: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            client_secret: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            code: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            code_verifier: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            redirect_uri: {
+                                                type: string;
+                                                format: string;
+                                                description: string;
+                                            };
+                                            refresh_token: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            resource: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            scope: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                        };
+                                        required: string[];
+                                    };
+                                };
+                            };
+                        };
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                access_token: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                token_type: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                expires_in: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                refresh_token: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                scope: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                id_token: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                            "400": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                error: {
+                                                    type: string;
+                                                };
+                                                error_description: {
+                                                    type: string;
+                                                };
+                                                error_uri: {
+                                                    type: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, {
+                access_token: string;
+                expires_in: number;
+                expires_at: number;
+                token_type: "Bearer";
+                refresh_token: string | undefined;
+                scope: string;
+                id_token: string | undefined;
+            }>;
+            oauth2Introspect: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/introspect", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_secret: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    token: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    token_type_hint: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        refresh_token: "refresh_token";
+                        access_token: "access_token";
+                    }>>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    allowedMediaTypes: string[];
+                    openapi: {
+                        description: string;
+                        requestBody: {
+                            required: boolean;
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object";
+                                        properties: {
+                                            client_id: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            client_secret: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            token: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            token_type_hint: {
+                                                type: string;
+                                                enum: string[];
+                                                description: string;
+                                            };
+                                            resource: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                        };
+                                        required: string[];
+                                    };
+                                };
+                            };
+                        };
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                active: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                scope: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                username: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                token_type: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                exp: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                iat: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                nbf: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                sub: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                aud: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                iss: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                jti: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                            "400": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                error: {
+                                                    type: string;
+                                                };
+                                                error_description: {
+                                                    type: string;
+                                                };
+                                                error_uri: {
+                                                    type: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, import("better-auth", { with: { "resolution-mode": "import" } }).JWTPayload>;
+            oauth2Revoke: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/revoke", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_secret: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    token: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    token_type_hint: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        refresh_token: "refresh_token";
+                        access_token: "access_token";
+                    }>>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    allowedMediaTypes: string[];
+                    openapi: {
+                        description: string;
+                        requestBody: {
+                            required: boolean;
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object";
+                                        properties: {
+                                            client_id: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            client_secret: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            token: {
+                                                type: string;
+                                                description: string;
+                                            };
+                                            token_type_hint: {
+                                                type: string;
+                                                enum: string[];
+                                                description: string;
+                                            };
+                                        };
+                                        required: string[];
+                                    };
+                                };
+                            };
+                        };
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            description: string;
+                                        };
+                                    };
+                                };
+                            };
+                            "400": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                error: {
+                                                    type: string;
+                                                };
+                                                error_description: {
+                                                    type: string;
+                                                };
+                                                error_uri: {
+                                                    type: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, null | undefined>;
+            oauth2UserInfo: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/userinfo", {
+                method: ("GET" | "POST")[];
+                metadata: {
+                    openapi: {
+                        description: string;
+                        security: ({
+                            bearerAuth: never[];
+                            OAuth2?: undefined;
+                        } | {
+                            OAuth2: string[];
+                            bearerAuth?: undefined;
+                        })[];
+                        parameters: {
+                            name: string;
+                            in: "header";
+                            required: false;
+                            schema: {
+                                type: "string";
+                            };
+                            description: string;
+                        }[];
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                sub: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                email: {
+                                                    type: string;
+                                                    format: string;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                                name: {
+                                                    type: string;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                                picture: {
+                                                    type: string;
+                                                    format: string;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                                given_name: {
+                                                    type: string;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                                family_name: {
+                                                    type: string;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                                email_verified: {
+                                                    type: string;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                            "401": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                error: {
+                                                    type: string;
+                                                };
+                                                error_description: {
+                                                    type: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                            "403": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                error: {
+                                                    type: string;
+                                                };
+                                                error_description: {
+                                                    type: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, {
+                email?: string | undefined;
+                email_verified?: boolean | undefined;
+                name?: string | undefined;
+                picture?: string | undefined;
+                given_name?: string | undefined;
+                family_name?: string | undefined;
+                sub: string;
+            }>;
+            oauth2EndSession: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/end-session", {
+                method: "GET";
+                query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    id_token_hint: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    post_logout_redirect_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>;
+                    state: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                redirect_uri: {
+                                                    type: string;
+                                                    format: string;
+                                                    description: string;
+                                                };
+                                                message: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                            };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, {
+                redirect: boolean;
+                url: string;
+            } | undefined>;
+            registerOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/register", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>;
+                    scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_name: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    logo_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    contacts: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>>;
+                    tos_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    policy_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_version: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_statement: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    post_logout_redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                    token_endpoint_auth_method: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        none: "none";
+                        client_secret_basic: "client_secret_basic";
+                        client_secret_post: "client_secret_post";
+                    }>>>;
+                    grant_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        authorization_code: "authorization_code";
+                        client_credentials: "client_credentials";
+                        refresh_token: "refresh_token";
+                    }>>>>;
+                    response_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        code: "code";
+                    }>>>>;
+                    type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        web: "web";
+                        native: "native";
+                        "user-agent-based": "user-agent-based";
+                    }>>;
+                    subject_type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        public: "public";
+                        pairwise: "pairwise";
+                    }>>;
+                    skip_consent: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodNever>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                client_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_secret: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_secret_expires_at: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                scope: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                user_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_id_issued_at: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_name: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                logo_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                contacts: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                tos_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                policy_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_version: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_statement: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                redirect_uris: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        format: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                post_logout_redirect_uris: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        format: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                token_endpoint_auth_method: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                grant_types: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        enum: string[];
+                                                    };
+                                                    description: string;
+                                                };
+                                                response_types: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        enum: string[];
+                                                    };
+                                                    description: string;
+                                                };
+                                                public: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                type: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                disabled: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            adminCreateOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/admin/oauth2/create-client", {
+                method: "POST";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>;
+                    scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_name: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    logo_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    contacts: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>>;
+                    tos_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    policy_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_version: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_statement: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    post_logout_redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                    token_endpoint_auth_method: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        none: "none";
+                        client_secret_basic: "client_secret_basic";
+                        client_secret_post: "client_secret_post";
+                    }>>>;
+                    grant_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        authorization_code: "authorization_code";
+                        client_credentials: "client_credentials";
+                        refresh_token: "refresh_token";
+                    }>>>>;
+                    response_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        code: "code";
+                    }>>>>;
+                    type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        web: "web";
+                        native: "native";
+                        "user-agent-based": "user-agent-based";
+                    }>>;
+                    client_secret_expires_at: import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodUnion<readonly [import("better-auth", { with: { "resolution-mode": "import" } }).ZodString, import("better-auth", { with: { "resolution-mode": "import" } }).ZodNumber]>>>;
+                    skip_consent: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                    enable_end_session: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                    require_pkce: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                    subject_type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        public: "public";
+                        pairwise: "pairwise";
+                    }>>;
+                    metadata: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodRecord<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString, import("better-auth", { with: { "resolution-mode": "import" } }).ZodUnknown>>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    SERVER_ONLY: true;
+                    openapi: {
+                        description: string;
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                client_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_secret: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_secret_expires_at: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                scope: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                user_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_id_issued_at: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_name: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                logo_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                contacts: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                tos_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                policy_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_version: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_statement: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                redirect_uris: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        format: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                token_endpoint_auth_method: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                grant_types: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        enum: string[];
+                                                    };
+                                                    description: string;
+                                                };
+                                                response_types: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        enum: string[];
+                                                    };
+                                                    description: string;
+                                                };
+                                                public: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                type: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                disabled: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                require_pkce: {
+                                                    type: string;
+                                                    description: string;
+                                                    default: boolean;
+                                                };
+                                                metadata: {
+                                                    type: string;
+                                                    additionalProperties: boolean;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            createOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/create-client", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>;
+                    scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_name: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    client_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    logo_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    contacts: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>>;
+                    tos_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    policy_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_version: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    software_statement: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    post_logout_redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                    token_endpoint_auth_method: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        none: "none";
+                        client_secret_basic: "client_secret_basic";
+                        client_secret_post: "client_secret_post";
+                    }>>>;
+                    grant_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        authorization_code: "authorization_code";
+                        client_credentials: "client_credentials";
+                        refresh_token: "refresh_token";
+                    }>>>>;
+                    response_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodDefault<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        code: "code";
+                    }>>>>;
+                    type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                        web: "web";
+                        native: "native";
+                        "user-agent-based": "user-agent-based";
+                    }>>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                        responses: {
+                            "200": {
+                                description: string;
+                                content: {
+                                    "application/json": {
+                                        schema: {
+                                            type: "object";
+                                            properties: {
+                                                client_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_secret: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_secret_expires_at: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                scope: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                user_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_id_issued_at: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_name: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                client_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                logo_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                contacts: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                tos_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                policy_uri: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_id: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_version: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                software_statement: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                redirect_uris: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        format: string;
+                                                    };
+                                                    description: string;
+                                                };
+                                                token_endpoint_auth_method: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                grant_types: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        enum: string[];
+                                                    };
+                                                    description: string;
+                                                };
+                                                response_types: {
+                                                    type: string;
+                                                    items: {
+                                                        type: string;
+                                                        enum: string[];
+                                                    };
+                                                    description: string;
+                                                };
+                                                public: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                type: {
+                                                    type: string;
+                                                    description: string;
+                                                    enum: string[];
+                                                };
+                                                disabled: {
+                                                    type: string;
+                                                    description: string;
+                                                };
+                                                metadata: {
+                                                    type: string;
+                                                    additionalProperties: boolean;
+                                                    nullable: boolean;
+                                                    description: string;
+                                                };
+                                            };
+                                            required: string[];
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            getOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/get-client", {
+                method: "GET";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            getOAuthClientPublic: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/public-client", {
+                method: "GET";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            getOAuthClientPublicPrelogin: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/public-client-prelogin", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<void>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    oauth_query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            getOAuthClients: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/get-clients", {
+                method: "GET";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient[] | null>;
+            adminUpdateOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/admin/oauth2/update-client", {
+                method: "PATCH";
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    update: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                        redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                        scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        client_name: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        client_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        logo_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        contacts: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>>;
+                        tos_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        policy_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        software_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        software_version: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        software_statement: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        post_logout_redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                        grant_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                            authorization_code: "authorization_code";
+                            client_credentials: "client_credentials";
+                            refresh_token: "refresh_token";
+                        }>>>;
+                        response_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                            code: "code";
+                        }>>>;
+                        type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                            web: "web";
+                            native: "native";
+                            "user-agent-based": "user-agent-based";
+                        }>>;
+                        client_secret_expires_at: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodUnion<readonly [import("better-auth", { with: { "resolution-mode": "import" } }).ZodString, import("better-auth", { with: { "resolution-mode": "import" } }).ZodNumber]>>;
+                        skip_consent: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                        enable_end_session: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodBoolean>;
+                        metadata: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodRecord<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString, import("better-auth", { with: { "resolution-mode": "import" } }).ZodUnknown>>;
+                    }, import("zod/v4/core").$strip>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    SERVER_ONLY: true;
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            updateOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/update-client", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    update: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                        redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                        scope: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        client_name: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        client_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        logo_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        contacts: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>>;
+                        tos_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        policy_uri: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        software_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        software_version: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        software_statement: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                        post_logout_redirect_uris: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodURL>>;
+                        grant_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                            authorization_code: "authorization_code";
+                            client_credentials: "client_credentials";
+                            refresh_token: "refresh_token";
+                        }>>>;
+                        response_types: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                            code: "code";
+                        }>>>;
+                        type: import("better-auth", { with: { "resolution-mode": "import" } }).ZodOptional<import("better-auth", { with: { "resolution-mode": "import" } }).ZodEnum<{
+                            web: "web";
+                            native: "native";
+                            "user-agent-based": "user-agent-based";
+                        }>>;
+                    }, import("zod/v4/core").$strip>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            rotateClientSecret: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/client/rotate-secret", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthClient>;
+            deleteOAuthClient: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/delete-client", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    client_id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, void>;
+            getOAuthConsent: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/get-consent", {
+                method: "GET";
+                query: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                }, import("zod/v4/core").$strip>;
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthConsent<import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).Scope[]>>;
+            getOAuthConsents: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/get-consents", {
+                method: "GET";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthConsent<import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).Scope[]>[]>;
+            updateOAuthConsent: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/update-consent", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                    update: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                        scopes: import("better-auth", { with: { "resolution-mode": "import" } }).ZodArray<import("better-auth", { with: { "resolution-mode": "import" } }).ZodString>;
+                    }, import("zod/v4/core").$strip>;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).OAuthConsent<import("@better-auth/oauth-provider", { with: { "resolution-mode": "import" } }).Scope[]> | null>;
+            deleteOAuthConsent: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/endpoint.mjs", { with: { "resolution-mode": "import" } }).StrictEndpoint<"/oauth2/delete-consent", {
+                method: "POST";
+                use: ((inputContext: import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("../../node_modules/.pnpm/better-call@1.3.7_zod@4.3.6/node_modules/better-call/dist/middleware.mjs", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<{
+                    session: {
+                        session: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            userId: string;
+                            expiresAt: Date;
+                            token: string;
+                            ipAddress?: string | null | undefined;
+                            userAgent?: string | null | undefined;
+                        };
+                        user: Record<string, any> & {
+                            id: string;
+                            createdAt: Date;
+                            updatedAt: Date;
+                            email: string;
+                            emailVerified: boolean;
+                            name: string;
+                            image?: string | null | undefined;
+                        };
+                    };
+                }>)[];
+                body: import("better-auth", { with: { "resolution-mode": "import" } }).ZodObject<{
+                    id: import("better-auth", { with: { "resolution-mode": "import" } }).ZodString;
+                }, import("zod/v4/core").$strip>;
+                metadata: {
+                    openapi: {
+                        description: string;
+                    };
+                };
+            }, void>;
+        };
+        schema: {
+            oauthClient: {
+                modelName: string;
+                fields: {
+                    clientId: {
+                        type: "string";
+                        unique: true;
+                        required: true;
+                    };
+                    clientSecret: {
+                        type: "string";
+                        required: false;
+                    };
+                    disabled: {
+                        type: "boolean";
+                        defaultValue: false;
+                        required: false;
+                    };
+                    skipConsent: {
+                        type: "boolean";
+                        required: false;
+                    };
+                    enableEndSession: {
+                        type: "boolean";
+                        required: false;
+                    };
+                    subjectType: {
+                        type: "string";
+                        required: false;
+                    };
+                    scopes: {
+                        type: "string[]";
+                        required: false;
+                    };
+                    userId: {
+                        type: "string";
+                        required: false;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    createdAt: {
+                        type: "date";
+                        required: false;
+                    };
+                    updatedAt: {
+                        type: "date";
+                        required: false;
+                    };
+                    name: {
+                        type: "string";
+                        required: false;
+                    };
+                    uri: {
+                        type: "string";
+                        required: false;
+                    };
+                    icon: {
+                        type: "string";
+                        required: false;
+                    };
+                    contacts: {
+                        type: "string[]";
+                        required: false;
+                    };
+                    tos: {
+                        type: "string";
+                        required: false;
+                    };
+                    policy: {
+                        type: "string";
+                        required: false;
+                    };
+                    softwareId: {
+                        type: "string";
+                        required: false;
+                    };
+                    softwareVersion: {
+                        type: "string";
+                        required: false;
+                    };
+                    softwareStatement: {
+                        type: "string";
+                        required: false;
+                    };
+                    redirectUris: {
+                        type: "string[]";
+                        required: true;
+                    };
+                    postLogoutRedirectUris: {
+                        type: "string[]";
+                        required: false;
+                    };
+                    tokenEndpointAuthMethod: {
+                        type: "string";
+                        required: false;
+                    };
+                    grantTypes: {
+                        type: "string[]";
+                        required: false;
+                    };
+                    responseTypes: {
+                        type: "string[]";
+                        required: false;
+                    };
+                    public: {
+                        type: "boolean";
+                        required: false;
+                    };
+                    type: {
+                        type: "string";
+                        required: false;
+                    };
+                    requirePKCE: {
+                        type: "boolean";
+                        required: false;
+                    };
+                    referenceId: {
+                        type: "string";
+                        required: false;
+                    };
+                    metadata: {
+                        type: "json";
+                        required: false;
+                    };
+                };
+            };
+            oauthRefreshToken: {
+                fields: {
+                    token: {
+                        type: "string";
+                        required: true;
+                        unique: true;
+                    };
+                    clientId: {
+                        type: "string";
+                        required: true;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    sessionId: {
+                        type: "string";
+                        required: false;
+                        references: {
+                            model: string;
+                            field: string;
+                            onDelete: "set null";
+                        };
+                        index: true;
+                    };
+                    userId: {
+                        type: "string";
+                        required: true;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    referenceId: {
+                        type: "string";
+                        required: false;
+                    };
+                    expiresAt: {
+                        type: "date";
+                    };
+                    createdAt: {
+                        type: "date";
+                    };
+                    revoked: {
+                        type: "date";
+                        required: false;
+                    };
+                    authTime: {
+                        type: "date";
+                        required: false;
+                    };
+                    scopes: {
+                        type: "string[]";
+                        required: true;
+                    };
+                };
+            };
+            oauthAccessToken: {
+                modelName: string;
+                fields: {
+                    token: {
+                        type: "string";
+                        unique: true;
+                    };
+                    clientId: {
+                        type: "string";
+                        required: true;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    sessionId: {
+                        type: "string";
+                        required: false;
+                        references: {
+                            model: string;
+                            field: string;
+                            onDelete: "set null";
+                        };
+                        index: true;
+                    };
+                    userId: {
+                        type: "string";
+                        required: false;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    referenceId: {
+                        type: "string";
+                        required: false;
+                    };
+                    refreshId: {
+                        type: "string";
+                        required: false;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    expiresAt: {
+                        type: "date";
+                    };
+                    createdAt: {
+                        type: "date";
+                    };
+                    scopes: {
+                        type: "string[]";
+                        required: true;
+                    };
+                };
+            };
+            oauthConsent: {
+                modelName: string;
+                fields: {
+                    clientId: {
+                        type: "string";
+                        required: true;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    userId: {
+                        type: "string";
+                        required: false;
+                        references: {
+                            model: string;
+                            field: string;
+                        };
+                        index: true;
+                    };
+                    referenceId: {
+                        type: "string";
+                        required: false;
+                    };
+                    scopes: {
+                        type: "string[]";
+                        required: true;
+                    };
+                    createdAt: {
+                        type: "date";
+                    };
+                    updatedAt: {
+                        type: "date";
+                    };
+                };
+            };
+        };
+        rateLimit: ({
+            pathMatcher: (path: string) => path is "/oauth2/token";
+            window: number;
+            max: number;
+        } | {
+            pathMatcher: (path: string) => path is "/oauth2/authorize";
+            window: number;
+            max: number;
+        } | {
+            pathMatcher: (path: string) => path is "/oauth2/introspect";
+            window: number;
+            max: number;
+        } | {
+            pathMatcher: (path: string) => path is "/oauth2/revoke";
+            window: number;
+            max: number;
+        } | {
+            pathMatcher: (path: string) => path is "/oauth2/register";
+            window: number;
+            max: number;
+        } | {
+            pathMatcher: (path: string) => path is "/oauth2/userinfo";
+            window: number;
+            max: number;
+        })[];
+    }, {
+        id: "next-cookies";
+        version: string;
+        hooks: {
+            before: {
+                matcher(ctx: import("better-auth", { with: { "resolution-mode": "import" } }).HookEndpointContext): boolean;
+                handler: (inputContext: import("better-auth", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("better-auth", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<void>;
+            }[];
+            after: {
+                matcher(ctx: import("better-auth", { with: { "resolution-mode": "import" } }).HookEndpointContext): true;
+                handler: (inputContext: import("better-auth", { with: { "resolution-mode": "import" } }).MiddlewareInputContext<import("better-auth", { with: { "resolution-mode": "import" } }).MiddlewareOptions>) => Promise<void>;
+            }[];
+        };
     }];
 }>;
