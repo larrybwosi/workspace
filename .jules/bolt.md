@@ -1,3 +1,8 @@
+## 2026-07-31 - [Database] Consolidated Multi-Entity Verification and Point-Lookup in Integrations
+
+**Learning:** Sibling methods in `IntegrationsService` were using sequential queries to verify workspace slugs, validate user membership role levels, and fetch or mutate integrations. Consolidating slug lookups, membership checks, and sub-resource lookups (or mutations) into a single nested `select` on `prisma.workspace.findUnique` reduces database round-trips (RTT) and closes potential IDOR security gaps. Furthermore, fetching sub-resources directly using `findUnique` on their primary key `id` while nested-selecting `workspace: { select: { slug: true } }` reduces database RTT from 2 to 1 by entirely bypassing the initial parent-entity database lookup query.
+**Action:** Always prefer a single `workspace.findUnique` with nested `select` for authorization and relation lists, and use `findUnique` on primary key with parent relation selections for O(1) details lookups.
+
 ## 2025-05-15 - [Database] Optimized Mention Lookup
 
 **Learning:** Fetching the entire users table to filter mentions in-memory is an O(N) operation that scales poorly with user growth.
@@ -10,7 +15,7 @@
 
 ## 2025-05-15 - [Algorithmic] Optimized Mention ID Resolution
 
-**Learning:** Using nested loops (O(N\*M)) for looking up user IDs from usernames in large messages or frequent operations causes CPU spikes.
+**Learning:** Using nested loops (O(N*M)) for looking up user IDs from usernames in large messages or frequent operations causes CPU spikes.
 **Action:** Use a `Map` for O(N+M) lookup and a `Set` to de-duplicate results, preventing redundant downstream processing (like duplicate notifications).
 
 ## 2025-05-15 - [Database] Multi-Column Indexes for Chat History
