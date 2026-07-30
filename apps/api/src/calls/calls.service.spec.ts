@@ -59,6 +59,7 @@ vi.mock('@repo/database', () => ({
     },
     directMessage: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
     },
     dMMessage: {
@@ -655,6 +656,70 @@ describe('CallsService', () => {
         (c: any[]) => c[0] === 'call:call-1' && c[1] === 'call-ended'
       );
       expect(callEndedToCallChannel).toBeUndefined();
+    });
+  });
+
+  describe('inviteToCall', () => {
+    const mockUser = { id: 'user-1', name: 'Alice' } as any;
+
+    it('should throw NotFoundException if the call does not exist', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue(null);
+
+      await expect(service.inviteToCall(mockUser, 'non-existent-call', 'target-user')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should find existing DM using findUnique and create an invite message', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {} });
+      mockPrisma.directMessage.findUnique.mockResolvedValueOnce({ id: 'dm-1' });
+      mockPrisma.dMMessage.create.mockResolvedValue({ id: 'msg-1' });
+
+      const result = await service.inviteToCall(mockUser, 'call-1', 'target-user');
+
+      expect(result).toEqual({ success: true, messageId: 'msg-1' });
+      expect(mockPrisma.directMessage.findUnique).toHaveBeenCalledWith({
+        where: {
+          participant1Id_participant2Id: {
+            participant1Id: mockUser.id,
+            participant2Id: 'target-user',
+          },
+        },
+      });
+      expect(mockPrisma.dMMessage.create).toHaveBeenCalled();
+    });
+
+    it('should fall back to reverse participant check on directMessage.findUnique if first is null', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {} });
+      // First call (user.id, target) returns null, second call (target, user.id) returns the DM
+      mockPrisma.directMessage.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 'dm-1' });
+      mockPrisma.dMMessage.create.mockResolvedValue({ id: 'msg-1' });
+
+      const result = await service.inviteToCall(mockUser, 'call-1', 'target-user');
+
+      expect(result).toEqual({ success: true, messageId: 'msg-1' });
+      expect(mockPrisma.directMessage.findUnique).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.dMMessage.create).toHaveBeenCalled();
+    });
+
+    it('should create a new DM if no existing DM is found in either direction', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {} });
+      mockPrisma.directMessage.findUnique.mockResolvedValue(null);
+      mockPrisma.directMessage.create.mockResolvedValue({ id: 'new-dm' });
+      mockPrisma.dMMessage.create.mockResolvedValue({ id: 'msg-1' });
+
+      const result = await service.inviteToCall(mockUser, 'call-1', 'target-user');
+
+      expect(result).toEqual({ success: true, messageId: 'msg-1' });
+      expect(mockPrisma.directMessage.create).toHaveBeenCalledWith({
+        data: {
+          participant1Id: mockUser.id,
+          participant2Id: 'target-user',
+        },
+      });
+      expect(mockPrisma.dMMessage.create).toHaveBeenCalled();
     });
   });
 });
