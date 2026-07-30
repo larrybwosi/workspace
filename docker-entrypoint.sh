@@ -51,9 +51,6 @@ if [ -f "dist/main.js" ] || [ -f "dist/main" ]; then
     fi
 
     $PRISMA_BIN migrate deploy
-
-    echo "Seeding database..."
-    $PRISMA_BIN db seed
   else
     echo "⚠️ DATABASE_URL not set, skipping migrations."
   fi

@@ -105,11 +105,14 @@ for (let i = 0; i < finalLines.length; i++) {
   }
 }
 
-// Second pass: construct correct, evaluated DATABASE_URL
+// Second pass: construct correct, evaluated DATABASE_URL and REDIS_URL
 const dbUser = finalEnvVars['DB_USER'] || 'postgres';
 const dbPassword = finalEnvVars['DB_PASSWORD'] || 'postgres';
 const dbName = finalEnvVars['DB_NAME'] || 'main';
 const defaultDbUrl = `postgresql://${dbUser}:${dbPassword}@localhost:54321/${dbName}?schema=public`;
+
+const redisPassword = finalEnvVars['REDIS_PASSWORD'] || '';
+const defaultRedisUrl = redisPassword ? `redis://:${redisPassword}@localhost:6479` : 'redis://localhost:6479';
 
 for (let i = 0; i < finalLines.length; i++) {
   const line = finalLines[i].trim();
@@ -125,6 +128,15 @@ for (let i = 0; i < finalLines.length; i++) {
           console.log(`Setting up proper evaluated DATABASE_URL...`);
           finalLines[i] = `${key}=${defaultDbUrl}`;
           finalEnvVars[key] = defaultDbUrl;
+        }
+      }
+
+      if (key === 'REDIS_URL') {
+        const hasPlaceholder = !val.includes(redisPassword);
+        if (!val || hasPlaceholder) {
+          console.log(`Setting up proper evaluated REDIS_URL...`);
+          finalLines[i] = `${key}=${defaultRedisUrl}`;
+          finalEnvVars[key] = defaultRedisUrl;
         }
       }
     }
