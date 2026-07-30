@@ -326,22 +326,31 @@ export class IntegrationsService {
   }
 
   async getWorkspaceIntegrations(userId: string, workspaceSlug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership check, and integrations fetching into a single query.
+     * This reduces the database round-trips (RTT) from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+        integrations: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId } },
-    });
-
+    const member = workspace.members[0];
     if (!member) throw new ForbiddenException('Forbidden');
 
-    const integrations = await prisma.workspaceIntegration.findMany({
-      where: { workspaceId: workspace.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    const integrations = workspace.integrations;
 
     const enrichedIntegrations = integrations.map(integration => {
       const config = integration.config as Record<string, any>;
@@ -369,16 +378,25 @@ export class IntegrationsService {
   }
 
   async createWorkspaceIntegration(userId: string, workspaceSlug: string, data: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership/role checks into a single query.
+     * This reduces the database round-trips (RTT) for authorization checks from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId } },
-    });
-
+    const member = workspace.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden - Admin access required');
     }
@@ -421,34 +439,70 @@ export class IntegrationsService {
   }
 
   async getWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug: workspaceSlug },
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces findUnique on workspace followed by findFirst on integration with a single O(1) point-lookup
+     * on prisma.workspaceIntegration.findUnique by id with relational slug check.
+     * This reduces database round-trips (RTT) from 2 down to 1.
+     */
+    const integration = await prisma.workspaceIntegration.findUnique({
+      where: { id: integrationId },
+      select: {
+        id: true,
+        workspaceId: true,
+        service: true,
+        config: true,
+        active: true,
+        createdAt: true,
+        workspace: {
+          select: {
+            slug: true,
+          },
+        },
+      },
     });
 
-    if (!workspace) throw new NotFoundException('Workspace not found');
+    if (!integration || integration.workspace.slug !== workspaceSlug) {
+      throw new NotFoundException('Integration not found');
+    }
 
-    const integration = await prisma.workspaceIntegration.findFirst({
-      where: { id: integrationId, workspaceId: workspace.id },
-    });
-
-    if (!integration) throw new NotFoundException('Integration not found');
-
-    return integration;
+    return {
+      ...integration,
+      workspace: undefined,
+    };
   }
 
   async updateWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string, data: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership/role validation, and integration presence check
+     * into a single query via nested select on workspace.findUnique.
+     * This reduces the database round-trips (RTT) from 3 down to 2, while preventing IDOR vulnerabilities.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+        integrations: {
+          where: { id: integrationId },
+          select: { id: true },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId } },
-    });
-
+    const member = workspace.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
+    }
+
+    if (workspace.integrations.length === 0) {
+      throw new NotFoundException('Integration not found');
     }
 
     const integration = await prisma.workspaceIntegration.update({
@@ -474,18 +528,36 @@ export class IntegrationsService {
   }
 
   async deleteWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership/role validation, and integration presence check
+     * into a single query via nested select on workspace.findUnique.
+     * This reduces the database round-trips (RTT) from 3 down to 2, while preventing IDOR vulnerabilities.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+        integrations: {
+          where: { id: integrationId },
+          select: { id: true },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId } },
-    });
-
+    const member = workspace.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
+    }
+
+    if (workspace.integrations.length === 0) {
+      throw new NotFoundException('Integration not found');
     }
 
     await prisma.workspaceIntegration.delete({
@@ -506,17 +578,34 @@ export class IntegrationsService {
   }
 
   async testWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug: workspaceSlug },
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces workspace lookup + findFirst with a single O(1) point-lookup on prisma.workspaceIntegration.findUnique
+     * by id with relational slug check.
+     * This reduces database round-trips (RTT) from 2 down to 1.
+     */
+    const integration = await prisma.workspaceIntegration.findUnique({
+      where: { id: integrationId },
+      select: {
+        id: true,
+        workspaceId: true,
+        service: true,
+        config: true,
+        active: true,
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
+          },
+        },
+      },
     });
 
-    if (!workspace) throw new NotFoundException('Workspace not found');
+    if (!integration || integration.workspace.slug !== workspaceSlug) {
+      throw new NotFoundException('Integration not found');
+    }
 
-    const integration = await prisma.workspaceIntegration.findFirst({
-      where: { id: integrationId, workspaceId: workspace.id },
-    });
-
-    if (!integration) throw new NotFoundException('Integration not found');
+    const workspaceId = integration.workspace.id;
 
     const config = integration.config as Record<string, any>;
     let testResult = { success: false, message: '', latency: 0 };
@@ -611,7 +700,7 @@ export class IntegrationsService {
 
     await prisma.workspaceAuditLog.create({
       data: {
-        workspaceId: workspace.id,
+        workspaceId,
         userId,
         action: 'integration.tested',
         resource: 'integration',
@@ -624,29 +713,39 @@ export class IntegrationsService {
   }
 
   async getWorkspaceWebhooks(userId: string, workspaceSlug: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, user membership check, and webhooks list fetching (with log count)
+     * into a single query via nested select on workspace.findUnique.
+     * This reduces the database round-trips (RTT) from 3 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+        webhooks: {
+          include: {
+            _count: {
+              select: {
+                logs: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId } },
-    });
-
+    const member = workspace.members[0];
     if (!member) throw new ForbiddenException('Forbidden');
 
-    return prisma.workspaceWebhook.findMany({
-      where: { workspaceId: workspace.id },
-      include: {
-        _count: {
-          select: {
-            logs: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    return workspace.webhooks;
   }
 
   async createWorkspaceWebhook(
@@ -654,16 +753,25 @@ export class IntegrationsService {
     workspaceSlug: string,
     data: { name: string; url: string; events: string[] }
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and membership/role verification into a single query via nested select.
+     * This reduces the database round-trips (RTT) from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    const member = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId: workspace.id, userId } },
-    });
-
+    const member = workspace.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
     }
@@ -697,8 +805,20 @@ export class IntegrationsService {
   }
 
   async handleGithubCallback(userId: string, workspaceSlug: string, code: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and existing github integration lookup into a single query via nested select.
+     * This reduces the database round-trips (RTT) from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        integrations: {
+          where: { service: 'github' },
+          select: { id: true },
+        },
+      },
     });
 
     if (!workspace) throw new NotFoundException('Workspace not found');
@@ -732,12 +852,7 @@ export class IntegrationsService {
 
     const userData = await userResponse.json();
 
-    const existingIntegration = await prisma.workspaceIntegration.findFirst({
-      where: {
-        workspaceId: workspace.id,
-        service: 'github',
-      },
-    });
+    const existingIntegration = workspace.integrations[0];
 
     const config = {
       accessToken: tokenData.access_token,
@@ -766,15 +881,25 @@ export class IntegrationsService {
   }
 
   async handleGithubWebhook(workspaceSlug: string, body: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup and general channel lookup into a single query via nested select.
+     * This reduces the database round-trips (RTT) from 2 down to 1.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
+      select: {
+        id: true,
+        channels: {
+          where: { name: 'general' },
+          select: { id: true },
+        },
+      },
     });
 
     if (!workspace) return { success: false };
 
-    const channel = await prisma.channel.findFirst({
-      where: { workspaceId: workspace.id, name: 'general' },
-    });
+    const channel = workspace.channels[0];
 
     if (!channel) return { success: false };
 
