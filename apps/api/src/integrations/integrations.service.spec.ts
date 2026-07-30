@@ -149,7 +149,7 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should throw BadRequestException on GitHub OAuth error', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', slug: 'my-workspace' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', slug: 'my-workspace', integrations: [] });
 
       const mockFetch = vi.fn().mockResolvedValueOnce({
         json: () =>
@@ -163,8 +163,7 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should create a new integration when none exists', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', slug: 'my-workspace' });
-      mockPrisma.workspaceIntegration.findFirst.mockResolvedValue(null);
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', slug: 'my-workspace', integrations: [] });
 
       const createdIntegration = {
         id: 'int-1',
@@ -200,11 +199,14 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should update an existing integration when one already exists', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', slug: 'my-workspace' });
-      mockPrisma.workspaceIntegration.findFirst.mockResolvedValue({
-        id: 'existing-int-1',
-        workspaceId: 'ws-1',
-        service: 'github',
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        slug: 'my-workspace',
+        integrations: [{
+          id: 'existing-int-1',
+          workspaceId: 'ws-1',
+          service: 'github',
+        }],
       });
 
       const updatedIntegration = {
@@ -250,16 +252,14 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it("should return { success: false } when no 'general' channel exists", async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
-      mockPrisma.channel.findFirst.mockResolvedValue(null);
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', channels: [] });
 
       const result = await service.handleGithubWebhook('my-workspace', {});
       expect(result).toEqual({ success: false });
     });
 
     it('should create system message for pull_request event', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
-      mockPrisma.channel.findFirst.mockResolvedValue({ id: 'ch-general' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', channels: [{ id: 'ch-general' }] });
 
       const prBody = {
         action: 'opened',
@@ -284,8 +284,7 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should create system message for push event with commits', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
-      mockPrisma.channel.findFirst.mockResolvedValue({ id: 'ch-general' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', channels: [{ id: 'ch-general' }] });
 
       const pushBody = {
         commits: [{ id: 'abc' }, { id: 'def' }],
@@ -305,8 +304,7 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should create system message for issue event', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
-      mockPrisma.channel.findFirst.mockResolvedValue({ id: 'ch-general' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', channels: [{ id: 'ch-general' }] });
 
       const issueBody = {
         action: 'opened',
@@ -329,8 +327,7 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should NOT call createSystemMessage when event type is unrecognized', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
-      mockPrisma.channel.findFirst.mockResolvedValue({ id: 'ch-general' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', channels: [{ id: 'ch-general' }] });
 
       // Body with no known event fields
       const unknownBody = { action: 'something', other_field: 'value' };
@@ -342,8 +339,7 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
     });
 
     it('should include commit count in push message', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
-      mockPrisma.channel.findFirst.mockResolvedValue({ id: 'ch-general' });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1', channels: [{ id: 'ch-general' }] });
 
       const pushBody = {
         commits: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
