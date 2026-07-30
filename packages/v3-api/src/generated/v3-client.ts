@@ -7304,6 +7304,68 @@ export const useStorageControllerUploadFile = <TError = ErrorType<unknown>,
       return useMutation(mutationOptions);
     }
 
+/**
+ * @summary Proxy file request using high-performance streaming
+ */
+export const shortUrlControllerRedirect = (
+    code: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/s/${code}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getShortUrlControllerRedirectQueryKey = (code: string,) => {
+    return [`/s/${code}`] as const;
+    }
+
+
+export const getShortUrlControllerRedirectQueryOptions = <TData = Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError = ErrorType<unknown>>(code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getShortUrlControllerRedirectQueryKey(code);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof shortUrlControllerRedirect>>> = ({ signal }) => shortUrlControllerRedirect(code, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(code), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ShortUrlControllerRedirectQueryResult = NonNullable<Awaited<ReturnType<typeof shortUrlControllerRedirect>>>
+export type ShortUrlControllerRedirectQueryError = ErrorType<unknown>
+
+/**
+ * @summary Proxy file request using high-performance streaming
+ */
+export const useShortUrlControllerRedirect = <TData = Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError = ErrorType<unknown>>(
+ code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getShortUrlControllerRedirectQueryOptions(code,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
 export const v10UsersControllerGetUser = (
     id: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal

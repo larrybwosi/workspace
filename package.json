@@ -21,6 +21,7 @@
     "start:dev": "docker compose -f docker-compose.dev.yml up -d",
     "setup:prod": "node scripts/setup-prod.js",
     "generate": "turbo run generate",
+    "generate:all": "pnpm --filter api generate:openapi && node -e \"const fs = require('fs'); fs.copyFileSync('apps/api/openapi.json', 'apps/v3-docs/src/content/openapi.json')\" && pnpm --filter @repo/v3-api generate",
     "setup:env": "node scripts/setup-env.js"
   },
   "devDependencies": {
