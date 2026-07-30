@@ -10,7 +10,7 @@ File uploads are handled using `multipart/form-data`. You can upload a file whil
 
 ## Uploading a File with a Message
 
-To send a message with an attachment, use the `POST /v2/workspaces/:slug/messages` endpoint with `multipart/form-data`.
+To send a message with an attachment, use the `POST /v3/workspaces/:slug/messages` endpoint with `multipart/form-data`.
 
 ### Node.js Example (using `form-data` and `axios`)
 
@@ -25,7 +25,7 @@ async function uploadFile(workspaceSlug: string, channelId: string, filePath: st
   form.append('content', 'Here is the file you requested!');
   form.append('file', fs.createReadStream(filePath));
 
-  const response = await axios.post(`https://api.skyrme.chat/v2/workspaces/${workspaceSlug}/messages`, form, {
+  const response = await axios.post(`https://api.skyrme.chat/v3/workspaces/${workspaceSlug}/messages`, form, {
     headers: {
       ...form.getHeaders(),
       Authorization: `Bearer ${YOUR_ACCESS_TOKEN}`,
@@ -42,7 +42,7 @@ async function uploadFile(workspaceSlug: string, channelId: string, filePath: st
 import requests
 
 def upload_file(workspace_slug, channel_id, file_path):
-    url = f"https://api.skyrme.chat/v2/workspaces/{workspace_slug}/messages"
+    url = f"https://api.skyrme.chat/v3/workspaces/{workspace_slug}/messages"
     headers = {"Authorization": f"Bearer {YOUR_ACCESS_TOKEN}"}
 
     files = {
@@ -88,10 +88,10 @@ When you receive a message with a file via a Webhook or the API, the `attachment
 
 You can also use file uploads to update a channel's icon.
 
-**Endpoint:** `POST /v2/workspaces/:slug/channels/:channelId/icon`
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/icon`
 
 ```bash
-curl -X POST https://api.skyrme.chat/v2/workspaces/my-workspace/channels/chan_123/icon \
+curl -X POST https://api.skyrme.chat/v3/workspaces/my-workspace/channels/chan_123/icon \
   -H "Authorization: Bearer <token>" \
   -F "file=@/path/to/icon.png"
 ```
