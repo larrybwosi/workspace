@@ -14,7 +14,7 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { ChevronRight, Globe, Lock, Shield, Copy, Check, Terminal } from 'lucide-react';
+import { ChevronRight, Globe, Lock, Shield, Copy, Check, Terminal, Code2 } from 'lucide-react';
 import openapi from '../content/openapi.json';
 
 const CopyButton = ({ value }: { value: string }) => {
@@ -118,6 +118,89 @@ export default function ApiReferencePage() {
     return curl;
   };
 
+  const getSdkNames = (operationId: string) => {
+    if (!operationId) return null;
+    const parts = operationId.split('_');
+    let transformed = '';
+    if (parts.length === 2) {
+      const controller = parts[0];
+      const method = parts[1];
+      const capitalizedMethod = method.charAt(0).toUpperCase() + method.slice(1);
+      transformed = controller + capitalizedMethod;
+    } else {
+      transformed = operationId;
+    }
+    const clientFn = transformed.charAt(0).toLowerCase() + transformed.slice(1);
+    const hookName = `use${transformed.charAt(0).toUpperCase() + transformed.slice(1)}`;
+    return { clientFn, hookName };
+  };
+
+  const generateReactSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
+    if (!sdkNames) return '// No SDK mapping available for this endpoint';
+    const { hookName } = sdkNames;
+    const params = operation.parameters || [];
+    const hasParams = params.length > 0;
+
+    let snippet = `import { ${hookName} } from '@repo/v3-api';\n\n`;
+    snippet += `function MyComponent() {\n`;
+
+    if (hasParams) {
+      snippet += `  // Pass parameters as required\n`;
+      snippet += `  const { data, isLoading, error } = ${hookName}(\n`;
+      snippet += `    {\n`;
+      params.forEach((p: any) => {
+        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
+        snippet += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
+      });
+      snippet += `    }\n`;
+      snippet += `  );\n`;
+    } else {
+      snippet += `  const { data, isLoading, error } = ${hookName}();\n`;
+    }
+
+    snippet += `\n  if (isLoading) return <div>Loading...</div>;\n`;
+    snippet += `  if (error) return <div>Error loading data</div>;\n\n`;
+    snippet += `  return <pre>{JSON.stringify(data, null, 2)}</pre>;\n`;
+    snippet += `}`;
+    return snippet;
+  };
+
+  const generateNodeSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
+    if (!sdkNames) return '// No SDK mapping available for this endpoint';
+    const { clientFn } = sdkNames;
+    const params = operation.parameters || [];
+    const hasParams = params.length > 0;
+    const hasBody = !!operation.requestBody;
+
+    let snippet = `import { ${clientFn} } from '@repo/v3-api/server';\n\n`;
+    snippet += `async function run() {\n`;
+    snippet += `  try {\n`;
+
+    let args = [];
+    if (hasBody) {
+      const exampleBody = operation.requestBody.content?.['application/json']?.schema?.example || {};
+      args.push(JSON.stringify(exampleBody, null, 2).replace(/\n/g, '\n    '));
+    }
+    if (hasParams) {
+      let paramObj = `{\n`;
+      params.forEach((p: any) => {
+        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
+        paramObj += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
+      });
+      paramObj += `    }`;
+      args.push(paramObj);
+    }
+
+    const argsStr = args.join(', ');
+    snippet += `    const response = await ${clientFn}(${argsStr});\n`;
+    snippet += `    console.log('Success:', response.data);\n`;
+    snippet += `  } catch (error) {\n`;
+    snippet += `    console.error('Error executing request:', error);\n`;
+    snippet += `  }\n`;
+    snippet += `}`;
+    return snippet;
+  };
+
   return (
     <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1">
       <div className="flex flex-col md:flex-row gap-6 lg:gap-12 py-10">
@@ -166,13 +249,21 @@ export default function ApiReferencePage() {
                             <CardContent className="py-6">
                               <Tabs defaultValue="params">
                                 <div className="flex items-center justify-between mb-4">
-                                  <TabsList className="bg-muted/50">
+                                  <TabsList className="bg-muted/50 flex-wrap">
                                     <TabsTrigger value="params">Parameters</TabsTrigger>
                                     <TabsTrigger value="request">Request</TabsTrigger>
                                     <TabsTrigger value="responses">Responses</TabsTrigger>
                                     <TabsTrigger value="curl" className="gap-2">
                                       <Terminal className="h-3 w-3" />
                                       cURL
+                                    </TabsTrigger>
+                                    <TabsTrigger value="sdk-react" className="gap-2">
+                                      <Code2 className="h-3 w-3 text-indigo-400" />
+                                      React Hook
+                                    </TabsTrigger>
+                                    <TabsTrigger value="sdk-node" className="gap-2">
+                                      <Code2 className="h-3 w-3 text-emerald-400" />
+                                      Node Client
                                     </TabsTrigger>
                                   </TabsList>
                                 </div>
@@ -266,6 +357,30 @@ export default function ApiReferencePage() {
                                       <CopyButton value={curl} />
                                     </div>
                                     <SyntaxHighlighter code={curl} language="bash" />
+                                  </div>
+                                </TabsContent>
+
+                                <TabsContent value="sdk-react">
+                                  <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                                    <div className="absolute right-2 top-2">
+                                      <CopyButton value={generateReactSnippet(operation, getSdkNames(operation.operationId))} />
+                                    </div>
+                                    <SyntaxHighlighter
+                                      code={generateReactSnippet(operation, getSdkNames(operation.operationId))}
+                                      language="typescript"
+                                    />
+                                  </div>
+                                </TabsContent>
+
+                                <TabsContent value="sdk-node">
+                                  <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                                    <div className="absolute right-2 top-2">
+                                      <CopyButton value={generateNodeSnippet(operation, getSdkNames(operation.operationId))} />
+                                    </div>
+                                    <SyntaxHighlighter
+                                      code={generateNodeSnippet(operation, getSdkNames(operation.operationId))}
+                                      language="typescript"
+                                    />
                                   </div>
                                 </TabsContent>
                               </Tabs>
