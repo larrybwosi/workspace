@@ -135,65 +135,128 @@ export default function ApiReferencePage() {
     return { clientFn, hookName };
   };
 
-  const generateReactSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
+  const generateReactSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null, isGet: boolean) => {
     if (!sdkNames) return '// No SDK mapping available for this endpoint';
     const { hookName } = sdkNames;
     const params = operation.parameters || [];
-    const hasParams = params.length > 0;
+    const pathParams = params.filter((p: any) => p.in === 'path');
+    const queryParams = params.filter((p: any) => p.in === 'query');
+    const hasBody = !!operation.requestBody;
 
-    let snippet = `import { ${hookName} } from '@repo/v3-api';\n\n`;
+    let snippet = `import { ${hookName} } from '@repo/sdk';\n\n`;
     snippet += `function MyComponent() {\n`;
 
-    if (hasParams) {
-      snippet += `  // Pass parameters as required\n`;
-      snippet += `  const { data, isLoading, error } = ${hookName}(\n`;
-      snippet += `    {\n`;
-      params.forEach((p: any) => {
-        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
-        snippet += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
+    if (isGet) {
+      const argsList: string[] = [];
+      pathParams.forEach((p: any) => {
+        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : p.name === 'userId' ? 'user_123' : '<VALUE>');
+        argsList.push(typeof example === 'string' ? `'${example}'` : JSON.stringify(example));
       });
-      snippet += `    }\n`;
-      snippet += `  );\n`;
+      if (queryParams.length > 0) {
+        let qObj = '{\n';
+        queryParams.forEach((p: any) => {
+          const example = p.schema?.example || p.example || '<VALUE>';
+          qObj += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : JSON.stringify(example)},\n`;
+        });
+        qObj += '    }';
+        argsList.push(qObj);
+      }
+      const argsStr = argsList.join(', ');
+      snippet += `  const { data, isLoading, error } = ${hookName}(${argsStr});\n\n`;
+      snippet += `  if (isLoading) return <div>Loading...</div>;\n`;
+      snippet += `  if (error) return <div>Error loading data</div>;\n\n`;
+      snippet += `  return <pre>{JSON.stringify(data, null, 2)}</pre>;\n`;
     } else {
-      snippet += `  const { data, isLoading, error } = ${hookName}();\n`;
+      snippet += `  const { mutate, isPending } = ${hookName}();\n\n`;
+      snippet += `  const handleAction = () => {\n`;
+
+      const payloadFields: string[] = [];
+      pathParams.forEach((p: any) => {
+        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : p.name === 'userId' ? 'user_123' : p.name === 'webhookId' ? 'wh_123' : '<VALUE>');
+        payloadFields.push(`    ${p.name}: ${typeof example === 'string' ? `'${example}'` : JSON.stringify(example)}`);
+      });
+
+      if (hasBody) {
+        let exampleBody = operation.requestBody.content?.['application/json']?.schema?.example ||
+                            operation.requestBody.content?.['application/json']?.schema?.properties?.file?.example ||
+                            {};
+        if (Object.keys(exampleBody).length === 0) {
+          const schema = operation.requestBody.content?.['application/json']?.schema;
+          if (schema && schema.properties) {
+            exampleBody = {};
+            Object.entries(schema.properties).forEach(([key, val]: [string, any]) => {
+              exampleBody[key] = val.example || val.default || (val.type === 'string' ? '<VALUE>' : val.type === 'number' ? 0 : val.type === 'boolean' ? false : {});
+            });
+          }
+        }
+        const bodyStr = JSON.stringify(exampleBody, null, 2).replace(/\n/g, '\n      ');
+        payloadFields.push(`    data: ${bodyStr}`);
+      }
+
+      if (payloadFields.length > 0) {
+        snippet += `    mutate({\n${payloadFields.join(',\n')}\n    });\n`;
+      } else {
+        snippet += `    mutate();\n`;
+      }
+      snippet += `  };\n\n`;
+      snippet += `  return (\n`;
+      snippet += `    <button onClick={handleAction} disabled={isPending}>\n`;
+      snippet += `      {isPending ? 'Executing...' : 'Trigger Action'}\n`;
+      snippet += `    </button>\n`;
+      snippet += `  );\n`;
     }
 
-    snippet += `\n  if (isLoading) return <div>Loading...</div>;\n`;
-    snippet += `  if (error) return <div>Error loading data</div>;\n\n`;
-    snippet += `  return <pre>{JSON.stringify(data, null, 2)}</pre>;\n`;
     snippet += `}`;
     return snippet;
   };
 
-  const generateNodeSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
+  const generateNodeSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null, isGet: boolean) => {
     if (!sdkNames) return '// No SDK mapping available for this endpoint';
     const { clientFn } = sdkNames;
     const params = operation.parameters || [];
-    const hasParams = params.length > 0;
+    const pathParams = params.filter((p: any) => p.in === 'path');
+    const queryParams = params.filter((p: any) => p.in === 'query');
     const hasBody = !!operation.requestBody;
 
-    let snippet = `import { ${clientFn} } from '@repo/v3-api/server';\n\n`;
+    let snippet = `import { ${clientFn} } from '@repo/sdk/server';\n\n`;
     snippet += `async function run() {\n`;
     snippet += `  try {\n`;
 
-    let args = [];
-    if (hasBody) {
-      const exampleBody = operation.requestBody.content?.['application/json']?.schema?.example || {};
-      args.push(JSON.stringify(exampleBody, null, 2).replace(/\n/g, '\n    '));
-    }
-    if (hasParams) {
-      let paramObj = `{\n`;
-      params.forEach((p: any) => {
-        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
-        paramObj += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
-      });
-      paramObj += `    }`;
-      args.push(paramObj);
+    const argsList: string[] = [];
+    pathParams.forEach((p: any) => {
+      const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : p.name === 'userId' ? 'user_123' : p.name === 'webhookId' ? 'wh_123' : '<VALUE>');
+      argsList.push(typeof example === 'string' ? `'${example}'` : JSON.stringify(example));
+    });
+
+    if (isGet) {
+      if (queryParams.length > 0) {
+        let qObj = '{\n';
+        queryParams.forEach((p: any) => {
+          const example = p.schema?.example || p.example || '<VALUE>';
+          qObj += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : JSON.stringify(example)},\n`;
+        });
+        qObj += '    }';
+        argsList.push(qObj);
+      }
+    } else if (hasBody) {
+      let exampleBody = operation.requestBody.content?.['application/json']?.schema?.example ||
+                          operation.requestBody.content?.['application/json']?.schema?.properties?.file?.example ||
+                          {};
+      if (Object.keys(exampleBody).length === 0) {
+        const schema = operation.requestBody.content?.['application/json']?.schema;
+        if (schema && schema.properties) {
+          exampleBody = {};
+          Object.entries(schema.properties).forEach(([key, val]: [string, any]) => {
+            exampleBody[key] = val.example || val.default || (val.type === 'string' ? '<VALUE>' : val.type === 'number' ? 0 : val.type === 'boolean' ? false : {});
+          });
+        }
+      }
+      argsList.push(JSON.stringify(exampleBody, null, 2).replace(/\n/g, '\n    '));
     }
 
-    const argsStr = args.join(', ');
+    const argsStr = argsList.join(', ');
     snippet += `    const response = await ${clientFn}(${argsStr});\n`;
-    snippet += `    console.log('Success:', response.data);\n`;
+    snippet += `    console.log('Success:', response);\n`;
     snippet += `  } catch (error) {\n`;
     snippet += `    console.error('Error executing request:', error);\n`;
     snippet += `  }\n`;
@@ -364,11 +427,11 @@ export default function ApiReferencePage() {
                                   <div className="relative group rounded-lg overflow-hidden bg-black/90">
                                     <div className="absolute right-2 top-2">
                                       <CopyButton
-                                        value={generateReactSnippet(operation, getSdkNames(operation.operationId))}
+                                        value={generateReactSnippet(operation, getSdkNames(operation.operationId), method.toLowerCase() === 'get')}
                                       />
                                     </div>
                                     <SyntaxHighlighter
-                                      code={generateReactSnippet(operation, getSdkNames(operation.operationId))}
+                                      code={generateReactSnippet(operation, getSdkNames(operation.operationId), method.toLowerCase() === 'get')}
                                       language="typescript"
                                     />
                                   </div>
@@ -378,11 +441,11 @@ export default function ApiReferencePage() {
                                   <div className="relative group rounded-lg overflow-hidden bg-black/90">
                                     <div className="absolute right-2 top-2">
                                       <CopyButton
-                                        value={generateNodeSnippet(operation, getSdkNames(operation.operationId))}
+                                        value={generateNodeSnippet(operation, getSdkNames(operation.operationId), method.toLowerCase() === 'get')}
                                       />
                                     </div>
                                     <SyntaxHighlighter
-                                      code={generateNodeSnippet(operation, getSdkNames(operation.operationId))}
+                                      code={generateNodeSnippet(operation, getSdkNames(operation.operationId), method.toLowerCase() === 'get')}
                                       language="typescript"
                                     />
                                   </div>
