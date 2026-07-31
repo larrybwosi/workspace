@@ -11,9 +11,7 @@
           }
         },
         "summary": "Check health",
-        "tags": [
-          "Health"
-        ]
+        "tags": ["Health"]
       }
     },
     "/api": {
@@ -26,9 +24,7 @@
           }
         },
         "summary": "Hello",
-        "tags": [
-          "Health"
-        ]
+        "tags": ["Health"]
       }
     },
     "/api/config/realtime": {
@@ -41,9 +37,7 @@
           }
         },
         "summary": "Get realtime configuration",
-        "tags": [
-          "Health"
-        ]
+        "tags": ["Health"]
       }
     },
     "/api/users/search": {
@@ -70,9 +64,7 @@
           }
         ],
         "summary": "Search for users by username or name",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/users/me": {
@@ -90,9 +82,7 @@
           }
         ],
         "summary": "Get current user profile",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       },
       "post": {
         "operationId": "UsersController_updateMe",
@@ -108,9 +98,7 @@
           }
         ],
         "summary": "Update current user profile",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/users/{id}": {
@@ -141,9 +129,7 @@
           }
         ],
         "summary": "Get a user profile by ID",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/users/{id}/social-profile": {
@@ -174,9 +160,7 @@
           }
         ],
         "summary": "Get social profile between current user and target user",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/users/{id}/block": {
@@ -204,9 +188,7 @@
           }
         ],
         "summary": "Block a user",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       },
       "delete": {
         "operationId": "UsersController_unblockUser",
@@ -232,9 +214,7 @@
           }
         ],
         "summary": "Unblock a user",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/users/me/device-tokens": {
@@ -247,22 +227,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "token",
-                  "platform"
-                ],
+                "required": ["token", "platform"],
                 "properties": {
                   "token": {
                     "type": "string"
                   },
                   "platform": {
                     "type": "string",
-                    "enum": [
-                      "web",
-                      "ios",
-                      "android",
-                      "desktop"
-                    ]
+                    "enum": ["web", "ios", "android", "desktop"]
                   },
                   "deviceInfo": {
                     "type": "object"
@@ -283,9 +255,7 @@
           }
         ],
         "summary": "Register a device token for push notifications",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       },
       "get": {
         "operationId": "UsersController_getDeviceTokens",
@@ -301,9 +271,7 @@
           }
         ],
         "summary": "Get active device tokens for the current user",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       },
       "delete": {
         "operationId": "UsersController_deleteDeviceToken",
@@ -328,9 +296,7 @@
           }
         ],
         "summary": "Deactivate a device token",
-        "tags": [
-          "Users"
-        ]
+        "tags": ["Users"]
       }
     },
     "/api/v2/workspaces/{slug}/members": {
@@ -360,9 +326,7 @@
           }
         ],
         "summary": "List all workspace members",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       },
       "post": {
         "description": "Requires members:write scope.",
@@ -400,9 +364,7 @@
           }
         ],
         "summary": "Add a member to the workspace",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       }
     },
     "/api/v2/workspaces/{slug}/members/{userId}": {
@@ -441,9 +403,7 @@
           }
         ],
         "summary": "Get details of a specific workspace member",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       },
       "delete": {
         "description": "Requires members:write scope.",
@@ -483,9 +443,7 @@
           }
         ],
         "summary": "Remove a member from the workspace",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       }
     },
     "/api/v2/workspaces/{slug}/channels": {
@@ -512,9 +470,7 @@
           }
         ],
         "summary": "List all channels in the workspace",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       },
       "post": {
         "description": "Requires channels:write scope.",
@@ -549,9 +505,7 @@
           }
         ],
         "summary": "Create a new channel",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/v2/workspaces/{slug}/channels/{channelId}/icon": {
@@ -603,9 +557,7 @@
           }
         ],
         "summary": "Upload a channel icon",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/v2/workspaces/{slug}/channels/{channelId}": {
@@ -641,9 +593,7 @@
           }
         ],
         "summary": "Get details of a specific channel",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       },
       "patch": {
         "description": "Requires channels:write scope.",
@@ -687,9 +637,7 @@
           }
         ],
         "summary": "Update a channel",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       },
       "delete": {
         "description": "Requires channels:write scope.",
@@ -723,9 +671,7 @@
           }
         ],
         "summary": "Delete a channel",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/v2/workspaces/{slug}/messages": {
@@ -792,9 +738,7 @@
           }
         ],
         "summary": "List messages in the workspace",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       },
       "post": {
         "description": "\nRequires messages:send scope. Supports multipart/form-data for file uploads.\n\n**M2M Behavior:**\n- If the request is made by an M2M application, the message is sent by the app's associated bot.\n- If no app bot exists, it falls back to the workspace's **Default Bot**.\n- You can include `actions` to create interactive buttons that trigger webhooks.\n    ",
@@ -829,9 +773,7 @@
           }
         ],
         "summary": "Send a message",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/v2/workspaces/{slug}/search/members": {
@@ -875,9 +817,7 @@
           }
         ],
         "summary": "Search for members in the workspace",
-        "tags": [
-          "Search"
-        ]
+        "tags": ["Search"]
       }
     },
     "/api/v2/workspaces/{slug}/search/messages": {
@@ -929,9 +869,7 @@
           }
         ],
         "summary": "Search for messages in the workspace",
-        "tags": [
-          "Search"
-        ]
+        "tags": ["Search"]
       }
     },
     "/api/v2/workspaces/{slug}/api-tokens": {
@@ -958,9 +896,7 @@
           }
         ],
         "summary": "List all API tokens in the workspace",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       },
       "post": {
         "description": "Requires tokens:write scope.",
@@ -995,9 +931,7 @@
           }
         ],
         "summary": "Create a new API token",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       }
     },
     "/api/v2/workspaces/{slug}/api-tokens/{tokenId}": {
@@ -1033,9 +967,7 @@
           }
         ],
         "summary": "Delete an API token",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       }
     },
     "/api/v2/workspaces/{slug}/api-tokens/{tokenId}/rotate": {
@@ -1071,9 +1003,7 @@
           }
         ],
         "summary": "Rotate an API token (generate new token value)",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       }
     },
     "/api/v2/workspaces/{slug}/webhooks": {
@@ -1100,9 +1030,7 @@
           }
         ],
         "summary": "List all webhooks in the workspace",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       },
       "post": {
         "description": "Requires webhooks:write scope.",
@@ -1137,9 +1065,7 @@
           }
         ],
         "summary": "Create a new webhook",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       }
     },
     "/api/v2/workspaces/{slug}/webhooks/{webhookId}": {
@@ -1175,9 +1101,7 @@
           }
         ],
         "summary": "Get details of a specific webhook",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       },
       "patch": {
         "description": "Requires webhooks:write scope.",
@@ -1221,9 +1145,7 @@
           }
         ],
         "summary": "Update a webhook",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       },
       "delete": {
         "description": "Requires webhooks:write scope.",
@@ -1257,9 +1179,7 @@
           }
         ],
         "summary": "Delete a webhook",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       }
     },
     "/api/v2/workspaces/{slug}/threads": {
@@ -1302,9 +1222,7 @@
           }
         ],
         "summary": "List all threads in the workspace",
-        "tags": [
-          "Threads"
-        ]
+        "tags": ["Threads"]
       }
     },
     "/api/v2/workspaces/{slug}/threads/{threadId}/messages": {
@@ -1356,9 +1274,7 @@
           }
         ],
         "summary": "List messages in a thread",
-        "tags": [
-          "Threads"
-        ]
+        "tags": ["Threads"]
       }
     },
     "/api/v2/workspaces/{slug}/threads/context/{contextId}": {
@@ -1394,9 +1310,7 @@
           }
         ],
         "summary": "Get a thread by its context ID",
-        "tags": [
-          "Threads"
-        ]
+        "tags": ["Threads"]
       }
     },
     "/api/v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}": {
@@ -1461,9 +1375,7 @@
           }
         ],
         "summary": "Trigger a message action",
-        "tags": [
-          "Message Actions"
-        ]
+        "tags": ["Message Actions"]
       }
     },
     "/api/v2/workspaces/{slug}/departments": {
@@ -1490,9 +1402,7 @@
           }
         ],
         "summary": "List all departments in the workspace",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "post": {
         "description": "Requires departments:write scope.",
@@ -1527,9 +1437,7 @@
           }
         ],
         "summary": "Create a new department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       }
     },
     "/api/v2/workspaces/{slug}/departments/{departmentId}": {
@@ -1565,9 +1473,7 @@
           }
         ],
         "summary": "Get details of a specific department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "patch": {
         "description": "Requires departments:write scope.",
@@ -1611,9 +1517,7 @@
           }
         ],
         "summary": "Update a department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "delete": {
         "description": "Requires departments:write scope.",
@@ -1647,9 +1551,7 @@
           }
         ],
         "summary": "Delete a department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       }
     },
     "/api/v2/workspaces/{slug}/teams": {
@@ -1676,9 +1578,7 @@
           }
         ],
         "summary": "List all teams in the workspace",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       },
       "post": {
         "description": "Requires teams:write scope.",
@@ -1713,9 +1613,7 @@
           }
         ],
         "summary": "Create a new team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       }
     },
     "/api/v2/workspaces/{slug}/teams/{teamId}": {
@@ -1751,9 +1649,7 @@
           }
         ],
         "summary": "Get details of a specific team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       },
       "patch": {
         "description": "Requires teams:write scope.",
@@ -1797,9 +1693,7 @@
           }
         ],
         "summary": "Update a team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       },
       "delete": {
         "description": "Requires teams:write scope.",
@@ -1833,9 +1727,7 @@
           }
         ],
         "summary": "Delete a team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       }
     },
     "/api/v2/workspaces/{slug}/announcements": {
@@ -1862,9 +1754,7 @@
           }
         ],
         "summary": "List all announcements in the workspace",
-        "tags": [
-          "Announcements"
-        ]
+        "tags": ["Announcements"]
       },
       "post": {
         "description": "Requires announcements:write scope.",
@@ -1899,9 +1789,7 @@
           }
         ],
         "summary": "Create a new announcement",
-        "tags": [
-          "Announcements"
-        ]
+        "tags": ["Announcements"]
       }
     },
     "/api/v2/workspaces/{slug}/announcements/{announcementId}": {
@@ -1937,9 +1825,7 @@
           }
         ],
         "summary": "Get details of a specific announcement",
-        "tags": [
-          "Announcements"
-        ]
+        "tags": ["Announcements"]
       },
       "patch": {
         "description": "Requires announcements:write scope.",
@@ -1983,9 +1869,7 @@
           }
         ],
         "summary": "Update an announcement",
-        "tags": [
-          "Announcements"
-        ]
+        "tags": ["Announcements"]
       },
       "delete": {
         "description": "Requires announcements:write scope.",
@@ -2019,9 +1903,7 @@
           }
         ],
         "summary": "Delete an announcement",
-        "tags": [
-          "Announcements"
-        ]
+        "tags": ["Announcements"]
       }
     },
     "/api/v2/oauth/token": {
@@ -2076,9 +1958,7 @@
           }
         },
         "summary": "Exchange client credentials for an access token",
-        "tags": [
-          "Authentication"
-        ]
+        "tags": ["Authentication"]
       }
     },
     "/api/v2/applications": {
@@ -2107,9 +1987,7 @@
           }
         ],
         "summary": "Create a new bot application",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       },
       "get": {
         "operationId": "V2ApplicationsController_getApplications",
@@ -2125,9 +2003,7 @@
           }
         ],
         "summary": "List all bot applications owned by the user or organization",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       }
     },
     "/api/v2/applications/{id}": {
@@ -2155,9 +2031,7 @@
           }
         ],
         "summary": "Get details of a specific bot application",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       },
       "post": {
         "operationId": "V2ApplicationsController_updateApplication",
@@ -2193,9 +2067,7 @@
           }
         ],
         "summary": "Update a bot application",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       }
     },
     "/api/v2/applications/{id}/delete": {
@@ -2223,9 +2095,7 @@
           }
         ],
         "summary": "Delete a bot application",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       }
     },
     "/api/v2/applications/{id}/reset-token": {
@@ -2253,9 +2123,7 @@
           }
         ],
         "summary": "Reset the bot user token",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       }
     },
     "/api/v2/applications/{id}/install": {
@@ -2298,9 +2166,7 @@
           }
         ],
         "summary": "Install the bot into a workspace",
-        "tags": [
-          "Bot Applications"
-        ]
+        "tags": ["Bot Applications"]
       }
     },
     "/api/v2/contact": {
@@ -2334,9 +2200,7 @@
           }
         },
         "summary": "Submit a contact form",
-        "tags": [
-          "General"
-        ]
+        "tags": ["General"]
       }
     },
     "/api/v2/provisioning/workspaces": {
@@ -2371,9 +2235,7 @@
           }
         ],
         "summary": "Provision a new workspace (Enterprise M2M)",
-        "tags": [
-          "Provisioning"
-        ]
+        "tags": ["Provisioning"]
       }
     },
     "/api/organizations/{orgSlug}/workspaces": {
@@ -2401,9 +2263,7 @@
           }
         ],
         "summary": "List workspaces for an organization",
-        "tags": [
-          "Organizations"
-        ]
+        "tags": ["Organizations"]
       }
     },
     "/api/organizations/{orgSlug}": {
@@ -2431,9 +2291,7 @@
           }
         ],
         "summary": "Get organization details",
-        "tags": [
-          "Organizations"
-        ]
+        "tags": ["Organizations"]
       },
       "patch": {
         "operationId": "OrganizationsController_updateOrganization",
@@ -2469,9 +2327,7 @@
           }
         ],
         "summary": "Update organization details",
-        "tags": [
-          "Organizations"
-        ]
+        "tags": ["Organizations"]
       }
     },
     "/api/integrations/plane/webhook": {
@@ -2484,9 +2340,7 @@
           }
         },
         "summary": "Handle Plane webhook",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/huly/webhook/{id}": {
@@ -2509,9 +2363,7 @@
           }
         },
         "summary": "Handle Huly webhook",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/stats": {
@@ -2529,9 +2381,7 @@
           }
         ],
         "summary": "Get integration statistics",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/webhooks": {
@@ -2549,9 +2399,7 @@
           }
         ],
         "summary": "Get all integration webhooks",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       },
       "post": {
         "operationId": "IntegrationsController_createWebhook",
@@ -2577,9 +2425,7 @@
           }
         ],
         "summary": "Create an integration webhook",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/webhooks/{webhookId}": {
@@ -2607,9 +2453,7 @@
           }
         ],
         "summary": "Update an integration webhook",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       },
       "delete": {
         "operationId": "IntegrationsController_deleteWebhook",
@@ -2635,9 +2479,7 @@
           }
         ],
         "summary": "Delete an integration webhook",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/webhooks/{webhookId}/logs": {
@@ -2665,9 +2507,7 @@
           }
         ],
         "summary": "Get integration webhook logs",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/api-keys": {
@@ -2685,9 +2525,7 @@
           }
         ],
         "summary": "Get all integration API keys",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/integrations/api-keys/{keyId}": {
@@ -2715,9 +2553,7 @@
           }
         ],
         "summary": "Update an integration API key",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       },
       "delete": {
         "operationId": "IntegrationsController_deleteApiKey",
@@ -2743,9 +2579,7 @@
           }
         ],
         "summary": "Delete an integration API key",
-        "tags": [
-          "Integrations"
-        ]
+        "tags": ["Integrations"]
       }
     },
     "/api/workspaces/{slug}/integrations": {
@@ -2773,9 +2607,7 @@
           }
         ],
         "summary": "Get all integrations for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       },
       "post": {
         "operationId": "WorkspaceIntegrationsController_createWorkspaceIntegration",
@@ -2811,9 +2643,7 @@
           }
         ],
         "summary": "Create a new integration for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       }
     },
     "/api/workspaces/{slug}/integrations/{integrationId}": {
@@ -2853,9 +2683,7 @@
           }
         ],
         "summary": "Get integration details",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       },
       "patch": {
         "operationId": "WorkspaceIntegrationsController_updateWorkspaceIntegration",
@@ -2890,9 +2718,7 @@
           }
         ],
         "summary": "Update an integration",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       },
       "delete": {
         "operationId": "WorkspaceIntegrationsController_deleteWorkspaceIntegration",
@@ -2927,9 +2753,7 @@
           }
         ],
         "summary": "Delete an integration",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       }
     },
     "/api/workspaces/{slug}/integrations/{integrationId}/test": {
@@ -2966,9 +2790,7 @@
           }
         ],
         "summary": "Test an integration",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       }
     },
     "/api/workspaces/{slug}/integrations/webhooks": {
@@ -2996,9 +2818,7 @@
           }
         ],
         "summary": "Get all integration webhooks for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       },
       "post": {
         "operationId": "WorkspaceIntegrationsController_createWorkspaceWebhook",
@@ -3034,9 +2854,7 @@
           }
         ],
         "summary": "Create an integration webhook for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
+        "tags": ["Workspace Integrations"]
       }
     },
     "/api/notifications": {
@@ -3073,9 +2891,7 @@
           }
         ],
         "summary": "Get notifications for the current user",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       }
     },
     "/api/notifications/mark-all-read": {
@@ -3093,9 +2909,7 @@
           }
         ],
         "summary": "Mark all notifications as read",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       }
     },
     "/api/notifications/settings/workspace": {
@@ -3123,9 +2937,7 @@
           }
         ],
         "summary": "Get notification settings for a workspace",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       },
       "patch": {
         "operationId": "NotificationsController_updateWorkspaceSettings",
@@ -3151,9 +2963,7 @@
           }
         ],
         "summary": "Update notification settings for a workspace",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       }
     },
     "/api/notifications/settings/channel": {
@@ -3181,9 +2991,7 @@
           }
         ],
         "summary": "Get notification settings for a channel",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       },
       "patch": {
         "operationId": "NotificationsController_updateChannelSettings",
@@ -3209,9 +3017,7 @@
           }
         ],
         "summary": "Update notification settings for a channel",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       }
     },
     "/api/notifications/{notificationId}": {
@@ -3249,9 +3055,7 @@
           }
         ],
         "summary": "Update a notification (e.g. mark as read)",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       },
       "delete": {
         "operationId": "NotificationsController_deleteNotification",
@@ -3277,9 +3081,7 @@
           }
         ],
         "summary": "Delete a notification",
-        "tags": [
-          "Notifications"
-        ]
+        "tags": ["Notifications"]
       }
     },
     "/api/ably/token": {
@@ -3291,9 +3093,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Ably"
-        ]
+        "tags": ["Ably"]
       }
     },
     "/api/storage/upload": {
@@ -3327,9 +3127,29 @@
           }
         ],
         "summary": "Upload a file",
-        "tags": [
-          "Storage"
-        ]
+        "tags": ["Storage"]
+      }
+    },
+    "/s/{code}": {
+      "get": {
+        "operationId": "ShortUrlController_redirect",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Proxy file request using high-performance streaming",
+        "tags": ["Storage"]
       }
     },
     "/api/bot/v10/users/{id}": {
@@ -3350,9 +3170,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Users"
-        ]
+        "tags": ["V10Users"]
       }
     },
     "/api/bot/v10/users/@me": {
@@ -3364,9 +3182,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Users"
-        ]
+        "tags": ["V10Users"]
       }
     },
     "/api/bot/v10/gateway/bot": {
@@ -3378,9 +3194,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Gateway"
-        ]
+        "tags": ["V10Gateway"]
       }
     },
     "/api/bot/v10/gateway/auth": {
@@ -3392,9 +3206,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Gateway"
-        ]
+        "tags": ["V10Gateway"]
       }
     },
     "/api/bot/v10/channels/{id}": {
@@ -3422,9 +3234,7 @@
           }
         ],
         "summary": "Get channel details",
-        "tags": [
-          "V10 Channels"
-        ]
+        "tags": ["V10 Channels"]
       }
     },
     "/api/bot/v10/channels/{id}/messages": {
@@ -3452,9 +3262,7 @@
           }
         ],
         "summary": "Send a message to a channel",
-        "tags": [
-          "V10 Channels"
-        ]
+        "tags": ["V10 Channels"]
       },
       "get": {
         "operationId": "V10ChannelsController_getMessages",
@@ -3504,9 +3312,7 @@
           }
         ],
         "summary": "Get messages from a channel",
-        "tags": [
-          "V10 Channels"
-        ]
+        "tags": ["V10 Channels"]
       }
     },
     "/api/bot/v10/channels/{id}/messages/{messageId}": {
@@ -3543,9 +3349,7 @@
           }
         ],
         "summary": "Update a message",
-        "tags": [
-          "V10 Channels"
-        ]
+        "tags": ["V10 Channels"]
       },
       "delete": {
         "operationId": "V10ChannelsController_deleteMessage",
@@ -3580,9 +3384,7 @@
           }
         ],
         "summary": "Delete a message",
-        "tags": [
-          "V10 Channels"
-        ]
+        "tags": ["V10 Channels"]
       }
     },
     "/api/bot/v10/guilds/{guildId}": {
@@ -3603,9 +3405,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Guilds"
-        ]
+        "tags": ["V10Guilds"]
       }
     },
     "/api/bot/v10/guilds/{guildId}/channels": {
@@ -3626,9 +3426,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Guilds"
-        ]
+        "tags": ["V10Guilds"]
       }
     },
     "/api/bot/v10/guilds/{guildId}/members": {
@@ -3665,9 +3463,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Guilds"
-        ]
+        "tags": ["V10Guilds"]
       }
     },
     "/api/bot/v10/guilds/{guildId}/roles": {
@@ -3688,9 +3484,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Guilds"
-        ]
+        "tags": ["V10Guilds"]
       }
     },
     "/api/bot/v10/guilds/{guildId}/members/{userId}/roles/{roleId}": {
@@ -3727,9 +3521,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Guilds"
-        ]
+        "tags": ["V10Guilds"]
       },
       "delete": {
         "operationId": "V10GuildsController_removeMemberRole",
@@ -3764,9 +3556,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Guilds"
-        ]
+        "tags": ["V10Guilds"]
       }
     },
     "/api/bot/v10/applications/{id}/commands": {
@@ -3787,9 +3577,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Applications"
-        ]
+        "tags": ["V10Applications"]
       },
       "post": {
         "operationId": "V10ApplicationsController_createCommand",
@@ -3808,9 +3596,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Applications"
-        ]
+        "tags": ["V10Applications"]
       }
     },
     "/api/bot/v10/applications/{id}/guilds/{guildId}/commands": {
@@ -3839,9 +3625,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Applications"
-        ]
+        "tags": ["V10Applications"]
       },
       "post": {
         "operationId": "V10ApplicationsController_createGuildCommand",
@@ -3868,9 +3652,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Applications"
-        ]
+        "tags": ["V10Applications"]
       }
     },
     "/api/bot/v10/interactions/{id}/{token}/callback": {
@@ -3899,9 +3681,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Interactions"
-        ]
+        "tags": ["V10Interactions"]
       }
     },
     "/api/bot/v10/enterprise/departments/{id}/announcements": {
@@ -3922,9 +3702,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "V10Enterprise"
-        ]
+        "tags": ["V10Enterprise"]
       }
     },
     "/api/v3/oauth/token": {
@@ -3995,9 +3773,7 @@
           }
         },
         "summary": "Exchange client credentials for a V3 access token",
-        "tags": [
-          "V3 Authentication"
-        ]
+        "tags": ["V3 Authentication"]
       }
     },
     "/api/v3/workspaces": {
@@ -4067,9 +3843,7 @@
           }
         ],
         "summary": "List organization workspaces (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       },
       "post": {
         "description": "\nProvisions a new workspace within your organization.\nWhen provisioned via M2M:\n1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.\n2. Your M2M application is installed as an **Administrator** in the new workspace.\n3. The specified owner and initial members are added.\n    ",
@@ -4151,9 +3925,7 @@
           }
         ],
         "summary": "Provision a new workspace (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       }
     },
     "/api/v3/workspaces/{slug}": {
@@ -4245,9 +4017,7 @@
           }
         ],
         "summary": "Get workspace details (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       },
       "patch": {
         "description": "Update the configuration and metadata of a specific workspace.",
@@ -4350,9 +4120,7 @@
           }
         ],
         "summary": "Update a workspace (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       },
       "delete": {
         "description": "Permanently deletes a specific workspace.",
@@ -4413,9 +4181,7 @@
           }
         ],
         "summary": "Delete a workspace (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       }
     },
     "/api/v3/workspaces/{slug}/members": {
@@ -4447,9 +4213,7 @@
           }
         ],
         "summary": "List all workspace members (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       },
       "post": {
         "description": "Add a new member to a specific workspace. Requires members:write scope.",
@@ -4489,9 +4253,7 @@
           }
         ],
         "summary": "Add a member to the workspace (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       }
     },
     "/api/v3/workspaces/{slug}/members/{userId}": {
@@ -4535,9 +4297,7 @@
           }
         ],
         "summary": "Get details of a specific workspace member (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       },
       "patch": {
         "description": "Update the role of a specific workspace member. Requires members:write scope.",
@@ -4586,9 +4346,7 @@
           }
         ],
         "summary": "Update a workspace member role (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       },
       "delete": {
         "description": "Remove a workspace member by userId. Requires members:write scope.",
@@ -4630,9 +4388,7 @@
           }
         ],
         "summary": "Remove a member from the workspace (Enterprise M2M)",
-        "tags": [
-          "V3 Workspaces"
-        ]
+        "tags": ["V3 Workspaces"]
       }
     },
     "/api/v3/workspaces/{slug}/webhooks": {
@@ -4661,9 +4417,7 @@
           }
         ],
         "summary": "List all webhooks in the workspace",
-        "tags": [
-          "V3 Webhooks"
-        ]
+        "tags": ["V3 Webhooks"]
       },
       "post": {
         "description": "Requires webhooks:write scope.",
@@ -4700,9 +4454,7 @@
           }
         ],
         "summary": "Create a new webhook",
-        "tags": [
-          "V3 Webhooks"
-        ]
+        "tags": ["V3 Webhooks"]
       }
     },
     "/api/v3/workspaces/{slug}/webhooks/{webhookId}": {
@@ -4740,9 +4492,7 @@
           }
         ],
         "summary": "Get details of a specific webhook",
-        "tags": [
-          "V3 Webhooks"
-        ]
+        "tags": ["V3 Webhooks"]
       },
       "patch": {
         "description": "Requires webhooks:write scope.",
@@ -4788,9 +4538,7 @@
           }
         ],
         "summary": "Update a webhook",
-        "tags": [
-          "V3 Webhooks"
-        ]
+        "tags": ["V3 Webhooks"]
       },
       "delete": {
         "description": "Requires webhooks:write scope.",
@@ -4826,9 +4574,7 @@
           }
         ],
         "summary": "Delete a webhook",
-        "tags": [
-          "V3 Webhooks"
-        ]
+        "tags": ["V3 Webhooks"]
       }
     },
     "/api/v3/workspaces/{slug}/channels/{channelId}/incoming-webhooks": {
@@ -4866,9 +4612,7 @@
           }
         ],
         "summary": "List incoming webhooks for a channel",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       },
       "post": {
         "description": "Requires webhooks:write scope. Generates a new webhook token and secret.",
@@ -4914,9 +4658,7 @@
           }
         ],
         "summary": "Create an incoming webhook for a channel",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       }
     },
     "/api/v3/workspaces/{slug}/channels/{channelId}/incoming-webhooks/{webhookId}": {
@@ -4963,9 +4705,7 @@
           }
         ],
         "summary": "Get details of a channel incoming webhook",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       },
       "patch": {
         "description": "Requires webhooks:write scope.",
@@ -5020,9 +4760,7 @@
           }
         ],
         "summary": "Update a channel incoming webhook",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       },
       "delete": {
         "description": "Requires webhooks:write scope.",
@@ -5067,9 +4805,7 @@
           }
         ],
         "summary": "Delete a channel incoming webhook",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       }
     },
     "/api/v3/webhooks/incoming/{token}": {
@@ -5111,9 +4847,7 @@
           }
         },
         "summary": "Execute a channel incoming webhook (Token in URL)",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       }
     },
     "/api/v3/channels/{channelId}/webhooks/incoming": {
@@ -5172,9 +4906,7 @@
           }
         },
         "summary": "Execute a channel incoming webhook (Channel in URL)",
-        "tags": [
-          "V3 Channel Incoming Webhooks"
-        ]
+        "tags": ["V3 Channel Incoming Webhooks"]
       }
     },
     "/api/invitations": {
@@ -5202,9 +4934,7 @@
           }
         ],
         "summary": "Get invitations for the current user",
-        "tags": [
-          "Invitations"
-        ]
+        "tags": ["Invitations"]
       },
       "post": {
         "operationId": "InvitationsController_createInvitation",
@@ -5230,9 +4960,7 @@
           }
         ],
         "summary": "Create a new invitation",
-        "tags": [
-          "Invitations"
-        ]
+        "tags": ["Invitations"]
       }
     },
     "/api/invitations/{token}": {
@@ -5258,9 +4986,7 @@
           }
         },
         "summary": "Get invitation details by token",
-        "tags": [
-          "Invitations"
-        ]
+        "tags": ["Invitations"]
       }
     },
     "/api/invitations/{token}/accept": {
@@ -5291,9 +5017,7 @@
           }
         ],
         "summary": "Accept an invitation",
-        "tags": [
-          "Invitations"
-        ]
+        "tags": ["Invitations"]
       }
     },
     "/api/calls": {
@@ -5321,9 +5045,7 @@
           }
         ],
         "summary": "Start a new call",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/calls/{callId}": {
@@ -5361,9 +5083,7 @@
           }
         ],
         "summary": "Update call state",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/calls/{callId}/invite": {
@@ -5391,9 +5111,7 @@
           }
         ],
         "summary": "Invite a user to a call",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/calls/{callId}/participants": {
@@ -5421,9 +5139,7 @@
           }
         ],
         "summary": "Get participants in a call",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/calls/scheduled": {
@@ -5451,9 +5167,7 @@
           }
         ],
         "summary": "Get scheduled calls for a workspace",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       },
       "post": {
         "operationId": "CallsController_scheduleCall",
@@ -5479,9 +5193,7 @@
           }
         ],
         "summary": "Schedule a call",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/calls/soundboard": {
@@ -5509,9 +5221,7 @@
           }
         ],
         "summary": "Play a soundboard sound",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/channels": {
@@ -5529,9 +5239,7 @@
           }
         ],
         "summary": "Get global channels",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       },
       "post": {
         "operationId": "ChannelsController_createChannel",
@@ -5547,9 +5255,7 @@
           }
         ],
         "summary": "Create a global channel",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/messages": {
@@ -5591,9 +5297,7 @@
           }
         ],
         "summary": "Get messages from a channel",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       },
       "post": {
         "operationId": "ChannelsController_createMessage",
@@ -5619,9 +5323,7 @@
           }
         ],
         "summary": "Send a message to a channel",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/messages/{messageId}": {
@@ -5673,9 +5375,7 @@
           }
         ],
         "summary": "Update a message",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       },
       "delete": {
         "operationId": "ChannelsController_deleteMessage",
@@ -5710,9 +5410,7 @@
           }
         ],
         "summary": "Delete a message",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/messages/read": {
@@ -5758,9 +5456,7 @@
           }
         ],
         "summary": "Mark messages as read",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/messages/{messageId}/reactions": {
@@ -5812,9 +5508,7 @@
           }
         ],
         "summary": "Add a reaction to a message",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/messages/{messageId}/reactions/{emoji}": {
@@ -5860,9 +5554,7 @@
           }
         ],
         "summary": "Remove a reaction from a message",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/share": {
@@ -5889,9 +5581,7 @@
           }
         ],
         "summary": "Share a channel with another workspace",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/channels/{channelId}/messages/{messageId}/reply": {
@@ -5928,9 +5618,7 @@
           }
         ],
         "summary": "Reply to a message",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/admin/stats": {
@@ -5948,9 +5636,7 @@
           }
         ],
         "summary": "Get global system statistics",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/members": {
@@ -5993,9 +5679,7 @@
           }
         ],
         "summary": "Get all members across all workspaces",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/members/{userId}/role": {
@@ -6022,9 +5706,7 @@
           }
         ],
         "summary": "Update member role",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/assets": {
@@ -6051,9 +5733,7 @@
           }
         ],
         "summary": "Get assets by type",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       },
       "post": {
         "operationId": "AdminController_createAsset",
@@ -6069,9 +5749,7 @@
           }
         ],
         "summary": "Create a new asset",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       },
       "patch": {
         "operationId": "AdminController_updateAsset",
@@ -6087,9 +5765,7 @@
           }
         ],
         "summary": "Update an existing asset",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       },
       "delete": {
         "operationId": "AdminController_deleteAsset",
@@ -6122,9 +5798,7 @@
           }
         ],
         "summary": "Delete an asset",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/profile-assets": {
@@ -6142,9 +5816,7 @@
           }
         ],
         "summary": "Get profile assets",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       },
       "post": {
         "operationId": "AdminController_createProfileAsset",
@@ -6160,9 +5832,7 @@
           }
         ],
         "summary": "Create a profile asset",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/assets/stats": {
@@ -6197,9 +5867,7 @@
           }
         ],
         "summary": "Get asset statistics",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/admin/upload": {
@@ -6233,9 +5901,7 @@
           }
         ],
         "summary": "Upload a file to Sanity",
-        "tags": [
-          "Admin"
-        ]
+        "tags": ["Admin"]
       }
     },
     "/api/dms": {
@@ -6253,9 +5919,7 @@
           }
         ],
         "summary": "Get all DM conversations for the current user",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       },
       "post": {
         "operationId": "DmsController_createDm",
@@ -6281,9 +5945,7 @@
           }
         ],
         "summary": "Start a new DM conversation",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/dms/{conversationId}": {
@@ -6314,9 +5976,7 @@
           }
         ],
         "summary": "Get DM conversation details",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       },
       "delete": {
         "operationId": "DmsController_deleteDm",
@@ -6342,9 +6002,7 @@
           }
         ],
         "summary": "Delete a DM conversation",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/dms/{conversationId}/messages": {
@@ -6388,9 +6046,7 @@
           }
         ],
         "summary": "Get messages in a DM conversation",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       },
       "post": {
         "operationId": "DmsController_createMessage",
@@ -6416,9 +6072,7 @@
           }
         ],
         "summary": "Send a message in a DM",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/dms/{conversationId}/messages/{messageId}": {
@@ -6465,9 +6119,7 @@
           }
         ],
         "summary": "Update a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       },
       "delete": {
         "operationId": "DmsController_deleteMessage",
@@ -6502,9 +6154,7 @@
           }
         ],
         "summary": "Delete a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/dms/{conversationId}/messages/read": {
@@ -6542,9 +6192,7 @@
           }
         ],
         "summary": "Mark messages as read in a DM",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/dms/{conversationId}/messages/{messageId}/reactions": {
@@ -6597,9 +6245,7 @@
           }
         ],
         "summary": "Add a reaction to a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/dms/{conversationId}/messages/{messageId}/reactions/{emoji}": {
@@ -6645,9 +6291,7 @@
           }
         ],
         "summary": "Remove a reaction from a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
+        "tags": ["Direct Messages"]
       }
     },
     "/api/friends": {
@@ -6675,9 +6319,7 @@
           }
         ],
         "summary": "Get list of friends",
-        "tags": [
-          "Friends"
-        ]
+        "tags": ["Friends"]
       }
     },
     "/api/friends/requests": {
@@ -6690,10 +6332,7 @@
             "in": "query",
             "description": "Type of requests",
             "schema": {
-              "enum": [
-                "incoming",
-                "outgoing"
-              ],
+              "enum": ["incoming", "outgoing"],
               "type": "string"
             }
           },
@@ -6703,11 +6342,7 @@
             "in": "query",
             "description": "Status of requests",
             "schema": {
-              "enum": [
-                "pending",
-                "accepted",
-                "declined"
-              ],
+              "enum": ["pending", "accepted", "declined"],
               "type": "string"
             }
           }
@@ -6723,9 +6358,7 @@
           }
         ],
         "summary": "Get friend requests",
-        "tags": [
-          "Friends"
-        ]
+        "tags": ["Friends"]
       },
       "post": {
         "operationId": "FriendsController_sendFriendRequest",
@@ -6751,9 +6384,7 @@
           }
         ],
         "summary": "Send a friend request",
-        "tags": [
-          "Friends"
-        ]
+        "tags": ["Friends"]
       }
     },
     "/api/friends/requests/{requestId}": {
@@ -6791,9 +6422,7 @@
           }
         ],
         "summary": "Accept, decline or cancel a friend request",
-        "tags": [
-          "Friends"
-        ]
+        "tags": ["Friends"]
       },
       "delete": {
         "operationId": "FriendsController_deleteFriendRequest",
@@ -6819,9 +6448,7 @@
           }
         ],
         "summary": "Delete a friend request or unfriend",
-        "tags": [
-          "Friends"
-        ]
+        "tags": ["Friends"]
       }
     },
     "/api/workspaces": {
@@ -6839,9 +6466,7 @@
           }
         ],
         "summary": "Get all workspaces for the current user",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       },
       "post": {
         "operationId": "WorkspacesController_createWorkspace",
@@ -6870,9 +6495,7 @@
           }
         ],
         "summary": "Create a new workspace",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       }
     },
     "/api/workspaces/roles": {
@@ -6890,9 +6513,7 @@
           }
         ],
         "summary": "Get all well-defined workspace roles",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       }
     },
     "/api/workspaces/{slug}/roles": {
@@ -6920,9 +6541,7 @@
           }
         ],
         "summary": "Get roles defined for a specific workspace",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       }
     },
     "/api/workspaces/discover": {
@@ -6950,9 +6569,7 @@
           }
         ],
         "summary": "Discover public workspaces",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       }
     },
     "/api/workspaces/{slug}/join": {
@@ -6983,9 +6600,7 @@
           }
         ],
         "summary": "Join a workspace",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       }
     },
     "/api/workspaces/{slug}": {
@@ -7019,9 +6634,7 @@
           }
         ],
         "summary": "Get workspace details by slug",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       },
       "patch": {
         "operationId": "WorkspacesController_updateWorkspaceBySlug",
@@ -7060,9 +6673,7 @@
           }
         ],
         "summary": "Update workspace details",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       },
       "delete": {
         "operationId": "WorkspacesController_deleteWorkspaceBySlug",
@@ -7091,9 +6702,7 @@
           }
         ],
         "summary": "Delete a workspace",
-        "tags": [
-          "Workspaces"
-        ]
+        "tags": ["Workspaces"]
       }
     },
     "/api/workspaces/{slug}/members": {
@@ -7121,9 +6730,7 @@
           }
         ],
         "summary": "Get all members of a workspace",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       }
     },
     "/api/workspaces/{slug}/members/{memberId}": {
@@ -7173,9 +6780,7 @@
           }
         ],
         "summary": "Update a workspace member (e.g. change role)",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       },
       "delete": {
         "operationId": "MembersController_removeMember",
@@ -7213,9 +6818,7 @@
           }
         ],
         "summary": "Remove a member from a workspace",
-        "tags": [
-          "Members"
-        ]
+        "tags": ["Members"]
       }
     },
     "/api/workspaces/{slug}/channels": {
@@ -7243,9 +6846,7 @@
           }
         ],
         "summary": "Get all channels in a workspace",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       },
       "post": {
         "operationId": "ChannelsController_createChannel",
@@ -7281,9 +6882,7 @@
           }
         ],
         "summary": "Create a new channel in a workspace",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}": {
@@ -7323,9 +6922,7 @@
           }
         ],
         "summary": "Get channel details",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       },
       "patch": {
         "operationId": "ChannelsController_updateChannel",
@@ -7370,9 +6967,7 @@
           }
         ],
         "summary": "Update channel details",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       },
       "delete": {
         "operationId": "ChannelsController_deleteChannel",
@@ -7407,9 +7002,7 @@
           }
         ],
         "summary": "Delete a channel",
-        "tags": [
-          "Channels"
-        ]
+        "tags": ["Channels"]
       }
     },
     "/api/workspaces/{slug}/departments": {
@@ -7437,9 +7030,7 @@
           }
         ],
         "summary": "Get all departments in a workspace",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "post": {
         "operationId": "DepartmentsController_createDepartment",
@@ -7475,9 +7066,7 @@
           }
         ],
         "summary": "Create a new department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       }
     },
     "/api/workspaces/{slug}/departments/{departmentId}": {
@@ -7517,9 +7106,7 @@
           }
         ],
         "summary": "Get department details",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "patch": {
         "operationId": "DepartmentsController_updateDepartment",
@@ -7564,9 +7151,7 @@
           }
         ],
         "summary": "Update department details",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "delete": {
         "operationId": "DepartmentsController_deleteDepartment",
@@ -7601,9 +7186,7 @@
           }
         ],
         "summary": "Delete a department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       }
     },
     "/api/workspaces/{slug}/departments/{departmentId}/announcements": {
@@ -7633,12 +7216,7 @@
             "required": false,
             "in": "query",
             "schema": {
-              "enum": [
-                "low",
-                "normal",
-                "high",
-                "urgent"
-              ],
+              "enum": ["low", "normal", "high", "urgent"],
               "type": "string"
             }
           },
@@ -7668,9 +7246,7 @@
           }
         ],
         "summary": "Get announcements for a department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       },
       "post": {
         "operationId": "DepartmentsController_createAnnouncement",
@@ -7715,9 +7291,7 @@
           }
         ],
         "summary": "Create a new announcement in a department",
-        "tags": [
-          "Departments"
-        ]
+        "tags": ["Departments"]
       }
     },
     "/api/workspaces/{slug}/teams": {
@@ -7754,9 +7328,7 @@
           }
         ],
         "summary": "Get all teams in a workspace",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       },
       "post": {
         "operationId": "TeamsController_createTeam",
@@ -7792,9 +7364,7 @@
           }
         ],
         "summary": "Create a new team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       }
     },
     "/api/workspaces/{slug}/teams/{teamId}/members": {
@@ -7841,9 +7411,7 @@
           }
         ],
         "summary": "Add a member to a team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       }
     },
     "/api/workspaces/{slug}/teams/{teamId}/members/{userId}": {
@@ -7889,9 +7457,7 @@
           }
         ],
         "summary": "Remove a member from a team",
-        "tags": [
-          "Teams"
-        ]
+        "tags": ["Teams"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/messages": {
@@ -7953,9 +7519,7 @@
           }
         ],
         "summary": "Get messages from a channel",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       },
       "post": {
         "operationId": "MessagesController_createMessage",
@@ -8000,9 +7564,7 @@
           }
         ],
         "summary": "Send a message to a channel",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/messages/{messageId}": {
@@ -8058,9 +7620,7 @@
           }
         ],
         "summary": "Update a message",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       },
       "delete": {
         "operationId": "MessagesController_deleteMessage",
@@ -8104,9 +7664,7 @@
           }
         ],
         "summary": "Delete a message",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/messages/read": {
@@ -8153,9 +7711,7 @@
           }
         ],
         "summary": "Mark messages as read",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/messages/{messageId}/reactions": {
@@ -8211,9 +7767,7 @@
           }
         ],
         "summary": "Add a reaction to a message",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/messages/{messageId}/reactions/{emoji}": {
@@ -8268,9 +7822,7 @@
           }
         ],
         "summary": "Remove a reaction from a message",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/messages/{messageId}/replies": {
@@ -8326,9 +7878,7 @@
           }
         ],
         "summary": "Create a reply to a message",
-        "tags": [
-          "Channels & Messages"
-        ]
+        "tags": ["Channels & Messages"]
       }
     },
     "/api/workspaces/{slug}/emojis": {
@@ -8356,9 +7906,7 @@
           }
         ],
         "summary": "Get all custom emojis for a workspace",
-        "tags": [
-          "Emojis"
-        ]
+        "tags": ["Emojis"]
       },
       "post": {
         "operationId": "EmojisController_createEmoji",
@@ -8394,9 +7942,7 @@
           }
         ],
         "summary": "Create a custom emoji",
-        "tags": [
-          "Emojis"
-        ]
+        "tags": ["Emojis"]
       }
     },
     "/api/workspaces/{slug}/audit-logs": {
@@ -8438,9 +7984,7 @@
           }
         ],
         "summary": "Get audit logs for a workspace",
-        "tags": [
-          "Audit Logs"
-        ]
+        "tags": ["Audit Logs"]
       }
     },
     "/api/workspaces/{slug}/audit-logs/export": {
@@ -8468,9 +8012,7 @@
           }
         ],
         "summary": "Export audit logs as CSV",
-        "tags": [
-          "Audit Logs"
-        ]
+        "tags": ["Audit Logs"]
       }
     },
     "/api/workspaces/{slug}/invite-links": {
@@ -8498,9 +8040,7 @@
           }
         ],
         "summary": "Get all invite links for a workspace",
-        "tags": [
-          "Invite Links"
-        ]
+        "tags": ["Invite Links"]
       },
       "post": {
         "operationId": "InviteLinksController_createInviteLink",
@@ -8536,9 +8076,7 @@
           }
         ],
         "summary": "Create a new invite link",
-        "tags": [
-          "Invite Links"
-        ]
+        "tags": ["Invite Links"]
       }
     },
     "/api/workspaces/{slug}/api-tokens": {
@@ -8566,9 +8104,7 @@
           }
         ],
         "summary": "Get all API tokens for a workspace",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       },
       "post": {
         "operationId": "ApiTokensController_createApiToken",
@@ -8604,9 +8140,7 @@
           }
         ],
         "summary": "Create a new API token for a workspace",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       }
     },
     "/api/workspaces/{slug}/api-tokens/{tokenId}": {
@@ -8643,9 +8177,7 @@
           }
         ],
         "summary": "Delete an API token",
-        "tags": [
-          "API Tokens"
-        ]
+        "tags": ["API Tokens"]
       }
     },
     "/api/workspaces/{slug}/webhooks": {
@@ -8673,9 +8205,7 @@
           }
         ],
         "summary": "Get all webhooks for a workspace",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       },
       "post": {
         "operationId": "WebhooksController_createWebhook",
@@ -8711,9 +8241,7 @@
           }
         ],
         "summary": "Create a new webhook for a workspace",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       }
     },
     "/api/workspaces/{slug}/webhooks/{webhookId}": {
@@ -8760,9 +8288,7 @@
           }
         ],
         "summary": "Update a webhook",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       },
       "delete": {
         "operationId": "WebhooksController_deleteWebhook",
@@ -8797,9 +8323,7 @@
           }
         ],
         "summary": "Delete a webhook",
-        "tags": [
-          "Webhooks"
-        ]
+        "tags": ["Webhooks"]
       }
     },
     "/api/workspaces/{slug}/calls/active": {
@@ -8827,9 +8351,7 @@
           }
         ],
         "summary": "Get active calls in a workspace",
-        "tags": [
-          "Calls"
-        ]
+        "tags": ["Calls"]
       }
     },
     "/api/workspaces/{slug}/search": {
@@ -8881,9 +8403,7 @@
           }
         ],
         "summary": "Unified workspace search (messages, channels, members, files)",
-        "tags": [
-          "Search"
-        ]
+        "tags": ["Search"]
       }
     },
     "/api/device-auth/qr/generate": {
@@ -8895,9 +8415,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "DeviceAuth"
-        ]
+        "tags": ["DeviceAuth"]
       }
     },
     "/api/device-auth/qr/status/{deviceCode}": {
@@ -8918,9 +8436,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "DeviceAuth"
-        ]
+        "tags": ["DeviceAuth"]
       }
     },
     "/api/device-auth/qr/authorize": {
@@ -8932,9 +8448,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "DeviceAuth"
-        ]
+        "tags": ["DeviceAuth"]
       }
     },
     "/api/device-auth/qr/deny": {
@@ -8946,9 +8460,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "DeviceAuth"
-        ]
+        "tags": ["DeviceAuth"]
       }
     },
     "/api/android-auth/me": {
@@ -8960,9 +8472,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/change-password": {
@@ -8974,9 +8484,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/check-username": {
@@ -8997,9 +8505,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/login": {
@@ -9011,9 +8517,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/signup": {
@@ -9025,9 +8529,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/social/google": {
@@ -9039,9 +8541,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/social/github": {
@@ -9053,9 +8553,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/android-auth/refresh": {
@@ -9067,9 +8565,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "AndroidAuth"
-        ]
+        "tags": ["AndroidAuth"]
       }
     },
     "/api/scheduled-notifications": {
@@ -9097,9 +8593,7 @@
           }
         ],
         "summary": "Get scheduled notifications for the current user",
-        "tags": [
-          "Scheduled Notifications"
-        ]
+        "tags": ["Scheduled Notifications"]
       },
       "post": {
         "operationId": "ScheduledNotificationsController_createNotification",
@@ -9125,9 +8619,7 @@
           }
         ],
         "summary": "Create a scheduled notification",
-        "tags": [
-          "Scheduled Notifications"
-        ]
+        "tags": ["Scheduled Notifications"]
       }
     },
     "/api/scheduled-notifications/{id}": {
@@ -9153,10 +8645,7 @@
                 "properties": {
                   "action": {
                     "type": "string",
-                    "enum": [
-                      "pause",
-                      "resume"
-                    ]
+                    "enum": ["pause", "resume"]
                   },
                   "title": {
                     "type": "string"
@@ -9180,9 +8669,7 @@
           }
         ],
         "summary": "Update a scheduled notification",
-        "tags": [
-          "Scheduled Notifications"
-        ]
+        "tags": ["Scheduled Notifications"]
       },
       "delete": {
         "operationId": "ScheduledNotificationsController_deleteNotification",
@@ -9208,9 +8695,7 @@
           }
         ],
         "summary": "Delete a scheduled notification",
-        "tags": [
-          "Scheduled Notifications"
-        ]
+        "tags": ["Scheduled Notifications"]
       }
     },
     "/api/assets/eligible": {
@@ -9228,9 +8713,7 @@
           }
         ],
         "summary": "Get all eligible assets for the current user",
-        "tags": [
-          "Assets"
-        ]
+        "tags": ["Assets"]
       }
     },
     "/api/support/tickets": {
@@ -9248,9 +8731,7 @@
           }
         ],
         "summary": "Create a support ticket",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       },
       "get": {
         "operationId": "SupportController_getTickets",
@@ -9275,9 +8756,7 @@
           }
         ],
         "summary": "Get support tickets",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       }
     },
     "/api/support/live-chat": {
@@ -9295,9 +8774,7 @@
           }
         ],
         "summary": "Start a live chat session",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       }
     },
     "/api/support/live-chat/{sessionId}/end": {
@@ -9324,9 +8801,7 @@
           }
         ],
         "summary": "End a live chat session",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       }
     },
     "/api/support/tickets/{ticketId}/status": {
@@ -9353,9 +8828,7 @@
           }
         ],
         "summary": "Update ticket status",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       }
     },
     "/api/support/tickets/{ticketId}/assign": {
@@ -9382,9 +8855,7 @@
           }
         ],
         "summary": "Assign ticket to an agent",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       }
     },
     "/api/support/customers": {
@@ -9402,9 +8873,7 @@
           }
         ],
         "summary": "Create or update customer profile",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       },
       "get": {
         "operationId": "SupportController_getCustomerProfiles",
@@ -9429,9 +8898,7 @@
           }
         ],
         "summary": "Get customer profiles",
-        "tags": [
-          "Support"
-        ]
+        "tags": ["Support"]
       }
     }
   },
@@ -9528,9 +8995,7 @@
             "default": "member"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "CreateChannelDto": {
         "type": "object",
@@ -9546,10 +9011,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ],
+            "enum": ["public", "private"],
             "default": "public"
           },
           "description": {
@@ -9559,9 +9021,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateChannelDto": {
         "type": "object",
@@ -9574,10 +9034,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ]
+            "enum": ["public", "private"]
           },
           "description": {
             "type": "string"
@@ -9625,9 +9082,7 @@
             }
           }
         },
-        "required": [
-          "content"
-        ]
+        "required": ["content"]
       },
       "CreateTokenDto": {
         "type": "object",
@@ -9675,10 +9130,7 @@
             "description": "ISO string date"
           }
         },
-        "required": [
-          "name",
-          "permissions"
-        ]
+        "required": ["name", "permissions"]
       },
       "CreateWebhookDto": {
         "type": "object",
@@ -9692,10 +9144,7 @@
             "example": "https://example.com/webhook"
           },
           "events": {
-            "example": [
-              "message.sent",
-              "channel.created"
-            ],
+            "example": ["message.sent", "channel.created"],
             "type": "array",
             "items": {
               "type": "string"
@@ -9706,11 +9155,7 @@
             "default": true
           }
         },
-        "required": [
-          "name",
-          "url",
-          "events"
-        ]
+        "required": ["name", "url", "events"]
       },
       "UpdateWebhookDto": {
         "type": "object",
@@ -9759,10 +9204,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "slug"
-        ]
+        "required": ["name", "slug"]
       },
       "UpdateDepartmentDto": {
         "type": "object",
@@ -9817,10 +9259,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "slug"
-        ]
+        "required": ["name", "slug"]
       },
       "UpdateTeamDto": {
         "type": "object",
@@ -9865,12 +9304,7 @@
           },
           "priority": {
             "type": "string",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ],
+            "enum": ["low", "normal", "high", "urgent"],
             "default": "normal"
           },
           "pinned": {
@@ -9895,11 +9329,7 @@
             }
           }
         },
-        "required": [
-          "departmentId",
-          "title",
-          "content"
-        ]
+        "required": ["departmentId", "title", "content"]
       },
       "UpdateAnnouncementDto": {
         "type": "object",
@@ -9915,12 +9345,7 @@
           },
           "priority": {
             "type": "string",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ]
+            "enum": ["low", "normal", "high", "urgent"]
           },
           "pinned": {
             "type": "boolean"
@@ -9948,9 +9373,7 @@
           "grant_type": {
             "type": "string",
             "example": "client_credentials",
-            "enum": [
-              "client_credentials"
-            ]
+            "enum": ["client_credentials"]
           },
           "client_id": {
             "type": "string",
@@ -9965,11 +9388,7 @@
             "example": "provisioning:workspaces"
           }
         },
-        "required": [
-          "grant_type",
-          "client_id",
-          "client_secret"
-        ]
+        "required": ["grant_type", "client_id", "client_secret"]
       },
       "CreateApplicationDto": {
         "type": "object",
@@ -9989,9 +9408,7 @@
             "type": "string"
           },
           "scopes": {
-            "example": [
-              "*"
-            ],
+            "example": ["*"],
             "type": "array",
             "items": {
               "type": "string"
@@ -10010,9 +9427,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateApplicationDto": {
         "type": "object",
@@ -10082,10 +9497,7 @@
             "description": "Custom branding configuration"
           },
           "channels": {
-            "example": [
-              "general",
-              "engineering"
-            ],
+            "example": ["general", "engineering"],
             "description": "Initial channels to create",
             "type": "array",
             "items": {
@@ -10105,20 +9517,13 @@
                 "role": {
                   "type": "string",
                   "example": "member",
-                  "enum": [
-                    "admin",
-                    "member"
-                  ]
+                  "enum": ["admin", "member"]
                 }
               }
             }
           }
         },
-        "required": [
-          "name",
-          "slug",
-          "ownerEmail"
-        ]
+        "required": ["name", "slug", "ownerEmail"]
       },
       "UpdateOrganizationDto": {
         "type": "object",
@@ -10149,20 +9554,14 @@
             "example": "https://example.com/webhook"
           },
           "events": {
-            "example": [
-              "event.name"
-            ],
+            "example": ["event.name"],
             "type": "array",
             "items": {
               "type": "string"
             }
           }
         },
-        "required": [
-          "name",
-          "url",
-          "events"
-        ]
+        "required": ["name", "url", "events"]
       },
       "CreateIntegrationDto": {
         "type": "object",
@@ -10243,11 +9642,7 @@
             "example": "Integration with GitHub"
           }
         },
-        "required": [
-          "service",
-          "name",
-          "config"
-        ]
+        "required": ["service", "name", "config"]
       },
       "WorkspaceSettingsDto": {
         "type": "object",
@@ -10258,18 +9653,11 @@
           },
           "preference": {
             "type": "string",
-            "enum": [
-              "all",
-              "mentions",
-              "none"
-            ],
+            "enum": ["all", "mentions", "none"],
             "example": "all"
           }
         },
-        "required": [
-          "workspaceId",
-          "preference"
-        ]
+        "required": ["workspaceId", "preference"]
       },
       "ChannelSettingsDto": {
         "type": "object",
@@ -10280,19 +9668,11 @@
           },
           "preference": {
             "type": "string",
-            "enum": [
-              "all",
-              "mentions",
-              "none",
-              "default"
-            ],
+            "enum": ["all", "mentions", "none", "default"],
             "example": "all"
           }
         },
-        "required": [
-          "channelId",
-          "preference"
-        ]
+        "required": ["channelId", "preference"]
       },
       "UpdateNotificationDto": {
         "type": "object",
@@ -10302,9 +9682,7 @@
             "example": true
           }
         },
-        "required": [
-          "isRead"
-        ]
+        "required": ["isRead"]
       },
       "V3TokenRequestDto": {
         "type": "object",
@@ -10312,9 +9690,7 @@
           "grant_type": {
             "type": "string",
             "example": "client_credentials",
-            "enum": [
-              "client_credentials"
-            ],
+            "enum": ["client_credentials"],
             "description": "The OAuth2 grant type. Must be client_credentials."
           },
           "client_id": {
@@ -10333,11 +9709,7 @@
             "description": "Space-separated list of scopes requested."
           }
         },
-        "required": [
-          "grant_type",
-          "client_id",
-          "client_secret"
-        ]
+        "required": ["grant_type", "client_id", "client_secret"]
       },
       "V3ProvisionWorkspaceDto": {
         "type": "object",
@@ -10377,10 +9749,7 @@
             "description": "Custom branding configuration"
           },
           "channels": {
-            "example": [
-              "general",
-              "engineering"
-            ],
+            "example": ["general", "engineering"],
             "description": "Initial channels to create",
             "type": "array",
             "items": {
@@ -10400,20 +9769,13 @@
                 "role": {
                   "type": "string",
                   "example": "member",
-                  "enum": [
-                    "admin",
-                    "member"
-                  ]
+                  "enum": ["admin", "member"]
                 }
               }
             }
           }
         },
-        "required": [
-          "name",
-          "slug",
-          "ownerEmail"
-        ]
+        "required": ["name", "slug", "ownerEmail"]
       },
       "V3UpdateWorkspaceDto": {
         "type": "object",
@@ -10459,28 +9821,18 @@
             "default": "member"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "V3UpdateMemberRoleDto": {
         "type": "object",
         "properties": {
           "role": {
             "type": "string",
-            "enum": [
-              "owner",
-              "admin",
-              "moderator",
-              "member",
-              "guest"
-            ],
+            "enum": ["owner", "admin", "moderator", "member", "guest"],
             "example": "admin"
           }
         },
-        "required": [
-          "role"
-        ]
+        "required": ["role"]
       },
       "V3CreateWebhookDto": {
         "type": "object",
@@ -10494,10 +9846,7 @@
             "example": "https://example.com/webhook"
           },
           "events": {
-            "example": [
-              "message.sent",
-              "channel.created"
-            ],
+            "example": ["message.sent", "channel.created"],
             "type": "array",
             "items": {
               "type": "string"
@@ -10508,11 +9857,7 @@
             "default": true
           }
         },
-        "required": [
-          "name",
-          "url",
-          "events"
-        ]
+        "required": ["name", "url", "events"]
       },
       "V3UpdateWebhookDto": {
         "type": "object",
@@ -10546,9 +9891,7 @@
             "example": "Receives alerts from external monitoring system"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateChannelIncomingWebhookDto": {
         "type": "object",
@@ -10594,9 +9937,7 @@
             }
           }
         },
-        "required": [
-          "content"
-        ]
+        "required": ["content"]
       },
       "CreateInvitationDto": {
         "type": "object",
@@ -10621,24 +9962,17 @@
             "type": "object"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "StartCallDto": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "voice",
-              "video"
-            ]
+            "enum": ["voice", "video"]
           }
         },
-        "required": [
-          "type"
-        ]
+        "required": ["type"]
       },
       "UpdateCallDto": {
         "type": "object",
@@ -10661,9 +9995,7 @@
             "description": "The ID of the user to start a DM with"
           }
         },
-        "required": [
-          "userId"
-        ]
+        "required": ["userId"]
       },
       "UpdateDmMessageDto": {
         "type": "object",
@@ -10673,27 +10005,20 @@
             "example": "Updated message content"
           }
         },
-        "required": [
-          "content"
-        ]
+        "required": ["content"]
       },
       "MarkAsReadDto": {
         "type": "object",
         "properties": {
           "messageIds": {
-            "example": [
-              "msg_1",
-              "msg_2"
-            ],
+            "example": ["msg_1", "msg_2"],
             "type": "array",
             "items": {
               "type": "string"
             }
           }
         },
-        "required": [
-          "messageIds"
-        ]
+        "required": ["messageIds"]
       },
       "SendFriendRequestDto": {
         "type": "object",
@@ -10708,26 +10033,18 @@
             "example": "Hi, let's be friends!"
           }
         },
-        "required": [
-          "receiverId"
-        ]
+        "required": ["receiverId"]
       },
       "UpdateFriendRequestDto": {
         "type": "object",
         "properties": {
           "action": {
             "type": "string",
-            "enum": [
-              "accept",
-              "decline",
-              "cancel"
-            ],
+            "enum": ["accept", "decline", "cancel"],
             "example": "accept"
           }
         },
-        "required": [
-          "action"
-        ]
+        "required": ["action"]
       },
       "CreateWorkspaceDto": {
         "type": "object",
@@ -10753,9 +10070,7 @@
             "example": "A workspace for our team"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateWorkspaceDto": {
         "type": "object",
@@ -10777,11 +10092,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": [
-              "free",
-              "pro",
-              "enterprise"
-            ]
+            "enum": ["free", "pro", "enterprise"]
           },
           "isPublic": {
             "type": "boolean"
@@ -10802,19 +10113,11 @@
         "properties": {
           "role": {
             "type": "string",
-            "enum": [
-              "owner",
-              "admin",
-              "moderator",
-              "member",
-              "guest"
-            ],
+            "enum": ["owner", "admin", "moderator", "member", "guest"],
             "example": "admin"
           }
         },
-        "required": [
-          "role"
-        ]
+        "required": ["role"]
       },
       "CreateWorkspaceChannelDto": {
         "type": "object",
@@ -10829,10 +10132,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ],
+            "enum": ["public", "private"],
             "default": "public"
           },
           "departmentId": {
@@ -10844,9 +10144,7 @@
             "example": "Hash"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateWorkspaceChannelDto": {
         "type": "object",
@@ -10861,10 +10159,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ]
+            "enum": ["public", "private"]
           },
           "icon": {
             "type": "string",
@@ -10911,10 +10206,7 @@
             "default": true
           }
         },
-        "required": [
-          "name",
-          "slug"
-        ]
+        "required": ["name", "slug"]
       },
       "UpdateWorkspaceDepartmentDto": {
         "type": "object",
@@ -10984,12 +10276,7 @@
           },
           "priority": {
             "type": "string",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ],
+            "enum": ["low", "normal", "high", "urgent"],
             "default": "normal"
           },
           "pinned": {
@@ -11014,10 +10301,7 @@
             }
           }
         },
-        "required": [
-          "title",
-          "content"
-        ]
+        "required": ["title", "content"]
       },
       "CreateWorkspaceTeamDto": {
         "type": "object",
@@ -11051,10 +10335,7 @@
             "example": "user_123"
           },
           "memberIds": {
-            "example": [
-              "user_123",
-              "user_456"
-            ],
+            "example": ["user_123", "user_456"],
             "type": "array",
             "items": {
               "type": "string"
@@ -11065,10 +10346,7 @@
             "default": true
           }
         },
-        "required": [
-          "name",
-          "slug"
-        ]
+        "required": ["name", "slug"]
       },
       "AddTeamMemberDto": {
         "type": "object",
@@ -11082,9 +10360,7 @@
             "example": "member"
           }
         },
-        "required": [
-          "userId"
-        ]
+        "required": ["userId"]
       },
       "CreateMessageDto": {
         "type": "object",
@@ -11114,9 +10390,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "content"
-        ]
+        "required": ["content"]
       },
       "UpdateMessageDto": {
         "type": "object",
@@ -11126,27 +10400,20 @@
             "example": "Updated content"
           }
         },
-        "required": [
-          "content"
-        ]
+        "required": ["content"]
       },
       "MarkMessagesAsReadDto": {
         "type": "object",
         "properties": {
           "messageIds": {
-            "example": [
-              "msg_1",
-              "msg_2"
-            ],
+            "example": ["msg_1", "msg_2"],
             "type": "array",
             "items": {
               "type": "string"
             }
           }
         },
-        "required": [
-          "messageIds"
-        ]
+        "required": ["messageIds"]
       },
       "AddReactionDto": {
         "type": "object",
@@ -11160,9 +10427,7 @@
             "example": "emoji_123"
           }
         },
-        "required": [
-          "emoji"
-        ]
+        "required": ["emoji"]
       },
       "CreateEmojiDto": {
         "type": "object",
@@ -11180,11 +10445,7 @@
             "example": "https://example.com/emoji.png"
           }
         },
-        "required": [
-          "name",
-          "shortcode",
-          "imageUrl"
-        ]
+        "required": ["name", "shortcode", "imageUrl"]
       },
       "CreateInviteLinkDto": {
         "type": "object",
@@ -11253,10 +10514,7 @@
             "description": "ISO format datetime"
           }
         },
-        "required": [
-          "name",
-          "permissions"
-        ]
+        "required": ["name", "permissions"]
       },
       "CreateWorkspaceWebhookDto": {
         "type": "object",
@@ -11270,21 +10528,14 @@
             "example": "https://example.com/webhook"
           },
           "events": {
-            "example": [
-              "message.sent",
-              "channel.created"
-            ],
+            "example": ["message.sent", "channel.created"],
             "type": "array",
             "items": {
               "type": "string"
             }
           }
         },
-        "required": [
-          "name",
-          "url",
-          "events"
-        ]
+        "required": ["name", "url", "events"]
       },
       "UpdateWorkspaceWebhookDto": {
         "type": "object",
@@ -11308,13 +10559,7 @@
           },
           "scheduleType": {
             "type": "string",
-            "enum": [
-              "custom",
-              "once",
-              "daily",
-              "weekly",
-              "monthly"
-            ],
+            "enum": ["custom", "once", "daily", "weekly", "monthly"],
             "example": "once"
           },
           "scheduledFor": {
@@ -11326,9 +10571,7 @@
           },
           "entityType": {
             "type": "string",
-            "enum": [
-              "channel"
-            ]
+            "enum": ["channel"]
           },
           "entityId": {
             "type": "string"
@@ -11340,12 +10583,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "title",
-          "message",
-          "scheduleType",
-          "scheduledFor"
-        ]
+        "required": ["title", "message", "scheduleType", "scheduledFor"]
       }
     }
   }
