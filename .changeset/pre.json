@@ -17,10 +17,15 @@
     "@repo/shared": "0.0.772",
     "@repo/types": "0.0.772",
     "@repo/typescript-config": "0.0.772",
-    "@repo/ui": "0.0.772"
+    "@repo/ui": "0.0.772",
+    "v3-docs": "3.0.0",
+    "@repo/v3-api": "0.0.1"
   },
   "changesets": [
-    "auto-android-1783928864",
-    "auto-release-92baf775"
+    "flat-flowers-look",
+    "late-rooms-throw",
+    "pretty-cities-draw",
+    "seven-things-doubt",
+    "some-pens-hang"
   ]
 }
