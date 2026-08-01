@@ -32,7 +32,6 @@ import {
   Download,
   Shield,
   Terminal,
-  Code2,
 } from 'lucide-react';
 import openapi from '../content/openapi.json';
 
@@ -79,23 +78,408 @@ const CopyButton = ({ value }: { value: string }) => {
 };
 
 const SLUG_TO_TAGS_MAP: Record<string, string[]> = {
-  authentication: ['Authentication', 'V3 Authentication'],
-  'qr-auth': ['DeviceAuth'],
-  workspaces: ['V3 Workspaces', 'Workspaces'],
-  messages: ['Channels & Messages', 'Direct Messages', 'Threads', 'Message Actions'],
-  teams: ['Teams'],
-  announcements: ['Announcements'],
-  search: ['Search'],
-  webhooks: ['V3 Webhooks', 'Webhooks', 'V3 Channel Incoming Webhooks'],
-  'discord-v10': ['V10Guilds', 'V10Users', 'V10Gateway', 'V10Applications', 'V10Interactions', 'V10Enterprise'],
-  applications: ['Bot Applications'],
-  'organization-m2m': ['Organizations', 'Provisioning'],
-  'api-tokens': ['API Tokens'],
+  authentication: ['V3 Authentication'],
+  workspaces: ['V3 Workspaces'],
+  webhooks: ['V3 Webhooks'],
+  'incoming-webhooks': ['V3 Channel Incoming Webhooks'],
 };
 
 interface DocPageProps {
   type: 'user-guide' | 'api-reference';
   defaultSlug?: string;
+}
+
+const renderSchema = (schema: any) => {
+  if (!schema) return null;
+  if (schema.$ref) {
+    const refName = schema.$ref.split('/').pop();
+    const refSchema = (openapi as any).components.schemas[refName];
+    return renderSchema(refSchema);
+  }
+
+  if (schema.type === 'object' && schema.properties) {
+    return (
+      <div className="space-y-2 mt-4">
+        {Object.entries(schema.properties).map(([name, prop]: [string, any]) => (
+          <div key={name} className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0">
+            <div className="flex items-center gap-2">
+              <code className="text-primary font-bold">{name}</code>
+              <span className="text-xs text-muted-foreground">{prop.type || 'any'}</span>
+              {schema.required?.includes(name) && (
+                <Badge variant="outline" className="text-[10px] h-4 px-1 text-red-500 border-red-500/20 bg-red-500/5">
+                  Required
+                </Badge>
+              )}
+            </div>
+            {prop.description && <p className="text-sm text-muted-foreground">{prop.description}</p>}
+            {prop.enum && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {prop.enum.map((val: string) => (
+                  <code key={val} className="text-[10px] bg-muted px-1 rounded">
+                    {val}
+                  </code>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return <code className="text-sm">{JSON.stringify(schema, null, 2)}</code>;
+};
+
+const generateCurl = (method: string, path: string, operation: any) => {
+  let curl = `curl -X ${method.toUpperCase()} "https://api.skyrme.chat${path}" \\\n`;
+  curl += `  -H "Authorization: Bearer <YOUR_TOKEN>"`;
+
+  if (operation.requestBody) {
+    const example =
+      operation.requestBody.content?.['application/json']?.schema?.example ||
+      operation.requestBody.content?.['application/json']?.schema?.properties?.file?.example ||
+      {};
+    curl += ` \\\n  -H "Content-Type: application/json" \\\n`;
+    curl += `  -d '${JSON.stringify(example, null, 2)}'`;
+  }
+
+  return curl;
+};
+
+const getSdkNames = (operationId: string) => {
+  if (!operationId) return null;
+  const parts = operationId.split('_');
+  let transformed = '';
+  if (parts.length === 2) {
+    const controller = parts[0];
+    const method = parts[1];
+    const capitalizedMethod = method.charAt(0).toUpperCase() + method.slice(1);
+    transformed = controller + capitalizedMethod;
+  } else {
+    transformed = operationId;
+  }
+  const clientFn = transformed.charAt(0).toLowerCase() + transformed.slice(1);
+  const hookName = `use${transformed.charAt(0).toUpperCase() + transformed.slice(1)}`;
+  return { clientFn, hookName };
+};
+
+const generateReactSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
+  if (!sdkNames) return '// No SDK mapping available for this endpoint';
+  const { hookName } = sdkNames;
+  const params = operation.parameters || [];
+  const hasParams = params.length > 0;
+
+  let snippet = `import { ${hookName} } from '@repo/v3-api';\n\n`;
+  snippet += `function MyComponent() {\n`;
+
+  if (hasParams) {
+    snippet += `  // Pass parameters as required\n`;
+    snippet += `  const { data, isLoading, error } = ${hookName}(\n`;
+    snippet += `    {\n`;
+    params.forEach((p: any) => {
+      const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
+      snippet += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
+    });
+    snippet += `    }\n`;
+    snippet += `  );\n`;
+  } else {
+    snippet += `  const { data, isLoading, error } = ${hookName}();\n`;
+  }
+
+  snippet += `\n  if (isLoading) return <div>Loading...</div>;\n`;
+  snippet += `  if (error) return <div>Error loading data</div>;\n\n`;
+  snippet += `  return <pre>{JSON.stringify(data, null, 2)}</pre>;\n`;
+  snippet += `}`;
+  return snippet;
+};
+
+const generateNodeSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
+  if (!sdkNames) return '// No SDK mapping available for this endpoint';
+  const { clientFn } = sdkNames;
+  const params = operation.parameters || [];
+  const hasParams = params.length > 0;
+  const hasBody = !!operation.requestBody;
+
+  let snippet = `import { ${clientFn} } from '@repo/v3-api/server';\n\n`;
+  snippet += `async function run() {\n`;
+  snippet += `  try {\n`;
+
+  let args = [];
+  if (hasBody) {
+    const exampleBody = operation.requestBody.content?.['application/json']?.schema?.example || {};
+    args.push(JSON.stringify(exampleBody, null, 2).replace(/\n/g, '\n    '));
+  }
+  if (hasParams) {
+    let paramObj = `{\n`;
+    params.forEach((p: any) => {
+      const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
+      paramObj += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
+    });
+    paramObj += `    }`;
+    args.push(paramObj);
+  }
+
+  const argsStr = args.join(', ');
+  snippet += `    const response = await ${clientFn}(${argsStr});\n`;
+  snippet += `    console.log('Success:', response.data);\n`;
+  snippet += `  } catch (error) {\n`;
+  snippet += `    console.error('Error executing request:', error);\n`;
+  snippet += `  }\n`;
+  snippet += `}`;
+  return snippet;
+};
+
+const generatePythonSnippet = (method: string, path: string, operation: any) => {
+  let snippet = `import requests\n\n`;
+  snippet += `url = "https://api.skyrme.chat${path}"\n`;
+  snippet += `headers = {\n`;
+  snippet += `    "Authorization": "Bearer <YOUR_TOKEN>"\n`;
+  if (operation.requestBody) {
+    snippet += `    "Content-Type": "application/json"\n`;
+  }
+  snippet += `}\n\n`;
+
+  if (operation.requestBody) {
+    const example =
+      operation.requestBody.content?.['application/json']?.schema?.example ||
+      operation.requestBody.content?.['application/json']?.schema?.properties?.file?.example ||
+      {};
+    snippet += `data = ${JSON.stringify(example, null, 4)}\n\n`;
+    snippet += `response = requests.${method.toLowerCase()}(url, headers=headers, json=data)\n`;
+  } else {
+    snippet += `response = requests.${method.toLowerCase()}(url, headers=headers)\n`;
+  }
+
+  snippet += `print(response.json())`;
+  return snippet;
+};
+
+const getBadgeColor = (method: string) => {
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+    case 'POST':
+      return 'bg-green-500/10 text-green-500 border-green-500/20';
+    case 'PATCH':
+      return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+    case 'DELETE':
+      return 'bg-red-500/10 text-red-500 border-red-500/20';
+    default:
+      return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+  }
+};
+
+interface EndpointCardProps {
+  method: string;
+  path: string;
+  operation: any;
+  opId: string;
+}
+
+function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
+  const [selectedLang, setSelectedLang] = useState<'ts' | 'python' | 'curl'>('ts');
+  const curl = generateCurl(method, path, operation);
+  const sdkNames = getSdkNames(operation.operationId);
+
+  return (
+    <Card className="overflow-hidden border-border/10 bg-muted/5">
+      <CardHeader className="py-4 bg-muted/20 border-b border-border/5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Badge className={getBadgeColor(method)}>{method.toUpperCase()}</Badge>
+            <code className="text-sm font-mono opacity-80">{path}</code>
+          </div>
+          <div className="flex items-center gap-2">
+            {operation.security && <Shield className="h-4 w-4 text-primary" />}
+            <CopyButton value={path} />
+          </div>
+        </div>
+        <CardTitle className="text-lg mt-2">{operation.summary}</CardTitle>
+        {operation.description && (
+          <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>
+        )}
+      </CardHeader>
+      <CardContent className="py-6">
+        <Tabs defaultValue="params">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList className="bg-muted/50 flex-wrap">
+              <TabsTrigger value="params">Parameters</TabsTrigger>
+              <TabsTrigger value="request">Request</TabsTrigger>
+              <TabsTrigger value="responses">Responses</TabsTrigger>
+              <TabsTrigger value="code" className="gap-2">
+                <Terminal className="h-3 w-3" />
+                Code Examples
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="params">
+            {operation.parameters?.length > 0 ? (
+              <div className="space-y-4">
+                {operation.parameters.map((param: any) => (
+                  <div
+                    key={param.name}
+                    className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0"
+                  >
+                    <div className="flex items-center gap-2">
+                      <code className="text-primary font-bold">{param.name}</code>
+                      <Badge variant="ghost" className="text-[10px] uppercase">
+                        {param.in}
+                      </Badge>
+                      {param.required && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] h-4 px-1 text-red-500 border-red-500/20"
+                        >
+                          Required
+                        </Badge>
+                      )}
+                    </div>
+                    {param.description && (
+                      <p className="text-sm text-muted-foreground">{param.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No parameters</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="request">
+            {operation.requestBody ? (
+              <div className="space-y-4">
+                <div className="text-sm font-medium">
+                  Content Type: <code>application/json</code>
+                </div>
+                {renderSchema(
+                  operation.requestBody.content['application/json']?.schema ||
+                    operation.requestBody.content['multipart/form-data']?.schema
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No request body</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="responses">
+            <div className="space-y-6">
+              {Object.entries(operation.responses).map(
+                ([code, response]: [string, any]) => (
+                  <div key={code} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={code.startsWith('2') ? 'outline' : 'destructive'}
+                        className="text-[10px]"
+                      >
+                        {code}
+                      </Badge>
+                      <span className="text-sm font-medium">{response.description}</span>
+                    </div>
+                    {response.content?.['application/json'] && (
+                      <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto relative group">
+                        <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <CopyButton
+                            value={JSON.stringify(
+                              response.content['application/json'].schema,
+                              null,
+                              2
+                            )}
+                          />
+                        </div>
+                        <pre className="text-xs text-muted-foreground">
+                          {JSON.stringify(
+                            response.content['application/json'].schema,
+                            null,
+                            2
+                          )}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="code">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-border/5">
+                <span className="text-xs text-muted-foreground font-medium">Language:</span>
+                <select
+                  value={selectedLang}
+                  onChange={(e) => setSelectedLang(e.target.value as any)}
+                  className="bg-muted border border-border/20 rounded px-2 py-1 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                >
+                  <option value="ts">TypeScript SDK</option>
+                  <option value="python">Python Requests</option>
+                  <option value="curl">cURL Command</option>
+                </select>
+              </div>
+
+              {selectedLang === 'ts' && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">React Hook</span>
+                      <CopyButton value={generateReactSnippet(operation, sdkNames)} />
+                    </div>
+                    <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                      <SyntaxHighlighter
+                        code={generateReactSnippet(operation, sdkNames)}
+                        language="typescript"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Node Client</span>
+                      <CopyButton value={generateNodeSnippet(operation, sdkNames)} />
+                    </div>
+                    <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                      <SyntaxHighlighter
+                        code={generateNodeSnippet(operation, sdkNames)}
+                        language="typescript"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedLang === 'python' && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Python Requests</span>
+                    <CopyButton value={generatePythonSnippet(method, path, operation)} />
+                  </div>
+                  <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                    <SyntaxHighlighter
+                      code={generatePythonSnippet(method, path, operation)}
+                      language="python"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {selectedLang === 'curl' && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">cURL Command</span>
+                    <CopyButton value={curl} />
+                  </div>
+                  <div className="relative group rounded-lg overflow-hidden bg-black/90">
+                    <SyntaxHighlighter
+                      code={curl}
+                      language="bash"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function DocPage({ type, defaultSlug }: DocPageProps) {
@@ -111,17 +495,22 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
     setLoading(true);
 
-    if (type === 'api-reference' && SLUG_TO_TAGS_MAP[activeSlug]) {
-      setContent('');
-      setLoading(false);
+    if (type === 'api-reference') {
+      if (SLUG_TO_TAGS_MAP[activeSlug]) {
+        setContent('');
+        setLoading(false);
+      } else {
+        setContent(null);
+        setLoading(false);
+      }
       return;
     }
 
-    const folder = type === 'user-guide' ? 'docs' : 'api';
+    const folder = 'docs';
 
     // @ts-ignore
-    const modules = import.meta.glob('../content/**/*.md', { query: '?raw', import: 'default' });
-    const path = `../content/${folder}/${activeSlug}.md`;
+    const modules = import.meta.glob('../content/docs/**/*.md', { query: '?raw', import: 'default' });
+    const path = `../content/docs/${activeSlug}.md`;
 
     if (modules[path]) {
       // @ts-ignore
@@ -198,160 +587,6 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
     URL.revokeObjectURL(url);
   };
 
-  const getBadgeColor = (method: string) => {
-    switch (method.toUpperCase()) {
-      case 'GET':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'POST':
-        return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'PATCH':
-        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'DELETE':
-        return 'bg-red-500/10 text-red-500 border-red-500/20';
-      default:
-        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
-    }
-  };
-
-  const renderSchema = (schema: any) => {
-    if (!schema) return null;
-    if (schema.$ref) {
-      const refName = schema.$ref.split('/').pop();
-      const refSchema = (openapi as any).components.schemas[refName];
-      return renderSchema(refSchema);
-    }
-
-    if (schema.type === 'object' && schema.properties) {
-      return (
-        <div className="space-y-2 mt-4">
-          {Object.entries(schema.properties).map(([name, prop]: [string, any]) => (
-            <div key={name} className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0">
-              <div className="flex items-center gap-2">
-                <code className="text-primary font-bold">{name}</code>
-                <span className="text-xs text-muted-foreground">{prop.type || 'any'}</span>
-                {schema.required?.includes(name) && (
-                  <Badge variant="outline" className="text-[10px] h-4 px-1 text-red-500 border-red-500/20 bg-red-500/5">
-                    Required
-                  </Badge>
-                )}
-              </div>
-              {prop.description && <p className="text-sm text-muted-foreground">{prop.description}</p>}
-              {prop.enum && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {prop.enum.map((val: string) => (
-                    <code key={val} className="text-[10px] bg-muted px-1 rounded">
-                      {val}
-                    </code>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return <code className="text-sm">{JSON.stringify(schema, null, 2)}</code>;
-  };
-
-  const generateCurl = (method: string, path: string, operation: any) => {
-    let curl = `curl -X ${method.toUpperCase()} "https://api.skyrme.chat${path}" \\\n`;
-    curl += `  -H "Authorization: Bearer <YOUR_TOKEN>"`;
-
-    if (operation.requestBody) {
-      const example =
-        operation.requestBody.content?.['application/json']?.schema?.example ||
-        operation.requestBody.content?.['application/json']?.schema?.properties?.file?.example ||
-        {};
-      curl += ` \\\n  -H "Content-Type: application/json" \\\n`;
-      curl += `  -d '${JSON.stringify(example, null, 2)}'`;
-    }
-
-    return curl;
-  };
-
-  const getSdkNames = (operationId: string) => {
-    if (!operationId) return null;
-    const parts = operationId.split('_');
-    let transformed = '';
-    if (parts.length === 2) {
-      const controller = parts[0];
-      const method = parts[1];
-      const capitalizedMethod = method.charAt(0).toUpperCase() + method.slice(1);
-      transformed = controller + capitalizedMethod;
-    } else {
-      transformed = operationId;
-    }
-    const clientFn = transformed.charAt(0).toLowerCase() + transformed.slice(1);
-    const hookName = `use${transformed.charAt(0).toUpperCase() + transformed.slice(1)}`;
-    return { clientFn, hookName };
-  };
-
-  const generateReactSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
-    if (!sdkNames) return '// No SDK mapping available for this endpoint';
-    const { hookName } = sdkNames;
-    const params = operation.parameters || [];
-    const hasParams = params.length > 0;
-
-    let snippet = `import { ${hookName} } from '@repo/v3-api';\n\n`;
-    snippet += `function MyComponent() {\n`;
-
-    if (hasParams) {
-      snippet += `  // Pass parameters as required\n`;
-      snippet += `  const { data, isLoading, error } = ${hookName}(\n`;
-      snippet += `    {\n`;
-      params.forEach((p: any) => {
-        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
-        snippet += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
-      });
-      snippet += `    }\n`;
-      snippet += `  );\n`;
-    } else {
-      snippet += `  const { data, isLoading, error } = ${hookName}();\n`;
-    }
-
-    snippet += `\n  if (isLoading) return <div>Loading...</div>;\n`;
-    snippet += `  if (error) return <div>Error loading data</div>;\n\n`;
-    snippet += `  return <pre>{JSON.stringify(data, null, 2)}</pre>;\n`;
-    snippet += `}`;
-    return snippet;
-  };
-
-  const generateNodeSnippet = (operation: any, sdkNames: { clientFn: string; hookName: string } | null) => {
-    if (!sdkNames) return '// No SDK mapping available for this endpoint';
-    const { clientFn } = sdkNames;
-    const params = operation.parameters || [];
-    const hasParams = params.length > 0;
-    const hasBody = !!operation.requestBody;
-
-    let snippet = `import { ${clientFn} } from '@repo/v3-api/server';\n\n`;
-    snippet += `async function run() {\n`;
-    snippet += `  try {\n`;
-
-    let args = [];
-    if (hasBody) {
-      const exampleBody = operation.requestBody.content?.['application/json']?.schema?.example || {};
-      args.push(JSON.stringify(exampleBody, null, 2).replace(/\n/g, '\n    '));
-    }
-    if (hasParams) {
-      let paramObj = `{\n`;
-      params.forEach((p: any) => {
-        const example = p.schema?.example || p.example || (p.name === 'slug' ? 'acme-corp' : '<VALUE>');
-        paramObj += `      ${p.name}: ${typeof example === 'string' ? `'${example}'` : example},\n`;
-      });
-      paramObj += `    }`;
-      args.push(paramObj);
-    }
-
-    const argsStr = args.join(', ');
-    snippet += `    const response = await ${clientFn}(${argsStr});\n`;
-    snippet += `    console.log('Success:', response.data);\n`;
-    snippet += `  } catch (error) {\n`;
-    snippet += `    console.error('Error executing request:', error);\n`;
-    snippet += `  }\n`;
-    snippet += `}`;
-    return snippet;
-  };
-
   return (
     <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1">
       <div className="flex flex-col md:flex-row gap-6 lg:gap-12 py-10">
@@ -392,9 +627,10 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                       const tagObj = openapi.tags.find(t => t.name === tagName);
                       const tagId = tagName.toLowerCase().replace(/\s+/g, '-');
 
-                      // Get operations for this tag
+                      // Get operations for this tag (filter to V3 starting paths only)
                       const tagOperations: Array<{ method: string; path: string; operation: any; opId: string }> = [];
                       Object.entries(openapi.paths).forEach(([path, methods]: [string, any]) => {
+                        if (!path.startsWith('/api/v3/')) return;
                         Object.entries(methods).forEach(([method, operation]: [string, any]) => {
                           if (operation.tags?.includes(tagName)) {
                             const opId = `${method}-${path}`.replace(/\//g, '-');
@@ -413,176 +649,15 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                           {tagObj?.description && <p className="text-muted-foreground mb-6">{tagObj.description}</p>}
 
                           <div className="space-y-6">
-                            {tagOperations.map(({ method, path, operation, opId }) => {
-                              const curl = generateCurl(method, path, operation);
-                              const sdkNames = getSdkNames(operation.operationId);
-
-                              return (
-                                <Card key={opId} className="overflow-hidden border-border/10 bg-muted/5">
-                                  <CardHeader className="py-4 bg-muted/20 border-b border-border/5">
-                                    <div className="flex items-center justify-between gap-4">
-                                      <div className="flex items-center gap-3">
-                                        <Badge className={getBadgeColor(method)}>{method.toUpperCase()}</Badge>
-                                        <code className="text-sm font-mono opacity-80">{path}</code>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        {operation.security && <Shield className="h-4 w-4 text-primary" />}
-                                        <CopyButton value={path} />
-                                      </div>
-                                    </div>
-                                    <CardTitle className="text-lg mt-2">{operation.summary}</CardTitle>
-                                    {operation.description && (
-                                      <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>
-                                    )}
-                                  </CardHeader>
-                                  <CardContent className="py-6">
-                                    <Tabs defaultValue="params">
-                                      <div className="flex items-center justify-between mb-4">
-                                        <TabsList className="bg-muted/50 flex-wrap">
-                                          <TabsTrigger value="params">Parameters</TabsTrigger>
-                                          <TabsTrigger value="request">Request</TabsTrigger>
-                                          <TabsTrigger value="responses">Responses</TabsTrigger>
-                                          <TabsTrigger value="curl" className="gap-2">
-                                            <Terminal className="h-3 w-3" />
-                                            cURL
-                                          </TabsTrigger>
-                                          <TabsTrigger value="sdk-react" className="gap-2">
-                                            <Code2 className="h-3 w-3 text-indigo-400" />
-                                            React Hook
-                                          </TabsTrigger>
-                                          <TabsTrigger value="sdk-node" className="gap-2">
-                                            <Code2 className="h-3 w-3 text-emerald-400" />
-                                            Node Client
-                                          </TabsTrigger>
-                                        </TabsList>
-                                      </div>
-
-                                      <TabsContent value="params">
-                                        {operation.parameters?.length > 0 ? (
-                                          <div className="space-y-4">
-                                            {operation.parameters.map((param: any) => (
-                                              <div
-                                                key={param.name}
-                                                className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0"
-                                              >
-                                                <div className="flex items-center gap-2">
-                                                  <code className="text-primary font-bold">{param.name}</code>
-                                                  <Badge variant="ghost" className="text-[10px] uppercase">
-                                                    {param.in}
-                                                  </Badge>
-                                                  {param.required && (
-                                                    <Badge
-                                                      variant="outline"
-                                                      className="text-[10px] h-4 px-1 text-red-500 border-red-500/20"
-                                                    >
-                                                      Required
-                                                    </Badge>
-                                                  )}
-                                                </div>
-                                                {param.description && (
-                                                  <p className="text-sm text-muted-foreground">{param.description}</p>
-                                                )}
-                                              </div>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <p className="text-sm text-muted-foreground italic">No parameters</p>
-                                        )}
-                                      </TabsContent>
-
-                                      <TabsContent value="request">
-                                        {operation.requestBody ? (
-                                          <div className="space-y-4">
-                                            <div className="text-sm font-medium">
-                                              Content Type: <code>application/json</code>
-                                            </div>
-                                            {renderSchema(
-                                              operation.requestBody.content['application/json']?.schema ||
-                                                operation.requestBody.content['multipart/form-data']?.schema
-                                            )}
-                                          </div>
-                                        ) : (
-                                          <p className="text-sm text-muted-foreground italic">No request body</p>
-                                        )}
-                                      </TabsContent>
-
-                                      <TabsContent value="responses">
-                                        <div className="space-y-6">
-                                          {Object.entries(operation.responses).map(
-                                            ([code, response]: [string, any]) => (
-                                              <div key={code} className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                  <Badge
-                                                    variant={code.startsWith('2') ? 'outline' : 'destructive'}
-                                                    className="text-[10px]"
-                                                  >
-                                                    {code}
-                                                  </Badge>
-                                                  <span className="text-sm font-medium">{response.description}</span>
-                                                </div>
-                                                {response.content?.['application/json'] && (
-                                                  <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto relative group">
-                                                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                      <CopyButton
-                                                        value={JSON.stringify(
-                                                          response.content['application/json'].schema,
-                                                          null,
-                                                          2
-                                                        )}
-                                                      />
-                                                    </div>
-                                                    <pre className="text-xs text-muted-foreground">
-                                                      {JSON.stringify(
-                                                        response.content['application/json'].schema,
-                                                        null,
-                                                        2
-                                                      )}
-                                                    </pre>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            )
-                                          )}
-                                        </div>
-                                      </TabsContent>
-
-                                      <TabsContent value="curl">
-                                        <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                                          <div className="absolute right-2 top-2">
-                                            <CopyButton value={curl} />
-                                          </div>
-                                          <SyntaxHighlighter code={curl} language="bash" />
-                                        </div>
-                                      </TabsContent>
-
-                                      <TabsContent value="sdk-react">
-                                        <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                                          <div className="absolute right-2 top-2">
-                                            <CopyButton value={generateReactSnippet(operation, sdkNames)} />
-                                          </div>
-                                          <SyntaxHighlighter
-                                            code={generateReactSnippet(operation, sdkNames)}
-                                            language="typescript"
-                                          />
-                                        </div>
-                                      </TabsContent>
-
-                                      <TabsContent value="sdk-node">
-                                        <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                                          <div className="absolute right-2 top-2">
-                                            <CopyButton value={generateNodeSnippet(operation, sdkNames)} />
-                                          </div>
-                                          <SyntaxHighlighter
-                                            code={generateNodeSnippet(operation, sdkNames)}
-                                            language="typescript"
-                                          />
-                                        </div>
-                                      </TabsContent>
-                                    </Tabs>
-                                  </CardContent>
-                                </Card>
-                              );
-                            })}
+                            {tagOperations.map(({ method, path, operation, opId }) => (
+                              <EndpointCard
+                                key={opId}
+                                method={method}
+                                path={path}
+                                operation={operation}
+                                opId={opId}
+                              />
+                            ))}
                           </div>
                         </section>
                       );
