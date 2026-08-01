@@ -4,8 +4,53 @@ const path = require('path');
 const rootPackageJsonPath = path.resolve(__dirname, '../package.json');
 const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, 'utf8'));
 
-// Use the version from root package.json, which is managed by Changesets
-const newVersion = rootPackageJson.version;
+function parseSemVer(v) {
+  const parts = v.split('-');
+  const numeric = parts[0].split('.').map(Number);
+  return { numeric, prerelease: parts[1] || '' };
+}
+
+function semverCompare(a, b) {
+  const pa = parseSemVer(a);
+  const pb = parseSemVer(b);
+  for (let i = 0; i < 3; i++) {
+    const na = pa.numeric[i] || 0;
+    const nb = pb.numeric[i] || 0;
+    if (na !== nb) {
+      return na - nb;
+    }
+  }
+  if (pa.prerelease && !pb.prerelease) return -1;
+  if (!pa.prerelease && pb.prerelease) return 1;
+  if (pa.prerelease && pb.prerelease) {
+    return pa.prerelease.localeCompare(pb.prerelease);
+  }
+  return 0;
+}
+
+const apiPackageJsonPath = path.resolve(__dirname, '../apps/api/package.json');
+let apiVersion = null;
+if (fs.existsSync(apiPackageJsonPath)) {
+  try {
+    const apiPackageJson = JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf8'));
+    apiVersion = apiPackageJson.version;
+  } catch (e) {
+    console.error(`Failed to read apps/api/package.json: ${e.message}`);
+  }
+}
+
+// Dynamically use the larger of the root version vs sub-package version.
+// This ensures that when Changesets runs on main (which only bumps workspace packages),
+// the root package.json version is correctly synchronized, and downstream release steps trigger.
+let newVersion = rootPackageJson.version;
+if (apiVersion && semverCompare(apiVersion, newVersion) > 0) {
+  console.log(`Detecting newer sub-package version (apps/api): ${apiVersion} > root version: ${newVersion}`);
+  newVersion = apiVersion;
+  rootPackageJson.version = newVersion;
+  fs.writeFileSync(rootPackageJsonPath, JSON.stringify(rootPackageJson, null, 2) + '\n');
+  console.log(`Successfully updated root package.json version to ${newVersion}`);
+}
+
 // Tauri 2 requires a 3-part SemVer string for its config.
 const semverVersion = newVersion;
 
