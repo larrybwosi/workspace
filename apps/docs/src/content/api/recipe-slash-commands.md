@@ -50,7 +50,7 @@ app.post('/webhook', async (req, res) => {
 
 async function sendReply(channelId: string, text: string) {
   await axios.post(
-    `https://api.skyrme.chat/v2/workspaces/my-workspace/messages`,
+    `https://api.skyrme.chat/v3/workspaces/my-workspace/messages`,
     {
       channelId,
       content: text,
@@ -87,7 +87,7 @@ def webhook():
 
             if command == 'ping':
                 requests.post(
-                    'https://api.skyrme.chat/v2/workspaces/my-workspace/messages',
+                    'https://api.skyrme.chat/v3/workspaces/my-workspace/messages',
                     json={'channelId': channel_id, 'content': 'Pong! 🏓'},
                     headers={'Authorization': f'Bearer {YOUR_TOKEN}'}
                 )
@@ -103,7 +103,7 @@ Instead of just plain text, you can respond with **Interactive Actions** or **Cu
 
 ```typescript
 // Example: Sending a message with buttons
-const MESSAGES_URL = `https://api.skyrme.chat/v2/workspaces/my-workspace/messages`;
+const MESSAGES_URL = `https://api.skyrme.chat/v3/workspaces/my-workspace/messages`;
 await axios.post(MESSAGES_URL, {
   channelId,
   content: 'Select an option:',

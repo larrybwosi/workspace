@@ -235,3 +235,8 @@
 
 **Learning:** Pulling all unread message records and their mentions to count and filter them in JavaScript scales terribly with active workspaces (causing memory spikes and slow JSON serialization). Delegating these aggregations to native DB-level `prisma.message.groupBy` queries reduces network and Node.js memory overhead to O(1) per channel.
 **Action:** Always prefer database-level count/groupBy aggregations over pulling and mapping relation lists in memory for lists, dashboards, and metrics.
+
+## 2026-07-30 - [Prisma/Performance] O(1) Unique Index Point Lookups for Symmetric Relations
+
+**Learning:** When searching for symmetric two-way relation records defined by compound unique keys (such as `DirectMessage` with `@@unique([participant1Id, participant2Id])`), querying via `findFirst` with an `OR` condition prevents the query planner from optimal O(1) single-key lookup plans, resulting in slower index scans. Replacing it with chained short-circuiting `findUnique` calls targeting both relation permutations is significantly faster and highly optimized.
+**Action:** Prefer chaining sequential `findUnique` calls targeting compound keys (e.g., `findUnique({ participant1Id_participant2Id: { participant1Id: A, participant2Id: B } }) || findUnique({ participant1Id_participant2Id: { participant1Id: B, participant2Id: A } })`) instead of `findFirst` with an `OR` condition.

@@ -16,7 +16,7 @@ To receive real-time events, your application must:
 
 Scrymechat provides an endpoint to exchange your API access token for an Ably Token Request.
 
-**Endpoint:** `POST /api/ably/token` (Note: In V2, use your Bearer token in the Authorization header)
+**Endpoint:** `POST /api/ably/token` (Note: In V3, use your Bearer token in the Authorization header)
 
 ### Example Request
 

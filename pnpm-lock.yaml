@@ -464,6 +464,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.3.0(@types/react@19.2.17)(react@19.2.5)
+      '@repo/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -501,6 +504,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
+      '@tailwindcss/postcss':
+        specifier: ^4.3.1
+        version: 4.3.3
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.3.1(vite@8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -613,91 +619,6 @@ importers:
       vite:
         specifier: ^8.0.8
         version: 8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)
-
-  apps/v3-docs:
-    dependencies:
-      '@radix-ui/react-slot':
-        specifier: ^1.2.4
-        version: 1.3.0(@types/react@19.2.17)(react@19.2.5)
-      '@repo/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      lucide-react:
-        specifier: ^0.479.0
-        version: 0.479.0(react@19.2.5)
-      react:
-        specifier: 19.2.5
-        version: 19.2.5
-      react-dom:
-        specifier: 19.2.5
-        version: 19.2.5(react@19.2.5)
-      react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.2.17)(react@19.2.5)
-      react-router:
-        specifier: ^7.14.0
-        version: 7.18.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1
-      tailwind-merge:
-        specifier: ^2.6.1
-        version: 2.6.1
-    devDependencies:
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@tailwindcss/postcss':
-        specifier: ^4.3.1
-        version: 4.3.1
-      '@tailwindcss/vite':
-        specifier: ^4.2.2
-        version: 4.3.1(vite@8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
-      '@testing-library/react':
-        specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@types/node':
-        specifier: ^22.19.17
-        version: 22.20.0
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.17)
-      '@vitejs/plugin-react':
-        specifier: ^4.7.0
-        version: 4.7.0(vite@8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
-      autoprefixer:
-        specifier: ^10.4.27
-        version: 10.5.2(postcss@8.5.15)
-      jsdom:
-        specifier: ^29.1.1
-        version: 29.1.1(@noble/hashes@2.2.0)
-      postcss:
-        specifier: ^8.5.9
-        version: 8.5.15
-      tailwindcss:
-        specifier: ^4.2.2
-        version: 4.3.1
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.3
-      vite:
-        specifier: ^8.0.8
-        version: 8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)
-      vitest:
-        specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
   apps/web:
     dependencies:
@@ -982,6 +903,34 @@ importers:
         specifier: ^8.15.0
         version: 8.62.0(eslint@10.1.0(jiti@2.7.0))(typescript@6.0.3)
 
+  packages/sdk:
+    dependencies:
+      '@tanstack/react-query':
+        specifier: 5.96.2
+        version: 5.96.2(react@19.2.5)
+      axios:
+        specifier: ^1.7.9
+        version: 1.14.0
+      react:
+        specifier: 19.2.5
+        version: 19.2.5
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.0
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.17
+      orval:
+        specifier: ^6.31.0
+        version: 6.31.0(openapi-types@12.1.3)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/shared:
     dependencies:
       '@repo/database':
@@ -1161,34 +1110,6 @@ importers:
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
-
-  packages/v3-api:
-    dependencies:
-      '@tanstack/react-query':
-        specifier: 5.96.2
-        version: 5.96.2(react@19.2.5)
-      axios:
-        specifier: ^1.7.9
-        version: 1.14.0
-      react:
-        specifier: 19.2.5
-        version: 19.2.5
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/node':
-        specifier: ^22.10.7
-        version: 22.20.0
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.17
-      orval:
-        specifier: ^6.31.0
-        version: 6.31.0(openapi-types@12.1.3)(typescript@5.9.3)
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
 
 packages:
 
@@ -17970,7 +17891,7 @@ snapshots:
     dependencies:
       '@stoplight/json': 3.21.7
       '@stoplight/path': 1.3.2
-      '@stoplight/types': 13.6.0
+      '@stoplight/types': 13.20.0
       '@types/urijs': 1.19.26
       dependency-graph: 0.11.0
       fast-memoize: 2.5.2

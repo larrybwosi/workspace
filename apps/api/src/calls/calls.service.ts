@@ -566,12 +566,22 @@ export class CallsService {
     }
 
     // Find or create DM conversation
-    let dm = await prisma.directMessage.findFirst({
+    // ⚡ Performance Optimization:
+    // Uses direct findUnique point lookup on the compound unique key [participant1Id, participant2Id]
+    // instead of slower findFirst with OR, which avoids multi-index database scans and maximizes query efficiency.
+    let dm = await prisma.directMessage.findUnique({
       where: {
-        OR: [
-          { participant1Id: user.id, participant2Id: targetUserId },
-          { participant1Id: targetUserId, participant2Id: user.id },
-        ],
+        participant1Id_participant2Id: {
+          participant1Id: user.id,
+          participant2Id: targetUserId,
+        },
+      },
+    }) || await prisma.directMessage.findUnique({
+      where: {
+        participant1Id_participant2Id: {
+          participant1Id: targetUserId,
+          participant2Id: user.id,
+        },
       },
     });
 

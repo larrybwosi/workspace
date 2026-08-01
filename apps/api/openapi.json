@@ -3332,6 +3332,30 @@
         ]
       }
     },
+    "/s/{code}": {
+      "get": {
+        "operationId": "ShortUrlController_redirect",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Proxy file request using high-performance streaming",
+        "tags": [
+          "Storage"
+        ]
+      }
+    },
     "/api/bot/v10/users/{id}": {
       "get": {
         "operationId": "V10UsersController_getUser",

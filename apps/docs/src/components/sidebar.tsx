@@ -18,26 +18,11 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/user-guide/mcp', label: 'Model Context Protocol', category: 'Integrations' },
       ]
     : [
-        { href: '/api-reference/getting-started', label: 'Getting Started', category: 'General' },
-        { href: '/api-reference/authentication', label: 'Authentication', category: 'General' },
-        { href: '/api-reference/qr-auth', label: 'QR Authentication', category: 'General' },
-        { href: '/api-reference/explorer', label: 'API Explorer (Auto-gen)', category: 'General' },
-        { href: '/api-reference/errors', label: 'Errors & Rate Limits', category: 'General' },
-        { href: '/api-reference/workspaces', label: 'Workspaces & Members', category: 'Resources' },
-        { href: '/api-reference/messages', label: 'Messages & Channels', category: 'Resources' },
-        { href: '/api-reference/teams', label: 'Teams & Departments', category: 'Resources' },
-        { href: '/api-reference/announcements', label: 'Announcements', category: 'Resources' },
-        { href: '/api-reference/search', label: 'Search', category: 'Resources' },
-        { href: '/api-reference/real-time', label: 'Real-time Events', category: 'Resources' },
-        { href: '/api-reference/webhooks', label: 'Webhooks', category: 'Resources' },
-        { href: '/api-reference/discord-v10', label: 'Discord V10 Gateway', category: 'Compatibility' },
-        { href: '/api-reference/applications', label: 'Bot Applications', category: 'Bot API' },
-        { href: '/api-reference/organization-m2m', label: 'Organization M2M', category: 'Bot API' },
-        { href: '/api-reference/api-tokens', label: 'API Tokens', category: 'Bot API' },
-        { href: '/api-reference/recipe-bot', label: 'How to build a bot', category: 'Recipes' },
-        { href: '/api-reference/recipe-sync-members', label: 'Syncing members', category: 'Recipes' },
-        { href: '/api-reference/recipe-slash-commands', label: 'Slash commands', category: 'Recipes' },
-        { href: '/api-reference/recipe-file-uploads', label: 'File uploads', category: 'Recipes' },
+        { href: '/api-reference/explorer', label: 'Interactive API Explorer', category: 'General' },
+        { href: '/api-reference/authentication', label: 'V3 Authentication', category: 'Resources' },
+        { href: '/api-reference/workspaces', label: 'V3 Workspaces & Members', category: 'Resources' },
+        { href: '/api-reference/webhooks', label: 'V3 Webhooks', category: 'Resources' },
+        { href: '/api-reference/incoming-webhooks', label: 'V3 Channel Incoming Webhooks', category: 'Resources' },
       ];
 
   const groupedLinks = links.reduce(
@@ -54,7 +39,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
     <aside className="w-full h-full">
       <div className="py-6 lg:py-8 pr-4 overflow-y-auto h-full scrollbar-hide">
         <h4 className="mb-4 px-3 text-xs font-bold uppercase tracking-widest text-foreground/40">
-          {isUserGuide ? 'User Guide' : 'API Reference'}
+          {isUserGuide ? 'User Guide' : 'API V3 Reference'}
         </h4>
         <div className="flex flex-col gap-8">
           {Object.entries(groupedLinks).map(([category, items]) => (

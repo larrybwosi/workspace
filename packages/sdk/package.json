@@ -1,5 +1,5 @@
 {
-  "name": "@repo/v3-api",
+  "name": "@repo/sdk",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",

@@ -8,7 +8,7 @@ config({
   quiet: true,
 });
 
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
+const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@db:5432/main';
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',

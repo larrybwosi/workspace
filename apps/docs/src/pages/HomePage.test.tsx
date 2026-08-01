@@ -16,8 +16,8 @@ describe('HomePage', () => {
   it('renders home page with headers and buttons', () => {
     render(<HomePage />);
 
-    expect(screen.getByText('Build the future of communication')).toBeDefined();
-    expect(screen.getByText('Get Started')).toBeDefined();
-    expect(screen.getAllByText('API Reference').length).toBeGreaterThan(0);
+    expect(screen.getByText('Enterprise Communication at Scale')).toBeDefined();
+    expect(screen.getByText('Explore V3 API')).toBeDefined();
+    expect(screen.getByText('User Guides')).toBeDefined();
   });
 });

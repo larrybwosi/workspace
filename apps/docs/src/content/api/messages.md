@@ -8,13 +8,13 @@ Channels are shared spaces for team members.
 
 ### List Channels
 
-**Endpoint:** `GET /v2/workspaces/:slug/channels`
+**Endpoint:** `GET /v3/workspaces/:slug/channels`
 
 ---
 
 ### Create Channel
 
-**Endpoint:** `POST /v2/workspaces/:slug/channels`
+**Endpoint:** `POST /v3/workspaces/:slug/channels`
 
 **Body:**
 
@@ -32,7 +32,7 @@ Channels are shared spaces for team members.
 
 Upload a new icon for a channel using `multipart/form-data`.
 
-**Endpoint:** `POST /v2/workspaces/:slug/channels/:channelId/icon`
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/icon`
 
 ---
 
@@ -42,7 +42,7 @@ Upload a new icon for a channel using `multipart/form-data`.
 
 Send a message to a channel or a specific user.
 
-**Endpoint:** `POST /v2/workspaces/:slug/messages`
+**Endpoint:** `POST /v3/workspaces/:slug/messages`
 
 **Body Fields:**
 
@@ -100,7 +100,7 @@ The `metadata` field allows you to store structured JSON data with your message.
 
 ### List Messages
 
-**Endpoint:** `GET /v2/workspaces/:slug/messages`
+**Endpoint:** `GET /v3/workspaces/:slug/messages`
 
 **Query Parameters:**
 
