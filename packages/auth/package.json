@@ -2,7 +2,7 @@
   "name": "@repo/auth",
   "version": "0.1.0-dev.31",
   "main": "./auth.ts",
-  "types": "./auth.ts",
+  "types": "./dist/auth.d.ts",
   "private": true,
   "exports": {
     ".": "./auth.ts"
