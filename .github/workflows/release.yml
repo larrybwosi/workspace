@@ -122,6 +122,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # =======================================================================
+  # MAIN: every push/merge to main bumps the version and cuts a release.
+  # No changesets — version is bumped directly (patch) and published.
+  # =======================================================================
   version-main:
     needs: [test]
     if: github.ref == 'refs/heads/main'
@@ -129,8 +133,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version: ${{ steps.get_version.outputs.version }}
-      published: ${{ steps.check_release.outputs.published }}
+      version: ${{ steps.bump.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -142,44 +145,32 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Version packages directly on main
+      - name: Bump patch version
+        id: bump
         run: |
-          git fetch --tags
-          pnpm changeset version
+          git fetch --tags || true
+          npm version patch --no-git-tag-version
+          node scripts/ensure-unique-version.js
           pnpm install --no-frozen-lockfile
-      - name: Commit version bump
+          node scripts/update-version.js
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Commit and tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "chore: version packages [skip ci]" || echo "No changes to commit"
-          git push origin main
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]" || echo "No changes to commit"
+          git tag v${{ steps.bump.outputs.version }}
+          git push origin main --tags
       - name: Publish to npm
-        run: pnpm changeset publish
+        run: pnpm publish -r --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Read Current Version
-        id: get_version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Check if release is needed
-        id: check_release
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          git fetch --tags
-          if git rev-parse "refs/tags/v$VERSION" >/dev/null 2>&1; then
-            echo "Tag v$VERSION already exists — nothing new to release."
-            echo "published=false" >> $GITHUB_OUTPUT
-          else
-            echo "New version v$VERSION — releasing."
-            echo "published=true" >> $GITHUB_OUTPUT
-          fi
 
   docker-publish:
     needs: [test, version-main]
-    if: github.ref == 'refs/heads/main' && needs.version-main.outputs.published == 'true'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -231,7 +222,7 @@ jobs:
 
   create-release-main:
     needs: [version-main]
-    if: github.ref == 'refs/heads/main' && needs.version-main.outputs.published == 'true'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
