@@ -33,20 +33,6 @@ const getBaseURL = () => {
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
-    auth: {
-      type: 'Bearer',
-      token: () => {
-        if (typeof window !== 'undefined') {
-          return (
-            localStorage.getItem('bearer_token') ||
-            localStorage.getItem('better-auth.session_token') ||
-            localStorage.getItem('better-auth.session-token') ||
-            ''
-          );
-        }
-        return '';
-      },
-    },
     onRequest: async (ctx: any) => {
       if (typeof window !== 'undefined' && ctx.request.url.includes('/sign-out')) {
         localStorage.removeItem('bearer_token');
