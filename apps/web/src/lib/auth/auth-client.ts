@@ -33,6 +33,44 @@ const getBaseURL = () => {
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
+    auth: {
+      type: 'Bearer',
+      token: () => {
+        if (typeof window !== 'undefined') {
+          return (
+            localStorage.getItem('bearer_token') ||
+            localStorage.getItem('better-auth.session_token') ||
+            localStorage.getItem('better-auth.session-token') ||
+            ''
+          );
+        }
+        return '';
+      },
+    },
+    onRequest: async (ctx: any) => {
+      if (typeof window !== 'undefined' && ctx.request.url.includes('/sign-out')) {
+        localStorage.removeItem('bearer_token');
+        localStorage.removeItem('better-auth.session_token');
+        localStorage.removeItem('better-auth.session-token');
+      }
+      return ctx;
+    },
+    onSuccess: async (ctx: any) => {
+      if (typeof window !== 'undefined') {
+        const authToken = ctx.response.headers.get('set-auth-token');
+        if (authToken) {
+          localStorage.setItem('bearer_token', authToken);
+          localStorage.setItem('better-auth.session_token', authToken);
+          localStorage.setItem('better-auth.session-token', authToken);
+        }
+        if (ctx.request.url.includes('/sign-out')) {
+          localStorage.removeItem('bearer_token');
+          localStorage.removeItem('better-auth.session_token');
+          localStorage.removeItem('better-auth.session-token');
+        }
+      }
+      return ctx;
+    },
     onResponse: async ({ response }) => {
       const res = response as any;
       if (response.ok && res._data) {
@@ -40,6 +78,7 @@ export const authClient: any = createAuthClient({
         if (data && data.session && data.session.token) {
           localStorage.setItem('better-auth.session_token', data.session.token);
           localStorage.setItem('better-auth.session-token', data.session.token);
+          localStorage.setItem('bearer_token', data.session.token);
         }
       }
     },

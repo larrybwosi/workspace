@@ -67,16 +67,36 @@ export const getCustomApiUrl = () => {
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
+    auth: {
+      type: 'Bearer',
+      token: () => {
+        if (typeof window !== 'undefined') {
+          return (
+            localStorage.getItem('bearer_token') ||
+            localStorage.getItem('better-auth.session_token') ||
+            localStorage.getItem('better-auth.session-token') ||
+            ''
+          );
+        }
+        return '';
+      },
+    },
     onRequest: async (context: any) => {
       if (typeof window !== 'undefined') {
         const token =
           window.localStorage.getItem('better-auth.session-token') ||
-          window.localStorage.getItem('better-auth.session_token');
+          window.localStorage.getItem('better-auth.session_token') ||
+          window.localStorage.getItem('bearer_token');
         if (token) {
           context.headers = {
             ...context.headers,
             Authorization: `Bearer ${token}`,
           };
+        }
+        if (context.request.url.includes('/sign-out')) {
+          window.localStorage.removeItem('better-auth.session-token');
+          window.localStorage.removeItem('better-auth.session_token');
+          window.localStorage.removeItem('bearer_token');
         }
       }
       return context;
@@ -86,11 +106,14 @@ export const authClient: any = createAuthClient({
         const token = context.response.headers.get('set-auth-token');
         if (token) {
           window.localStorage.setItem('better-auth.session-token', token);
+          window.localStorage.setItem('better-auth.session_token', token);
+          window.localStorage.setItem('bearer_token', token);
         }
         // If it's a sign-out request, clear the stored tokens
         if (context.request.url.includes('/sign-out')) {
           window.localStorage.removeItem('better-auth.session-token');
           window.localStorage.removeItem('better-auth.session_token');
+          window.localStorage.removeItem('bearer_token');
         }
       }
       return context;
