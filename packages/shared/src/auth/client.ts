@@ -93,7 +93,8 @@ export const authClient: any = createAuthClient({
             Authorization: `Bearer ${token}`,
           };
         }
-        if (context.request.url.includes('/sign-out')) {
+        const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
+        if (urlStr && urlStr.includes('/sign-out')) {
           window.localStorage.removeItem('better-auth.session-token');
           window.localStorage.removeItem('better-auth.session_token');
           window.localStorage.removeItem('bearer_token');
@@ -103,14 +104,15 @@ export const authClient: any = createAuthClient({
     },
     onSuccess: async (context: any) => {
       if (typeof window !== 'undefined') {
-        const token = context.response.headers.get('set-auth-token');
+        const token = context.response?.headers?.get('set-auth-token');
         if (token) {
           window.localStorage.setItem('better-auth.session-token', token);
           window.localStorage.setItem('better-auth.session_token', token);
           window.localStorage.setItem('bearer_token', token);
         }
         // If it's a sign-out request, clear the stored tokens
-        if (context.request.url.includes('/sign-out')) {
+        const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
+        if (urlStr && urlStr.includes('/sign-out')) {
           window.localStorage.removeItem('better-auth.session-token');
           window.localStorage.removeItem('better-auth.session_token');
           window.localStorage.removeItem('bearer_token');

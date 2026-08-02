@@ -34,22 +34,26 @@ export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
     onRequest: async (ctx: any) => {
-      if (typeof window !== 'undefined' && ctx.request.url.includes('/sign-out')) {
-        localStorage.removeItem('bearer_token');
-        localStorage.removeItem('better-auth.session_token');
-        localStorage.removeItem('better-auth.session-token');
+      if (typeof window !== 'undefined') {
+        const urlStr = typeof ctx.request === 'string' ? ctx.request : ctx.request?.url || '';
+        if (urlStr && urlStr.includes('/sign-out')) {
+          localStorage.removeItem('bearer_token');
+          localStorage.removeItem('better-auth.session_token');
+          localStorage.removeItem('better-auth.session-token');
+        }
       }
       return ctx;
     },
     onSuccess: async (ctx: any) => {
       if (typeof window !== 'undefined') {
-        const authToken = ctx.response.headers.get('set-auth-token');
+        const authToken = ctx.response?.headers?.get('set-auth-token');
         if (authToken) {
           localStorage.setItem('bearer_token', authToken);
           localStorage.setItem('better-auth.session_token', authToken);
           localStorage.setItem('better-auth.session-token', authToken);
         }
-        if (ctx.request.url.includes('/sign-out')) {
+        const urlStr = typeof ctx.request === 'string' ? ctx.request : ctx.request?.url || '';
+        if (urlStr && urlStr.includes('/sign-out')) {
           localStorage.removeItem('bearer_token');
           localStorage.removeItem('better-auth.session_token');
           localStorage.removeItem('better-auth.session-token');
