@@ -55,12 +55,28 @@ apiClient.interceptors.request.use(config => {
 
     let token =
       window.localStorage.getItem('better-auth.session-token') ||
-      window.localStorage.getItem('better-auth.session_token');
+      window.localStorage.getItem('better-auth.session_token') ||
+      window.localStorage.getItem('bearer_token');
 
     if (!token) {
-      token = getCookie('better-auth.session_token') || getCookie('better-auth.session-token');
+      token =
+        getCookie('better-auth.session_token') ||
+        getCookie('better-auth.session-token') ||
+        getCookie('bearer_token');
       if (token) {
         window.localStorage.setItem('better-auth.session_token', token);
+        window.localStorage.setItem('better-auth.session-token', token);
+        window.localStorage.setItem('bearer_token', token);
+      }
+    } else {
+      // Keep everything in sync
+      if (!window.localStorage.getItem('bearer_token')) {
+        window.localStorage.setItem('bearer_token', token);
+      }
+      if (!window.localStorage.getItem('better-auth.session_token')) {
+        window.localStorage.setItem('better-auth.session_token', token);
+      }
+      if (!window.localStorage.getItem('better-auth.session-token')) {
         window.localStorage.setItem('better-auth.session-token', token);
       }
     }
