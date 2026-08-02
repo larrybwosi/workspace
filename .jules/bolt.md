@@ -1,3 +1,9 @@
+## 2026-08-02 - [Prisma/Performance] Child Sub-Resource Point Lookup with Parent Context Selection
+
+**Learning:** When retrieving details of a child sub-resource by its primary key `id` (e.g. `channelId`), querying the parent model (such as `Workspace`) by a unique secondary constraint (such as `slug`) and filtering child relations inside is less efficient for database query planners. Performing a direct O(1) point-lookup on the child table using its primary key `id` while nested-selecting/including parent metadata and authorization rules in a single database round-trip allows the DB engine to leverage the primary index immediately, while validation/authorization can be safely performed in application memory.
+
+**Action:** Prefer direct child `findUnique` lookups over parent model `findUnique` with nested sub-resource filters, validate parent slug matches and user membership in-memory, and omit parent metadata from final return values to adhere to response schemas/contracts.
+
 ## 2026-08-01 - [Prisma/Performance] Single-Query Mutation via Optimistic Update
 **Learning:** Combining a separate read existence check (`findUnique` or `findFirst`) and a subsequent write (`update` or `delete`) into a single atomic mutation with error catching (e.g. catching Prisma's `P2025` record-not-found error code) reduces database round-trips from 2 to 1. This optimizes write-path throughput, cuts database network overhead, and minimizes the window for write race conditions.
 **Action:** Prefer direct mutations (`update`/`delete`) with try/catch blocks for unique-constraint/existence errors instead of manual read-before-write validation on high-frequency write endpoints.
