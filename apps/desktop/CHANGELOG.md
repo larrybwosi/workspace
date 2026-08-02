@@ -1,5 +1,11 @@
 # desktop
 
+## 2.1.0
+
+### Minor Changes
+
+- 34cfaed: Update
+
 ## 2.1.0-dev.32
 
 ### Minor Changes

@@ -1,7 +1,26 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateEnv } from '@repo/shared';
 
-const publicRoutes = ['/login', '/signup', '/widget', '/invite', '/api/invitations', '/api/health', '/api/device-auth'];
+const publicRoutes = [
+  '/login',
+  '/signup',
+  '/widget',
+  '/invite',
+  '/api/invitations',
+  '/api/health',
+  '/api/device-auth',
+  '/privacy',
+  '/terms',
+  '/forgot-password',
+  '/sw.js',
+  '/firebase-messaging-sw.js',
+  '/manifest.json',
+  '/favicon.png',
+  '/apple-touch-icon.png',
+  '/icon.png',
+  '/icon_any.webp',
+  '/icon_maskable.webp',
+];
 const authPrefix = '/api/auth';
 
 export default async function proxy(request: NextRequest) {
