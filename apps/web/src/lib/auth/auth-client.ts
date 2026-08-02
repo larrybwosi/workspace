@@ -33,34 +33,6 @@ const getBaseURL = () => {
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
-    onRequest: async (ctx: any) => {
-      if (typeof window !== 'undefined') {
-        const urlStr = typeof ctx.request === 'string' ? ctx.request : ctx.request?.url || '';
-        if (urlStr && urlStr.includes('/sign-out')) {
-          localStorage.removeItem('bearer_token');
-          localStorage.removeItem('better-auth.session_token');
-          localStorage.removeItem('better-auth.session-token');
-        }
-      }
-      return ctx;
-    },
-    onSuccess: async (ctx: any) => {
-      if (typeof window !== 'undefined') {
-        const authToken = ctx.response?.headers?.get('set-auth-token');
-        if (authToken) {
-          localStorage.setItem('bearer_token', authToken);
-          localStorage.setItem('better-auth.session_token', authToken);
-          localStorage.setItem('better-auth.session-token', authToken);
-        }
-        const urlStr = typeof ctx.request === 'string' ? ctx.request : ctx.request?.url || '';
-        if (urlStr && urlStr.includes('/sign-out')) {
-          localStorage.removeItem('bearer_token');
-          localStorage.removeItem('better-auth.session_token');
-          localStorage.removeItem('better-auth.session-token');
-        }
-      }
-      return ctx;
-    },
     onResponse: async ({ response }) => {
       const res = response as any;
       if (response.ok && res._data) {
