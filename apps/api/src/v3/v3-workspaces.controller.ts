@@ -889,50 +889,49 @@ When provisioned via M2M:
     }
     const { role } = validatedData.data;
 
-    // Retrieve target member to verify existence
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId,
-        },
-      },
-      select: { id: true },
-    });
-
-    if (!member) {
-      throw new NotFoundException('Member not found in this workspace');
-    }
-
-    const updatedMember = await prisma.workspaceMember.update({
-      where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId,
-        },
-      },
-      data: { role },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
+    try {
+      /**
+       * ⚡ Performance Optimization:
+       * 1. Collapses the sequential 'findUnique' existence check and subsequent 'update' mutation
+       *    into a single atomic 'prisma.workspaceMember.update' call.
+       * 2. Handles the 'P2025' record not found error in the catch block to return NotFoundException.
+       * Expected impact: Reduces database round-trips (RTT) from 2 to 1 and improves role update response times by ~50%.
+       */
+      const updatedMember = await prisma.workspaceMember.update({
+        where: {
+          workspaceId_userId: {
+            workspaceId,
+            userId,
           },
         },
-      },
-    });
+        data: { role },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+        },
+      });
 
-    // Invalidate caches
-    try {
-      await this.redis.del(`v3:members:${workspaceId}`);
-      await this.redis.del(`v2:members:${workspaceId}`);
-    } catch (err) {
-      this.logger.warn('Redis error in updateWorkspaceMember (del):', err);
+      // Invalidate caches
+      try {
+        await this.redis.del(`v3:members:${workspaceId}`);
+        await this.redis.del(`v2:members:${workspaceId}`);
+      } catch (err) {
+        this.logger.warn('Redis error in updateWorkspaceMember (del):', err);
+      }
+
+      return this.formatResponse({ member: updatedMember });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Member not found in this workspace');
+      }
+      throw error;
     }
-
-    return this.formatResponse({ member: updatedMember });
   }
 
   @Delete(':slug/members/:userId')

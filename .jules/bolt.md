@@ -1,3 +1,7 @@
+## 2026-08-01 - [Prisma/Performance] Single-Query Mutation via Optimistic Update
+**Learning:** Combining a separate read existence check (`findUnique` or `findFirst`) and a subsequent write (`update` or `delete`) into a single atomic mutation with error catching (e.g. catching Prisma's `P2025` record-not-found error code) reduces database round-trips from 2 to 1. This optimizes write-path throughput, cuts database network overhead, and minimizes the window for write race conditions.
+**Action:** Prefer direct mutations (`update`/`delete`) with try/catch blocks for unique-constraint/existence errors instead of manual read-before-write validation on high-frequency write endpoints.
+
 ## 2026-07-31 - [Database] Consolidated Multi-Entity Verification and Point-Lookup in Integrations
 
 **Learning:** Sibling methods in `IntegrationsService` were using sequential queries to verify workspace slugs, validate user membership role levels, and fetch or mutate integrations. Consolidating slug lookups, membership checks, and sub-resource lookups (or mutations) into a single nested `select` on `prisma.workspace.findUnique` reduces database round-trips (RTT) and closes potential IDOR security gaps. Furthermore, fetching sub-resources directly using `findUnique` on their primary key `id` while nested-selecting `workspace: { select: { slug: true } }` reduces database RTT from 2 to 1 by entirely bypassing the initial parent-entity database lookup query.

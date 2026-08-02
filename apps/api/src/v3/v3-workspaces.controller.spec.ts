@@ -683,17 +683,17 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateWorkspaceMember', () => {
-      it('should update member role and invalidate caches', async () => {
+      it('should update member role directly and invalidate caches', async () => {
         const body = { role: 'moderator' as const };
         const mockMember = { id: 'm-1', userId: 'user-1', role: 'moderator' };
 
-        (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'm-1' });
         (prisma.workspaceMember.update as any).mockResolvedValue(mockMember);
 
         const result = await controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1', body);
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockMember);
+        expect(prisma.workspaceMember.findUnique).not.toHaveBeenCalled();
         expect(prisma.workspaceMember.update).toHaveBeenCalledWith({
           where: {
             workspaceId_userId: {
@@ -708,6 +708,29 @@ describe('V3WorkspacesController', () => {
         });
         expect(redisClient.del).toHaveBeenCalledWith('v3:members:ws-123');
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
+      });
+
+      it('should throw NotFoundException if update fails with P2025 error code', async () => {
+        const body = { role: 'moderator' as const };
+        const error = new Error('Record to update not found');
+        (error as any).code = 'P2025';
+
+        (prisma.workspaceMember.update as any).mockRejectedValue(error);
+
+        await expect(
+          controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1', body)
+        ).rejects.toThrow('Member not found in this workspace');
+      });
+
+      it('should propagate other errors from update', async () => {
+        const body = { role: 'moderator' as const };
+        const error = new Error('Database connection failed');
+
+        (prisma.workspaceMember.update as any).mockRejectedValue(error);
+
+        await expect(
+          controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1', body)
+        ).rejects.toThrow('Database connection failed');
       });
     });
 
