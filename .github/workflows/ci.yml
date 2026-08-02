@@ -1,8 +1,5 @@
 name: CI
 
-# Validates every PR into main or dev before merge.
-# Push validation for main/dev happens as the first job inside release.yml,
-# so it isn't duplicated here.
 on:
   pull_request:
     branches: [main, dev]
