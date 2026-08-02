@@ -123,16 +123,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # =======================================================================
-  # MAIN: changeset-driven release
-  #
-  # NOTE on why releases weren't appearing before: changesets/action only
-  # runs `publish` (and only then sets `published=true`) once there are no
-  # pending `.changeset/*.md` files left to consume. On the first push with
-  # pending changesets it just opens/updates a "Version Packages" PR - it
-  # does NOT publish or release yet. A release on main only happens once
-  # that PR is merged. If PRs into main never add changeset files, this
-  # step has nothing to version and silently never fires. Make sure PRs
-  # into main include a changeset (`pnpm changeset`).
+  # MAIN: every push/merge to main bumps the version and cuts a release.
+  # No changesets — version is bumped directly (patch) and published.
   # =======================================================================
   version-main:
     needs: [test]
@@ -140,62 +132,45 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     outputs:
-      version: ${{ steps.get_version.outputs.version }}
-      published: ${{ steps.check_release.outputs.published }}
+      version: ${{ steps.bump.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ github.token }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Create Version PR or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          title: 'chore: version packages'
-          commit: 'chore: version packages'
-          version: pnpm version:ci
-          publish: pnpm changeset publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Read Current Version
-        id: get_version
+      - name: Bump patch version
+        id: bump
         run: |
+          git fetch --tags || true
+          npm version patch --no-git-tag-version
+          node scripts/ensure-unique-version.js
+          pnpm install --no-frozen-lockfile
+          node scripts/update-version.js
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Check if release is needed
-        id: check_release
+      - name: Commit and tag
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "Current package version: v$VERSION"
-          git fetch --tags
-          if git rev-parse "refs/tags/v$VERSION" >/dev/null 2>&1; then
-            TAG_EXISTS=true
-          else
-            TAG_EXISTS=false
-          fi
-
-          HAS_CHANGESETS="${{ steps.changesets.outputs.hasChangesets }}"
-          echo "Has changesets: $HAS_CHANGESETS"
-          echo "Tag exists: $TAG_EXISTS"
-
-          if [ "$HAS_CHANGESETS" != "true" ] && [ "$TAG_EXISTS" = "false" ]; then
-            echo "A new release is needed!"
-            echo "published=true" >> $GITHUB_OUTPUT
-          else
-            echo "No release is needed."
-            echo "published=false" >> $GITHUB_OUTPUT
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]" || echo "No changes to commit"
+          git tag v${{ steps.bump.outputs.version }}
+          git push origin main --tags
+      - name: Publish to npm
+        run: pnpm publish -r --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   docker-publish:
     needs: [test, version-main]
-    if: github.ref == 'refs/heads/main' && needs.version-main.outputs.published == 'true'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -247,7 +222,7 @@ jobs:
 
   create-release-main:
     needs: [version-main]
-    if: github.ref == 'refs/heads/main' && needs.version-main.outputs.published == 'true'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
