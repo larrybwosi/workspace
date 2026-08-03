@@ -38,7 +38,7 @@ import { CallChat } from '../calls/call-chat';
 import { useSession } from '@repo/shared';
 import { cn } from '@repo/ui/lib/utils';
 import { toast } from 'sonner';
-import { useWorkspaceMembers } from '@repo/api-client';
+import { apiClient, useWorkspaceMembers } from '@repo/api-client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -172,11 +172,11 @@ export function VideoCallContent({
   }, [screenError]);
 
   const broadcastScreenShare = useCallback(async () => {
-    await fetch(`/api/calls/${callId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'screenShareStarted' }),
-    });
+    try {
+      await apiClient.patch(`/calls/${callId}`, { action: 'screenShareStarted' });
+    } catch (err) {
+      console.error('Failed to broadcast screen share:', err);
+    }
   }, [callId]);
 
   useEffect(() => {
@@ -199,11 +199,8 @@ export function VideoCallContent({
 
   const fetchParticipants = useCallback(async () => {
     try {
-      const res = await fetch(`/api/calls/${callId}/participants`);
-      if (res.ok) {
-        const data = await res.json();
-        setParticipants(data);
-      }
+      const res = await apiClient.get(`/calls/${callId}/participants`);
+      setParticipants(res.data);
     } catch (err) {
       console.error('Failed to fetch participants', err);
     }
@@ -219,11 +216,7 @@ export function VideoCallContent({
           }
         });
 
-        await fetch(`/api/calls/${callId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action }),
-        });
+        await apiClient.patch(`/calls/${callId}`, { action });
       } catch (error) {
         console.error('Error leaving call:', error);
       } finally {
@@ -278,11 +271,7 @@ export function VideoCallContent({
   useEffect(() => {
     const joinCall = async () => {
       try {
-        await fetch(`/api/calls/${callId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'join', uid }),
-        });
+        await apiClient.patch(`/calls/${callId}`, { action: 'join', uid });
         await fetchParticipants();
       } catch (err) {
         console.error('Failed to join call:', err);
@@ -312,11 +301,7 @@ export function VideoCallContent({
     const newMicState = !micOn;
     setMicOn(newMicState);
     try {
-      await fetch(`/api/calls/${callId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'updateState', muted: !newMicState }),
-      });
+      await apiClient.patch(`/calls/${callId}`, { action: 'updateState', muted: !newMicState });
     } catch (err) {
       console.error('Failed to update mic state:', err);
     }
@@ -326,11 +311,7 @@ export function VideoCallContent({
     const newCameraState = !cameraOn;
     setCameraOn(newCameraState);
     try {
-      await fetch(`/api/calls/${callId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'updateState', videoOff: !newCameraState }),
-      });
+      await apiClient.patch(`/calls/${callId}`, { action: 'updateState', videoOff: !newCameraState });
     } catch (err) {
       console.error('Failed to update camera state:', err);
     }
@@ -343,11 +324,7 @@ export function VideoCallContent({
     if (newState && cameraOn) {
       setCameraOn(false);
       try {
-        await fetch(`/api/calls/${callId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'updateState', videoOff: true }),
-        });
+        await apiClient.patch(`/calls/${callId}`, { action: 'updateState', videoOff: true });
       } catch (err) {
         console.error('Failed to update camera state for screen share:', err);
       }
@@ -356,12 +333,8 @@ export function VideoCallContent({
 
   const promoteParticipant = async (targetUid: number) => {
     try {
-      const res = await fetch(`/api/calls/${callId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'promote', uid: targetUid }),
-      });
-      if (res.ok) toast.success('Participant promoted to moderator');
+      await apiClient.patch(`/calls/${callId}`, { action: 'promote', uid: targetUid });
+      toast.success('Participant promoted to moderator');
     } catch (err) {
       toast.error('Failed to promote participant');
     }
@@ -369,12 +342,8 @@ export function VideoCallContent({
 
   const removeParticipant = async (targetUid: number) => {
     try {
-      const res = await fetch(`/api/calls/${callId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'remove', uid: targetUid }),
-      });
-      if (res.ok) toast.success('Participant removed from call');
+      await apiClient.patch(`/calls/${callId}`, { action: 'remove', uid: targetUid });
+      toast.success('Participant removed from call');
     } catch (err) {
       toast.error('Failed to remove participant');
     }
@@ -382,12 +351,7 @@ export function VideoCallContent({
 
   const inviteMember = async (userId: string) => {
     try {
-      const response = await fetch(`/api/calls/${callId}/invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-      if (!response.ok) throw new Error('Failed to send invite');
+      await apiClient.post(`/calls/${callId}/invite`, { userId });
       toast.success('Invite sent!');
     } catch (error) {
       console.error(error);

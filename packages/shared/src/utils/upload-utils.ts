@@ -11,12 +11,75 @@ export interface UploadedFile {
   };
 }
 
+// Helper to safely access env variables across Vite, Next.js and React Native
+const getEnv = (name: string) => {
+  const g = globalThis as any;
+  const env = g.process?.env || g.import?.meta?.env || g.__env__;
+  if (!env) return undefined;
+  return (
+    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`]
+  );
+};
+
+const getBaseURL = () => {
+  let url = '';
+  if (typeof window !== 'undefined') {
+    const customUrl = window.localStorage.getItem('CUSTOM_API_URL');
+    if (customUrl) {
+      url = customUrl;
+    }
+  }
+  if (!url) {
+    const isProd =
+      (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') ||
+      getEnv('NODE_ENV') === 'production' ||
+      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+    url =
+      getEnv('API_URL') ||
+      getEnv('NEXT_PUBLIC_API_URL') ||
+      getEnv('VITE_API_URL') ||
+      getEnv('EXPO_PUBLIC_API_URL') ||
+      (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
+  }
+  return url.replace(/\/$/, '') + '/api';
+};
+
+const getAuthToken = () => {
+  if (typeof window !== 'undefined') {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    return (
+      window.localStorage.getItem('better-auth.session-token') ||
+      window.localStorage.getItem('better-auth.session_token') ||
+      window.localStorage.getItem('bearer_token') ||
+      getCookie('better-auth.session_token') ||
+      getCookie('better-auth.session-token') ||
+      getCookie('bearer_token') ||
+      ''
+    );
+  }
+  return '';
+};
+
 export async function uploadFile(file: File): Promise<UploadedFile> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch('/api/upload', {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const baseURL = getBaseURL();
+  const response = await fetch(`${baseURL}/upload`, {
     method: 'POST',
+    headers,
     body: formData,
   });
 
@@ -29,8 +92,16 @@ export async function uploadFile(file: File): Promise<UploadedFile> {
 }
 
 export async function deleteFile(assetId: string): Promise<void> {
-  const response = await fetch(`/api/upload?assetId=${assetId}`, {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const baseURL = getBaseURL();
+  const response = await fetch(`${baseURL}/upload?assetId=${assetId}`, {
     method: 'DELETE',
+    headers,
   });
 
   if (!response.ok) {
