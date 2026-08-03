@@ -17,7 +17,9 @@ export default function Layout({ children }: { children: ReactNode }) {
               <MessageSquare className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg tracking-tight flex items-center gap-1.5">
                 Skyrme <span className="text-muted-foreground font-medium">Enterprise V3 Docs</span>
-                <span className="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20">V3</span>
+                <span className="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20">
+                  V3
+                </span>
               </span>
             </Link>
             <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
@@ -62,7 +64,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <span className="font-bold tracking-tight">Skyrme Chat Enterprise</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                The modern communication platform for teams that value privacy, multi-tenant workspace isolation, performance, and Redis caching.
+                The modern communication platform for teams that value privacy, multi-tenant workspace isolation,
+                performance, and Redis caching.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 col-span-1 md:col-span-3 gap-8">
@@ -70,12 +73,12 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">Product</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <a href="https://skyrme.chat" className="hover:text-primary transition-colors">
+                    <a href="https://chat.scryme.tech" className="hover:text-primary transition-colors">
                       Website
                     </a>
                   </li>
                   <li>
-                    <a href="https://app.skyrme.chat" className="hover:text-primary transition-colors">
+                    <a href="https://app.chat.scryme.tech" className="hover:text-primary transition-colors">
                       Open App
                     </a>
                   </li>

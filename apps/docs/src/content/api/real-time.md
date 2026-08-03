@@ -21,7 +21,7 @@ Scrymechat provides an endpoint to exchange your API access token for an Ably To
 ### Example Request
 
 ```bash
-curl -X POST https://api.skyrme.chat/api/ably/token \
+curl -X POST https://api.chat.scryme.tech/api/ably/token \
   -H "Authorization: Bearer <your_access_token>"
 ```
 
@@ -53,7 +53,7 @@ async function connectToAbly(accessToken: string) {
   const realtime = new Ably.Realtime({
     authCallback: async (tokenParams, callback) => {
       try {
-        const response = await fetch('https://api.skyrme.chat/api/ably/token', {
+        const response = await fetch('https://api.chat.scryme.tech/api/ably/token', {
           method: 'POST',
           headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -82,7 +82,7 @@ import requests
 def connect_to_ably(access_token):
     def auth_callback(token_params):
         response = requests.post(
-            'https://api.skyrme.chat/api/ably/token',
+            'https://api.chat.scryme.tech/api/ably/token',
             headers={'Authorization': f'Bearer {access_token}'}
         )
         return response.json()
