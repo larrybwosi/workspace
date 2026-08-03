@@ -1,3 +1,9 @@
+## 2026-08-03 - [Prisma/Performance] Single-Query Consolidated Workspace Verification & Invite Link Retrieval
+
+**Learning:** Sibling methods in controllers often split workspace verification (checking membership) and subsequent sub-resource lookups (such as checking if an invite link already exists) into multiple sequential database queries. Consolidating workspace lookups and existing sub-resource retrieval into a single `prisma.workspace.findUnique` query with nested `select` and filters reduces database round-trips from 2 to 1 on the hot path.
+
+**Action:** Use nested `select` filters (like `inviteLinks` filtered by `createdById` with `take: 1`) on the workspace verification query to fetch both membership information and existing sub-resources concurrently.
+
 ## 2026-08-02 - [Prisma/Performance] Child Sub-Resource Point Lookup with Parent Context Selection
 
 **Learning:** When retrieving details of a child sub-resource by its primary key `id` (e.g. `channelId`), querying the parent model (such as `Workspace`) by a unique secondary constraint (such as `slug`) and filtering child relations inside is less efficient for database query planners. Performing a direct O(1) point-lookup on the child table using its primary key `id` while nested-selecting/including parent metadata and authorization rules in a single database round-trip allows the DB engine to leverage the primary index immediately, while validation/authorization can be safely performed in application memory.
