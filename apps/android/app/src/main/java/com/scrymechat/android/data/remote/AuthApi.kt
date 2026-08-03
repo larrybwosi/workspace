@@ -78,6 +78,7 @@ data class UserResponse(
     val name: String,
     val email: String,
     val username: String? = null,
+    val displayUsername: String? = null,
     val avatar: String? = null,
     val image: String? = null,
     val banner: String? = null,
