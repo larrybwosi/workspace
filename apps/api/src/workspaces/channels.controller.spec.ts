@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsController } from './channels.controller';
 import { AuthGuard } from '../auth/auth.guard';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 // Mock @repo/database prisma
 vi.mock('@repo/database', () => ({
@@ -425,5 +426,92 @@ describe('ChannelsController - NestJS module', () => {
     expect(result[1].id).toBe('ch-2');
     expect(result[1].unreadCount).toBe(8);
     expect(result[1].mentionCount).toBe(0);
+  });
+
+  describe('getChannel', () => {
+    it('should retrieve a channel via direct findUnique and exclude the workspace object from the result', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        name: 'general',
+        slug: 'general',
+        workspace: {
+          id: 'ws-1',
+          slug: 'my-workspace',
+          members: [{ role: 'member' }],
+        },
+        members: [],
+        _count: { members: 1, threads: 0 },
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      const result = await controller.getChannel(user, 'my-workspace', 'ch-1');
+
+      expect(mockPrisma.channel.findUnique).toHaveBeenCalledWith({
+        where: { id: 'ch-1' },
+        include: {
+          workspace: {
+            select: {
+              id: true,
+              slug: true,
+              members: {
+                where: { userId: user.id },
+                select: { role: true },
+              },
+            },
+          },
+          members: {
+            include: {
+              user: { select: { id: true, name: true, email: true, avatar: true } },
+            },
+          },
+          _count: { select: { members: true, threads: true } },
+        },
+      });
+
+      expect(result).not.toHaveProperty('workspace');
+      expect(result.id).toBe('ch-1');
+      expect(result.name).toBe('general');
+    });
+
+    it('should throw NotFoundException if channel does not exist', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(controller.getChannel(user, 'my-workspace', 'ch-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if channel workspace slug does not match the slug param', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        name: 'general',
+        workspace: {
+          id: 'ws-1',
+          slug: 'other-workspace',
+          members: [{ role: 'member' }],
+        },
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(controller.getChannel(user, 'my-workspace', 'ch-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not a member of the workspace', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        name: 'general',
+        workspace: {
+          id: 'ws-1',
+          slug: 'my-workspace',
+          members: [], // empty membership
+        },
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(controller.getChannel(user, 'my-workspace', 'ch-1')).rejects.toThrow(ForbiddenException);
+    });
   });
 });
