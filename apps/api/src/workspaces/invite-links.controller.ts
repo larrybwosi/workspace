@@ -86,10 +86,11 @@ export class InviteLinksController {
   async createInviteLink(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: CreateInviteLinkDto) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single query.
-     * 2. Reduces database round-trips from 2 to 1 for initial verification.
-     * 3. Uses 'select' to retrieve only required fields.
-     * Expected impact: Faster validation and reduced database load.
+     * 1. Consolidates workspace existence check, member authorization, and lookup of existing user-created invite links
+     *    into a single point-lookup database query on 'prisma.workspace.findUnique' using nested 'select'.
+     * 2. Reduces database round-trips (RTT) from 2 down to 1 on the hot path.
+     * 3. Avoids the separate 'prisma.workspaceInviteLink.findFirst' query entirely.
+     * Expected impact: Improved query performance, reduced latency, and minimized database engine load.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -98,6 +99,27 @@ export class InviteLinksController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        inviteLinks: {
+          where: {
+            createdById: user.id,
+          },
+          select: {
+            id: true,
+            code: true,
+            maxUses: true,
+            uses: true,
+            expiresAt: true,
+            createdAt: true,
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+          take: 1,
         },
       },
     });
@@ -112,27 +134,7 @@ export class InviteLinksController {
 
     const { maxUses, expiresAt } = body;
 
-    const existingLink = await prisma.workspaceInviteLink.findFirst({
-      where: {
-        workspaceId: workspace.id,
-        createdById: user.id,
-      },
-      select: {
-        id: true,
-        code: true,
-        maxUses: true,
-        uses: true,
-        expiresAt: true,
-        createdAt: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
-        },
-      },
-    });
+    const existingLink = workspace.inviteLinks[0];
 
     if (existingLink) {
       return existingLink;
