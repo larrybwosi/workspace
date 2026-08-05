@@ -73,7 +73,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ScrymeNavHost(navController = navController)
+                    ScrymeNavHost(
+                        navController = navController,
+                        sessionManager = sessionManager
+                    )
                 }
 
                 LaunchedEffect(Unit) {
