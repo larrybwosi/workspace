@@ -22,9 +22,9 @@ import com.scrymechat.android.ui.notifications.NotificationsScreen
 @Composable
 fun ScrymeNavHost(
     navController: NavHostController,
+    sessionManager: com.scrymechat.android.data.local.SessionManager,
     startDestination: String = Screen.Splash.route,
-    themeViewModel: ThemeViewModel = hiltViewModel(),
-    sessionManager: com.scrymechat.android.data.local.SessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Splash.route) {
