@@ -231,28 +231,39 @@ export class V2ThreadsController {
 
     /**
      * ⚡ Performance Optimization:
-     * Uses 'select' instead of 'include' to reduce DB payload and memory usage.
+     * Replaces findFirst query on the parent model (Thread) using multi-join nested filters with
+     * a direct point lookup on the child table (ThreadTag) by its highly selective indexed 'tag' field.
+     * Keeps workspaceId scope on the database layer to ensure strict multi-tenant isolation,
+     * preventing collision false-negatives, while avoiding costly full table scans on Thread.
      */
-    const thread = await prisma.thread.findFirst({
+    const threadTag = await prisma.threadTag.findFirst({
       where: {
-        channel: { workspaceId: context.workspaceId },
-        tags: { some: { tag: contextId } },
+        tag: contextId,
+        thread: {
+          channel: { workspaceId: context.workspaceId },
+        },
       },
       select: {
-        id: true,
-        channelId: true,
-        creatorId: true,
-        status: true,
-        dateCreated: true,
-        updatedAt: true,
-        title: true,
-        rootMessageId: true,
-        tags: true,
-        _count: {
-          select: { messages: true },
+        thread: {
+          select: {
+            id: true,
+            channelId: true,
+            creatorId: true,
+            status: true,
+            dateCreated: true,
+            updatedAt: true,
+            title: true,
+            rootMessageId: true,
+            tags: true,
+            _count: {
+              select: { messages: true },
+            },
+          },
         },
       },
     });
+
+    const thread = threadTag?.thread;
 
     if (!thread) {
       throw new NotFoundException('Thread not found for this context');
