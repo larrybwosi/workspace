@@ -1,3 +1,9 @@
+## 2026-08-06 - [Prisma/Performance] Projected Selection on Database Lookup Queries
+
+**Learning:** Sibling methods, services, and middleware controllers often query models using `findFirst` without a select projection, returning the entire database row. When subsequent application logic only requires a few properties (such as an `id` or raw `config`), fetching full records increases database memory pressure, deserialization overhead, and response latency on high-frequency paths (like message creation). Explicitly projecting selected columns using Prisma's `select` (e.g. `select: { id: true }`) avoids these inefficiencies.
+
+**Action:** Consistently use Prisma `select` projections for high-traffic lookup queries (such as checking parent existence or fetching raw configuration maps) where the full row/object is not needed.
+
 ## 2026-08-03 - [Prisma/Performance] Single-Query Consolidated Workspace Verification & Invite Link Retrieval
 
 **Learning:** Sibling methods in controllers often split workspace verification (checking membership) and subsequent sub-resource lookups (such as checking if an invite link already exists) into multiple sequential database queries. Consolidating workspace lookups and existing sub-resource retrieval into a single `prisma.workspace.findUnique` query with nested `select` and filters reduces database round-trips from 2 to 1 on the hot path.

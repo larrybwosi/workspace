@@ -105,8 +105,14 @@ export class IntegrationsService {
   async handlePlaneWebhook(body: any) {
     const { event, data, workspaceId } = body;
 
+    /**
+     * ⚡ Performance Optimization:
+     * Uses `select: { id: true }` since only the channel's `id` is required to create the system message.
+     * This avoids pulling all channel properties from the database and reduces memory footprint.
+     */
     const channel = await prisma.channel.findFirst({
       where: { workspaceId: workspaceId as string },
+      select: { id: true },
     });
 
     if (!channel) throw new NotFoundException('Channel not found');
@@ -133,12 +139,19 @@ export class IntegrationsService {
   }
 
   async createHulyTask(workspaceId: string, data: { title: string; description?: string }) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses `select: { config: true }` to retrieve only the JSON `config` from the Integration row.
+     * Since only the integration's configuration is needed for executing HTTP requests to Huly,
+     * this avoids over-fetching other scalar fields and speeds up the integration execution path.
+     */
     const integration = await prisma.workspaceIntegration.findFirst({
       where: {
         workspaceId,
         service: 'huly',
         active: true,
       },
+      select: { config: true },
     });
 
     if (!integration) throw new NotFoundException('Huly integration not found or inactive');

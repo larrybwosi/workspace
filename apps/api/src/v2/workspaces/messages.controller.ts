@@ -731,11 +731,18 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
       }
 
       if (contextId && !activeThreadId) {
+        /**
+         * ⚡ Performance Optimization:
+         * Uses `select: { id: true }` instead of fetching the whole Thread row/object.
+         * Since only `id` is needed to assign the thread to the message, this minimizes database
+         * payload, reduces memory overhead, and speeds up the high-frequency message sending path.
+         */
         const existingThread = await prisma.thread.findFirst({
           where: {
             channelId: channel.id,
             tags: { some: { tag: contextId } },
           },
+          select: { id: true },
         });
 
         if (existingThread) {

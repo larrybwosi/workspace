@@ -85,12 +85,21 @@ export class V10InteractionsService {
     const { content, embeds, components, channelId } = data;
 
     // Find the original interaction message
+    /**
+     * ⚡ Performance Optimization:
+     * Uses `select: { id: true, metadata: true }` to fetch only the required message properties.
+     * This avoids loading massive fields like `content` from the database and reduces memory overhead.
+     */
     const originalMessage = await prisma.message.findFirst({
       where: {
         metadata: {
           path: ['interactionId'],
           equals: interactionId,
         },
+      },
+      select: {
+        id: true,
+        metadata: true,
       },
     });
 
