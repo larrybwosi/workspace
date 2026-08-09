@@ -439,7 +439,7 @@ fun MainContent(
                         sessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
                     )
                 } else if (!isHomeSelected && selectedChannel == null && selectedWorkspace != null) {
-                    WelcomeScreen(workspaceName = selectedWorkspace.name)
+                    WorkspaceWelcomeScreen(workspaceName = selectedWorkspace.name)
                 }
             }
         }
@@ -498,7 +498,7 @@ private fun EmptyStateScreen(
 }
 
 @Composable
-fun WelcomeScreen(workspaceName: String) {
+fun WorkspaceWelcomeScreen(workspaceName: String) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(workspaceName) { visible = true }
 
