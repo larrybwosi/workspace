@@ -15,7 +15,7 @@ Go to your **Workspace Settings > Developer Portal** and create a new applicatio
 Use the `client_credentials` flow to get an access token.
 
 ```bash
-curl -X POST https://api.skyrme.chat/v3/oauth/token \
+curl -X POST https://api.chat.scryme.tech/v3/oauth/token \
   -d '{"grant_type":"client_credentials","client_id":"...","client_secret":"..."}'
 ```
 
@@ -31,7 +31,7 @@ You have two options for receiving real-time events:
 Use the messages endpoint to send replies.
 
 ```bash
-curl -X POST https://api.skyrme.chat/v3/workspaces/my-workspace/channels/general/messages \
+curl -X POST https://api.chat.scryme.tech/v3/workspaces/my-workspace/channels/general/messages \
   -H "Authorization: Bearer <token>" \
   -d '{"content": "Hello from my bot!"}'
 ```
@@ -41,7 +41,7 @@ curl -X POST https://api.skyrme.chat/v3/workspaces/my-workspace/channels/general
 If you already have a Discord bot or prefer using Discord libraries like `discord.js`, you can use our V10 Gateway.
 
 1. **Get your Bot Token**: In the Developer Portal, generate a Bot Token for your application.
-2. **Configure Library**: Point your library's API and Gateway base URLs to `api.skyrme.chat/v10`.
+2. **Configure Library**: Point your library's API and Gateway base URLs to `api.chat.scryme.tech/v10`.
 3. **Run your Code**: Your bot will behave just like it's on Discord!
 
 ---

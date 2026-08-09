@@ -79,7 +79,22 @@ fun WelcomeScreen(
     val pagerState   = rememberPagerState(pageCount = { welcomePages.size })
     val scope        = rememberCoroutineScope()
     var showApiDialog  by remember { mutableStateOf(false) }
-    var tempApiUrl     by remember { mutableStateOf(currentApiUrl) }
+
+    val initialApiUrl = if (!com.scrymechat.android.BuildConfig.DEBUG && currentApiUrl.contains("localhost")) {
+        "https://api.chat.scryme.tech"
+    } else {
+        currentApiUrl
+    }
+    var tempApiUrl     by remember { mutableStateOf(initialApiUrl) }
+
+    LaunchedEffect(currentApiUrl) {
+        tempApiUrl = if (!com.scrymechat.android.BuildConfig.DEBUG && currentApiUrl.contains("localhost")) {
+            "https://api.chat.scryme.tech"
+        } else {
+            currentApiUrl
+        }
+    }
+
     val isLastPage     = pagerState.currentPage == welcomePages.size - 1
 
     val currentAccent = welcomePages[pagerState.currentPage].accentColor

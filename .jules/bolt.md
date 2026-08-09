@@ -1,3 +1,25 @@
+## 2026-08-06 - [Prisma/Performance] Projected Selection on Database Lookup Queries
+
+**Learning:** Sibling methods, services, and middleware controllers often query models using `findFirst` without a select projection, returning the entire database row. When subsequent application logic only requires a few properties (such as an `id` or raw `config`), fetching full records increases database memory pressure, deserialization overhead, and response latency on high-frequency paths (like message creation). Explicitly projecting selected columns using Prisma's `select` (e.g. `select: { id: true }`) avoids these inefficiencies.
+
+**Action:** Consistently use Prisma `select` projections for high-traffic lookup queries (such as checking parent existence or fetching raw configuration maps) where the full row/object is not needed.
+
+## 2026-08-03 - [Prisma/Performance] Single-Query Consolidated Workspace Verification & Invite Link Retrieval
+
+**Learning:** Sibling methods in controllers often split workspace verification (checking membership) and subsequent sub-resource lookups (such as checking if an invite link already exists) into multiple sequential database queries. Consolidating workspace lookups and existing sub-resource retrieval into a single `prisma.workspace.findUnique` query with nested `select` and filters reduces database round-trips from 2 to 1 on the hot path.
+
+**Action:** Use nested `select` filters (like `inviteLinks` filtered by `createdById` with `take: 1`) on the workspace verification query to fetch both membership information and existing sub-resources concurrently.
+
+## 2026-08-02 - [Prisma/Performance] Child Sub-Resource Point Lookup with Parent Context Selection
+
+**Learning:** When retrieving details of a child sub-resource by its primary key `id` (e.g. `channelId`), querying the parent model (such as `Workspace`) by a unique secondary constraint (such as `slug`) and filtering child relations inside is less efficient for database query planners. Performing a direct O(1) point-lookup on the child table using its primary key `id` while nested-selecting/including parent metadata and authorization rules in a single database round-trip allows the DB engine to leverage the primary index immediately, while validation/authorization can be safely performed in application memory.
+
+**Action:** Prefer direct child `findUnique` lookups over parent model `findUnique` with nested sub-resource filters, validate parent slug matches and user membership in-memory, and omit parent metadata from final return values to adhere to response schemas/contracts.
+
+## 2026-08-01 - [Prisma/Performance] Single-Query Mutation via Optimistic Update
+**Learning:** Combining a separate read existence check (`findUnique` or `findFirst`) and a subsequent write (`update` or `delete`) into a single atomic mutation with error catching (e.g. catching Prisma's `P2025` record-not-found error code) reduces database round-trips from 2 to 1. This optimizes write-path throughput, cuts database network overhead, and minimizes the window for write race conditions.
+**Action:** Prefer direct mutations (`update`/`delete`) with try/catch blocks for unique-constraint/existence errors instead of manual read-before-write validation on high-frequency write endpoints.
+
 ## 2026-07-31 - [Database] Consolidated Multi-Entity Verification and Point-Lookup in Integrations
 
 **Learning:** Sibling methods in `IntegrationsService` were using sequential queries to verify workspace slugs, validate user membership role levels, and fetch or mutate integrations. Consolidating slug lookups, membership checks, and sub-resource lookups (or mutations) into a single nested `select` on `prisma.workspace.findUnique` reduces database round-trips (RTT) and closes potential IDOR security gaps. Furthermore, fetching sub-resources directly using `findUnique` on their primary key `id` while nested-selecting `workspace: { select: { slug: true } }` reduces database RTT from 2 to 1 by entirely bypassing the initial parent-entity database lookup query.

@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-open class LoginViewModel @Inject constructor(
+class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     val sessionManager: SessionManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
@@ -96,7 +96,7 @@ open class LoginViewModel @Inject constructor(
         }
     }
 
-    protected open fun startRealtimeService() {
+    private fun startRealtimeService() {
         val intent = Intent(context, RealtimeService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)
@@ -105,7 +105,7 @@ open class LoginViewModel @Inject constructor(
         }
     }
 
-    protected open fun registerFcmToken() {
+    private fun registerFcmToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result

@@ -7,6 +7,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -15,6 +18,8 @@ import android.content.Context
 import com.scrymechat.android.data.local.SessionManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class LoginViewModelTest : BaseViewModelTest() {
 
     private val authRepository: AuthRepository = mock()
@@ -25,14 +30,7 @@ class LoginViewModelTest : BaseViewModelTest() {
     @Before
     override fun setUp() {
         super.setUp()
-        viewModel = object : LoginViewModel(authRepository, sessionManager, context) {
-            override fun registerFcmToken() {
-                // Do nothing in tests
-            }
-            override fun startRealtimeService() {
-                // Do nothing in tests
-            }
-        }
+        viewModel = LoginViewModel(authRepository, sessionManager, context)
     }
 
     @Test
@@ -70,8 +68,6 @@ class LoginViewModelTest : BaseViewModelTest() {
         viewModel.onPasswordChanged("password")
         viewModel.login()
 
-        // Remove the immediate check as it might be too fast with StandardTestDispatcher
-        // assertTrue(viewModel.uiState.value.isLoading)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value

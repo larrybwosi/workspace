@@ -40,6 +40,7 @@ export const authClient: any = createAuthClient({
         if (data && data.session && data.session.token) {
           localStorage.setItem('better-auth.session_token', data.session.token);
           localStorage.setItem('better-auth.session-token', data.session.token);
+          localStorage.setItem('bearer_token', data.session.token);
         }
       }
     },

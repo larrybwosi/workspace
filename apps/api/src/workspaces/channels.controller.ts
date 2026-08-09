@@ -314,50 +314,47 @@ export class ChannelsController {
   async getChannel(@CurrentUser() user: User, @Param('slug') slug: string, @Param('channelId') channelId: string) {
     /**
      * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup, membership verification, and detailed channel retrieval into a single query.
-     * 2. Uses nested 'select' and 'include' to fetch channel details, members, and counts in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1.
-     * Expected impact: Faster channel detail retrieval and reduced database load.
+     * 1. Replaces workspace-slug point-lookup containing nested channel filtering with a direct O(1) point-lookup on prisma.channel.findUnique by id.
+     * 2. Uses nested 'select'/'include' to retrieve the workspace slug and user's membership in a single round-trip.
+     * 3. Performs workspace validation and authorization in application memory.
+     * Expected impact: Directly leverages the primary key index on 'id', eliminating secondary scans and reducing database load.
      */
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
-        channels: {
-          where: { id: channelId },
-          include: {
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      include: {
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
             members: {
-              include: {
-                user: { select: { id: true, name: true, email: true, avatar: true } },
-              },
+              where: { userId: user.id },
+              select: { role: true },
             },
-            _count: { select: { members: true, threads: true } },
           },
         },
+        members: {
+          include: {
+            user: { select: { id: true, name: true, email: true, avatar: true } },
+          },
+        },
+        _count: { select: { members: true, threads: true } },
       },
     });
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+    if (!channel || !channel.workspace || channel.workspace.slug !== slug) {
+      throw new NotFoundException('Channel not found');
     }
 
-    const member = workspace.members[0];
+    const member = channel.workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const channel = workspace.channels[0];
+    // Omit workspace from the returned channel object to strictly match public API response schema/contract
+    const { workspace: _workspace, ...channelResponse } = channel;
 
-    if (!channel) {
-      throw new NotFoundException('Channel not found');
-    }
-
-    return channel;
+    return channelResponse;
   }
 
   @Patch(':channelId')

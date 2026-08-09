@@ -130,7 +130,7 @@ const renderSchema = (schema: any) => {
 };
 
 const generateCurl = (method: string, path: string, operation: any) => {
-  let curl = `curl -X ${method.toUpperCase()} "https://api.skyrme.chat${path}" \\\n`;
+  let curl = `curl -X ${method.toUpperCase()} "https://api.chat.scryme.tech${path}" \\\n`;
   curl += `  -H "Authorization: Bearer <YOUR_TOKEN>"`;
 
   if (operation.requestBody) {
@@ -230,7 +230,7 @@ const generateNodeSnippet = (operation: any, sdkNames: { clientFn: string; hookN
 
 const generatePythonSnippet = (method: string, path: string, operation: any) => {
   let snippet = `import requests\n\n`;
-  snippet += `url = "https://api.skyrme.chat${path}"\n`;
+  snippet += `url = "https://api.chat.scryme.tech${path}"\n`;
   snippet += `headers = {\n`;
   snippet += `    "Authorization": "Bearer <YOUR_TOKEN>"\n`;
   if (operation.requestBody) {
@@ -294,9 +294,7 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
           </div>
         </div>
         <CardTitle className="text-lg mt-2">{operation.summary}</CardTitle>
-        {operation.description && (
-          <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>
-        )}
+        {operation.description && <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>}
       </CardHeader>
       <CardContent className="py-6">
         <Tabs defaultValue="params">
@@ -316,27 +314,19 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
             {operation.parameters?.length > 0 ? (
               <div className="space-y-4">
                 {operation.parameters.map((param: any) => (
-                  <div
-                    key={param.name}
-                    className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0"
-                  >
+                  <div key={param.name} className="flex flex-col gap-1 py-2 border-b border-border/5 last:border-0">
                     <div className="flex items-center gap-2">
                       <code className="text-primary font-bold">{param.name}</code>
                       <Badge variant="ghost" className="text-[10px] uppercase">
                         {param.in}
                       </Badge>
                       {param.required && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] h-4 px-1 text-red-500 border-red-500/20"
-                        >
+                        <Badge variant="outline" className="text-[10px] h-4 px-1 text-red-500 border-red-500/20">
                           Required
                         </Badge>
                       )}
                     </div>
-                    {param.description && (
-                      <p className="text-sm text-muted-foreground">{param.description}</p>
-                    )}
+                    {param.description && <p className="text-sm text-muted-foreground">{param.description}</p>}
                   </div>
                 ))}
               </div>
@@ -363,41 +353,26 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
 
           <TabsContent value="responses">
             <div className="space-y-6">
-              {Object.entries(operation.responses).map(
-                ([code, response]: [string, any]) => (
-                  <div key={code} className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={code.startsWith('2') ? 'outline' : 'destructive'}
-                        className="text-[10px]"
-                      >
-                        {code}
-                      </Badge>
-                      <span className="text-sm font-medium">{response.description}</span>
-                    </div>
-                    {response.content?.['application/json'] && (
-                      <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto relative group">
-                        <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <CopyButton
-                            value={JSON.stringify(
-                              response.content['application/json'].schema,
-                              null,
-                              2
-                            )}
-                          />
-                        </div>
-                        <pre className="text-xs text-muted-foreground">
-                          {JSON.stringify(
-                            response.content['application/json'].schema,
-                            null,
-                            2
-                          )}
-                        </pre>
-                      </div>
-                    )}
+              {Object.entries(operation.responses).map(([code, response]: [string, any]) => (
+                <div key={code} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={code.startsWith('2') ? 'outline' : 'destructive'} className="text-[10px]">
+                      {code}
+                    </Badge>
+                    <span className="text-sm font-medium">{response.description}</span>
                   </div>
-                )
-              )}
+                  {response.content?.['application/json'] && (
+                    <div className="mt-2 bg-black/40 rounded-lg p-2 overflow-x-auto relative group">
+                      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <CopyButton value={JSON.stringify(response.content['application/json'].schema, null, 2)} />
+                      </div>
+                      <pre className="text-xs text-muted-foreground">
+                        {JSON.stringify(response.content['application/json'].schema, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </TabsContent>
 
@@ -407,7 +382,7 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
                 <span className="text-xs text-muted-foreground font-medium">Language:</span>
                 <select
                   value={selectedLang}
-                  onChange={(e) => setSelectedLang(e.target.value as any)}
+                  onChange={e => setSelectedLang(e.target.value as any)}
                   className="bg-muted border border-border/20 rounded px-2 py-1 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 >
                   <option value="ts">TypeScript SDK</option>
@@ -420,26 +395,24 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">React Hook</span>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        React Hook
+                      </span>
                       <CopyButton value={generateReactSnippet(operation, sdkNames)} />
                     </div>
                     <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                      <SyntaxHighlighter
-                        code={generateReactSnippet(operation, sdkNames)}
-                        language="typescript"
-                      />
+                      <SyntaxHighlighter code={generateReactSnippet(operation, sdkNames)} language="typescript" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Node Client</span>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Node Client
+                      </span>
                       <CopyButton value={generateNodeSnippet(operation, sdkNames)} />
                     </div>
                     <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                      <SyntaxHighlighter
-                        code={generateNodeSnippet(operation, sdkNames)}
-                        language="typescript"
-                      />
+                      <SyntaxHighlighter code={generateNodeSnippet(operation, sdkNames)} language="typescript" />
                     </div>
                   </div>
                 </div>
@@ -448,14 +421,13 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
               {selectedLang === 'python' && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Python Requests</span>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Python Requests
+                    </span>
                     <CopyButton value={generatePythonSnippet(method, path, operation)} />
                   </div>
                   <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                    <SyntaxHighlighter
-                      code={generatePythonSnippet(method, path, operation)}
-                      language="python"
-                    />
+                    <SyntaxHighlighter code={generatePythonSnippet(method, path, operation)} language="python" />
                   </div>
                 </div>
               )}
@@ -463,14 +435,13 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
               {selectedLang === 'curl' && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">cURL Command</span>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      cURL Command
+                    </span>
                     <CopyButton value={curl} />
                   </div>
                   <div className="relative group rounded-lg overflow-hidden bg-black/90">
-                    <SyntaxHighlighter
-                      code={curl}
-                      language="bash"
-                    />
+                    <SyntaxHighlighter code={curl} language="bash" />
                   </div>
                 </div>
               )}
@@ -650,13 +621,7 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
                           <div className="space-y-6">
                             {tagOperations.map(({ method, path, operation, opId }) => (
-                              <EndpointCard
-                                key={opId}
-                                method={method}
-                                path={path}
-                                operation={operation}
-                                opId={opId}
-                              />
+                              <EndpointCard key={opId} method={method} path={path} operation={operation} opId={opId} />
                             ))}
                           </div>
                         </section>

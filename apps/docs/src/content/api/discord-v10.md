@@ -6,7 +6,7 @@ Scrymechat provides a compatibility layer for the Discord V10 Gateway protocol. 
 
 Connect your Discord library to the following WebSocket endpoint:
 
-`ws://api.skyrme.chat/v10/gateway`
+`ws://api.chat.scryme.tech/v10/gateway`
 
 ## Supported Opcodes
 
@@ -39,8 +39,8 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   // Override the base API and Gateway URLs
-  rest: { api: 'https://api.skyrme.chat/v10' },
-  ws: { gateway: 'ws://api.skyrme.chat/v10/gateway' },
+  rest: { api: 'https://api.chat.scryme.tech/v10' },
+  ws: { gateway: 'ws://api.chat.scryme.tech/v10/gateway' },
 });
 
 client.on('ready', () => {
