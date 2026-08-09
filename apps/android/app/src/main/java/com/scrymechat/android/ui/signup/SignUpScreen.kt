@@ -5,10 +5,11 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -281,10 +282,13 @@ fun SignUpScreen(
                         append("Privacy Policy")
                     }
                 }
-                ClickableText(
+                Text(
                     text    = termsText,
                     style   = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-                    onClick = { /* open terms */ }
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { /* open terms */ }
                 )
             }
 
@@ -457,13 +461,16 @@ fun SignUpScreen(
                     color = colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
-                ClickableText(
-                    text    = AnnotatedString("Log in"),
-                    onClick = { onSignInClick() },
-                    style   = MaterialTheme.typography.bodySmall.copy(
+                Text(
+                    text = "Log in",
+                    style = MaterialTheme.typography.bodySmall.copy(
                         color      = accentColor,
                         fontWeight = FontWeight.SemiBold
-                    )
+                    ),
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onSignInClick() }
                 )
             }
 

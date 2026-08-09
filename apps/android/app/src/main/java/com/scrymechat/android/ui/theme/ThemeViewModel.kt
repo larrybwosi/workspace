@@ -15,7 +15,13 @@ class ThemeViewModel @Inject constructor(
     private val _themePreference = MutableStateFlow(sessionManager.getThemePreference())
     val themePreference: StateFlow<String> = _themePreference
 
-    private val _apiUrl = MutableStateFlow(sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL)
+    private val _apiUrl = MutableStateFlow(
+        sessionManager.getApiUrl() ?: if (!com.scrymechat.android.BuildConfig.DEBUG && com.scrymechat.android.BuildConfig.API_URL.contains("localhost")) {
+            "https://api.chat.scryme.tech"
+        } else {
+            com.scrymechat.android.BuildConfig.API_URL
+        }
+    )
     val apiUrl: StateFlow<String> = _apiUrl
 
     fun updateTheme(theme: String) {
