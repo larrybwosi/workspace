@@ -61,7 +61,12 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, sessionManager: SessionManager): Retrofit {
-        val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
+        val rawBaseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
+        val baseUrl = if (!com.scrymechat.android.BuildConfig.DEBUG && rawBaseUrl.contains("localhost")) {
+            "https://api.chat.scryme.tech"
+        } else {
+            rawBaseUrl
+        }
         return Retrofit.Builder()
             .baseUrl("$baseUrl/api/")
             .client(okHttpClient)
@@ -114,7 +119,12 @@ object NetworkModule {
         options.path = "/socket.io"
         options.auth = mapOf("token" to sessionManager.getToken())
 
-        val baseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
+        val rawBaseUrl = sessionManager.getApiUrl() ?: com.scrymechat.android.BuildConfig.API_URL
+        val baseUrl = if (!com.scrymechat.android.BuildConfig.DEBUG && rawBaseUrl.contains("localhost")) {
+            "https://api.chat.scryme.tech"
+        } else {
+            rawBaseUrl
+        }
         return IO.socket(URI.create(baseUrl), options)
     }
 }
