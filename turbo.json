@@ -38,7 +38,7 @@
     "generate": {
       "dependsOn": ["^generate"],
       "inputs": ["prisma/schema.prisma", "prisma.config.ts"],
-      "outputs": ["generated/**"],
+      "outputs": ["src/generated/**"],
       "cache": true
     },
 

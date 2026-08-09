@@ -90,6 +90,7 @@ export class AndroidAuthController {
           password: body.password,
           name: body.name,
           username: body.username,
+          displayUsername: body.displayUsername || body.username,
           image: body.avatar || body.image,
           bio: body.bio,
         } as any,
