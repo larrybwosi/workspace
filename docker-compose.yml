@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/larrybwosi/workspace/web:${WEB_IMAGE_TAG:-latest}
+    image: ghcr.io/larrybwosi/workspace/web:${VERSION:-latest}
     container_name: scrymechat-web
     restart: always
     expose:
@@ -52,7 +52,7 @@ services:
       - 'traefik.http.services.scrymechat-web.loadbalancer.server.port=3001'
 
   api:
-    image: ghcr.io/larrybwosi/workspace/api:${API_IMAGE_TAG:-latest}
+    image: ghcr.io/larrybwosi/workspace/api:${VERSION:-latest}
     container_name: scrymechat-api
     restart: always
     expose:
