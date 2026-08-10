@@ -80,16 +80,27 @@ class MainActivity : ComponentActivity() {
                 }
 
                 LaunchedEffect(Unit) {
+                    var lastSessionId: String? = null
+                    var lastApiUrl: String? = null
+
                     combine(
                         sessionManager.getActiveSessionFlow(),
                         sessionManager.getApiUrlFlow()
                     ) { session, apiUrl -> session to apiUrl }
-                        .collectLatest { (session, _) ->
+                        .collectLatest { (session, apiUrl) ->
                             if (session != null) {
-                                stopService(Intent(this@MainActivity, RealtimeService::class.java))
-                                startRealtimeService()
+                                if (session.id != lastSessionId || apiUrl != lastApiUrl) {
+                                    lastSessionId = session.id
+                                    lastApiUrl = apiUrl
+                                    stopService(Intent(this@MainActivity, RealtimeService::class.java))
+                                    startRealtimeService()
+                                }
                             } else {
-                                stopService(Intent(this@MainActivity, RealtimeService::class.java))
+                                if (lastSessionId != null) {
+                                    lastSessionId = null
+                                    lastApiUrl = apiUrl
+                                    stopService(Intent(this@MainActivity, RealtimeService::class.java))
+                                }
                             }
                         }
                 }

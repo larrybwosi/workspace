@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { fromNodeHeaders } from 'better-auth/node';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { AuthGuard } from '../auth.guard';
 import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
@@ -52,6 +53,7 @@ export class DeviceAuthController {
    * in the QR code / show on screen for the user to confirm).
    */
   @Post('qr/generate')
+  @AllowAnonymous()
   async generateQR() {
     try {
       const existingClient = await prisma.oAuthClient.findUnique({
@@ -94,6 +96,7 @@ export class DeviceAuthController {
    * polling, back off, or stop.
    */
   @Get('qr/status/:deviceCode')
+  @AllowAnonymous()
   async checkStatus(@Param('deviceCode') deviceCode: string) {
     try {
       const data = await auth.api.deviceToken({
