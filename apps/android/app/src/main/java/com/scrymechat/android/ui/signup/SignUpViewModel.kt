@@ -70,24 +70,10 @@ class SignUpViewModel @Inject constructor(
                 } catch (e: Exception) {
                     Log.e("SignUpViewModel", "FCM not available", e)
                 }
-                try {
-                    startRealtimeService()
-                } catch (e: Exception) {
-                    Log.e("SignUpViewModel", "Service not available", e)
-                }
                 _uiState.update { it.copy(isLoading = false, isSignUpSuccess = true) }
             } else {
                 _uiState.update { it.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Sign up failed") }
             }
-        }
-    }
-
-    private fun startRealtimeService() {
-        val intent = Intent(context, RealtimeService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
-        } else {
-            context.startService(intent)
         }
     }
 

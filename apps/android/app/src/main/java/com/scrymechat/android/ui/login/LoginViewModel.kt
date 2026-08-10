@@ -84,24 +84,10 @@ class LoginViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("LoginViewModel", "FCM not available", e)
             }
-            try {
-                startRealtimeService()
-            } catch (e: Exception) {
-                Log.e("LoginViewModel", "Service not available", e)
-            }
             _uiState.update { it.copy(isLoading = false, isLoginSuccess = true) }
         } else {
             val error = result.exceptionOrNull()
             _uiState.update { it.copy(isLoading = false, error = error?.message ?: "Unknown error") }
-        }
-    }
-
-    private fun startRealtimeService() {
-        val intent = Intent(context, RealtimeService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
-        } else {
-            context.startService(intent)
         }
     }
 
