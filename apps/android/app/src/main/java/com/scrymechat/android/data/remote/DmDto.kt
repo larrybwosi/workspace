@@ -4,10 +4,10 @@ data class DmConversationDto(
     val id: String,
     val creatorId: String?,
     val members: List<UserDto>,
-    val user: UserDto, // The other user in the DM
+    val user: UserDto?, // The other user in the DM
     val lastMessage: DmLastMessageDto?,
     val _count: DmCountDto?,
-    val lastMessageAt: String
+    val lastMessageAt: String?
 )
 
 data class DmLastMessageDto(

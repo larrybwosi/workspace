@@ -1349,7 +1349,7 @@ fun ChatView(
                                 name = fullScreenImageName ?: "image.jpg",
                                 url = url,
                                 type = fullScreenImageMimeType ?: "image/jpeg",
-                                size = 0
+                                                size = "0"
                             )
                         )
                     }
