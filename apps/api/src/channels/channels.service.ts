@@ -325,22 +325,21 @@ export class ChannelsService {
     }
 
     const message = await prisma.$transaction(async tx => {
-      // Optimization: Only check for support ticket if channel type suggests it
-      const channel = await tx.channel.findUnique({
-        where: { id: channelId },
-        select: { type: true },
-      });
-
-      if (channel?.type === 'support_ticket') {
-        const ticket = await tx.supportTicket.findUnique({
-          where: { channelId },
-        });
-
-        if (ticket) {
+      // ⚡ Performance Optimization:
+      // 1. Leverages the already fetched outer 'channel.type' to bypass a redundant channel point-lookup.
+      // 2. Combines the read 'findUnique' check and the subsequent 'update' write on the support ticket
+      //    into a single atomic mutation, reducing total database RTT by 2 queries.
+      if (channel.type === 'support_ticket') {
+        try {
           await tx.supportTicket.update({
-            where: { id: ticket.id },
+            where: { channelId },
             data: { lastMessageAt: new Date() },
           });
+        } catch (error) {
+          // Record to update not found (P2025) is caught and ignored to maintain robustness
+          if ((error as any).code !== 'P2025') {
+            throw error;
+          }
         }
       }
 
