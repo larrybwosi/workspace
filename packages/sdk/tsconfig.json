@@ -5,6 +5,8 @@
     "rootDir": "src",
     "jsx": "react-jsx",
     "incremental": true,
+    "emitDeclarationOnly": false,
+    "declaration": true,
     "types": [
       "node"
     ]
