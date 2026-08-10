@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "2.10.0"
+version = "2.11.0"
 description = "Scrymechat Desktop Application"
 authors = ["you"]
 edition = "2021"
