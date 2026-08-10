@@ -94,7 +94,9 @@ export const authClient: any = createAuthClient({
     },
     onRequest: async (context: any) => {
       if (typeof window !== 'undefined') {
-        const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
+        const reqVal = context.request;
+        const urlObj = typeof reqVal === 'string' ? reqVal : reqVal?.url;
+        const urlStr = urlObj ? String(urlObj) : '';
         if (urlStr && urlStr.includes('/sign-out')) {
           window.localStorage.removeItem('better-auth.session-token');
           window.localStorage.removeItem('better-auth.session_token');
@@ -112,7 +114,9 @@ export const authClient: any = createAuthClient({
           window.localStorage.setItem('bearer_token', token);
         }
         // If it's a sign-out request, clear the stored tokens
-        const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
+        const reqVal = context.request;
+        const urlObj = typeof reqVal === 'string' ? reqVal : reqVal?.url;
+        const urlStr = urlObj ? String(urlObj) : '';
         if (urlStr && urlStr.includes('/sign-out')) {
           window.localStorage.removeItem('better-auth.session-token');
           window.localStorage.removeItem('better-auth.session_token');
@@ -121,10 +125,10 @@ export const authClient: any = createAuthClient({
       }
       return context;
     },
-    onResponse: async (context: any) => {
+    onResponse: async ({ response }) => {
       if (typeof window !== 'undefined') {
-        const res = context.response as any;
-        if (context.response.ok && res._data) {
+        const res = response as any;
+        if (response && response.ok && res._data) {
           const data = res._data;
           if (data && data.session && data.session.token) {
             localStorage.setItem('better-auth.session_token', data.session.token);
@@ -133,7 +137,6 @@ export const authClient: any = createAuthClient({
           }
         }
       }
-      return context;
     },
   },
 });
