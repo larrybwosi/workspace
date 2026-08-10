@@ -11,9 +11,13 @@ import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceMemberEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.SharedPreferences
+import android.os.Build
+import android.util.Log
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.io.File
+import java.security.KeyStore
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,17 +28,56 @@ class SessionManager @Inject constructor(
     private val userDao: UserDao,
     private val workspaceMemberDao: WorkspaceMemberDao
 ) {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+    private val sharedPreferences: SharedPreferences = try {
+        createEncryptedSharedPreferences(context)
+    } catch (e: Exception) {
+        Log.e("SessionManager", "Failed to initialize EncryptedSharedPreferences, attempting recovery...", e)
+        try {
+            deleteEncryptedSharedPreferencesAndKey(context)
+            createEncryptedSharedPreferences(context)
+        } catch (ex: Exception) {
+            Log.e("SessionManager", "Recovery failed. Falling back to standard unencrypted SharedPreferences...", ex)
+            context.getSharedPreferences("scrymechat_prefs_fallback", Context.MODE_PRIVATE)
+        }
+    }
 
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "scrymechat_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private fun createEncryptedSharedPreferences(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        return EncryptedSharedPreferences.create(
+            context,
+            "scrymechat_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
+    private fun deleteEncryptedSharedPreferencesAndKey(context: Context) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                context.deleteSharedPreferences("scrymechat_prefs")
+            } else {
+                context.getSharedPreferences("scrymechat_prefs", Context.MODE_PRIVATE).edit().clear().commit()
+                val file = File(context.filesDir.parent, "shared_prefs/scrymechat_prefs.xml")
+                if (file.exists()) {
+                    file.delete()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SessionManager", "Error deleting scrymechat_prefs SharedPreferences file", e)
+        }
+
+        try {
+            val keyStore = KeyStore.getInstance("AndroidKeyStore")
+            keyStore.load(null)
+            keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+        } catch (e: Exception) {
+            Log.e("SessionManager", "Error deleting MasterKey from KeyStore", e)
+        }
+    }
 
     private var pendingDeepLinkRoute: String? = null
 
