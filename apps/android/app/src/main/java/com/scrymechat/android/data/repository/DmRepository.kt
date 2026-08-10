@@ -27,7 +27,7 @@ class DmRepository @Inject constructor(
 
                 // Save user details for DMs
                 dtos.forEach { dto ->
-                    userDao.insertUser(dto.user.toEntity())
+                    dto.user?.let { userDao.insertUser(it.toEntity()) }
                 }
 
                 dao.insertDms(entities)
@@ -74,8 +74,8 @@ class DmRepository @Inject constructor(
     private fun DmConversationDto.toEntity() = DmConversationEntity(
         id = id,
         creatorId = creatorId,
-        otherUserId = user.id,
-        lastMessageAt = lastMessageAt,
+        otherUserId = user?.id ?: "",
+        lastMessageAt = lastMessageAt ?: "",
         unreadCount = _count?.messages ?: 0
     )
 

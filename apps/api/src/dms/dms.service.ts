@@ -202,10 +202,17 @@ export class DmsService {
       avatar: dm.participant2.avatar || dm.participant2.image,
     };
 
+    const otherUser = dm.participant1Id === userId ? participant2 : participant1;
+
     const formattedDm = {
       ...dm,
       members: [participant1, participant2],
       creatorId: dm.participant1Id,
+      user: otherUser,
+      lastMessage: null,
+      _count: {
+        messages: 0,
+      },
     };
 
     /**

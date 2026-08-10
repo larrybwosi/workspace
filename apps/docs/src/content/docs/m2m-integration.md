@@ -47,6 +47,23 @@ If an error occurs, the standard exception filter returns a clean structure:
 
 Submit a `POST` request to the token endpoint to obtain a secure Bearer access token:
 
+### Using our TypeScript SDK (Recommended)
+
+Our official TypeScript SDK completely automates authentication, token caching, and proactive renewal, so you don't have to write any manual OAuth exchange code!
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+
+// The SDK automatically exchanges credentials for a Bearer token
+// and renews it transparently under the hood!
+```
+
 - **Endpoint**: `/api/v3/oauth/token`
 - **Scopes**:
   - `*`: Full access.
@@ -82,6 +99,43 @@ curl -X POST https://api.yourdomain.com/api/v3/oauth/token \
 ## V3 Workspace CRUD APIs
 
 All workspace CRUD operations are accessible with the `provisioning:workspaces` scope using M2M authentication.
+
+### Using our TypeScript SDK (Recommended)
+
+Our official TypeScript SDK makes workspace CRUD operations completely seamless and highly type-safe.
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+
+// 1. List all workspaces
+const workspaces = await sdk.workspace.list();
+
+// 2. Provision/Create a new workspace
+const workspace = await sdk.workspace.create({
+  name: 'Acme Corp',
+  slug: 'acme-corp',
+  ownerEmail: 'admin@acme.com',
+  channels: ['general', 'engineering'],
+});
+
+// 3. Read workspace details
+const details = await sdk.workspace.get('acme-corp');
+
+// 4. Update workspace configuration
+await sdk.workspace.update('acme-corp', {
+  name: 'Acme Corp International',
+  description: 'Updated team workspace',
+});
+
+// 5. Delete workspace
+await sdk.workspace.delete('acme-corp');
+```
 
 ### 1. List All Workspaces
 Retrieves all workspaces belonging to the M2M application's organization.

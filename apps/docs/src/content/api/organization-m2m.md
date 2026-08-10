@@ -75,6 +75,36 @@ Once you have an M2M application with the `provisioning:workspaces` scope, you c
 1. **Obtain Token**: Use your `client_id` and `client_secret` to get an OAuth access token (see [Authentication](/api-reference/authentication)).
 2. **Call Provisioning API**: Use the token to create a new workspace.
 
+### Or use the TypeScript SDK (Recommended)
+
+Our official `@scryme/chat` automates authentication and provides clear workspace provisioning helpers:
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+
+// Provision a new tenant workspace in one single call
+const result = await sdk.workspace.create({
+  name: 'New Tenant Workspace',
+  slug: 'tenant-slug',
+  ownerEmail: 'admin@organization.com',
+  description: 'A new workspace for a specific tenant',
+  industry: 'Consulting',
+  channels: ['general', 'announcements'],
+  initialMembers: [
+    { email: 'manager@organization.com', role: 'admin' }
+  ],
+  brandingConfig: {
+    primaryColor: '#007bff'
+  }
+});
+```
+
 **Endpoint:** `POST /v3/workspaces`
 
 **Body:**

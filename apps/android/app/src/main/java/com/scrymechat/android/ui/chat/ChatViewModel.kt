@@ -171,6 +171,11 @@ class ChatViewModel @Inject constructor(
                 when (resource) {
                     is Resource.Success -> {
                         _uiState.update { it.copy(isLoading = false) }
+                        if (channelId != null && slug != null) {
+                            chatRepository.markChannelRead(slug, channelId)
+                        } else if (dmId != null) {
+                            chatRepository.markDmRead(dmId)
+                        }
                     }
                     is Resource.Error -> {
                         _uiState.update { it.copy(error = resource.message, isLoading = false) }
@@ -335,7 +340,7 @@ class ChatViewModel @Inject constructor(
                             name = uploadResponse.name,
                             type = uploadResponse.type,
                             url = uploadResponse.url,
-                            size = uploadResponse.size.toInt()
+                            size = uploadResponse.size
                         ))
                     } else {
                         _uiState.update { it.copy(error = "Failed to upload ${pending.name}", isSending = false) }

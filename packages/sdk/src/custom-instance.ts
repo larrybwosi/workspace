@@ -92,9 +92,17 @@ export const customInstance = <T>(
   options?: AxiosRequestConfig
 ): Promise<T> => {
   const source = axios.CancelToken.source();
+
+  // Merge headers carefully so that options.headers does not overwrite config.headers completely
+  const mergedHeaders = {
+    ...config.headers,
+    ...options?.headers,
+  };
+
   const promise = AXIOS_INSTANCE({
     ...config,
     ...options,
+    headers: mergedHeaders,
     cancelToken: source.token,
   }).then(({ data }) => data);
 

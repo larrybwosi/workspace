@@ -1349,7 +1349,7 @@ fun ChatView(
                                 name = fullScreenImageName ?: "image.jpg",
                                 url = url,
                                 type = fullScreenImageMimeType ?: "image/jpeg",
-                                size = 0
+                                                size = "0"
                             )
                         )
                     }
@@ -1359,9 +1359,6 @@ fun ChatView(
     }
 }
 
-/**
- * Discord-style Empty State component for Channels and Direct Messages.
- */
 @Composable
 fun EmptyChatState(
     chatTitle: String,
