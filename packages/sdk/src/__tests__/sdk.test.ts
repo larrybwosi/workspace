@@ -157,7 +157,7 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const result = await sdk.raw.v3WorkspacesControllerGetWorkspaces();
+      const result = await sdk.raw.v3WorkspacesControllerGetWorkspaces() as any;
       expect(result).toBeDefined();
       expect(result.options).toBeDefined();
       expect(result.options.baseURL).toBe('https://api.test.com/api');
@@ -175,7 +175,7 @@ describe('ScrymeSDK', () => {
         headers: {
           'X-Custom-Header': 'CustomValue',
         },
-      });
+      } as any) as any;
 
       expect(result.options.headers.Authorization).toBe('Bearer active-token');
       expect(result.options.headers['X-Custom-Header']).toBe('CustomValue');
@@ -189,10 +189,10 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const listRes = await sdk.workspace.list();
+      const listRes = await sdk.workspace.list() as any;
       expect(listRes.success).toBe(true);
 
-      const getRes = await sdk.workspace.get('acme');
+      const getRes = await sdk.workspace.get('acme') as any;
       expect(getRes.data.workspace.slug).toBe('acme');
     });
 
@@ -202,10 +202,10 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const channelsRes = await sdk.workspace.channels.list('acme-corp');
+      const channelsRes = await sdk.workspace.channels.list('acme-corp') as any;
       expect(channelsRes.slug).toBe('acme-corp');
 
-      const createRes = await sdk.workspace.channels.create('acme-corp', { name: 'general' });
+      const createRes = await sdk.workspace.channels.create('acme-corp', { name: 'general' }) as any;
       expect(createRes.data.slug).toBe('acme-corp');
       expect(createRes.data.data.name).toBe('general');
     });
@@ -216,11 +216,11 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const messagesRes = await sdk.channel.message.list('chan_123', { limit: 10 });
+      const messagesRes = await sdk.channel.message.list('chan_123', { limit: 10 }) as any;
       expect(messagesRes.channelId).toBe('chan_123');
       expect(messagesRes.params.limit).toBe(10);
 
-      const createMsgRes = await sdk.channel.message.create('chan_123');
+      const createMsgRes = await sdk.channel.message.create('chan_123') as any;
       expect(createMsgRes.channelId).toBe('chan_123');
     });
   });
