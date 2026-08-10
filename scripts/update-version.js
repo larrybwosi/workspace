@@ -104,6 +104,12 @@ if (fs.existsSync(appsDir)) {
     });
 }
 
+// Sync version to packages/sdk/package.json
+const sdkPackageJsonPath = path.resolve(__dirname, '../packages/sdk/package.json');
+updateJsonFile(sdkPackageJsonPath, (json) => {
+  json.version = newVersion;
+});
+
 if (process.env.GITHUB_OUTPUT) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersion}\n`);
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `published=true\n`);
