@@ -122,7 +122,7 @@ class ShareViewModel @Inject constructor(
                                 name = uploadResponse.name,
                                 type = uploadResponse.type,
                                 url = uploadResponse.url,
-                                size = uploadResponse.size.toInt()
+                                size = uploadResponse.size
                             )
                         )
                     } else {

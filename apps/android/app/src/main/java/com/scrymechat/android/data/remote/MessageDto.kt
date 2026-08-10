@@ -30,7 +30,7 @@ data class AttachmentDto(
     val name: String,
     val url: String,
     val type: String,
-    val size: Int
+    val size: String? = null
 )
 
 data class ReactionGroupDto(
@@ -66,7 +66,7 @@ data class CreateAttachmentRequest(
     val name: String,
     val type: String,
     val url: String,
-    val size: Int
+    val size: String? = null
 )
 
 data class UpdateMessageRequest(

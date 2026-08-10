@@ -28,35 +28,7 @@ class RealtimeService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         Log.d("RealtimeService", "RealtimeService created")
-        startForegroundService()
         connectSocket()
-    }
-
-    private fun startForegroundService() {
-        val channelId = "realtime_service_channel"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Realtime Connection",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
-
-        val notification: Notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Scrymechat")
-            .setContentText("Connected to realtime services")
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
-            .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            // Foreground service types like 'specialUse' are only required on Android 14 (API 34) and above.
-            // For older versions (including Android 10), we fall back to the standard startForeground call.
-            startForeground(1, notification)
-        }
     }
 
     private fun connectSocket() {

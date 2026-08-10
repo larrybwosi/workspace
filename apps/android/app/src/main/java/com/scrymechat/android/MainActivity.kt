@@ -121,11 +121,7 @@ class MainActivity : ComponentActivity() {
 
     private fun startRealtimeService() {
         val serviceIntent = Intent(this, RealtimeService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
+        startService(serviceIntent)
     }
 
     private fun handleIntent(intent: Intent, navigate: (String) -> Unit) {
