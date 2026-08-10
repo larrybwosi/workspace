@@ -1,5 +1,26 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { getSkyrmeChatAPI } from './generated/v3-server';
+import type {
+  V3ProvisionWorkspaceDto,
+  V3UpdateWorkspaceDto,
+  V3AddMemberDto,
+  V3UpdateMemberRoleDto,
+  CreateWorkspaceChannelDto,
+  UpdateWorkspaceChannelDto,
+  ChannelsControllerGetMessagesParams,
+  ChannelsControllerUpdateMessageBody,
+  ChannelsControllerAddReactionBody,
+  CreateDmDto,
+  UpdateDmMessageDto,
+  MarkAsReadDto,
+  UsersControllerSearchUsersParams,
+  V3WorkspacesControllerGetWorkspaces200,
+  V3WorkspacesControllerGetWorkspaceBySlug200,
+  V3WorkspacesControllerProvisionWorkspace201,
+  V3WorkspacesControllerUpdateWorkspace200,
+  V3WorkspacesControllerDeleteWorkspace200,
+  DmsControllerGetMessagesParams,
+} from './generated/v3-server';
 
 export interface ScrymeSDKOptions {
   baseURL?: string;
@@ -154,43 +175,43 @@ export class ScrymeSDK {
 
   public get workspace() {
     return {
-      list: async (options?: any) => {
+      list: async (options?: AxiosRequestConfig): Promise<V3WorkspacesControllerGetWorkspaces200> => {
         return this.raw.v3WorkspacesControllerGetWorkspaces(options);
       },
-      get: async (slug: string, options?: any) => {
+      get: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspacesControllerGetWorkspaceBySlug200> => {
         return this.raw.v3WorkspacesControllerGetWorkspaceBySlug(slug, options);
       },
-      create: async (data: any, options?: any) => {
+      create: async (data: V3ProvisionWorkspaceDto, options?: AxiosRequestConfig): Promise<V3WorkspacesControllerProvisionWorkspace201> => {
         return this.raw.v3WorkspacesControllerProvisionWorkspace(data, options);
       },
-      update: async (slug: string, data: any, options?: any) => {
+      update: async (slug: string, data: V3UpdateWorkspaceDto, options?: AxiosRequestConfig): Promise<V3WorkspacesControllerUpdateWorkspace200> => {
         return this.raw.v3WorkspacesControllerUpdateWorkspace(slug, data, options);
       },
-      delete: async (slug: string, options?: any) => {
+      delete: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspacesControllerDeleteWorkspace200> => {
         return this.raw.v3WorkspacesControllerDeleteWorkspace(slug, options);
       },
       members: {
-        list: async (slug: string, options?: any) => {
+        list: async (slug: string, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceMembers(slug, options);
         },
-        add: async (slug: string, data: any, options?: any) => {
+        add: async (slug: string, data: V3AddMemberDto, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.v3WorkspacesControllerAddWorkspaceMember(slug, data, options);
         },
-        get: async (slug: string, memberId: string, options?: any) => {
+        get: async (slug: string, memberId: string, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceMember(slug, memberId, options);
         },
-        update: async (slug: string, memberId: string, data: any, options?: any) => {
+        update: async (slug: string, memberId: string, data: V3UpdateMemberRoleDto, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.v3WorkspacesControllerUpdateWorkspaceMember(slug, memberId, data, options);
         },
-        delete: async (slug: string, memberId: string, options?: any) => {
+        delete: async (slug: string, memberId: string, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options);
         },
       },
       channels: {
-        list: async (slug: string, options?: any) => {
+        list: async (slug: string, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.channelsControllerGetWorkspaceChannels(slug, options);
         },
-        create: async (slug: string, data: any, options?: any) => {
+        create: async (slug: string, data: CreateWorkspaceChannelDto, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.channelsControllerCreateChannel(slug, data, options);
         },
       },
@@ -199,20 +220,20 @@ export class ScrymeSDK {
 
   public get channel() {
     return {
-      get: async (slug: string, channelId: string, options?: any) => {
+      get: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerGetChannel(slug, channelId, options);
       },
-      update: async (slug: string, channelId: string, data: any, options?: any) => {
+      update: async (slug: string, channelId: string, data: UpdateWorkspaceChannelDto, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerUpdateChannel(slug, channelId, data, options);
       },
-      delete: async (slug: string, channelId: string, options?: any) => {
+      delete: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerDeleteChannel(slug, channelId, options);
       },
       message: {
-        list: async (channelId: string, params?: any, options?: any) => {
+        list: async (channelId: string, params?: ChannelsControllerGetMessagesParams, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.channelsControllerGetMessages(channelId, params, options);
         },
-        create: async (channelId: string, options?: any) => {
+        create: async (channelId: string, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.channelsControllerCreateMessage(channelId, options);
         },
       },
@@ -221,16 +242,16 @@ export class ScrymeSDK {
 
   public get message() {
     return {
-      update: async (channelId: string, messageId: string, data: any, options?: any) => {
+      update: async (channelId: string, messageId: string, data: ChannelsControllerUpdateMessageBody, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerUpdateMessage(channelId, messageId, data, options);
       },
-      delete: async (channelId: string, messageId: string, options?: any) => {
+      delete: async (channelId: string, messageId: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerDeleteMessage(channelId, messageId, options);
       },
-      addReaction: async (channelId: string, messageId: string, data: any, options?: any) => {
+      addReaction: async (channelId: string, messageId: string, data: ChannelsControllerAddReactionBody, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerAddReaction(channelId, messageId, data, options);
       },
-      removeReaction: async (channelId: string, messageId: string, emoji: string, options?: any) => {
+      removeReaction: async (channelId: string, messageId: string, emoji: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.channelsControllerRemoveReaction(channelId, messageId, emoji, options);
       },
     };
@@ -238,23 +259,23 @@ export class ScrymeSDK {
 
   public get dm() {
     return {
-      list: async (options?: any) => {
+      list: async (options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.dmsControllerGetDms(options);
       },
-      create: async (data: any, options?: any) => {
+      create: async (data: CreateDmDto, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.dmsControllerCreateDm(data, options);
       },
-      get: async (dmId: string, options?: any) => {
+      get: async (dmId: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.dmsControllerGetDm(dmId, options);
       },
-      delete: async (dmId: string, options?: any) => {
+      delete: async (dmId: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.dmsControllerDeleteDm(dmId, options);
       },
       message: {
-        list: async (dmId: string, options?: any) => {
-          return this.raw.dmsControllerGetMessages(dmId, options);
+        list: async (dmId: string, params?: DmsControllerGetMessagesParams, options?: AxiosRequestConfig): Promise<any> => {
+          return this.raw.dmsControllerGetMessages(dmId, params, options);
         },
-        create: async (dmId: string, options?: any) => {
+        create: async (dmId: string, options?: AxiosRequestConfig): Promise<any> => {
           return this.raw.dmsControllerCreateMessage(dmId, options);
         },
       },
@@ -263,13 +284,13 @@ export class ScrymeSDK {
 
   public get user() {
     return {
-      me: async (options?: any) => {
+      me: async (options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.usersControllerGetMe(options);
       },
-      get: async (userId: string, options?: any) => {
+      get: async (userId: string, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.usersControllerGetUser(userId, options);
       },
-      search: async (params: any, options?: any) => {
+      search: async (params: UsersControllerSearchUsersParams, options?: AxiosRequestConfig): Promise<any> => {
         return this.raw.usersControllerSearchUsers(params, options);
       },
     };

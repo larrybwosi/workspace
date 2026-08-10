@@ -52,7 +52,7 @@ Submit a `POST` request to the token endpoint to obtain a secure Bearer access t
 Our official TypeScript SDK completely automates authentication, token caching, and proactive renewal, so you don't have to write any manual OAuth exchange code!
 
 ```typescript
-import { ScrymeSDK } from '@repo/sdk';
+import { ScrymeSDK } from '@scryme/chat';
 
 const sdk = new ScrymeSDK({
   baseURL: 'https://api.chat.scryme.tech',
@@ -105,7 +105,7 @@ All workspace CRUD operations are accessible with the `provisioning:workspaces` 
 Our official TypeScript SDK makes workspace CRUD operations completely seamless and highly type-safe.
 
 ```typescript
-import { ScrymeSDK } from '@repo/sdk';
+import { ScrymeSDK } from '@scryme/chat';
 
 const sdk = new ScrymeSDK({
   baseURL: 'https://api.chat.scryme.tech',
