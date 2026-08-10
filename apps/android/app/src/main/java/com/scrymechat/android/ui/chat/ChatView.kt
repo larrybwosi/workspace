@@ -1359,9 +1359,6 @@ fun ChatView(
     }
 }
 
-/**
- * Discord-style Empty State component for Channels and Direct Messages.
- */
 @Composable
 fun EmptyChatState(
     chatTitle: String,

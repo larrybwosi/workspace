@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +55,12 @@ private val AvatarSize = 38.dp
 private val GutterSpacer = 12.dp
 private val ReplyAvatarSize = 16.dp
 private val ForwardAvatarSize = 22.dp
+
+// The reply connector's canvas reserves exactly this much width: enough to center the
+// stem under the main avatar above, and to land the horizontal run right at the left
+// edge of the small reply avatar (no leftover gap, no overlap).
+private val ReplyConnectorGap = 6.dp
+private val ReplyConnectorWidth = AvatarSize + ReplyConnectorGap
 
 @Composable
 fun BotBadge() {
@@ -124,24 +131,28 @@ fun ModBadge() {
 }
 
 /**
- * The little hook that connects the reply preview to the message below it, exactly
- * like Discord: a vertical stem centered under where the avatar above sits, curving
- * right into a horizontal run that lands on the reply avatar.
+ * The little hook that connects the reply preview to the message below it.
+ *
+ * Unlike a naive "draw at 50% width" version, this takes an explicit [stemX] (where the
+ * vertical stem sits) so the caller can size the canvas to whatever width is convenient
+ * without the stem drifting off-center. The horizontal run always terminates at the
+ * canvas's right edge, so as long as the caller sizes the canvas to end exactly where
+ * the reply avatar begins, the line will visually connect rather than fall short of it.
  */
 @Composable
-private fun ReplyConnector(color: Color, modifier: Modifier = Modifier) {
+private fun ReplyConnector(color: Color, stemX: Dp, modifier: Modifier = Modifier) {
     androidx.compose.foundation.Canvas(modifier = modifier) {
-        val stemX = size.width * 0.5f
+        val stemXPx = stemX.toPx()
         val cornerRadius = 8.dp.toPx()
         val strokeWidth = 2.dp.toPx()
         val bottomY = size.height - strokeWidth / 2
 
         val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(stemX, 0f)
-            lineTo(stemX, bottomY - cornerRadius)
+            moveTo(stemXPx, 0f)
+            lineTo(stemXPx, bottomY - cornerRadius)
             quadraticBezierTo(
-                stemX, bottomY,
-                stemX + cornerRadius, bottomY
+                stemXPx, bottomY,
+                stemXPx + cornerRadius, bottomY
             )
             lineTo(size.width, bottomY)
         }
@@ -157,21 +168,30 @@ private fun ReplyConnector(color: Color, modifier: Modifier = Modifier) {
 }
 
 /**
- * Discord-style "Forwarded" label — a small forward icon + italic caption sitting
- * directly above the quoted snapshot card(s), never above the avatar/name row.
+ * Discord-style "Forwarded" label sitting above the quoted snapshot card(s). Shows a
+ * count when several messages were forwarded together, so the header reads as a real
+ * summary rather than a static caption.
  */
 @Composable
-private fun ForwardedHeader(palette: ChatPalette) {
+private fun ForwardedHeader(count: Int, palette: ChatPalette) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            Icons.Default.Forward,
-            contentDescription = null,
-            tint = palette.textTertiary,
-            modifier = Modifier.size(13.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .clip(CircleShape)
+                .background(palette.accentSoft),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Forward,
+                contentDescription = null,
+                tint = palette.accent,
+                modifier = Modifier.size(11.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
-            text = "Forwarded",
+            text = if (count > 1) "Forwarded \u00B7 $count messages" else "Forwarded",
             color = palette.textTertiary,
             fontSize = 12.5.sp,
             fontStyle = FontStyle.Italic,
@@ -181,9 +201,9 @@ private fun ForwardedHeader(palette: ChatPalette) {
 }
 
 /**
- * A single quoted "snapshot" card inside a forwarded message — mini avatar, sender
- * name, timestamp, the original text (if any), and any attachments, all rendered at
- * a smaller scale than a normal message so it reads as an embedded quote.
+ * A single quoted "snapshot" inside a forwarded message, rendered as its own bordered
+ * embed card with a colored accent strip on the leading edge — the same visual language
+ * Discord uses to distinguish "this is quoted content" from the sender's own message.
  */
 @Composable
 private fun ForwardedSnapshotCard(
@@ -195,98 +215,119 @@ private fun ForwardedSnapshotCard(
     val context = LocalContext.current
     val senderName = snapshot.senderName ?: "Unknown User"
 
-    Row(modifier = Modifier.fillMaxWidth()) {
-        UserAvatar(
-            name = senderName,
-            avatarUrl = snapshot.senderAvatar,
-            size = ForwardAvatarSize,
-            borderColor = Color.Transparent
-        )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        color = palette.bubbleSurface,
+        border = BorderStroke(1.dp, palette.bubbleBorder)
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            // Accent strip — marks this whole card as quoted/embedded content.
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(3.dp)
+                    .background(palette.accent.copy(alpha = 0.55f))
+            )
 
-        Spacer(modifier = Modifier.width(8.dp))
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(10.dp)
+            ) {
+                UserAvatar(
+                    name = senderName,
+                    avatarUrl = snapshot.senderAvatar,
+                    size = ForwardAvatarSize,
+                    borderColor = palette.glassBorder
+                )
 
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = senderName,
-                    color = palette.textPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.5.sp
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = formatMessageTimestamp(snapshot.createdAt),
-                    color = palette.textTertiary,
-                    fontSize = 10.5.sp
-                )
-            }
+                Spacer(modifier = Modifier.width(8.dp))
 
-            if (snapshot.content.isNotBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                MarkdownText(
-                    content = snapshot.content,
-                    onMentionClick = {},
-                    onChannelTagClick = {}
-                )
-            } else if (snapshot.attachments.isEmpty()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Original message was deleted or unavailable",
-                    color = palette.textTertiary,
-                    fontSize = 13.sp,
-                    fontStyle = FontStyle.Italic
-                )
-            }
-
-            snapshot.attachments.forEach { attachment ->
-                if (attachment.type.startsWith("image/")) {
-                    Box(modifier = Modifier.padding(top = 6.dp)) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, palette.bubbleBorder)
-                        ) {
-                            AsyncImage(
-                                model = attachment.url,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 180.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onImageClick(attachment) },
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .padding(top = 6.dp)
-                            .fillMaxWidth()
-                            .clip(ShapeChip)
-                            .background(palette.attachmentChipBg)
-                            .border(1.dp, palette.bubbleBorder, ShapeChip)
-                            .padding(horizontal = 8.dp, vertical = 6.dp)
-                            .clickable {
-                                Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
-                                onDownload(attachment)
-                            },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.FilePresent,
-                            contentDescription = null,
-                            tint = palette.accent,
-                            modifier = Modifier.size(13.dp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = senderName,
+                            color = palette.textPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = attachment.name,
-                            color = palette.textPrimary,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
+                            text = formatMessageTimestamp(snapshot.createdAt),
+                            color = palette.textTertiary,
+                            fontSize = 10.5.sp
                         )
+                    }
+
+                    if (snapshot.content.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        MarkdownText(
+                            content = snapshot.content,
+                            onMentionClick = {},
+                            onChannelTagClick = {}
+                        )
+                    } else if (snapshot.attachments.isEmpty()) {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "Original message was deleted or unavailable",
+                            color = palette.textTertiary,
+                            fontSize = 13.sp,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
+
+                    snapshot.attachments.forEach { attachment ->
+                        if (attachment.type.startsWith("image/")) {
+                            Box(modifier = Modifier.padding(top = 6.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(1.dp, palette.bubbleBorder)
+                                ) {
+                                    AsyncImage(
+                                        model = attachment.url,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(max = 180.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { onImageClick(attachment) },
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .padding(top = 6.dp)
+                                    .fillMaxWidth()
+                                    .clip(ShapeChip)
+                                    .background(palette.attachmentChipBg)
+                                    .border(1.dp, palette.bubbleBorder, ShapeChip)
+                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                                    .clickable {
+                                        Toast.makeText(context, "Starting download...", Toast.LENGTH_SHORT).show()
+                                        onDownload(attachment)
+                                    },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.FilePresent,
+                                    contentDescription = null,
+                                    tint = palette.accent,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = attachment.name,
+                                    color = palette.textPrimary,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -295,8 +336,9 @@ private fun ForwardedSnapshotCard(
 }
 
 /**
- * The bordered container holding one or more ForwardedSnapshotCards, stacked with a
- * divider between them when several messages were forwarded together.
+ * The stack of ForwardedSnapshotCards for one message. Each forwarded message gets its
+ * own bordered embed (matching how Discord shows multiple forwards as separate quoted
+ * cards, not one shared box), spaced with a small consistent gap.
  */
 @Composable
 private fun ForwardedMessageBlock(
@@ -307,30 +349,16 @@ private fun ForwardedMessageBlock(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        ForwardedHeader(palette = palette)
-        Spacer(modifier = Modifier.height(4.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(palette.bubbleSurface)
-                .border(1.dp, palette.bubbleBorder, RoundedCornerShape(8.dp))
-                .padding(10.dp)
-        ) {
-            snapshots.forEachIndexed { index, snapshot ->
+        ForwardedHeader(count = snapshots.size, palette = palette)
+        Spacer(modifier = Modifier.height(6.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            snapshots.forEach { snapshot ->
                 ForwardedSnapshotCard(
                     snapshot = snapshot,
                     palette = palette,
                     onImageClick = onImageClick,
                     onDownload = onDownload
                 )
-                if (index != snapshots.lastIndex) {
-                    Divider(
-                        color = palette.bubbleBorder,
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
             }
         }
     }
@@ -576,6 +604,11 @@ fun MessageItem(
                 else -> "Original message was deleted or unavailable"
             }
 
+            // The connector's canvas reserves exactly ReplyConnectorWidth (avatar column +
+            // a small gap) and nothing else — the stem sits centered under the avatar
+            // above, and the horizontal run terminates precisely at the left edge of the
+            // reply avatar that follows immediately after, so the line visibly connects
+            // instead of stopping short of it.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -585,12 +618,11 @@ fun MessageItem(
             ) {
                 ReplyConnector(
                     color = palette.replyStripAccent.copy(alpha = 0.45f),
+                    stemX = AvatarSize / 2,
                     modifier = Modifier
-                        .width(AvatarSize)
-                        .height(15.dp)
+                        .width(ReplyConnectorWidth)
+                        .height(16.dp)
                 )
-
-                Spacer(modifier = Modifier.width(GutterSpacer - ReplyAvatarSize / 2))
 
                 UserAvatar(
                     name = repliedName,

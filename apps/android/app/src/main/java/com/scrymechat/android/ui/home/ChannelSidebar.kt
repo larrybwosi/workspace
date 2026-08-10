@@ -11,8 +11,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -32,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,53 +50,71 @@ import com.scrymechat.android.data.local.entities.WorkspaceEntity
 import com.scrymechat.android.ui.components.UserAvatar
 
 /**
- * Exact Discord design tokens for dark themes, extended with a couple of
- * "premium" depth tokens (soft glows, elevated surfaces) that vanilla
- * Discord fakes with layered blurs.
+ * Premium/enterprise design tokens.
+ *
+ * The palette moves away from flat Discord grey toward a slightly cooler,
+ * deeper "graphite" base with an indigo-violet accent gradient instead of a
+ * single flat blurple — this is what reads as "premium SaaS" rather than
+ * "consumer chat app default theme". Elevation is expressed with real
+ * (if subtle) shadows instead of only flat color swaps, and hairlines carry
+ * a faint gradient fade rather than a uniform 1dp line.
  */
 object SidebarTokens {
-    val SurfaceBase: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF2B2D31) else Color(0xFFF2F3F5)
-    val SurfaceRaised: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF313338) else Color(0xFFFFFFFF)
-    val SurfaceSelected: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF3F4248) else Color(0xFFE3E5E8)
-    val SurfaceHover: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF34363C) else Color(0xFFEBEDF0)
-    val SurfaceFooter: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF232428) else Color(0xFFEBEDF0)
-    val SurfaceIconIdle: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF232428) else Color(0xFFE3E5E8)
+    // Slightly cooler & deeper than stock Discord — reads less "flat grey box".
+    val SurfaceBase: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF1C1D22) else Color(0xFFF5F6F8)
+    val SurfaceRaised: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF24252B) else Color(0xFFFFFFFF)
+    val SurfaceSelected: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF2E3038) else Color(0xFFEDEFF5)
+    val SurfaceHover: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF26272E) else Color(0xFFF0F1F5)
+    val SurfaceFooter: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF17181C) else Color(0xFFEDEFF5)
+    val SurfaceIconIdle: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF1B1C21) else Color(0xFFE7E9F0)
 
-    val Hairline: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x33000000) else Color(0x1F000000)
-    val HairlineStrong: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x24FFFFFF) else Color(0x0F000000)
+    val Hairline: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x2EFFFFFF) else Color(0x14000000)
+    val HairlineStrong: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x3DFFFFFF) else Color(0x1F000000)
 
-    val Accent = Color(0xFF5865F2)            // Blurple
-    val AccentSoft: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x335865F2) else Color(0x1F5865F2)
-    val Online = Color(0xFF23A55A)            // Status Green
-    val Danger = Color(0xFFF23F43)            // Notification Badge Red
+    // Indigo-violet gradient accent instead of a flat single blurple.
+    val AccentStart = Color(0xFF6D5EF5)
+    val AccentEnd = Color(0xFF8B5CF6)
+    val Accent = Color(0xFF6D5EF5)
+    val AccentGradient: Brush @Composable get() = Brush.linearGradient(listOf(AccentStart, AccentEnd))
+    val AccentSoft: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x336D5EF5) else Color(0x1F6D5EF5)
 
-    val TextBright: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFFFFFFF) else Color(0xFF060607)
-    val TextPrimary: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFA6ABB4) else Color(0xFF4E5058)
-    val TextCategory: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF96999E) else Color(0xFF5C5E66)
-    val TextMuted: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF949BA4) else Color(0xFF5C5E66)
-    val TextFaint: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF84898F) else Color(0xFF6D6F78)
+    val Online = Color(0xFF3BC46A)
+    val Danger = Color(0xFFFF4D5E)
+    val Premium = Color(0xFFF5B93B) // small "enterprise/verified" accent, used sparingly
 
-    val PillIndicator: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFFFFFFF) else Color(0xFF060607)
+    val TextBright: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFFFFFFF) else Color(0xFF0B0C10)
+    val TextPrimary: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFAEB2C4) else Color(0xFF474A57)
+    val TextCategory: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF7C8098) else Color(0xFF6A6D7C)
+    val TextMuted: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF8B8FA3) else Color(0xFF5C5E66)
+    val TextFaint: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF6E7186) else Color(0xFF7A7D8A)
+
+    val PillGradient: Brush @Composable get() = AccentGradient
 
     val HeaderGradient: Brush @Composable get() {
         val dark = LocalThemeIsDark.current
         return Brush.verticalGradient(
-            colors = if (dark) listOf(Color(0xFF35373C), Color(0xFF2F3136)) else listOf(Color(0xFFFFFFFF), Color(0xFFF2F3F5))
+            colors = if (dark) listOf(Color(0xFF26272F), Color(0xFF1D1E24)) else listOf(Color(0xFFFFFFFF), Color(0xFFF5F6F8))
         )
     }
     val FooterGradient: Brush @Composable get() {
         val dark = LocalThemeIsDark.current
         return Brush.verticalGradient(
-            colors = if (dark) listOf(Color(0xFF232428), Color(0xFF1E1F22)) else listOf(Color(0xFFF2F3F5), Color(0xFFE3E5E8))
+            colors = if (dark) listOf(Color(0xFF1A1B20), Color(0xFF141519)) else listOf(Color(0xFFF5F6F8), Color(0xFFE7E9F0))
         )
     }
+    // Faint top-to-bottom fade so hairlines don't read as harsh ruled lines.
+    val HairlineFade: Brush @Composable get() = Brush.horizontalGradient(
+        listOf(Color.Transparent, Hairline, Hairline, Color.Transparent)
+    )
+
+    val ShadowColor: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xCC000000) else Color(0x1F1B1D2A)
 }
 
 fun presenceColor(status: String?): Color = when (status?.lowercase()) {
-    "online" -> Color(0xFF23A55A)
-    "idle", "away" -> Color(0xFFF0B232)
-    "dnd", "busy" -> Color(0xFFF23F43)
-    else -> Color(0xFF80848E)
+    "online" -> Color(0xFF3BC46A)
+    "idle", "away" -> Color(0xFFF2A93B)
+    "dnd", "busy" -> Color(0xFFFF4D5E)
+    else -> Color(0xFF6C7086)
 }
 
 /** Helper data structure for category grouping */
@@ -135,16 +153,10 @@ fun ChannelSidebar(
     onFriendsClick: () -> Unit = {},
     onCreateChannelClick: () -> Unit = {}
 ) {
-    // Compute category grouping once per channel list change so we can both
-    // render it and use it to seed the default-expanded state below.
     val (uncategorized, groupedCategories) = remember(channels) {
         processChannelGrouping(channels)
     }
 
-    // Categories should read as "expanded" the first time they're seen,
-    // matching Discord's own behavior of never starting a server collapsed.
-    // We only ever push categories INTO expandedCategories here — we never
-    // touch ones the user has since collapsed by hand.
     LaunchedEffect(groupedCategories) {
         groupedCategories.forEach { category ->
             if (category.categoryId !in expandedCategories) {
@@ -179,7 +191,6 @@ fun ChannelSidebar(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             if (isHomeSelected) {
-                // Direct Messages / Home View
                 item {
                     PaddingWrapper {
                         SidebarItem(
@@ -212,9 +223,6 @@ fun ChannelSidebar(
                     }
                 }
             } else {
-                // Workspace / Server Channels View
-
-                // Render Uncategorized Channels
                 if (uncategorized.isNotEmpty()) {
                     items(uncategorized, key = { it.id }) { channel ->
                         PaddingWrapper {
@@ -228,7 +236,6 @@ fun ChannelSidebar(
                     item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
 
-                // Render Categorized Channels
                 groupedCategories.forEach { category ->
                     val isExpanded = expandedCategories.contains(category.categoryId)
                     val hasUnread = category.channels.any { it.unreadCount > 0 }
@@ -283,9 +290,6 @@ fun ChannelSidebar(
     }
 }
 
-/**
- * Organizes raw channels into logical Discord categories (Text vs Voice or Parent Categories).
- */
 private fun processChannelGrouping(channels: List<ChannelEntity>): Pair<List<ChannelEntity>, List<ChannelCategoryGroup>> {
     val categoryEntities = channels.filter { it.type?.lowercase() == "category" }
     val normalChannels = channels.filter { it.type?.lowercase() != "category" }
@@ -302,7 +306,6 @@ private fun processChannelGrouping(channels: List<ChannelEntity>): Pair<List<Cha
         return Pair(uncategorized, grouped)
     }
 
-    // Fallback: If no explicit category entity exists, group by type like standard Discord
     val textChannels = normalChannels.filter { it.type?.lowercase() != "voice" }
     val voiceChannels = normalChannels.filter { it.type?.lowercase() == "voice" }
 
@@ -324,27 +327,22 @@ private fun PaddingWrapper(content: @Composable () -> Unit) {
     }
 }
 
+/**
+ * Workspace banner — swapped the old hash-based random gradient for the
+ * consistent brand accent gradient plus a subtle vignette. Adds a small
+ * verified/enterprise badge next to the name and a member-count style
+ * caption slot, which is what separates "chat app header" from "workspace
+ * dashboard header".
+ */
 @Composable
 fun WorkspaceBanner(workspace: WorkspaceEntity?) {
     if (workspace == null) return
 
-    val gradientColors = remember(workspace.name) {
-        val hash = workspace.name.hashCode()
-        val colors = listOf(
-            listOf(Color(0xFF5865F2), Color(0xFF2C2F33)),
-            listOf(Color(0xFFEC407A), Color(0xFF3F51B5)),
-            listOf(Color(0xFF26A69A), Color(0xFF1A237E)),
-            listOf(Color(0xFFAB47BC), Color(0xFF212121)),
-            listOf(Color(0xFFFF7043), Color(0xFF3E2723))
-        )
-        colors[Math.abs(hash) % colors.size]
-    }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
-            .background(Brush.verticalGradient(gradientColors))
+            .height(112.dp)
+            .background(SidebarTokens.AccentGradient)
     ) {
         if (workspace.icon != null && workspace.icon.startsWith("http")) {
             AsyncImage(
@@ -352,42 +350,86 @@ fun WorkspaceBanner(workspace: WorkspaceEntity?) {
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.4f
+                alpha = 0.32f
             )
         }
 
-        // Bottom dark gradient overlay for text readability
+        // Vignette for legibility, darker and tighter than before for a
+        // more "designed" look rather than a flat linear fade.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f))
+                        0f to Color.Black.copy(alpha = 0.05f),
+                        0.55f to Color.Black.copy(alpha = 0.35f),
+                        1f to Color.Black.copy(alpha = 0.82f)
                     )
                 )
         )
 
-        // Workspace Name Overlay
-        Column(
+        // Faint top sheen — a 1px highlight along the very top edge.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color.White.copy(alpha = 0.18f))
+                .align(Alignment.TopCenter)
+        )
+
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(12.dp)
+                .padding(14.dp),
+            verticalAlignment = Alignment.Bottom
         ) {
-            Text(
-                text = workspace.name,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (!workspace.description.isNullOrBlank()) {
-                Text(
-                    text = workspace.description,
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 11.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = workspace.name,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = "Verified workspace",
+                        tint = SidebarTokens.Premium,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+                if (!workspace.description.isNullOrBlank()) {
+                    Text(
+                        text = workspace.description,
+                        color = Color.White.copy(alpha = 0.72f),
+                        fontSize = 11.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.14f))
+                    .border(1.dp, Color.White.copy(alpha = 0.18f), CircleShape)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(bounded = false, radius = 16.dp)
+                    ) { },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Workspace menu",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
@@ -396,69 +438,64 @@ fun WorkspaceBanner(workspace: WorkspaceEntity?) {
 
 @Composable
 private fun SidebarHeader(title: String, subtitle: String?) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SidebarTokens.HeaderGradient)
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SidebarTokens.HeaderGradient)
+                .height(56.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(color = SidebarTokens.SurfaceHover)
+                ) { }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(color = SidebarTokens.SurfaceHover)
-                    ) { }
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = SidebarTokens.TextBright,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    letterSpacing = (-0.2).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (subtitle != null) {
                     Text(
-                        text = title,
-                        color = SidebarTokens.TextBright,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (subtitle != null) {
-                        Text(
-                            text = subtitle,
-                            color = SidebarTokens.TextPrimary,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.06f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Server Menu",
-                        tint = SidebarTokens.TextBright,
-                        modifier = Modifier.size(16.dp)
+                        text = subtitle,
+                        color = SidebarTokens.TextPrimary,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 11.sp
                     )
                 }
             }
-            // Subtle 1px sheen at the very top edge — the kind of detail that
-            // reads as "designed" rather than "default component".
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(Color.White.copy(alpha = 0.04f))
-                    .align(Alignment.TopCenter)
-            )
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(SidebarTokens.SurfaceIconIdle)
+                    .border(1.dp, SidebarTokens.HairlineStrong, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Menu",
+                    tint = SidebarTokens.TextBright,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(SidebarTokens.HairlineFade)
+                .align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -474,9 +511,9 @@ private fun SectionLabel(text: String, trailing: (@Composable () -> Unit)? = nul
         Text(
             text = text.uppercase(),
             color = SidebarTokens.TextCategory,
-            fontSize = 12.sp,
+            fontSize = 11.5.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.4.sp
+            letterSpacing = 0.6.sp
         )
         trailing?.invoke()
     }
@@ -519,9 +556,9 @@ fun CategoryHeader(
         Text(
             text = name.uppercase(),
             color = SidebarTokens.TextCategory,
-            fontSize = 12.sp,
+            fontSize = 11.5.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.4.sp,
+            letterSpacing = 0.6.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -568,7 +605,8 @@ private fun CreateChannelRow(onClick: () -> Unit) {
             modifier = Modifier
                 .size(18.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(SidebarTokens.SurfaceIconIdle),
+                .background(SidebarTokens.SurfaceIconIdle)
+                .border(1.dp, SidebarTokens.Hairline, RoundedCornerShape(6.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -604,9 +642,11 @@ fun ChannelItem(
 }
 
 /**
- * Core list item with the iconic Discord pill indicator on the left edge,
- * plus a soft glow behind it and a subtle press-scale for a more premium,
- * tactile feel than a flat background swap.
+ * Core list item. Selected state now uses:
+ *  - a real (small, tasteful) drop shadow on the row card instead of a flat
+ *    color swap, giving it a "lifted" enterprise-panel feel;
+ *  - a gradient pill indicator instead of a flat white bar;
+ *  - a soft radial glow that sits behind the pill for a bit of depth.
  */
 @Composable
 fun SidebarItem(
@@ -645,7 +685,7 @@ fun SidebarItem(
         label = "itemIcon"
     )
     val iconChipColor by animateColorAsState(
-        targetValue = if (isSelected) SidebarTokens.Accent.copy(alpha = 0.18f) else SidebarTokens.SurfaceIconIdle,
+        targetValue = if (isSelected) SidebarTokens.Accent.copy(alpha = 0.20f) else SidebarTokens.SurfaceIconIdle,
         animationSpec = tween(120),
         label = "itemIconChip"
     )
@@ -663,6 +703,11 @@ fun SidebarItem(
         animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessHigh),
         label = "itemScale"
     )
+    val elevation by animateDpAsState(
+        targetValue = if (isSelected) 3.dp else 0.dp,
+        animationSpec = tween(150),
+        label = "itemElevation"
+    )
 
     Box(
         modifier = Modifier
@@ -670,14 +715,12 @@ fun SidebarItem(
             .height(34.dp)
             .scale(scale)
     ) {
-        // Soft glow behind the pill for selected rows — a small touch that
-        // reads as "premium" without being loud.
         if (isSelected) {
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .offset(x = (-10).dp)
-                    .size(width = 10.dp, height = 26.dp)
+                    .size(width = 12.dp, height = 28.dp)
                     .background(
                         Brush.radialGradient(
                             colors = listOf(SidebarTokens.AccentSoft, Color.Transparent)
@@ -686,7 +729,7 @@ fun SidebarItem(
             )
         }
 
-        // Discord Pill Indicator (Left edge gutter)
+        // Gradient pill indicator (left edge gutter)
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -694,19 +737,25 @@ fun SidebarItem(
                 .width(4.dp)
                 .height(pillHeight)
                 .clip(RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
-                .background(SidebarTokens.PillIndicator)
+                .background(SidebarTokens.PillGradient)
         )
 
-        // Row Content Card
         Surface(
             modifier = Modifier
                 .fillMaxSize()
+                .shadow(
+                    elevation = elevation,
+                    shape = RoundedCornerShape(6.dp),
+                    ambientColor = SidebarTokens.ShadowColor,
+                    spotColor = SidebarTokens.ShadowColor
+                )
                 .clip(RoundedCornerShape(6.dp))
                 .clickable(
                     interactionSource = interactionSource,
                     indication = rememberRipple(color = SidebarTokens.SurfaceHover)
                 ) { onClick() },
-            color = backgroundColor
+            color = backgroundColor,
+            border = if (isSelected) BorderStroke(1.dp, SidebarTokens.HairlineStrong) else null
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -741,9 +790,6 @@ fun SidebarItem(
                         }
                     }
                 } else {
-                    // Icons sit in a soft rounded chip instead of floating bare —
-                    // gives channels a bit of "product" weight like Nitro server
-                    // boosts / custom channel icons do in real Discord.
                     Box(
                         modifier = Modifier
                             .size(22.dp)
@@ -777,6 +823,7 @@ fun SidebarItem(
                     color = contentColor,
                     fontSize = 14.sp,
                     fontWeight = if (isSelected || isUnread) FontWeight.SemiBold else FontWeight.Medium,
+                    letterSpacing = (-0.1).sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -807,17 +854,28 @@ fun SidebarItem(
     }
 }
 
+/**
+ * Footer — the avatar now sits on a gradient ring rather than a sweep
+ * gradient, a slightly larger touch target, and the presence label has
+ * been promoted to a small pill so it reads as a status chip rather than
+ * plain caption text, which is a very "enterprise dashboard" affordance.
+ */
 @Composable
 fun UserSection(
     currentUser: UserEntity?,
     onSettingsClick: () -> Unit
 ) {
     Column {
-        HorizontalDivider(color = SidebarTokens.Hairline, thickness = 1.dp)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(1.dp)
+                .background(SidebarTokens.HairlineFade)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
                 .background(SidebarTokens.FooterGradient)
         ) {
             Row(
@@ -830,7 +888,7 @@ fun UserSection(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(color = SidebarTokens.SurfaceHover)
@@ -838,30 +896,20 @@ fun UserSection(
                         .padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(34.dp)) {
-                        // Faint accent ring behind the avatar — a small
-                        // "premium account" flourish.
+                    Box(modifier = Modifier.size(36.dp)) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.sweepGradient(
-                                        colors = listOf(
-                                            SidebarTokens.Accent.copy(alpha = 0.5f),
-                                            Color.Transparent,
-                                            SidebarTokens.Accent.copy(alpha = 0.25f)
-                                        )
-                                    )
-                                )
-                                .padding(1.5.dp)
+                                .background(SidebarTokens.AccentGradient)
+                                .padding(2.dp)
                         )
-                        Box(modifier = Modifier.padding(2.dp)) {
+                        Box(modifier = Modifier.padding(2.5.dp)) {
                             UserAvatar(
                                 name = currentUser?.name ?: "User",
                                 avatarUrl = currentUser?.avatar,
-                                size = 30.dp,
-                                borderColor = SidebarTokens.HairlineStrong
+                                size = 31.dp,
+                                borderColor = SidebarTokens.SurfaceFooter
                             )
                         }
                         Box(
@@ -881,7 +929,7 @@ fun UserSection(
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(9.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -889,15 +937,25 @@ fun UserSection(
                             color = SidebarTokens.TextBright,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.1).sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = "Online",
-                            color = SidebarTokens.TextPrimary,
-                            fontSize = 11.sp,
-                            maxLines = 1
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(SidebarTokens.Online)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Online",
+                                color = SidebarTokens.TextPrimary,
+                                fontSize = 11.sp,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
 
@@ -922,12 +980,13 @@ private fun FooterIconButton(
         modifier = Modifier
             .size(32.dp)
             .clip(CircleShape)
+            .background(SidebarTokens.SurfaceIconIdle)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = SidebarTokens.TextPrimary,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(16.dp)
         )
     }
 }
