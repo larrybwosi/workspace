@@ -156,9 +156,22 @@ export default function SettingsPage() {
     const formData = new FormData();
     formData.append('file', file);
 
+    const token =
+      typeof window !== 'undefined'
+        ? window.localStorage.getItem('bearer_token') ||
+          window.localStorage.getItem('better-auth.session_token') ||
+          window.localStorage.getItem('better-auth.session-token')
+        : '';
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
       const response = await fetch('/api/upload', {
         method: 'POST',
+        headers,
         body: formData,
       });
 

@@ -29,6 +29,17 @@ const getBaseURL = () => {
   }
 
   if (!url) {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const port = window.location.port;
+      // If we are running in the browser within the Next.js web app, we should use window.location.origin
+      if (port === '3001' || (hostname.includes('scryme.tech') && !hostname.startsWith('api.'))) {
+        url = window.location.origin;
+      }
+    }
+  }
+
+  if (!url) {
     const isProd =
       (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') ||
       getEnv('NODE_ENV') === 'production' ||
@@ -83,16 +94,6 @@ export const authClient: any = createAuthClient({
     },
     onRequest: async (context: any) => {
       if (typeof window !== 'undefined') {
-        const token =
-          window.localStorage.getItem('better-auth.session-token') ||
-          window.localStorage.getItem('better-auth.session_token') ||
-          window.localStorage.getItem('bearer_token');
-        if (token) {
-          context.headers = {
-            ...context.headers,
-            Authorization: `Bearer ${token}`,
-          };
-        }
         const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
         if (urlStr && urlStr.includes('/sign-out')) {
           window.localStorage.removeItem('better-auth.session-token');
@@ -116,6 +117,20 @@ export const authClient: any = createAuthClient({
           window.localStorage.removeItem('better-auth.session-token');
           window.localStorage.removeItem('better-auth.session_token');
           window.localStorage.removeItem('bearer_token');
+        }
+      }
+      return context;
+    },
+    onResponse: async (context: any) => {
+      if (typeof window !== 'undefined') {
+        const res = context.response as any;
+        if (context.response.ok && res._data) {
+          const data = res._data;
+          if (data && data.session && data.session.token) {
+            localStorage.setItem('better-auth.session_token', data.session.token);
+            localStorage.setItem('better-auth.session-token', data.session.token);
+            localStorage.setItem('bearer_token', data.session.token);
+          }
         }
       }
       return context;

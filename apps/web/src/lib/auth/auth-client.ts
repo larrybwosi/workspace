@@ -33,16 +33,62 @@ const getBaseURL = () => {
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
-    onResponse: async ({ response }) => {
-      const res = response as any;
-      if (response.ok && res._data) {
-        const data = res._data;
-        if (data && data.session && data.session.token) {
-          localStorage.setItem('better-auth.session_token', data.session.token);
-          localStorage.setItem('better-auth.session-token', data.session.token);
-          localStorage.setItem('bearer_token', data.session.token);
+    auth: {
+      type: 'Bearer',
+      token: () => {
+        if (typeof window !== 'undefined') {
+          return (
+            localStorage.getItem('bearer_token') ||
+            localStorage.getItem('better-auth.session_token') ||
+            localStorage.getItem('better-auth.session-token') ||
+            ''
+          );
+        }
+        return '';
+      },
+    },
+    onRequest: async (context: any) => {
+      if (typeof window !== 'undefined') {
+        const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
+        if (urlStr && urlStr.includes('/sign-out')) {
+          window.localStorage.removeItem('better-auth.session-token');
+          window.localStorage.removeItem('better-auth.session_token');
+          window.localStorage.removeItem('bearer_token');
         }
       }
+      return context;
+    },
+    onSuccess: async (context: any) => {
+      if (typeof window !== 'undefined') {
+        const token = context.response?.headers?.get('set-auth-token');
+        if (token) {
+          window.localStorage.setItem('better-auth.session-token', token);
+          window.localStorage.setItem('better-auth.session_token', token);
+          window.localStorage.setItem('bearer_token', token);
+        }
+        // If it's a sign-out request, clear the stored tokens
+        const urlStr = typeof context.request === 'string' ? context.request : context.request?.url || '';
+        if (urlStr && urlStr.includes('/sign-out')) {
+          window.localStorage.removeItem('better-auth.session-token');
+          window.localStorage.removeItem('better-auth.session_token');
+          window.localStorage.removeItem('bearer_token');
+        }
+      }
+      return context;
+    },
+    onResponse: async (context: any) => {
+      if (typeof window !== 'undefined') {
+        const res = context.response as any;
+        if (context.response.ok && res._data) {
+          const data = res._data;
+          if (data && data.session && data.session.token) {
+            localStorage.setItem('better-auth.session_token', data.session.token);
+            localStorage.setItem('better-auth.session-token', data.session.token);
+            localStorage.setItem('bearer_token', data.session.token);
+          }
+        }
+      }
+      return context;
     },
   },
 });
