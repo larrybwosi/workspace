@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateEnv } from '@repo/shared';
+import { headers } from 'next/headers';
 
 const publicRoutes = [
   '/login',
@@ -32,39 +33,12 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Clone request headers into standard Web Headers to allow mutation
-  const headers = new Headers(request.headers);
-
-  // Extract the Authorization header (Web Headers handles case-insensitivity automatically)
-  const authHeader = headers.get('authorization') || '';
-  if (authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    if (token) {
-      console.info(`[Proxy] Bearer token detected. Injecting better-auth session cookies.`);
-      const cookieValue = headers.get('cookie') || '';
-      const cookieNameUnderscore = 'better-auth.session_token';
-      const cookieNameHyphen = 'better-auth.session-token';
-
-      // Inject the session tokens into the cookie header if they aren't already present
-      let updatedCookie = cookieValue;
-      if (!cookieValue.includes(cookieNameUnderscore)) {
-        updatedCookie = updatedCookie ? `${updatedCookie}; ${cookieNameUnderscore}=${token}` : `${cookieNameUnderscore}=${token}`;
-      }
-      if (!cookieValue.includes(cookieNameHyphen)) {
-        updatedCookie = updatedCookie ? `${updatedCookie}; ${cookieNameHyphen}=${token}` : `${cookieNameHyphen}=${token}`;
-      }
-      headers.set('cookie', updatedCookie);
-    }
-  }
-
   let session = null;
   try {
-    // Load auth dynamically so that public routes (like /api/health) and simple routes
-    // do not trigger Better Auth / Database connection failures or environment validations.
     const { auth } = await import('@/lib/auth');
 
     session = await auth.api.getSession({
-      headers,
+      headers: await headers(),
     });
   } catch (err) {
     console.error(`[Proxy] Session retrieval error on path ${pathname}:`, err);
@@ -89,7 +63,7 @@ export default async function proxy(request: NextRequest) {
   console.info(`[Proxy] Session verified successfully for path: ${pathname}`);
   return NextResponse.next({
     request: {
-      headers,
+      headers: await headers(),
     },
   });
 }
