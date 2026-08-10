@@ -1,4 +1,4 @@
-# Scryme Chat TypeScript SDK (`@repo/sdk`)
+# Scryme Chat TypeScript SDK (`@scryme/chat`)
 
 A high-performance, developer-friendly, fully typed TypeScript/JavaScript SDK for interacting with the Skyrme Chat V2 and V3 Enterprise APIs.
 
@@ -18,11 +18,11 @@ Designed primarily for backend integrations, servers, and automated Machine-to-M
 ## Installation
 
 ```bash
-npm install @repo/sdk
+npm install @scryme/chat
 # or
-pnpm add @repo/sdk
+pnpm add @scryme/chat
 # or
-yarn add @repo/sdk
+yarn add @scryme/chat
 ```
 
 ---
@@ -34,7 +34,7 @@ yarn add @repo/sdk
 You can initialize `ScrymeSDK` using a static bearer token or using M2M client credentials (`clientId` and `clientSecret`) to enable auto-authentication.
 
 ```typescript
-import { ScrymeSDK } from '@repo/sdk';
+import { ScrymeSDK } from '@scryme/chat';
 
 // Option A: Machine-to-Machine (M2M) Auth (Highly recommended for servers/bots)
 const sdk = new ScrymeSDK({

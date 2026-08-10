@@ -77,10 +77,10 @@ Once you have an M2M application with the `provisioning:workspaces` scope, you c
 
 ### Or use the TypeScript SDK (Recommended)
 
-Our official `@repo/sdk` automates authentication and provides clear workspace provisioning helpers:
+Our official `@scryme/chat` automates authentication and provides clear workspace provisioning helpers:
 
 ```typescript
-import { ScrymeSDK } from '@repo/sdk';
+import { ScrymeSDK } from '@scryme/chat';
 
 const sdk = new ScrymeSDK({
   baseURL: 'https://api.chat.scryme.tech',
