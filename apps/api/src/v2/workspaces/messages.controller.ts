@@ -733,20 +733,24 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
       if (contextId && !activeThreadId) {
         /**
          * ⚡ Performance Optimization:
-         * Uses `select: { id: true }` instead of fetching the whole Thread row/object.
-         * Since only `id` is needed to assign the thread to the message, this minimizes database
-         * payload, reduces memory overhead, and speeds up the high-frequency message sending path.
+         * Shifting the query entry point from querying the parent Thread table using multi-join nested filters
+         * to querying the highly indexed child ThreadTag table directly.
+         * By performing a lookup on ThreadTag by tag (contextId) and strictly validating parent relations on the database layer,
+         * we leverage direct indexing for O(1) compound point lookups, minimizing database network payload and round-trip overhead.
          */
-        const existingThread = await prisma.thread.findFirst({
+        const existingThreadTag = await prisma.threadTag.findFirst({
           where: {
-            channelId: channel.id,
-            tags: { some: { tag: contextId } },
+            tag: contextId,
+            thread: {
+              channelId: channel.id,
+              channel: { workspaceId: context.workspaceId },
+            },
           },
-          select: { id: true },
+          select: { threadId: true },
         });
 
-        if (existingThread) {
-          activeThreadId = existingThread.id;
+        if (existingThreadTag) {
+          activeThreadId = existingThreadTag.threadId;
         } else {
           const newThread = await prisma.thread.create({
             data: {
