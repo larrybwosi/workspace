@@ -41,6 +41,119 @@ vi.mock('../generated/v3-server', () => {
       channelsControllerCreateMessage: vi.fn(async (channelId, options) => {
         return { success: true, channelId, options };
       }),
+      channelsControllerUpdateMessage: vi.fn(async (channelId, messageId, data, options) => {
+        return { success: true, type: 'channel', action: 'update', channelId, messageId, data, options };
+      }),
+      channelsControllerDeleteMessage: vi.fn(async (channelId, messageId, options) => {
+        return { success: true, type: 'channel', action: 'delete', channelId, messageId, options };
+      }),
+      channelsControllerAddReaction: vi.fn(async (channelId, messageId, data, options) => {
+        return { success: true, type: 'channel', action: 'addReaction', channelId, messageId, data, options };
+      }),
+      channelsControllerRemoveReaction: vi.fn(async (channelId, messageId, emoji, options) => {
+        return { success: true, type: 'channel', action: 'removeReaction', channelId, messageId, emoji, options };
+      }),
+
+      // DMs Mock
+      dmsControllerGetDms: vi.fn(async (options) => {
+        return { success: true, conversations: [], options };
+      }),
+      dmsControllerCreateDm: vi.fn(async (data, options) => {
+        return { success: true, data, options };
+      }),
+      dmsControllerGetDm: vi.fn(async (dmId, options) => {
+        return { success: true, dmId, options };
+      }),
+      dmsControllerDeleteDm: vi.fn(async (dmId, options) => {
+        return { success: true, dmId, options };
+      }),
+      dmsControllerGetMessages: vi.fn(async (dmId, params, options) => {
+        return { success: true, dmId, params, options };
+      }),
+      dmsControllerCreateMessage: vi.fn(async (dmId, options) => {
+        return { success: true, dmId, options };
+      }),
+      dmsControllerUpdateMessage: vi.fn(async (dmId, messageId, data, options) => {
+        return { success: true, type: 'dm', action: 'update', dmId, messageId, data, options };
+      }),
+      dmsControllerDeleteMessage: vi.fn(async (dmId, messageId, options) => {
+        return { success: true, type: 'dm', action: 'delete', dmId, messageId, options };
+      }),
+      dmsControllerAddReaction: vi.fn(async (dmId, messageId, data, options) => {
+        return { success: true, type: 'dm', action: 'addReaction', dmId, messageId, data, options };
+      }),
+      dmsControllerRemoveReaction: vi.fn(async (dmId, messageId, emoji, options) => {
+        return { success: true, type: 'dm', action: 'removeReaction', dmId, messageId, emoji, options };
+      }),
+
+      // Webhooks Mock
+      v3WebhooksControllerGetWebhooks: vi.fn(async (slug, options) => {
+        return { success: true, slug, options };
+      }),
+      v3WebhooksControllerCreateWebhook: vi.fn(async (slug, data, options) => {
+        return { success: true, slug, data, options };
+      }),
+      v3WebhooksControllerGetWebhook: vi.fn(async (slug, webhookId, options) => {
+        return { success: true, slug, webhookId, options };
+      }),
+      v3WebhooksControllerUpdateWebhook: vi.fn(async (slug, webhookId, data, options) => {
+        return { success: true, slug, webhookId, data, options };
+      }),
+      v3WebhooksControllerDeleteWebhook: vi.fn(async (slug, webhookId, options) => {
+        return { success: true, slug, webhookId, options };
+      }),
+
+      // Channel Incoming Webhooks Mock
+      v3ChannelIncomingWebhooksControllerGetChannelWebhooks: vi.fn(async (slug, channelId, options) => {
+        return { success: true, slug, channelId, options };
+      }),
+      v3ChannelIncomingWebhooksControllerCreateChannelWebhook: vi.fn(async (slug, channelId, data, options) => {
+        return { success: true, slug, channelId, data, options };
+      }),
+      v3ChannelIncomingWebhooksControllerGetChannelWebhook: vi.fn(async (slug, channelId, webhookId, options) => {
+        return { success: true, slug, channelId, webhookId, options };
+      }),
+      v3ChannelIncomingWebhooksControllerUpdateChannelWebhook: vi.fn(async (slug, channelId, webhookId, data, options) => {
+        return { success: true, slug, channelId, webhookId, data, options };
+      }),
+      v3ChannelIncomingWebhooksControllerDeleteChannelWebhook: vi.fn(async (slug, channelId, webhookId, options) => {
+        return { success: true, slug, channelId, webhookId, options };
+      }),
+      v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken: vi.fn(async (token, data, options) => {
+        return { success: true, token, data, options };
+      }),
+      v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId: vi.fn(async (channelId, data, params, options) => {
+        return { success: true, channelId, data, params, options };
+      }),
+
+      // V3 Workspace M2M Mock
+      v3WorkspacesControllerProvisionWorkspace: vi.fn(async (data, options) => {
+        return { success: true, data, options };
+      }),
+      v3WorkspacesControllerUpdateWorkspace: vi.fn(async (slug, data, options) => {
+        return { success: true, slug, data, options };
+      }),
+      v3WorkspacesControllerDeleteWorkspace: vi.fn(async (slug, options) => {
+        return { success: true, slug, options };
+      }),
+      v3WorkspacesControllerGetWorkspaceMembers: vi.fn(async (slug, options) => {
+        return { success: true, slug, options };
+      }),
+      v3WorkspacesControllerAddWorkspaceMember: vi.fn(async (slug, data, options) => {
+        return { success: true, slug, data, options };
+      }),
+      v3WorkspacesControllerGetWorkspaceMember: vi.fn(async (slug, memberId, options) => {
+        return { success: true, slug, memberId, options };
+      }),
+      v3WorkspacesControllerUpdateWorkspaceMember: vi.fn(async (slug, memberId, data, options) => {
+        return { success: true, slug, memberId, data, options };
+      }),
+      v3WorkspacesControllerDeleteWorkspaceMember: vi.fn(async (slug, memberId, options) => {
+        return { success: true, slug, memberId, options };
+      }),
+      v3OAuthControllerGetToken: vi.fn(async (data, options) => {
+        return { success: true, data, options };
+      }),
     })),
   };
 });
@@ -220,8 +333,117 @@ describe('ScrymeSDK', () => {
       expect(messagesRes.channelId).toBe('chan_123');
       expect(messagesRes.params.limit).toBe(10);
 
-      const createMsgRes = await sdk.channel.message.create('chan_123') as any;
-      expect(createMsgRes.channelId).toBe('chan_123');
+      // Channel message create (with string)
+      const createMsgStrRes = await sdk.channel.message.create('chan_123', 'Hello') as any;
+      expect(createMsgStrRes.channelId).toBe('chan_123');
+      expect(createMsgStrRes.options.data.content).toBe('Hello');
+
+      // Channel message create (with object)
+      const createMsgObjRes = await sdk.channel.message.create('chan_123', { content: 'Hello World' }) as any;
+      expect(createMsgObjRes.options.data.content).toBe('Hello World');
+    });
+
+    it('should support dm.message namespaces', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      // DM list
+      const listDmsRes = await sdk.dm.list() as any;
+      expect(listDmsRes.conversations).toBeDefined();
+
+      // DM create
+      const createDmRes = await sdk.dm.create({ userId: 'user_123' }) as any;
+      expect(createDmRes.data.userId).toBe('user_123');
+
+      // DM message list
+      const messagesRes = await sdk.dm.message.list('dm_123', { limit: 5 }) as any;
+      expect(messagesRes.dmId).toBe('dm_123');
+      expect(messagesRes.params.limit).toBe(5);
+
+      // DM message create (with string)
+      const createMsgStrRes = await sdk.dm.message.create('dm_123', 'Hello DM') as any;
+      expect(createMsgStrRes.dmId).toBe('dm_123');
+      expect(createMsgStrRes.options.data.content).toBe('Hello DM');
+
+      // DM message create (with object)
+      const createMsgObjRes = await sdk.dm.message.create('dm_123', { content: 'Hello DM Object' }) as any;
+      expect(createMsgObjRes.options.data.content).toBe('Hello DM Object');
+    });
+
+    it('should route message update/delete/reaction dynamically based on "dm-" prefix', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      // Standard Channel message update
+      const chanUpdate = await sdk.message.update('chan_123', 'msg_1', { content: 'updated content' }) as any;
+      expect(chanUpdate.type).toBe('channel');
+      expect(chanUpdate.action).toBe('update');
+
+      // DM message update
+      const dmUpdate = await sdk.message.update('dm-123', 'msg_1', { content: 'updated content' }) as any;
+      expect(dmUpdate.type).toBe('dm');
+      expect(dmUpdate.action).toBe('update');
+
+      // Standard Channel message delete
+      const chanDelete = await sdk.message.delete('chan_123', 'msg_1') as any;
+      expect(chanDelete.type).toBe('channel');
+
+      // DM message delete
+      const dmDelete = await sdk.message.delete('dm-123', 'msg_1') as any;
+      expect(dmDelete.type).toBe('dm');
+
+      // Standard Channel message addReaction
+      const chanAddReaction = await sdk.message.addReaction('chan_123', 'msg_1', { emoji: '👍' }) as any;
+      expect(chanAddReaction.type).toBe('channel');
+
+      // DM message addReaction
+      const dmAddReaction = await sdk.message.addReaction('dm-123', 'msg_1', { emoji: '👍' }) as any;
+      expect(dmAddReaction.type).toBe('dm');
+    });
+
+    it('should support webhooks and channel incoming webhooks namespace', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      // Standard Webhooks
+      const createWh = await sdk.webhooks.create('acme', { name: 'wh1', url: 'http://wh', events: ['*'] }) as any;
+      expect(createWh.slug).toBe('acme');
+      expect(createWh.data.name).toBe('wh1');
+
+      const listWh = await sdk.webhooks.list('acme') as any;
+      expect(listWh.slug).toBe('acme');
+
+      // Incoming Webhooks
+      const createInWh = await sdk.webhooks.incoming.create('acme', 'chan_123', { name: 'incoming_wh' }) as any;
+      expect(createInWh.slug).toBe('acme');
+      expect(createInWh.channelId).toBe('chan_123');
+      expect(createInWh.data.name).toBe('incoming_wh');
+    });
+
+    it('should support sdk.m2m operations namespace', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      // m2m.workspace.provision
+      const provRes = await sdk.m2m.workspace.provision({ name: 'Acme', ownerEmail: 'a@acme.com', slug: 'acme' }) as any;
+      expect(provRes.data.name).toBe('Acme');
+
+      // m2m.member.add
+      const addMem = await sdk.m2m.member.add('acme', { email: 'user@acme.com', role: 'admin' }) as any;
+      expect(addMem.slug).toBe('acme');
+      expect(addMem.data.email).toBe('user@acme.com');
+
+      // m2m.auth.token
+      const tokenRes = await sdk.m2m.auth.token('cid', 'sec') as any;
+      expect(tokenRes.data.client_id).toBe('cid');
     });
   });
 });

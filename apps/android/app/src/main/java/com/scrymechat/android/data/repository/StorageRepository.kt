@@ -20,10 +20,16 @@ class StorageRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    suspend fun uploadFile(file: File): Result<UploadResponse> {
+    suspend fun uploadFile(
+        file: File,
+        originalName: String? = null,
+        mimeType: String? = null
+    ): Result<UploadResponse> {
         return try {
-            val requestFile = file.asRequestBody("application/octet-stream".toMediaTypeOrNull())
-            val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+            val actualMime = mimeType ?: "application/octet-stream"
+            val requestFile = file.asRequestBody(actualMime.toMediaTypeOrNull())
+            val actualName = originalName ?: file.name
+            val body = MultipartBody.Part.createFormData("file", actualName, requestFile)
 
             val response = storageApi.uploadFile(body)
             if (response.isSuccessful) {

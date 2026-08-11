@@ -328,12 +328,20 @@ class ChatViewModel @Inject constructor(
                 // Sequential upload of pending files
                 for (pending in pendingFiles) {
                     val inputStream = context.contentResolver.openInputStream(pending.uri) ?: continue
-                    val tempFile = java.io.File.createTempFile("upload", null, context.cacheDir)
+
+                    val dotIndex = pending.name.lastIndexOf('.')
+                    val suffix = if (dotIndex != -1) pending.name.substring(dotIndex) else ".tmp"
+                    val prefix = if (dotIndex != -1) {
+                        val base = pending.name.substring(0, dotIndex)
+                        if (base.length >= 3) base else "upload"
+                    } else "upload"
+
+                    val tempFile = java.io.File.createTempFile(prefix, suffix, context.cacheDir)
                     tempFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
 
-                    val result = storageRepository.uploadFile(tempFile)
+                    val result = storageRepository.uploadFile(tempFile, pending.name, pending.type)
                     if (result.isSuccess) {
                         val uploadResponse = result.getOrThrow()
                         uploadedAttachments.add(CreateAttachmentRequest(
