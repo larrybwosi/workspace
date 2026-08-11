@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateEnv } from '@repo/shared';
-import { headers } from 'next/headers';
 
 const publicRoutes = [
   '/login',
@@ -37,8 +36,25 @@ export default async function proxy(request: NextRequest) {
   try {
     const { auth } = await import('@/lib/auth');
 
+    // Convert Headers to a plain object
+    const plainHeaders = Object.fromEntries(request.headers.entries());
+
+    // Extract Bearer token and set it in cookie headers so getSession finds it
+    const authHeader = plainHeaders['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      if (token) {
+        let cookieHeader = plainHeaders['cookie'] || '';
+        if (cookieHeader && !cookieHeader.endsWith(';')) {
+          cookieHeader += ';';
+        }
+        cookieHeader += ` better-auth.session_token=${token}; better-auth.session-token=${token}; bearer_token=${token}`;
+        plainHeaders['cookie'] = cookieHeader;
+      }
+    }
+
     session = await auth.api.getSession({
-      headers: await headers(),
+      headers: plainHeaders as any,
     });
   } catch (err) {
     console.error(`[Proxy] Session retrieval error on path ${pathname}:`, err);
@@ -63,7 +79,7 @@ export default async function proxy(request: NextRequest) {
   console.info(`[Proxy] Session verified successfully for path: ${pathname}`);
   return NextResponse.next({
     request: {
-      headers: await headers(),
+      headers: request.headers,
     },
   });
 }
