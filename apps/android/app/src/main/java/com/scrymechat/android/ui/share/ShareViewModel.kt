@@ -109,12 +109,33 @@ class ShareViewModel @Inject constructor(
                 val uploadedAttachments = mutableListOf<CreateAttachmentRequest>()
                 for (uri in sharedContent.uris) {
                     val inputStream = context.contentResolver.openInputStream(uri) ?: continue
-                    val tempFile = File.createTempFile("share_upload", null, context.cacheDir)
+
+                    var fileName = "file"
+                    val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+
+                    context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                        val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (cursor.moveToFirst() && nameIndex != -1) {
+                            val resolvedName = cursor.getString(nameIndex)
+                            if (!resolvedName.isNullOrEmpty()) {
+                                fileName = resolvedName
+                            }
+                        }
+                    }
+
+                    val dotIndex = fileName.lastIndexOf('.')
+                    val suffix = if (dotIndex != -1) fileName.substring(dotIndex) else ".tmp"
+                    val prefix = if (dotIndex != -1) {
+                        val base = fileName.substring(0, dotIndex)
+                        if (base.length >= 3) base else "share_upload"
+                    } else "share_upload"
+
+                    val tempFile = File.createTempFile(prefix, suffix, context.cacheDir)
                     tempFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
 
-                    val result = storageRepository.uploadFile(tempFile)
+                    val result = storageRepository.uploadFile(tempFile, fileName, mimeType)
                     if (result.isSuccess) {
                         val uploadResponse = result.getOrThrow()
                         uploadedAttachments.add(

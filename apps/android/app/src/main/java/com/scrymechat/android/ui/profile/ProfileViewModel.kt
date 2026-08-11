@@ -157,7 +157,21 @@ class ProfileViewModel @Inject constructor(
                 _uiState.value.pendingAvatarUri?.let { uri ->
                     android.util.Log.d("ProfileViewModel", "Uploading pending avatar file: $uri")
                     val file = uriToFile(uri, context)
-                    val result = storageRepository.uploadFile(file)
+
+                    var fileName = "avatar.jpg"
+                    val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+                    context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                        val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (cursor.moveToFirst() && nameIndex != -1) {
+                            val resolvedName = cursor.getString(nameIndex)
+                            if (!resolvedName.isNullOrEmpty()) {
+                                fileName = resolvedName
+                            }
+                        }
+                    }
+
+                    val result = storageRepository.uploadFile(file, fileName, mimeType)
+                    file.delete()
                     result.onSuccess { response ->
                         finalUpdates["avatar"] = response.url
                         android.util.Log.d("ProfileViewModel", "Avatar uploaded successfully: ${response.url}")
@@ -172,7 +186,21 @@ class ProfileViewModel @Inject constructor(
                 _uiState.value.pendingBannerUri?.let { uri ->
                     android.util.Log.d("ProfileViewModel", "Uploading pending banner file: $uri")
                     val file = uriToFile(uri, context)
-                    val result = storageRepository.uploadFile(file)
+
+                    var fileName = "banner.jpg"
+                    val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+                    context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                        val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (cursor.moveToFirst() && nameIndex != -1) {
+                            val resolvedName = cursor.getString(nameIndex)
+                            if (!resolvedName.isNullOrEmpty()) {
+                                fileName = resolvedName
+                            }
+                        }
+                    }
+
+                    val result = storageRepository.uploadFile(file, fileName, mimeType)
+                    file.delete()
                     result.onSuccess { response ->
                         finalUpdates["banner"] = response.url
                         android.util.Log.d("ProfileViewModel", "Banner uploaded successfully: ${response.url}")
