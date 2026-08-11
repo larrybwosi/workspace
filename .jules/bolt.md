@@ -1,3 +1,9 @@
+## 2026-08-11 - [Database/Performance] Parallel Query Splitting for Case-Insensitive Multi-Column OR Search
+
+**Learning:** Combining case-insensitive `contains` (`ILIKE`) operations across multiple separate columns (such as `name` and `username`) in an `OR` condition is a severe database anti-pattern in PostgreSQL/Prisma. It forces the query planner to bypass B-tree indexes, triggering costly sequential/full-table scans. Running parallel point-contains queries with `Promise.all` targeting each column individually allows PostgreSQL to leverage distinct index scans. The results can then be combined and de-duplicated in-memory (Node.js) with negligible CPU overhead.
+
+**Action:** Consistently split multi-column case-insensitive `OR` searches on indexed fields into parallel query point contains, merging and de-duplicating results in application memory.
+
 ## 2026-08-06 - [Prisma/Performance] Projected Selection on Database Lookup Queries
 
 **Learning:** Sibling methods, services, and middleware controllers often query models using `findFirst` without a select projection, returning the entire database row. When subsequent application logic only requires a few properties (such as an `id` or raw `config`), fetching full records increases database memory pressure, deserialization overhead, and response latency on high-frequency paths (like message creation). Explicitly projecting selected columns using Prisma's `select` (e.g. `select: { id: true }`) avoids these inefficiencies.
