@@ -191,9 +191,22 @@ async function bootstrap() {
   });
 
   fastifyInstance.route({
-    method: ['GET', 'POST'],
+    method: ['GET', 'POST', 'OPTIONS'],
     url: '/api/auth/*',
     async handler(request, reply) {
+      if (request.method === 'OPTIONS') {
+        reply.status(204);
+        reply.header('Access-Control-Allow-Origin', request.headers.origin || '*');
+        reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
+        const requestHeaders = request.headers['access-control-request-headers'];
+        if (requestHeaders) {
+          reply.header('Access-Control-Allow-Headers', requestHeaders);
+        } else {
+          reply.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, set-cookie, cookie');
+        }
+        reply.header('Access-Control-Allow-Credentials', 'true');
+        return reply.send();
+      }
       const url = new URL(request.url, `http://${request.headers.host}`);
       const headers = fromNodeHeaders(request.headers);
       const req = new Request(url.toString(), {

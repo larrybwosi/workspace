@@ -37,6 +37,14 @@ const getBaseURL = () => {
   return url.replace(/\/$/, '') + '/api';
 };
 
+let globalToken: string | null = null;
+
+export const setGlobalToken = (token: string | null) => {
+  globalToken = token;
+};
+
+export const getGlobalToken = () => globalToken;
+
 export const AXIOS_INSTANCE = axios.create({
   baseURL: getBaseURL(),
   timeout: 10000,
@@ -44,6 +52,23 @@ export const AXIOS_INSTANCE = axios.create({
 });
 
 AXIOS_INSTANCE.interceptors.request.use(config => {
+  if (!config.headers) {
+    config.headers = {} as any;
+  }
+
+  // Check if an Authorization header is already present (case-insensitive)
+  const hasAuth =
+    config.headers.Authorization ||
+    config.headers.authorization ||
+    (config.headers as any)['Authorization'] ||
+    (config.headers as any)['authorization'];
+
+  // 1. Apply global token if available and no Auth header is set yet
+  if (globalToken && !hasAuth) {
+    config.headers.Authorization = `Bearer ${globalToken}`;
+  }
+
+  // 2. Check for browser-based session/bearer tokens
   if (typeof window !== 'undefined') {
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
@@ -80,7 +105,14 @@ AXIOS_INSTANCE.interceptors.request.use(config => {
       }
     }
 
-    if (token) {
+    // Re-check for Authorization header before applying browser token
+    const hasAuthNow =
+      config.headers.Authorization ||
+      config.headers.authorization ||
+      (config.headers as any)['Authorization'] ||
+      (config.headers as any)['authorization'];
+
+    if (token && !hasAuthNow) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
