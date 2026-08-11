@@ -16,6 +16,13 @@ import type {
   MarkAsReadDto,
   UsersControllerSearchUsersParams,
   DmsControllerGetMessagesParams,
+  CreateMessageDto,
+  V3CreateWebhookDto,
+  V3UpdateWebhookDto,
+  CreateChannelIncomingWebhookDto,
+  UpdateChannelIncomingWebhookDto,
+  ExecuteChannelIncomingWebhookDto,
+  V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams,
   V3WorkspacesControllerGetWorkspacesResult,
   V3WorkspacesControllerGetWorkspaceBySlugResult,
   V3WorkspacesControllerProvisionWorkspaceResult,
@@ -812,24 +819,96 @@ export class ScrymeSDK {
         /**
          * Sends a new message to a channel.
          * @param channelId Unique identifier of the target channel.
-         * @param options Optional request config override. Note that standard message data (like text content) can be passed inside options.data.
+         * @param data The message content string or structured CreateMessageDto object.
+         * @param options Optional request config override.
          * @returns The created message exactly from the endpoint.
          */
-        create: async (channelId: string, options?: AxiosRequestConfig): Promise<ChannelMessage> => {
-          return this.raw.channelsControllerCreateMessage(channelId, options) as any;
+        create: async (
+          channelId: string,
+          data: CreateMessageDto | string,
+          options?: AxiosRequestConfig
+        ): Promise<ChannelMessage> => {
+          const payload = typeof data === 'string' ? { content: data } : data;
+          return this.raw.channelsControllerCreateMessage(channelId, {
+            ...options,
+            data: payload,
+          }) as any;
+        },
+        /**
+         * Updates the content of a previously sent message in a channel.
+         * @param channelId Unique identifier of the channel containing the message.
+         * @param messageId Unique identifier of the message to update.
+         * @param data The new content payload.
+         * @param options Optional request config override.
+         * @returns The updated message details exactly from the endpoint.
+         */
+        update: async (
+          channelId: string,
+          messageId: string,
+          data: ChannelsControllerUpdateMessageBody,
+          options?: AxiosRequestConfig
+        ): Promise<ChannelMessage> => {
+          return this.raw.channelsControllerUpdateMessage(channelId, messageId, data, options) as any;
+        },
+        /**
+         * Permanently deletes a message in a channel.
+         * @param channelId Unique identifier of the channel containing the message.
+         * @param messageId Unique identifier of the message to delete.
+         * @param options Optional request config override.
+         * @returns Success status indicating that the message was deleted exactly from the endpoint.
+         */
+        delete: async (
+          channelId: string,
+          messageId: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean }> => {
+          return this.raw.channelsControllerDeleteMessage(channelId, messageId, options) as any;
+        },
+        /**
+         * Adds a reaction (emoji) to a message in a channel.
+         * @param channelId Unique identifier of the channel containing the message.
+         * @param messageId Unique identifier of the message.
+         * @param data Object containing the target emoji character.
+         * @param options Optional request config override.
+         * @returns The reaction response returned exactly from the endpoint.
+         */
+        addReaction: async (
+          channelId: string,
+          messageId: string,
+          data: ChannelsControllerAddReactionBody,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.channelsControllerAddReaction(channelId, messageId, data, options) as any;
+        },
+        /**
+         * Removes a reaction (emoji) from a message in a channel.
+         * @param channelId Unique identifier of the channel containing the message.
+         * @param messageId Unique identifier of the message.
+         * @param emoji The emoji character to remove.
+         * @param options Optional request config override.
+         * @returns The reaction removal response returned exactly from the endpoint.
+         */
+        removeReaction: async (
+          channelId: string,
+          messageId: string,
+          emoji: string,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.channelsControllerRemoveReaction(channelId, messageId, emoji, options) as any;
         },
       },
     };
   }
 
   /**
-   * Operations for modifying, reacting to, or deleting existing channel messages.
+   * Operations for modifying, reacting to, or deleting existing messages (both channel & direct messages).
+   * Automatically intercepts direct messages starting with 'dm-' and routes them correctly.
    */
   public get message() {
     return {
       /**
        * Updates the content of a previously sent message.
-       * @param channelId Unique identifier of the channel containing the message.
+       * @param channelId Unique identifier of the channel or DM conversation containing the message.
        * @param messageId Unique identifier of the message to update.
        * @param data The new content payload.
        * @param options Optional request config override.
@@ -838,14 +917,17 @@ export class ScrymeSDK {
       update: async (
         channelId: string,
         messageId: string,
-        data: ChannelsControllerUpdateMessageBody,
+        data: ChannelsControllerUpdateMessageBody | UpdateDmMessageDto,
         options?: AxiosRequestConfig
       ): Promise<ChannelMessage> => {
+        if (channelId.startsWith('dm-')) {
+          return this.raw.dmsControllerUpdateMessage(channelId, messageId, data as any, options) as any;
+        }
         return this.raw.channelsControllerUpdateMessage(channelId, messageId, data, options) as any;
       },
       /**
        * Permanently deletes a message.
-       * @param channelId Unique identifier of the channel containing the message.
+       * @param channelId Unique identifier of the channel or DM conversation containing the message.
        * @param messageId Unique identifier of the message to delete.
        * @param options Optional request config override.
        * @returns Success status indicating that the message was deleted exactly from the endpoint.
@@ -855,11 +937,14 @@ export class ScrymeSDK {
         messageId: string,
         options?: AxiosRequestConfig
       ): Promise<{ success: boolean }> => {
+        if (channelId.startsWith('dm-')) {
+          return this.raw.dmsControllerDeleteMessage(channelId, messageId, options) as any;
+        }
         return this.raw.channelsControllerDeleteMessage(channelId, messageId, options) as any;
       },
       /**
        * Adds a reaction (emoji) to a message.
-       * @param channelId Unique identifier of the channel containing the message.
+       * @param channelId Unique identifier of the channel or DM conversation containing the message.
        * @param messageId Unique identifier of the message.
        * @param data Object containing the target emoji character.
        * @param options Optional request config override.
@@ -868,14 +953,17 @@ export class ScrymeSDK {
       addReaction: async (
         channelId: string,
         messageId: string,
-        data: ChannelsControllerAddReactionBody,
+        data: ChannelsControllerAddReactionBody | { emoji?: string },
         options?: AxiosRequestConfig
       ): Promise<any> => {
+        if (channelId.startsWith('dm-')) {
+          return this.raw.dmsControllerAddReaction(channelId, messageId, data as any, options) as any;
+        }
         return this.raw.channelsControllerAddReaction(channelId, messageId, data, options) as any;
       },
       /**
        * Removes a reaction (emoji) from a message.
-       * @param channelId Unique identifier of the channel containing the message.
+       * @param channelId Unique identifier of the channel or DM conversation containing the message.
        * @param messageId Unique identifier of the message.
        * @param emoji The emoji character to remove.
        * @param options Optional request config override.
@@ -887,6 +975,9 @@ export class ScrymeSDK {
         emoji: string,
         options?: AxiosRequestConfig
       ): Promise<any> => {
+        if (channelId.startsWith('dm-')) {
+          return this.raw.dmsControllerRemoveReaction(channelId, messageId, emoji, options) as any;
+        }
         return this.raw.channelsControllerRemoveReaction(channelId, messageId, emoji, options) as any;
       },
     };
@@ -953,11 +1044,82 @@ export class ScrymeSDK {
         /**
          * Sends a new message in a direct message conversation.
          * @param dmId Unique identifier of the direct message conversation.
-         * @param options Optional request config override. Note that content/attachments can be passed inside options.data.
+         * @param data The message content string or structured CreateMessageDto object.
+         * @param options Optional request config override.
          * @returns The sent message exactly from the endpoint.
          */
-        create: async (dmId: string, options?: AxiosRequestConfig): Promise<ChannelMessage> => {
-          return this.raw.dmsControllerCreateMessage(dmId, options) as any;
+        create: async (
+          dmId: string,
+          data: CreateMessageDto | { content: string } | string,
+          options?: AxiosRequestConfig
+        ): Promise<ChannelMessage> => {
+          const payload = typeof data === 'string' ? { content: data } : data;
+          return this.raw.dmsControllerCreateMessage(dmId, {
+            ...options,
+            data: payload,
+          }) as any;
+        },
+        /**
+         * Updates the content of a previously sent direct message.
+         * @param dmId Unique identifier of the direct message conversation.
+         * @param messageId Unique identifier of the message to update.
+         * @param data The new content payload.
+         * @param options Optional request config override.
+         * @returns The updated message details exactly from the endpoint.
+         */
+        update: async (
+          dmId: string,
+          messageId: string,
+          data: UpdateDmMessageDto,
+          options?: AxiosRequestConfig
+        ): Promise<ChannelMessage> => {
+          return this.raw.dmsControllerUpdateMessage(dmId, messageId, data, options) as any;
+        },
+        /**
+         * Permanently deletes a direct message.
+         * @param dmId Unique identifier of the direct message conversation.
+         * @param messageId Unique identifier of the message to delete.
+         * @param options Optional request config override.
+         * @returns Success status indicating that the message was deleted exactly from the endpoint.
+         */
+        delete: async (
+          dmId: string,
+          messageId: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean }> => {
+          return this.raw.dmsControllerDeleteMessage(dmId, messageId, options) as any;
+        },
+        /**
+         * Adds a reaction (emoji) to a direct message.
+         * @param dmId Unique identifier of the direct message conversation.
+         * @param messageId Unique identifier of the message.
+         * @param data Object containing the target emoji character.
+         * @param options Optional request config override.
+         * @returns The reaction response returned exactly from the endpoint.
+         */
+        addReaction: async (
+          dmId: string,
+          messageId: string,
+          data: { emoji: string },
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.dmsControllerAddReaction(dmId, messageId, data, options) as any;
+        },
+        /**
+         * Removes a reaction (emoji) from a direct message.
+         * @param dmId Unique identifier of the direct message conversation.
+         * @param messageId Unique identifier of the message.
+         * @param emoji The emoji character to remove.
+         * @param options Optional request config override.
+         * @returns The reaction removal response returned exactly from the endpoint.
+         */
+        removeReaction: async (
+          dmId: string,
+          messageId: string,
+          emoji: string,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.dmsControllerRemoveReaction(dmId, messageId, emoji, options) as any;
         },
       },
     };
@@ -997,6 +1159,332 @@ export class ScrymeSDK {
         options?: AxiosRequestConfig
       ): Promise<UserProfile[]> => {
         return this.raw.usersControllerSearchUsers(params, options) as any;
+      },
+    };
+  }
+
+  /**
+   * Operations for managing webhooks (both standard workspace webhooks and channel incoming webhooks).
+   */
+  public get webhooks() {
+    return {
+      /**
+       * Lists all configured webhooks for a workspace. Requires webhooks:read scope.
+       * @param slug The unique workspace slug.
+       * @param options Optional request config override.
+       */
+      list: async (slug: string, options?: AxiosRequestConfig): Promise<any> => {
+        return this.raw.v3WebhooksControllerGetWebhooks(slug, options) as any;
+      },
+      /**
+       * Creates a new standard webhook for a workspace. Requires webhooks:write scope.
+       * @param slug The unique workspace slug.
+       * @param data Configuration options for the standard webhook.
+       * @param options Optional request config override.
+       */
+      create: async (slug: string, data: V3CreateWebhookDto, options?: AxiosRequestConfig): Promise<any> => {
+        return this.raw.v3WebhooksControllerCreateWebhook(slug, data, options) as any;
+      },
+      /**
+       * Retrieves details of a specific webhook. Requires webhooks:read scope.
+       * @param slug The unique workspace slug.
+       * @param webhookId The unique webhook identifier.
+       * @param options Optional request config override.
+       */
+      get: async (slug: string, webhookId: string, options?: AxiosRequestConfig): Promise<any> => {
+        return this.raw.v3WebhooksControllerGetWebhook(slug, webhookId, options) as any;
+      },
+      /**
+       * Updates a standard webhook for a workspace. Requires webhooks:write scope.
+       * @param slug The unique workspace slug.
+       * @param webhookId The unique webhook identifier.
+       * @param data Fields to update on the webhook.
+       * @param options Optional request config override.
+       */
+      update: async (
+        slug: string,
+        webhookId: string,
+        data: V3UpdateWebhookDto,
+        options?: AxiosRequestConfig
+      ): Promise<any> => {
+        return this.raw.v3WebhooksControllerUpdateWebhook(slug, webhookId, data, options) as any;
+      },
+      /**
+       * Permanently deletes a standard webhook. Requires webhooks:write scope.
+       * @param slug The unique workspace slug.
+       * @param webhookId The unique webhook identifier.
+       * @param options Optional request config override.
+       */
+      delete: async (slug: string, webhookId: string, options?: AxiosRequestConfig): Promise<any> => {
+        return this.raw.v3WebhooksControllerDeleteWebhook(slug, webhookId, options) as any;
+      },
+
+      /**
+       * Sub-namespace for managing channel incoming webhooks.
+       */
+      incoming: {
+        /**
+         * Lists incoming webhooks configured for a specific channel. Requires webhooks:read scope.
+         * @param slug The unique workspace slug.
+         * @param channelId The unique channel identifier.
+         * @param options Optional request config override.
+         */
+        list: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerGetChannelWebhooks(slug, channelId, options) as any;
+        },
+        /**
+         * Creates an incoming webhook for a specific channel. Requires webhooks:write scope.
+         * @param slug The unique workspace slug.
+         * @param channelId The unique channel identifier.
+         * @param data Configuration options for the incoming webhook.
+         * @param options Optional request config override.
+         */
+        create: async (
+          slug: string,
+          channelId: string,
+          data: CreateChannelIncomingWebhookDto,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerCreateChannelWebhook(slug, channelId, data, options) as any;
+        },
+        /**
+         * Retrieves details of a specific channel incoming webhook. Requires webhooks:read scope.
+         * @param slug The unique workspace slug.
+         * @param channelId The unique channel identifier.
+         * @param webhookId The unique webhook identifier.
+         * @param options Optional request config override.
+         */
+        get: async (slug: string, channelId: string, webhookId: string, options?: AxiosRequestConfig): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerGetChannelWebhook(slug, channelId, webhookId, options) as any;
+        },
+        /**
+         * Updates a channel incoming webhook. Requires webhooks:write scope.
+         * @param slug The unique workspace slug.
+         * @param channelId The unique channel identifier.
+         * @param webhookId The unique webhook identifier.
+         * @param data Fields to update on the incoming webhook.
+         * @param options Optional request config override.
+         */
+        update: async (
+          slug: string,
+          channelId: string,
+          webhookId: string,
+          data: UpdateChannelIncomingWebhookDto,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerUpdateChannelWebhook(
+            slug,
+            channelId,
+            webhookId,
+            data,
+            options
+          ) as any;
+        },
+        /**
+         * Deletes a channel incoming webhook. Requires webhooks:write scope.
+         * @param slug The unique workspace slug.
+         * @param channelId The unique channel identifier.
+         * @param webhookId The unique webhook identifier.
+         * @param options Optional request config override.
+         */
+        delete: async (
+          slug: string,
+          channelId: string,
+          webhookId: string,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerDeleteChannelWebhook(slug, channelId, webhookId, options) as any;
+        },
+        /**
+         * Executes an incoming webhook using its unique url token directly. No auth headers required.
+         * @param token The unique webhook token from the webhook URL.
+         * @param data The payload payload consisting of content/attachments/metadata.
+         * @param options Optional request config override.
+         */
+        executeByUrlToken: async (
+          token: string,
+          data: ExecuteChannelIncomingWebhookDto,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken(token, data, options) as any;
+        },
+        /**
+         * Executes an incoming webhook by channel ID.
+         * @param channelId The target channel identifier.
+         * @param data The payload payload consisting of content/attachments/metadata.
+         * @param params Optional query parameters like token or signature.
+         * @param options Optional request config override.
+         */
+        executeByChannelId: async (
+          channelId: string,
+          data: ExecuteChannelIncomingWebhookDto,
+          params?: V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId(
+            channelId,
+            data,
+            params,
+            options
+          ) as any;
+        },
+      },
+    };
+  }
+
+  /**
+   * First-class namespace for Machine-to-Machine (M2M) operations,
+   * grouping V3 Enterprise M2M APIs into logical, highly cohesive spaces.
+   */
+  public get m2m() {
+    return {
+      /**
+       * M2M Workspace Operations (Provisioning, Retrieval, and Lifecycle management).
+       */
+      workspace: {
+        /**
+         * Provisions a brand new tenant workspace in the organization.
+         * @param data Configuration payload for workspace name, slug, owner, and initial setups.
+         * @param options Optional request config override.
+         */
+        provision: async (
+          data: V3ProvisionWorkspaceDto,
+          options?: AxiosRequestConfig
+        ): Promise<V3ProvisionWorkspaceResponse> => {
+          return this.raw.v3WorkspacesControllerProvisionWorkspace(data, options) as any;
+        },
+        /**
+         * Retrieves detailed information of a specific workspace by its slug.
+         * @param slug The unique workspace slug.
+         * @param options Optional request config override.
+         */
+        get: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspaceResponse> => {
+          return this.raw.v3WorkspacesControllerGetWorkspaceBySlug(slug, options) as any;
+        },
+        /**
+         * Lists all workspaces under the organization context.
+         * @param options Optional request config override.
+         */
+        list: async (options?: AxiosRequestConfig): Promise<V3WorkspacesResponse> => {
+          return this.raw.v3WorkspacesControllerGetWorkspaces(options) as any;
+        },
+        /**
+         * Updates configuration and branding metadata of a specific workspace.
+         * @param slug The unique workspace slug.
+         * @param data Workspace update DTO.
+         * @param options Optional request config override.
+         */
+        update: async (
+          slug: string,
+          data: V3UpdateWorkspaceDto,
+          options?: AxiosRequestConfig
+        ): Promise<V3WorkspaceResponse> => {
+          return this.raw.v3WorkspacesControllerUpdateWorkspace(slug, data, options) as any;
+        },
+        /**
+         * Permanently deletes a specific workspace by its slug.
+         * @param slug The unique workspace slug.
+         * @param options Optional request config override.
+         */
+        delete: async (slug: string, options?: AxiosRequestConfig): Promise<V3DeleteWorkspaceResponse> => {
+          return this.raw.v3WorkspacesControllerDeleteWorkspace(slug, options) as any;
+        },
+      },
+
+      /**
+       * M2M Workspace Membership Operations (Adding, modifying roles, and removing workspace members).
+       */
+      member: {
+        /**
+         * Lists all members currently in a workspace.
+         * @param slug The unique workspace slug.
+         * @param options Optional request config override.
+         */
+        list: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspaceMembersResponse> => {
+          return this.raw.v3WorkspacesControllerGetWorkspaceMembers(slug, options) as any;
+        },
+        /**
+         * Adds a new member to a workspace.
+         * @param slug The unique workspace slug.
+         * @param data Configuration containing user email and target role.
+         * @param options Optional request config override.
+         */
+        add: async (
+          slug: string,
+          data: V3AddMemberDto,
+          options?: AxiosRequestConfig
+        ): Promise<V3AddWorkspaceMemberResponse> => {
+          return this.raw.v3WorkspacesControllerAddWorkspaceMember(slug, data, options) as any;
+        },
+        /**
+         * Retrieves membership details of a specific workspace member.
+         * @param slug The unique workspace slug.
+         * @param memberId Unique ID of the workspace member (user ID).
+         * @param options Optional request config override.
+         */
+        get: async (
+          slug: string,
+          memberId: string,
+          options?: AxiosRequestConfig
+        ): Promise<V3GetWorkspaceMemberResponse> => {
+          return this.raw.v3WorkspacesControllerGetWorkspaceMember(slug, memberId, options) as any;
+        },
+        /**
+         * Updates the role or settings of an existing member in a workspace.
+         * @param slug The unique workspace slug.
+         * @param memberId Unique ID of the workspace member (user ID).
+         * @param data Updated role.
+         * @param options Optional request config override.
+         */
+        update: async (
+          slug: string,
+          memberId: string,
+          data: V3UpdateMemberRoleDto,
+          options?: AxiosRequestConfig
+        ): Promise<V3UpdateWorkspaceMemberResponse> => {
+          return this.raw.v3WorkspacesControllerUpdateWorkspaceMember(slug, memberId, data, options) as any;
+        },
+        /**
+         * Removes a member from a workspace.
+         * @param slug The unique workspace slug.
+         * @param memberId Unique ID of the workspace member (user ID).
+         * @param options Optional request config override.
+         */
+        delete: async (
+          slug: string,
+          memberId: string,
+          options?: AxiosRequestConfig
+        ): Promise<V3DeleteWorkspaceMemberResponse> => {
+          return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options) as any;
+        },
+      },
+
+      /**
+       * M2M Authentication and Token Management Utilities.
+       */
+      auth: {
+        /**
+         * Explicitly exchanges Client Credentials for a V3 access token.
+         * @param clientId The unique M2M Client ID.
+         * @param clientSecret The secure M2M Client Secret.
+         * @param options Optional request config override.
+         */
+        token: async (clientId: string, clientSecret: string, options?: AxiosRequestConfig): Promise<any> => {
+          return this.raw.v3OAuthControllerGetToken(
+            {
+              client_id: clientId,
+              client_secret: clientSecret,
+              grant_type: 'client_credentials',
+            },
+            options
+          ) as any;
+        },
+        /**
+         * Dynamically retrieves the current cached M2M token, or proactively fetches a new one.
+         */
+        getOrFetchToken: async (): Promise<string | null> => {
+          return this.getOrFetchToken();
+        },
       },
     };
   }
