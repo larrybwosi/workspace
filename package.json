@@ -1,6 +1,10 @@
 {
   "name": "workspace",
+<<<<<<< HEAD
   "version": "2.14.0",
+=======
+  "version": "2.13.4",
+>>>>>>> main
   "private": true,
   "scripts": {
     "build": "turbo build",
