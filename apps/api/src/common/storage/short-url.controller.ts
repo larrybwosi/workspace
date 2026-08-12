@@ -7,6 +7,7 @@ import { prisma } from '@repo/database';
 import { RustFSStorageProvider } from './providers/rustfs.provider';
 import Redis from 'ioredis';
 import { Readable } from 'stream';
+import { validateEnv } from '@repo/shared';
 
 @ApiTags('Storage')
 @SkipThrottle()
@@ -66,8 +67,11 @@ export class ShortUrlController {
       }
     }
 
-    // If key is present, stream directly from RustFS/S3
-    if (key) {
+    const env = validateEnv();
+    const isRustFS = env.STORAGE_PROVIDER?.toLowerCase() === 'rustfs';
+
+    // If key is present and active provider is RustFS, stream directly from RustFS/S3
+    if (key && isRustFS) {
       try {
         const fileData = await this.rustfsProvider.getFileStream(key);
         if (fileData && fileData.stream) {
@@ -76,7 +80,20 @@ export class ShortUrlController {
             res.header('Content-Length', fileData.contentLength.toString());
           }
           res.header('Cache-Control', 'public, max-age=31536000, immutable');
-          return res.send(fileData.stream);
+
+          // Ensure standard Node Readable stream for Fastify compatibility
+          const stream = fileData.stream;
+          let nodeStream: any = stream;
+          if (stream && typeof stream.pipe !== 'function') {
+            if (typeof stream.transformToWebStream === 'function') {
+              nodeStream = Readable.fromWeb(stream.transformToWebStream());
+            } else if (typeof Readable.fromWeb === 'function') {
+              nodeStream = Readable.fromWeb(stream as any);
+            } else {
+              nodeStream = Readable.from(stream as any);
+            }
+          }
+          return res.send(nodeStream);
         }
       } catch (error) {
         // Fallback to proxying from original direct URL if S3 stream fails
