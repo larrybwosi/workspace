@@ -11,6 +11,7 @@ vi.mock('@repo/database', () => ({
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),
+      findMany: vi.fn(),
     },
     deviceToken: {
       upsert: vi.fn(),
@@ -106,6 +107,37 @@ describe('UsersController', () => {
     it('should throw BadRequestException if platform is missing', async () => {
       const body = { token: 'token-123' };
       await expect(controller.registerDeviceToken(mockUser, body)).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('searchUsers', () => {
+    it('should return empty array if query is too short', async () => {
+      const result = await controller.searchUsers('a');
+      expect(result).toEqual([]);
+      expect(prisma.user.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should query by username and name in parallel and de-duplicate results', async () => {
+      const query = 'alice';
+      const mockByUsername = [
+        { id: 'user-1', name: 'Alice Smith', username: 'alice_smith', avatar: null, status: 'online' },
+      ];
+      const mockByName = [
+        { id: 'user-1', name: 'Alice Smith', username: 'alice_smith', avatar: null, status: 'online' },
+        { id: 'user-2', name: 'Alicia Keys', username: 'alicia_keys', avatar: null, status: 'offline' },
+      ];
+
+      (prisma.user.findMany as any)
+        .mockResolvedValueOnce(mockByUsername)
+        .mockResolvedValueOnce(mockByName);
+
+      const result = await controller.searchUsers(query);
+
+      expect(prisma.user.findMany).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([
+        { id: 'user-1', name: 'Alice Smith', username: 'alice_smith', avatar: null, status: 'online' },
+        { id: 'user-2', name: 'Alicia Keys', username: 'alicia_keys', avatar: null, status: 'offline' },
+      ]);
     });
   });
 });
