@@ -14,7 +14,91 @@ The Scrymechat API is a RESTful API that uses JSON for requests and responses. I
 - **Scoping**: Our API uses granular scopes (e.g., `messages:send`, `provisioning:workspaces`) so you can grant your apps only the permissions they need.
 - **Real-time**: While you use REST to _do_ things, you can use **Webhooks** or connect to our **Ably** integration to _listen_ to things happening in real-time.
 
-## Quick Start
+---
+
+## Official TypeScript SDK (Recommended)
+
+Instead of manually constructing HTTP requests and managing tokens in TypeScript, you should use our official, high-performance, and fully typed `@scryme/chat` SDK. This is the recommended path for building robust integrations.
+
+### 1. Installation
+
+Install the package using your favorite package manager:
+
+```bash
+npm install @scryme/chat
+# or
+pnpm add @scryme/chat
+# or
+yarn add @scryme/chat
+```
+
+### 2. Initialization
+
+You can initialize the `ScrymeSDK` using either Machine-to-Machine (M2M) Client Credentials (ideal for backend services/bots) or a static Bearer Token (ideal for personal scripts or web clients).
+
+#### Option A: M2M Client Credentials (Automatic Auth)
+The SDK will automatically handle fetching, caching, and proactively renewing your OAuth2 Bearer token!
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+```
+
+#### Option B: Static Bearer Token
+If you already have a token (like a Workspace Token `wst_` or a pre-exchanged OAuth token `oat_`), you can pass it directly:
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  token: 'YOUR_STATIC_TOKEN',
+});
+```
+
+### 3. Usage Example
+
+Here is how simple it is to list channels and send a message using the SDK:
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+
+async function run() {
+  const workspaceSlug = 'my-workspace';
+
+  // 1. List channels inside a workspace
+  const channels = await sdk.workspace.channels.list(workspaceSlug);
+  console.log(`Found ${channels.length} channels.`);
+
+  const generalChannel = channels.find(c => c.name === 'general');
+  if (generalChannel) {
+    // 2. Send a message to the general channel
+    const message = await sdk.channel.message.create(generalChannel.id, {
+      content: 'Hello World! Powered by the official @scryme/chat SDK 🚀',
+    });
+    console.log(`Sent message with ID: ${message.id}`);
+  }
+}
+
+run().catch(console.error);
+```
+
+---
+
+## Quick Start (Raw HTTP/cURL)
+
+If you are not using TypeScript/JavaScript, you can interact with the API using raw HTTP requests.
 
 1. **Create an App**: Go to Workspace Settings > Developer Portal and create a new Bot Application.
    - Give your application a name and description.

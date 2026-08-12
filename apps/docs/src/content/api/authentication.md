@@ -30,21 +30,28 @@ curl -X POST https://api.chat.scryme.tech/v3/oauth/token \
   }'
 ```
 
-#### Node.js (TypeScript)
+#### Node.js (TypeScript SDK - Recommended)
+
+With our official TypeScript SDK, you do not need to manually request or exchange tokens. Simply initialize the `ScrymeSDK` with your Client ID and Client Secret, and the SDK will automatically perform the OAuth2 exchange, cache the token, and proactively renew it under the hood!
 
 ```typescript
-import axios from 'axios';
+import { ScrymeSDK } from '@scryme/chat';
 
-async function getAccessToken() {
-  const response = await axios.post('https://api.chat.scryme.tech/v3/oauth/token', {
-    grant_type: 'client_credentials',
-    client_id: 'your_client_id',
-    client_secret: 'your_client_secret',
-    scope: 'messages:send channels:read',
-  });
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'your_client_id',
+  clientSecret: 'your_client_secret',
+});
 
-  return response.data.access_token;
-}
+// Any subsequent call automatically resolves and injects the access token!
+const channels = await sdk.workspace.channels.list('my-workspace');
+```
+
+If you ever need the raw access token value programmatically (e.g., to pass it to a different service), you can invoke:
+
+```typescript
+const accessToken = await sdk.getOrFetchToken();
+console.log('Access Token:', accessToken);
 ```
 
 #### Python

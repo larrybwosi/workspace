@@ -11,59 +11,63 @@ Large organizations often need to keep their Scrymechat workspace membership in 
 
 ## Implementation Guide
 
-### 1. Get an Access Token
+### 1. Initialize the `@scryme/chat` SDK
 
-Ensure your Bot App has the `members:read` and `members:write` scopes.
+Ensure your Bot App has been granted the `members:read` and `members:write` scopes. Initialize the SDK with either your M2M credentials or your access token:
+
+```typescript
+import { ScrymeSDK } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+```
 
 ### 2. Fetch Existing Members
 
-Use the `GET /v3/workspaces/:slug/members` endpoint.
+Use the fluent workspace members list helper to fetch the current workspace members:
 
-```javascript
-const response = await axios.get(`https://api.chat.scryme.tech/v3/workspaces/${SLUG}/members`, {
-  headers: { Authorization: `Bearer ${TOKEN}` },
-});
-const currentMembers = response.data.members;
+```typescript
+const result = await sdk.workspace.members.list(SLUG);
+const currentMembers = result.data.members;
 ```
 
 ### 3. Identify Changes
 
-Map your HR system data to Scrymechat users by email address.
+Compare the Scryme workspace membership list against your HR system (your source of truth) by matching email addresses:
 
-```javascript
+```typescript
 const hrUsers = await getHRSystemUsers(); // Your internal logic
 
-// Users to add
+// Users to add (present in HR system, but missing in Scryme)
 const toAdd = hrUsers.filter(u => !currentMembers.find(m => m.user.email === u.email));
 
-// Users to remove
+// Users to remove (present in Scryme, but no longer in HR system)
 const toRemove = currentMembers.filter(m => !hrUsers.find(u => u.email === m.user.email));
 ```
 
 ### 4. Apply Updates
 
+Iterate over the changes and invoke the SDK's members addition and deletion methods to apply the synchronization.
+
 **Adding Members:**
 
-```javascript
+```typescript
 for (const user of toAdd) {
-  await axios.post(
-    `https://api.chat.scryme.tech/v3/workspaces/${SLUG}/members`,
-    {
-      email: user.email,
-      role: 'member',
-    },
-    { headers: { Authorization: `Bearer ${TOKEN}` } }
-  );
+  await sdk.workspace.members.add(SLUG, {
+    email: user.email,
+    role: 'member',
+  });
 }
 ```
 
 **Removing Members:**
 
-```javascript
+```typescript
 for (const member of toRemove) {
-  await axios.delete(`https://api.chat.scryme.tech/v3/workspaces/${SLUG}/members/${member.user.id}`, {
-    headers: { Authorization: `Bearer ${TOKEN}` },
-  });
+  await sdk.workspace.members.delete(SLUG, member.user.id);
 }
 ```
 
