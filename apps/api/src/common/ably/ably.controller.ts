@@ -68,8 +68,21 @@ export class AblyController {
     const h = headers.authorization || headers.Authorization || '';
     if (!h.startsWith('Bearer ')) return;
     const t = h.split(' ')[1];
-    const k = 'better-auth.session_token';
-    if (!t || (headers.cookie && headers.cookie.includes(k))) return;
-    headers.cookie = headers.cookie ? `${headers.cookie}; ${k}=${t}` : `${k}=${t}`;
+    if (!t) return;
+
+    const keys = [
+      'better-auth.session_token',
+      'better-auth.session-token',
+      '__Secure-better-auth.session_token',
+      '__Secure-better-auth.session-token',
+    ];
+
+    let cookie = headers.cookie || '';
+    for (const k of keys) {
+      if (!cookie.includes(k)) {
+        cookie = cookie ? `${cookie}; ${k}=${t}` : `${k}=${t}`;
+      }
+    }
+    headers.cookie = cookie;
   }
 }

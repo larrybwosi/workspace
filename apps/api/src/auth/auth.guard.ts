@@ -29,7 +29,12 @@ export class AuthGuard implements CanActivate {
     if (!h.startsWith('Bearer ')) return;
     const t = h.split(' ')[1];
 
-    const keys = ['better-auth.session_token', 'better-auth.session-token'];
+    const keys = [
+      'better-auth.session_token',
+      'better-auth.session-token',
+      '__Secure-better-auth.session_token',
+      '__Secure-better-auth.session-token',
+    ];
     const cookie = headers.get('cookie') || '';
 
     let updatedCookie = cookie;
