@@ -29,6 +29,28 @@ import type { User } from '@repo/database';
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
+  @Get()
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'List of all users' })
+  async getUsers(): Promise<any> {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        avatar: true,
+        image: true,
+        status: true,
+        statusText: true,
+        statusEmoji: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Search for users by username or name' })
   @ApiQuery({ name: 'query', required: true })
