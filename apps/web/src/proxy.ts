@@ -50,13 +50,19 @@ export default async function proxy(request: NextRequest) {
         if (cookieHeader && !cookieHeader.endsWith(';')) {
           cookieHeader += ';';
         }
-        cookieHeader += ` better-auth.session_token=${token}; better-auth.session-token=${token}; bearer_token=${token}`;
+        cookieHeader += ` better-auth.session_token=${token}; better-auth.session-token=${token}; bearer_token=${token}; __Secure-better-auth.session_token=${token}; __Secure-better-auth.session-token=${token}`;
         plainHeaders['cookie'] = cookieHeader;
       }
     }
 
+    // Build standard Web Headers object to prevent session retrieval failure
+    const finalHeaders = new Headers();
+    for (const [key, val] of Object.entries(plainHeaders)) {
+      finalHeaders.set(key, val);
+    }
+
     session = await auth.api.getSession({
-      headers: plainHeaders as any,
+      headers: finalHeaders,
     });
   } catch (err) {
     console.error(`[Proxy] Session retrieval error on path ${pathname}:`, err);
