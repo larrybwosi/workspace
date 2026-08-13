@@ -216,7 +216,35 @@ async function bootstrap() {
       });
       const response = await auth.handler(req);
       reply.status(response.status);
-      response.headers.forEach((v, k) => reply.header(k, v));
+
+      // Copy headers from Better-Auth, excluding set-cookie and cors headers
+      response.headers.forEach((v, k) => {
+        const lowerK = k.toLowerCase();
+        if (lowerK !== 'set-cookie' && lowerK !== 'access-control-allow-origin' && lowerK !== 'access-control-allow-credentials') {
+          reply.header(k, v);
+        }
+      });
+
+      // Always set standard CORS headers to avoid preflight/CORS errors on GET/POST auth endpoints
+      const origin = request.headers.origin;
+      if (origin) {
+        reply.header('Access-Control-Allow-Origin', origin);
+        reply.header('Access-Control-Allow-Credentials', 'true');
+      }
+
+      // Handle cookies properly to prevent multi-value cookies from being squashed/concatenated
+      if (typeof response.headers.getSetCookie === 'function') {
+        const setCookies = response.headers.getSetCookie();
+        if (setCookies && setCookies.length > 0) {
+          reply.header('set-cookie', setCookies);
+        }
+      } else {
+        const setCookie = response.headers.get('set-cookie');
+        if (setCookie) {
+          reply.header('set-cookie', setCookie);
+        }
+      }
+
       return reply.send(response.body ? await response.text() : null);
     },
   });
