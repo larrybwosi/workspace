@@ -2,7 +2,6 @@
   "name": "api",
   "version": "2.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
