@@ -46,10 +46,16 @@ export class CallsController {
 
   @Get('scheduled')
   @ApiOperation({ summary: 'Get scheduled calls for a workspace' })
-  @ApiQuery({ name: 'workspaceId', description: 'The workspace ID' })
+  @ApiQuery({ name: 'workspaceId', required: false, description: 'The workspace ID' })
+  @ApiQuery({ name: 'workspaceSlug', required: false, description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of scheduled calls' })
-  async getScheduledCalls(@CurrentUser() user: User, @Query('workspaceId') workspaceId: string) {
-    return this.callsService.getScheduledCalls(user, workspaceId);
+  async getScheduledCalls(
+    @CurrentUser() user: User,
+    @Query('workspaceId') workspaceId?: string,
+    @Query('workspaceSlug') workspaceSlug?: string
+  ) {
+    const idOrSlug = workspaceId || workspaceSlug;
+    return this.callsService.getScheduledCalls(user, idOrSlug);
   }
 
   @Post('scheduled')

@@ -42,6 +42,36 @@ describe('UsersController', () => {
 
   const mockUser = { id: 'user-1', name: 'Alice' } as any;
 
+  describe('getUsers', () => {
+    it('should return all users with selected fields', async () => {
+      const mockUsers = [
+        { id: 'user-1', name: 'Alice', username: 'alice', email: 'alice@example.com' },
+        { id: 'user-2', name: 'Bob', username: 'bob', email: 'bob@example.com' },
+      ];
+      (prisma.user.findMany as any).mockResolvedValue(mockUsers);
+
+      const result = await controller.getUsers();
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          email: true,
+          avatar: true,
+          image: true,
+          status: true,
+          statusText: true,
+          statusEmoji: true,
+          bio: true,
+          role: true,
+          createdAt: true,
+        },
+      });
+      expect(result).toEqual(mockUsers);
+    });
+  });
+
   describe('getUser', () => {
     it('should return a user profile if found', async () => {
       const mockFoundUser = {

@@ -59,6 +59,43 @@ describe('MembersController', () => {
       ).rejects.toThrow('Workspace not found');
     });
 
+    it('should fallback to workspace ID lookup when slug lookup returns null', async () => {
+      const mockWorkspace = {
+        id: 'ws-123',
+        members: [
+          {
+            id: 'member-1',
+            userId: 'user-1',
+            role: 'owner',
+            user: {
+              id: 'user-1',
+              name: 'Alice',
+              email: 'alice@example.com',
+              avatar: 'https://custom-avatar-url-1',
+              status: 'online',
+            },
+          },
+        ],
+      };
+
+      (prisma.workspace.findUnique as any)
+        .mockResolvedValueOnce(null) // first try by slug -> null
+        .mockResolvedValueOnce(mockWorkspace); // second try by id -> found
+
+      const response = await controller.getWorkspaceMembers(mockUser, 'ws-123');
+
+      expect(prisma.workspace.findUnique).toHaveBeenCalledTimes(2);
+      expect(prisma.workspace.findUnique).toHaveBeenNthCalledWith(1, {
+        where: { slug: 'ws-123' },
+        select: expect.any(Object),
+      });
+      expect(prisma.workspace.findUnique).toHaveBeenNthCalledWith(2, {
+        where: { id: 'ws-123' },
+        select: expect.any(Object),
+      });
+      expect(response.members).toHaveLength(1);
+    });
+
     it('should throw ForbiddenException when user is not a member of the workspace', async () => {
       (prisma.workspace.findUnique as any).mockResolvedValue({
         id: 'ws-1',
