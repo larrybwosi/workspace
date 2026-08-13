@@ -1,6 +1,6 @@
 # Machine-to-Machine (M2M) V3 API Integration Guide
 
-Machine-to-Machine (M2M) integration allows your organization's backend systems and enterprise services to interact with Skyrme Chat autonomously. This is ideal for provisioning tenants, sending system updates, managing bots, and workspace CRUD operations at scale.
+Machine-to-Machine (M2M) integration allows your organization's backend systems, internal microservices, and enterprise applications to interact with Skyrme Chat autonomously. This is ideal for provisioning tenants, managing workspace CRUD at scale, configuring webhooks, sync member registries, and orchestrating server-side bot workflows.
 
 ---
 
@@ -17,7 +17,7 @@ We employ strict, modern security practices to ensure that your integration is p
 
 ## Standard V3 Response Format
 
-To simplify client construction, SDK auto-generation, and standard API consuming patterns, all V3 API endpoints (with exception of some internal fallbacks) conform to a predictable wrapped JSON response model:
+To simplify client construction, SDK auto-generation, and standard API consuming patterns, all V3 API endpoints conform to a predictable wrapped JSON response model:
 
 ```json
 {
@@ -41,266 +41,455 @@ If an error occurs, the standard exception filter returns a clean structure:
 
 ---
 
-## V3 Authentication Workflow
+## The Official TypeScript SDK (`@scryme/chat`)
 
-### 1. Exchange Client Credentials for a Token
+For standard TypeScript/JavaScript backend or frontend environments, we **highly recommend** using our official `@scryme/chat` SDK instead of executing manual HTTP calls. It automates authentication, client token caching, proactive renewals, and handles all dynamic path substitutions with unmatched type-safety!
 
-Submit a `POST` request to the token endpoint to obtain a secure Bearer access token:
+### Installation
 
-### Using our TypeScript SDK (Recommended)
+```bash
+npm install @scryme/chat
+# or
+pnpm add @scryme/chat
+# or
+yarn add @scryme/chat
+```
 
-Our official TypeScript SDK completely automates authentication, token caching, and proactive renewal, so you don't have to write any manual OAuth exchange code!
+### Initialization Options
+
+The SDK can be initialized in multiple modes depending on your environment.
 
 ```typescript
 import { ScrymeSDK } from '@scryme/chat';
 
+// Option A: Machine-to-Machine (M2M) Auth (Highly recommended for servers/bots)
+// The SDK automatically exchanges credentials for a Bearer token and handles transparent renewals!
 const sdk = new ScrymeSDK({
   baseURL: 'https://api.chat.scryme.tech',
-  clientId: 'YOUR_CLIENT_ID',
-  clientSecret: 'YOUR_CLIENT_SECRET',
+  clientId: 'm2m_client_abc123',
+  clientSecret: 'sk_m2m_secret_xyz789',
 });
 
-// The SDK automatically exchanges credentials for a Bearer token
-// and renews it transparently under the hood!
-```
-
-- **Endpoint**: `/api/v3/oauth/token`
-- **Scopes**:
-  - `*`: Full access.
-  - `provisioning:workspaces`: Access to workspace list and full CRUD capabilities.
-
-```bash
-curl -X POST https://api.yourdomain.com/api/v3/oauth/token \
-  -H "Content-Type: application/json" \
-  -d '{
-    "grant_type": "client_credentials",
-    "client_id": "YOUR_CLIENT_ID",
-    "client_secret": "YOUR_CLIENT_SECRET",
-    "scope": "provisioning:workspaces"
-  }'
-```
-
-**Standard Success Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "access_token": "oat_f3a7...",
-    "token_type": "Bearer",
-    "expires_in": 3600,
-    "scope": "provisioning:workspaces"
-  },
-  "timestamp": "2026-07-10T06:25:22.704Z"
-}
+// Option B: Static Bearer/Session Token Auth
+const sdkWithToken = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  token: 'oat_your_token_here',
+});
 ```
 
 ---
 
-## V3 Workspace CRUD APIs
+## Complete SDK Namespace Reference
 
-All workspace CRUD operations are accessible with the `provisioning:workspaces` scope using M2M authentication.
+The `ScrymeSDK` class structures its tools under clean, nested namespaces matching standard entities in Skyrme Chat.
 
-### Using our TypeScript SDK (Recommended)
+---
 
-Our official TypeScript SDK makes workspace CRUD operations completely seamless and highly type-safe.
+### 1. Workspaces namespace (`sdk.workspace`)
+
+Comprehensive workspace management and CRUD endpoints with multi-tenant tenant isolation.
 
 ```typescript
-import { ScrymeSDK } from '@scryme/chat';
+// 1. List all workspaces belonging to your organization
+const workspacesRes = await sdk.workspace.list();
+// Returns: V3WorkspacesResponse
 
-const sdk = new ScrymeSDK({
-  baseURL: 'https://api.chat.scryme.tech',
-  clientId: 'YOUR_CLIENT_ID',
-  clientSecret: 'YOUR_CLIENT_SECRET',
-});
-
-// 1. List all workspaces
-const workspaces = await sdk.workspace.list();
-
-// 2. Provision/Create a new workspace
+// 2. Provision/Create a brand new tenant workspace
 const workspace = await sdk.workspace.create({
-  name: 'Acme Corp',
+  name: 'Acme Corporation',
   slug: 'acme-corp',
   ownerEmail: 'admin@acme.com',
-  channels: ['general', 'engineering'],
+  channels: ['general', 'engineering', 'announcements'],
+  initialMembers: [
+    { email: 'dev@acme.com', role: 'member' }
+  ]
 });
+// Returns: V3ProvisionWorkspaceResponse (Includes generated default System Bot credentials)
 
-// 3. Read workspace details
+// 3. Retrieve detailed metadata of a specific workspace by slug
 const details = await sdk.workspace.get('acme-corp');
+// Returns: V3WorkspaceResponse
 
-// 4. Update workspace configuration
-await sdk.workspace.update('acme-corp', {
-  name: 'Acme Corp International',
-  description: 'Updated team workspace',
+// 4. Update workspace configurations, industry, or branding metadata
+const updated = await sdk.workspace.update('acme-corp', {
+  name: 'Acme Corporation International',
+  description: 'Updated description for the Acme global team.',
+});
+// Returns: V3WorkspaceResponse
+
+// 5. Permanently delete a workspace by slug
+const deleteRes = await sdk.workspace.delete('acme-corp');
+// Returns: V3DeleteWorkspaceResponse
+```
+
+#### Workspace Members Sub-namespace (`sdk.workspace.members`)
+
+Manage workspace access, invitations, roles, and member listings.
+
+```typescript
+// 1. List all members in a workspace
+const members = await sdk.workspace.members.list('acme-corp');
+// Returns: V3WorkspaceMembersResponse
+
+// 2. Add/Invite a user by email with a specific role
+const addRes = await sdk.workspace.members.add('acme-corp', {
+  email: 'new-hire@acme.com',
+  role: 'member', // Roles: owner | admin | moderator | member | guest
+});
+// Returns: V3AddWorkspaceMemberResponse
+
+// 3. Get membership details of a specific workspace member
+const member = await sdk.workspace.members.get('acme-corp', 'user_id_xyz');
+// Returns: V3GetWorkspaceMemberResponse
+
+// 4. Update the role of a workspace member
+const updateRes = await sdk.workspace.members.update('acme-corp', 'user_id_xyz', {
+  role: 'admin',
+});
+// Returns: V3UpdateWorkspaceMemberResponse
+
+// 5. Remove a member from the workspace
+const deleteRes = await sdk.workspace.members.delete('acme-corp', 'user_id_xyz');
+// Returns: V3DeleteWorkspaceMemberResponse
+```
+
+#### Workspace Channels Sub-namespace (`sdk.workspace.channels`)
+
+Manage channels inside a workspace.
+
+```typescript
+// 1. List all public (and accessible private) channels in a workspace
+const channels = await sdk.workspace.channels.list('acme-corp');
+// Returns: WorkspaceChannel[]
+
+// 2. Create a new channel in a workspace
+const newChannel = await sdk.workspace.channels.create('acme-corp', {
+  name: 'security-alerts',
+  description: 'Channel for security notification broadcasts',
+  type: 'private', // public | private
+});
+// Returns: WorkspaceChannel
+```
+
+---
+
+### 2. Channels namespace (`sdk.channel`)
+
+Direct operations on specific channels and channel message records.
+
+```typescript
+// 1. Retrieve metadata for a specific channel
+const channel = await sdk.channel.get('acme-corp', 'channel_id_123');
+// Returns: WorkspaceChannel
+
+// 2. Update channel details
+const updatedChannel = await sdk.channel.update('acme-corp', 'channel_id_123', {
+  name: 'security-notifications',
+  description: 'Updated security channel description.',
+});
+// Returns: WorkspaceChannel
+
+// 3. Permanently delete a channel from the workspace
+const deleteRes = await sdk.channel.delete('acme-corp', 'channel_id_123');
+// Returns: { success: boolean }
+```
+
+#### Channel Messages Sub-namespace (`sdk.channel.message`)
+
+Send, query, react to, and moderate messages in channels.
+
+```typescript
+// 1. Fetch channel messages with optional pagination cursors and limits
+const history = await sdk.channel.message.list('channel_id_123', {
+  limit: 20,
+  cursor: 'msg_cursor_id_abc',
+});
+// Returns: { messages: ChannelMessage[]; nextCursor?: string }
+
+// 2. Send a new message to a channel
+const msg = await sdk.channel.message.create('channel_id_123', {
+  content: 'Hello Security Team! Please review the latest audit logs.',
+});
+// Returns: ChannelMessage
+
+// 3. Edit the content of a sent message
+const updatedMsg = await sdk.channel.message.update('channel_id_123', 'message_id_999', {
+  content: 'Corrected message content.',
+});
+// Returns: ChannelMessage
+
+// 4. Delete a message
+const deleteRes = await sdk.channel.message.delete('channel_id_123', 'message_id_999');
+// Returns: { success: boolean }
+
+// 5. Add an emoji reaction to a message
+const reactionRes = await sdk.channel.message.addReaction('channel_id_123', 'message_id_999', {
+  emoji: '🛡️',
+});
+// Returns: ChannelsControllerAddReactionResult
+
+// 6. Remove a previous emoji reaction from a message
+const removeRes = await sdk.channel.message.removeReaction('channel_id_123', 'message_id_999', '🛡️');
+// Returns: ChannelsControllerRemoveReactionResult
+```
+
+---
+
+### 3. Messages namespace (`sdk.message`)
+
+Symmetric universal messaging actions. This helper space automatically checks if the `channelId` begins with `dm-` and routes the request to the correct channel or direct message backend controllers dynamically.
+
+```typescript
+// 1. Update any message (channel or DM)
+const msg = await sdk.message.update('channel_or_dm_id', 'message_id', {
+  content: 'New content',
+});
+// Returns: ChannelMessage
+
+// 2. Delete any message
+const deleteRes = await sdk.message.delete('channel_or_dm_id', 'message_id');
+// Returns: { success: boolean }
+
+// 3. Add a reaction
+const reaction = await sdk.message.addReaction('channel_or_dm_id', 'message_id', {
+  emoji: '🚀',
 });
 
-// 5. Delete workspace
-await sdk.workspace.delete('acme-corp');
-```
-
-### 1. List All Workspaces
-Retrieves all workspaces belonging to the M2M application's organization.
-
-- **HTTP Method**: `GET`
-- **Endpoint**: `/api/v3/workspaces`
-
-```bash
-curl -X GET https://api.yourdomain.com/api/v3/workspaces \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "workspaces": [
-      {
-        "id": "ws_123",
-        "name": "Acme Corp",
-        "slug": "acme-corp",
-        "description": "Primary workspace for Acme Corp teams",
-        "createdAt": "2026-07-10T06:25:22.704Z"
-      }
-    ]
-  },
-  "timestamp": "2026-07-10T06:25:22.704Z"
-}
+// 4. Remove a reaction
+const removeRes = await sdk.message.removeReaction('channel_or_dm_id', 'message_id', '🚀');
 ```
 
 ---
 
-### 2. Provision/Create a Workspace
-Provisions a new tenant workspace. A default System Bot is created automatically as an administrator inside the newly provisioned workspace.
+### 4. Direct Messages namespace (`sdk.dm`)
 
-- **HTTP Method**: `POST`
-- **Endpoint**: `/api/v3/workspaces`
+Full-lifecycle direct messaging conversation orchestrations.
 
-```bash
-curl -X POST https://api.yourdomain.com/api/v3/workspaces \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Acme Corp",
-    "slug": "acme-corp",
-    "ownerEmail": "admin@acme.com",
-    "channels": ["general", "engineering"],
-    "initialMembers": [
-      { "email": "dev@acme.com", "role": "member" }
-    ]
-  }'
+```typescript
+// 1. List all active DM conversations for the authenticated user/bot context
+const dms = await sdk.dm.list();
+// Returns: DmConversation[]
+
+// 2. Start a new DM conversation with another user
+const newDm = await sdk.dm.create({
+  userId: 'user_id_partner',
+});
+// Returns: DmConversation
+
+// 3. Retrieve detailed information for a specific DM conversation
+const dm = await sdk.dm.get('dm_id_123');
+// Returns: DmConversation
+
+// 4. Delete/Close a DM conversation
+const deleteRes = await sdk.dm.delete('dm_id_123');
+// Returns: { success: boolean }
 ```
 
-**Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "workspace": {
-      "id": "ws_123",
-      "slug": "acme-corp",
-      "name": "Acme Corp"
-    },
-    "bot": {
-      "id": "app_bot_123",
-      "clientId": "bot_xyz...",
-      "clientSecret": "sec_abc..."
-    }
-  },
-  "timestamp": "2026-07-10T06:25:22.704Z"
-}
-```
+#### DM Messages Sub-namespace (`sdk.dm.message`)
 
----
+Send and manage messages specifically in DM conversations.
 
-### 3. Read Workspace Details
-Retrieves detailed metadata for a specific workspace by its slug.
+```typescript
+// 1. List messages in a DM conversation
+const history = await sdk.dm.message.list('dm_id_123', { limit: 15 });
+// Returns: { messages: ChannelMessage[]; nextCursor?: string }
 
-- **HTTP Method**: `GET`
-- **Endpoint**: `/api/v3/workspaces/:slug`
+// 2. Send a direct message
+const msg = await sdk.dm.message.create('dm_id_123', 'Hi there! This is a private notification.');
+// Returns: ChannelMessage
 
-```bash
-curl -X GET https://api.yourdomain.com/api/v3/workspaces/acme-corp \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
+// 3. Edit a DM message
+const updatedMsg = await sdk.dm.message.update('dm_id_123', 'message_id_456', {
+  content: 'Hi there! Here is the updated alert.',
+});
+// Returns: ChannelMessage
 
-**Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "workspace": {
-      "id": "ws_123",
-      "name": "Acme Corp",
-      "slug": "acme-corp",
-      "description": "Primary workspace for Acme Corp teams",
-      "icon": "building",
-      "industry": "Technology",
-      "brandingConfig": null,
-      "createdAt": "2026-07-10T06:25:22.704Z"
-    }
-  },
-  "timestamp": "2026-07-10T06:25:22.704Z"
-}
+// 4. Delete a DM message
+const deleteRes = await sdk.dm.message.delete('dm_id_123', 'message_id_456');
+// Returns: { success: boolean }
+
+// 5. React to a DM message
+const reaction = await sdk.dm.message.addReaction('dm_id_123', 'message_id_456', {
+  emoji: '👍',
+});
+// Returns: DmsControllerAddReactionResult
+
+// 6. Remove a reaction from a DM message
+const removeRes = await sdk.dm.message.removeReaction('dm_id_123', 'message_id_456', '👍');
+// Returns: DmsControllerRemoveReactionResult
 ```
 
 ---
 
-### 4. Update Workspace Configuration
-Updates metadata, categorization, or branding of a specific workspace.
+### 5. Users namespace (`sdk.user`)
 
-- **HTTP Method**: `PATCH`
-- **Endpoint**: `/api/v3/workspaces/:slug`
+Access current or public user profiles, or query directory indices.
 
-```bash
-curl -X PATCH https://api.yourdomain.com/api/v3/workspaces/acme-corp \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Acme Corp International",
-    "description": "Updated international team workspace"
-  }'
-```
+```typescript
+// 1. Retrieve the profile details of the currently authenticated identity
+const selfProfile = await sdk.user.me();
+// Returns: UserProfile
 
-**Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "workspace": {
-      "id": "ws_123",
-      "name": "Acme Corp International",
-      "slug": "acme-corp",
-      "description": "Updated international team workspace",
-      "icon": "building",
-      "industry": "Technology",
-      "brandingConfig": null,
-      "updatedAt": "2026-07-10T06:30:15.112Z"
-    }
-  },
-  "timestamp": "2026-07-10T06:30:15.112Z"
-}
+// 2. Retrieve public profile details of any user by ID
+const publicProfile = await sdk.user.get('user_id_xyz');
+// Returns: UserProfile
+
+// 3. Search user directories using name or username filters
+const searchResults = await sdk.user.search({
+  query: 'alice',
+});
+// Returns: UserProfile[]
 ```
 
 ---
 
-### 5. Delete Workspace
-Permanently deletes a specific workspace and its associated channels, members, and data.
+### 6. Webhooks namespace (`sdk.webhooks`)
 
-- **HTTP Method**: `DELETE`
-- **Endpoint**: `/api/v3/workspaces/:slug`
+Configure and manage secure real-time outgoing webhooks, or create discord-style channel incoming webhooks.
 
-```bash
-curl -X DELETE https://api.yourdomain.com/api/v3/workspaces/acme-corp \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```typescript
+// 1. List all active standard workspace webhooks
+const webhooks = await sdk.webhooks.list('acme-corp');
+// Returns: V3WebhooksControllerGetWebhooksResult
+
+// 2. Register a new outgoing webhook for workspace events
+const newWebhook = await sdk.webhooks.create('acme-corp', {
+  name: 'Security Alert Dispatcher',
+  url: 'https://security.acme.com/alerts/receiver',
+  events: ['message.sent', 'channel.created', 'member.joined'],
+  active: true,
+});
+// Returns: V3WebhooksControllerCreateWebhookResult
+
+// 3. Retrieve details of a specific webhook
+const webhook = await sdk.webhooks.get('acme-corp', 'webhook_id_abc');
+// Returns: V3WebhooksControllerGetWebhookResult
+
+// 4. Update the events or status of an existing webhook
+const updated = await sdk.webhooks.update('acme-corp', 'webhook_id_abc', {
+  active: false,
+});
+// Returns: V3WebhooksControllerUpdateWebhookResult
+
+// 5. Delete a webhook
+const deleteRes = await sdk.webhooks.delete('acme-corp', 'webhook_id_abc');
+// Returns: V3WebhooksControllerDeleteWebhookResult
 ```
 
-**Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "success": true
-  },
-  "timestamp": "2026-07-10T06:32:00.000Z"
-}
+#### Channel Incoming Webhooks Sub-namespace (`sdk.webhooks.incoming`)
+
+Provision Discord-style Incoming Webhooks targeting specific channels. These allow external services to post messages directly to channels using simple tokens without needing authentication headers.
+
+```typescript
+// 1. List all incoming webhooks configured for a specific channel
+const incomingWebhooks = await sdk.webhooks.incoming.list('acme-corp', 'channel_id_123');
+// Returns: V3ChannelIncomingWebhooksControllerGetChannelWebhooksResult
+
+// 2. Create a new incoming webhook for a channel
+const webhook = await sdk.webhooks.incoming.create('acme-corp', 'channel_id_123', {
+  name: 'CI/CD Alerts',
+  description: 'Posts deployment events from GitHub Actions.',
+});
+// Returns: V3ChannelIncomingWebhooksControllerCreateChannelWebhookResult
+
+// 3. Get details of a channel incoming webhook
+const details = await sdk.webhooks.incoming.get('acme-corp', 'channel_id_123', 'webhook_id_abc');
+// Returns: V3ChannelIncomingWebhooksControllerGetChannelWebhookResult
+
+// 4. Update an incoming webhook's name or configuration
+const updated = await sdk.webhooks.incoming.update('acme-corp', 'channel_id_123', 'webhook_id_abc', {
+  name: 'GitHub Deployment Alerts',
+});
+// Returns: V3ChannelIncomingWebhooksControllerUpdateChannelWebhookResult
+
+// 5. Delete an incoming webhook
+const deleteRes = await sdk.webhooks.incoming.delete('acme-corp', 'channel_id_123', 'webhook_id_abc');
+// Returns: V3ChannelIncomingWebhooksControllerDeleteChannelWebhookResult
+
+// 6. Execute an incoming webhook by its unique token in URL path (Does not require Authorization Bearer headers!)
+const executeRes1 = await sdk.webhooks.incoming.executeByUrlToken('webhook_token_xyz', {
+  content: 'Deployment to production was successful! 🚀',
+  username: 'CI Bot',
+  avatar_url: 'https://example.com/ci-avatar.png',
+});
+// Returns: V3ChannelIncomingWebhooksControllerExecuteWebhookByUrlTokenResult
+
+// 7. Execute an incoming webhook by channel ID (Authentication headers required)
+const executeRes2 = await sdk.webhooks.incoming.executeByChannelId('channel_id_123', {
+  content: 'Internal server alert!',
+}, {
+  token: 'webhook_token_xyz',
+});
+// Returns: V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdResult
+```
+
+---
+
+### 7. Explicit M2M namespace (`sdk.m2m`)
+
+An explicit first-class namespace grouping V3 Enterprise M2M APIs into highly logical spaces for perfect server-side DX.
+
+```typescript
+// --- Workspace Provisioning & Lifecycle ---
+const listWorkspaces = await sdk.m2m.workspace.list();
+const newWorkspace = await sdk.m2m.workspace.provision({
+  name: 'Partner Tenant',
+  slug: 'partner-tenant',
+  ownerEmail: 'tenant-owner@partner.com',
+  channels: ['general'],
+});
+const getWorkspace = await sdk.m2m.workspace.get('partner-tenant');
+const updateWorkspace = await sdk.m2m.workspace.update('partner-tenant', {
+  name: 'Partner Tenant Global',
+});
+const deleteWorkspace = await sdk.m2m.workspace.delete('partner-tenant');
+
+// --- Membership Syncing & Admin ---
+const workspaceMembers = await sdk.m2m.member.list('partner-tenant');
+const addedMember = await sdk.m2m.member.add('partner-tenant', {
+  email: 'collaborator@partner.com',
+  role: 'member',
+});
+const getMember = await sdk.m2m.member.get('partner-tenant', 'user_id_xyz');
+const updatedMember = await sdk.m2m.member.update('partner-tenant', 'user_id_xyz', {
+  role: 'moderator',
+});
+const removedMember = await sdk.m2m.member.delete('partner-tenant', 'user_id_xyz');
+
+// --- Authentication & Token Exchange Utilities ---
+// Manually fetch or exchange credentials for an access token
+const tokenData = await sdk.m2m.auth.token('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET');
+// Returns: V3OAuthControllerGetTokenResult
+
+// Get the current cached token or execute an auto-refresh cycle
+const tokenStr = await sdk.m2m.auth.getOrFetchToken();
+// Returns: string | null
+```
+
+---
+
+## Dynamic Lower-Level Proxying (`sdk.raw`)
+
+If you require low-level control or want to interact directly with any of our 100+ generated V3 controllers and actions (defined via Orval / NestJS), use `sdk.raw`.
+
+`sdk.raw` is a powerful, dynamic JS proxy intercepting all method calls. It automatically:
+- Resolves your base URL.
+- Intercepts requests to inject or refresh your Bearer token dynamically before transmitting.
+- Preserves full autocompletion and TS types for all paths, request bodies, query params, and returns.
+
+```typescript
+// Access generated lower-level raw endpoints directly
+const health = await sdk.raw.appControllerGetHealth();
+
+// Query users by string with parameters
+const results = await sdk.raw.usersControllerSearchUsers({
+  query: 'developer',
+});
+
+// Explicitly provision a workspace using the raw controller method
+const rawRes = await sdk.raw.v3WorkspacesControllerProvisionWorkspace({
+  name: 'Demo Space',
+  slug: 'demo-space',
+  ownerEmail: 'demo@demo.com',
+});
 ```
