@@ -118,12 +118,18 @@ export class RustFSStorageProvider implements StorageProvider {
 
         mimetype = 'image/webp';
         if (!originalname.toLocaleLowerCase().endsWith('.webp')) {
-          originalname = originalname.split('.').slice(0, -1).join('.') + '.webp';
+          const extIndex = originalname.lastIndexOf('.');
+          if (extIndex !== -1) {
+            originalname = originalname.substring(0, extIndex) + '.webp';
+          } else {
+            originalname = originalname + '.webp';
+          }
         }
       }
 
-      const fileExtension = originalname.split('.').pop();
-      const fileName = `${randomUUID()}.${fileExtension}`;
+      const extIndex = originalname.lastIndexOf('.');
+      const fileExtension = extIndex !== -1 ? originalname.substring(extIndex + 1) : '';
+      const fileName = fileExtension ? `${randomUUID()}.${fileExtension}` : randomUUID();
 
       await this.s3Client.send(
         new PutObjectCommand({

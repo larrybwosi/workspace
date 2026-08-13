@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateEnv } from '@repo/shared';
-import { headers } from 'next/headers';
 
 const publicRoutes = [
   '/login',
@@ -10,6 +9,7 @@ const publicRoutes = [
   '/api/invitations',
   '/api/health',
   '/api/device-auth',
+  '/api/webhooks/incoming',
   '/privacy',
   '/terms',
   '/forgot-password',
@@ -34,11 +34,35 @@ export default async function proxy(request: NextRequest) {
   }
 
   let session = null;
+  let plainHeaders: Record<string, string> = {};
   try {
     const { auth } = await import('@/lib/auth');
 
+    // Convert Headers to a plain object
+    plainHeaders = Object.fromEntries(request.headers.entries());
+
+    // Extract Bearer token and set it in cookie headers so getSession finds it
+    const authHeader = plainHeaders['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      if (token) {
+        let cookieHeader = plainHeaders['cookie'] || '';
+        if (cookieHeader && !cookieHeader.endsWith(';')) {
+          cookieHeader += ';';
+        }
+        cookieHeader += ` better-auth.session_token=${token}; better-auth.session-token=${token}; bearer_token=${token}; __Secure-better-auth.session_token=${token}; __Secure-better-auth.session-token=${token}`;
+        plainHeaders['cookie'] = cookieHeader;
+      }
+    }
+
+    // Build standard Web Headers object to prevent session retrieval failure
+    const finalHeaders = new Headers();
+    for (const [key, val] of Object.entries(plainHeaders)) {
+      finalHeaders.set(key, val);
+    }
+
     session = await auth.api.getSession({
-      headers: await headers(),
+      headers: finalHeaders,
     });
   } catch (err) {
     console.error(`[Proxy] Session retrieval error on path ${pathname}:`, err);
@@ -61,9 +85,16 @@ export default async function proxy(request: NextRequest) {
   }
 
   console.info(`[Proxy] Session verified successfully for path: ${pathname}`);
+
+  // Construct a new Headers object carrying the mutated cookie details to ensure downstream session context flows correctly
+  const requestHeaders = new Headers(request.headers);
+  if (plainHeaders['cookie']) {
+    requestHeaders.set('cookie', plainHeaders['cookie']);
+  }
+
   return NextResponse.next({
     request: {
-      headers: await headers(),
+      headers: requestHeaders,
     },
   });
 }

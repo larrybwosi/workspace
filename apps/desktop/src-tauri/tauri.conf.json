@@ -25,13 +25,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "publisher": "Scrymechat",
     "createUpdaterArtifacts": true
   },
@@ -40,18 +34,14 @@
       "open": true
     },
     "deep-link": {
-      "schemes": [
-        "scrymechat"
-      ]
+      "schemes": ["scrymechat"]
     },
     "sql": {
       "db": "sqlite:workspace.db"
     },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI4MzM1Mjg5Mjk1NjI3RUMKUldUc0oxWXBpVkl6S01pZmhZZ2hHMzBONEgyWUU5ekplNHBoWGxwY2F2bGphOC9BY1VXbEtqWHYK",
-      "endpoints": [
-        "https://github.com/your-username/your-repo/releases/latest/download/latest.json"
-      ]
+      "endpoints": ["https://github.com/your-username/your-repo/releases/latest/download/latest.json"]
     }
   }
 }

@@ -18,16 +18,22 @@ Ensure your Bot App is subscribed to the `message.sent` event via [Webhooks](/ap
 
 In your webhook handler, check if the incoming message starts with your command prefix.
 
-### Node.js Example (Express + TypeScript)
+### Node.js Example (Express + TypeScript SDK)
 
 ```typescript
 import express from 'express';
-import axios from 'axios';
+import { ScrymeSDK } from '@scryme/chat';
 
 const app = express();
 app.use(express.json());
 
 const COMMAND_PREFIX = '/';
+
+// Initialize the SDK with your token
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  token: process.env.SKYRME_TOKEN,
+});
 
 app.post('/webhook', async (req, res) => {
   const { event, data } = req.body;
@@ -49,16 +55,10 @@ app.post('/webhook', async (req, res) => {
 });
 
 async function sendReply(channelId: string, text: string) {
-  await axios.post(
-    `https://api.chat.scryme.tech/v3/workspaces/my-workspace/messages`,
-    {
-      channelId,
-      content: text,
-    },
-    {
-      headers: { Authorization: `Bearer ${process.env.SKYRME_TOKEN}` },
-    }
-  );
+  // Leverage sdk.channel.message.create for clean DX
+  await sdk.channel.message.create(channelId, {
+    content: text,
+  });
 }
 ```
 
@@ -102,10 +102,8 @@ def webhook():
 Instead of just plain text, you can respond with **Interactive Actions** or **Custom Metadata** to create a richer experience.
 
 ```typescript
-// Example: Sending a message with buttons
-const MESSAGES_URL = `https://api.chat.scryme.tech/v3/workspaces/my-workspace/messages`;
-await axios.post(MESSAGES_URL, {
-  channelId,
+// Example: Sending a message with buttons using the SDK
+await sdk.channel.message.create(channelId, {
   content: 'Select an option:',
   messageType: 'custom',
   actions: [

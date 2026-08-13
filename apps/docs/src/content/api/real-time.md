@@ -44,20 +44,24 @@ curl -X POST https://api.chat.scryme.tech/api/ably/token \
 
 Use the official Ably SDKs to connect. We recommend using the `Realtime` client.
 
-### Node.js / TypeScript Example
+### Node.js / TypeScript Example (using the `@scryme/chat` SDK)
 
 ```typescript
+import { ScrymeSDK } from '@scryme/chat';
 import * as Ably from 'ably';
 
-async function connectToAbly(accessToken: string) {
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+
+async function connectToAbly() {
   const realtime = new Ably.Realtime({
     authCallback: async (tokenParams, callback) => {
       try {
-        const response = await fetch('https://api.chat.scryme.tech/api/ably/token', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const tokenRequest = await response.json();
+        // The SDK automatically handles baseURL, credentials, token retrieval, and renewal!
+        const tokenRequest = await sdk.raw.ablyControllerGetToken();
         callback(null, tokenRequest);
       } catch (error) {
         callback(error, null);

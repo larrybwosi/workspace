@@ -12,27 +12,33 @@ File uploads are handled using `multipart/form-data`. You can upload a file whil
 
 To send a message with an attachment, use the `POST /v3/workspaces/:slug/messages` endpoint with `multipart/form-data`.
 
-### Node.js Example (using `form-data` and `axios`)
+### Node.js Example (using the `@scryme/chat` SDK)
 
 ```typescript
-import axios from 'axios';
+import { ScrymeSDK } from '@scryme/chat';
 import FormData from 'form-data';
 import fs from 'fs';
 
-async function uploadFile(workspaceSlug: string, channelId: string, filePath: string) {
+const sdk = new ScrymeSDK({
+  baseURL: 'https://api.chat.scryme.tech',
+  clientId: 'YOUR_CLIENT_ID',
+  clientSecret: 'YOUR_CLIENT_SECRET',
+});
+
+async function uploadFile(channelId: string, filePath: string) {
   const form = new FormData();
-  form.append('channelId', channelId);
   form.append('content', 'Here is the file you requested!');
   form.append('file', fs.createReadStream(filePath));
 
-  const response = await axios.post(`https://api.chat.scryme.tech/v3/workspaces/${workspaceSlug}/messages`, form, {
+  // The SDK automatically handles authentication headers and base URL.
+  // We simply pass the form along with its calculated headers.
+  const message = await sdk.channel.message.create(channelId, form as any, {
     headers: {
       ...form.getHeaders(),
-      Authorization: `Bearer ${YOUR_ACCESS_TOKEN}`,
     },
   });
 
-  return response.data;
+  return message;
 }
 ```
 

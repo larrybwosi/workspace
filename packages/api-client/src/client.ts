@@ -28,6 +28,16 @@ const getBaseURL = () => {
     }
   }
   if (!url) {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const port = window.location.port;
+      // If we are running in the browser within the Next.js web app, we should use window.location.origin
+      if (port === '3001' || (hostname.includes('scryme.tech') && !hostname.startsWith('api.'))) {
+        url = window.location.origin;
+      }
+    }
+  }
+  if (!url) {
     const isProd =
       (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') ||
       getEnv('NODE_ENV') === 'production' ||

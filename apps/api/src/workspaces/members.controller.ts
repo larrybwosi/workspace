@@ -39,7 +39,7 @@ export class MembersController {
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 200, description: 'List of members' })
   async getWorkspaceMembers(@CurrentUser() user: User, @Param('slug') slug: string) {
-    const workspace = await prisma.workspace.findUnique({
+    let workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
@@ -66,6 +66,36 @@ export class MembersController {
         },
       },
     });
+
+    if (!workspace) {
+      workspace = await prisma.workspace.findUnique({
+        where: { id: slug },
+        select: {
+          id: true,
+          members: {
+            // Fetch all members for the response
+            select: {
+              id: true,
+              workspaceId: true,
+              userId: true,
+              departmentId: true,
+              role: true,
+              joinedAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  avatar: true,
+                  image: true,
+                  status: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    }
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
@@ -114,7 +144,7 @@ export class MembersController {
     @Param('memberId') memberId: string,
     @Body() body: UpdateMemberRoleDto
   ) {
-    const workspace = await prisma.workspace.findUnique({
+    let workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
@@ -126,6 +156,21 @@ export class MembersController {
         },
       },
     });
+
+    if (!workspace) {
+      workspace = await prisma.workspace.findUnique({
+        where: { id: slug },
+        select: {
+          id: true,
+          members: {
+            where: {
+              OR: [{ userId: user.id }, { id: memberId }],
+            },
+            select: { id: true, userId: true, role: true },
+          },
+        },
+      });
+    }
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
@@ -193,7 +238,7 @@ export class MembersController {
   @ApiResponse({ status: 200, description: 'Member removed successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden: Only owner or admin can remove' })
   async removeMember(@CurrentUser() user: User, @Param('slug') slug: string, @Param('memberId') memberId: string) {
-    const workspace = await prisma.workspace.findUnique({
+    let workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
         id: true,
@@ -205,6 +250,21 @@ export class MembersController {
         },
       },
     });
+
+    if (!workspace) {
+      workspace = await prisma.workspace.findUnique({
+        where: { id: slug },
+        select: {
+          id: true,
+          members: {
+            where: {
+              OR: [{ userId: user.id }, { id: memberId }],
+            },
+            select: { id: true, userId: true, role: true },
+          },
+        },
+      });
+    }
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');

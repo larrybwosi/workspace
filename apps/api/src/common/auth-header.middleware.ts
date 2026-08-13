@@ -31,21 +31,22 @@ export class AuthHeaderMiddleware implements NestMiddleware {
         req.headers.authorization = `Bearer ${token}`;
       }
 
-      const keyUnderscore = 'better-auth.session_token';
-      const keyHyphen = 'better-auth.session-token';
+      const keys = [
+        'better-auth.session_token',
+        'better-auth.session-token',
+        '__Secure-better-auth.session_token',
+        '__Secure-better-auth.session-token',
+      ];
       const cookie = req.headers.cookie || '';
 
       let updatedCookie = typeof cookie === 'string' ? cookie : '';
 
-      if (!updatedCookie.includes(keyUnderscore)) {
-        updatedCookie = updatedCookie
-          ? `${updatedCookie}; ${keyUnderscore}=${token}`
-          : `${keyUnderscore}=${token}`;
-      }
-      if (!updatedCookie.includes(keyHyphen)) {
-        updatedCookie = updatedCookie
-          ? `${updatedCookie}; ${keyHyphen}=${token}`
-          : `${keyHyphen}=${token}`;
+      for (const k of keys) {
+        if (!updatedCookie.includes(k)) {
+          updatedCookie = updatedCookie
+            ? `${updatedCookie}; ${k}=${token}`
+            : `${k}=${token}`;
+        }
       }
 
       req.headers.cookie = updatedCookie;
