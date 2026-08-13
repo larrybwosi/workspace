@@ -34,11 +34,12 @@ export default async function proxy(request: NextRequest) {
   }
 
   let session = null;
+  let plainHeaders: Record<string, string> = {};
   try {
     const { auth } = await import('@/lib/auth');
 
     // Convert Headers to a plain object
-    const plainHeaders = Object.fromEntries(request.headers.entries());
+    plainHeaders = Object.fromEntries(request.headers.entries());
 
     // Extract Bearer token and set it in cookie headers so getSession finds it
     const authHeader = plainHeaders['authorization'];
