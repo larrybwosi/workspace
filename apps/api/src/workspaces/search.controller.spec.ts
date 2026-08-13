@@ -198,5 +198,67 @@ describe('SearchController', () => {
       expect(response.results.channels).toHaveLength(1);
       expect(response.results.members).toHaveLength(0);
     });
+
+    it('should query name and email in parallel and de-duplicate the results correctly', async () => {
+      const mockMembersByName = [
+        {
+          id: 'user-2',
+          name: 'Bob Smith',
+          email: 'bob@example.com',
+          avatar: 'https://avatar-url',
+          status: 'online',
+          role: 'member',
+        },
+      ];
+      const mockMembersByEmail = [
+        {
+          id: 'user-2', // Duplicate user
+          name: 'Bob Smith',
+          email: 'bob@example.com',
+          avatar: 'https://avatar-url',
+          status: 'online',
+          role: 'member',
+        },
+        {
+          id: 'user-3',
+          name: 'Charlie Smith',
+          email: 'charlie@example.com',
+          avatar: null,
+          image: 'https://charlie-fallback-url',
+          status: 'offline',
+          role: 'admin',
+        },
+      ];
+
+      (prisma.user.findMany as any)
+        .mockResolvedValueOnce(mockMembersByName)
+        .mockResolvedValueOnce(mockMembersByEmail);
+
+      (prisma.channel.findMany as any).mockResolvedValue([]);
+      (prisma.message.findMany as any).mockResolvedValue([]);
+      (prisma.attachment.findMany as any).mockResolvedValue([]);
+
+      const response = await controller.search(mockUser, 'my-workspace', 'Smith', 'members', '8');
+
+      // Check user.findMany was called twice in parallel (one for name, one for email)
+      expect(prisma.user.findMany).toHaveBeenCalledTimes(2);
+
+      // Verify actual search filters passed to each call
+      expect(prisma.user.findMany).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        where: expect.objectContaining({
+          name: { contains: 'Smith', mode: 'insensitive' },
+        })
+      }));
+      expect(prisma.user.findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        where: expect.objectContaining({
+          email: { contains: 'Smith', mode: 'insensitive' },
+        })
+      }));
+
+      // Check results are de-duplicated
+      expect(response.results.members).toHaveLength(2);
+      expect(response.results.members[0].id).toBe('user-2');
+      expect(response.results.members[1].id).toBe('user-3');
+    });
   });
 });
