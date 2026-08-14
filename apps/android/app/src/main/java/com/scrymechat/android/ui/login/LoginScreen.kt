@@ -185,6 +185,12 @@ fun LoginScreen(
         if (uiState.isLoginSuccess) onLoginSuccess()
     }
 
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Root Box: fills the full screen and shrinks its bottom edge to sit
     // above the software keyboard via imePadding(). The scrollable Column
     // inside can then scroll freely within the remaining space.
