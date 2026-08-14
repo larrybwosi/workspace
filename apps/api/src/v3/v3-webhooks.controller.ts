@@ -261,19 +261,25 @@ export class V3WebhooksController {
 
     const data = validatedData.data;
 
-    // Check if exists first to return 404
-    const existing = await prisma.workspaceWebhook.findUnique({
-      where: { id: webhookId, workspaceId: context.workspaceId },
-    });
-
-    if (!existing) {
-      throw new NotFoundException('Webhook not found');
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates the separate read existence check (findUnique) and subsequent write (update)
+     * into a single atomic update query with a try-catch block for Prisma's P2025 record-not-found error.
+     * This reduces database round-trips (RTT) on the webhook update path from 2 down to 1,
+     * matching the optimal write-path throughput pattern established in V2WebhooksController.
+     */
+    let webhook;
+    try {
+      webhook = await prisma.workspaceWebhook.update({
+        where: { id: webhookId, workspaceId: context.workspaceId },
+        data,
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Webhook not found');
+      }
+      throw error;
     }
-
-    const webhook = await prisma.workspaceWebhook.update({
-      where: { id: webhookId, workspaceId: context.workspaceId },
-      data,
-    });
 
     // Invalidate Cache
     const cacheKey = `v3:workspace:${context.workspaceId}:webhooks`;
