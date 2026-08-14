@@ -23,7 +23,7 @@ vi.mock('@repo/database', () => ({
       delete: vi.fn(),
     },
     workspaceAuditLog: {
-      create: vi.fn(),
+      create: vi.fn().mockReturnValue({ catch: vi.fn() }),
     },
   },
 }));
