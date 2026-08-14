@@ -1,3 +1,15 @@
+## 2026-08-13 - [Prisma/Performance] Single-Query Mutation via Optimistic Update in V3 Webhooks
+
+**Learning:** Sibling controllers like `V2WebhooksController` optimized their update operations by consolidating read existence checks and write updates into a single atomic mutation with a try-catch for Prisma's P2025 record-not-found error. Applying this same pattern to `V3WebhooksController` reduces the database round-trips (RTT) on the update path from 2 down to 1. This significantly improves write throughput and mitigates potential write race conditions.
+
+**Action:** Prefer direct mutations (`update`/`delete`) with try/catch blocks for unique-constraint/existence errors instead of manual read-before-write validation across all versioned API controllers.
+
+## 2026-08-13 - [PostgreSQL/Performance] The Limits of Parallel Contains Query Splitting on Wildcard Searches
+
+**Learning:** While splitting multi-column `OR` searches into parallel index scans (with `Promise.all` and Set-based de-duplication in Node.js) is a powerful optimization for B-Tree indexable prefix/equality point-lookups (e.g. `contains` with prefix, or `equals`), it does not automatically scale to generic infix/suffix contains wildcard searches (like `%search%`). Without specific GIN or trigram indexes on the target columns, both queries compile to sequential full table scans in PostgreSQL. Doubling full table scans can increase database CPU and IO load compared to a single query with BitmapOr combinations.
+
+**Action:** Only apply parallel query contains splitting for columns and operators that are highly indexed or where GIN/pg_trgm indexes are explicitly configured on the database.
+
 ## 2026-08-12 - [Database/Performance] Parallel Query Splitting for Member Searches on Name and Email
 
 **Learning:** Sibling controllers like `SearchController` (v1) and `V2SearchController` (v2) queried the `User` model using case-insensitive `contains` (`ILIKE`) inside an `OR` condition over both `name` and `email` columns. This prevents the PostgreSQL planner from utilizing B-tree indexes, leading to sequential/full-table scans. Splitting these into parallel index point contains via `Promise.all` and merging/de-duplicating in memory utilizing a `Set` eliminates this bottleneck entirely.

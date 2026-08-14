@@ -267,7 +267,9 @@ describe('V3WebhooksController', () => {
         userId: 'user-xyz',
       };
 
-      (prisma.workspaceWebhook.findUnique as any).mockResolvedValue(null);
+      const error: any = new Error('Record to update not found');
+      error.code = 'P2025';
+      (prisma.workspaceWebhook.update as any).mockRejectedValue(error);
 
       await expect(
         controller.updateWebhook(context as any, 'acme-slug', 'non-existent', { name: 'Update' })
