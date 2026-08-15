@@ -8,7 +8,7 @@ on:
     types: [closed]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   # ---------------------------------------------------------------------
@@ -77,6 +77,7 @@ jobs:
           git add .
           git commit -m "chore: bump minor version to ${{ steps.bump.outputs.version }} (android) [skip ci]" || echo "No changes to commit"
           git tag v${{ steps.bump.outputs.version }}
+          git pull --rebase origin dev || true
           git push origin dev --tags
 
   create-release-dev:
@@ -173,6 +174,7 @@ jobs:
           git add .
           git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]" || echo "No changes to commit"
           git tag v${{ steps.bump.outputs.version }}
+          git pull --rebase origin main || true
           git push origin main --tags
       - name: Publish to npm
         run: pnpm publish -r --no-git-checks --access public
@@ -230,8 +232,8 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.description=Scrymechat ${{ matrix.apps }} service
             org.opencontainers.image.version=${{ steps.get_version.outputs.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.apps }}
+          cache-to: type=gha,mode=min,scope=${{ matrix.apps }}
 
   create-release-main:
     needs: [version-main]
