@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "781681449480",
+    "project_id": "scryme-tech",
+    "storage_bucket": "scryme-tech.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781681449480:android:fa47d9aab5bd2b28900fbd",
+        "android_client_info": {
+          "package_name": "com.scrymechat.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwYDrY9UM8ezr48ABfj1xCwgYkMs4MQ2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
