@@ -12,9 +12,12 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------
-  # Runs on every push to main or dev. Everything else gates on this.
+  # Runs on every push to main or dev, EXCEPT when the run is a dev->main
+  # merge — that code was already tested when it landed on dev, so we
+  # skip straight to cutting the release.
   # ---------------------------------------------------------------------
   test:
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main' && github.head_ref == 'dev')"
     uses: ./.github/workflows/tests.yml
     secrets: inherit
 

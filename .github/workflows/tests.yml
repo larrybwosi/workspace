@@ -1,6 +1,8 @@
 name: Tests
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_call:
 
 env:
@@ -17,6 +19,9 @@ jobs:
       android: ${{ steps.filter.outputs.android }}
       admin: ${{ steps.filter.outputs.admin }}
       docs: ${{ steps.filter.outputs.docs }}
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      unit: ${{ steps.filter.outputs.unit }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -30,6 +35,15 @@ jobs:
             docs:
               - 'apps/docs/**'
               - 'apps/v3-docs/**'
+            api:
+              - 'apps/api/**'
+              - 'packages/**'
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+            unit:
+              - 'apps/api/**'
+              - 'packages/**'
 
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -47,6 +61,8 @@ jobs:
       - run: pnpm run tsc
 
   unit-tests:
+    needs: [changes]
+    if: needs.changes.outputs.unit == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -91,6 +107,8 @@ jobs:
         run: pnpm run test
 
   api-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.api == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -136,6 +154,8 @@ jobs:
         run: pnpm turbo run test:e2e --filter=api
 
   web-e2e:
+    needs: [changes]
+    if: needs.changes.outputs.web == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     services:
@@ -261,9 +281,9 @@ jobs:
           docs="${{ needs.docs-tests.result }}"
 
           if [[ "$lint" != "success" ]]; then exit 1; fi
-          if [[ "$unit" != "success" ]]; then exit 1; fi
-          if [[ "$api" != "success" ]]; then exit 1; fi
-          if [[ "$web" != "success" ]]; then exit 1; fi
+          if [[ "$unit" != "success" && "$unit" != "skipped" ]]; then exit 1; fi
+          if [[ "$api" != "success" && "$api" != "skipped" ]]; then exit 1; fi
+          if [[ "$web" != "success" && "$web" != "skipped" ]]; then exit 1; fi
           if [[ "$android" != "success" && "$android" != "skipped" ]]; then exit 1; fi
           if [[ "$admin" != "success" && "$admin" != "skipped" ]]; then exit 1; fi
           if [[ "$docs" != "success" && "$docs" != "skipped" ]]; then exit 1; fi
