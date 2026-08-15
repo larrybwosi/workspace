@@ -253,14 +253,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
       label: 'General',
       items: [
         { icon: LayoutDashboard, label: 'Dashboard', href: `/workspace/${slug}` },
-        { icon: Sparkles, label: 'Assistant', href: `/workspace/${slug}/assistant` },
-      ],
-    },
-    {
-      label: 'Manage',
-      items: [
         { icon: Users, label: 'Members', href: `/workspace/${slug}/members` },
-        { icon: Plug2, label: 'Integrations', href: `/workspace/${slug}/integrations` },
         { icon: Settings, label: 'Settings', href: `/workspace/${slug}/settings` },
       ],
     },
@@ -336,46 +329,6 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
               ))}
 
               <Separator className="bg-sidebar-border" />
-
-              {/* Support tickets */}
-              <div>
-                <div className="flex items-center justify-between px-3 mb-1">
-                  <SectionLabel>Support</SectionLabel>
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 rounded text-muted-foreground hover:text-foreground"
-                          onClick={() => setCreateTicketOpen(true)}
-                          aria-label="Create ticket"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">New ticket</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-
-                <div className="space-y-0.5 mb-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
-                      pathname === `/workspace/${slug}/tickets`
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                    )}
-                    onClick={() => handleNavigate(`/workspace/${slug}/tickets`)}
-                  >
-                    <LifeBuoy className="h-3.5 w-3.5 shrink-0" />
-                    <span className="flex-1 truncate text-left">All Tickets</span>
-                  </Button>
-                </div>
-              </div>
 
               {/* Channels — collapsible */}
               <CollapsibleSection

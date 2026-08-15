@@ -288,6 +288,13 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
           })),
         };
       });
+
+      // Invalidate sidebar channel / DM query cache to refresh unread counts immediately
+      if (workspaceSlug) {
+        queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
+      }
     },
   });
 }

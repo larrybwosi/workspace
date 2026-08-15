@@ -250,8 +250,10 @@ fun HomeScreen(
                 formStates = formStates,
                 loadingActions = loadingActions,
                 onTyping = {
-                    uiState.currentUser?.let { user ->
-                        chatViewModel.sendTyping(user.id, user.name)
+                    if (uiState.currentUser != null) {
+                        chatViewModel.sendTyping(uiState.currentUser!!.id, uiState.currentUser!!.name)
+                    } else {
+                        chatViewModel.sendTyping()
                     }
                 },
                 onMenuClick = { scope.launch { drawerState.open() } },

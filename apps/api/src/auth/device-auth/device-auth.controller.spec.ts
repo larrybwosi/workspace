@@ -4,11 +4,12 @@ import { BadRequestException, ForbiddenException, InternalServerErrorException }
 import { DeviceAuthController } from './device-auth.controller';
 
 // Mock Better-Auth API methods
-const { mockDeviceCode, mockDeviceToken, mockDeviceApprove, mockDeviceDeny } = vi.hoisted(() => ({
+const { mockDeviceCode, mockDeviceToken, mockDeviceApprove, mockDeviceDeny, mockDeviceVerify } = vi.hoisted(() => ({
   mockDeviceCode: vi.fn(),
   mockDeviceToken: vi.fn(),
   mockDeviceApprove: vi.fn(),
   mockDeviceDeny: vi.fn(),
+  mockDeviceVerify: vi.fn(),
 }));
 
 vi.mock('@repo/auth', () => ({
@@ -18,6 +19,7 @@ vi.mock('@repo/auth', () => ({
       deviceToken: mockDeviceToken,
       deviceApprove: mockDeviceApprove,
       deviceDeny: mockDeviceDeny,
+      deviceVerify: mockDeviceVerify,
     },
   },
 }));

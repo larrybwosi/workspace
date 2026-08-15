@@ -253,6 +253,7 @@ export function ChannelView({
           channelForm={channelForm}
           setChannelForm={setChannelForm}
           handleEditChannel={() => setEditDialogOpen(false)}
+          workspaceSlug={workspaceSlug}
           channelId={channelId}
         />
       </div>

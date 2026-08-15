@@ -42,6 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.scrymechat.android.BuildConfig
 
 // ─── Enterprise Design System ─────────────────────────────────────────────
 //
@@ -287,35 +293,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(22.dp))
 
             // ── Brand wordmark ────────────────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(
-                            Brush.linearGradient(palette.accentGradient),
-                            RoundedCornerShape(8.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "S",
-                        color = Color.White,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 15.sp,
-                        letterSpacing = (-0.5).sp
-                    )
-                }
-                Text(
-                    text = "Scrymechat",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = palette.textPrimary,
-                    letterSpacing = (-0.2).sp
-                )
-            }
+            Text(
+                text = "Scrymechat",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = palette.textPrimary,
+                letterSpacing = (-0.2).sp
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -341,6 +325,32 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(22.dp))
 
+            // Google Sign-In client setup
+            val googleSignInLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)
+                    val idToken = account?.idToken
+                    if (idToken != null) {
+                        viewModel.loginWithGoogle(idToken)
+                    } else {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Google Sign-In failed: No ID Token retrieved",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: ApiException) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Google Sign-In failed: ${e.statusCode}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
             // ── Social auth row ───────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -352,7 +362,23 @@ fun LoginScreen(
                     logoContent = {
                         Text("G", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF4285F4))
                     },
-                    onClick = { /* Google OAuth */ },
+                    onClick = {
+                        val clientId = BuildConfig.GOOGLE_CLIENT_ID
+                        if (clientId.isBlank()) {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Google Client ID is not configured",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestIdToken(clientId)
+                                .requestEmail()
+                                .build()
+                            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 )
                 GlassOAuthButton(

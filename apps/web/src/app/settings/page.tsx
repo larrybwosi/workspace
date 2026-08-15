@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { EmojiPicker } from '@/components/shared/emoji-picker';
 import { useCurrentUser, useUpdateUser, useUpdateUserStatus, useEligibleAssets } from '@repo/api-client';
 import { useSession } from '@repo/shared';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@repo/ui';
 import { useToast } from '@/hooks/use-toast';
 import {
   User as UserIcon,
@@ -49,7 +49,14 @@ interface NotificationPreferences {
 }
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const setTheme = (targetTheme: 'light' | 'dark' | 'system') => {
+    if (targetTheme === 'light' || targetTheme === 'dark') {
+      if (theme !== targetTheme) {
+        toggleTheme();
+      }
+    }
+  };
   const { toast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -522,14 +529,6 @@ export default function SettingsPage() {
                         >
                           <Moon className="h-5 w-5" />
                           <span className="text-xs">Dark</span>
-                        </Button>
-                        <Button
-                          variant={theme === 'system' ? 'default' : 'outline'}
-                          className="h-20 flex flex-col items-center justify-center gap-2"
-                          onClick={() => setTheme('system')}
-                        >
-                          <Laptop className="h-5 w-5" />
-                          <span className="text-xs">System</span>
                         </Button>
                       </div>
                     </div>

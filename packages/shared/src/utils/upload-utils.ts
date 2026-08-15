@@ -77,7 +77,8 @@ export async function uploadFile(file: File): Promise<UploadedFile> {
   }
 
   const baseURL = getBaseURL();
-  const response = await fetch(`${baseURL}/upload`, {
+  const uploadUrl = typeof window !== 'undefined' && window.location.pathname.startsWith('/api') ? '/api/upload' : `${baseURL}/storage/upload`;
+  const response = await fetch(uploadUrl, {
     method: 'POST',
     headers,
     body: formData,
@@ -99,7 +100,8 @@ export async function deleteFile(assetId: string): Promise<void> {
   }
 
   const baseURL = getBaseURL();
-  const response = await fetch(`${baseURL}/upload?assetId=${assetId}`, {
+  const deleteUrl = typeof window !== 'undefined' && window.location.pathname.startsWith('/api') ? `/api/upload?assetId=${assetId}` : `${baseURL}/storage/upload?assetId=${assetId}`;
+  const response = await fetch(deleteUrl, {
     method: 'DELETE',
     headers,
   });

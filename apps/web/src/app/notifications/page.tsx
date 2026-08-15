@@ -4,9 +4,8 @@ import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Check, Trash2, Bell, MessageSquare, AtSign, UserPlus, Info, CheckCircle2, X, Menu } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Check, Trash2, Bell, AtSign, UserPlus, Info, CheckCircle2 } from 'lucide-react';
 import {
   useNotifications,
   useMarkNotificationRead,
@@ -87,6 +86,11 @@ export default function NotificationsPage() {
     }
   };
 
+  const emptyCopy =
+    filter === 'unread'
+      ? { title: "You're all caught up", subtitle: 'No unread notifications right now.' }
+      : { title: 'No notifications yet', subtitle: "We'll let you know when something happens." };
+
   return (
     <div className="h-screen flex overflow-hidden bg-background">
       <Sidebar
@@ -104,19 +108,17 @@ export default function NotificationsPage() {
                 <h1 className="text-3xl font-bold">Notifications</h1>
                 <p className="text-muted-foreground text-lg">Stay updated with your latest activity</p>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleMarkAllRead}
-                  disabled={markAllReadMutation.isPending || !notifications?.some((n: any) => !n.isRead)}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Mark all as read
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                onClick={handleMarkAllRead}
+                disabled={markAllReadMutation.isPending || !notifications?.some((n: any) => !n.isRead)}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Mark all as read
+              </Button>
             </div>
 
-            <Tabs defaultValue="all" onValueChange={v => setFilter(v as any)} className="space-y-6">
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="space-y-6">
               <TabsList className="bg-muted/50 p-1">
                 <TabsTrigger value="all" className="px-6">
                   All
@@ -126,12 +128,9 @@ export default function NotificationsPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="all" className="space-y-8">
+              <TabsContent value={filter} className="space-y-8">
                 {isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                    <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-muted-foreground animate-pulse">Loading notifications...</p>
-                  </div>
+                  <NotificationsSkeleton />
                 ) : !notifications || notifications.length === 0 ? (
                   <Card className="border-dashed py-12">
                     <CardContent className="flex flex-col items-center justify-center space-y-4">
@@ -139,8 +138,8 @@ export default function NotificationsPage() {
                         <Bell className="h-8 w-8 text-muted-foreground" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xl font-medium">No notifications yet</p>
-                        <p className="text-muted-foreground">We'll let you know when something happens</p>
+                        <p className="text-xl font-medium">{emptyCopy.title}</p>
+                        <p className="text-muted-foreground">{emptyCopy.subtitle}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -171,14 +170,15 @@ export default function NotificationsPage() {
 
                               <div className="flex-1 min-w-0 space-y-1">
                                 <div className="flex items-center justify-between gap-2">
-                                  <p
+                                  <Link
+                                    href={`/notifications/${notification.id}`}
                                     className={cn(
-                                      'font-semibold truncate',
+                                      'font-semibold truncate hover:underline',
                                       !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
                                     )}
                                   >
                                     {notification.title}
-                                  </p>
+                                  </Link>
                                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                                     {format(new Date(notification.createdAt), 'h:mm a')}
                                   </span>
@@ -186,11 +186,9 @@ export default function NotificationsPage() {
                                 <p className="text-sm text-muted-foreground line-clamp-2">{notification.message}</p>
 
                                 <div className="flex items-center gap-3 pt-2">
-                                  {notification.linkUrl && (
-                                    <Button asChild size="sm" variant="secondary" className="h-8">
-                                      <Link href={notification.linkUrl}>View Details</Link>
-                                    </Button>
-                                  )}
+                                  <Button asChild size="sm" variant="secondary" className="h-8">
+                                    <Link href={`/notifications/${notification.id}`}>View details</Link>
+                                  </Button>
                                   {notification.type === 'workspace_invitation' && (
                                     <div className="flex gap-2">
                                       <Button size="sm" className="h-8 px-4">
@@ -234,11 +232,39 @@ export default function NotificationsPage() {
                   ))
                 )}
               </TabsContent>
-              <TabsContent value="unread">{/* Same as above but with filter='unread' applied in hook */}</TabsContent>
             </Tabs>
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function NotificationsSkeleton() {
+  return (
+    <div className="space-y-8">
+      {Array.from({ length: 2 }).map((_, groupIdx) => (
+        <div key={groupIdx} className="space-y-4">
+          <Skeleton className="h-3.5 w-20" />
+          <div className="space-y-2">
+            {Array.from({ length: groupIdx === 0 ? 3 : 2 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4 flex items-start gap-4">
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-10 shrink-0" />
+                    </div>
+                    <Skeleton className="h-3.5 w-full max-w-md" />
+                    <Skeleton className="h-3.5 w-2/3 max-w-sm" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

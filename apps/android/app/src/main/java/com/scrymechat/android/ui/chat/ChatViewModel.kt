@@ -24,7 +24,8 @@ class ChatViewModel @Inject constructor(
     private val storageRepository: com.scrymechat.android.data.repository.StorageRepository,
     private val authRepository: com.scrymechat.android.data.repository.AuthRepository,
     private val workspaceRepository: com.scrymechat.android.data.repository.WorkspaceRepository,
-    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository,
+    private val sessionManager: com.scrymechat.android.data.local.SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -45,9 +46,28 @@ class ChatViewModel @Inject constructor(
     private var currentWorkspaceSlug: String? = null
     private var currentDmUserId: String? = null
 
+    private var activeUserId: String? = null
+    private var activeUserName: String? = null
+
     init {
         observeRealtimeMessages()
         observeTypingStatus()
+        observeCurrentUser()
+    }
+
+    private fun observeCurrentUser() {
+        viewModelScope.launch {
+            sessionManager.getActiveSessionFlow().collect { session ->
+                if (session != null) {
+                    activeUserId = session.userId
+                    sessionManager.getUserFlow(session.userId).collect { user ->
+                        if (user != null) {
+                            activeUserName = user.name
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun setWorkspaceSlug(slug: String) {
@@ -421,7 +441,9 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun sendTyping(userId: String, userName: String) {
+    fun sendTyping(userId: String? = null, userName: String? = null) {
+        val uid = userId ?: activeUserId ?: return
+        val uname = userName ?: activeUserName ?: "User"
         val channelId = currentChannelId
         val dmId = currentDmId
         val room = when {
@@ -429,7 +451,7 @@ class ChatViewModel @Inject constructor(
             dmId != null -> "dm:$dmId"
             else -> return
         }
-        realtimeRepository.sendTyping(room, userId, userName)
+        realtimeRepository.sendTyping(room, uid, uname)
     }
 
     fun updateFormState(messageId: String, fieldId: String, value: Any) {

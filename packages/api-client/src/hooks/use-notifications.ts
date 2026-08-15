@@ -5,6 +5,8 @@ export const notificationKeys = {
   all: ['notifications'] as const,
   lists: () => [...notificationKeys.all, 'list'] as const,
   list: (params: Record<string, unknown>) => [...notificationKeys.lists(), params] as const,
+  details: () => [...notificationKeys.all, 'detail'] as const,
+  detail: (id: string) => [...notificationKeys.details(), id] as const,
 };
 
 export function useNotifications(unreadOnly = false) {
@@ -19,11 +21,34 @@ export function useNotifications(unreadOnly = false) {
   });
 }
 
+export function useNotification(id: string) {
+  return useQuery({
+    queryKey: notificationKeys.detail(id),
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/notifications/${id}`);
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
 export function useUpdateUserDeviceToken() {
   return useMutation({
     mutationFn: async (data: { token: string; platform: string; deviceInfo?: unknown }) => {
       const response = await apiClient.post('/device-tokens', data);
       return response.data;
+    },
+  });
+}
+
+export function useUpdateNotificationReadStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ notificationId, isRead }: { notificationId: string; isRead: boolean }) => {
+      await apiClient.patch(`/notifications/${notificationId}`, { isRead });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });
 }

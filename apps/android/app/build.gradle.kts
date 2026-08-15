@@ -14,7 +14,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "2.18.2"
+        versionName = "2.30.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -26,8 +26,13 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
 
-        val apiUrl = System.getenv("API_URL") ?: "https://api.chat.scryme.tech"
+        val rawApiUrl = System.getenv("API_URL") ?: "https://api.chat.scryme.tech"
+        val apiUrl = rawApiUrl.trim().replace("\n", "").replace("\r", "").replace("\"", "\\\"")
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
+
+        val rawGoogleClientId = System.getenv("GOOGLE_CLIENT_ID") ?: ""
+        val googleClientId = rawGoogleClientId.trim().replace("\n", "").replace("\r", "").replace("\"", "\\\"")
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
     }
 
     buildTypes {

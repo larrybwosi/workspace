@@ -37,9 +37,8 @@ services:
       - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://${WEB_DOMAIN:-scrymechat.local}}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.chat.scryme.tech}}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.chat.scryme.tech}}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://${WEB_DOMAIN:-scrymechat.local}}
       - BOT_TOKEN_SECRET=${BOT_TOKEN_SECRET}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
@@ -88,9 +87,8 @@ services:
       - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY:-rustfsadmin}
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY:-rustfsadmin}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://${WEB_DOMAIN:-scrymechat.local}}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.scrymechat.local}}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://${API_DOMAIN:-api.chat.scryme.tech}}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://${API_DOMAIN:-api.chat.scryme.tech}}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://${WEB_DOMAIN:-scrymechat.local}}
       - BOT_TOKEN_SECRET=${BOT_TOKEN_SECRET}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
@@ -100,7 +98,7 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=${PROXY_NETWORK:-dokploy-network}'
-      - 'traefik.http.routers.scrymechat-api.rule=Host(`${API_DOMAIN:-api.scrymechat.local}`)'
+      - 'traefik.http.routers.scrymechat-api.rule=Host(`${API_DOMAIN:-api.chat.scryme.tech}`)'
       - 'traefik.http.routers.scrymechat-api.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}'
       - 'traefik.http.routers.scrymechat-api.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}'
       - 'traefik.http.services.scrymechat-api.loadbalancer.server.port=3000'
