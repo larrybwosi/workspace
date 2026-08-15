@@ -27,11 +27,15 @@ const DEVICE_CLIENT_ID = 'desktop-app';
 
 function extractUserCode(input: string): string {
   if (!input) return '';
-  if (input.startsWith('http://') || input.startsWith('https://')) {
+  let code = input.trim();
+  if (code.startsWith('scrymechat:')) {
+    code = code.replace(/^scrymechat:/, '');
+  }
+  if (code.startsWith('http://') || code.startsWith('https://')) {
     try {
-      const url = new URL(input);
-      const code = url.searchParams.get('user_code') || url.searchParams.get('userCode');
-      if (code) return code;
+      const url = new URL(code);
+      const paramCode = url.searchParams.get('user_code') || url.searchParams.get('userCode');
+      if (paramCode) return paramCode;
 
       const parts = url.pathname.split('/');
       const lastPart = parts[parts.length - 1];
@@ -42,7 +46,7 @@ function extractUserCode(input: string): string {
       console.error('Failed to parse user code from URL', e);
     }
   }
-  return input;
+  return code;
 }
 
 @Controller('device-auth')
@@ -147,14 +151,23 @@ export class DeviceAuthController {
     const userCode = extractUserCode(rawCode);
 
     try {
+      const headers = fromNodeHeaders(req.headers as Record<string, string | string[]>);
+      // Ensure the device code record is claimed by the current user session
+      try {
+        await auth.api.deviceVerify({
+          query: { user_code: userCode },
+          headers,
+        });
+      } catch (e) {
+        // Ignore verify errors if userCode was already claimed or handled
+      }
+
       await auth.api.deviceApprove({
         body: { userCode },
-        // Fastify normalizes headers into a plain incoming headers object,
-        // which matches what fromNodeHeaders expects.
-        headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
+        headers,
       });
     } catch (error: any) {
-      if (error?.status === 404 || error?.body?.error === 'invalid_grant') {
+      if (error?.status === 404 || error?.body?.error === 'invalid_grant' || error?.body?.error === 'invalid_request') {
         throw new BadRequestException('Session not found or expired');
       }
       if (error?.status === 403 || error?.body?.error === 'access_denied') {
@@ -195,9 +208,19 @@ export class DeviceAuthController {
     const userCode = extractUserCode(rawCode);
 
     try {
+      const headers = fromNodeHeaders(req.headers as Record<string, string | string[]>);
+      try {
+        await auth.api.deviceVerify({
+          query: { user_code: userCode },
+          headers,
+        });
+      } catch (e) {
+        // Ignore verify errors
+      }
+
       await auth.api.deviceDeny({
         body: { userCode },
-        headers: fromNodeHeaders(req.headers as Record<string, string | string[]>),
+        headers,
       });
     } catch {
       throw new BadRequestException('Session not found or expired');

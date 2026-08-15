@@ -60,6 +60,7 @@ model User {
   oauthClients OAuthClient[]
   oauthTokens  OAuthToken[]
   pats         PersonalAccessToken[]
+  deviceCodes  DeviceCode[]
 
   // AI Assistant Relations
   assistantConversations AssistantConversation[]
@@ -1474,6 +1475,25 @@ model PersonalAccessToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("personal_access_tokens")
+}
+
+model DeviceCode {
+  id              String    @id @default(cuid())
+  deviceCode      String    @unique
+  userCode        String    @unique
+  userId          String?
+  expiresAt       DateTime
+  status          String
+  lastPolledAt    DateTime?
+  pollingInterval Int?
+  clientId        String?
+  scope           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_codes")
 }
 
 model FriendRequest {
