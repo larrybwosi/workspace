@@ -692,6 +692,7 @@ fun ChatView(
     onChannelTagClick: (String) -> Unit = {},
     onEditMessage: (MessageEntity, String) -> Unit = { _, _ -> },
     onDeleteMessage: (MessageEntity) -> Unit = {},
+    messageApi: MessageApi? = null,
     modifier: Modifier = Modifier
 ) {
     val palette = chatPalette()
@@ -934,7 +935,8 @@ fun ChatView(
                                 onEditMessage = onEditMessage,
                                 onDeleteMessage = onDeleteMessage,
                                 currentUserId = currentUserId,
-                                highlightedMessageId = highlightedMessageId
+                                highlightedMessageId = highlightedMessageId,
+                                messageApi = messageApi
                             )
                         }
                     }

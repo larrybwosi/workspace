@@ -25,7 +25,8 @@ class ChatViewModel @Inject constructor(
     private val authRepository: com.scrymechat.android.data.repository.AuthRepository,
     private val workspaceRepository: com.scrymechat.android.data.repository.WorkspaceRepository,
     private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository,
-    private val sessionManager: com.scrymechat.android.data.local.SessionManager
+    private val sessionManager: com.scrymechat.android.data.local.SessionManager,
+    val messageApi: MessageApi
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())

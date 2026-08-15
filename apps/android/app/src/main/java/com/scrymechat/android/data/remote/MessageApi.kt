@@ -129,4 +129,9 @@ interface MessageApi {
         @Query("threadId") threadId: String,
         @Body request: SendMessageRequest
     ): Response<MessageDto>
+
+    @GET("link-preview")
+    suspend fun getLinkPreview(
+        @Query("url") url: String
+    ): Response<LinkPreviewDto>
 }
