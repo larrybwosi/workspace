@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Delete,
   Param,
   Patch,
   Body,
@@ -14,8 +16,25 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
+import * as crypto from 'crypto';
 import { z } from 'zod';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsArray } from 'class-validator';
+
+class CreateM2mApplicationDto {
+  @IsString()
+  @ApiProperty({ example: 'CI/CD Pipeline' })
+  name!: string;
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({ required: false, example: ['provisioning:workspaces'] })
+  scopes?: string[];
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({ required: false, example: ['192.168.1.1'] })
+  allowedIps?: string[];
+}
 
 class UpdateOrganizationDto {
   @IsString()
@@ -180,5 +199,154 @@ export class OrganizationsController {
     });
 
     return { organization: updatedOrganization };
+  }
+
+  @Get('m2m')
+  @ApiOperation({ summary: 'List organization M2M applications' })
+  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
+  async getM2mApplications(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string) {
+    const organization = await prisma.organization.findUnique({
+      where: { slug: orgSlug },
+      select: {
+        id: true,
+        name: true,
+        clientId: true,
+        scopes: true,
+        allowedIps: true,
+        createdAt: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    if (organization.members.length === 0) {
+      throw new ForbiddenException('Not a member of this organization');
+    }
+
+    const applications = organization.clientId
+      ? [
+          {
+            id: organization.id,
+            name: organization.name,
+            clientId: organization.clientId,
+            scopes: organization.scopes || ['provisioning:workspaces'],
+            allowedIps: organization.allowedIps || [],
+            createdAt: organization.createdAt,
+          },
+        ]
+      : [];
+
+    return { applications };
+  }
+
+  @Post('m2m')
+  @ApiOperation({ summary: 'Create organization M2M application credentials' })
+  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
+  @ApiBody({ type: CreateM2mApplicationDto })
+  async createM2mApplication(
+    @CurrentUser() user: User,
+    @Param('orgSlug') orgSlug: string,
+    @Body() body: CreateM2mApplicationDto
+  ) {
+    const organization = await prisma.organization.findUnique({
+      where: { slug: orgSlug },
+      select: {
+        id: true,
+        name: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const member = organization.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    }
+
+    const clientId = `m2m_${crypto.randomBytes(12).toString('hex')}`;
+    const clientSecret = `sk_m2m_${crypto.randomBytes(24).toString('hex')}`;
+    const scopes = body.scopes || ['provisioning:workspaces'];
+    const allowedIps = body.allowedIps || [];
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id: organization.id },
+      data: {
+        clientId,
+        clientSecret,
+        scopes,
+        allowedIps,
+      },
+      select: {
+        id: true,
+        clientId: true,
+        scopes: true,
+        allowedIps: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      id: updatedOrg.id,
+      name: body.name || organization.name,
+      clientId: updatedOrg.clientId,
+      clientSecret,
+      scopes: updatedOrg.scopes,
+      allowedIps: updatedOrg.allowedIps,
+      createdAt: updatedOrg.createdAt,
+    };
+  }
+
+  @Delete('m2m/:id')
+  @ApiOperation({ summary: 'Delete organization M2M application credentials' })
+  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
+  @ApiParam({ name: 'id', description: 'The M2M application/organization ID' })
+  async deleteM2mApplication(
+    @CurrentUser() user: User,
+    @Param('orgSlug') orgSlug: string,
+    @Param('id') id: string
+  ) {
+    const organization = await prisma.organization.findUnique({
+      where: { slug: orgSlug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const member = organization.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    }
+
+    await prisma.organization.update({
+      where: { id: organization.id },
+      data: {
+        clientId: null,
+        clientSecret: null,
+        scopes: [],
+        allowedIps: [],
+      },
+    });
+
+    return { success: true };
   }
 }

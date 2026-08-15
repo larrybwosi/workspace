@@ -3,7 +3,7 @@ import { Menu, Search, PanelRight, ChevronLeft, Hash, Lock, ChevronRight } from 
 import { Button } from '../components/button';
 import { ThemeToggle } from './theme-toggle';
 import { Huddle } from '../features/chat/huddle';
-import { useCurrentUser } from '@repo/api-client';
+import { useCurrentUser, useUser } from '@repo/api-client';
 import { useWorkspace, useWorkspaceChannels } from '@repo/api-client';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '../components/skeleton';
@@ -23,6 +23,9 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
   const { data: workspace } = useWorkspace(slug as string);
   const { data: channels, isLoading } = useWorkspaceChannels(slug as string);
   const palette = useCommandPalette();
+
+  const dmUserId = activeView?.startsWith('dm-') ? activeView.replace('dm-', '') : '';
+  const { data: dmUser } = useUser(dmUserId);
 
   const openSearch = () => {
     if (onSearchClick) onSearchClick();
@@ -53,7 +56,9 @@ export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackCl
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
           <span className="text-muted-foreground">Direct Messages</span>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
-          <span className="font-semibold text-foreground">Conversation</span>
+          <span className="font-semibold text-foreground">
+            {dmUser?.name ? `@${dmUser.name}` : 'Conversation'}
+          </span>
         </nav>
       );
     }

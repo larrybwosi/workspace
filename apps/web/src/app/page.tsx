@@ -1,6 +1,6 @@
 'use client';
 
-import { mockUsers } from '@/lib/mock-data';
+import { useUser } from '@repo/api-client';
 import { SearchView } from '@/components/layout/search-view';
 import { MembersPanel } from '@/components/features/workspace/members-panel';
 import { ChannelView } from '@/components/features/chat/channel-view';
@@ -17,10 +17,12 @@ export default function HomePage() {
   const [searchMode, setSearchMode] = useState(false);
   const [membersMode, setMembersMode] = useState(false);
 
+  const activeDmUserId = activeChannel?.startsWith('dm-') ? activeChannel.replace('dm-', '') : '';
+  const { data: dmUser } = useUser(activeDmUserId);
+
   const getDMUser = () => {
     if (activeChannel?.startsWith('dm-')) {
-      const userId = activeChannel?.replace('dm-', '');
-      return mockUsers.find(u => u.id === userId);
+      return dmUser ?? null;
     }
     return null;
   };
