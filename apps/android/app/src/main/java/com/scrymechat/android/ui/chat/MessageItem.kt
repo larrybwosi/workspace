@@ -40,6 +40,7 @@ import com.scrymechat.android.data.local.entities.ForwardedSnapshot
 import com.scrymechat.android.data.remote.AttachmentDto
 import com.scrymechat.android.data.remote.MessageActionDto
 import com.scrymechat.android.data.remote.MessageActionHandlerDto
+import com.scrymechat.android.data.remote.MessageApi
 import com.scrymechat.android.ui.components.*
 import java.time.Duration
 import java.time.Instant
@@ -389,7 +390,8 @@ fun SwipeableMessageItem(
     onEditMessage: (MessageEntity, String) -> Unit = { _, _ -> },
     onDeleteMessage: (MessageEntity) -> Unit = {},
     currentUserId: String? = null,
-    highlightedMessageId: String? = null
+    highlightedMessageId: String? = null,
+    messageApi: MessageApi? = null
 ) {
     val swipeState = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
@@ -472,7 +474,8 @@ fun SwipeableMessageItem(
                     onAvatarClick = onAvatarClick,
                     apiUrl = apiUrl,
                     onMentionClick = onMentionClick,
-                    onChannelTagClick = onChannelTagClick
+                    onChannelTagClick = onChannelTagClick,
+                    messageApi = messageApi
                 )
 
                 if (showContextMenu) {
@@ -573,7 +576,8 @@ fun MessageItem(
     onAvatarClick: (String) -> Unit = {},
     apiUrl: String = "https://api.chat.scryme.tech",
     onMentionClick: (String) -> Unit = {},
-    onChannelTagClick: (String) -> Unit = {}
+    onChannelTagClick: (String) -> Unit = {},
+    messageApi: MessageApi? = null
 ) {
     val cleanName = remember(message.senderName) {
         val rawName = message.senderName ?: "Unknown User"
@@ -826,6 +830,20 @@ fun MessageItem(
                             onChannelTagClick = onChannelTagClick
                         )
                     }
+                }
+
+                // Extract links from message content for link preview cards
+                val extractedUrls = remember(message.content) {
+                    val urlRegex = Regex("(https?://[a-zA-Z0-9.\\-_~:/?#\\[\\]@!$&'()*+,;=%]+)")
+                    urlRegex.findAll(message.content).map { it.value }.distinct().take(3).toList()
+                }
+
+                extractedUrls.forEach { linkUrl ->
+                    LinkPreviewCard(
+                        url = linkUrl,
+                        messageApi = messageApi,
+                        palette = palette
+                    )
                 }
 
                 // Forwarded message(s) — rendered as quoted snapshot card(s) below any
