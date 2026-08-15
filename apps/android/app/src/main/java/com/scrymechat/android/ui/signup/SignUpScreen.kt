@@ -38,9 +38,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.scrymechat.android.BuildConfig
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.scrymechat.android.R
 import kotlinx.coroutines.launch
+import com.scrymechat.android.ui.login.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,8 +65,39 @@ fun SignUpScreen(
     var confirmPassword      by remember { mutableStateOf("") }
     var agreedToTerms        by remember { mutableStateOf(false) }
 
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val loginUiState         by loginViewModel.uiState.collectAsState()
     val sheetState           = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSuccessSheet     by remember { mutableStateOf(false) }
+
+    LaunchedEffect(loginUiState.isLoginSuccess) {
+        if (loginUiState.isLoginSuccess) onSignUpSuccess()
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (idToken != null) {
+                loginViewModel.loginWithGoogle(idToken)
+            } else {
+                android.widget.Toast.makeText(
+                    context,
+                    "Google Sign-In failed: No ID Token retrieved",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+        } catch (e: ApiException) {
+            android.widget.Toast.makeText(
+                context,
+                "Google Sign-In failed: ${e.statusCode}",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     val colorScheme = MaterialTheme.colorScheme
     val accentColor = colorScheme.primary
@@ -382,7 +420,23 @@ fun SignUpScreen(
 
             // ── Google — full width ───────────────────────────────────────────
             OutlinedButton(
-                onClick  = { /* Google OAuth */ },
+                onClick  = {
+                    val clientId = BuildConfig.GOOGLE_CLIENT_ID
+                    if (clientId.isBlank()) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Google Client ID is not configured",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(clientId)
+                            .requestEmail()
+                            .build()
+                        val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
