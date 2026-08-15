@@ -63,6 +63,14 @@ export class NotificationsController {
     return this.notificationsService.getNotifications(user.id, isUnreadOnly, limitNum);
   }
 
+  @Get(':notificationId')
+  @ApiOperation({ summary: 'Get a single notification by ID' })
+  @ApiParam({ name: 'notificationId', description: 'The notification ID' })
+  @ApiResponse({ status: 200, description: 'Notification details' })
+  async getNotificationById(@CurrentUser() user: User, @Param('notificationId') notificationId: string) {
+    return this.notificationsService.getNotificationById(user.id, notificationId);
+  }
+
   @Post('mark-all-read')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   @ApiResponse({ status: 201, description: 'All notifications marked as read' })

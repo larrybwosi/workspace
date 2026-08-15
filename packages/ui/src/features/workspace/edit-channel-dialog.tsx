@@ -15,13 +15,16 @@ import { useState, useEffect } from 'react';
 import { Separator } from '../../components/separator';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '../../components/radio-group';
+import { useUpdateChannel } from '@repo/api-client';
 
 interface EditChannelDialogProps {
   editChannelOpen: boolean;
   setEditChannelOpen: (open: boolean) => void;
   channelForm: { name: string; description: string; type: 'public' | 'private' };
   setChannelForm: (form: any) => void;
-  handleEditChannel: () => void;
+  handleEditChannel?: () => void;
+  workspaceSlug?: string;
+  channelId?: string;
 }
 
 export function EditChannelDialog({
@@ -30,10 +33,12 @@ export function EditChannelDialog({
   channelForm,
   setChannelForm,
   handleEditChannel,
+  workspaceSlug,
   channelId,
-}: EditChannelDialogProps & { channelId?: string }) {
+}: EditChannelDialogProps) {
   const [preference, setPreference] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const updateChannelMutation = useUpdateChannel(workspaceSlug);
 
   useEffect(() => {
     if (editChannelOpen && channelId) {
@@ -52,31 +57,33 @@ export function EditChannelDialog({
     }
   }, [editChannelOpen, channelId]);
 
-  const handleSavePreference = async () => {
-    if (!channelId) return;
+  const onSaveAll = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/notifications/settings/channel', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channelId, preference }),
-      });
-      if (res.ok) {
-        toast.success('Channel notification preferences saved');
-      } else {
-        throw new Error('Failed to save');
+      if (channelId) {
+        await updateChannelMutation.mutateAsync({
+          id: channelId,
+          name: channelForm.name,
+          description: channelForm.description,
+          type: channelForm.type,
+        } as any);
+
+        await fetch('/api/notifications/settings/channel', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId, preference }),
+        });
       }
-    } catch (error) {
-      toast.error('Failed to save channel notification preferences');
+
+      if (handleEditChannel) {
+        handleEditChannel();
+      }
+      toast.success('Channel updated successfully');
+      setEditChannelOpen(false);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to update channel');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const onSaveAll = () => {
-    handleEditChannel();
-    if (channelId) {
-      handleSavePreference();
     }
   };
 

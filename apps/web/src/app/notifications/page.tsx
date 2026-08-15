@@ -170,14 +170,15 @@ export default function NotificationsPage() {
 
                               <div className="flex-1 min-w-0 space-y-1">
                                 <div className="flex items-center justify-between gap-2">
-                                  <p
+                                  <Link
+                                    href={`/notifications/${notification.id}`}
                                     className={cn(
-                                      'font-semibold truncate',
+                                      'font-semibold truncate hover:underline',
                                       !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
                                     )}
                                   >
                                     {notification.title}
-                                  </p>
+                                  </Link>
                                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                                     {format(new Date(notification.createdAt), 'h:mm a')}
                                   </span>
@@ -185,11 +186,9 @@ export default function NotificationsPage() {
                                 <p className="text-sm text-muted-foreground line-clamp-2">{notification.message}</p>
 
                                 <div className="flex items-center gap-3 pt-2">
-                                  {notification.linkUrl && (
-                                    <Button asChild size="sm" variant="secondary" className="h-8">
-                                      <Link href={notification.linkUrl}>View details</Link>
-                                    </Button>
-                                  )}
+                                  <Button asChild size="sm" variant="secondary" className="h-8">
+                                    <Link href={`/notifications/${notification.id}`}>View details</Link>
+                                  </Button>
                                   {notification.type === 'workspace_invitation' && (
                                     <div className="flex gap-2">
                                       <Button size="sm" className="h-8 px-4">

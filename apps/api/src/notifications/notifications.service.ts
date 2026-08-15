@@ -46,6 +46,15 @@ export class NotificationsService {
     });
   }
 
+  async getNotificationById(userId: string, notificationId: string) {
+    return prisma.notification.findFirst({
+      where: {
+        id: notificationId,
+        userId,
+      },
+    });
+  }
+
   /**
    * ⚡ Performance Optimization:
    * Deliver real-time and push notifications.
