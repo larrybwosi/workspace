@@ -24,7 +24,7 @@
 
 ### Patch Changes
 
-- Updated dependencies
+- Updated dependencies 
   - @repo/api-client@0.1.0-dev.31
   - @repo/types@0.1.0-dev.31
   - @repo/ui@0.1.0-dev.31
