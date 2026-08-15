@@ -84,9 +84,40 @@ const MessageEditor = memo(({ initialContent, onSave, onCancel }: MessageEditorP
 
 MessageEditor.displayName = 'MessageEditor';
 
-const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any, message: any, userBadges: any[], isReply: boolean }) => {
+const ReplyPreview = memo(({ message }: { message: any }) => {
+  const replyToMsg = message.replyToMessage || message.replyTo;
+  const replyToUser = (replyToMsg && typeof replyToMsg === 'object' ? replyToMsg.user : null) || (message as any).replyToUser;
+  const replyToName = replyToUser?.name || 'someone';
+  const rawContent = typeof replyToMsg === 'object' ? replyToMsg?.content : (typeof replyToMsg === 'string' ? replyToMsg : '');
+  const contentSnippet = rawContent ? (rawContent.length > 80 ? rawContent.slice(0, 80) + '...' : rawContent) : 'Click to view original message';
+
+  return (
+    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground/80 mb-1 pl-1">
+      <div className="relative w-8 h-3.5 flex-shrink-0">
+        <svg className="w-full h-full text-muted-foreground/40 stroke-current fill-none" viewBox="0 0 32 14">
+          <path d="M 12 0 L 12 7 A 6 6 0 0 0 18 13 L 32 13" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </div>
+      <Avatar className="h-4 w-4 rounded-full overflow-hidden shrink-0">
+        <AvatarImage src={replyToUser?.avatar || replyToUser?.image} alt={replyToName} />
+        <AvatarFallback className="text-[8px] bg-primary/20 text-primary font-bold">
+          {replyToName.slice(0, 1).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <span className="font-semibold text-foreground/80 hover:underline cursor-pointer">
+        @{replyToName}
+      </span>
+      <span className="truncate max-w-[300px] text-muted-foreground/70 italic">
+        {contentSnippet}
+      </span>
+    </div>
+  );
+});
+
+ReplyPreview.displayName = 'ReplyPreview';
+
+const MessageHeader = memo(({ user, message, userBadges }: { user: any, message: any, userBadges: any[] }) => {
   const timestamp = useMemo(() => format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm'), [message.timestamp]);
-  const replyToName = (message as any).replyToUser?.name || 'someone';
 
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
@@ -106,12 +137,6 @@ const MessageHeader = memo(({ user, message, userBadges, isReply }: { user: any,
         <span className="text-[11px] text-primary flex items-center gap-1 font-medium">
           <Pin className="h-3 w-3 fill-current" />
           Pinned
-        </span>
-      )}
-      {isReply && (
-        <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1">
-          <Reply className="h-3 w-3" />
-          replied to {replyToName}
         </span>
       )}
     </div>
@@ -627,7 +652,8 @@ const MessageMainContent = memo(({
   handleToggleReaction: any
 }) => (
   <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
-    {showAvatar && <MessageHeader user={user} message={message} userBadges={(user as any)?.badges || []} isReply={isReply} />}
+    {isReply && <ReplyPreview message={message} />}
+    {showAvatar && <MessageHeader user={user} message={message} userBadges={(user as any)?.badges || []} />}
     <MessageContent
       message={message}
       isEditing={isEditing}

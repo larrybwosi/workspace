@@ -140,39 +140,15 @@ const MessageItemWrapper = memo(({
 }) => {
   const message = item.data;
 
-  if (isReply) {
-    return (
-      <div className="flex">
-        <div className="w-[52px] shrink-0 flex justify-center">
-          <div className="w-px bg-border/60 h-full" />
-        </div>
-        <div className="flex-1 min-w-0 pr-4">
-          <MessageItem
-            message={message}
-            showAvatar={!isGrouped}
-            onReply={handleReply}
-            onThreadOpen={handleOpenThread}
-            onReaction={handleReaction}
-            depth={item.depth}
-            isReply={true}
-            isHighlighted={isHighlighted}
-            channelId={channelId}
-            workspaceId={workspaceSlug}
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <MessageItem
       message={message}
-      showAvatar={!isGrouped}
+      showAvatar={!isGrouped || isReply}
       onReply={handleReply}
       onThreadOpen={handleOpenThread}
       onReaction={handleReaction}
       depth={item.depth}
-      isReply={false}
+      isReply={isReply}
       isHighlighted={isHighlighted}
       channelId={channelId}
       workspaceId={workspaceSlug}
