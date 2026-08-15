@@ -20,7 +20,12 @@ export function LinkPreview({ url }: { url: string }) {
   useEffect(() => {
     const fetchPreview = async () => {
       try {
-        const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+        let response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+        if (!response.ok) {
+          // Fallback to API server if Next.js route is not used/available
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.chat.scryme.tech';
+          response = await fetch(`${apiUrl}/link-preview?url=${encodeURIComponent(url)}`);
+        }
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
         if (data.title || data.description || data.image) {

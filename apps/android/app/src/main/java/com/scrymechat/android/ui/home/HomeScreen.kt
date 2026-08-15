@@ -274,6 +274,7 @@ fun HomeScreen(
                 },
                 onEditMessage = { msg, text -> chatViewModel.editMessage(msg, text) },
                 onDeleteMessage = { msg -> chatViewModel.deleteMessage(msg) },
+                messageApi = chatViewModel.messageApi,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -316,6 +317,7 @@ fun MainContent(
     onChannelTagClick: (String) -> Unit = {},
     onEditMessage: (com.scrymechat.android.data.local.entities.MessageEntity, String) -> Unit = { _, _ -> },
     onDeleteMessage: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit = {},
+    messageApi: com.scrymechat.android.data.remote.MessageApi? = null,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -438,7 +440,8 @@ fun MainContent(
                         onChannelTagClick = onChannelTagClick,
                         onEditMessage = onEditMessage,
                         onDeleteMessage = onDeleteMessage,
-                        sessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager
+                        sessionManager = hiltViewModel<com.scrymechat.android.ui.login.LoginViewModel>().sessionManager,
+                        messageApi = messageApi
                     )
                 } else if (!isHomeSelected && selectedChannel == null && selectedWorkspace != null) {
                     WorkspaceWelcomeScreen(workspaceName = selectedWorkspace.name)
