@@ -26,7 +26,7 @@ const getBaseURLConfig = () => {
     'api.chat.scryme.tech',
     '*.scryme.tech',
     'scrymechat.local',
-    'api.scrymechat.local',
+    'api.chat.scryme.tech',
     '*.scrymechat.local',
     'api',
     'api:*',

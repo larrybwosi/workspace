@@ -17,7 +17,7 @@ import {
   useRespondToFriendRequest,
   messageKeys,
 } from '@repo/api-client';
-import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import type { Message } from '@repo/types';
 
 export const useChannelViewParams = () => {
@@ -60,11 +60,12 @@ export const useRealtimeSubscriptions = (
 ) => {
   useEffect(() => {
     if (!activeChannelId || !queryClient) return;
-    const ably = getAblyClient();
-    if (!ably) return;
-    const channel = threadId
-      ? ably.channels.get(AblyChannels.channel(activeChannelId)) // For threads we still listen on the main channel for consistency, or we could listen on thread channel
-      : ably.channels.get(AblyChannels.channel(activeChannelId));
+
+    const channelName = activeChannelId.startsWith('dm-')
+      ? `dm:${activeChannelId.replace('dm-', '')}`
+      : threadId
+        ? `thread:${threadId}`
+        : `channel:${activeChannelId}`;
 
     const handleMessage = () => {
       const queryKey = workspaceSlug
@@ -72,20 +73,44 @@ export const useRealtimeSubscriptions = (
         : messageKeys.list(activeChannelId, undefined, threadId);
       queryClient.invalidateQueries({ queryKey });
     };
-    channel.subscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
-    channel.subscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
-    const userChannel = ably.channels.get(AblyChannels.user(currentUserId || ''));
-    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleMessage);
+
+    const events = [
+      'message:new',
+      'message:update',
+      'message:delete',
+      'message',
+      AblyEvents.MESSAGE_SENT,
+      AblyEvents.MESSAGE_UPDATED,
+      AblyEvents.MESSAGE_DELETED,
+      AblyEvents.MESSAGE_REACTION,
+    ];
+
+    events.forEach(event => {
+      realtime.subscribe(channelName, event, handleMessage);
+      if (activeChannelId) {
+        realtime.subscribe(activeChannelId, event, handleMessage);
+      }
+    });
+
+    const userChannelName = currentUserId ? AblyChannels.user(currentUserId) : '';
+    if (userChannelName) {
+      realtime.subscribe(userChannelName, AblyEvents.DM_RECEIVED, handleMessage);
+      realtime.subscribe(userChannelName, 'message:new', handleMessage);
+    }
+
     return () => {
-      channel.unsubscribe(AblyEvents.MESSAGE_SENT, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_UPDATED, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_DELETED, handleMessage);
-      channel.unsubscribe(AblyEvents.MESSAGE_REACTION, handleMessage);
-      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleMessage);
+      events.forEach(event => {
+        realtime.unsubscribe(channelName, event, handleMessage);
+        if (activeChannelId) {
+          realtime.unsubscribe(activeChannelId, event, handleMessage);
+        }
+      });
+      if (userChannelName) {
+        realtime.unsubscribe(userChannelName, AblyEvents.DM_RECEIVED, handleMessage);
+        realtime.unsubscribe(userChannelName, 'message:new', handleMessage);
+      }
     };
-  }, [activeChannelId, workspaceSlug, queryClient, currentUserId]);
+  }, [activeChannelId, workspaceSlug, queryClient, currentUserId, threadId]);
 };
 
 export const useReadReceipts = (activeChannelId: string, scrollAreaRef: React.RefObject<HTMLDivElement | null>, markedMessageIds: React.MutableRefObject<Set<string>>, messages: Message[], currentUserId?: string, markMessagesAsReadMutation?: any) => {
