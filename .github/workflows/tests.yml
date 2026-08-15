@@ -206,6 +206,7 @@ jobs:
       - name: Run Tests
         env:
           API_URL: http://localhost:3000
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: cd apps/android && ./gradlew test
 
   admin-tests:

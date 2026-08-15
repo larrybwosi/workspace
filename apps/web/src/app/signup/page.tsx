@@ -70,12 +70,19 @@ export default function SignupPage() {
     try {
       const callbackURL = inviteToken ? `/invite/${inviteToken}` : '/';
 
-      await authClient.signIn.social({
+      const res = await authClient.signIn.social({
         provider,
         callbackURL,
       });
-    } catch (error) {
-      toast.error(`Unable to sign up with ${provider}. Please try again.`);
+
+      if (res?.error) {
+        toast.error(res.error.message || `Unable to sign up with ${provider}. Please try again.`);
+        setIsLoading(false);
+      } else if (res?.data?.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (error: any) {
+      toast.error(error?.message || `Unable to sign up with ${provider}. Please try again.`);
       setIsLoading(false);
     }
   };

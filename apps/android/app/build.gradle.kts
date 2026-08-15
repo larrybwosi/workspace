@@ -28,6 +28,9 @@ android {
 
         val apiUrl = System.getenv("API_URL") ?: "https://api.chat.scryme.tech"
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
+
+        val googleClientId = System.getenv("GOOGLE_CLIENT_ID") ?: ""
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
     }
 
     buildTypes {
