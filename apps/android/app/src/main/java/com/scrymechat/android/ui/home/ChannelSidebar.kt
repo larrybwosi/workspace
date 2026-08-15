@@ -50,18 +50,7 @@ import com.scrymechat.android.data.local.entities.UserEntity
 import com.scrymechat.android.data.local.entities.WorkspaceEntity
 import com.scrymechat.android.ui.components.UserAvatar
 
-/**
- * Premium/enterprise design tokens.
- *
- * The palette moves away from flat Discord grey toward a slightly cooler,
- * deeper "graphite" base with an indigo-violet accent gradient instead of a
- * single flat blurple — this is what reads as "premium SaaS" rather than
- * "consumer chat app default theme". Elevation is expressed with real
- * (if subtle) shadows instead of only flat color swaps, and hairlines carry
- * a faint gradient fade rather than a uniform 1dp line.
- */
 object SidebarTokens {
-    // Slightly cooler & deeper than stock Discord — reads less "flat grey box".
     val SurfaceBase: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF1C1D22) else Color(0xFFF5F6F8)
     val SurfaceRaised: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF24252B) else Color(0xFFFFFFFF)
     val SurfaceSelected: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFF2E3038) else Color(0xFFEDEFF5)
@@ -72,7 +61,6 @@ object SidebarTokens {
     val Hairline: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x2EFFFFFF) else Color(0x14000000)
     val HairlineStrong: Color @Composable get() = if (LocalThemeIsDark.current) Color(0x3DFFFFFF) else Color(0x1F000000)
 
-    // Indigo-violet gradient accent instead of a flat single blurple.
     val AccentStart = Color(0xFF6D5EF5)
     val AccentEnd = Color(0xFF8B5CF6)
     val Accent = Color(0xFF6D5EF5)
@@ -81,7 +69,7 @@ object SidebarTokens {
 
     val Online = Color(0xFF3BC46A)
     val Danger = Color(0xFFFF4D5E)
-    val Premium = Color(0xFFF5B93B) // small "enterprise/verified" accent, used sparingly
+    val Premium = Color(0xFFF5B93B)
 
     val TextBright: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFFFFFFF) else Color(0xFF0B0C10)
     val TextPrimary: Color @Composable get() = if (LocalThemeIsDark.current) Color(0xFFAEB2C4) else Color(0xFF474A57)
@@ -103,7 +91,6 @@ object SidebarTokens {
             colors = if (dark) listOf(Color(0xFF1A1B20), Color(0xFF141519)) else listOf(Color(0xFFF5F6F8), Color(0xFFE7E9F0))
         )
     }
-    // Faint top-to-bottom fade so hairlines don't read as harsh ruled lines.
     val HairlineFade: Brush @Composable get() = Brush.horizontalGradient(
         listOf(Color.Transparent, Hairline, Hairline, Color.Transparent)
     )
@@ -118,14 +105,12 @@ fun presenceColor(status: String?): Color = when (status?.lowercase()) {
     else -> Color(0xFF6C7086)
 }
 
-/** Helper data structure for category grouping */
 private data class ChannelCategoryGroup(
     val categoryId: String,
     val name: String,
     val channels: List<ChannelEntity>
 )
 
-/** Which glyph a channel row should show */
 private fun channelLeadingIcon(channel: ChannelEntity): Any {
     if (!channel.icon.isNullOrEmpty() && channel.icon != "#") return channel.icon
     return when (channel.type?.lowercase()) {
@@ -172,7 +157,6 @@ fun ChannelSidebar(
             .fillMaxHeight()
             .background(SidebarTokens.SurfaceBase)
     ) {
-        // --- 1. Top Header ---
         if (isHomeSelected) {
             SidebarHeader(
                 title = "Direct Messages",
@@ -184,7 +168,6 @@ fun ChannelSidebar(
 
         HorizontalDivider(color = SidebarTokens.Hairline, thickness = 1.dp)
 
-        // --- 2. Main Content List ---
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -286,7 +269,6 @@ fun ChannelSidebar(
             }
         }
 
-        // --- 3. User Footer Section ---
         UserSection(currentUser = currentUser, onSettingsClick = onSettingsClick)
     }
 }
@@ -328,13 +310,6 @@ private fun PaddingWrapper(content: @Composable () -> Unit) {
     }
 }
 
-/**
- * Workspace banner — swapped the old hash-based random gradient for the
- * consistent brand accent gradient plus a subtle vignette. Adds a small
- * verified/enterprise badge next to the name and a member-count style
- * caption slot, which is what separates "chat app header" from "workspace
- * dashboard header".
- */
 @Composable
 fun WorkspaceBanner(workspace: WorkspaceEntity?) {
     if (workspace == null) return
@@ -355,8 +330,6 @@ fun WorkspaceBanner(workspace: WorkspaceEntity?) {
             )
         }
 
-        // Vignette for legibility, darker and tighter than before for a
-        // more "designed" look rather than a flat linear fade.
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -369,7 +342,6 @@ fun WorkspaceBanner(workspace: WorkspaceEntity?) {
                 )
         )
 
-        // Faint top sheen — a 1px highlight along the very top edge.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -606,8 +578,7 @@ private fun CreateChannelRow(onClick: () -> Unit) {
             modifier = Modifier
                 .size(18.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(SidebarTokens.SurfaceIconIdle)
-                .border(1.dp, SidebarTokens.Hairline, RoundedCornerShape(6.dp)),
+                .background(SidebarTokens.SurfaceIconIdle),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -642,13 +613,6 @@ fun ChannelItem(
     )
 }
 
-/**
- * Core list item. Selected state now uses:
- *  - a real (small, tasteful) drop shadow on the row card instead of a flat
- *    color swap, giving it a "lifted" enterprise-panel feel;
- *  - a gradient pill indicator instead of a flat white bar;
- *  - a soft radial glow that sits behind the pill for a bit of depth.
- */
 @Composable
 fun SidebarItem(
     icon: Any?,
@@ -730,7 +694,6 @@ fun SidebarItem(
             )
         }
 
-        // Gradient pill indicator (left edge gutter)
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -755,8 +718,7 @@ fun SidebarItem(
                     interactionSource = interactionSource,
                     indication = rememberRipple(color = SidebarTokens.SurfaceHover)
                 ) { onClick() },
-            color = backgroundColor,
-            border = if (isSelected) BorderStroke(1.dp, SidebarTokens.HairlineStrong) else null
+            color = backgroundColor
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -846,7 +808,9 @@ fun SidebarItem(
                             color = Color.White,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            lineHeight = 10.sp,
+                            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically)
                         )
                     }
                 }
@@ -855,12 +819,6 @@ fun SidebarItem(
     }
 }
 
-/**
- * Footer — the avatar now sits on a gradient ring rather than a sweep
- * gradient, a slightly larger touch target, and the presence label has
- * been promoted to a small pill so it reads as a status chip rather than
- * plain caption text, which is a very "enterprise dashboard" affordance.
- */
 @Composable
 fun UserSection(
     currentUser: UserEntity?,

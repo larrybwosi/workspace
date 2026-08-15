@@ -254,7 +254,6 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
       items: [
         { icon: LayoutDashboard, label: 'Dashboard', href: `/workspace/${slug}` },
         { icon: Users, label: 'Members', href: `/workspace/${slug}/members` },
-        { icon: Plug2, label: 'Integrations', href: `/workspace/${slug}/integrations` },
         { icon: Settings, label: 'Settings', href: `/workspace/${slug}/settings` },
       ],
     },
