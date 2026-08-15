@@ -339,7 +339,7 @@ function CommentItem({
           className={cn(
             'text-sm p-2.5 rounded-lg w-fit max-w-[90%] overflow-hidden',
             isMe
-              ? 'bg-primary/5 text-primary-foreground/90 border border-primary/10'
+              ? 'bg-primary/10 text-foreground border border-primary/20'
               : 'bg-muted/40 text-foreground border border-border/40',
             MARKDOWN_STYLES
           )}
@@ -357,7 +357,7 @@ function getStatusBadge(status: string) {
       return (
         <Badge
           variant="outline"
-          className="h-6 px-2 bg-green-500/10 text-green-700 border-green-200 text-[10px] gap-1.5 hover:bg-green-500/20 transition-colors"
+          className="h-6 px-2 bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 text-[10px] gap-1.5 hover:bg-green-500/20 transition-colors"
         >
           <CheckCircle2 className="w-3.5 h-3.5" />
           RESOLVED
@@ -368,7 +368,7 @@ function getStatusBadge(status: string) {
       return (
         <Badge
           variant="outline"
-          className="h-6 px-2 bg-amber-500/10 text-amber-700 border-amber-200 text-[10px] gap-1.5 hover:bg-amber-500/20 transition-colors"
+          className="h-6 px-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800 text-[10px] gap-1.5 hover:bg-amber-500/20 transition-colors"
         >
           <AlertCircle className="w-3.5 h-3.5" />
           NEEDS REVIEW
