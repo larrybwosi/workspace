@@ -94,21 +94,20 @@ export const MessageSkeletons = memo(() => (
 MessageSkeletons.displayName = 'MessageSkeletons';
 
 const EmptyState = memo(({ activeChannelId, channelName }: { activeChannelId: string; channelName?: string }) => {
-  const name = channelName || activeChannelId;
   const isDM = activeChannelId.startsWith('dm-');
+  const cleanName = (channelName || activeChannelId).replace(/^[@#]/, '').replace(/^dm-/, '');
 
   return (
     <div className="flex flex-col items-start justify-end flex-1 p-8 mb-4">
       <div className="h-16 w-16 bg-muted rounded-full mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
-        {isDM ? ' @ ' : ' # '}
+        {isDM ? '@' : '#'}
       </div>
       <h1 className="text-3xl font-bold mb-2">
-        Welcome to {isDM ? '' : '#'}
-        {name}!
+        Welcome to {isDM ? '@' : '#'}{cleanName}!
       </h1>
       <p className="text-muted-foreground">
         This is the start of the {isDM ? 'direct message history with ' : ' #'}
-        <span className="font-semibold">{name}</span>
+        <span className="font-semibold">{isDM ? `@${cleanName}` : cleanName}</span>
         {isDM ? '.' : ' channel.'}
       </p>
     </div>

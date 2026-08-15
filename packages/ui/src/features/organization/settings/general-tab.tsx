@@ -55,7 +55,7 @@ export function GeneralTab({ orgSlug }: GeneralTabProps) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/storage/upload', {
         method: 'POST',
         body: formData,
       });
