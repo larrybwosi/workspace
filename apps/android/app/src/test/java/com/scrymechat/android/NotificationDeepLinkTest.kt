@@ -71,6 +71,11 @@ class NotificationDeepLinkTest {
 
         assertEquals("channel_alert", intent.getStringExtra("type"))
         assertEquals("chan456", intent.getStringExtra("entityId"))
+
+        // Also test quick actions present on channel notifications (Reply & Mark Read)
+        assertEquals(2, notification.actions.size)
+        assertEquals("Reply", notification.actions[0].title)
+        assertEquals("Mark as read", notification.actions[1].title)
     }
 
     @Test
