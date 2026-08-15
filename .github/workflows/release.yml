@@ -70,7 +70,7 @@ jobs:
           npm version minor --no-git-tag-version
           node scripts/ensure-unique-version.js
           pnpm install --no-frozen-lockfile
-          node scripts/update-version.js
+          node scripts/update-version.js android
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Commit and tag
