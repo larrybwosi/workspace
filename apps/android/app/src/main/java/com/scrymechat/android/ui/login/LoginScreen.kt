@@ -293,24 +293,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(22.dp))
 
             // ── Brand wordmark ────────────────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
-            ) {
-                Icon(
-                    painter = androidx.compose.ui.res.painterResource(id = com.scrymechat.android.R.drawable.ic_logo),
-                    contentDescription = "Scrymechat Logo",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(32.dp)
-                )
-                Text(
-                    text = "Scrymechat",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = palette.textPrimary,
-                    letterSpacing = (-0.2).sp
-                )
-            }
+            Text(
+                text = "Scrymechat",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = palette.textPrimary,
+                letterSpacing = (-0.2).sp
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
 
