@@ -13,7 +13,6 @@ import { useTauri } from './hooks/use-tauri';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { AgoraClientProvider } from './components/features/calls/agora-provider';
 import { CallContainer } from './components/features/calls/call-container';
-import { DesktopTitleBar } from './components/layout/desktop-title-bar';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useTauri();
@@ -41,7 +40,6 @@ function AppContent() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <DesktopTitleBar />
       {session && (
         <AgoraClientProvider>
           <CallContainer />
