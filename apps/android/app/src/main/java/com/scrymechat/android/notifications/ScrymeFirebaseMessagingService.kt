@@ -48,15 +48,23 @@ class ScrymeFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         Log.d(TAG, "From: ${remoteMessage.from}")
 
-        // Handle data payload
-        if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
-            NotificationHelper(this).showNotification(remoteMessage.data)
+        val dataMap = remoteMessage.data.toMutableMap()
+
+        // If the FCM message has a notification payload, merge title and body into data map
+        // to guarantee system notification display even when data payload alone is received or mixed.
+        remoteMessage.notification?.let { notification ->
+            Log.d(TAG, "Message Notification Title: ${notification.title}, Body: ${notification.body}")
+            if (!dataMap.containsKey("title") && notification.title != null) {
+                dataMap["title"] = notification.title!!
+            }
+            if (!dataMap.containsKey("body") && notification.body != null) {
+                dataMap["body"] = notification.body!!
+            }
         }
 
-        // Handle notification payload
-        remoteMessage.notification?.let {
-            Log.d(TAG, "Message Notification Body: ${it.body}")
+        if (dataMap.isNotEmpty()) {
+            Log.d(TAG, "Displaying notification with payload: $dataMap")
+            NotificationHelper(this).showNotification(dataMap)
         }
     }
 
