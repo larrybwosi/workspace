@@ -197,16 +197,17 @@ class MainActivity : ComponentActivity() {
 
         val type = intent.getStringExtra("type")
         val entityId = intent.getStringExtra("entityId")
+        val workspaceSlug = intent.getStringExtra("workspaceSlug")
 
         if (type != null && entityId != null) {
             when (type) {
                 "direct_message" -> navigate(Screen.Chat.createRoute(entityId))
-                "channel_alert" -> navigate(Screen.Channel.createRoute(entityId))
+                "channel_alert" -> navigate(Screen.Channel.createRoute(entityId, workspaceSlug))
                 "friend_request" -> navigate(Screen.Friends.route)
                 "mention" -> {
                     val entityType = intent.getStringExtra("entityType")
                     if (entityType == "channel") {
-                        navigate(Screen.Channel.createRoute(entityId))
+                        navigate(Screen.Channel.createRoute(entityId, workspaceSlug))
                     } else if (entityType == "direct_message" || entityType == "dm") {
                         navigate(Screen.Chat.createRoute(entityId))
                     }

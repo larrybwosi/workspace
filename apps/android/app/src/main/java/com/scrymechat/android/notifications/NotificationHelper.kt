@@ -110,6 +110,8 @@ class NotificationHelper(private val context: Context) {
         val type = data["type"] ?: "system"
         val entityId = data["entityId"] ?: ""
         val entityType = data["entityType"] ?: if (type == "direct_message") "dm" else "channel"
+        val workspaceId = data["workspaceId"]
+        val workspaceSlug = data["workspaceSlug"]
         val senderAvatarUrl = data["senderAvatarUrl"]
 
         val channelId = when (type) {
@@ -173,9 +175,9 @@ class NotificationHelper(private val context: Context) {
             .setAutoCancel(true)
             .setShowWhen(true)
             .setGroup(if (entityType == "dm") GROUP_DM else GROUP_CHANNEL)
-            .setContentIntent(buildContentIntent(notificationId, type, entityId, entityType))
-            .addAction(buildReplyAction(context, notificationId, entityId, entityType, person.name.toString()))
-            .addAction(buildMarkAsReadAction(notificationId, entityId, entityType))
+            .setContentIntent(buildContentIntent(notificationId, type, entityId, entityType, workspaceId, workspaceSlug))
+            .addAction(buildReplyAction(context, notificationId, entityId, entityType, workspaceId, person.name.toString()))
+            .addAction(buildMarkAsReadAction(notificationId, entityId, entityType, workspaceId))
             .build()
 
         notificationManager.notify(notificationId, notification)
@@ -291,13 +293,17 @@ class NotificationHelper(private val context: Context) {
         notificationId: Int,
         type: String,
         entityId: String,
-        entityType: String
+        entityType: String,
+        workspaceId: String? = null,
+        workspaceSlug: String? = null
     ): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("type", type)
             putExtra("entityId", entityId)
             putExtra("entityType", entityType)
+            if (workspaceId != null) putExtra("workspaceId", workspaceId)
+            if (workspaceSlug != null) putExtra("workspaceSlug", workspaceSlug)
         }
         return PendingIntent.getActivity(
             context,
@@ -312,7 +318,8 @@ class NotificationHelper(private val context: Context) {
         notificationId: Int,
         entityId: String,
         entityType: String,
-        senderName: String
+        workspaceId: String? = null,
+        senderName: String = ""
     ): NotificationCompat.Action {
         val remoteInput = RemoteInput.Builder(KEY_TEXT_REPLY)
             .setLabel("Message $senderName")
@@ -322,6 +329,7 @@ class NotificationHelper(private val context: Context) {
             action = ReplyReceiver.ACTION_REPLY
             putExtra("entityId", entityId)
             putExtra("entityType", entityType)
+            if (workspaceId != null) putExtra("workspaceId", workspaceId)
             putExtra("notificationId", notificationId)
         }
 
@@ -346,12 +354,14 @@ class NotificationHelper(private val context: Context) {
     private fun buildMarkAsReadAction(
         notificationId: Int,
         entityId: String,
-        entityType: String
+        entityType: String,
+        workspaceId: String? = null
     ): NotificationCompat.Action {
         val readIntent = Intent(context, ReplyReceiver::class.java).apply {
             action = ReplyReceiver.ACTION_MARK_READ
             putExtra("entityId", entityId)
             putExtra("entityType", entityType)
+            if (workspaceId != null) putExtra("workspaceId", workspaceId)
             putExtra("notificationId", notificationId)
         }
 
