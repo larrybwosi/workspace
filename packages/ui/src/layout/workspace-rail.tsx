@@ -25,7 +25,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
   const { slug } = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
   const { data: friends } = useFriends();

@@ -530,14 +530,6 @@ export default function SettingsPage() {
                           <Moon className="h-5 w-5" />
                           <span className="text-xs">Dark</span>
                         </Button>
-                        <Button
-                          variant={theme === 'system' ? 'default' : 'outline'}
-                          className="h-20 flex flex-col items-center justify-center gap-2"
-                          onClick={() => setTheme('system')}
-                        >
-                          <Laptop className="h-5 w-5" />
-                          <span className="text-xs">System</span>
-                        </Button>
                       </div>
                     </div>
 
