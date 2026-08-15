@@ -19,7 +19,7 @@
 ## 2.1.0-dev.31
 
 ### Minor Changes
-
+ 
 - Automatic minor release for branch dev
 
 ### Patch Changes
