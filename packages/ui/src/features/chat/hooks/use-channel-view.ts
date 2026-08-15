@@ -72,6 +72,12 @@ export const useRealtimeSubscriptions = (
         ? ['workspaces', workspaceSlug, 'channels', activeChannelId, 'messages', { threadId: threadId || null }]
         : messageKeys.list(activeChannelId, undefined, threadId);
       queryClient.invalidateQueries({ queryKey });
+
+      if (workspaceSlug) {
+        queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['dms', 'conversations'] });
+      }
     };
 
     const events = [

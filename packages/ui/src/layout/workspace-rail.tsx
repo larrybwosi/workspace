@@ -10,7 +10,7 @@ import { Button } from '../components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/avatar';
 import { useSession, authClient } from '@repo/shared';
-import { useTheme } from 'next-themes';
+import { useTheme } from './theme-provider';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 import { usePresence } from '../lib/contexts/presence-context';
 
@@ -25,7 +25,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
   const { slug } = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
   const { data: friends } = useFriends();
@@ -209,7 +209,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                onClick={toggleTheme}
               >
                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
