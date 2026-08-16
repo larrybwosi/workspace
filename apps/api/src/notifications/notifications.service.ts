@@ -47,12 +47,20 @@ export class NotificationsService {
   }
 
   async getNotificationById(userId: string, notificationId: string) {
-    return prisma.notification.findFirst({
-      where: {
-        id: notificationId,
-        userId,
-      },
+    /**
+     * ⚡ Performance Optimization:
+     * Leverages direct O(1) primary key lookup on 'id' via `findUnique` instead of slower `findFirst` index scan,
+     * handling ownership check in application memory.
+     */
+    const notification = await prisma.notification.findUnique({
+      where: { id: notificationId },
     });
+
+    if (!notification || notification.userId !== userId) {
+      return null;
+    }
+
+    return notification;
   }
 
   /**
