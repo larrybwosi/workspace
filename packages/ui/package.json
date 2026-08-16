@@ -8,7 +8,9 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    }
+    },
+    "./styles/*": "./src/styles/*",
+    "./styles/globals.css": "./src/styles/globals.css"
   },
   "scripts": {
     "type-check": "tsc --noEmit"

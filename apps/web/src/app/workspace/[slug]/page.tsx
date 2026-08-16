@@ -34,6 +34,7 @@ interface Workspace {
   slug: string;
   description?: string;
   icon?: string;
+  banner?: string;
   plan?: string;
   members?: any[];
   _count?: {
@@ -155,11 +156,22 @@ export default function WorkspacePage() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="w-full">
+            {/* Workspace Banner if available */}
+            {workspace.banner && (
+              <div className="h-32 w-full overflow-hidden border-b border-border bg-muted">
+                <img src={workspace.banner} alt={`${workspace.name} banner`} className="h-full w-full object-cover" />
+              </div>
+            )}
+
             {/* Workspace identity strip */}
             <div className="flex items-center justify-between gap-4 px-8 py-6 border-b border-border">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="h-12 w-12 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-lg font-bold text-primary shrink-0">
-                  {workspace.icon || workspace.name.charAt(0).toUpperCase()}
+                <div className="h-12 w-12 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-lg font-bold text-primary shrink-0 overflow-hidden">
+                  {workspace.icon && (workspace.icon.startsWith('http') || workspace.icon.startsWith('/') || workspace.icon.startsWith('data:') || workspace.icon.length > 2) ? (
+                    <img src={workspace.icon} alt={workspace.name} className="h-full w-full object-cover" />
+                  ) : (
+                    workspace.icon || workspace.name.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
