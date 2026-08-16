@@ -58,6 +58,20 @@ export function useCreateM2mApplication(orgSlug: string) {
   });
 }
 
+export function useUpdateM2mApplication(orgSlug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; name?: string; scopes?: string[]; allowedIps?: string[] }) => {
+      const { data } = await apiClient.patch(`/organizations/${orgSlug}/m2m/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization', orgSlug, 'm2m'] });
+    },
+  });
+}
+
 export function useUpdateOrganization(orgSlug: string) {
   const queryClient = useQueryClient();
 

@@ -181,6 +181,48 @@ describe('OrganizationsController', () => {
     });
   });
 
+  describe('updateM2mApplication', () => {
+    it('should update name, scopes, and allowedIps', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        name: 'Acme',
+        clientId: 'm2m_123',
+        scopes: ['provisioning:workspaces'],
+        allowedIps: [],
+        createdAt: new Date('2026-01-01'),
+        members: [{ role: 'admin' }],
+      };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+      (prisma.organization.update as any).mockResolvedValue({
+        id: 'org-1',
+        name: 'Updated CI App',
+        clientId: 'm2m_123',
+        scopes: ['provisioning:workspaces', 'messages:send'],
+        allowedIps: ['192.168.1.1'],
+        createdAt: new Date('2026-01-01'),
+      });
+
+      const result = await controller.updateM2mApplication(mockUser, 'acme', 'org-1', {
+        name: 'Updated CI App',
+        scopes: ['provisioning:workspaces', 'messages:send'],
+        allowedIps: ['192.168.1.1'],
+      });
+
+      expect(prisma.organization.update).toHaveBeenCalledWith({
+        where: { id: 'org-1' },
+        data: {
+          name: 'Updated CI App',
+          scopes: ['provisioning:workspaces', 'messages:send'],
+          allowedIps: ['192.168.1.1'],
+        },
+        select: expect.any(Object),
+      });
+      expect(result.name).toBe('Updated CI App');
+      expect(result.scopes).toEqual(['provisioning:workspaces', 'messages:send']);
+    });
+  });
+
   describe('deleteM2mApplication', () => {
     it('should clear M2M credentials', async () => {
       const mockOrg = {
