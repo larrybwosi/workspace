@@ -126,6 +126,7 @@ jobs:
       - name: Build Release APK
         env:
           API_URL: http://localhost:3000
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: cd apps/android && ./gradlew assembleRelease
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
@@ -282,6 +283,7 @@ jobs:
       - name: Build Release APK
         env:
           API_URL: http://localhost:3000
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: cd apps/android && ./gradlew assembleRelease
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
