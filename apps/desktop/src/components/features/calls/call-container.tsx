@@ -15,6 +15,7 @@ export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { data: session } = useSession();
+  const joinCallMutation = useJoinCall();
 
   // Subscribe to incoming calls
   useEffect(() => {
@@ -41,13 +42,9 @@ export function CallContainer() {
     }
   }, [activeCall]);
 
-  if (!activeCall && !isIncoming) return null;
-
   const handleEndCall = () => {
     endCall();
   };
-
-  const joinCallMutation = useJoinCall();
 
   const handleAcceptCall = async () => {
     if (!incomingCallData) return;
@@ -68,48 +65,56 @@ export function CallContainer() {
     }
   };
 
+  // If there's no call activity, return empty fragment instead of early return
+  if (!activeCall && !isIncoming) {
+    return <></>;
+  }
+
   return (
     <>
       {/* Incoming Call Dialog */}
-      <Dialog open={isIncoming} onOpenChange={open => !open && rejectCall()}>
-        <DialogContent className="sm:max-w-md bg-card border-border">
-          <div className="flex flex-col items-center justify-center p-6 space-y-6">
-            <div className="relative">
-              <Avatar className="h-24 w-24 ring-4 ring-primary/20 animate-pulse">
-                <AvatarImage src={incomingCallData?.initiator?.image} />
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {incomingCallData?.initiator?.name.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-2 -right-2 bg-primary rounded-full p-2">
-                {incomingCallData?.type === 'video' ? (
-                  <Video className="h-5 w-5 text-white" />
-                ) : (
-                  <Phone className="h-5 w-5 text-white" />
-                )}
+      {isIncoming && (
+        <Dialog open={isIncoming} onOpenChange={open => !open && rejectCall()}>
+          <DialogContent className="sm:max-w-md bg-card border-border">
+            <div className="flex flex-col items-center justify-center p-6 space-y-6">
+              <div className="relative">
+                <Avatar className="h-24 w-24 ring-4 ring-primary/20 animate-pulse">
+                  <AvatarImage src={incomingCallData?.initiator?.image} />
+                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                    {/* Added '?' before .slice to prevent crash when data is null */}
+                    {incomingCallData?.initiator?.name?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-2 -right-2 bg-primary rounded-full p-2">
+                  {incomingCallData?.type === 'video' ? (
+                    <Video className="h-5 w-5 text-white" />
+                  ) : (
+                    <Phone className="h-5 w-5 text-white" />
+                  )}
+                </div>
+              </div>
+
+              <div className="text-center">
+                <h3 className="text-xl font-bold">{incomingCallData?.initiator?.name}</h3>
+                <p className="text-muted-foreground italic">Incoming {incomingCallData?.type} call...</p>
+              </div>
+
+              <div className="flex gap-4 w-full">
+                <Button variant="destructive" className="flex-1 h-12 rounded-full" onClick={rejectCall}>
+                  <PhoneOff className="mr-2 h-5 w-5" /> Decline
+                </Button>
+                <Button
+                  variant="default"
+                  className="flex-1 h-12 rounded-full bg-green-600 hover:bg-green-700"
+                  onClick={handleAcceptCall}
+                >
+                  <Phone className="mr-2 h-5 w-5" /> Accept
+                </Button>
               </div>
             </div>
-
-            <div className="text-center">
-              <h3 className="text-xl font-bold">{incomingCallData?.initiator?.name}</h3>
-              <p className="text-muted-foreground italic">Incoming {incomingCallData?.type} call...</p>
-            </div>
-
-            <div className="flex gap-4 w-full">
-              <Button variant="destructive" className="flex-1 h-12 rounded-full" onClick={rejectCall}>
-                <PhoneOff className="mr-2 h-5 w-5" /> Decline
-              </Button>
-              <Button
-                variant="default"
-                className="flex-1 h-12 rounded-full bg-green-600 hover:bg-green-700"
-                onClick={handleAcceptCall}
-              >
-                <Phone className="mr-2 h-5 w-5" /> Accept
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Active Call Modal/Fullscreen */}
       {!isFullscreen && activeCall && (

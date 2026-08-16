@@ -84,6 +84,9 @@ export function InfoPanel({
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(workspaceSlug);
   const { data: channel, isLoading: isChannelLoading } = useChannel(channelId, workspaceSlug);
   const { data: workspaceMembers, isLoading: isMembersLoading } = useWorkspaceMembers(workspaceSlug);
+  const joinCallMutation = useJoinCall();
+  const startCallMutation = useStartCall();
+  const generateInviteLinkMutation = useGenerateInviteLink();
 
   const isDM = channelId?.startsWith('dm-') || !!dmUser;
   const members: WorkspaceMember[] = isDM ? [] : (workspaceMembers as any)?.members || [];
@@ -97,9 +100,6 @@ export function InfoPanel({
   const { data: scheduledCalls = [] } = useScheduledCalls(workspaceSlug);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
 
-  const joinCallMutation = useJoinCall();
-  const startCallMutation = useStartCall();
-  const generateInviteLinkMutation = useGenerateInviteLink();
 
   const handleJoinCall = async (call: any) => {
     if (currentActiveCall) {

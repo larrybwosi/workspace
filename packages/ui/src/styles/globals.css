@@ -10,88 +10,88 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Warm, light-first enterprise palette (Conceptzilla-inspired) */
-  --background: oklch(0.995 0.002 95);
-  --foreground: oklch(0.22 0.008 75);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.008 75);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.008 75);
-  --primary: oklch(0.6 0.18 275);
-  --primary-foreground: oklch(0.99 0.002 95);
-  --secondary: oklch(0.965 0.005 90);
-  --secondary-foreground: oklch(0.28 0.008 75);
-  --muted: oklch(0.965 0.005 90);
-  --muted-foreground: oklch(0.55 0.008 75);
-  --accent: oklch(0.96 0.02 275);
-  --accent-foreground: oklch(0.28 0.008 75);
-  --destructive: oklch(0.585 0.213 27);
-  --destructive-foreground: oklch(0.99 0.002 95);
-  --success: oklch(0.62 0.14 150);
-  --success-foreground: oklch(0.99 0.002 95);
-  --warning: oklch(0.72 0.15 65);
-  --warning-foreground: oklch(0.24 0.006 75);
-  --border: oklch(0.912 0.006 85);
-  --input: oklch(0.912 0.006 85);
-  --ring: oklch(0.6 0.18 275);
-  --chart-1: oklch(0.55 0.14 250);
-  --chart-2: oklch(0.62 0.14 150);
-  --chart-3: oklch(0.72 0.15 65);
-  --chart-4: oklch(0.6 0.18 320);
-  --chart-5: oklch(0.62 0.2 25);
-  --radius: 0.375rem;
-  --sidebar: oklch(0.98 0.01 275);
-  --sidebar-foreground: oklch(0.3 0.008 75);
-  --sidebar-primary: oklch(0.6 0.18 275);
-  --sidebar-primary-foreground: oklch(0.99 0.002 95);
-  --sidebar-accent: oklch(0.96 0.02 275);
-  --sidebar-accent-foreground: oklch(0.24 0.006 75);
-  --sidebar-border: oklch(0.9 0.007 85);
-  --sidebar-ring: oklch(0.6 0.18 275);
+  /* Discord light theme */
+  --background: #ffffff;
+  --foreground: #060607;
+  --card: #ffffff;
+  --card-foreground: #060607;
+  --popover: #ffffff;
+  --popover-foreground: #060607;
+  --primary: #5865f2; /* Discord blurple */
+  --primary-foreground: #ffffff;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #060607;
+  --muted: #f2f3f5;
+  --muted-foreground: #5c5e66;
+  --accent: #e3e5e8;
+  --accent-foreground: #060607;
+  --destructive: #f23f42;
+  --destructive-foreground: #ffffff;
+  --success: #23a55a;
+  --success-foreground: #ffffff;
+  --warning: #f0b232;
+  --warning-foreground: #060607;
+  --border: #e3e5e8;
+  --input: #e3e5e8;
+  --ring: #5865f2;
+  --chart-1: #5865f2;
+  --chart-2: #23a55a;
+  --chart-3: #f0b232;
+  --chart-4: #eb459e;
+  --chart-5: #f23f42;
+  --radius: 0.5rem;
+  --sidebar: #f2f3f5;
+  --sidebar-foreground: #060607;
+  --sidebar-primary: #5865f2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e3e5e8;
+  --sidebar-accent-foreground: #060607;
+  --sidebar-border: #e3e5e8;
+  --sidebar-ring: #5865f2;
 }
 
-/* Conceptzilla-inspired deep purple dark theme */
+/* Discord dark theme (default look most people know) */
 .dark {
-  --background: oklch(0.14 0.015 275);
-  --foreground: oklch(0.98 0.005 275);
-  --card: oklch(0.17 0.015 275);
-  --card-foreground: oklch(0.98 0.005 275);
-  --popover: oklch(0.17 0.015 275);
-  --popover-foreground: oklch(0.98 0.005 275);
-  --primary: oklch(0.62 0.17 275);
-  --primary-foreground: oklch(0.99 0.005 275);
-  --secondary: oklch(0.22 0.03 275);
-  --secondary-foreground: oklch(0.98 0.005 275);
-  --muted: oklch(0.22 0.03 275);
-  --muted-foreground: oklch(0.75 0.015 275);
-  --accent: oklch(0.26 0.04 275);
-  --accent-foreground: oklch(0.98 0.005 275);
-  --destructive: oklch(0.6 0.19 25);
-  --destructive-foreground: oklch(0.98 0.005 275);
-  --success: oklch(0.68 0.14 150);
-  --success-foreground: oklch(0.18 0.004 75);
-  --warning: oklch(0.76 0.15 70);
-  --warning-foreground: oklch(0.18 0.004 75);
-  --border: oklch(0.22 0.02 275);
-  --input: oklch(0.22 0.02 275);
-  --ring: oklch(0.62 0.17 275);
-  --chart-1: oklch(0.62 0.17 275);
-  --chart-2: oklch(0.7 0.14 150);
-  --chart-3: oklch(0.75 0.15 70);
-  --chart-4: oklch(0.65 0.18 320);
-  --chart-5: oklch(0.65 0.2 25);
-  --sidebar: oklch(0.11 0.015 275);
-  --sidebar-foreground: oklch(0.9 0.01 275);
-  --sidebar-primary: oklch(0.62 0.17 275);
-  --sidebar-primary-foreground: oklch(0.99 0.005 275);
-  --sidebar-accent: oklch(0.19 0.025 275);
-  --sidebar-accent-foreground: oklch(0.98 0.005 275);
-  --sidebar-border: oklch(0.19 0.015 275);
-  --sidebar-ring: oklch(0.62 0.17 275);
+  --background: #313338; /* main content / chat area */
+  --foreground: #f2f3f5;
+  --card: #2b2d31; /* elevated panels, popovers */
+  --card-foreground: #f2f3f5;
+  --popover: #111214;
+  --popover-foreground: #f2f3f5;
+  --primary: #5865f2; /* blurple */
+  --primary-foreground: #ffffff;
+  --secondary: #2b2d31;
+  --secondary-foreground: #f2f3f5;
+  --muted: #2b2d31;
+  --muted-foreground: #b5bac1;
+  --accent: #35373c; /* hover states on list items */
+  --accent-foreground: #f2f3f5;
+  --destructive: #f23f42;
+  --destructive-foreground: #ffffff;
+  --success: #23a55a;
+  --success-foreground: #ffffff;
+  --warning: #f0b232;
+  --warning-foreground: #060607;
+  --border: #1e1f22;
+  --input: #1e1f22;
+  --ring: #5865f2;
+  --chart-1: #5865f2;
+  --chart-2: #23a55a;
+  --chart-3: #f0b232;
+  --chart-4: #eb459e;
+  --chart-5: #f23f42;
+  --sidebar: #2b2d31; /* channel list */
+  --sidebar-foreground: #b5bac1;
+  --sidebar-primary: #5865f2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #35373c;
+  --sidebar-accent-foreground: #f2f3f5;
+  --sidebar-border: #1e1f22;
+  --sidebar-ring: #5865f2;
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: 'gg sans', 'Geist', 'Geist Fallback', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -154,7 +154,7 @@
     outline: none;
   }
 
-  /* Custom scrollbar styling for better appearance */
+  /* Discord-style thin, dark scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -165,29 +165,34 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: oklch(0.82 0.006 85);
-    border-radius: 999px;
+    background: #d4d7dc;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.72 0.006 85);
+    background: #b5bac1;
+    background-clip: padding-box;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: oklch(0.82 0.006 85) transparent;
+    scrollbar-color: #d4d7dc transparent;
   }
 
   .dark ::-webkit-scrollbar-thumb {
-    background: oklch(0.35 0.004 75);
+    background: #1a1b1e;
+    background-clip: padding-box;
   }
 
   .dark ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.45 0.004 75);
+    background: #131417;
+    background-clip: padding-box;
   }
 
   .dark * {
-    scrollbar-color: oklch(0.35 0.004 75) transparent;
+    scrollbar-color: #1a1b1e transparent;
   }
 
   /* PWA & Mobile Optimizations */
@@ -212,7 +217,7 @@
   }
 
   .bg-dotted {
-  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
+    background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 

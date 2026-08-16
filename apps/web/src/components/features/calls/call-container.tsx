@@ -15,6 +15,7 @@ export function CallContainer() {
   const { activeCall, isIncoming, incomingCallData, endCall, setCall, setIncoming, rejectCall } = useCallStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { data: session } = useSession();
+  const joinCallMutation = useJoinCall();
 
   // Subscribe to incoming calls
   useEffect(() => {
@@ -46,7 +47,6 @@ export function CallContainer() {
     endCall();
   };
 
-  const joinCallMutation = useJoinCall();
 
   const handleAcceptCall = async () => {
     if (!incomingCallData) return;
