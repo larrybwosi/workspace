@@ -9,10 +9,8 @@ vi.mock('@repo/database', () => ({
     organization: {
       findUnique: vi.fn(),
     },
-    oauthAccessToken: {
-      create: vi.fn(),
-    },
     oAuthAccessToken: {
+      create: vi.fn(),
       findUnique: vi.fn(),
     },
   },
@@ -54,12 +52,10 @@ describe('V3OAuthController', () => {
       allowedIps: [],
     });
 
-    (prisma as any).oauthAccessToken = {
-      create: vi.fn().mockResolvedValue({
-        id: 'token-id-1',
-        scopes: ['provisioning:workspaces'],
-      }),
-    };
+    (prisma.oAuthAccessToken.create as any).mockResolvedValue({
+      id: 'token-id-1',
+      scopes: ['provisioning:workspaces'],
+    });
 
     const result = await controller.getToken(req, body);
 
@@ -91,12 +87,10 @@ describe('V3OAuthController', () => {
       allowedIps: [],
     });
 
-    (prisma as any).oauthAccessToken = {
-      create: vi.fn().mockResolvedValue({
-        id: 'token-id-1',
-        scopes: ['*'],
-      }),
-    };
+    (prisma.oAuthAccessToken.create as any).mockResolvedValue({
+      id: 'token-id-1',
+      scopes: ['*'],
+    });
 
     const result = await controller.getToken(req, body);
     expect(result.success).toBe(true);
