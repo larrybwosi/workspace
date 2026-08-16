@@ -6,7 +6,7 @@ import { processScheduledNotifications, processScheduledCalls, processNotificati
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     this.logger.debug('Running scheduled notifications, calls and queue task');
 
