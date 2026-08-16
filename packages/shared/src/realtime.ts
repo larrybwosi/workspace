@@ -46,14 +46,24 @@ const getBaseURL = () => {
 async function fetchProviderType() {
   if (providerType) return providerType;
 
+  const envProvider = getEnv('REALTIME_PROVIDER') || getEnv('NEXT_PUBLIC_REALTIME_PROVIDER');
+  if (envProvider === 'socketio' || envProvider === 'ably') {
+    providerType = envProvider;
+    return providerType;
+  }
+
   try {
     const baseURL = getBaseURL();
     const response = await fetch(`${baseURL.replace(/\/$/, '')}/api/config/realtime`);
     const data = await response.json();
-    providerType = data.provider;
+    if (data.provider === 'socketio' || data.provider === 'ably') {
+      providerType = data.provider;
+    } else {
+      providerType = 'socketio';
+    }
   } catch (error) {
-    console.error('Failed to fetch realtime provider type, defaulting to ably', error);
-    providerType = 'ably';
+    console.error('Failed to fetch realtime provider type, defaulting to socketio', error);
+    providerType = 'socketio';
   }
   return providerType;
 }

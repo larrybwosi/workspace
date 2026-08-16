@@ -39,6 +39,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_REALTIME_PROVIDER=socketio
+ENV REALTIME_PROVIDER=socketio
 
 # Create a system user to run the app
 RUN addgroup --system --gid 1001 nodejs
