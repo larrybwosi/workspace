@@ -300,6 +300,21 @@ export class InvitationsService {
         }),
       ]);
 
+      if (inviteLink.createdById && inviteLink.createdById !== user.id) {
+        await this.notificationsService.createNotification({
+          userId: inviteLink.createdById,
+          type: 'workspace_invitation',
+          title: 'Invitation Accepted',
+          message: `${user.name} accepted your invitation to join ${inviteLink.workspace.name}`,
+          entityType: 'workspace',
+          entityId: inviteLink.workspaceId,
+          metadata: {
+            acceptedByUserId: user.id,
+            workspaceId: inviteLink.workspaceId,
+          },
+        });
+      }
+
       return { success: true, workspace: inviteLink.workspace };
     }
 
@@ -339,6 +354,21 @@ export class InvitationsService {
         }),
       ]);
 
+      if (workspaceInvite.invitedBy && workspaceInvite.invitedBy !== user.id) {
+        await this.notificationsService.createNotification({
+          userId: workspaceInvite.invitedBy,
+          type: 'workspace_invitation',
+          title: 'Invitation Accepted',
+          message: `${user.name} accepted your invitation to join ${workspaceInvite.workspace.name}`,
+          entityType: 'workspace',
+          entityId: workspaceInvite.workspaceId,
+          metadata: {
+            acceptedByUserId: user.id,
+            workspaceId: workspaceInvite.workspaceId,
+          },
+        });
+      }
+
       return { success: true, workspace: workspaceInvite.workspace };
     }
 
@@ -367,6 +397,21 @@ export class InvitationsService {
           data: { status: 'accepted', acceptedAt: new Date() },
         }),
       ]);
+
+      if (generalInvite.invitedBy && generalInvite.invitedBy !== user.id) {
+        await this.notificationsService.createNotification({
+          userId: generalInvite.invitedBy,
+          type: 'platform_invitation',
+          title: 'Invitation Accepted',
+          message: `${user.name} accepted your invitation to join Scrymechat`,
+          entityType: 'invitation',
+          entityId: generalInvite.id,
+          metadata: {
+            acceptedByUserId: user.id,
+            invitationId: generalInvite.id,
+          },
+        });
+      }
 
       return { success: true, platform: true };
     }

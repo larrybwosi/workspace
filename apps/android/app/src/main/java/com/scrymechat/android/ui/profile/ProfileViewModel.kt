@@ -315,7 +315,16 @@ class ProfileViewModel @Inject constructor(
                             statusEmoji = userDto.statusEmoji,
                             bio = userDto.bio,
                             role = userDto.role ?: "member",
-                            status = userDto.status ?: "offline"
+                            status = userDto.status ?: "offline",
+                            jobTitle = userDto.jobTitle,
+                            department = userDto.department,
+                            officeLocation = userDto.officeLocation,
+                            managerId = userDto.managerId,
+                            managerName = userDto.managerName,
+                            managerTitle = userDto.managerTitle,
+                            managerAvatar = userDto.managerAvatar,
+                            github = userDto.github,
+                            slack = userDto.slack
                         )
                     }
                 }

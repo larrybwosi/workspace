@@ -139,7 +139,7 @@ fun HomeScreen(
             isLoading = uiState.isUpdatingWorkspace,
             onDismiss = { viewModel.setEditWorkspaceDialogOpen(false) },
             onSave = { name, description, icon, banner ->
-                viewModel.updateWorkspace(name, description, icon, banner)
+                viewModel.updateWorkspace(name, description, icon, banner, context)
             }
         )
     }
