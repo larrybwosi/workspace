@@ -1,6 +1,6 @@
 {
   "name": "workspace",
-  "version": "2.40.0",
+  "version": "2.41.1",
   "private": true,
   "scripts": {
     "build": "turbo build",
