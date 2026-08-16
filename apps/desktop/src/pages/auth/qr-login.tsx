@@ -5,6 +5,7 @@ import { authClient } from '../../lib/auth/auth-client';
 import { Loader2, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
+import { realtime } from '@repo/shared';
 
 type Status = 'loading' | 'pending' | 'authorized' | 'expired' | 'denied' | 'error';
 
@@ -58,9 +59,11 @@ export function QRCodeLoginPage() {
       setStatus('authorized');
 
       try {
-        // Better-Auth reads the session token from localStorage on this
-        // client; swap in the access token issued by the device flow.
+        // Populate all token keys in localStorage to ensure Better-Auth and API clients recognize session
+        localStorage.setItem('better-auth.session_token', token);
         localStorage.setItem('better-auth.session-token', token);
+        localStorage.setItem('bearer_token', token);
+
         await authClient.getSession();
 
         toast.success('Logged in successfully!');
@@ -74,40 +77,73 @@ export function QRCodeLoginPage() {
     [navigate]
   );
 
+  const checkStatus = useCallback(async () => {
+    if (!deviceCode) return;
+    try {
+      const { data } = await apiClient.get(`/device-auth/qr/status/${deviceCode}`);
+
+      switch (data.status) {
+        case 'authorized':
+          if (data.token) {
+            await handleAuthorization(data.token);
+          }
+          return;
+        case 'expired':
+          clearPolling();
+          setStatus('expired');
+          return;
+        case 'denied':
+          clearPolling();
+          setStatus('denied');
+          return;
+        case 'pending':
+          if (data.slowDown) {
+            intervalRef.current += 5;
+          }
+          break;
+      }
+    } catch (e) {
+      console.error('Status check failed', e);
+    }
+  }, [deviceCode, handleAuthorization]);
+
   useEffect(() => {
-    if (!deviceCode || status !== 'pending') return;
+    if (!deviceCode || !userCode || status !== 'pending') return;
+
+    // Real-time channel listener for instant authorization
+    const channel = `qr-session:${userCode}`;
+
+    const handleRealtimeEvent = async (payload: any) => {
+      if (payload?.status === 'authorized') {
+        if (payload.token) {
+          await handleAuthorization(payload.token);
+        } else {
+          await checkStatus();
+        }
+      } else if (payload?.status === 'denied') {
+        clearPolling();
+        setStatus('denied');
+      }
+    };
+
+    realtime.subscribe(channel, 'authorized', handleRealtimeEvent);
+    realtime.subscribe(channel, 'denied', handleRealtimeEvent);
 
     const poll = async () => {
-      try {
-        const { data } = await apiClient.get(`/device-auth/qr/status/${deviceCode}`);
-
-        switch (data.status) {
-          case 'authorized':
-            await handleAuthorization(data.token);
-            return;
-          case 'expired':
-            setStatus('expired');
-            return;
-          case 'denied':
-            setStatus('denied');
-            return;
-          case 'pending':
-            if (data.slowDown) {
-              intervalRef.current += 5;
-            }
-            break;
-        }
-      } catch (e) {
-        console.error('Status check failed', e);
+      await checkStatus();
+      if (status === 'pending') {
+        pollingRef.current = setTimeout(poll, intervalRef.current * 1000);
       }
-
-      pollingRef.current = setTimeout(poll, intervalRef.current * 1000);
     };
 
     pollingRef.current = setTimeout(poll, intervalRef.current * 1000);
 
-    return () => clearPolling();
-  }, [deviceCode, status, handleAuthorization]);
+    return () => {
+      clearPolling();
+      realtime.unsubscribe(channel, 'authorized', handleRealtimeEvent);
+      realtime.unsubscribe(channel, 'denied', handleRealtimeEvent);
+    };
+  }, [deviceCode, userCode, status, checkStatus, handleAuthorization]);
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-background p-6">
