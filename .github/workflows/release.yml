@@ -3,36 +3,23 @@ name: Release
 on:
   push:
     branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
-    types: [closed]
 
 permissions:
   contents: write
 
 jobs:
-  # ---------------------------------------------------------------------
-  # Runs on every push to main or dev, EXCEPT when the run is a dev->main
-  # merge — that code was already tested when it landed on dev, so we
-  # skip straight to cutting the release.
-  # ---------------------------------------------------------------------
-  test:
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main' && github.head_ref == 'dev')"
-    uses: ./.github/workflows/tests.yml
-    secrets: inherit
-
   # =======================================================================
   # DEV: minor release, gated to only run when Android Kotlin code changed
   # =======================================================================
   detect-android-kotlin:
-    if: github.ref == 'refs/heads/dev' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'dev')
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.filter.outputs.kotlin }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -43,8 +30,8 @@ jobs:
               - 'apps/android/**/*.kts'
 
   version-dev:
-    needs: [test, detect-android-kotlin]
-    if: (github.ref == 'refs/heads/dev' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'dev')) && needs.detect-android-kotlin.outputs.changed == 'true'
+    needs: [detect-android-kotlin]
+    if: github.ref == 'refs/heads/dev' && needs.detect-android-kotlin.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -55,7 +42,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -94,7 +81,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -114,7 +101,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -126,6 +113,7 @@ jobs:
       - name: Build Release APK
         env:
           API_URL: http://localhost:3000
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: cd apps/android && ./gradlew assembleRelease
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
@@ -140,8 +128,7 @@ jobs:
   # No changesets — version is bumped directly (patch) and published.
   # =======================================================================
   version-main:
-    needs: [test]
-    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -152,7 +139,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -186,8 +173,8 @@ jobs:
         continue-on-error: true
 
   docker-publish:
-    needs: [test, version-main]
-    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main')
+    needs: [version-main]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -199,7 +186,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -240,7 +227,7 @@ jobs:
 
   create-release-main:
     needs: [version-main]
-    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -250,7 +237,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -270,7 +257,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -282,6 +269,7 @@ jobs:
       - name: Build Release APK
         env:
           API_URL: http://localhost:3000
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: cd apps/android && ./gradlew assembleRelease
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
@@ -307,7 +295,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: ${{ github.event.pull_request.base.ref || github.ref }}
+          ref: ${{ github.ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
