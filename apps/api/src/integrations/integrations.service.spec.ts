@@ -40,6 +40,7 @@ vi.mock('@repo/database', () => ({
     },
     webhook: {
       count: vi.fn(),
+      findUnique: vi.fn(),
     },
     webhookLog: {
       findMany: vi.fn(),
@@ -404,6 +405,49 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
 
       const result = await service.getStats('user-1');
       expect(result.webhookSuccessRate).toBe(0);
+    });
+  });
+
+  describe('getWebhookLogs', () => {
+    it('should return logs in a single query when logs exist', async () => {
+      const mockLogs = [{ id: 'log-1', event: 'test.event', statusCode: 200 }];
+      mockPrisma.webhookLog.findMany.mockResolvedValue(mockLogs);
+
+      const result = await service.getWebhookLogs('user-1', 'wh-1');
+
+      expect(mockPrisma.webhookLog.findMany).toHaveBeenCalledWith({
+        where: {
+          webhookId: 'wh-1',
+          webhook: { userId: 'user-1' },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      expect(mockPrisma.webhook.findUnique).not.toHaveBeenCalled();
+      expect(result).toEqual(mockLogs);
+    });
+
+    it('should return empty array when no logs exist but webhook belongs to user', async () => {
+      mockPrisma.webhookLog.findMany.mockResolvedValue([]);
+      mockPrisma.webhook.findUnique.mockResolvedValue({ id: 'wh-1' });
+
+      const result = await service.getWebhookLogs('user-1', 'wh-1');
+
+      expect(mockPrisma.webhookLog.findMany).toHaveBeenCalled();
+      expect(mockPrisma.webhook.findUnique).toHaveBeenCalledWith({
+        where: { id: 'wh-1', userId: 'user-1' },
+        select: { id: true },
+      });
+      expect(result).toEqual([]);
+    });
+
+    it('should throw NotFoundException when webhook does not exist or belong to user', async () => {
+      mockPrisma.webhookLog.findMany.mockResolvedValue([]);
+      mockPrisma.webhook.findUnique.mockResolvedValue(null);
+
+      await expect(service.getWebhookLogs('user-1', 'wh-nonexistent')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 });

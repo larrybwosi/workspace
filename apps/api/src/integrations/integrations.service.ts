@@ -304,17 +304,34 @@ export class IntegrationsService {
   }
 
   async getWebhookLogs(userId: string, webhookId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Directly queries webhook logs with a relational filter on `webhook: { userId }`.
+     * On the happy path (when logs exist), this reduces database round-trips (RTT) from 2 down to 1
+     * by bypassing the initial `prisma.webhook.findUnique` ownership verification query.
+     * If no logs are returned, a targeted `prisma.webhook.findUnique` query verifies existence and ownership.
+     */
+    const logs = await prisma.webhookLog.findMany({
+      where: {
+        webhookId,
+        webhook: { userId },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    if (logs.length > 0) {
+      return logs;
+    }
+
     const webhook = await prisma.webhook.findUnique({
       where: { id: webhookId, userId },
+      select: { id: true },
     });
 
     if (!webhook) throw new NotFoundException('Webhook not found');
 
-    return prisma.webhookLog.findMany({
-      where: { webhookId },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
+    return [];
   }
 
   async getApiKeys(userId: string) {
