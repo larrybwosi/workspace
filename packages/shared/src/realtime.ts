@@ -113,8 +113,14 @@ export const realtime = {
 
       const listener = (data: any) => {
         // Socket.io emits to rooms, but client-side listeners are global per socket.
-        // We should ensure the message was intended for this channel.
-        if (data?._channel && data._channel !== channelName) return;
+        // We should ensure the message was intended for this channel or matching raw channel ID.
+        if (data?._channel) {
+          const rawChannel = channelName.replace(/^(channel:|dm:|thread:|user:|notifications:)/, '');
+          const rawDataChannel = String(data._channel).replace(/^(channel:|dm:|thread:|user:|notifications:)/, '');
+          if (data._channel !== channelName && rawDataChannel !== rawChannel) {
+            return;
+          }
+        }
         callback(data);
       };
 
@@ -176,7 +182,11 @@ export const realtime = {
     if (type === 'socketio') {
       const socket = getSocketioClient();
       if (!socket) return;
-      socket.emit('publish', { channel: channelName, event: eventName, data });
+      if (eventName === 'typing') {
+        socket.emit('typing', { room: channelName, ...data });
+      } else {
+        socket.emit('publish', { channel: channelName, event: eventName, data });
+      }
     } else {
       const ably = getAblyClient();
       if (!ably) return;

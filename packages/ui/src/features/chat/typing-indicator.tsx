@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 
 interface TypingIndicatorProps {
@@ -11,36 +11,39 @@ interface TypingIndicatorProps {
 
 export function TypingIndicator({ channelId, currentUserId }: TypingIndicatorProps) {
   const [typingUsers, setTypingUsers] = useState<any[]>([]);
-  const ably = getAblyClient();
 
   useEffect(() => {
-    if (!ably || !channelId) return;
+    if (!channelId) return;
 
-    const channel = ably.channels.get(AblyChannels.channel(channelId));
+    const room = channelId.startsWith('dm-')
+      ? `dm:${channelId.replace('dm-', '')}`
+      : channelId.startsWith('channel:') || channelId.startsWith('dm:') || channelId.startsWith('thread:')
+        ? channelId
+        : `channel:${channelId}`;
 
-    const handleTypingStart = (message: any) => {
-      const { userId, name, avatar } = message.data;
-      if (userId === currentUserId) return;
+    const handleTyping = (data: any) => {
+      const userId = data.userId;
+      const displayName = data.userName || data.name || 'User';
+      const avatar = data.avatar;
+
+      if (!userId || userId === currentUserId) return;
 
       setTypingUsers(prev => {
-        if (prev.find(u => u.userId === userId)) return prev;
-        return [...prev, { userId, name, avatar }];
+        const filtered = prev.filter(u => u.userId !== userId);
+        return [...filtered, { userId, name: displayName, avatar }];
       });
+
+      setTimeout(() => {
+        setTypingUsers(prev => prev.filter(u => u.userId !== userId));
+      }, 3000);
     };
 
-    const handleTypingStop = (message: any) => {
-      const { userId } = message.data;
-      setTypingUsers(prev => prev.filter(u => u.userId !== userId));
-    };
-
-    channel.subscribe(AblyEvents.TYPING_START, handleTypingStart);
-    channel.subscribe(AblyEvents.TYPING_STOP, handleTypingStop);
+    realtime.subscribe(room, 'typing', handleTyping);
 
     return () => {
-      channel.unsubscribe(AblyEvents.TYPING_START, handleTypingStart);
-      channel.unsubscribe(AblyEvents.TYPING_STOP, handleTypingStop);
+      realtime.unsubscribe(room, 'typing', handleTyping);
     };
-  }, [ably, channelId, currentUserId]);
+  }, [channelId, currentUserId]);
 
   if (typingUsers.length === 0) return null;
 
@@ -73,16 +76,19 @@ export function TypingIndicator({ channelId, currentUserId }: TypingIndicatorPro
 }
 
 export function useTypingNotifier(channelId: string, user: any) {
-  const ably = getAblyClient();
   const typingTimeoutRef = useRef<any>(null);
   const isTypingRef = useRef(false);
 
-  // Ensure typing stops when component unmounts or channel changes
+  const room = channelId
+    ? channelId.startsWith('dm-')
+      ? `dm:${channelId.replace('dm-', '')}`
+      : channelId.startsWith('channel:') || channelId.startsWith('dm:') || channelId.startsWith('thread:')
+        ? channelId
+        : `channel:${channelId}`
+    : '';
+
   useEffect(() => {
     return () => {
-      if (isTypingRef.current) {
-        notifyTyping(false);
-      }
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -90,16 +96,15 @@ export function useTypingNotifier(channelId: string, user: any) {
   }, [channelId]);
 
   const notifyTyping = (isTyping: boolean) => {
-    if (!ably || !channelId || !user) return;
+    if (!room || !user) return;
 
-    const channel = ably.channels.get(AblyChannels.channel(channelId));
-    const event = isTyping ? AblyEvents.TYPING_START : AblyEvents.TYPING_STOP;
-
-    channel.publish(event, {
-      userId: user.id,
-      name: user.name,
-      avatar: user.avatar || user.image,
-    });
+    if (isTyping) {
+      realtime.publish(room, 'typing', {
+        userId: user.id,
+        userName: user.name || user.username || 'User',
+        avatar: user.avatar || user.image,
+      });
+    }
 
     isTypingRef.current = isTyping;
   };

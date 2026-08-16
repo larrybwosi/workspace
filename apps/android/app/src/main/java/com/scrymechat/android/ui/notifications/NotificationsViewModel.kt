@@ -1,12 +1,16 @@
 package com.scrymechat.android.ui.notifications
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scrymechat.android.common.Resource
 import com.scrymechat.android.data.local.SessionManager
 import com.scrymechat.android.data.local.entities.NotificationEntity
 import com.scrymechat.android.data.repository.NotificationRepository
+import com.scrymechat.android.data.repository.RealtimeRepository
+import com.scrymechat.android.notifications.NotificationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,8 +18,10 @@ import javax.inject.Inject
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val repository: NotificationRepository,
+    private val realtimeRepository: RealtimeRepository,
     private val sessionManager: SessionManager,
-    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository
+    private val friendsRepository: com.scrymechat.android.data.repository.FriendsRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
@@ -23,7 +29,28 @@ class NotificationsViewModel @Inject constructor(
 
     init {
         observeNotifications()
+        observeRealtimeNotifications()
         refreshNotifications()
+    }
+
+    private fun observeRealtimeNotifications() {
+        viewModelScope.launch {
+            realtimeRepository.observeNotifications().collect { dto ->
+                try {
+                    repository.saveNotification(dto)
+                    val dataMap = mutableMapOf<String, String>(
+                        "title" to dto.title,
+                        "body" to dto.message,
+                        "type" to dto.type
+                    )
+                    dto.entityId?.let { dataMap["entityId"] = it }
+                    dto.entityType?.let { dataMap["entityType"] = it }
+                    NotificationHelper(context).showNotification(dataMap)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     private fun observeNotifications() {
