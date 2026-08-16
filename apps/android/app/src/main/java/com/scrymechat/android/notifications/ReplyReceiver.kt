@@ -78,7 +78,7 @@ class ReplyReceiver : BroadcastReceiver() {
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                if (entityType == "dm") {
+                if (entityType == "dm" || entityType == "direct_message") {
                     chatRepository.markDmRead(entityId)
                 } else if (workspaceId != null) {
                     workspaceDao.getWorkspaceById(workspaceId)?.slug?.let { slug ->
@@ -113,7 +113,7 @@ class ReplyReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                if (entityType == "dm") {
+                if (entityType == "dm" || entityType == "direct_message") {
                     chatRepository.sendDmMessage(entityId, replyText)
                 } else if (workspaceId != null) {
                     workspaceDao.getWorkspaceById(workspaceId)?.slug?.let { slug ->
