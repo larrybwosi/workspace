@@ -164,13 +164,19 @@ describe('ScrymeSDK', () => {
   });
 
   describe('Initialization', () => {
-    it('should initialize with default baseURL', () => {
+    it('should initialize with default baseURL without /api suffix', () => {
       const sdk = new ScrymeSDK();
       expect(sdk.baseURL).toContain('http://localhost:3000');
+      expect(sdk.baseURL).not.toContain('/api');
     });
 
-    it('should initialize with custom baseURL', () => {
+    it('should initialize with custom baseURL stripping trailing slash', () => {
       const sdk = new ScrymeSDK({ baseURL: 'https://custom-api.com/' });
+      expect(sdk.baseURL).toBe('https://custom-api.com');
+    });
+
+    it('should strip /api suffix from custom baseURL if provided', () => {
+      const sdk = new ScrymeSDK({ baseURL: 'https://custom-api.com/api' });
       expect(sdk.baseURL).toBe('https://custom-api.com');
     });
 
@@ -273,7 +279,7 @@ describe('ScrymeSDK', () => {
       const result = await sdk.raw.v3WorkspacesControllerGetWorkspaces() as any;
       expect(result).toBeDefined();
       expect(result.options).toBeDefined();
-      expect(result.options.baseURL).toBe('https://api.test.com/api');
+      expect(result.options.baseURL).toBe('https://api.test.com');
       expect(result.options.headers.Authorization).toBe('Bearer active-token');
     });
 

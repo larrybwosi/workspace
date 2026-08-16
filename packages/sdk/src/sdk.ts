@@ -520,7 +520,11 @@ export class ScrymeSDK {
         env.VITE_API_URL ||
         (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
     }
-    this.baseURL = url.replace(/\/$/, '');
+    url = url.replace(/\/$/, '');
+    if (url.endsWith('/api')) {
+      url = url.slice(0, -4);
+    }
+    this.baseURL = url;
   }
 
   /**
@@ -585,7 +589,7 @@ export class ScrymeSDK {
   private async getRequestConfig(): Promise<AxiosRequestConfig> {
     const token = await this.getOrFetchToken();
     return {
-      baseURL: `${this.baseURL}/api`,
+      baseURL: this.baseURL,
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },

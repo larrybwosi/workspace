@@ -34,7 +34,11 @@ const getBaseURL = () => {
       (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
     url = getEnv('API_URL') || getEnv('NEXT_PUBLIC_API_URL') || (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   }
-  return url.replace(/\/$/, '') + '/api';
+  url = url.replace(/\/$/, '');
+  if (url.endsWith('/api')) {
+    url = url.slice(0, -4);
+  }
+  return url;
 };
 
 let globalToken: string | null = null;
