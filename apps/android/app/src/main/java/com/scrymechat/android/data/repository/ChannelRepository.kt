@@ -53,6 +53,45 @@ class ChannelRepository @Inject constructor(
         }
     }
 
+    suspend fun getChannelMembers(slug: String, channelId: String): Resource<List<com.scrymechat.android.data.remote.ChannelMemberDto>> {
+        return try {
+            val response = api.getChannelMembers(slug, channelId)
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun addChannelMembers(slug: String, channelId: String, userIds: List<String>): Resource<List<com.scrymechat.android.data.remote.ChannelMemberDto>> {
+        return try {
+            val response = api.addChannelMembers(slug, channelId, com.scrymechat.android.data.remote.AddChannelMembersRequest(userIds))
+            if (response.isSuccessful && response.body() != null) {
+                Resource.Success(response.body()!!)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun removeChannelMember(slug: String, channelId: String, userId: String): Resource<Unit> {
+        return try {
+            val response = api.removeChannelMember(slug, channelId, userId)
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(response.message())
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
     suspend fun getChannel(channelId: String): ChannelEntity? {
         return dao.getChannelById(channelId)
     }

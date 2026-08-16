@@ -68,6 +68,11 @@ class UpdateWorkspaceDto {
 
   @IsString()
   @IsOptional()
+  @ApiProperty({ required: false, example: 'https://example.com/banner.png' })
+  banner?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ required: false, example: 'Updated description' })
   description?: string;
 
@@ -447,6 +452,7 @@ export class WorkspacesController {
         name: true,
         slug: true,
         icon: true,
+        banner: true,
         description: true,
         ownerId: true,
         createdAt: true,

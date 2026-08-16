@@ -117,4 +117,92 @@ describe('OrganizationsController', () => {
       await expect(controller.updateOrganization(mockUser, 'acme', { name: 'New Name' })).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('getM2mApplications', () => {
+    it('should return M2M application list if organization has credentials', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        name: 'Acme',
+        clientId: 'm2m_123',
+        scopes: ['provisioning:workspaces'],
+        allowedIps: [],
+        createdAt: new Date('2026-01-01'),
+        members: [{ role: 'owner' }],
+      };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+
+      const result = await controller.getM2mApplications(mockUser, 'acme');
+
+      expect(result.applications).toHaveLength(1);
+      expect(result.applications[0].clientId).toBe('m2m_123');
+    });
+
+    it('should return empty list if organization has no credentials', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        name: 'Acme',
+        clientId: null,
+        members: [{ role: 'owner' }],
+      };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+
+      const result = await controller.getM2mApplications(mockUser, 'acme');
+
+      expect(result.applications).toEqual([]);
+    });
+  });
+
+  describe('createM2mApplication', () => {
+    it('should create and return M2M credentials', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        name: 'Acme',
+        members: [{ role: 'owner' }],
+      };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+      (prisma.organization.update as any).mockResolvedValue({
+        id: 'org-1',
+        clientId: 'm2m_generated',
+        scopes: ['provisioning:workspaces'],
+        allowedIps: [],
+        createdAt: new Date('2026-01-01'),
+      });
+
+      const result = await controller.createM2mApplication(mockUser, 'acme', {
+        name: 'CI App',
+      });
+
+      expect(result.clientId).toBeDefined();
+      expect(result.clientSecret).toMatch(/^sk_m2m_/);
+      expect(result.name).toBe('CI App');
+    });
+  });
+
+  describe('deleteM2mApplication', () => {
+    it('should clear M2M credentials', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        members: [{ role: 'admin' }],
+      };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+      (prisma.organization.update as any).mockResolvedValue({});
+
+      const result = await controller.deleteM2mApplication(mockUser, 'acme', 'org-1');
+
+      expect(prisma.organization.update).toHaveBeenCalledWith({
+        where: { id: 'org-1' },
+        data: {
+          clientId: null,
+          clientSecret: null,
+          scopes: [],
+          allowedIps: [],
+        },
+      });
+      expect(result).toEqual({ success: true });
+    });
+  });
 });

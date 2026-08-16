@@ -399,6 +399,25 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isCreateChannelDialogOpen = isOpen) }
     }
 
+    fun setEditWorkspaceDialogOpen(isOpen: Boolean) {
+        _uiState.update { it.copy(isEditWorkspaceDialogOpen = isOpen) }
+    }
+
+    fun setEditChannelDialogOpen(isOpen: Boolean) {
+        _uiState.update { it.copy(isEditChannelDialogOpen = isOpen) }
+        if (isOpen) {
+            _uiState.value.selectedChannel?.let { loadChannelMembers(it.id) }
+            loadWorkspaceMembers()
+        }
+    }
+
+    fun setAddChannelMembersDialogOpen(isOpen: Boolean) {
+        _uiState.update { it.copy(isAddChannelMembersDialogOpen = isOpen) }
+        if (isOpen) {
+            loadWorkspaceMembers()
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
@@ -421,6 +440,103 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateWorkspace(name: String, description: String?, icon: String?, banner: String?) {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            _uiState.update { it.copy(isUpdatingWorkspace = true, error = null) }
+            val request = com.scrymechat.android.data.remote.UpdateWorkspaceRequest(
+                name = name,
+                description = description,
+                icon = icon,
+                banner = banner
+            )
+            val result = workspaceRepository.updateWorkspace(workspaceSlug, request)
+            if (result is Resource.Success) {
+                _uiState.update { state ->
+                    state.copy(
+                        isUpdatingWorkspace = false,
+                        isEditWorkspaceDialogOpen = false,
+                        selectedWorkspace = result.data ?: state.selectedWorkspace
+                    )
+                }
+                loadWorkspaces()
+            } else {
+                _uiState.update { it.copy(isUpdatingWorkspace = false, error = result.message) }
+            }
+        }
+    }
+
+    fun updateChannel(channelId: String, name: String, description: String?, type: String, icon: String?) {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            _uiState.update { it.copy(isUpdatingChannel = true, error = null) }
+            val request = com.scrymechat.android.data.remote.UpdateChannelRequest(
+                name = name,
+                description = description,
+                type = type,
+                icon = icon
+            )
+            val result = channelRepository.updateChannel(workspaceSlug, channelId, request)
+            if (result is Resource.Success) {
+                _uiState.update { state ->
+                    state.copy(
+                        isUpdatingChannel = false,
+                        isEditChannelDialogOpen = false,
+                        selectedChannel = result.data ?: state.selectedChannel
+                    )
+                }
+                loadChannels(workspaceSlug)
+            } else {
+                _uiState.update { it.copy(isUpdatingChannel = false, error = result.message) }
+            }
+        }
+    }
+
+    fun loadChannelMembers(channelId: String) {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            val result = channelRepository.getChannelMembers(workspaceSlug, channelId)
+            if (result is Resource.Success) {
+                _uiState.update { it.copy(channelMembers = result.data ?: emptyList()) }
+            }
+        }
+    }
+
+    fun loadWorkspaceMembers() {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            val result = workspaceRepository.getWorkspaceMembers(workspaceSlug)
+            if (result is Resource.Success) {
+                _uiState.update { it.copy(workspaceMembers = result.data ?: emptyList()) }
+            }
+        }
+    }
+
+    fun addChannelMembers(channelId: String, userIds: List<String>) {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            val result = channelRepository.addChannelMembers(workspaceSlug, channelId, userIds)
+            if (result is Resource.Success) {
+                _uiState.update { it.copy(isAddChannelMembersDialogOpen = false) }
+                loadChannelMembers(channelId)
+            } else {
+                _uiState.update { it.copy(error = result.message) }
+            }
+        }
+    }
+
+    fun removeChannelMember(channelId: String, userId: String) {
+        viewModelScope.launch {
+            val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
+            val result = channelRepository.removeChannelMember(workspaceSlug, channelId, userId)
+            if (result is Resource.Success) {
+                loadChannelMembers(channelId)
+            } else {
+                _uiState.update { it.copy(error = result.message) }
+            }
+        }
+    }
 }
 
 data class HomeUiState(
@@ -437,7 +553,14 @@ data class HomeUiState(
     val expandedCategories: Set<String> = emptySet(),
     val isCreateWorkspaceDialogOpen: Boolean = false,
     val isCreateChannelDialogOpen: Boolean = false,
+    val isEditWorkspaceDialogOpen: Boolean = false,
+    val isEditChannelDialogOpen: Boolean = false,
+    val isAddChannelMembersDialogOpen: Boolean = false,
     val isCreatingWorkspace: Boolean = false,
     val isCreatingChannel: Boolean = false,
-    val isChannelLoading: Boolean = false
+    val isUpdatingWorkspace: Boolean = false,
+    val isUpdatingChannel: Boolean = false,
+    val isChannelLoading: Boolean = false,
+    val workspaceMembers: List<com.scrymechat.android.data.remote.WorkspaceMemberWithUserDto> = emptyList(),
+    val channelMembers: List<com.scrymechat.android.data.remote.ChannelMemberDto> = emptyList()
 )
