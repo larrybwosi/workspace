@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -132,6 +133,46 @@ fun HomeScreen(
         )
     }
 
+    if (uiState.isEditWorkspaceDialogOpen && uiState.selectedWorkspace != null) {
+        EditWorkspaceDialog(
+            workspace = uiState.selectedWorkspace!!,
+            isLoading = uiState.isUpdatingWorkspace,
+            onDismiss = { viewModel.setEditWorkspaceDialogOpen(false) },
+            onSave = { name, description, icon, banner ->
+                viewModel.updateWorkspace(name, description, icon, banner)
+            }
+        )
+    }
+
+    if (uiState.isEditChannelDialogOpen && uiState.selectedChannel != null) {
+        EditChannelDialog(
+            channel = uiState.selectedChannel!!,
+            channelMembers = uiState.channelMembers,
+            isLoading = uiState.isUpdatingChannel,
+            onDismiss = { viewModel.setEditChannelDialogOpen(false) },
+            onSave = { name, description, type, icon ->
+                viewModel.updateChannel(uiState.selectedChannel!!.id, name, description, type, icon)
+            },
+            onOpenAddMembers = { viewModel.setAddChannelMembersDialogOpen(true) },
+            onRemoveMember = { userId -> viewModel.removeChannelMember(uiState.selectedChannel!!.id, userId) }
+        )
+    }
+
+    if (uiState.isAddChannelMembersDialogOpen && uiState.selectedChannel != null) {
+        val existingMemberUserIds = remember(uiState.channelMembers) {
+            uiState.channelMembers.map { it.userId }.toSet()
+        }
+        AddChannelMembersDialog(
+            workspaceMembers = uiState.workspaceMembers,
+            existingMemberUserIds = existingMemberUserIds,
+            isLoading = false,
+            onDismiss = { viewModel.setAddChannelMembersDialogOpen(false) },
+            onAddMembers = { userIds ->
+                viewModel.addChannelMembers(uiState.selectedChannel!!.id, userIds)
+            }
+        )
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.error) {
@@ -164,6 +205,7 @@ fun HomeScreen(
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet(
+                    drawerShape = androidx.compose.ui.graphics.RectangleShape,
                     drawerContainerColor = Color.Transparent,
                     drawerTonalElevation = 0.dp,
                     modifier = Modifier.width(352.dp) // 72 + 280
@@ -213,7 +255,8 @@ fun HomeScreen(
                                 onFriendsClick()
                                 scope.launch { drawerState.close() }
                             },
-                            onCreateChannelClick = { viewModel.setCreateChannelDialogOpen(true) }
+                            onCreateChannelClick = { viewModel.setCreateChannelDialogOpen(true) },
+                            onEditWorkspaceClick = { viewModel.setEditWorkspaceDialogOpen(true) }
                         )
                     }
                 }
@@ -226,6 +269,7 @@ fun HomeScreen(
                 isHomeSelected = uiState.isHomeSelected,
                 chatUiState = chatUiState,
                 currentUser = uiState.currentUser,
+                onEditChannelClick = { viewModel.setEditChannelDialogOpen(true) },
                 onSendMessage = { content, replyToId, _ -> chatViewModel.sendMessage(content, replyToId, null, context) },
                 onReply = { /* Handled in ChatView */ },
                 onOpenThread = { message ->
@@ -291,6 +335,7 @@ fun MainContent(
     isHomeSelected: Boolean,
     chatUiState: com.scrymechat.android.ui.chat.ChatUiState,
     currentUser: com.scrymechat.android.data.local.entities.UserEntity?,
+    onEditChannelClick: () -> Unit = {},
     onSendMessage: (String, String?, List<com.scrymechat.android.data.remote.CreateAttachmentRequest>?) -> Unit,
     onReply: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit,
     onOpenThread: (com.scrymechat.android.data.local.entities.MessageEntity) -> Unit = {},
@@ -389,8 +434,20 @@ fun MainContent(
                         color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp,
-                        letterSpacing = 0.1.sp
+                        letterSpacing = 0.1.sp,
+                        modifier = Modifier.weight(1f)
                     )
+
+                    if (selectedChannel != null) {
+                        IconButton(onClick = onEditChannelClick) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Edit Channel",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
             }
 

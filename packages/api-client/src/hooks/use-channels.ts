@@ -22,6 +22,57 @@ export function useChannels() {
   });
 }
 
+// Fetch channel members
+export function useChannelMembers(workspaceSlug?: string, channelId?: string) {
+  return useQuery({
+    queryKey: ['channel-members', workspaceSlug, channelId],
+    queryFn: async () => {
+      if (!workspaceSlug || !channelId) return [];
+      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/channels/${channelId}/members`);
+      return data;
+    },
+    enabled: !!workspaceSlug && !!channelId,
+  });
+}
+
+// Add channel members
+export function useAddChannelMembers(workspaceSlug?: string, channelId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userIds: string[]) => {
+      if (!workspaceSlug || !channelId) throw new Error('workspaceSlug and channelId required');
+      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/channels/${channelId}/members`, { userIds });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['channel-members', workspaceSlug, channelId] });
+      if (workspaceSlug && channelId) {
+        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceSlug, 'channels', channelId] });
+      }
+    },
+  });
+}
+
+// Remove channel member
+export function useRemoveChannelMember(workspaceSlug?: string, channelId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (targetUserId: string) => {
+      if (!workspaceSlug || !channelId) throw new Error('workspaceSlug and channelId required');
+      const { data } = await apiClient.delete(`/workspaces/${workspaceSlug}/channels/${channelId}/members/${targetUserId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['channel-members', workspaceSlug, channelId] });
+      if (workspaceSlug && channelId) {
+        queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceSlug, 'channels', channelId] });
+      }
+    },
+  });
+}
+
 // Fetch single channel
 export function useChannel(id: string, workspaceSlug?: string) {
   return useQuery({

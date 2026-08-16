@@ -5,6 +5,7 @@ data class WorkspaceDto(
     val name: String,
     val slug: String,
     val icon: String?,
+    val banner: String? = null,
     val description: String?,
     val ownerId: String,
     val createdAt: String,
@@ -33,6 +34,7 @@ data class CreateWorkspaceRequest(
 data class UpdateWorkspaceRequest(
     val name: String? = null,
     val icon: String? = null,
+    val banner: String? = null,
     val description: String? = null,
     val settings: Map<String, Any>? = null,
     val plan: String? = null,

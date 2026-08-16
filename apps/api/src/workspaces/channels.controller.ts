@@ -407,7 +407,7 @@ export class ChannelsController {
       data: {
         ...(data.name && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
-        ...(data.type && { type: data.type }),
+        ...(data.type && { type: data.type, isPrivate: data.type === 'private' }),
         ...(data.icon && { icon: data.icon }),
       },
       include: { members: { include: { user: true } } },
@@ -483,6 +483,153 @@ export class ChannelsController {
       const ablyChannel = ably.channels.get(AblyChannels.workspace(workspace.id));
       await ablyChannel.publish(EVENTS.CHANNEL_DELETED, { channelId, userId: user.id });
     }
+
+    return { success: true };
+  }
+
+  @Get(':channelId/members')
+  @ApiOperation({ summary: 'Get members of a channel' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'List of channel members' })
+  async getChannelMembers(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string
+  ) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const members = await prisma.channelMember.findMany({
+      where: { channelId, channel: { workspaceId: workspace.id } },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, avatar: true, status: true },
+        },
+      },
+    });
+
+    return members;
+  }
+
+  @Post(':channelId/members')
+  @ApiOperation({ summary: 'Add members to a channel' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 201, description: 'Members added to channel' })
+  async addChannelMembers(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Body() body: { userIds?: string[]; userId?: string; role?: string }
+  ) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const userIdsToAdd = body.userIds || (body.userId ? [body.userId] : []);
+    if (userIdsToAdd.length === 0) {
+      throw new BadRequestException('userId or userIds required');
+    }
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId, workspaceId: workspace.id },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    await prisma.channelMember.createMany({
+      data: userIdsToAdd.map(uId => ({
+        channelId,
+        userId: uId,
+        role: body.role || 'member',
+      })),
+      skipDuplicates: true,
+    });
+
+    const updatedMembers = await prisma.channelMember.findMany({
+      where: { channelId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, avatar: true },
+        },
+      },
+    });
+
+    return updatedMembers;
+  }
+
+  @Delete(':channelId/members/:targetUserId')
+  @ApiOperation({ summary: 'Remove a member from a channel' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'targetUserId', description: 'The user ID to remove' })
+  @ApiResponse({ status: 200, description: 'Member removed from channel' })
+  async removeChannelMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('targetUserId') targetUserId: string
+  ) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    await prisma.channelMember.deleteMany({
+      where: {
+        channelId,
+        userId: targetUserId,
+        channel: { workspaceId: workspace.id },
+      },
+    });
 
     return { success: true };
   }

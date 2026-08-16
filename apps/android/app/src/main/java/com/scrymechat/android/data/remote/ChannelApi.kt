@@ -31,4 +31,24 @@ interface ChannelApi {
         @Path("slug") slug: String,
         @Path("channelId") channelId: String
     ): Response<Unit>
+
+    @GET("workspaces/{slug}/channels/{channelId}/members")
+    suspend fun getChannelMembers(
+        @Path("slug") slug: String,
+        @Path("channelId") channelId: String
+    ): Response<List<ChannelMemberDto>>
+
+    @POST("workspaces/{slug}/channels/{channelId}/members")
+    suspend fun addChannelMembers(
+        @Path("slug") slug: String,
+        @Path("channelId") channelId: String,
+        @Body request: AddChannelMembersRequest
+    ): Response<List<ChannelMemberDto>>
+
+    @DELETE("workspaces/{slug}/channels/{channelId}/members/{userId}")
+    suspend fun removeChannelMember(
+        @Path("slug") slug: String,
+        @Path("channelId") channelId: String,
+        @Path("userId") userId: String
+    ): Response<Unit>
 }
