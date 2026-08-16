@@ -4,6 +4,11 @@ const path = require('path');
 const rootPackageJsonPath = path.resolve(__dirname, '../package.json');
 const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, 'utf8'));
 
+// Optional CLI arg to restrict syncing to a single app, e.g.:
+//   node scripts/update-version.js android
+// When omitted, all apps/packages are synced (used by the main release path).
+const targetApp = process.argv[2] || null;
+
 function parseSemVer(v) {
   const parts = v.split('-');
   const numeric = parts[0].split('.').map(Number);
@@ -42,8 +47,9 @@ if (fs.existsSync(apiPackageJsonPath)) {
 // Dynamically use the larger of the root version vs sub-package version.
 // This ensures that when Changesets runs on main (which only bumps workspace packages),
 // the root package.json version is correctly synchronized, and downstream release steps trigger.
+// Skipped in scoped (targetApp) mode since that path never touches apps/api.
 let newVersion = rootPackageJson.version;
-if (apiVersion && semverCompare(apiVersion, newVersion) > 0) {
+if (!targetApp && apiVersion && semverCompare(apiVersion, newVersion) > 0) {
   console.log(`Detecting newer sub-package version (apps/api): ${apiVersion} > root version: ${newVersion}`);
   newVersion = apiVersion;
   rootPackageJson.version = newVersion;
@@ -54,7 +60,11 @@ if (apiVersion && semverCompare(apiVersion, newVersion) > 0) {
 // Tauri 2 requires a 3-part SemVer string for its config.
 const semverVersion = newVersion;
 
-console.log(`Syncing version ${newVersion} to non-package configuration files`);
+console.log(
+  targetApp
+    ? `Syncing version ${newVersion} to apps/${targetApp} only`
+    : `Syncing version ${newVersion} to non-package configuration files`
+);
 
 function updateJsonFile(filePath, updateFn) {
   if (fs.existsSync(filePath)) {
@@ -73,6 +83,11 @@ const appsDir = path.resolve(__dirname, '..', 'apps');
 
 if (fs.existsSync(appsDir)) {
     fs.readdirSync(appsDir).forEach(subDir => {
+      // In scoped mode, only touch the requested app.
+      if (targetApp && subDir !== targetApp) {
+        return;
+      }
+
       const appPath = path.join(appsDir, subDir);
 
       if (subDir === 'desktop') {
@@ -104,11 +119,13 @@ if (fs.existsSync(appsDir)) {
     });
 }
 
-// Sync version to packages/sdk/package.json
-const sdkPackageJsonPath = path.resolve(__dirname, '../packages/sdk/package.json');
-updateJsonFile(sdkPackageJsonPath, (json) => {
-  json.version = newVersion;
-});
+// Sync version to packages/sdk/package.json — only in full (non-scoped) sync mode.
+if (!targetApp) {
+  const sdkPackageJsonPath = path.resolve(__dirname, '../packages/sdk/package.json');
+  updateJsonFile(sdkPackageJsonPath, (json) => {
+    json.version = newVersion;
+  });
+}
 
 if (process.env.GITHUB_OUTPUT) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersion}\n`);

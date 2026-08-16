@@ -16,7 +16,7 @@
 - 7ca8600: Minor release
 - 38e9412: update
 
-## 2.1.0-dev.31
+## 2.1.0-dev.31 
 
 ### Minor Changes
 
