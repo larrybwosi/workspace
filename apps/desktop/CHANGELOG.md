@@ -13,7 +13,7 @@
 - dd44d92: update
 - a2f0b57: Update
 - 223975c: update
-- 7ca8600: Minor release
+- 7ca8600: Minor release 
 - 38e9412: update
 
 ## 2.1.0-dev.31 
