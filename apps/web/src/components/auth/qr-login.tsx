@@ -62,6 +62,7 @@ export function QRLogin({ inviteToken }: QRLoginProps) {
         // Also populate localStorage to ensure robust authentication across all app scopes
         localStorage.setItem('better-auth.session_token', payload.token);
         localStorage.setItem('better-auth.session-token', payload.token);
+        localStorage.setItem('bearer_token', payload.token);
 
         toast.success('Successfully logged in via QR code!');
 

@@ -32,7 +32,8 @@ class HomeViewModel @Inject constructor(
     private val dmDao: DmDao,
     private val channelDao: ChannelDao,
     private val messageDao: MessageDao,
-    private val userDao: com.scrymechat.android.data.local.dao.UserDao
+    private val userDao: com.scrymechat.android.data.local.dao.UserDao,
+    private val storageRepository: com.scrymechat.android.data.repository.StorageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -441,15 +442,65 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun updateWorkspace(name: String, description: String?, icon: String?, banner: String?) {
+    fun updateWorkspace(
+        name: String,
+        description: String?,
+        icon: String?,
+        banner: String?,
+        context: android.content.Context? = null
+    ) {
         viewModelScope.launch {
             val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
             _uiState.update { it.copy(isUpdatingWorkspace = true, error = null) }
+
+            var uploadedIcon = icon
+            var uploadedBanner = banner
+
+            if (context != null) {
+                if (icon != null && (icon.startsWith("content://") || icon.startsWith("file://"))) {
+                    try {
+                        val uri = android.net.Uri.parse(icon)
+                        val file = uriToFile(uri, context)
+                        val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+                        val result = storageRepository.uploadFile(file, "workspace_icon.jpg", mimeType)
+                        file.delete()
+                        result.onSuccess { response ->
+                            uploadedIcon = response.url
+                        }.onFailure { e ->
+                            _uiState.update { it.copy(isUpdatingWorkspace = false, error = "Icon upload failed: ${e.localizedMessage}") }
+                            return@launch
+                        }
+                    } catch (e: Exception) {
+                        _uiState.update { it.copy(isUpdatingWorkspace = false, error = "Failed to process icon image") }
+                        return@launch
+                    }
+                }
+
+                if (banner != null && (banner.startsWith("content://") || banner.startsWith("file://"))) {
+                    try {
+                        val uri = android.net.Uri.parse(banner)
+                        val file = uriToFile(uri, context)
+                        val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+                        val result = storageRepository.uploadFile(file, "workspace_banner.jpg", mimeType)
+                        file.delete()
+                        result.onSuccess { response ->
+                            uploadedBanner = response.url
+                        }.onFailure { e ->
+                            _uiState.update { it.copy(isUpdatingWorkspace = false, error = "Banner upload failed: ${e.localizedMessage}") }
+                            return@launch
+                        }
+                    } catch (e: Exception) {
+                        _uiState.update { it.copy(isUpdatingWorkspace = false, error = "Failed to process banner image") }
+                        return@launch
+                    }
+                }
+            }
+
             val request = com.scrymechat.android.data.remote.UpdateWorkspaceRequest(
                 name = name,
                 description = description,
-                icon = icon,
-                banner = banner
+                icon = uploadedIcon,
+                banner = uploadedBanner
             )
             val result = workspaceRepository.updateWorkspace(workspaceSlug, request)
             if (result is Resource.Success) {
@@ -465,6 +516,18 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(isUpdatingWorkspace = false, error = result.message) }
             }
         }
+    }
+
+    private fun uriToFile(uri: android.net.Uri, context: android.content.Context): java.io.File {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val file = java.io.File(context.cacheDir, "upload_${java.util.UUID.randomUUID()}.jpg")
+        val outputStream = java.io.FileOutputStream(file)
+        inputStream?.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        return file
     }
 
     fun updateChannel(channelId: String, name: String, description: String?, type: String, icon: String?) {

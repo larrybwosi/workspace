@@ -36,6 +36,23 @@ class CreateM2mApplicationDto {
   allowedIps?: string[];
 }
 
+class UpdateM2mApplicationDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'CI/CD Pipeline Updated' })
+  name?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({ required: false, example: ['provisioning:workspaces', 'messages:send'] })
+  scopes?: string[];
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({ required: false, example: ['192.168.1.1'] })
+  allowedIps?: string[];
+}
+
 class UpdateOrganizationDto {
   @IsString()
   @IsOptional()
@@ -302,6 +319,80 @@ export class OrganizationsController {
       name: body.name || organization.name,
       clientId: updatedOrg.clientId,
       clientSecret,
+      scopes: updatedOrg.scopes,
+      allowedIps: updatedOrg.allowedIps,
+      createdAt: updatedOrg.createdAt,
+    };
+  }
+
+  @Patch('m2m/:id')
+  @ApiOperation({ summary: 'Update organization M2M application credentials and scopes' })
+  @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
+  @ApiParam({ name: 'id', description: 'The M2M application/organization ID' })
+  @ApiBody({ type: UpdateM2mApplicationDto })
+  async updateM2mApplication(
+    @CurrentUser() user: User,
+    @Param('orgSlug') orgSlug: string,
+    @Param('id') id: string,
+    @Body() body: UpdateM2mApplicationDto
+  ) {
+    const organization = await prisma.organization.findUnique({
+      where: { slug: orgSlug },
+      select: {
+        id: true,
+        name: true,
+        clientId: true,
+        scopes: true,
+        allowedIps: true,
+        createdAt: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const member = organization.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    }
+
+    if (organization.id !== id && organization.clientId !== id) {
+      throw new NotFoundException('M2M application not found');
+    }
+
+    const updateData: any = {};
+    if (body.name !== undefined) {
+      updateData.name = body.name;
+    }
+    if (body.scopes !== undefined) {
+      updateData.scopes = body.scopes;
+    }
+    if (body.allowedIps !== undefined) {
+      updateData.allowedIps = body.allowedIps;
+    }
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id: organization.id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        clientId: true,
+        scopes: true,
+        allowedIps: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      id: updatedOrg.id,
+      name: updatedOrg.name,
+      clientId: updatedOrg.clientId,
       scopes: updatedOrg.scopes,
       allowedIps: updatedOrg.allowedIps,
       createdAt: updatedOrg.createdAt,

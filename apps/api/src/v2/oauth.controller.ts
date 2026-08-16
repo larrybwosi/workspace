@@ -153,7 +153,7 @@ Used for bot, integration, and M2M authentication.
         }
       }
 
-      return this.issueToken(client_id, org.id, scope || (allowedScopes.length ? allowedScopes.join(' ') : '*'), 'm2m');
+      return this.issueToken(client_id, `m2m:${org.id}`, scope || (allowedScopes.length ? allowedScopes.join(' ') : '*'), 'm2m');
     }
 
     throw new UnauthorizedException('Invalid client credentials');
@@ -164,7 +164,7 @@ Used for bot, integration, and M2M authentication.
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
 
-    const accessToken = await (prisma as any).oauthAccessToken.create({
+    const accessToken = await prisma.oAuthAccessToken.create({
       data: {
         id: crypto.randomBytes(16).toString('hex'),
         token: hashedToken,

@@ -50,8 +50,12 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
           <Button variant="ghost" className="w-full justify-between h-14 px-3 hover:bg-muted/80">
             <div className="flex items-center gap-3 min-w-0">
               {displayIcon ? (
-                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg shrink-0 shadow-sm">
-                  {displayIcon}
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg shrink-0 shadow-sm overflow-hidden">
+                  {displayIcon.startsWith('http') || displayIcon.startsWith('/') || displayIcon.startsWith('data:') || displayIcon.length > 2 ? (
+                    <img src={displayIcon} alt={displayName} className="h-full w-full object-cover" />
+                  ) : (
+                    displayIcon
+                  )}
                 </div>
               ) : (
                 <div
@@ -124,8 +128,12 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                 >
                   <div className="flex items-center gap-3 flex-1">
                     {workspace.icon ? (
-                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-600/20 text-lg">
-                        {workspace.icon}
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-600/20 text-lg overflow-hidden">
+                        {workspace.icon.startsWith('http') || workspace.icon.startsWith('/') || workspace.icon.startsWith('data:') || workspace.icon.length > 2 ? (
+                          <img src={workspace.icon} alt={workspace.name} className="h-full w-full object-cover" />
+                        ) : (
+                          workspace.icon
+                        )}
                       </div>
                     ) : (
                       <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">

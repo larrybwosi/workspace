@@ -26,7 +26,8 @@ import { Separator } from '../components/separator';
 import { Skeleton } from '../components/skeleton';
 import { cn } from '../lib/utils';
 import { useRouter, useParams, usePathname } from '../hooks/use-universal-router';
-import { useSession } from '@repo/shared';
+import { useSession, realtime, AblyChannels } from '@repo/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
 import { useCommandPalette } from './command-palette-provider';
@@ -214,6 +215,35 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   const sessionUser = session.data?.user;
   const { onlineUsers } = usePresence();
   const commandPalette = useCommandPalette();
+  const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    if (!workspaceSlug) return;
+
+    const workspaceChannel = `workspace:${workspaceSlug}`;
+
+    const handleChannelUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
+    };
+
+    realtime.subscribe(workspaceChannel, 'message:new', handleChannelUpdate);
+    realtime.subscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+
+    if (sessionUser?.id) {
+      const userChannel = AblyChannels.user(sessionUser.id);
+      realtime.subscribe(userChannel, 'message:read', handleChannelUpdate);
+      return () => {
+        realtime.unsubscribe(workspaceChannel, 'message:new', handleChannelUpdate);
+        realtime.unsubscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+        realtime.unsubscribe(userChannel, 'message:read', handleChannelUpdate);
+      };
+    }
+
+    return () => {
+      realtime.unsubscribe(workspaceChannel, 'message:new', handleChannelUpdate);
+      realtime.unsubscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+    };
+  }, [workspaceSlug, sessionUser?.id, queryClient]);
 
   // Friends/DM list
   const { data: friends, isLoading: friendsLoading } = useFriends();

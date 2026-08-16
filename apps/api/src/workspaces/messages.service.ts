@@ -7,6 +7,8 @@ import {
   notifyMention,
   notifyMentions,
   notifyChannel,
+  notifyNewMessage,
+  notifyReply,
   isUserEligibleForAsset,
   logAssetUsage,
 } from '@repo/shared/server';
@@ -249,10 +251,7 @@ export class MessagesService {
           throw new ForbiddenException('Not eligible to use this sticker');
         }
       }
-      /**
-       * ⚡ Performance Optimization:
-       * Background the asset usage logging to avoid blocking message creation.
-       */
+
       logAssetUsage({
         assetId: stickerId,
         assetType: 'sticker',
@@ -313,6 +312,10 @@ export class MessagesService {
         : Promise.resolve(),
       mentionsAll || mentionsHere
         ? notifyChannel(channelId, sender?.name || 'Someone', message.id, content, mentionsHere)
+        : Promise.resolve(),
+      notifyNewMessage(channelId, userId, sender?.name || 'Someone', message.id, content, mentionedUserIds),
+      replyToId
+        ? notifyReply(channelId, userId, sender?.name || 'Someone', replyToId, message.id, content)
         : Promise.resolve(),
       publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message),
     ]).catch(err => this.logger.error('Failed to process message side effects:', err));

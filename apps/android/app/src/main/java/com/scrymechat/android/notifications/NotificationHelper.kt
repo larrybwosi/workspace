@@ -85,9 +85,12 @@ class NotificationHelper(private val context: Context) {
             val highChannel = NotificationChannel(
                 CHANNEL_HIGH,
                 "Channel activity",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "New messages in channels you've joined"
+                enableLights(true)
+                lightColor = Color.parseColor("#8B5CF6")
+                setShowBadge(true)
             }
 
             val normalChannel = NotificationChannel(
@@ -109,7 +112,8 @@ class NotificationHelper(private val context: Context) {
         val body = data["body"] ?: ""
         val type = data["type"] ?: "system"
         val entityId = data["entityId"] ?: ""
-        val entityType = data["entityType"] ?: if (type == "direct_message") "dm" else "channel"
+        val rawEntityType = data["entityType"] ?: if (type == "direct_message") "dm" else "channel"
+        val entityType = if (rawEntityType == "direct_message") "dm" else rawEntityType
         val workspaceId = data["workspaceId"]
         val workspaceSlug = data["workspaceSlug"]
         val senderAvatarUrl = data["senderAvatarUrl"]
@@ -128,7 +132,13 @@ class NotificationHelper(private val context: Context) {
             return
         }
 
-        val isConversation = entityId.isNotEmpty() && (type == "direct_message" || type == "mention" || type == "channel_alert")
+        val isConversation = entityId.isNotEmpty() && (
+            type == "direct_message" ||
+            type == "mention" ||
+            type == "channel_alert" ||
+            entityType == "dm" ||
+            entityType == "channel"
+        )
         val notificationId = if (isConversation) {
             conversationKey(entityType, entityId).hashCode()
         } else {
@@ -174,7 +184,7 @@ class NotificationHelper(private val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
             .setShowWhen(true)
-            .setGroup(if (entityType == "dm") GROUP_DM else GROUP_CHANNEL)
+            .setGroup(if (entityType == "dm" || entityType == "direct_message") GROUP_DM else GROUP_CHANNEL)
             .setContentIntent(buildContentIntent(notificationId, type, entityId, entityType, workspaceId, workspaceSlug))
             .addAction(buildReplyAction(context, notificationId, entityId, entityType, workspaceId, person.name.toString()))
             .addAction(buildMarkAsReadAction(notificationId, entityId, entityType, workspaceId))
@@ -264,7 +274,8 @@ class NotificationHelper(private val context: Context) {
 
     /** Bundles individual conversation notifications under a single summary entry per type. */
     private fun postGroupSummary(entityType: String, channelId: String) {
-        val (groupKey, summaryId, summaryTitle) = if (entityType == "dm") {
+        val isDm = entityType == "dm" || entityType == "direct_message"
+        val (groupKey, summaryId, summaryTitle) = if (isDm) {
             Triple(GROUP_DM, SUMMARY_ID_DM, "Direct messages")
         } else {
             Triple(GROUP_CHANNEL, SUMMARY_ID_CHANNEL, "Channel activity")

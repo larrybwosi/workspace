@@ -38,6 +38,8 @@ vi.mock('@repo/shared/server', () => ({
   publishRealtime: vi.fn().mockResolvedValue(undefined),
   notifyMentions: vi.fn().mockResolvedValue(undefined),
   notifyChannel: vi.fn().mockResolvedValue(undefined),
+  notifyNewMessage: vi.fn().mockResolvedValue(undefined),
+  notifyReply: vi.fn().mockResolvedValue(undefined),
   extractUserMentions: vi.fn().mockReturnValue([]),
   extractChannelMentions: vi.fn().mockReturnValue([]),
   hasSpecialMention: vi.fn().mockReturnValue(false),

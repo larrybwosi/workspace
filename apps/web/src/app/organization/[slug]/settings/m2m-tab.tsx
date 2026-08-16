@@ -1,8 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useOrganizationM2mApplications, useCreateM2mApplication, useDeleteM2mApplication } from '@repo/api-client';
+import {
+  useOrganizationM2mApplications,
+  useCreateM2mApplication,
+  useUpdateM2mApplication,
+  useDeleteM2mApplication,
+  M2mApplication,
+} from '@repo/api-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,33 +35,93 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, KeyRound, ShieldCheck, Info, Copy, Check, Eye, EyeOff, Plus, Terminal } from 'lucide-react';
+import { Trash2, KeyRound, ShieldCheck, Info, Copy, Check, Eye, EyeOff, Plus, Terminal, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+
+const AVAILABLE_SCOPES = [
+  { id: 'provisioning:workspaces', label: 'provisioning:workspaces', description: 'Create & manage workspaces' },
+  { id: 'messages:read', label: 'messages:read', description: 'Read messages' },
+  { id: 'messages:send', label: 'messages:send', description: 'Send messages & actions' },
+  { id: 'channels:read', label: 'channels:read', description: 'List & view channel details' },
+  { id: 'channels:write', label: 'channels:write', description: 'Create & manage channels' },
+  { id: 'webhooks:read', label: 'webhooks:read', description: 'View webhooks' },
+  { id: 'webhooks:write', label: 'webhooks:write', description: 'Provision & update webhooks' },
+  { id: 'members:read', label: 'members:read', description: 'Read workspace members' },
+  { id: 'members:write', label: 'members:write', description: 'Manage workspace members' },
+];
 
 export function M2mTab({ orgSlug }: { orgSlug: string }) {
   const { data: applications, isLoading } = useOrganizationM2mApplications(orgSlug);
   const createMutation = useCreateM2mApplication(orgSlug);
+  const updateMutation = useUpdateM2mApplication(orgSlug);
   const deleteMutation = useDeleteM2mApplication(orgSlug);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [appName, setAppName] = useState('');
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(['provisioning:workspaces']);
+  const [allowedIpsText, setAllowedIpsText] = useState('');
   const [createdApp, setCreatedApp] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<'id' | 'secret' | null>(null);
   const [secretVisible, setSecretVisible] = useState(false);
+
+  // Edit dialog state
+  const [editingApp, setEditingApp] = useState<M2mApplication | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editScopes, setEditScopes] = useState<string[]>([]);
+  const [editAllowedIpsText, setEditAllowedIpsText] = useState('');
+
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const allowedIps = allowedIpsText
+        .split(',')
+        .map((ip) => ip.trim())
+        .filter(Boolean);
+
       const result = await createMutation.mutateAsync({
         name: appName,
-        scopes: ['provisioning:workspaces'],
+        scopes: selectedScopes.length ? selectedScopes : ['provisioning:workspaces'],
+        allowedIps,
       });
       setCreatedApp(result);
       setAppName('');
+      setSelectedScopes(['provisioning:workspaces']);
+      setAllowedIpsText('');
       toast.success('M2M application created');
     } catch (error) {
       toast.error('Failed to create M2M application');
+    }
+  };
+
+  const openEditDialog = (app: M2mApplication) => {
+    setEditingApp(app);
+    setEditName(app.name);
+    setEditScopes(app.scopes || ['provisioning:workspaces']);
+    setEditAllowedIpsText((app.allowedIps || []).join(', '));
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingApp) return;
+
+    try {
+      const allowedIps = editAllowedIpsText
+        .split(',')
+        .map((ip) => ip.trim())
+        .filter(Boolean);
+
+      await updateMutation.mutateAsync({
+        id: editingApp.id,
+        name: editName,
+        scopes: editScopes.length ? editScopes : ['provisioning:workspaces'],
+        allowedIps,
+      });
+      toast.success('M2M application updated');
+      setEditingApp(null);
+    } catch (error) {
+      toast.error('Failed to update M2M application');
     }
   };
 
@@ -112,16 +179,60 @@ export function M2mTab({ orgSlug }: { orgSlug: string }) {
                       Give your application a name to identify it later.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-2 py-4">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={appName}
-                      onChange={(e) => setAppName(e.target.value)}
-                      placeholder="e.g. CI/CD pipeline"
-                      autoFocus
-                      required
-                    />
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                        id="name"
+                        value={appName}
+                        onChange={(e) => setAppName(e.target.value)}
+                        placeholder="e.g. CI/CD pipeline"
+                        autoFocus
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Scopes</Label>
+                      <p className="text-xs text-muted-foreground">Select the permissions granted to this application.</p>
+                      <div className="grid grid-cols-1 gap-2 rounded-md border p-3 max-h-48 overflow-y-auto">
+                        {AVAILABLE_SCOPES.map((scope) => (
+                          <div key={scope.id} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`create-scope-${scope.id}`}
+                              checked={selectedScopes.includes(scope.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedScopes((prev) => [...prev, scope.id]);
+                                } else {
+                                  setSelectedScopes((prev) => prev.filter((s) => s !== scope.id));
+                                }
+                              }}
+                            />
+                            <div className="grid gap-0.5 leading-none">
+                              <label
+                                htmlFor={`create-scope-${scope.id}`}
+                                className="text-xs font-medium font-mono leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {scope.label}
+                              </label>
+                              <p className="text-[11px] text-muted-foreground">{scope.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="allowedIps">Allowed IPs (Optional)</Label>
+                      <Input
+                        id="allowedIps"
+                        value={allowedIpsText}
+                        onChange={(e) => setAllowedIpsText(e.target.value)}
+                        placeholder="Comma-separated IP addresses e.g. 192.168.1.1, 10.0.0.1"
+                        className="font-mono text-xs"
+                      />
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -253,15 +364,26 @@ export function M2mTab({ orgSlug }: { orgSlug: string }) {
                         })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={() => setPendingDeleteId(app.id)}
-                        >
-                          <Trash2 className="size-4" />
-                          <span className="sr-only">Delete {app.name}</span>
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => openEditDialog(app)}
+                          >
+                            <Pencil className="size-4" />
+                            <span className="sr-only">Edit {app.name}</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => setPendingDeleteId(app.id)}
+                          >
+                            <Trash2 className="size-4" />
+                            <span className="sr-only">Delete {app.name}</span>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -316,6 +438,82 @@ export function M2mTab({ orgSlug }: { orgSlug: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Application Dialog */}
+      <Dialog open={!!editingApp} onOpenChange={(open) => !open && setEditingApp(null)}>
+        <DialogContent>
+          <form onSubmit={handleUpdate}>
+            <DialogHeader>
+              <DialogTitle>Edit M2M application</DialogTitle>
+              <DialogDescription>
+                Modify application name, scopes, and IP allowlist restrictions.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. CI/CD pipeline"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Scopes</Label>
+                <p className="text-xs text-muted-foreground">Select permissions granted to this application.</p>
+                <div className="grid grid-cols-1 gap-2 rounded-md border p-3 max-h-48 overflow-y-auto">
+                  {AVAILABLE_SCOPES.map((scope) => (
+                    <div key={scope.id} className="flex items-start space-x-2">
+                      <Checkbox
+                        id={`edit-scope-${scope.id}`}
+                        checked={editScopes.includes(scope.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setEditScopes((prev) => [...prev, scope.id]);
+                          } else {
+                            setEditScopes((prev) => prev.filter((s) => s !== scope.id));
+                          }
+                        }}
+                      />
+                      <div className="grid gap-0.5 leading-none">
+                        <label
+                          htmlFor={`edit-scope-${scope.id}`}
+                          className="text-xs font-medium font-mono leading-none cursor-pointer"
+                        >
+                          {scope.label}
+                        </label>
+                        <p className="text-[11px] text-muted-foreground">{scope.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-allowedIps">Allowed IPs (Optional)</Label>
+                <Input
+                  id="edit-allowedIps"
+                  value={editAllowedIpsText}
+                  onChange={(e) => setEditAllowedIpsText(e.target.value)}
+                  placeholder="Comma-separated IP addresses e.g. 192.168.1.1, 10.0.0.1"
+                  className="font-mono text-xs"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingApp(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending || !editName.trim()}>
+                {updateMutation.isPending ? 'Saving…' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!pendingDeleteId} onOpenChange={(open) => !open && setPendingDeleteId(null)}>
         <AlertDialogContent>

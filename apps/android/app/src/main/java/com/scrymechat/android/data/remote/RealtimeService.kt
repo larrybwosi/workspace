@@ -48,11 +48,14 @@ class RealtimeService : LifecycleService() {
                 optsField.isAccessible = true
                 val opts = optsField.get(manager) as io.socket.client.IO.Options
                 opts.auth = mapOf("token" to token)
+                opts.query = "token=$token"
             } catch (e: Exception) {
                 Log.e("RealtimeService", "Failed to dynamically set auth options on Socket.io", e)
             }
 
-            socket.connect()
+            if (!socket.connected()) {
+                socket.connect()
+            }
             Log.d("RealtimeService", "Socket connecting...")
         } else {
             Log.d("RealtimeService", "No token found, socket not connecting")

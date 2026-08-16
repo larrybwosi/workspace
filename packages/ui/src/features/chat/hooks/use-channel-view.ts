@@ -89,6 +89,8 @@ export const useRealtimeSubscriptions = (
       AblyEvents.MESSAGE_UPDATED,
       AblyEvents.MESSAGE_DELETED,
       AblyEvents.MESSAGE_REACTION,
+      AblyEvents.MESSAGE_READ,
+      'message:read',
     ];
 
     events.forEach(event => {
@@ -102,6 +104,8 @@ export const useRealtimeSubscriptions = (
     if (userChannelName) {
       realtime.subscribe(userChannelName, AblyEvents.DM_RECEIVED, handleMessage);
       realtime.subscribe(userChannelName, 'message:new', handleMessage);
+      realtime.subscribe(userChannelName, AblyEvents.MESSAGE_READ, handleMessage);
+      realtime.subscribe(userChannelName, 'message:read', handleMessage);
     }
 
     return () => {
@@ -114,6 +118,8 @@ export const useRealtimeSubscriptions = (
       if (userChannelName) {
         realtime.unsubscribe(userChannelName, AblyEvents.DM_RECEIVED, handleMessage);
         realtime.unsubscribe(userChannelName, 'message:new', handleMessage);
+        realtime.unsubscribe(userChannelName, AblyEvents.MESSAGE_READ, handleMessage);
+        realtime.unsubscribe(userChannelName, 'message:read', handleMessage);
       }
     };
   }, [activeChannelId, workspaceSlug, queryClient, currentUserId, threadId]);

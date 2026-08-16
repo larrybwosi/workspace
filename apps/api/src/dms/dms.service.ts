@@ -8,13 +8,6 @@ export class DmsService {
   private readonly logger = new Logger(DmsService.name);
 
   constructor(private readonly notificationsService: NotificationsService) {}
-  /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Removed redundant 'sender' include for last message as it's already fetched via participants.
-   * 3. Only fetches necessary fields for the DM list view.
-   * Expected impact: Reduces database response size and memory overhead by ~30-40%.
-   */
   async getDms(userId: string) {
     const dms = await prisma.directMessage.findMany({
       where: {
@@ -142,13 +135,6 @@ export class DmsService {
   }
 
   async createDm(userId: string, targetUserId: string, userName: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Sorts participant IDs to ensure consistent 'participant1Id_participant2Id' ordering.
-     * 2. Uses 'prisma.directMessage.upsert' with the compound unique index to resolve or create DM in one RTT.
-     * 3. Consolidates 'select' logic to reduce code duplication and ensure consistent response shape.
-     * Expected impact: Reduces database round-trips from 2 down to 1 for new conversations.
-     */
     const [p1, p2] = [userId, targetUserId].sort();
 
     const dmSelect = {
@@ -215,10 +201,6 @@ export class DmsService {
       },
     };
 
-    /**
-     * ⚡ Performance Optimization:
-     * Background the realtime publishing to avoid blocking the DM creation response.
-     */
     publishRealtime(AblyChannels.user(targetUserId), AblyEvents.DM_RECEIVED, {
       dmId: dm.id,
       from: userName,
@@ -234,13 +216,6 @@ export class DmsService {
     return { success: true };
   }
 
-  /**
-   * ⚡ Performance Optimization:
-   * 1. Uses 'select' instead of 'include' to reduce DB payload and memory usage.
-   * 2. Only fetches the current user's read status instead of all read receipts.
-   * 3. Groups reactions in-memory to match frontend optimized format.
-   * Expected impact: Reduces JSON payload size by ~40-60% and speeds up DB query by avoiding deep joins.
-   */
   async getMessages(dmId: string, userId: string, cursor?: string, limitNum = 50) {
     const messages = await prisma.dMMessage.findMany({
       where: {
@@ -346,12 +321,6 @@ export class DmsService {
 
   async createMessage(dmId: string, userId: string, body: any) {
     const { content, replyToId, attachments } = body;
-
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates DM message creation and conversation timestamp update into a single transaction.
-     * 2. Reduces database round-trips from 2 down to 1.
-     */
     const [message, dm] = await prisma.$transaction([
       prisma.dMMessage.create({
         data: {
@@ -394,10 +363,6 @@ export class DmsService {
       messageType: 'standard',
     };
 
-    /**
-     * ⚡ Performance Optimization:
-     * Background the realtime publishing and notifications to avoid blocking the message creation response.
-     */
     publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_SENT, formattedMessage).catch(err =>
       this.logger.error('Failed to publish DM message sent event:', err)
     );
@@ -435,10 +400,6 @@ export class DmsService {
       messageType: 'standard',
     };
 
-    /**
-     * ⚡ Performance Optimization:
-     * Background the realtime publishing to avoid blocking the update response.
-     */
     publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_UPDATED, formattedMessage).catch(err =>
       this.logger.error('Failed to publish DM message update:', err)
     );
@@ -450,11 +411,6 @@ export class DmsService {
     await prisma.dMMessage.delete({
       where: { id: messageId },
     });
-
-    /**
-     * ⚡ Performance Optimization:
-     * Background the realtime publishing to avoid blocking the deletion response.
-     */
     publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_DELETED, { id: messageId }).catch(err =>
       this.logger.error('Failed to publish DM message deletion:', err)
     );
@@ -465,10 +421,6 @@ export class DmsService {
   async markAsRead(userId: string, messageIds: string[], dmId?: string) {
     if (!messageIds.length) return { success: true };
 
-    // ⚡ Performance Optimization:
-    // Replaces sequential upsert calls with a single batch 'createMany' operation.
-    // This reduces O(N) database round-trips to O(1).
-    // We use skipDuplicates to avoid errors for already read messages.
     await prisma.dMMessageRead.createMany({
       data: messageIds.map(messageId => ({
         messageId,
@@ -478,7 +430,6 @@ export class DmsService {
       skipDuplicates: true,
     });
 
-    // ⚡ Optimization: dmId is passed from the controller, avoiding a redundant database lookup.
     let targetDmId = dmId;
     if (!targetDmId) {
       const firstMessage = await prisma.dMMessage.findUnique({
@@ -489,10 +440,6 @@ export class DmsService {
     }
 
     if (targetDmId) {
-      /**
-       * ⚡ Performance Optimization:
-       * Background the realtime publishing to avoid blocking the read receipt response.
-       */
       publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
         dmId: targetDmId,
         messageIds,

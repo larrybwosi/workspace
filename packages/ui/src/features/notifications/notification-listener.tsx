@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useParams, usePathname } from 'next/navigation';
 import { showDiscordNotification, playNotificationSound } from './custom-toasts/notification-utils';
 import { useSession } from '@repo/shared';
@@ -17,8 +17,8 @@ export function NotificationListener() {
   const activeChannel = (params.channelId as string) || (params.channelSlug as string);
 
   const handleNotification = useCallback(
-    (message: any) => {
-      const notification = message.data;
+    (payload: any) => {
+      const notification = payload?.data || payload;
 
       // Suppression Logic:
       // If the notification is for a channel the user is currently in, don't show it.
@@ -29,7 +29,7 @@ export function NotificationListener() {
       // Sound effects logic
       if (notification.type === 'mention') {
         playNotificationSound('mention');
-      } else if (notification.title.toLowerCase().includes('call')) {
+      } else if (notification.title?.toLowerCase().includes('call')) {
         playNotificationSound('call');
       } else {
         playNotificationSound('message');
@@ -53,14 +53,13 @@ export function NotificationListener() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const channel = ably.channels.get(AblyChannels.notifications(session.user.id));
-    channel.subscribe(AblyEvents.NOTIFICATION, handleNotification);
+    const channel = AblyChannels.notifications(session.user.id);
+    realtime.subscribe(channel, AblyEvents.NOTIFICATION, handleNotification);
+    realtime.subscribe(channel, 'notification:new', handleNotification);
 
     return () => {
-      channel.unsubscribe(AblyEvents.NOTIFICATION, handleNotification);
+      realtime.unsubscribe(channel, AblyEvents.NOTIFICATION, handleNotification);
+      realtime.unsubscribe(channel, 'notification:new', handleNotification);
     };
   }, [session?.user?.id, handleNotification]);
 

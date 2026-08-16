@@ -18,6 +18,11 @@ class NotificationRepository @Inject constructor(
 ) {
     fun getNotificationsFlow(): Flow<List<NotificationEntity>> = dao.getNotificationsFlow()
 
+    suspend fun saveNotification(dto: NotificationDto) {
+        val entity = dto.toEntity()
+        dao.insertNotifications(listOf(entity))
+    }
+
     fun getNotificationByIdFlow(id: String): Flow<NotificationEntity?> = dao.getNotificationByIdFlow(id)
 
     suspend fun fetchNotifications(unreadOnly: Boolean? = null, limit: Int? = null): Resource<List<NotificationEntity>> {

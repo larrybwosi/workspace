@@ -151,7 +151,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
 
       // Issue token for Organization M2M context
-      return this.issueToken(client_id, org.id, scopesToIssue);
+      return this.issueToken(client_id, `m2m:${org.id}`, scopesToIssue);
     }
 
     throw new UnauthorizedException('Invalid client credentials');
@@ -162,7 +162,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour expiration
 
-    const accessToken = await (prisma as any).oauthAccessToken.create({
+    const accessToken = await prisma.oAuthAccessToken.create({
       data: {
         id: crypto.randomBytes(16).toString('hex'),
         token: hashedToken,

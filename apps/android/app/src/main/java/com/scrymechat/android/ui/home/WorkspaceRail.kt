@@ -58,7 +58,7 @@ fun WorkspaceRail(
 
         // Home Button
         WorkspaceIcon(
-            isSelected = isHomeSelected,
+            isSelected = isHomeSelected && selectedDm == null,
             onClick = onHomeClick,
             indicatorColor = indicatorColor,
             content = {
