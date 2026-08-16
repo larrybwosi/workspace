@@ -29,7 +29,7 @@ export class AppController {
   @ApiOperation({ summary: 'Get realtime configuration' })
   getRealtimeConfig() {
     return {
-      provider: process.env.REALTIME_PROVIDER || 'ably',
+      provider: process.env.REALTIME_PROVIDER || 'socketio',
     };
   }
 

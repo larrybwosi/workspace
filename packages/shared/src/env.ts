@@ -23,7 +23,7 @@ export const baseEnvSchema = z.object({
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string().optional(),
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().optional(),
-  NEXT_PUBLIC_REALTIME_PROVIDER: z.enum(['ably', 'socketio']).default('ably'),
+  NEXT_PUBLIC_REALTIME_PROVIDER: z.enum(['ably', 'socketio']).default('socketio'),
 });
 
 /**
@@ -36,7 +36,7 @@ export const serverEnvSchema = baseEnvSchema.extend({
   BETTER_AUTH_SECRET: z.string().min(32).optional(),
   BETTER_AUTH_URL: z.url().optional(),
   ABLY_API_KEY: z.string().optional(),
-  REALTIME_PROVIDER: z.enum(['ably', 'socketio']).default('ably'),
+  REALTIME_PROVIDER: z.enum(['ably', 'socketio']).default('socketio'),
   STORAGE_PROVIDER: z.enum(['sanity', 'rustfs']).default('rustfs'),
   SANITY_WRITE_TOKEN: z.string().optional(),
   RUSTFS_ENDPOINT: z.string().default('localhost'),
