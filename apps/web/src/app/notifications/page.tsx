@@ -5,12 +5,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Check, Trash2, Bell, AtSign, UserPlus, Info, CheckCircle2 } from 'lucide-react';
 import {
   useNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
   useDeleteNotification,
+  useRespondToFriendRequest,
 } from '@repo/api-client';
 import { Sidebar } from '@/components/layout/sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
@@ -26,6 +35,7 @@ export default function NotificationsPage() {
   const markReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
   const deleteMutation = useDeleteNotification();
+  const respondToFriendRequestMutation = useRespondToFriendRequest();
   const { toast } = useToast();
 
   const groupedNotifications = useMemo(() => {
@@ -71,6 +81,21 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleFriendRequestAction = async (requestId?: string, action?: 'accept' | 'decline') => {
+    if (!requestId || !action) return;
+    try {
+      await respondToFriendRequestMutation.mutateAsync({ requestId, action });
+      toast({
+        title: action === 'accept' ? 'Friend request accepted' : 'Friend request declined',
+      });
+    } catch (error: any) {
+      toast({
+        title: error?.response?.data?.message || 'Failed to process friend request',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'mention':
@@ -78,6 +103,7 @@ export default function NotificationsPage() {
       case 'channel_alert':
         return <Bell className="h-4 w-4 text-amber-500" />;
       case 'workspace_invitation':
+      case 'friend_request':
         return <UserPlus className="h-4 w-4 text-green-500" />;
       case 'system':
         return <Info className="h-4 w-4 text-slate-500" />;
@@ -102,7 +128,7 @@ export default function NotificationsPage() {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DynamicHeader activeView="Notifications" onMenuClick={() => setSidebarOpen(true)} onSearchClick={() => {}} />
         <div className="flex-1 overflow-auto bg-background">
-          <div className="max-w-4xl mx-auto p-6 space-y-8">
+          <div className="max-w-5xl mx-auto p-6 space-y-8">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold">Notifications</h1>
@@ -145,88 +171,152 @@ export default function NotificationsPage() {
                   </Card>
                 ) : (
                   Object.entries(groupedNotifications).map(([label, group]: [string, any]) => (
-                    <div key={label} className="space-y-4">
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground px-1">{label}</h2>
-                      <div className="space-y-2">
-                        {group.map((notification: any) => (
-                          <Card
-                            key={notification.id}
-                            className={cn(
-                              'group transition-all duration-200 hover:shadow-md',
-                              !notification.isRead ? 'border-l-4 border-l-primary bg-primary/5' : 'bg-card'
-                            )}
-                          >
-                            <CardContent className="p-4 flex items-start gap-4">
-                              <div className="mt-1">
-                                <div
+                    <div key={label} className="space-y-3">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
+                        {label}
+                      </h2>
+                      <div className="rounded-lg border bg-card overflow-hidden shadow-sm">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50 hover:bg-muted/50">
+                              <TableHead className="w-10 text-center">Status</TableHead>
+                              <TableHead className="w-10"></TableHead>
+                              <TableHead>Notification</TableHead>
+                              <TableHead className="w-28 text-right">Time</TableHead>
+                              <TableHead className="w-48 text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {group.map((notification: any) => {
+                              const isFriendRequest =
+                                notification.type === 'friend_request' ||
+                                notification.entityType === 'friend_request';
+                              const requestId =
+                                notification.entityId || (notification.metadata as any)?.requestId;
+
+                              return (
+                                <TableRow
+                                  key={notification.id}
                                   className={cn(
-                                    'h-10 w-10 rounded-full flex items-center justify-center',
-                                    !notification.isRead ? 'bg-primary/10' : 'bg-muted'
+                                    'group transition-colors',
+                                    !notification.isRead
+                                      ? 'bg-primary/5 hover:bg-primary/10'
+                                      : 'hover:bg-muted/50'
                                   )}
                                 >
-                                  {getIcon(notification.type)}
-                                </div>
-                              </div>
-
-                              <div className="flex-1 min-w-0 space-y-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <Link
-                                    href={`/notifications/${notification.id}`}
-                                    className={cn(
-                                      'font-semibold truncate hover:underline',
-                                      !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
+                                  <TableCell className="text-center py-3">
+                                    {!notification.isRead ? (
+                                      <span
+                                        className="inline-block h-2 w-2 rounded-full bg-primary"
+                                        title="Unread"
+                                      />
+                                    ) : (
+                                      <span className="inline-block h-2 w-2 rounded-full bg-transparent" />
                                     )}
-                                  >
-                                    {notification.title}
-                                  </Link>
-                                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                  </TableCell>
+                                  <TableCell className="py-3 px-0">
+                                    <div
+                                      className={cn(
+                                        'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
+                                        !notification.isRead ? 'bg-primary/10' : 'bg-muted'
+                                      )}
+                                    >
+                                      {getIcon(notification.type)}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-3">
+                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                      <Link
+                                        href={`/notifications/${notification.id}`}
+                                        className={cn(
+                                          'font-semibold text-sm hover:underline truncate',
+                                          !notification.isRead
+                                            ? 'text-foreground'
+                                            : 'text-muted-foreground'
+                                        )}
+                                      >
+                                        {notification.title}
+                                      </Link>
+                                      <p className="text-xs text-muted-foreground line-clamp-1">
+                                        {notification.message}
+                                      </p>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap py-3">
                                     {format(new Date(notification.createdAt), 'h:mm a')}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2">{notification.message}</p>
-
-                                <div className="flex items-center gap-3 pt-2">
-                                  <Button asChild size="sm" variant="secondary" className="h-8">
-                                    <Link href={`/notifications/${notification.id}`}>View details</Link>
-                                  </Button>
-                                  {notification.type === 'workspace_invitation' && (
-                                    <div className="flex gap-2">
-                                      <Button size="sm" className="h-8 px-4">
-                                        Accept
+                                  </TableCell>
+                                  <TableCell className="text-right py-3">
+                                    <div className="flex items-center justify-end gap-1">
+                                      {isFriendRequest && (
+                                        <div className="flex items-center gap-1 mr-1">
+                                          <Button
+                                            size="sm"
+                                            className="h-7 px-2.5 text-xs"
+                                            onClick={() =>
+                                              handleFriendRequestAction(requestId, 'accept')
+                                            }
+                                            disabled={respondToFriendRequestMutation.isPending}
+                                          >
+                                            Accept
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2.5 text-xs"
+                                            onClick={() =>
+                                              handleFriendRequestAction(requestId, 'decline')
+                                            }
+                                            disabled={respondToFriendRequestMutation.isPending}
+                                          >
+                                            Decline
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {notification.type === 'workspace_invitation' && (
+                                        <div className="flex items-center gap-1 mr-1">
+                                          <Button size="sm" className="h-7 px-2.5 text-xs">
+                                            Accept
+                                          </Button>
+                                          <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs">
+                                            Decline
+                                          </Button>
+                                        </div>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        asChild
+                                        className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                      >
+                                        <Link href={`/notifications/${notification.id}`}>View</Link>
                                       </Button>
-                                      <Button size="sm" variant="ghost" className="h-8 px-4">
-                                        Decline
+                                      {!notification.isRead && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 text-primary"
+                                          onClick={() => handleMarkRead(notification.id)}
+                                          title="Mark as read"
+                                        >
+                                          <Check className="h-3.5 w-3.5" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-destructive"
+                                        onClick={() => handleDelete(notification.id)}
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
                                       </Button>
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {!notification.isRead && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-primary"
-                                    onClick={() => handleMarkRead(notification.id)}
-                                    title="Mark as read"
-                                  >
-                                    <Check className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive"
-                                  onClick={() => handleDelete(notification.id)}
-                                  title="Delete"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
                       </div>
                     </div>
                   ))
@@ -242,25 +332,22 @@ export default function NotificationsPage() {
 
 function NotificationsSkeleton() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {Array.from({ length: 2 }).map((_, groupIdx) => (
-        <div key={groupIdx} className="space-y-4">
+        <div key={groupIdx} className="space-y-3">
           <Skeleton className="h-3.5 w-20" />
-          <div className="space-y-2">
+          <div className="rounded-lg border bg-card overflow-hidden p-4 space-y-3">
             {Array.from({ length: groupIdx === 0 ? 3 : 2 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4 flex items-start gap-4">
-                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <Skeleton className="h-4 w-40" />
-                      <Skeleton className="h-3 w-10 shrink-0" />
-                    </div>
-                    <Skeleton className="h-3.5 w-full max-w-md" />
-                    <Skeleton className="h-3.5 w-2/3 max-w-sm" />
+              <div key={i} className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 flex-1">
+                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                  <div className="space-y-1 flex-1">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-64" />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <Skeleton className="h-4 w-16 shrink-0" />
+              </div>
             ))}
           </div>
         </div>
