@@ -77,7 +77,11 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
                       onClick={() => router.push(`/workspace/${workspace.slug}`)}
                     >
                       {workspace.icon ? (
-                        <span className="text-xl">{workspace.icon}</span>
+                        workspace.icon.startsWith('http') || workspace.icon.startsWith('/') || workspace.icon.startsWith('data:') || workspace.icon.length > 2 ? (
+                          <img src={workspace.icon} alt={workspace.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-xl">{workspace.icon}</span>
+                        )
                       ) : (
                         <span className="font-bold text-sm">{workspace.name.charAt(0).toUpperCase()}</span>
                       )}
@@ -219,7 +223,13 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="relative cursor-pointer group p-0.5 rounded-2xl border-2 border-transparent hover:border-sidebar-border transition-all">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push('/settings')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/settings'); }}
+                className="relative cursor-pointer group p-0.5 rounded-2xl border-2 border-transparent hover:border-sidebar-border transition-all"
+              >
                 <Avatar className="h-11 w-11 rounded-xl ring-2 ring-background">
                   <AvatarImage src={user?.image || ''} />
                   <AvatarFallback className="rounded-xl bg-primary text-primary-foreground font-bold">

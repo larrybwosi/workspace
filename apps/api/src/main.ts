@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { WsAdapter } from '@nestjs/platform-ws';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { validateEnv } from '@repo/shared';
 import { auth } from '@repo/auth';
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
@@ -256,7 +256,7 @@ async function bootstrap() {
     await redisIoAdapter.connectToRedis();
     app.useWebSocketAdapter(redisIoAdapter);
   } else {
-    app.useWebSocketAdapter(new WsAdapter(app));
+    app.useWebSocketAdapter(new IoAdapter(app));
   }
 
   app.setGlobalPrefix('api', {
