@@ -40,7 +40,16 @@ data class UserDto(
     val statusEmoji: String? = null,
     val bio: String? = null,
     val role: String? = null,
-    val status: String? = null
+    val status: String? = null,
+    val jobTitle: String? = null,
+    val department: String? = null,
+    val officeLocation: String? = null,
+    val managerId: String? = null,
+    val managerName: String? = null,
+    val managerTitle: String? = null,
+    val managerAvatar: String? = null,
+    val github: String? = null,
+    val slack: String? = null
 )
 
 data class SessionDto(

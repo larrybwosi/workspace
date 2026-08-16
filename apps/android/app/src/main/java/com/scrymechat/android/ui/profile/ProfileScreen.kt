@@ -354,57 +354,77 @@ fun UserHeader(user: UserEntity?, palette: ProfilePalette) {
             .padding(top = 12.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.verticalGradient(palette.headerGradient))
-            .border(1.dp, palette.cardBorder, RoundedCornerShape(20.dp))
-            .padding(vertical = 28.dp, horizontal = 16.dp),
+            .border(1.dp, palette.cardBorder, RoundedCornerShape(20.dp)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(88.dp)
-                .clip(CircleShape)
-                .border(2.dp, palette.avatarRing, CircleShape)
-                .padding(3.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (user?.avatar != null) {
+        if (user?.banner != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+            ) {
                 AsyncImage(
-                    model = user.avatar,
+                    model = user.banner,
                     contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(palette.accentGradient)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = (user?.name?.firstOrNull() ?: 'U').uppercase(),
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = user?.name ?: "User",
-            color = palette.textPrimary,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = (-0.2).sp
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = user?.email ?: "",
-            color = palette.textSecondary,
-            fontSize = 13.5.sp
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, palette.avatarRing, CircleShape)
+                    .padding(3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (user?.avatar != null) {
+                    AsyncImage(
+                        model = user.avatar,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(palette.accentGradient)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (user?.name?.firstOrNull() ?: 'U').uppercase(),
+                            color = Color.White,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = user?.name ?: "User",
+                color = palette.textPrimary,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.2).sp
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = user?.email ?: "",
+                color = palette.textSecondary,
+                fontSize = 13.5.sp
+            )
+        }
     }
 }
 
