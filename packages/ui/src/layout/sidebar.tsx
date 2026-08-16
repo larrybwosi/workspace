@@ -15,7 +15,7 @@ import { useSession } from '@repo/shared';
 import { useNotifications } from '@repo/api-client';
 import { useDMConversations, dmKeys } from '@repo/api-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, AblyChannels, AblyEvents } from '@repo/shared';
+import { realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
 import { UserProfileDialog } from '../features/social/user-profile-dialog';
@@ -224,19 +224,20 @@ export function Sidebar({
   React.useEffect(() => {
     if (!sessionUser?.id) return;
 
-    const ably = getAblyClient();
-    if (!ably) return;
-
-    const userChannel = ably.channels.get(AblyChannels.user(sessionUser.id));
+    const userChannel = AblyChannels.user(sessionUser.id);
 
     const handleDMUpdate = () => {
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
     };
 
-    userChannel.subscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
+    realtime.subscribe(userChannel, AblyEvents.DM_RECEIVED, handleDMUpdate);
+    realtime.subscribe(userChannel, 'message:new', handleDMUpdate);
+    realtime.subscribe(userChannel, 'dm:received', handleDMUpdate);
 
     return () => {
-      userChannel.unsubscribe(AblyEvents.DM_RECEIVED, handleDMUpdate);
+      realtime.unsubscribe(userChannel, AblyEvents.DM_RECEIVED, handleDMUpdate);
+      realtime.unsubscribe(userChannel, 'message:new', handleDMUpdate);
+      realtime.unsubscribe(userChannel, 'dm:received', handleDMUpdate);
     };
   }, [sessionUser?.id, queryClient]);
 

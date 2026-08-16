@@ -21,15 +21,18 @@ class RealtimeRepository @Inject constructor(
 
     fun observeMessages(): Flow<MessageDto> = callbackFlow {
         val listener = Emitter.Listener { args ->
-            val data = args[0].toString()
-            val message = gson.fromJson(data, MessageDto::class.java)
-            trySend(message)
+            try {
+                val data = args[0].toString()
+                val message = gson.fromJson(data, MessageDto::class.java)
+                trySend(message)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-        socket.on("message:new", listener)
-        socket.on("message:update", listener)
+        val events = arrayOf("message:new", "message:sent", "message:update", "message:updated", "message:delete", "message:deleted")
+        events.forEach { socket.on(it, listener) }
         awaitClose {
-            socket.off("message:new", listener)
-            socket.off("message:update", listener)
+            events.forEach { socket.off(it, listener) }
         }
     }
 
@@ -62,13 +65,18 @@ class RealtimeRepository @Inject constructor(
 
     fun observeNotifications(): Flow<NotificationDto> = callbackFlow {
         val listener = Emitter.Listener { args ->
-            val data = args[0].toString()
-            val notification = gson.fromJson(data, NotificationDto::class.java)
-            trySend(notification)
+            try {
+                val data = args[0].toString()
+                val notification = gson.fromJson(data, NotificationDto::class.java)
+                trySend(notification)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-        socket.on("notification:new", listener)
+        val events = arrayOf("notification:new", "notification", "NOTIFICATION")
+        events.forEach { socket.on(it, listener) }
         awaitClose {
-            socket.off("notification:new", listener)
+            events.forEach { socket.off(it, listener) }
         }
     }
 

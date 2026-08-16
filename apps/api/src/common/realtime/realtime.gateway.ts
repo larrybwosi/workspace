@@ -45,9 +45,15 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   async handleConnection(client: Socket) {
     try {
       // Socket.io authentication using better-auth
-      // We expect the session cookie or authorization header to be present in the handshake
+      // We expect the session cookie, authorization header, auth object, or query token to be present in the handshake
       const headers = { ...client.handshake.headers };
-      const token = client.handshake.auth?.token;
+      let token = client.handshake.auth?.token || (client.handshake.query?.token as string);
+      if (!token && headers.authorization) {
+        token = (headers.authorization as string).replace(/^Bearer\s+/i, '');
+      }
+      if (!token && headers.Authorization) {
+        token = (headers.Authorization as string).replace(/^Bearer\s+/i, '');
+      }
       if (token && !headers.authorization && !headers.Authorization) {
         headers.authorization = `Bearer ${token}`;
       }
@@ -115,8 +121,8 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         this.logger.log(`Client ${client.id} left room: ${room}`);
       });
 
-      client.on('typing', (data: { room: string; userId: string; userName: string }) => {
-        this.logger.log(`User ${data.userName} is typing in ${data.room}`);
+      client.on('typing', (data: { room: string; userId: string; userName: string; avatar?: string }) => {
+        this.logger.log(`User ${data.userName || data.userId} is typing in ${data.room}`);
         client.to(data.room).emit('typing', data);
       });
 
@@ -171,15 +177,18 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   async publish(channel: string, event: string, data: any): Promise<void> {
     this.logger.log(`Publishing to ${channel}: ${event}`);
 
-    // Map Ably events to Android-expected Socket.io events
+    // Map Ably events to Socket.io events while supporting both mapped and original names
     let mappedEvent = event;
     if (event === 'message:sent') mappedEvent = 'message:new';
     else if (event === 'message:updated') mappedEvent = 'message:update';
     else if (event === 'message:deleted') mappedEvent = 'message:delete';
-    else if (event === 'notification') mappedEvent = 'notification:new';
+    else if (event === 'notification' || event === 'NOTIFICATION') mappedEvent = 'notification:new';
 
     const payload = typeof data === 'object' && data !== null ? { ...data, _channel: channel } : data;
     this.server.to(channel).emit(mappedEvent, payload);
+    if (mappedEvent !== event) {
+      this.server.to(channel).emit(event, payload);
+    }
   }
 
   @SubscribeMessage('publish')
