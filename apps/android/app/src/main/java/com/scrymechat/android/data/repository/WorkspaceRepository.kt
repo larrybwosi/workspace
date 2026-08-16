@@ -136,6 +136,7 @@ class WorkspaceRepository @Inject constructor(
         name = name,
         slug = slug,
         icon = icon,
+        banner = banner,
         description = description,
         ownerId = ownerId,
         createdAt = createdAt,

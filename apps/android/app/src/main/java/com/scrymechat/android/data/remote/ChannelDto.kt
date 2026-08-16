@@ -43,3 +43,7 @@ data class UpdateChannelRequest(
     val type: String? = null,
     val icon: String? = null
 )
+
+data class AddChannelMembersRequest(
+    val userIds: List<String>
+)

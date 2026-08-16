@@ -105,10 +105,10 @@ export function ChannelView({
   useRealtimeSubscriptions(channelId, workspaceSlug, queryClient, currentUser?.id, initialThreadId);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [channelForm, setChannelForm] = useState({ name: '', description: '', type: 'public' as 'public' | 'private' });
+  const [channelForm, setChannelForm] = useState({ name: '', description: '', type: 'public' as 'public' | 'private', icon: '#' });
 
   useEffect(() => {
-    if (channelData) setChannelForm({ name: channelData.name, description: channelData.description || '', type: (channelData as any).isPrivate ? 'private' : 'public' });
+    if (channelData) setChannelForm({ name: channelData.name, description: channelData.description || '', type: (channelData as any).isPrivate || channelData.type === 'private' ? 'private' : 'public', icon: (channelData as any).icon || '#' });
   }, [channelData]);
 
   const messages = useMemo(() => messagesData?.pages?.flatMap(page => page.messages) || [], [messagesData]);

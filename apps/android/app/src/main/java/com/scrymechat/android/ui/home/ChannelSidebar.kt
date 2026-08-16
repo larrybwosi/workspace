@@ -137,7 +137,8 @@ fun ChannelSidebar(
     onCategoryToggle: (String) -> Unit,
     onSettingsClick: () -> Unit,
     onFriendsClick: () -> Unit = {},
-    onCreateChannelClick: () -> Unit = {}
+    onCreateChannelClick: () -> Unit = {},
+    onEditWorkspaceClick: (() -> Unit)? = null
 ) {
     val (uncategorized, groupedCategories) = remember(channels) {
         processChannelGrouping(channels)
@@ -163,7 +164,7 @@ fun ChannelSidebar(
                 subtitle = null
             )
         } else {
-            WorkspaceBanner(workspace = workspace)
+            WorkspaceBanner(workspace = workspace, onEditWorkspaceClick = onEditWorkspaceClick)
         }
 
         HorizontalDivider(color = SidebarTokens.Hairline, thickness = 1.dp)
@@ -311,7 +312,10 @@ private fun PaddingWrapper(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun WorkspaceBanner(workspace: WorkspaceEntity?) {
+fun WorkspaceBanner(
+    workspace: WorkspaceEntity?,
+    onEditWorkspaceClick: (() -> Unit)? = null
+) {
     if (workspace == null) return
 
     Box(
@@ -320,7 +324,15 @@ fun WorkspaceBanner(workspace: WorkspaceEntity?) {
             .height(112.dp)
             .background(SidebarTokens.AccentGradient)
     ) {
-        if (workspace.icon != null && workspace.icon.startsWith("http")) {
+        if (!workspace.banner.isNullOrBlank() && workspace.banner.startsWith("http")) {
+            AsyncImage(
+                model = workspace.banner,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.65f
+            )
+        } else if (workspace.icon != null && workspace.icon.startsWith("http")) {
             AsyncImage(
                 model = workspace.icon,
                 contentDescription = null,
@@ -395,12 +407,12 @@ fun WorkspaceBanner(workspace: WorkspaceEntity?) {
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(bounded = false, radius = 16.dp)
-                    ) { },
+                    ) { onEditWorkspaceClick?.invoke() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Workspace menu",
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Workspace settings",
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
                 )
