@@ -397,7 +397,8 @@ export class ChannelsService {
       content,
       mentionedUserIds,
       mentionsAll,
-      mentionsHere
+      mentionsHere,
+      replyToId
     );
 
     await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message);
@@ -413,7 +414,8 @@ export class ChannelsService {
     content: string,
     mentionedUserIds: string[],
     mentionsAll: boolean,
-    mentionsHere: boolean
+    mentionsHere: boolean,
+    replyToId?: string
   ) {
     const recipientIds = mentionedUserIds.filter(id => id !== userId);
     if (recipientIds.length > 0) {
@@ -422,6 +424,17 @@ export class ChannelsService {
 
     if (mentionsAll || mentionsHere) {
       await this.notificationsService.notifyChannel(channelId, senderName, messageId, content, mentionsHere);
+    }
+
+    if (replyToId) {
+      await this.notificationsService.notifyReply(
+        channelId,
+        userId,
+        senderName,
+        replyToId,
+        messageId,
+        content
+      );
     }
 
     await this.notificationsService.notifyNewMessage(

@@ -1,6 +1,7 @@
 import { prisma } from '@repo/database';
 import { AblyChannels, AblyEvents } from './ably';
 import { getAblyRest } from './ably.server';
+import { extractUserMentions, extractChannelMentions } from './mention-utils';
 import { queueNotification } from './notification-queue';
 
 export interface NotificationPayload {
@@ -67,15 +68,25 @@ export async function createNotifications(payloads: NotificationPayload[]) {
 
       // Push notification (Queued for background delivery - Enterprise requirement)
       try {
+        const customData: Record<string, string> = {
+          type: notification.type as any,
+          entityType: notification.entityType || '',
+          entityId: notification.entityId || '',
+        };
+
+        if (notification.metadata && typeof notification.metadata === 'object') {
+          for (const [k, v] of Object.entries(notification.metadata as Record<string, any>)) {
+            if (v !== undefined && v !== null) {
+              customData[k] = String(v);
+            }
+          }
+        }
+
         await queueNotification({
           userId: notification.userId,
           title: notification.title,
           body: notification.message,
-          data: {
-            type: notification.type as any,
-            entityType: notification.entityType || '',
-            entityId: notification.entityId || '',
-          },
+          data: customData,
           linkUrl: notification.linkUrl || undefined,
           notificationId: notification.id,
         });
@@ -178,6 +189,9 @@ export async function notifyMentions(
   const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
   const userPrefMap = new Map(users.map(u => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
 
+  const userMentions = extractUserMentions(messageContent || '');
+  const channelMentions = extractChannelMentions(messageContent || '');
+
   // 2. Build notification payloads
   const payloads: NotificationPayload[] = [];
   for (const userId of mentionedUserIds) {
@@ -213,6 +227,8 @@ export async function notifyMentions(
         workspaceId,
         workspaceName: channel.workspace?.name,
         workspaceSlug: channel.workspace?.slug,
+        mentions: userMentions.join(','),
+        tags: channelMentions.map(t => `#${t}`).join(','),
       },
     });
   }
@@ -282,6 +298,9 @@ export async function notifyReply(
 
   if (preference === 'nothing') return;
 
+  const userMentions = extractUserMentions(content || '');
+  const channelMentions = extractChannelMentions(content || '');
+
   await createNotification({
     userId: recipientId,
     type: 'mention',
@@ -298,6 +317,8 @@ export async function notifyReply(
       workspaceId,
       workspaceName: channel.workspace?.name,
       workspaceSlug: channel.workspace?.slug,
+      mentions: userMentions.join(','),
+      tags: channelMentions.map(t => `#${t}`).join(','),
     },
   });
 }
@@ -355,6 +376,9 @@ export async function notifyChannel(
   const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
   const userPrefMap = new Map(users.map(u => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
 
+  const userMentions = extractUserMentions(messageContent || '');
+  const channelMentions = extractChannelMentions(messageContent || '');
+
   // 3. Build payloads
   const payloads: NotificationPayload[] = [];
   for (const cm of channel.members) {
@@ -383,6 +407,8 @@ export async function notifyChannel(
         workspaceId,
         workspaceName: channel.workspace?.name,
         workspaceSlug: channel.workspace?.slug,
+        mentions: userMentions.join(','),
+        tags: channelMentions.map(t => `#${t}`).join(','),
       },
     });
   }
@@ -448,6 +474,9 @@ export async function notifyDM(
 
   if (prefs.dms === 'nothing') return;
 
+  const userMentions = extractUserMentions(content || '');
+  const channelMentions = extractChannelMentions(content || '');
+
   await createNotification({
     userId: recipientId,
     type: 'direct_message',
@@ -461,6 +490,8 @@ export async function notifyDM(
       senderId,
       messageId,
       type: 'direct_message',
+      mentions: userMentions.join(','),
+      tags: channelMentions.map(t => `#${t}`).join(','),
     },
   });
 }
@@ -517,6 +548,9 @@ export async function notifyNewMessage(
     usersWithGlobalPrefs.map(u => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all'])
   );
 
+  const userMentions = extractUserMentions(content || '');
+  const channelMentions = extractChannelMentions(content || '');
+
   const payloads: NotificationPayload[] = [];
   const excludedSet = new Set(excludedUserIds);
   for (const cm of channel.members) {
@@ -548,6 +582,8 @@ export async function notifyNewMessage(
         workspaceId,
         workspaceName: channel.workspace?.name,
         workspaceSlug: channel.workspace?.slug,
+        mentions: userMentions.join(','),
+        tags: channelMentions.map(t => `#${t}`).join(','),
       },
     });
   }
