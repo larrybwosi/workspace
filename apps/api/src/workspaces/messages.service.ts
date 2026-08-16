@@ -249,10 +249,7 @@ export class MessagesService {
           throw new ForbiddenException('Not eligible to use this sticker');
         }
       }
-      /**
-       * ⚡ Performance Optimization:
-       * Background the asset usage logging to avoid blocking message creation.
-       */
+
       logAssetUsage({
         assetId: stickerId,
         assetType: 'sticker',
