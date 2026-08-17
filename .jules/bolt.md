@@ -286,3 +286,8 @@
 
 **Learning:** When searching for symmetric two-way relation records defined by compound unique keys (such as `DirectMessage` with `@@unique([participant1Id, participant2Id])`), querying via `findFirst` with an `OR` condition prevents the query planner from optimal O(1) single-key lookup plans, resulting in slower index scans. Replacing it with chained short-circuiting `findUnique` calls targeting both relation permutations is significantly faster and highly optimized.
 **Action:** Prefer chaining sequential `findUnique` calls targeting compound keys (e.g., `findUnique({ participant1Id_participant2Id: { participant1Id: A, participant2Id: B } }) || findUnique({ participant1Id_participant2Id: { participant1Id: B, participant2Id: A } })`) instead of `findFirst` with an `OR` condition.
+
+## 2026-08-17 - [Prisma/Performance] O(1) Primary Key Lookup for Non-Unique Relation Models in Auth Guards
+
+**Learning:** When validating session-based workspace access where the active organization ID is present, querying child relation tables without compound unique keys (such as `prisma.member.findFirst({ where: { organizationId, userId } })`) causes database index scans. Replacing `findFirst` on the non-unique relation with a primary key point-lookup on the parent model `prisma.organization.findUnique({ where: { id: workspaceId }, select: { id: true, slug: true, members: { where: { userId }, select: { id: true } } } })` leverages direct O(1) primary key indexing and enriches context with `workspaceSlug`.
+**Action:** Always prefer querying parent models by primary key `id` with nested relation filtering over `findFirst` on non-uniquely constrained child models for authorization checks in guards.
