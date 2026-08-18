@@ -5,7 +5,7 @@ This guide details how to set up Firebase Cloud Messaging (FCM) in ScryMeChat so
 ---
 
 ## 1. Firebase Console Configuration
-
+ 
 1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project or select an existing project.
 2. In Project Settings, click **Add App** and select **Android**.
 3. Enter the Android Package Name:
