@@ -1,3 +1,9 @@
+## 2026-08-16 - [Prisma/Performance] Single-Query Relational Filter for Sub-Resource Log Retrieval
+
+**Learning:** `IntegrationsService.getWebhookLogs` previously performed an initial `prisma.webhook.findUnique` query to verify ownership before issuing a second query (`prisma.webhookLog.findMany`) to fetch logs. Querying `prisma.webhookLog.findMany` directly with a relational filter (`webhook: { userId }`) cuts database round-trips from 2 to 1 on the happy path (when logs exist). Fallback to a targeted O(1) point lookup (`findUnique` with `select: { id: true }`) only occurs when the log set is empty, maintaining `NotFoundException` semantics without penalizing active webhooks.
+
+**Action:** Prefer querying child sub-resources directly with parent relation filters (`parentModel: { ownerId }`) to reduce database round-trips from 2 to 1, utilizing fallback point lookups only for empty-result verification.
+
 ## 2026-08-13 - [Prisma/Performance] Single-Query Mutation via Optimistic Update in V3 Webhooks
 
 **Learning:** Sibling controllers like `V2WebhooksController` optimized their update operations by consolidating read existence checks and write updates into a single atomic mutation with a try-catch for Prisma's P2025 record-not-found error. Applying this same pattern to `V3WebhooksController` reduces the database round-trips (RTT) on the update path from 2 down to 1. This significantly improves write throughput and mitigates potential write race conditions.
