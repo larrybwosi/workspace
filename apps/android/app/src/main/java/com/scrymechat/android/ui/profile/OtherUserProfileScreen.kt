@@ -80,8 +80,9 @@ fun OtherUserProfileScreen(
             TopAppBar(
                 title = {
                     AnimatedVisibility(visible = !isLoading && user != null, enter = fadeIn(), exit = fadeOut()) {
+                        val displayName = user?.name?.takeIf { it.isNotBlank() } ?: user?.username ?: ""
                         Text(
-                            user?.name ?: "",
+                            displayName,
                             color = palette.textPrimary,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
@@ -339,9 +340,10 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
                 .padding(start = 20.dp)
                 .padding(top = 148.dp + 8.dp)
         ) {
+            val displayName = user?.name?.takeIf { it.isNotBlank() } ?: user?.username ?: "User"
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    user?.name ?: "",
+                    displayName,
                     color = palette.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 21.sp,
