@@ -19,20 +19,49 @@ class RealtimeRepository @Inject constructor(
     private val gson: Gson
 ) {
 
-    fun observeMessages(): Flow<MessageDto> = callbackFlow {
-        val listener = Emitter.Listener { args ->
+    fun observeMessages(): Flow<RealtimeMessageEvent> = callbackFlow {
+        val createListener = Emitter.Listener { args ->
             try {
                 val data = args[0].toString()
                 val message = gson.fromJson(data, MessageDto::class.java)
-                trySend(message)
+                trySend(RealtimeMessageEvent("sent", message))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
-        val events = arrayOf("message:new", "message:sent", "message:update", "message:updated", "message:delete", "message:deleted")
-        events.forEach { socket.on(it, listener) }
+        val updateListener = Emitter.Listener { args ->
+            try {
+                val data = args[0].toString()
+                val message = gson.fromJson(data, MessageDto::class.java)
+                trySend(RealtimeMessageEvent("updated", message))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        val deleteListener = Emitter.Listener { args ->
+            try {
+                val data = args[0].toString()
+                val message = gson.fromJson(data, MessageDto::class.java)
+                trySend(RealtimeMessageEvent("deleted", message))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        socket.on("message:new", createListener)
+        socket.on("message:sent", createListener)
+        socket.on("message:update", updateListener)
+        socket.on("message:updated", updateListener)
+        socket.on("message:delete", deleteListener)
+        socket.on("message:deleted", deleteListener)
+
         awaitClose {
-            events.forEach { socket.off(it, listener) }
+            socket.off("message:new", createListener)
+            socket.off("message:sent", createListener)
+            socket.off("message:update", updateListener)
+            socket.off("message:updated", updateListener)
+            socket.off("message:delete", deleteListener)
+            socket.off("message:deleted", deleteListener)
         }
     }
 
@@ -130,6 +159,11 @@ class RealtimeRepository @Inject constructor(
         socket.emit("leave-presence", payload)
     }
 }
+
+data class RealtimeMessageEvent(
+    val eventType: String,
+    val message: MessageDto
+)
 
 data class TypingEvent(
     val userId: String,
