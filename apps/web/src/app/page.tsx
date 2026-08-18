@@ -11,7 +11,7 @@ import { WelcomeState } from '@/components/layout/welcome-state';
 import { useState } from 'react';
 
 export default function HomePage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const [activeChannel, setActiveChannel] = useState('');
   const [searchMode, setSearchMode] = useState(false);
@@ -65,7 +65,7 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col min-w-0">
         <DynamicHeader
           activeView={activeChannel}
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={() => setSidebarOpen((prev) => !prev)}
           onSearchClick={() => {
             setSearchMode(true);
             setMembersMode(false);

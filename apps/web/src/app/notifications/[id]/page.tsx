@@ -14,21 +14,22 @@ import {
   Info,
   Trash2,
   CheckCircle,
-  ExternalLink,
   Clock,
   Calendar,
   Layers,
+  Check,
+  X,
 } from 'lucide-react';
 import {
   useNotification,
   useUpdateNotificationReadStatus,
   useDeleteNotification,
+  useRespondToFriendRequest,
 } from '@repo/api-client';
 import { Sidebar } from '@/components/layout/sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import Link from 'next/link';
 
 export default function NotificationDetailPage({
   params,
@@ -43,6 +44,9 @@ export default function NotificationDetailPage({
   const { data: notification, isLoading, error } = useNotification(id);
   const updateReadStatusMutation = useUpdateNotificationReadStatus();
   const deleteMutation = useDeleteNotification();
+  const respondToFriendRequestMutation = useRespondToFriendRequest();
+
+  const [friendRequestStatus, setFriendRequestStatus] = useState<'accepted' | 'declined' | null>(null);
 
   const handleToggleReadStatus = async () => {
     if (!notification) return;
@@ -74,6 +78,27 @@ export default function NotificationDetailPage({
     }
   };
 
+  const handleFriendRequestAction = async (action: 'accept' | 'decline') => {
+    const requestId = notification?.entityId || (notification?.metadata as any)?.requestId;
+    if (!requestId) {
+      toast({ title: 'Request ID missing', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      await respondToFriendRequestMutation.mutateAsync({ requestId, action });
+      setFriendRequestStatus(action === 'accept' ? 'accepted' : 'declined');
+      toast({
+        title: action === 'accept' ? 'Friend request accepted' : 'Friend request declined',
+      });
+    } catch (err: any) {
+      toast({
+        title: err?.response?.data?.message || 'Failed to process friend request',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getIcon = (type?: string) => {
     switch (type) {
       case 'mention':
@@ -81,6 +106,7 @@ export default function NotificationDetailPage({
       case 'channel_alert':
         return <Bell className="h-6 w-6 text-amber-500" />;
       case 'workspace_invitation':
+      case 'friend_request':
         return <UserPlus className="h-6 w-6 text-green-500" />;
       case 'system':
         return <Info className="h-6 w-6 text-slate-500" />;
@@ -88,6 +114,9 @@ export default function NotificationDetailPage({
         return <Bell className="h-6 w-6 text-primary" />;
     }
   };
+
+  const isFriendRequest =
+    notification?.type === 'friend_request' || notification?.entityType === 'friend_request';
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
@@ -182,6 +211,54 @@ export default function NotificationDetailPage({
                     </p>
                   </div>
 
+                  {/* Actions section for friend requests */}
+                  {isFriendRequest && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+                          <UserPlus className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">Friend Request</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(notification.metadata as any)?.senderName
+                              ? `${(notification.metadata as any).senderName} wants to connect with you.`
+                              : 'You have a pending friend request.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {friendRequestStatus ? (
+                        <Badge
+                          variant={friendRequestStatus === 'accepted' ? 'default' : 'secondary'}
+                          className="px-3 py-1 text-xs font-semibold"
+                        >
+                          {friendRequestStatus === 'accepted' ? 'Request Accepted' : 'Request Declined'}
+                        </Badge>
+                      ) : (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            onClick={() => handleFriendRequestAction('accept')}
+                            disabled={respondToFriendRequestMutation.isPending}
+                          >
+                            <Check className="h-4 w-4 mr-1.5" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleFriendRequestAction('decline')}
+                            disabled={respondToFriendRequestMutation.isPending}
+                          >
+                            <X className="h-4 w-4 mr-1.5" />
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {notification.type === 'workspace_invitation' && (
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
                       <UserPlus className="h-5 w-5 text-primary" />
@@ -197,17 +274,6 @@ export default function NotificationDetailPage({
                           Decline
                         </Button>
                       </div>
-                    </div>
-                  )}
-
-                  {notification.linkUrl && (
-                    <div className="pt-2">
-                      <Button asChild className="gap-2">
-                        <Link href={notification.linkUrl}>
-                          <ExternalLink className="h-4 w-4" />
-                          View Details & Action
-                        </Link>
-                      </Button>
                     </div>
                   )}
 
@@ -241,17 +307,6 @@ export default function NotificationDetailPage({
                       </div>
                     </div>
                   </div>
-
-                  {notification.metadata && Object.keys(notification.metadata).length > 0 && (
-                    <div className="border-t pt-4 space-y-2">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Additional Metadata
-                      </h3>
-                      <pre className="p-3 bg-muted rounded-md text-xs font-mono overflow-x-auto text-foreground">
-                        {JSON.stringify(notification.metadata, null, 2)}
-                      </pre>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             )}
