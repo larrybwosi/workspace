@@ -411,7 +411,7 @@ export class DmsService {
     await prisma.dMMessage.delete({
       where: { id: messageId },
     });
-    publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_DELETED, { id: messageId }).catch(err =>
+    publishRealtime(AblyChannels.dm(dmId), AblyEvents.MESSAGE_DELETED, { id: messageId, dmId }).catch(err =>
       this.logger.error('Failed to publish DM message deletion:', err)
     );
 

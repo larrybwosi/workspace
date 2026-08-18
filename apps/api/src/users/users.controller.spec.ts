@@ -170,4 +170,49 @@ describe('UsersController', () => {
       ]);
     });
   });
+
+  describe('update user endpoints', () => {
+    it('should update user status via updateMyStatus', async () => {
+      const updatedUser = { ...mockUser, status: 'away' };
+      (prisma.user.update as any).mockResolvedValue(updatedUser);
+
+      const result = await controller.updateMyStatus(mockUser, { status: 'away' });
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { status: 'away' },
+      });
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('should update profile via patchMe', async () => {
+      const updatedUser = { ...mockUser, bio: 'Hello World' };
+      (prisma.user.update as any).mockResolvedValue(updatedUser);
+
+      const result = await controller.patchMe(mockUser, { bio: 'Hello World' });
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { bio: 'Hello World' },
+      });
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('should update profile via patchUser when id is currentUser id', async () => {
+      const updatedUser = { ...mockUser, name: 'Alice Updated' };
+      (prisma.user.update as any).mockResolvedValue(updatedUser);
+
+      const result = await controller.patchUser(mockUser, 'user-1', { name: 'Alice Updated' });
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { name: 'Alice Updated' },
+      });
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('should throw ForbiddenException if patchUser id is another user', async () => {
+      await expect(controller.patchUser(mockUser, 'user-2', { name: 'Other User' })).rejects.toThrow();
+    });
+  });
 });

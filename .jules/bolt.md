@@ -1,3 +1,9 @@
+## 2026-08-16 - [Prisma/Performance] Single-Query Relational Filter for Sub-Resource Log Retrieval
+
+**Learning:** `IntegrationsService.getWebhookLogs` previously performed an initial `prisma.webhook.findUnique` query to verify ownership before issuing a second query (`prisma.webhookLog.findMany`) to fetch logs. Querying `prisma.webhookLog.findMany` directly with a relational filter (`webhook: { userId }`) cuts database round-trips from 2 to 1 on the happy path (when logs exist). Fallback to a targeted O(1) point lookup (`findUnique` with `select: { id: true }`) only occurs when the log set is empty, maintaining `NotFoundException` semantics without penalizing active webhooks.
+
+**Action:** Prefer querying child sub-resources directly with parent relation filters (`parentModel: { ownerId }`) to reduce database round-trips from 2 to 1, utilizing fallback point lookups only for empty-result verification.
+
 ## 2026-08-13 - [Prisma/Performance] Single-Query Mutation via Optimistic Update in V3 Webhooks
 
 **Learning:** Sibling controllers like `V2WebhooksController` optimized their update operations by consolidating read existence checks and write updates into a single atomic mutation with a try-catch for Prisma's P2025 record-not-found error. Applying this same pattern to `V3WebhooksController` reduces the database round-trips (RTT) on the update path from 2 down to 1. This significantly improves write throughput and mitigates potential write race conditions.
@@ -286,3 +292,8 @@
 
 **Learning:** When searching for symmetric two-way relation records defined by compound unique keys (such as `DirectMessage` with `@@unique([participant1Id, participant2Id])`), querying via `findFirst` with an `OR` condition prevents the query planner from optimal O(1) single-key lookup plans, resulting in slower index scans. Replacing it with chained short-circuiting `findUnique` calls targeting both relation permutations is significantly faster and highly optimized.
 **Action:** Prefer chaining sequential `findUnique` calls targeting compound keys (e.g., `findUnique({ participant1Id_participant2Id: { participant1Id: A, participant2Id: B } }) || findUnique({ participant1Id_participant2Id: { participant1Id: B, participant2Id: A } })`) instead of `findFirst` with an `OR` condition.
+
+## 2026-08-17 - [Prisma/Performance] O(1) Primary Key Lookup for Non-Unique Relation Models in Auth Guards
+
+**Learning:** When validating session-based workspace access where the active organization ID is present, querying child relation tables without compound unique keys (such as `prisma.member.findFirst({ where: { organizationId, userId } })`) causes database index scans. Replacing `findFirst` on the non-unique relation with a primary key point-lookup on the parent model `prisma.organization.findUnique({ where: { id: workspaceId }, select: { id: true, slug: true, members: { where: { userId }, select: { id: true } } } })` leverages direct O(1) primary key indexing and enriches context with `workspaceSlug`.
+**Action:** Always prefer querying parent models by primary key `id` with nested relation filtering over `findFirst` on non-uniquely constrained child models for authorization checks in guards.

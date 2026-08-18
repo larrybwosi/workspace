@@ -344,22 +344,27 @@ class HomeViewModel @Inject constructor(
 
     private fun observeRealtimeMessages() {
         viewModelScope.launch {
-            realtimeRepository.observeMessages().collect { messageDto ->
+            realtimeRepository.observeMessages().collect { event ->
                 try {
-                    // Convert messageDto to MessageEntity and save it to the database
-                    val entity = messageDto.toEntity()
-                    messageDao.insertMessage(entity)
+                    val messageDto = event.message
+                    if (event.eventType == "deleted") {
+                        messageDao.deleteMessageById(messageDto.id)
+                    } else {
+                        // Convert messageDto to MessageEntity and save it to the database
+                        val entity = messageDto.toEntity()
+                        messageDao.insertMessage(entity)
 
-                    // Update unread counts if the conversation is not actively being viewed
-                    if (messageDto.channelId != null) {
-                        if (messageDto.channelId != _uiState.value.selectedChannel?.id) {
-                            channelDao.incrementUnreadCount(messageDto.channelId)
+                        // Update unread counts if the conversation is not actively being viewed
+                        if (messageDto.channelId != null) {
+                            if (messageDto.channelId != _uiState.value.selectedChannel?.id) {
+                                channelDao.incrementUnreadCount(messageDto.channelId)
+                            }
+                        } else if (messageDto.dmId != null) {
+                            if (messageDto.dmId != _uiState.value.selectedDm?.dm?.id) {
+                                dmDao.incrementUnreadCount(messageDto.dmId)
+                            }
+                            loadDms() // Refresh DM list to update last message and sorting
                         }
-                    } else if (messageDto.dmId != null) {
-                        if (messageDto.dmId != _uiState.value.selectedDm?.dm?.id) {
-                            dmDao.incrementUnreadCount(messageDto.dmId)
-                        }
-                        loadDms() // Refresh DM list to update last message and sorting
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()

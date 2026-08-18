@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   UseGuards,
@@ -9,6 +10,7 @@ import {
   Query,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -357,6 +359,34 @@ export class UsersController {
     }
   }
 
+  @Patch('me/status')
+  @ApiOperation({ summary: 'Update current user status' })
+  @ApiResponse({ status: 200, description: 'User status updated' })
+  async updateMyStatus(@CurrentUser() user: User, @Body() body: { status: User['status'] }) {
+    return prisma.user.update({
+      where: { id: user.id },
+      data: { status: body.status },
+    });
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated' })
+  async patchMe(@CurrentUser() user: User, @Body() body: any) {
+    return this.updateMe(user, body);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update user profile by ID' })
+  @ApiParam({ name: 'id', description: 'The user ID or me' })
+  @ApiResponse({ status: 200, description: 'Profile updated' })
+  async patchUser(@CurrentUser() currentUser: User, @Param('id') id: string, @Body() body: any) {
+    if (id !== 'me' && id !== currentUser.id) {
+      throw new ForbiddenException('Cannot update another user profile');
+    }
+    return this.updateMe(currentUser, body);
+  }
+
   @Post('me')
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated' })
@@ -370,24 +400,29 @@ export class UsersController {
       statusText,
       statusEmoji,
       bio,
+      status,
       notificationPreferences,
     } = body;
 
-    const profileImage = avatar || image;
+    const profileImage = avatar !== undefined || image !== undefined ? avatar || image : undefined;
+
+    const data: any = {};
+    if (name !== undefined) data.name = name;
+    if (username !== undefined) data.username = username;
+    if (profileImage !== undefined) {
+      data.avatar = profileImage;
+      data.image = profileImage;
+    }
+    if (banner !== undefined) data.banner = banner;
+    if (statusText !== undefined) data.statusText = statusText;
+    if (statusEmoji !== undefined) data.statusEmoji = statusEmoji;
+    if (bio !== undefined) data.bio = bio;
+    if (status !== undefined) data.status = status;
+    if (notificationPreferences !== undefined) data.notificationPreferences = notificationPreferences;
 
     return prisma.user.update({
       where: { id: user.id },
-      data: {
-        name,
-        username,
-        avatar: profileImage,
-        image: profileImage,
-        banner,
-        statusText,
-        statusEmoji,
-        bio,
-        notificationPreferences: notificationPreferences !== undefined ? notificationPreferences : undefined,
-      },
+      data,
     });
   }
 

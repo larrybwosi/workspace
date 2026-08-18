@@ -307,4 +307,8 @@ class ChatRepository @Inject constructor(
     suspend fun insertMessage(message: MessageEntity) {
         dao.insertMessage(message)
     }
+
+    suspend fun deleteMessageById(id: String) {
+        dao.deleteMessageById(id)
+    }
 }

@@ -402,7 +402,8 @@ class ChatViewModel @Inject constructor(
 
     private fun observeRealtimeMessages() {
         viewModelScope.launch {
-            realtimeRepository.observeMessages().collect { messageDto ->
+            realtimeRepository.observeMessages().collect { event ->
+                val messageDto = event.message
                 val channelId = currentChannelId
                 val dmId = currentDmId
                 val threadId = currentThreadId
@@ -414,7 +415,17 @@ class ChatViewModel @Inject constructor(
                     else -> false
                 }
 
-                if (isRelevant) {
+                if (event.eventType == "deleted") {
+                    if (isRelevant || messageDto.id.isNotEmpty()) {
+                        viewModelScope.launch {
+                            try {
+                                chatRepository.deleteMessageById(messageDto.id)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                } else if (isRelevant) {
                     // Convert and save to database
                     viewModelScope.launch {
                         try {
