@@ -362,63 +362,186 @@ fun QRScannerView(onCodeScanned: (String) -> Unit) {
         }
     }
 
-    AndroidView(
-        factory = { ctx ->
-            val previewView = PreviewView(ctx)
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-                val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { ctx ->
+                val previewView = PreviewView(ctx)
+                cameraProviderFuture.addListener({
+                    val cameraProvider = cameraProviderFuture.get()
+                    val preview = Preview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
 
-                val scanner = BarcodeScanning.getClient(
-                    BarcodeScannerOptions.Builder()
-                        .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    val scanner = BarcodeScanning.getClient(
+                        BarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                            .build()
+                    )
+
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build()
-                )
 
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-
-                imageAnalysis.setAnalyzer(executor) { imageProxy ->
-                    val mediaImage = imageProxy.image
-                    if (mediaImage != null) {
-                        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-                        scanner.process(image)
-                            .addOnSuccessListener { barcodes ->
-                                for (barcode in barcodes) {
-                                    barcode.rawValue?.let { value ->
-                                        if (value.startsWith("scrymechat:")) {
-                                            onCodeScanned(value.replace("scrymechat:", ""))
-                                        } else {
-                                            onCodeScanned(value)
+                    imageAnalysis.setAnalyzer(executor) { imageProxy ->
+                        val mediaImage = imageProxy.image
+                        if (mediaImage != null) {
+                            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                            scanner.process(image)
+                                .addOnSuccessListener { barcodes ->
+                                    for (barcode in barcodes) {
+                                        barcode.rawValue?.let { value ->
+                                            if (value.startsWith("scrymechat:")) {
+                                                onCodeScanned(value.replace("scrymechat:", ""))
+                                            } else {
+                                                onCodeScanned(value)
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            .addOnCompleteListener {
-                                imageProxy.close()
-                            }
+                                .addOnCompleteListener {
+                                    imageProxy.close()
+                                }
+                        }
                     }
-                }
 
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        preview,
-                        imageAnalysis
+                    try {
+                        cameraProvider.unbindAll()
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            preview,
+                            imageAnalysis
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }, ContextCompat.getMainExecutor(context))
+                previewView
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Square overlay mask with corner markers and focus instruction
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val scanBoxSize = 260.dp.toPx()
+            val boxLeft = (size.width - scanBoxSize) / 2
+            val boxTop = (size.height - scanBoxSize) / 2
+            val boxRight = boxLeft + scanBoxSize
+            val boxBottom = boxTop + scanBoxSize
+
+            // Outer dark semi-transparent mask
+            val overlayPath = androidx.compose.ui.graphics.Path().apply {
+                addRect(androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height))
+                addRoundRect(
+                    androidx.compose.ui.geometry.RoundRect(
+                        left = boxLeft,
+                        top = boxTop,
+                        right = boxRight,
+                        bottom = boxBottom,
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx())
                     )
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }, ContextCompat.getMainExecutor(context))
-            previewView
-        },
-        modifier = Modifier.fillMaxSize()
-    )
+                )
+            }
+
+            drawPath(
+                path = overlayPath,
+                color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f),
+                style = androidx.compose.ui.graphics.drawscope.Fill
+            )
+
+            // Scanning box border cutout
+            drawRoundRect(
+                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f),
+                topLeft = androidx.compose.ui.geometry.Offset(boxLeft, boxTop),
+                size = androidx.compose.ui.geometry.Size(scanBoxSize, scanBoxSize),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+            )
+
+            // Corner accents (4 corners)
+            val cornerLength = 28.dp.toPx()
+            val cornerStroke = 4.dp.toPx()
+            val accentColor = ScrymeDarkAccent
+
+            // Top-Left corner
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxLeft, boxTop + cornerLength),
+                end = androidx.compose.ui.geometry.Offset(boxLeft, boxTop),
+                strokeWidth = cornerStroke
+            )
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxLeft, boxTop),
+                end = androidx.compose.ui.geometry.Offset(boxLeft + cornerLength, boxTop),
+                strokeWidth = cornerStroke
+            )
+
+            // Top-Right corner
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxRight - cornerLength, boxTop),
+                end = androidx.compose.ui.geometry.Offset(boxRight, boxTop),
+                strokeWidth = cornerStroke
+            )
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxRight, boxTop),
+                end = androidx.compose.ui.geometry.Offset(boxRight, boxTop + cornerLength),
+                strokeWidth = cornerStroke
+            )
+
+            // Bottom-Left corner
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxLeft, boxBottom - cornerLength),
+                end = androidx.compose.ui.geometry.Offset(boxLeft, boxBottom),
+                strokeWidth = cornerStroke
+            )
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxLeft, boxBottom),
+                end = androidx.compose.ui.geometry.Offset(boxLeft + cornerLength, boxBottom),
+                strokeWidth = cornerStroke
+            )
+
+            // Bottom-Right corner
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxRight - cornerLength, boxBottom),
+                end = androidx.compose.ui.geometry.Offset(boxRight, boxBottom),
+                strokeWidth = cornerStroke
+            )
+            drawLine(
+                color = accentColor,
+                start = androidx.compose.ui.geometry.Offset(boxRight, boxBottom - cornerLength),
+                end = androidx.compose.ui.geometry.Offset(boxRight, boxBottom),
+                strokeWidth = cornerStroke
+            )
+        }
+
+        // Text instruction overlay below the scanner box
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 80.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Text(
+                    text = "Point camera at QR code on screen",
+                    color = androidx.compose.ui.graphics.Color.White,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
+        }
+    }
 }
