@@ -554,7 +554,7 @@ export class V3ChannelIncomingWebhooksController {
       const signatureToCompare = signatureHeader.startsWith('sha256=') ? signatureHeader.substring(7) : signatureHeader;
 
       if (!this.safeCompare(expectedSignature, signatureToCompare)) {
-        await this.logExecution(webhook.id, body, HttpStatus.FORBIDDEN, { error: 'Invalid webhook signature' });
+        this.logExecution(webhook.id, body, HttpStatus.FORBIDDEN, { error: 'Invalid webhook signature' });
         throw new ForbiddenException('Invalid webhook signature');
       }
     }
@@ -623,14 +623,21 @@ export class V3ChannelIncomingWebhooksController {
         }
       }
 
-      // 5. Update Webhook Stats
-      await prisma.channelIncomingWebhook.update({
-        where: { id: webhook.id },
-        data: {
-          lastReceivedAt: new Date(),
-          totalReceived: { increment: 1 },
-        },
-      });
+      /**
+       * ⚡ Performance Optimization:
+       * Non-critical side effects (updating webhook statistics and writing execution logs) are
+       * backgrounded without blocking the HTTP response path. This removes 2 database round-trips
+       * from the critical path and significantly reduces endpoint response latency.
+       */
+      Promise.resolve(
+        prisma.channelIncomingWebhook.update({
+          where: { id: webhook.id },
+          data: {
+            lastReceivedAt: new Date(),
+            totalReceived: { increment: 1 },
+          },
+        })
+      ).catch(err => this.logger.error('Failed to update channel incoming webhook stats:', err));
 
       // 6. Ably & Webhook Dispatching (real-time chat + outgoing workspace webhooks)
       publishRealtime(AblyChannels.channel(webhook.channelId), AblyEvents.MESSAGE_SENT, message).catch(
@@ -644,28 +651,28 @@ export class V3ChannelIncomingWebhooksController {
       }
 
       const responsePayload = { success: true, messageId: message.id };
-      await this.logExecution(webhook.id, body, HttpStatus.OK, responsePayload);
+      this.logExecution(webhook.id, body, HttpStatus.OK, responsePayload);
 
       return this.formatResponse(responsePayload);
     } catch (err: any) {
       this.logger.error('Error executing channel incoming webhook:', err);
-      await this.logExecution(webhook.id, body, HttpStatus.INTERNAL_SERVER_ERROR, { error: err.message });
+      this.logExecution(webhook.id, body, HttpStatus.INTERNAL_SERVER_ERROR, { error: err.message });
       throw err;
     }
   }
 
-  private async logExecution(webhookId: string, payload: any, status: number, response: any) {
-    try {
-      await prisma.channelIncomingWebhookLog.create({
+  private logExecution(webhookId: string, payload: any, status: number, response: any) {
+    Promise.resolve(
+      prisma.channelIncomingWebhookLog.create({
         data: {
           webhookId,
           payload: payload as any,
           status,
           response: JSON.stringify(response),
         },
-      });
-    } catch (err) {
+      })
+    ).catch(err => {
       this.logger.warn('Failed to write channel incoming webhook log:', err);
-    }
+    });
   }
 }
