@@ -46,7 +46,12 @@ fun UserProfileScreen(
 
     var name by remember(user) { mutableStateOf(user?.name ?: "") }
     var username by remember(user) { mutableStateOf(user?.username ?: "") }
+    var statusEmoji by remember(user) { mutableStateOf(user?.statusEmoji ?: "") }
     var statusText by remember(user) { mutableStateOf(user?.statusText ?: "") }
+    var bio by remember(user) { mutableStateOf(user?.bio ?: "") }
+    var jobTitle by remember(user) { mutableStateOf(user?.jobTitle ?: "") }
+    var department by remember(user) { mutableStateOf(user?.department ?: "") }
+    var officeLocation by remember(user) { mutableStateOf(user?.officeLocation ?: "") }
     var github by remember(user) { mutableStateOf(user?.github ?: "") }
     var slack by remember(user) { mutableStateOf(user?.slack ?: "") }
 
@@ -125,11 +130,12 @@ fun UserProfileScreen(
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Column {
                             Spacer(modifier = Modifier.height(44.dp)) // space for overlapping avatar
-                            Text(name, color = palette.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                            Text(name.ifEmpty { "User" }, color = palette.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
                             Text("@$username", color = palette.textSecondary, fontSize = 14.sp)
-                            if (statusText.isNotEmpty()) {
+                            val statusDisplay = listOfNotNull(statusEmoji.takeIf { it.isNotBlank() }, statusText.takeIf { it.isNotBlank() }).joinToString(" ")
+                            if (statusDisplay.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(statusText, color = palette.textPrimary, fontSize = 15.sp)
+                                Text(statusDisplay, color = palette.textPrimary, fontSize = 15.sp)
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -194,11 +200,56 @@ fun UserProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
                     OutlinedTextField(
+                        value = statusEmoji,
+                        onValueChange = { statusEmoji = it },
+                        label = { Text("Status Emoji") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
                         value = statusText,
                         onValueChange = { statusText = it },
-                        label = { Text("About Me") },
+                        label = { Text("Status Message") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = bio,
+                        onValueChange = { bio = it },
+                        label = { Text("About Me / Bio") },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = jobTitle,
+                        onValueChange = { jobTitle = it },
+                        label = { Text("Job Title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = department,
+                        onValueChange = { department = it },
+                        label = { Text("Department") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = officeLocation,
+                        onValueChange = { officeLocation = it },
+                        label = { Text("Office Location") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
                         colors = standardTextFieldColors(palette)
                     )
                     Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
@@ -225,7 +276,12 @@ fun UserProfileScreen(
                             viewModel.saveProfile(mapOf(
                                 "name" to name,
                                 "username" to username,
+                                "statusEmoji" to statusEmoji,
                                 "statusText" to statusText,
+                                "bio" to bio,
+                                "jobTitle" to jobTitle,
+                                "department" to department,
+                                "officeLocation" to officeLocation,
                                 "github" to github,
                                 "slack" to slack
                             ), context)
