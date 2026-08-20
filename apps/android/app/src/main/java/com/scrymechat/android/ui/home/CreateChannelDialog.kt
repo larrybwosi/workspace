@@ -2,6 +2,7 @@ package com.scrymechat.android.ui.home
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -132,7 +133,9 @@ fun CreateChannelDialog(
                         onClick = { showIconPicker = true }
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Column {
+                    Column(
+                        modifier = Modifier.clickable { showIconPicker = true }
+                    ) {
                         Text(
                             "Channel Icon",
                             fontSize = 13.sp,
@@ -323,6 +326,7 @@ private fun ChannelIconAvatar(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
+            .clickable { onClick() }
             .then(
                 when (selection) {
                     is ChannelIconSelection.Preset -> Modifier.background(selection.color)
@@ -355,9 +359,7 @@ private fun ChannelIconAvatar(
                 .size(size / 3)
                 .clip(CircleShape)
                 .background(SidebarTokens.SurfaceRaised)
-                .border(1.dp, SidebarTokens.HairlineStrong, CircleShape)
-                .clip(CircleShape)
-                .background(Color.Transparent),
+                .border(1.dp, SidebarTokens.HairlineStrong, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -366,22 +368,16 @@ private fun ChannelIconAvatar(
                 tint = SidebarTokens.TextMuted,
                 modifier = Modifier
                     .size(size / 5)
-                    .clip(CircleShape)
             )
         }
     }
-
-    // Keep the click target on the whole avatar without fighting the badge above.
-    Spacer(
-        modifier = Modifier
-            .size(0.dp)
-    )
 }
 
 /**
- * Discord-style icon picker: a grid of tinted preset glyphs plus a tile to
+ * Bottom drawer for icon picking: a grid of tinted preset glyphs plus a tile to
  * upload a custom image from the device gallery.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IconPickerDialog(
     selected: ChannelIconSelection,
@@ -389,89 +385,94 @@ private fun IconPickerDialog(
     onSelect: (ChannelIconSelection) -> Unit
 ) {
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let { onSelect(ChannelIconSelection.Custom(it)) }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = SidebarTokens.SurfaceRaised
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = SidebarTokens.SurfaceRaised,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Choose an Icon",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = SidebarTokens.TextBright
+                Text(
+                    "Choose an Icon",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = SidebarTokens.TextBright
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "Close",
+                        tint = SidebarTokens.TextMuted,
+                        modifier = Modifier.size(20.dp)
                     )
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                }
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.heightIn(max = 320.dp)
+            ) {
+                // Custom upload tile, always shown first — same spot Discord puts "Upload Image".
+                item {
+                    IconPickerTile(
+                        isSelected = selected is ChannelIconSelection.Custom,
+                        onClick = {
+                            imagePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                    ) {
                         Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = "Close",
+                            imageVector = Icons.Rounded.Upload,
+                            contentDescription = "Upload custom icon",
                             tint = SidebarTokens.TextMuted,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.heightIn(max = 320.dp)
-                ) {
-                    // Custom upload tile, always shown first — same spot Discord puts "Upload Image".
-                    item {
-                        IconPickerTile(
-                            isSelected = selected is ChannelIconSelection.Custom,
-                            onClick = { imagePickerLauncher.launch("image/*") }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Upload,
-                                contentDescription = "Upload custom icon",
-                                tint = SidebarTokens.TextMuted,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-
-                    items(PRESET_CHANNEL_ICONS) { preset ->
-                        val isSelected = selected is ChannelIconSelection.Preset &&
-                            selected.icon == preset.icon && selected.color == preset.color
-                        IconPickerTile(
-                            isSelected = isSelected,
-                            backgroundColor = preset.color,
-                            onClick = { onSelect(preset) }
-                        ) {
-                            Icon(
-                                imageVector = preset.icon,
-                                contentDescription = preset.label,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                items(PRESET_CHANNEL_ICONS) { preset ->
+                    val isSelected = selected is ChannelIconSelection.Preset &&
+                        selected.icon == preset.icon && selected.color == preset.color
+                    IconPickerTile(
+                        isSelected = isSelected,
+                        backgroundColor = preset.color,
+                        onClick = { onSelect(preset) }
+                    ) {
+                        Icon(
+                            imageVector = preset.icon,
+                            contentDescription = preset.label,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
-
-                Text(
-                    "PNG, JPG. Square images look best.",
-                    fontSize = 11.sp,
-                    color = SidebarTokens.TextFaint
-                )
             }
+
+            Text(
+                "PNG, JPG. Square images look best.",
+                fontSize = 11.sp,
+                color = SidebarTokens.TextFaint
+            )
         }
     }
 }
