@@ -733,17 +733,15 @@ Requires messages:send scope. Supports multipart/form-data for file uploads.
       if (contextId && !activeThreadId) {
         /**
          * ⚡ Performance Optimization:
-         * Shifting the query entry point from querying the parent Thread table using multi-join nested filters
-         * to querying the highly indexed child ThreadTag table directly.
-         * By performing a lookup on ThreadTag by tag (contextId) and strictly validating parent relations on the database layer,
-         * we leverage direct indexing for O(1) compound point lookups, minimizing database network payload and round-trip overhead.
+         * Queries the ThreadTag table filtering by tag and thread's channelId.
+         * Removes redundant nested workspace filter on channel relation (since channel.id is already validated against workspaceId),
+         * avoiding an unnecessary SQL join table scan on the channel table.
          */
         const existingThreadTag = await prisma.threadTag.findFirst({
           where: {
             tag: contextId,
             thread: {
               channelId: channel.id,
-              channel: { workspaceId: context.workspaceId },
             },
           },
           select: { threadId: true },
