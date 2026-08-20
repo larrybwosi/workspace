@@ -447,19 +447,27 @@ export class IntegrationsService {
       },
     });
 
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: workspace.id,
-        userId,
-        action: 'integration.created',
-        resource: 'integration',
-        resourceId: integration.id,
-        metadata: {
-          service: data.service,
-          name: data.name,
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical audit log creation using `.catch()` error handling to prevent
+     * database write latency from blocking the HTTP response.
+     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
+     */
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: workspace.id,
+          userId,
+          action: 'integration.created',
+          resource: 'integration',
+          resourceId: integration.id,
+          metadata: {
+            service: data.service,
+            name: data.name,
+          },
         },
-      },
-    });
+      })
+      .catch(err => console.error('Workspace audit log creation error (integration.created):', err));
 
     return {
       ...integration,
@@ -543,16 +551,24 @@ export class IntegrationsService {
       },
     });
 
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: workspace.id,
-        userId,
-        action: 'integration.updated',
-        resource: 'integration',
-        resourceId: integrationId,
-        metadata: data,
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical audit log creation using `.catch()` error handling to prevent
+     * database write latency from blocking the HTTP response.
+     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
+     */
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: workspace.id,
+          userId,
+          action: 'integration.updated',
+          resource: 'integration',
+          resourceId: integrationId,
+          metadata: data,
+        },
+      })
+      .catch(err => console.error('Workspace audit log creation error (integration.updated):', err));
 
     return integration;
   }
@@ -594,15 +610,23 @@ export class IntegrationsService {
       where: { id: integrationId },
     });
 
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: workspace.id,
-        userId,
-        action: 'integration.deleted',
-        resource: 'integration',
-        resourceId: integrationId,
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical audit log creation using `.catch()` error handling to prevent
+     * database write latency from blocking the HTTP response.
+     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
+     */
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: workspace.id,
+          userId,
+          action: 'integration.deleted',
+          resource: 'integration',
+          resourceId: integrationId,
+        },
+      })
+      .catch(err => console.error('Workspace audit log creation error (integration.deleted):', err));
 
     return { success: true };
   }
@@ -728,16 +752,24 @@ export class IntegrationsService {
       };
     }
 
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId,
-        userId,
-        action: 'integration.tested',
-        resource: 'integration',
-        resourceId: integrationId,
-        metadata: testResult as any,
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical audit log creation using `.catch()` error handling to prevent
+     * database write latency from blocking the HTTP response.
+     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
+     */
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId,
+          userId,
+          action: 'integration.tested',
+          resource: 'integration',
+          resourceId: integrationId,
+          metadata: testResult as any,
+        },
+      })
+      .catch(err => console.error('Workspace audit log creation error (integration.tested):', err));
 
     return testResult;
   }
