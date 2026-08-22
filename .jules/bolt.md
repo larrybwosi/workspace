@@ -1,3 +1,9 @@
+## 2026-08-22 - [Prisma/Performance] Targeted Selection in Event Webhook Dispatching
+
+**Learning:** `WebhooksService.dispatch` previously retrieved full `WorkspaceWebhook` records when querying active webhooks for event broadcasting. Since event payload signing and HTTP dispatching only require `id`, `url`, and `secret`, adding `select: { id: true, url: true, secret: true }` avoids over-fetching unused scalar columns (`workspaceId`, `name`, `events`, `active`, `createdAt`, `updatedAt`) across all target webhooks.
+
+**Action:** Always project only required fields (`id`, `url`, `secret`) with Prisma `select` during high-frequency event/webhook dispatching loops.
+
 ## 2026-08-16 - [Prisma/Performance] Single-Query Relational Filter for Sub-Resource Log Retrieval
 
 **Learning:** `IntegrationsService.getWebhookLogs` previously performed an initial `prisma.webhook.findUnique` query to verify ownership before issuing a second query (`prisma.webhookLog.findMany`) to fetch logs. Querying `prisma.webhookLog.findMany` directly with a relational filter (`webhook: { userId }`) cuts database round-trips from 2 to 1 on the happy path (when logs exist). Fallback to a targeted O(1) point lookup (`findUnique` with `select: { id: true }`) only occurs when the log set is empty, maintaining `NotFoundException` semantics without penalizing active webhooks.
