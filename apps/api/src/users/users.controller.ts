@@ -313,8 +313,14 @@ export class UsersController {
       throw new BadRequestException('Cannot block yourself');
     }
 
+    /**
+     * ⚡ Performance Optimization:
+     * Uses `select: { id: true }` to verify target user existence.
+     * This avoids pulling all user scalar columns from the database and reduces memory overhead.
+     */
     const targetUser = await prisma.user.findUnique({
       where: { id: targetId },
+      select: { id: true },
     });
 
     if (!targetUser) {
