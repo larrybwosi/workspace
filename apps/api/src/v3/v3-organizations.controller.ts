@@ -7,6 +7,7 @@ import {
   Patch,
   Body,
   UseGuards,
+  UseFilters,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -14,13 +15,14 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { V3ExceptionFilter } from './v3-exception.filter';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import * as crypto from 'crypto';
 import { z } from 'zod';
 import { IsString, IsOptional, IsArray } from 'class-validator';
 
-class CreateM2mApplicationDto {
+export class V3CreateM2mApplicationDto {
   @IsString()
   @ApiProperty({ example: 'CI/CD Pipeline' })
   name!: string;
@@ -36,7 +38,7 @@ class CreateM2mApplicationDto {
   allowedIps?: string[];
 }
 
-class UpdateM2mApplicationDto {
+export class V3UpdateM2mApplicationDto {
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false, example: 'CI/CD Pipeline Updated' })
@@ -53,7 +55,7 @@ class UpdateM2mApplicationDto {
   allowedIps?: string[];
 }
 
-class UpdateOrganizationDto {
+export class V3UpdateOrganizationDto {
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false, example: 'Updated Organization Name' })
@@ -76,11 +78,20 @@ const updateOrganizationSchema = z.object({
   banner: z.string().optional(),
 });
 
-@ApiTags('Organizations')
+@ApiTags('V3 Organizations')
 @ApiBearerAuth()
-@Controller('organizations/:orgSlug')
+@Controller('v3/organizations/:orgSlug')
 @UseGuards(AuthGuard)
-export class OrganizationsController {
+@UseFilters(V3ExceptionFilter)
+export class V3OrganizationsController {
+  private formatResponse<T>(data: T) {
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get('workspaces')
   @ApiOperation({ summary: 'List workspaces for an organization' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
@@ -136,7 +147,7 @@ export class OrganizationsController {
       throw new ForbiddenException('Not a member of this organization');
     }
 
-    return { workspaces: organization.workspaces };
+    return this.formatResponse({ workspaces: organization.workspaces });
   }
 
   @Get()
@@ -173,17 +184,17 @@ export class OrganizationsController {
       throw new ForbiddenException('Not a member of this organization');
     }
 
-    return { organization };
+    return this.formatResponse({ organization });
   }
 
   @Patch()
   @ApiOperation({ summary: 'Update organization details' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
-  @ApiBody({ type: UpdateOrganizationDto })
+  @ApiBody({ type: V3UpdateOrganizationDto })
   async updateOrganization(
     @CurrentUser() user: User,
     @Param('orgSlug') orgSlug: string,
-    @Body() body: UpdateOrganizationDto
+    @Body() body: V3UpdateOrganizationDto
   ) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
@@ -215,7 +226,7 @@ export class OrganizationsController {
       data: validatedData.data,
     });
 
-    return { organization: updatedOrganization };
+    return this.formatResponse({ organization: updatedOrganization });
   }
 
   @Get('m2m')
@@ -259,17 +270,17 @@ export class OrganizationsController {
         ]
       : [];
 
-    return { applications };
+    return this.formatResponse({ applications });
   }
 
   @Post('m2m')
   @ApiOperation({ summary: 'Create organization M2M application credentials' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
-  @ApiBody({ type: CreateM2mApplicationDto })
+  @ApiBody({ type: V3CreateM2mApplicationDto })
   async createM2mApplication(
     @CurrentUser() user: User,
     @Param('orgSlug') orgSlug: string,
-    @Body() body: CreateM2mApplicationDto
+    @Body() body: V3CreateM2mApplicationDto
   ) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
@@ -314,7 +325,7 @@ export class OrganizationsController {
       },
     });
 
-    return {
+    return this.formatResponse({
       id: updatedOrg.id,
       name: body.name || organization.name,
       clientId: updatedOrg.clientId,
@@ -322,19 +333,19 @@ export class OrganizationsController {
       scopes: updatedOrg.scopes,
       allowedIps: updatedOrg.allowedIps,
       createdAt: updatedOrg.createdAt,
-    };
+    });
   }
 
   @Patch('m2m/:id')
   @ApiOperation({ summary: 'Update organization M2M application credentials and scopes' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
   @ApiParam({ name: 'id', description: 'The M2M application/organization ID' })
-  @ApiBody({ type: UpdateM2mApplicationDto })
+  @ApiBody({ type: V3UpdateM2mApplicationDto })
   async updateM2mApplication(
     @CurrentUser() user: User,
     @Param('orgSlug') orgSlug: string,
     @Param('id') id: string,
-    @Body() body: UpdateM2mApplicationDto
+    @Body() body: V3UpdateM2mApplicationDto
   ) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
@@ -389,14 +400,14 @@ export class OrganizationsController {
       },
     });
 
-    return {
+    return this.formatResponse({
       id: updatedOrg.id,
       name: updatedOrg.name,
       clientId: updatedOrg.clientId,
       scopes: updatedOrg.scopes,
       allowedIps: updatedOrg.allowedIps,
       createdAt: updatedOrg.createdAt,
-    };
+    });
   }
 
   @Delete('m2m/:id')
@@ -438,6 +449,6 @@ export class OrganizationsController {
       },
     });
 
-    return { success: true };
+    return this.formatResponse({ success: true });
   }
 }

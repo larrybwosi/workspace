@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrganizationsController } from './organizations.controller';
+import { V3OrganizationsController } from './v3-organizations.controller';
 import { AuthGuard } from '../auth/auth.guard';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@repo/database';
@@ -15,25 +15,25 @@ vi.mock('@repo/database', () => ({
   },
 }));
 
-describe('OrganizationsController', () => {
-  let controller: OrganizationsController;
+describe('V3OrganizationsController', () => {
+  let controller: V3OrganizationsController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [OrganizationsController],
+      controllers: [V3OrganizationsController],
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get<OrganizationsController>(OrganizationsController);
+    controller = module.get<V3OrganizationsController>(V3OrganizationsController);
     vi.clearAllMocks();
   });
 
   const mockUser = { id: 'user-1', name: 'Alice', email: 'alice@example.com' } as any;
 
   describe('getOrganizationWorkspaces', () => {
-    it('should return workspaces if user is a member', async () => {
+    it('should return workspaces formatted in V3 response structure if user is a member', async () => {
       const mockOrg = {
         id: 'org-1',
         members: [{ id: 'member-1' }],
@@ -48,7 +48,9 @@ describe('OrganizationsController', () => {
         where: { slug: 'acme' },
         select: expect.any(Object),
       });
-      expect(result).toEqual({ workspaces: mockOrg.workspaces });
+      expect(result.success).toBe(true);
+      expect(result.timestamp).toBeDefined();
+      expect(result.data).toEqual({ workspaces: mockOrg.workspaces });
     });
 
     it('should throw NotFoundException if organization not found', async () => {
@@ -71,7 +73,7 @@ describe('OrganizationsController', () => {
   });
 
   describe('getOrganization', () => {
-    it('should return organization details if user is a member', async () => {
+    it('should return organization details formatted in V3 response structure if user is a member', async () => {
       const mockOrg = {
         id: 'org-1',
         name: 'Acme',
@@ -83,7 +85,8 @@ describe('OrganizationsController', () => {
 
       const result = await controller.getOrganization(mockUser, 'acme');
 
-      expect(result).toEqual({ organization: mockOrg });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ organization: mockOrg });
     });
   });
 
@@ -103,7 +106,8 @@ describe('OrganizationsController', () => {
         where: { id: 'org-1' },
         data: { name: 'New Name' },
       });
-      expect(result).toEqual({ organization: { id: 'org-1', name: 'New Name' } });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ organization: { id: 'org-1', name: 'New Name' } });
     });
 
     it('should throw ForbiddenException if member role is member', async () => {
@@ -134,8 +138,9 @@ describe('OrganizationsController', () => {
 
       const result = await controller.getM2mApplications(mockUser, 'acme');
 
-      expect(result.applications).toHaveLength(1);
-      expect(result.applications[0].clientId).toBe('m2m_123');
+      expect(result.success).toBe(true);
+      expect(result.data.applications).toHaveLength(1);
+      expect(result.data.applications[0].clientId).toBe('m2m_123');
     });
 
     it('should return empty list if organization has no credentials', async () => {
@@ -150,12 +155,13 @@ describe('OrganizationsController', () => {
 
       const result = await controller.getM2mApplications(mockUser, 'acme');
 
-      expect(result.applications).toEqual([]);
+      expect(result.success).toBe(true);
+      expect(result.data.applications).toEqual([]);
     });
   });
 
   describe('createM2mApplication', () => {
-    it('should create and return M2M credentials', async () => {
+    it('should create and return M2M credentials formatted in V3 response structure', async () => {
       const mockOrg = {
         id: 'org-1',
         name: 'Acme',
@@ -175,9 +181,10 @@ describe('OrganizationsController', () => {
         name: 'CI App',
       });
 
-      expect(result.clientId).toBeDefined();
-      expect(result.clientSecret).toMatch(/^sk_m2m_/);
-      expect(result.name).toBe('CI App');
+      expect(result.success).toBe(true);
+      expect(result.data.clientId).toBeDefined();
+      expect(result.data.clientSecret).toMatch(/^sk_m2m_/);
+      expect(result.data.name).toBe('CI App');
     });
   });
 
@@ -218,8 +225,9 @@ describe('OrganizationsController', () => {
         },
         select: expect.any(Object),
       });
-      expect(result.name).toBe('Updated CI App');
-      expect(result.scopes).toEqual(['provisioning:workspaces', 'messages:send']);
+      expect(result.success).toBe(true);
+      expect(result.data.name).toBe('Updated CI App');
+      expect(result.data.scopes).toEqual(['provisioning:workspaces', 'messages:send']);
     });
   });
 
@@ -244,7 +252,8 @@ describe('OrganizationsController', () => {
           allowedIps: [],
         },
       });
-      expect(result).toEqual({ success: true });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ success: true });
     });
   });
 });

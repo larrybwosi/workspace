@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { V3WorkspacesController } from './v3-workspaces.controller';
-import { ProvisioningService } from '../v2/provisioning.service';
+import { ProvisioningService } from '../provisioning/provisioning.service';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ConfigService } from '@nestjs/config';
 import { vi, describe, beforeEach, it, expect } from 'vitest';

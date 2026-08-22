@@ -213,7 +213,15 @@ export type CallsControllerGetScheduledCallsParams = {
 /**
  * The workspace ID
  */
-workspaceId: string;
+workspaceId?: string;
+/**
+ * The workspace slug
+ */
+workspaceSlug?: string;
+};
+
+export type StorageControllerUploadFileBody = {
+  file?: Blob;
 };
 
 export type InvitationsControllerGetInvitationsParams = {
@@ -221,6 +229,31 @@ export type InvitationsControllerGetInvitationsParams = {
  * Filter by workspace ID
  */
 workspaceId?: string;
+};
+
+export type NotificationsControllerGetChannelSettingsParams = {
+/**
+ * The channel ID
+ */
+channelId: string;
+};
+
+export type NotificationsControllerGetWorkspaceSettingsParams = {
+/**
+ * The workspace ID
+ */
+workspaceId: string;
+};
+
+export type NotificationsControllerGetNotificationsParams = {
+/**
+ * Filter by unread only
+ */
+unreadOnly?: string;
+/**
+ * Number of notifications to return
+ */
+limit?: string;
 };
 
 export type V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams = {
@@ -236,12 +269,6 @@ export type V3WorkspacesControllerDeleteWorkspace200Data = {
 
 export type V3WorkspacesControllerDeleteWorkspace200 = {
   data?: V3WorkspacesControllerDeleteWorkspace200Data;
-  success?: boolean;
-  timestamp?: string;
-};
-
-export type V3WorkspacesControllerUpdateWorkspace200 = {
-  data?: V3WorkspacesControllerUpdateWorkspace200Data;
   success?: boolean;
   timestamp?: string;
 };
@@ -270,6 +297,18 @@ export type V3WorkspacesControllerUpdateWorkspace200Data = {
   workspace?: V3WorkspacesControllerUpdateWorkspace200DataWorkspace;
 };
 
+export type V3WorkspacesControllerUpdateWorkspace200 = {
+  data?: V3WorkspacesControllerUpdateWorkspace200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
 /**
  * @nullable
  */
@@ -294,8 +333,8 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
   workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
 };
 
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+export type V3WorkspacesControllerProvisionWorkspace201 = {
+  data?: V3WorkspacesControllerProvisionWorkspace201Data;
   success?: boolean;
   timestamp?: string;
 };
@@ -315,12 +354,6 @@ export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
 export type V3WorkspacesControllerProvisionWorkspace201Data = {
   bot?: V3WorkspacesControllerProvisionWorkspace201DataBot;
   workspace?: V3WorkspacesControllerProvisionWorkspace201DataWorkspace;
-};
-
-export type V3WorkspacesControllerProvisionWorkspace201 = {
-  data?: V3WorkspacesControllerProvisionWorkspace201Data;
-  success?: boolean;
-  timestamp?: string;
 };
 
 export type V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem = {
@@ -361,100 +394,6 @@ before?: string;
 after?: string;
 };
 
-export type StorageControllerUploadFileBody = {
-  file?: Blob;
-};
-
-export type NotificationsControllerGetChannelSettingsParams = {
-/**
- * The channel ID
- */
-channelId: string;
-};
-
-export type NotificationsControllerGetWorkspaceSettingsParams = {
-/**
- * The workspace ID
- */
-workspaceId: string;
-};
-
-export type NotificationsControllerGetNotificationsParams = {
-/**
- * Filter by unread only
- */
-unreadOnly?: string;
-/**
- * Number of notifications to return
- */
-limit?: string;
-};
-
-export type V2ContactControllerSubmitContactFormBody = {
-  email?: string;
-  message?: string;
-  name?: string;
-};
-
-export type V2ApplicationsControllerInstallBotBody = {
-  workspaceId?: string;
-};
-
-export type V2OAuthControllerGetToken200 = {
-  access_token?: string;
-  expires_in?: number;
-  scope?: string;
-  token_type?: string;
-};
-
-export type V2MessageActionsControllerHandleActionBodyPayload = { [key: string]: unknown };
-
-export type V2MessageActionsControllerHandleActionBodyFormState = { [key: string]: unknown };
-
-export type V2MessageActionsControllerHandleActionBody = {
-  formState?: V2MessageActionsControllerHandleActionBodyFormState;
-  payload?: V2MessageActionsControllerHandleActionBodyPayload;
-};
-
-export type V2ThreadsControllerGetThreadMessagesParams = {
-cursor?: string;
-limit?: number;
-};
-
-export type V2ThreadsControllerGetThreadsParams = {
-channelId?: string;
-limit?: number;
-};
-
-export type V2SearchControllerSearchMessagesParams = {
-/**
- * The search query
- */
-q: string;
-channelId?: string;
-limit?: number;
-};
-
-export type V2SearchControllerSearchMembersParams = {
-/**
- * The search query
- */
-q: string;
-limit?: number;
-};
-
-export type V2MessagesControllerGetMessagesParams = {
-channelId?: string;
-threadId?: string;
-contextId?: string;
-limit?: number;
-cursor?: string;
-};
-
-export type V2MessagesControllerUploadChannelIconBody = {
-  file?: Blob;
-};
-
 export type UsersControllerDeleteDeviceTokenParams = {
 token: string;
 };
@@ -480,6 +419,10 @@ export type UsersControllerRegisterDeviceTokenBody = {
 
 export type UsersControllerSearchUsersParams = {
 query: string;
+};
+
+export type AppControllerGetLinkPreviewParams = {
+url: string;
 };
 
 export type CreateScheduledNotificationDtoScheduleType = typeof CreateScheduledNotificationDtoScheduleType[keyof typeof CreateScheduledNotificationDtoScheduleType];
@@ -751,6 +694,7 @@ export const UpdateWorkspaceDtoPlan = {
 export type UpdateWorkspaceDtoBrandingConfig = { [key: string]: unknown };
 
 export interface UpdateWorkspaceDto {
+  banner?: string;
   brandingConfig?: UpdateWorkspaceDtoBrandingConfig;
   customDomain?: string;
   description?: string;
@@ -822,6 +766,56 @@ export interface StartCallDto {
   type: StartCallDtoType;
 }
 
+export type CreateIntegrationDtoService = typeof CreateIntegrationDtoService[keyof typeof CreateIntegrationDtoService];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateIntegrationDtoService = {
+  slack: 'slack',
+  github: 'github',
+  gitlab: 'gitlab',
+  jira: 'jira',
+  linear: 'linear',
+  notion: 'notion',
+  figma: 'figma',
+  discord: 'discord',
+  teams: 'teams',
+  zapier: 'zapier',
+  make: 'make',
+  custom: 'custom',
+  huly: 'huly',
+} as const;
+
+export interface CreateIntegrationDto {
+  config: CreateIntegrationDtoConfig;
+  description?: string;
+  name: string;
+  service: CreateIntegrationDtoService;
+}
+
+export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
+
+export type CreateIntegrationDtoConfig = {
+  accessToken?: string;
+  apiKey?: string;
+  channelId?: string;
+  customHeaders?: CreateIntegrationDtoConfigCustomHeaders;
+  events?: string[];
+  hulyUrl?: string;
+  projectId?: string;
+  refreshToken?: string;
+  repositoryId?: string;
+  scopes?: string[];
+  teamId?: string;
+  webhookUrl?: string;
+};
+
+export interface CreateIntegrationWebhookDto {
+  events: string[];
+  name: string;
+  url: string;
+}
+
 export type CreateInvitationDtoPermissions = { [key: string]: unknown };
 
 export interface CreateInvitationDto {
@@ -830,6 +824,59 @@ export interface CreateInvitationDto {
   permissions?: CreateInvitationDtoPermissions;
   role?: string;
   workspaceId?: string;
+}
+
+export interface UpdateNotificationDto {
+  isRead: boolean;
+}
+
+export type ChannelSettingsDtoPreference = typeof ChannelSettingsDtoPreference[keyof typeof ChannelSettingsDtoPreference];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ChannelSettingsDtoPreference = {
+  all: 'all',
+  mentions: 'mentions',
+  none: 'none',
+  default: 'default',
+} as const;
+
+export interface ChannelSettingsDto {
+  channelId: string;
+  preference: ChannelSettingsDtoPreference;
+}
+
+export type WorkspaceSettingsDtoPreference = typeof WorkspaceSettingsDtoPreference[keyof typeof WorkspaceSettingsDtoPreference];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSettingsDtoPreference = {
+  all: 'all',
+  mentions: 'mentions',
+  none: 'none',
+} as const;
+
+export interface WorkspaceSettingsDto {
+  preference: WorkspaceSettingsDtoPreference;
+  workspaceId: string;
+}
+
+export interface V3UpdateM2mApplicationDto {
+  allowedIps?: string[];
+  name?: string;
+  scopes?: string[];
+}
+
+export interface V3CreateM2mApplicationDto {
+  allowedIps?: string[];
+  name: string;
+  scopes?: string[];
+}
+
+export interface V3UpdateOrganizationDto {
+  banner?: string;
+  logo?: string;
+  name?: string;
 }
 
 export type ExecuteChannelIncomingWebhookDtoAttachmentsItem = { [key: string]: unknown };
@@ -971,382 +1018,6 @@ export interface V3TokenRequestDto {
   scope?: string;
 }
 
-export interface UpdateNotificationDto {
-  isRead: boolean;
-}
-
-export type ChannelSettingsDtoPreference = typeof ChannelSettingsDtoPreference[keyof typeof ChannelSettingsDtoPreference];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ChannelSettingsDtoPreference = {
-  all: 'all',
-  mentions: 'mentions',
-  none: 'none',
-  default: 'default',
-} as const;
-
-export interface ChannelSettingsDto {
-  channelId: string;
-  preference: ChannelSettingsDtoPreference;
-}
-
-export type WorkspaceSettingsDtoPreference = typeof WorkspaceSettingsDtoPreference[keyof typeof WorkspaceSettingsDtoPreference];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const WorkspaceSettingsDtoPreference = {
-  all: 'all',
-  mentions: 'mentions',
-  none: 'none',
-} as const;
-
-export interface WorkspaceSettingsDto {
-  preference: WorkspaceSettingsDtoPreference;
-  workspaceId: string;
-}
-
-export type CreateIntegrationDtoService = typeof CreateIntegrationDtoService[keyof typeof CreateIntegrationDtoService];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateIntegrationDtoService = {
-  slack: 'slack',
-  github: 'github',
-  gitlab: 'gitlab',
-  jira: 'jira',
-  linear: 'linear',
-  notion: 'notion',
-  figma: 'figma',
-  discord: 'discord',
-  teams: 'teams',
-  zapier: 'zapier',
-  make: 'make',
-  custom: 'custom',
-  huly: 'huly',
-} as const;
-
-export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
-
-export type CreateIntegrationDtoConfig = {
-  accessToken?: string;
-  apiKey?: string;
-  channelId?: string;
-  customHeaders?: CreateIntegrationDtoConfigCustomHeaders;
-  events?: string[];
-  hulyUrl?: string;
-  projectId?: string;
-  refreshToken?: string;
-  repositoryId?: string;
-  scopes?: string[];
-  teamId?: string;
-  webhookUrl?: string;
-};
-
-export interface CreateIntegrationDto {
-  config: CreateIntegrationDtoConfig;
-  description?: string;
-  name: string;
-  service: CreateIntegrationDtoService;
-}
-
-export interface CreateIntegrationWebhookDto {
-  events: string[];
-  name: string;
-  url: string;
-}
-
-export interface UpdateOrganizationDto {
-  banner?: string;
-  logo?: string;
-  name?: string;
-}
-
-export type ProvisionWorkspaceDtoInitialMembersItemRole = typeof ProvisionWorkspaceDtoInitialMembersItemRole[keyof typeof ProvisionWorkspaceDtoInitialMembersItemRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ProvisionWorkspaceDtoInitialMembersItemRole = {
-  admin: 'admin',
-  member: 'member',
-} as const;
-
-export type ProvisionWorkspaceDtoInitialMembersItem = {
-  email?: string;
-  role?: ProvisionWorkspaceDtoInitialMembersItemRole;
-};
-
-/**
- * Custom branding configuration
- */
-export type ProvisionWorkspaceDtoBrandingConfig = { [key: string]: unknown };
-
-export interface ProvisionWorkspaceDto {
-  /** Custom branding configuration */
-  brandingConfig?: ProvisionWorkspaceDtoBrandingConfig;
-  /** Initial channels to create */
-  channels?: string[];
-  description?: string;
-  /** Icon identifier */
-  icon?: string;
-  industry?: string;
-  /** Initial members to add to the workspace */
-  initialMembers?: ProvisionWorkspaceDtoInitialMembersItem[];
-  /** The display name of the workspace */
-  name: string;
-  /** The email of the workspace owner. Must exist in the organization. */
-  ownerEmail: string;
-  /** Unique slug for the workspace URL */
-  slug: string;
-}
-
-export type UpdateApplicationDtoChannelDefinitions = { [key: string]: unknown };
-
-export interface UpdateApplicationDto {
-  allowedIps?: string[];
-  channelDefinitions?: UpdateApplicationDtoChannelDefinitions;
-  description?: string;
-  name?: string;
-  scopes?: string[];
-  webhookSecret?: string;
-  webhookUrl?: string;
-}
-
-export interface CreateApplicationDto {
-  allowedIps?: string[];
-  description?: string;
-  name: string;
-  organizationId?: string;
-  scopes?: string[];
-  webhookSecret?: string;
-  webhookUrl?: string;
-  /** Optional workspace ID to link the bot to */
-  workspaceId?: string;
-}
-
-export type TokenRequestDtoGrantType = typeof TokenRequestDtoGrantType[keyof typeof TokenRequestDtoGrantType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TokenRequestDtoGrantType = {
-  client_credentials: 'client_credentials',
-} as const;
-
-export interface TokenRequestDto {
-  client_id: string;
-  client_secret: string;
-  grant_type: TokenRequestDtoGrantType;
-  scope?: string;
-}
-
-export type UpdateAnnouncementDtoTargetAudience = { [key: string]: unknown };
-
-export type UpdateAnnouncementDtoPriority = typeof UpdateAnnouncementDtoPriority[keyof typeof UpdateAnnouncementDtoPriority];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateAnnouncementDtoPriority = {
-  low: 'low',
-  normal: 'normal',
-  high: 'high',
-  urgent: 'urgent',
-} as const;
-
-export type UpdateAnnouncementDtoAttachmentsItem = { [key: string]: unknown };
-
-export interface UpdateAnnouncementDto {
-  attachments?: UpdateAnnouncementDtoAttachmentsItem[];
-  content?: string;
-  departmentId?: string;
-  expiresAt?: string;
-  pinned?: boolean;
-  priority?: UpdateAnnouncementDtoPriority;
-  publishAt?: string;
-  targetAudience?: UpdateAnnouncementDtoTargetAudience;
-  title?: string;
-}
-
-export type CreateAnnouncementDtoTargetAudience = { [key: string]: unknown };
-
-export type CreateAnnouncementDtoPriority = typeof CreateAnnouncementDtoPriority[keyof typeof CreateAnnouncementDtoPriority];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateAnnouncementDtoPriority = {
-  low: 'low',
-  normal: 'normal',
-  high: 'high',
-  urgent: 'urgent',
-} as const;
-
-export type CreateAnnouncementDtoAttachmentsItem = { [key: string]: unknown };
-
-export interface CreateAnnouncementDto {
-  attachments?: CreateAnnouncementDtoAttachmentsItem[];
-  content: string;
-  departmentId: string;
-  /** ISO string date */
-  expiresAt?: string;
-  pinned?: boolean;
-  priority?: CreateAnnouncementDtoPriority;
-  /** ISO string date */
-  publishAt?: string;
-  targetAudience?: CreateAnnouncementDtoTargetAudience;
-  title: string;
-}
-
-export interface UpdateTeamDto {
-  color?: string;
-  departmentId?: string;
-  description?: string;
-  icon?: string;
-  leadId?: string;
-  name?: string;
-  slug?: string;
-}
-
-export interface CreateTeamDto {
-  color?: string;
-  departmentId?: string;
-  description?: string;
-  icon?: string;
-  leadId?: string;
-  name: string;
-  slug: string;
-}
-
-export interface UpdateDepartmentDto {
-  color?: string;
-  description?: string;
-  icon?: string;
-  managerId?: string;
-  name?: string;
-  parentId?: string;
-  slug?: string;
-}
-
-export interface CreateDepartmentDto {
-  color?: string;
-  description?: string;
-  icon?: string;
-  managerId?: string;
-  name: string;
-  parentId?: string;
-  slug: string;
-}
-
-export interface UpdateWebhookDto {
-  active?: boolean;
-  events?: string[];
-  name?: string;
-  url?: string;
-}
-
-export interface CreateWebhookDto {
-  active?: boolean;
-  events: string[];
-  name: string;
-  url: string;
-}
-
-export type CreateTokenDtoPermissionsActionsItem = typeof CreateTokenDtoPermissionsActionsItem[keyof typeof CreateTokenDtoPermissionsActionsItem];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateTokenDtoPermissionsActionsItem = {
-  'read:members': 'read:members',
-  'write:members': 'write:members',
-  'read:departments': 'read:departments',
-  'write:departments': 'write:departments',
-  'read:teams': 'read:teams',
-  'write:teams': 'write:teams',
-  'read:announcements': 'read:announcements',
-  'write:announcements': 'write:announcements',
-  'read:channels': 'read:channels',
-  'write:channels': 'write:channels',
-  'send:messages': 'send:messages',
-  'read:messages': 'read:messages',
-  'read:threads': 'read:threads',
-  'read:webhooks': 'read:webhooks',
-  'write:webhooks': 'write:webhooks',
-  'read:tokens': 'read:tokens',
-  'write:tokens': 'write:tokens',
-} as const;
-
-export type CreateTokenDtoPermissions = {
-  actions?: CreateTokenDtoPermissionsActionsItem[];
-};
-
-export interface CreateTokenDto {
-  /** ISO string date */
-  expiresAt?: string;
-  name: string;
-  permissions: CreateTokenDtoPermissions;
-  rateLimit?: number;
-}
-
-export type SendMessageDtoMetadata = { [key: string]: unknown };
-
-export type SendMessageDtoAttachmentsItem = { [key: string]: unknown };
-
-export type SendMessageDtoActionsItem = { [key: string]: unknown };
-
-export interface SendMessageDto {
-  actions?: SendMessageDtoActionsItem[];
-  attachments?: SendMessageDtoAttachmentsItem[];
-  /** Required if recipientId is not provided */
-  channelId?: string;
-  content: string;
-  contextId?: string;
-  messageType?: string;
-  metadata?: SendMessageDtoMetadata;
-  /** Required if channelId is not provided */
-  recipientId?: string;
-  threadId?: string;
-}
-
-export type UpdateChannelDtoType = typeof UpdateChannelDtoType[keyof typeof UpdateChannelDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateChannelDtoType = {
-  public: 'public',
-  private: 'private',
-} as const;
-
-export interface UpdateChannelDto {
-  description?: string;
-  icon?: string;
-  name?: string;
-  type?: UpdateChannelDtoType;
-}
-
-export type CreateChannelDtoType = typeof CreateChannelDtoType[keyof typeof CreateChannelDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateChannelDtoType = {
-  public: 'public',
-  private: 'private',
-} as const;
-
-export type CreateChannelDtoMetadata = { [key: string]: unknown };
-
-export interface CreateChannelDto {
-  description?: string;
-  icon?: string;
-  metadata?: CreateChannelDtoMetadata;
-  name: string;
-  type?: CreateChannelDtoType;
-}
-
-export interface AddMemberDto {
-  /** The email of the user to add */
-  email: string;
-  /** The role of the member */
-  role?: string;
-}
-
 
 
 
@@ -1391,6 +1062,31 @@ const appControllerGetRealtimeConfig = (
     }
 
 /**
+ * @summary Get link preview metadata for a URL
+ */
+const appControllerGetLinkPreview = (
+    params: AppControllerGetLinkPreviewParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/link-preview`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get all users
+ */
+const usersControllerGetUsers = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/users`, method: 'GET'
+    },
+      options);
+    }
+
+/**
  * @summary Search for users by username or name
  */
 const usersControllerSearchUsers = (
@@ -1418,6 +1114,18 @@ const usersControllerGetMe = (
 /**
  * @summary Update current user profile
  */
+const usersControllerPatchMe = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/users/me`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * @summary Update current user profile
+ */
 const usersControllerUpdateMe = (
 
  options?: SecondParameter<typeof customInstance>,) => {
@@ -1435,6 +1143,18 @@ const usersControllerGetUser = (
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/users/${id}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update user profile by ID
+ */
+const usersControllerPatchUser = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/users/${id}`, method: 'PATCH'
     },
       options);
     }
@@ -1476,6 +1196,18 @@ const usersControllerUnblockUser = (
     }
 
 /**
+ * @summary Update current user status
+ */
+const usersControllerUpdateMyStatus = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/users/me/status`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
  * @summary Register a device token for push notifications
  */
 const usersControllerRegisterDeviceToken = (
@@ -1510,1243 +1242,6 @@ const usersControllerDeleteDeviceToken = (
       return customInstance<void>(
       {url: `/api/users/me/device-tokens`, method: 'DELETE',
         params
-    },
-      options);
-    }
-
-/**
- * Requires members:read scope.
- * @summary List all workspace members
- */
-const v2WorkspacesControllerGetMembers = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires members:write scope.
- * @summary Add a member to the workspace
- */
-const v2WorkspacesControllerAddMember = (
-    slug: unknown,
-    addMemberDto: BodyType<AddMemberDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: addMemberDto
-    },
-      options);
-    }
-
-/**
- * Requires members:read scope.
- * @summary Get details of a specific workspace member
- */
-const v2WorkspacesControllerGetMember = (
-    slug: unknown,
-    userId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members/${userId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires members:write scope.
- * @summary Remove a member from the workspace
- */
-const v2WorkspacesControllerRemoveMember = (
-    slug: unknown,
-    userId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members/${userId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Requires channels:read scope.
- * @summary List all channels in the workspace
- */
-const v2MessagesControllerGetChannels = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires channels:write scope.
- * @summary Create a new channel
- */
-const v2MessagesControllerCreateChannel = (
-    slug: unknown,
-    createChannelDto: BodyType<CreateChannelDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createChannelDto
-    },
-      options);
-    }
-
-/**
- * Requires channels:write scope.
- * @summary Upload a channel icon
- */
-const v2MessagesControllerUploadChannelIcon = (
-    slug: unknown,
-    channelId: string,
-    v2MessagesControllerUploadChannelIconBody: BodyType<V2MessagesControllerUploadChannelIconBody>,
- options?: SecondParameter<typeof customInstance>,) => {const formData = new FormData();
-if(v2MessagesControllerUploadChannelIconBody.file !== undefined) {
- formData.append('file', v2MessagesControllerUploadChannelIconBody.file)
- }
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}/icon`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-/**
- * Requires channels:read scope.
- * @summary Get details of a specific channel
- */
-const v2MessagesControllerGetChannel = (
-    slug: unknown,
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires channels:write scope.
- * @summary Update a channel
- */
-const v2MessagesControllerUpdateChannel = (
-    slug: unknown,
-    channelId: string,
-    updateChannelDto: BodyType<UpdateChannelDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateChannelDto
-    },
-      options);
-    }
-
-/**
- * Requires channels:write scope.
- * @summary Delete a channel
- */
-const v2MessagesControllerDeleteChannel = (
-    slug: unknown,
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Requires messages:read scope.
- * @summary List messages in the workspace
- */
-const v2MessagesControllerGetMessages = (
-    slug: unknown,
-    params?: V2MessagesControllerGetMessagesParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/messages`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- *
-Requires messages:send scope. Supports multipart/form-data for file uploads.
-
-**M2M Behavior:**
-- If the request is made by an M2M application, the message is sent by the app's associated bot.
-- If no app bot exists, it falls back to the workspace's **Default Bot**.
-- You can include `actions` to create interactive buttons that trigger webhooks.
-
- * @summary Send a message
- */
-const v2MessagesControllerSendMessage = (
-    slug: unknown,
-    sendMessageDto: BodyType<SendMessageDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/messages`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: sendMessageDto
-    },
-      options);
-    }
-
-/**
- * Requires members:read scope.
- * @summary Search for members in the workspace
- */
-const v2SearchControllerSearchMembers = (
-    slug: unknown,
-    params: V2SearchControllerSearchMembersParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/search/members`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Requires messages:read scope.
- * @summary Search for messages in the workspace
- */
-const v2SearchControllerSearchMessages = (
-    slug: unknown,
-    params: V2SearchControllerSearchMessagesParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/search/messages`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Requires tokens:read scope.
- * @summary List all API tokens in the workspace
- */
-const v2ApiTokensControllerGetTokens = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires tokens:write scope.
- * @summary Create a new API token
- */
-const v2ApiTokensControllerCreateToken = (
-    slug: unknown,
-    createTokenDto: BodyType<CreateTokenDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTokenDto
-    },
-      options);
-    }
-
-/**
- * Requires tokens:write scope.
- * @summary Delete an API token
- */
-const v2ApiTokensControllerDeleteToken = (
-    slug: unknown,
-    tokenId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens/${tokenId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Requires tokens:write scope.
- * @summary Rotate an API token (generate new token value)
- */
-const v2ApiTokensControllerRotateToken = (
-    slug: unknown,
-    tokenId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens/${tokenId}/rotate`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- *
-Requires webhooks:read scope.
-List all webhooks configured for this workspace.
-
-**Supported Events:**
-- `message.sent`: Triggered when a new message is sent.
-- `message.updated`: Triggered when a message is edited or updated by a callback.
-- `message.action`: Triggered when a user clicks an interactive button on a message.
-- `channel.created`: Triggered when a new channel is created.
-- `channel.updated`: Triggered when channel details change.
-- `member.joined`: Triggered when a new member joins the workspace.
-- `member.left`: Triggered when a member leaves the workspace.
-
- * @summary List all webhooks in the workspace
- */
-const v2WebhooksControllerGetWebhooks = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires webhooks:write scope.
- * @summary Create a new webhook
- */
-const v2WebhooksControllerCreateWebhook = (
-    slug: unknown,
-    createWebhookDto: BodyType<CreateWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createWebhookDto
-    },
-      options);
-    }
-
-/**
- * Requires webhooks:read scope.
- * @summary Get details of a specific webhook
- */
-const v2WebhooksControllerGetWebhook = (
-    slug: unknown,
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks/${webhookId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires webhooks:write scope.
- * @summary Update a webhook
- */
-const v2WebhooksControllerUpdateWebhook = (
-    slug: unknown,
-    webhookId: string,
-    updateWebhookDto: BodyType<UpdateWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks/${webhookId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateWebhookDto
-    },
-      options);
-    }
-
-/**
- * Requires webhooks:write scope.
- * @summary Delete a webhook
- */
-const v2WebhooksControllerDeleteWebhook = (
-    slug: unknown,
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks/${webhookId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Requires threads:read scope.
- * @summary List all threads in the workspace
- */
-const v2ThreadsControllerGetThreads = (
-    slug: unknown,
-    params?: V2ThreadsControllerGetThreadsParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/threads`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Requires threads:read and messages:read scopes.
- * @summary List messages in a thread
- */
-const v2ThreadsControllerGetThreadMessages = (
-    slug: unknown,
-    threadId: string,
-    params?: V2ThreadsControllerGetThreadMessagesParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/threads/${threadId}/messages`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * Requires threads:read scope.
- * @summary Get a thread by its context ID
- */
-const v2ThreadsControllerGetThreadByContext = (
-    slug: unknown,
-    contextId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/threads/context/${contextId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- *
-Triggers a custom action associated with a message.
-
-**M2M Interactivity:**
-If the message was sent by an M2M application, triggering an action will:
-1. Dispatch a **Callback** to the M2M application's configured `webhookUrl`.
-2. The callback includes the `formState` and `payload` provided in the request.
-3. The M2M application can respond to the callback to **update the message** content or metadata in real-time.
-
- * @summary Trigger a message action
- */
-const v2MessageActionsControllerHandleAction = (
-    slug: unknown,
-    messageId: string,
-    actionId: string,
-    v2MessageActionsControllerHandleActionBody?: BodyType<V2MessageActionsControllerHandleActionBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/messages/${messageId}/actions/${actionId}`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: v2MessageActionsControllerHandleActionBody
-    },
-      options);
-    }
-
-/**
- * Requires departments:read scope.
- * @summary List all departments in the workspace
- */
-const v2DepartmentsControllerGetDepartments = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires departments:write scope.
- * @summary Create a new department
- */
-const v2DepartmentsControllerCreateDepartment = (
-    slug: unknown,
-    createDepartmentDto: BodyType<CreateDepartmentDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createDepartmentDto
-    },
-      options);
-    }
-
-/**
- * Requires departments:read scope.
- * @summary Get details of a specific department
- */
-const v2DepartmentsControllerGetDepartment = (
-    slug: unknown,
-    departmentId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments/${departmentId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires departments:write scope.
- * @summary Update a department
- */
-const v2DepartmentsControllerUpdateDepartment = (
-    slug: unknown,
-    departmentId: string,
-    updateDepartmentDto: BodyType<UpdateDepartmentDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments/${departmentId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateDepartmentDto
-    },
-      options);
-    }
-
-/**
- * Requires departments:write scope.
- * @summary Delete a department
- */
-const v2DepartmentsControllerDeleteDepartment = (
-    slug: unknown,
-    departmentId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments/${departmentId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Requires teams:read scope.
- * @summary List all teams in the workspace
- */
-const v2TeamsControllerGetTeams = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires teams:write scope.
- * @summary Create a new team
- */
-const v2TeamsControllerCreateTeam = (
-    slug: unknown,
-    createTeamDto: BodyType<CreateTeamDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTeamDto
-    },
-      options);
-    }
-
-/**
- * Requires teams:read scope.
- * @summary Get details of a specific team
- */
-const v2TeamsControllerGetTeam = (
-    slug: unknown,
-    teamId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams/${teamId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires teams:write scope.
- * @summary Update a team
- */
-const v2TeamsControllerUpdateTeam = (
-    slug: unknown,
-    teamId: string,
-    updateTeamDto: BodyType<UpdateTeamDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams/${teamId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateTeamDto
-    },
-      options);
-    }
-
-/**
- * Requires teams:write scope.
- * @summary Delete a team
- */
-const v2TeamsControllerDeleteTeam = (
-    slug: unknown,
-    teamId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams/${teamId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * Requires announcements:read scope.
- * @summary List all announcements in the workspace
- */
-const v2AnnouncementsControllerGetAnnouncements = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires announcements:write scope.
- * @summary Create a new announcement
- */
-const v2AnnouncementsControllerCreateAnnouncement = (
-    slug: unknown,
-    createAnnouncementDto: BodyType<CreateAnnouncementDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createAnnouncementDto
-    },
-      options);
-    }
-
-/**
- * Requires announcements:read scope.
- * @summary Get details of a specific announcement
- */
-const v2AnnouncementsControllerGetAnnouncement = (
-    slug: unknown,
-    announcementId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements/${announcementId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Requires announcements:write scope.
- * @summary Update an announcement
- */
-const v2AnnouncementsControllerUpdateAnnouncement = (
-    slug: unknown,
-    announcementId: string,
-    updateAnnouncementDto: BodyType<UpdateAnnouncementDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements/${announcementId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateAnnouncementDto
-    },
-      options);
-    }
-
-/**
- * Requires announcements:write scope.
- * @summary Delete an announcement
- */
-const v2AnnouncementsControllerDeleteAnnouncement = (
-    slug: unknown,
-    announcementId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements/${announcementId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- *
-Used for bot, integration, and M2M authentication.
-
-**Scopes available:**
-- `*`: Full access (only for internal system bots).
-- `provisioning:workspaces`: Ability to create and manage workspaces.
-- `messages:read`: Read messages in allowed channels.
-- `messages:send`: Send messages and trigger actions.
-- `channels:read`: List and view channel details.
-- `channels:write`: Create and manage channels.
-- `webhooks:read`: View webhook configurations.
-- `webhooks:write`: Manage webhooks.
-
- * @summary Exchange client credentials for an access token
- */
-const v2OAuthControllerGetToken = (
-    tokenRequestDto: BodyType<TokenRequestDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<V2OAuthControllerGetToken200>(
-      {url: `/api/v2/oauth/token`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: tokenRequestDto
-    },
-      options);
-    }
-
-/**
- * Requires an authenticated user or M2M app.
- * @summary Create a new bot application
- */
-const v2ApplicationsControllerCreateApplication = (
-    createApplicationDto: BodyType<CreateApplicationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createApplicationDto
-    },
-      options);
-    }
-
-/**
- * @summary List all bot applications owned by the user or organization
- */
-const v2ApplicationsControllerGetApplications = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get details of a specific bot application
- */
-const v2ApplicationsControllerGetApplication = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Update a bot application
- */
-const v2ApplicationsControllerUpdateApplication = (
-    id: string,
-    updateApplicationDto: BodyType<UpdateApplicationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: updateApplicationDto
-    },
-      options);
-    }
-
-/**
- * @summary Delete a bot application
- */
-const v2ApplicationsControllerDeleteApplication = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}/delete`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Reset the bot user token
- */
-const v2ApplicationsControllerResetBotToken = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}/reset-token`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Install the bot into a workspace
- */
-const v2ApplicationsControllerInstallBot = (
-    id: string,
-    v2ApplicationsControllerInstallBotBody: BodyType<V2ApplicationsControllerInstallBotBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}/install`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: v2ApplicationsControllerInstallBotBody
-    },
-      options);
-    }
-
-/**
- * @summary Submit a contact form
- */
-const v2ContactControllerSubmitContactForm = (
-    v2ContactControllerSubmitContactFormBody: BodyType<V2ContactControllerSubmitContactFormBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/contact`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: v2ContactControllerSubmitContactFormBody
-    },
-      options);
-    }
-
-/**
- *
-Provisions a new workspace within your organization.
-When provisioned via M2M:
-1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.
-2. Your M2M application is installed as an **Administrator** in the new workspace.
-3. The specified owner and initial members are added (must belong to the same organization).
-
-The System Bot acts as the default sender for messages and announcements sent via M2M if no application-specific bot is configured.
-
- * @summary Provision a new workspace (Enterprise M2M)
- */
-const provisioningControllerProvisionWorkspace = (
-    provisionWorkspaceDto: BodyType<ProvisionWorkspaceDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/v2/provisioning/workspaces`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: provisionWorkspaceDto
-    },
-      options);
-    }
-
-/**
- * @summary List workspaces for an organization
- */
-const organizationsControllerGetOrganizationWorkspaces = (
-    orgSlug: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/organizations/${orgSlug}/workspaces`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get organization details
- */
-const organizationsControllerGetOrganization = (
-    orgSlug: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/organizations/${orgSlug}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Update organization details
- */
-const organizationsControllerUpdateOrganization = (
-    orgSlug: string,
-    updateOrganizationDto: BodyType<UpdateOrganizationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/organizations/${orgSlug}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateOrganizationDto
-    },
-      options);
-    }
-
-/**
- * @summary Handle Plane webhook
- */
-const integrationsControllerHandlePlaneWebhook = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/plane/webhook`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Handle Huly webhook
- */
-const integrationsControllerHandleHulyWebhook = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/huly/webhook/${id}`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Get integration statistics
- */
-const integrationsControllerGetStats = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/stats`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get all integration webhooks
- */
-const integrationsControllerGetWebhooks = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Create an integration webhook
- */
-const integrationsControllerCreateWebhook = (
-    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createIntegrationWebhookDto
-    },
-      options);
-    }
-
-/**
- * @summary Update an integration webhook
- */
-const integrationsControllerUpdateWebhook = (
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks/${webhookId}`, method: 'PATCH'
-    },
-      options);
-    }
-
-/**
- * @summary Delete an integration webhook
- */
-const integrationsControllerDeleteWebhook = (
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks/${webhookId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Get integration webhook logs
- */
-const integrationsControllerGetWebhookLogs = (
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks/${webhookId}/logs`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get all integration API keys
- */
-const integrationsControllerGetApiKeys = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/api-keys`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Update an integration API key
- */
-const integrationsControllerUpdateApiKey = (
-    keyId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/api-keys/${keyId}`, method: 'PATCH'
-    },
-      options);
-    }
-
-/**
- * @summary Delete an integration API key
- */
-const integrationsControllerDeleteApiKey = (
-    keyId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/integrations/api-keys/${keyId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Get all integrations for a workspace
- */
-const workspaceIntegrationsControllerGetWorkspaceIntegrations = (
-    slug: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Create a new integration for a workspace
- */
-const workspaceIntegrationsControllerCreateWorkspaceIntegration = (
-    slug: string,
-    createIntegrationDto: BodyType<CreateIntegrationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createIntegrationDto
-    },
-      options);
-    }
-
-/**
- * @summary Get integration details
- */
-const workspaceIntegrationsControllerGetWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Update an integration
- */
-const workspaceIntegrationsControllerUpdateWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'PATCH'
-    },
-      options);
-    }
-
-/**
- * @summary Delete an integration
- */
-const workspaceIntegrationsControllerDeleteWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Test an integration
- */
-const workspaceIntegrationsControllerTestWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}/test`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Get all integration webhooks for a workspace
- */
-const workspaceIntegrationsControllerGetWorkspaceWebhooks = (
-    slug: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Create an integration webhook for a workspace
- */
-const workspaceIntegrationsControllerCreateWorkspaceWebhook = (
-    slug: string,
-    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createIntegrationWebhookDto
-    },
-      options);
-    }
-
-/**
- * @summary Get notifications for the current user
- */
-const notificationsControllerGetNotifications = (
-    params?: NotificationsControllerGetNotificationsParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Mark all notifications as read
- */
-const notificationsControllerMarkAllRead = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/mark-all-read`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Get notification settings for a workspace
- */
-const notificationsControllerGetWorkspaceSettings = (
-    params: NotificationsControllerGetWorkspaceSettingsParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/settings/workspace`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Update notification settings for a workspace
- */
-const notificationsControllerUpdateWorkspaceSettings = (
-    workspaceSettingsDto: BodyType<WorkspaceSettingsDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/settings/workspace`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: workspaceSettingsDto
-    },
-      options);
-    }
-
-/**
- * @summary Get notification settings for a channel
- */
-const notificationsControllerGetChannelSettings = (
-    params: NotificationsControllerGetChannelSettingsParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/settings/channel`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Update notification settings for a channel
- */
-const notificationsControllerUpdateChannelSettings = (
-    channelSettingsDto: BodyType<ChannelSettingsDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/settings/channel`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: channelSettingsDto
-    },
-      options);
-    }
-
-/**
- * @summary Update a notification (e.g. mark as read)
- */
-const notificationsControllerUpdateNotification = (
-    notificationId: string,
-    updateNotificationDto: BodyType<UpdateNotificationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/${notificationId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateNotificationDto
-    },
-      options);
-    }
-
-/**
- * @summary Delete a notification
- */
-const notificationsControllerDeleteNotification = (
-    notificationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/notifications/${notificationId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-const ablyControllerGetToken = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/ably/token`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Upload a file
- */
-const storageControllerUploadFile = (
-    storageControllerUploadFileBody: BodyType<StorageControllerUploadFileBody>,
- options?: SecondParameter<typeof customInstance>,) => {const formData = new FormData();
-if(storageControllerUploadFileBody.file !== undefined) {
- formData.append('file', storageControllerUploadFileBody.file)
- }
-
-      return customInstance<void>(
-      {url: `/api/storage/upload`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-/**
- * @summary Proxy file request using high-performance streaming
- */
-const shortUrlControllerRedirect = (
-    code: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/s/${code}`, method: 'GET'
     },
       options);
     }
@@ -3331,6 +1826,219 @@ const v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId = (
     }
 
 /**
+ * @summary List workspaces for an organization
+ */
+const v3OrganizationsControllerGetOrganizationWorkspaces = (
+    orgSlug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/workspaces`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get organization details
+ */
+const v3OrganizationsControllerGetOrganization = (
+    orgSlug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update organization details
+ */
+const v3OrganizationsControllerUpdateOrganization = (
+    orgSlug: string,
+    v3UpdateOrganizationDto: BodyType<V3UpdateOrganizationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateOrganizationDto
+    },
+      options);
+    }
+
+/**
+ * @summary List organization M2M applications
+ */
+const v3OrganizationsControllerGetM2mApplications = (
+    orgSlug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create organization M2M application credentials
+ */
+const v3OrganizationsControllerCreateM2mApplication = (
+    orgSlug: string,
+    v3CreateM2mApplicationDto: BodyType<V3CreateM2mApplicationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateM2mApplicationDto
+    },
+      options);
+    }
+
+/**
+ * @summary Update organization M2M application credentials and scopes
+ */
+const v3OrganizationsControllerUpdateM2mApplication = (
+    orgSlug: string,
+    id: string,
+    v3UpdateM2mApplicationDto: BodyType<V3UpdateM2mApplicationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateM2mApplicationDto
+    },
+      options);
+    }
+
+/**
+ * @summary Delete organization M2M application credentials
+ */
+const v3OrganizationsControllerDeleteM2mApplication = (
+    orgSlug: string,
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get notifications for the current user
+ */
+const notificationsControllerGetNotifications = (
+    params?: NotificationsControllerGetNotificationsParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Get a single notification by ID
+ */
+const notificationsControllerGetNotificationById = (
+    notificationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/${notificationId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update a notification (e.g. mark as read)
+ */
+const notificationsControllerUpdateNotification = (
+    notificationId: string,
+    updateNotificationDto: BodyType<UpdateNotificationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/${notificationId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateNotificationDto
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a notification
+ */
+const notificationsControllerDeleteNotification = (
+    notificationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/${notificationId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Mark all notifications as read
+ */
+const notificationsControllerMarkAllRead = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/mark-all-read`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Get notification settings for a workspace
+ */
+const notificationsControllerGetWorkspaceSettings = (
+    params: NotificationsControllerGetWorkspaceSettingsParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/settings/workspace`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Update notification settings for a workspace
+ */
+const notificationsControllerUpdateWorkspaceSettings = (
+    workspaceSettingsDto: BodyType<WorkspaceSettingsDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/settings/workspace`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: workspaceSettingsDto
+    },
+      options);
+    }
+
+/**
+ * @summary Get notification settings for a channel
+ */
+const notificationsControllerGetChannelSettings = (
+    params: NotificationsControllerGetChannelSettingsParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/settings/channel`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Update notification settings for a channel
+ */
+const notificationsControllerUpdateChannelSettings = (
+    channelSettingsDto: BodyType<ChannelSettingsDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/notifications/settings/channel`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: channelSettingsDto
+    },
+      options);
+    }
+
+/**
  * @summary Get invitations for the current user
  */
 const invitationsControllerGetInvitations = (
@@ -3377,6 +2085,285 @@ const invitationsControllerAcceptInvitation = (
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/invitations/${token}/accept`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Handle Plane webhook
+ */
+const integrationsControllerHandlePlaneWebhook = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/plane/webhook`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Handle Huly webhook
+ */
+const integrationsControllerHandleHulyWebhook = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/huly/webhook/${id}`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Get integration statistics
+ */
+const integrationsControllerGetStats = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/stats`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get all integration webhooks
+ */
+const integrationsControllerGetWebhooks = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create an integration webhook
+ */
+const integrationsControllerCreateWebhook = (
+    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIntegrationWebhookDto
+    },
+      options);
+    }
+
+/**
+ * @summary Update an integration webhook
+ */
+const integrationsControllerUpdateWebhook = (
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks/${webhookId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * @summary Delete an integration webhook
+ */
+const integrationsControllerDeleteWebhook = (
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks/${webhookId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get integration webhook logs
+ */
+const integrationsControllerGetWebhookLogs = (
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks/${webhookId}/logs`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get all integration API keys
+ */
+const integrationsControllerGetApiKeys = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/api-keys`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update an integration API key
+ */
+const integrationsControllerUpdateApiKey = (
+    keyId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/api-keys/${keyId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * @summary Delete an integration API key
+ */
+const integrationsControllerDeleteApiKey = (
+    keyId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/integrations/api-keys/${keyId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get all integrations for a workspace
+ */
+const workspaceIntegrationsControllerGetWorkspaceIntegrations = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create a new integration for a workspace
+ */
+const workspaceIntegrationsControllerCreateWorkspaceIntegration = (
+    slug: string,
+    createIntegrationDto: BodyType<CreateIntegrationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIntegrationDto
+    },
+      options);
+    }
+
+/**
+ * @summary Get integration details
+ */
+const workspaceIntegrationsControllerGetWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update an integration
+ */
+const workspaceIntegrationsControllerUpdateWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * @summary Delete an integration
+ */
+const workspaceIntegrationsControllerDeleteWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Test an integration
+ */
+const workspaceIntegrationsControllerTestWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}/test`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Get all integration webhooks for a workspace
+ */
+const workspaceIntegrationsControllerGetWorkspaceWebhooks = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create an integration webhook for a workspace
+ */
+const workspaceIntegrationsControllerCreateWorkspaceWebhook = (
+    slug: string,
+    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIntegrationWebhookDto
+    },
+      options);
+    }
+
+const ablyControllerGetToken = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/ably/token`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Upload a file
+ */
+const storageControllerUploadFile = (
+    storageControllerUploadFileBody: BodyType<StorageControllerUploadFileBody>,
+ options?: SecondParameter<typeof customInstance>,) => {const formData = new FormData();
+if(storageControllerUploadFileBody.file !== undefined) {
+ formData.append('file', storageControllerUploadFileBody.file)
+ }
+
+      return customInstance<void>(
+      {url: `/api/storage/upload`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
+    },
+      options);
+    }
+
+/**
+ * @summary Proxy file request using high-performance streaming
+ */
+const shortUrlControllerRedirect = (
+    code: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/s/${code}`, method: 'GET'
     },
       options);
     }
@@ -3438,7 +2425,7 @@ const callsControllerGetParticipants = (
  * @summary Get scheduled calls for a workspace
  */
 const callsControllerGetScheduledCalls = (
-    params: CallsControllerGetScheduledCallsParams,
+    params?: CallsControllerGetScheduledCallsParams,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/calls/scheduled`, method: 'GET',
@@ -4191,6 +3178,46 @@ const channelsControllerDeleteChannel = (
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/workspaces/${slug}/channels/${channelId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get members of a channel
+ */
+const channelsControllerGetChannelMembers = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Add members to a channel
+ */
+const channelsControllerAddChannelMembers = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Remove a member from a channel
+ */
+const channelsControllerRemoveChannelMember = (
+    slug: string,
+    channelId: string,
+    targetUserId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members/${targetUserId}`, method: 'DELETE'
     },
       options);
     }
@@ -4956,105 +3983,25 @@ const supportControllerGetCustomerProfiles = (
       options);
     }
 
-return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,usersControllerSearchUsers,usersControllerGetMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v2WorkspacesControllerGetMembers,v2WorkspacesControllerAddMember,v2WorkspacesControllerGetMember,v2WorkspacesControllerRemoveMember,v2MessagesControllerGetChannels,v2MessagesControllerCreateChannel,v2MessagesControllerUploadChannelIcon,v2MessagesControllerGetChannel,v2MessagesControllerUpdateChannel,v2MessagesControllerDeleteChannel,v2MessagesControllerGetMessages,v2MessagesControllerSendMessage,v2SearchControllerSearchMembers,v2SearchControllerSearchMessages,v2ApiTokensControllerGetTokens,v2ApiTokensControllerCreateToken,v2ApiTokensControllerDeleteToken,v2ApiTokensControllerRotateToken,v2WebhooksControllerGetWebhooks,v2WebhooksControllerCreateWebhook,v2WebhooksControllerGetWebhook,v2WebhooksControllerUpdateWebhook,v2WebhooksControllerDeleteWebhook,v2ThreadsControllerGetThreads,v2ThreadsControllerGetThreadMessages,v2ThreadsControllerGetThreadByContext,v2MessageActionsControllerHandleAction,v2DepartmentsControllerGetDepartments,v2DepartmentsControllerCreateDepartment,v2DepartmentsControllerGetDepartment,v2DepartmentsControllerUpdateDepartment,v2DepartmentsControllerDeleteDepartment,v2TeamsControllerGetTeams,v2TeamsControllerCreateTeam,v2TeamsControllerGetTeam,v2TeamsControllerUpdateTeam,v2TeamsControllerDeleteTeam,v2AnnouncementsControllerGetAnnouncements,v2AnnouncementsControllerCreateAnnouncement,v2AnnouncementsControllerGetAnnouncement,v2AnnouncementsControllerUpdateAnnouncement,v2AnnouncementsControllerDeleteAnnouncement,v2OAuthControllerGetToken,v2ApplicationsControllerCreateApplication,v2ApplicationsControllerGetApplications,v2ApplicationsControllerGetApplication,v2ApplicationsControllerUpdateApplication,v2ApplicationsControllerDeleteApplication,v2ApplicationsControllerResetBotToken,v2ApplicationsControllerInstallBot,v2ContactControllerSubmitContactForm,provisioningControllerProvisionWorkspace,organizationsControllerGetOrganizationWorkspaces,organizationsControllerGetOrganization,organizationsControllerUpdateOrganization,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,notificationsControllerGetNotifications,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,ablyControllerGetToken,storageControllerUploadFile,shortUrlControllerRedirect,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
+return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,appControllerGetLinkPreview,usersControllerGetUsers,usersControllerSearchUsers,usersControllerGetMe,usersControllerPatchMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerPatchUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerUpdateMyStatus,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,v3OrganizationsControllerGetOrganizationWorkspaces,v3OrganizationsControllerGetOrganization,v3OrganizationsControllerUpdateOrganization,v3OrganizationsControllerGetM2mApplications,v3OrganizationsControllerCreateM2mApplication,v3OrganizationsControllerUpdateM2mApplication,v3OrganizationsControllerDeleteM2mApplication,notificationsControllerGetNotifications,notificationsControllerGetNotificationById,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,ablyControllerGetToken,storageControllerUploadFile,shortUrlControllerRedirect,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,channelsControllerGetChannelMembers,channelsControllerAddChannelMembers,channelsControllerRemoveChannelMember,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
 export type AppControllerGetHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHealth']>>>
 export type AppControllerGetHelloResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHello']>>>
 export type AppControllerGetRealtimeConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetRealtimeConfig']>>>
+export type AppControllerGetLinkPreviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetLinkPreview']>>>
+export type UsersControllerGetUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerGetUsers']>>>
 export type UsersControllerSearchUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerSearchUsers']>>>
 export type UsersControllerGetMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerGetMe']>>>
+export type UsersControllerPatchMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerPatchMe']>>>
 export type UsersControllerUpdateMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerUpdateMe']>>>
 export type UsersControllerGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerGetUser']>>>
+export type UsersControllerPatchUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerPatchUser']>>>
 export type UsersControllerGetSocialProfileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerGetSocialProfile']>>>
 export type UsersControllerBlockUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerBlockUser']>>>
 export type UsersControllerUnblockUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerUnblockUser']>>>
+export type UsersControllerUpdateMyStatusResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerUpdateMyStatus']>>>
 export type UsersControllerRegisterDeviceTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerRegisterDeviceToken']>>>
 export type UsersControllerGetDeviceTokensResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerGetDeviceTokens']>>>
 export type UsersControllerDeleteDeviceTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['usersControllerDeleteDeviceToken']>>>
-export type V2WorkspacesControllerGetMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WorkspacesControllerGetMembers']>>>
-export type V2WorkspacesControllerAddMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WorkspacesControllerAddMember']>>>
-export type V2WorkspacesControllerGetMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WorkspacesControllerGetMember']>>>
-export type V2WorkspacesControllerRemoveMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WorkspacesControllerRemoveMember']>>>
-export type V2MessagesControllerGetChannelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerGetChannels']>>>
-export type V2MessagesControllerCreateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerCreateChannel']>>>
-export type V2MessagesControllerUploadChannelIconResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerUploadChannelIcon']>>>
-export type V2MessagesControllerGetChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerGetChannel']>>>
-export type V2MessagesControllerUpdateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerUpdateChannel']>>>
-export type V2MessagesControllerDeleteChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerDeleteChannel']>>>
-export type V2MessagesControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerGetMessages']>>>
-export type V2MessagesControllerSendMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessagesControllerSendMessage']>>>
-export type V2SearchControllerSearchMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2SearchControllerSearchMembers']>>>
-export type V2SearchControllerSearchMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2SearchControllerSearchMessages']>>>
-export type V2ApiTokensControllerGetTokensResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApiTokensControllerGetTokens']>>>
-export type V2ApiTokensControllerCreateTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApiTokensControllerCreateToken']>>>
-export type V2ApiTokensControllerDeleteTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApiTokensControllerDeleteToken']>>>
-export type V2ApiTokensControllerRotateTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApiTokensControllerRotateToken']>>>
-export type V2WebhooksControllerGetWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WebhooksControllerGetWebhooks']>>>
-export type V2WebhooksControllerCreateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WebhooksControllerCreateWebhook']>>>
-export type V2WebhooksControllerGetWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WebhooksControllerGetWebhook']>>>
-export type V2WebhooksControllerUpdateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WebhooksControllerUpdateWebhook']>>>
-export type V2WebhooksControllerDeleteWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2WebhooksControllerDeleteWebhook']>>>
-export type V2ThreadsControllerGetThreadsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ThreadsControllerGetThreads']>>>
-export type V2ThreadsControllerGetThreadMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ThreadsControllerGetThreadMessages']>>>
-export type V2ThreadsControllerGetThreadByContextResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ThreadsControllerGetThreadByContext']>>>
-export type V2MessageActionsControllerHandleActionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2MessageActionsControllerHandleAction']>>>
-export type V2DepartmentsControllerGetDepartmentsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2DepartmentsControllerGetDepartments']>>>
-export type V2DepartmentsControllerCreateDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2DepartmentsControllerCreateDepartment']>>>
-export type V2DepartmentsControllerGetDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2DepartmentsControllerGetDepartment']>>>
-export type V2DepartmentsControllerUpdateDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2DepartmentsControllerUpdateDepartment']>>>
-export type V2DepartmentsControllerDeleteDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2DepartmentsControllerDeleteDepartment']>>>
-export type V2TeamsControllerGetTeamsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2TeamsControllerGetTeams']>>>
-export type V2TeamsControllerCreateTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2TeamsControllerCreateTeam']>>>
-export type V2TeamsControllerGetTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2TeamsControllerGetTeam']>>>
-export type V2TeamsControllerUpdateTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2TeamsControllerUpdateTeam']>>>
-export type V2TeamsControllerDeleteTeamResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2TeamsControllerDeleteTeam']>>>
-export type V2AnnouncementsControllerGetAnnouncementsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2AnnouncementsControllerGetAnnouncements']>>>
-export type V2AnnouncementsControllerCreateAnnouncementResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2AnnouncementsControllerCreateAnnouncement']>>>
-export type V2AnnouncementsControllerGetAnnouncementResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2AnnouncementsControllerGetAnnouncement']>>>
-export type V2AnnouncementsControllerUpdateAnnouncementResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2AnnouncementsControllerUpdateAnnouncement']>>>
-export type V2AnnouncementsControllerDeleteAnnouncementResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2AnnouncementsControllerDeleteAnnouncement']>>>
-export type V2OAuthControllerGetTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2OAuthControllerGetToken']>>>
-export type V2ApplicationsControllerCreateApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerCreateApplication']>>>
-export type V2ApplicationsControllerGetApplicationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerGetApplications']>>>
-export type V2ApplicationsControllerGetApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerGetApplication']>>>
-export type V2ApplicationsControllerUpdateApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerUpdateApplication']>>>
-export type V2ApplicationsControllerDeleteApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerDeleteApplication']>>>
-export type V2ApplicationsControllerResetBotTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerResetBotToken']>>>
-export type V2ApplicationsControllerInstallBotResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ApplicationsControllerInstallBot']>>>
-export type V2ContactControllerSubmitContactFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v2ContactControllerSubmitContactForm']>>>
-export type ProvisioningControllerProvisionWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['provisioningControllerProvisionWorkspace']>>>
-export type OrganizationsControllerGetOrganizationWorkspacesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['organizationsControllerGetOrganizationWorkspaces']>>>
-export type OrganizationsControllerGetOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['organizationsControllerGetOrganization']>>>
-export type OrganizationsControllerUpdateOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['organizationsControllerUpdateOrganization']>>>
-export type IntegrationsControllerHandlePlaneWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerHandlePlaneWebhook']>>>
-export type IntegrationsControllerHandleHulyWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerHandleHulyWebhook']>>>
-export type IntegrationsControllerGetStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetStats']>>>
-export type IntegrationsControllerGetWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetWebhooks']>>>
-export type IntegrationsControllerCreateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerCreateWebhook']>>>
-export type IntegrationsControllerUpdateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerUpdateWebhook']>>>
-export type IntegrationsControllerDeleteWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerDeleteWebhook']>>>
-export type IntegrationsControllerGetWebhookLogsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetWebhookLogs']>>>
-export type IntegrationsControllerGetApiKeysResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetApiKeys']>>>
-export type IntegrationsControllerUpdateApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerUpdateApiKey']>>>
-export type IntegrationsControllerDeleteApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerDeleteApiKey']>>>
-export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerGetWorkspaceIntegrations']>>>
-export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerCreateWorkspaceIntegration']>>>
-export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerGetWorkspaceIntegration']>>>
-export type WorkspaceIntegrationsControllerUpdateWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerUpdateWorkspaceIntegration']>>>
-export type WorkspaceIntegrationsControllerDeleteWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerDeleteWorkspaceIntegration']>>>
-export type WorkspaceIntegrationsControllerTestWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerTestWorkspaceIntegration']>>>
-export type WorkspaceIntegrationsControllerGetWorkspaceWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerGetWorkspaceWebhooks']>>>
-export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerCreateWorkspaceWebhook']>>>
-export type NotificationsControllerGetNotificationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetNotifications']>>>
-export type NotificationsControllerMarkAllReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerMarkAllRead']>>>
-export type NotificationsControllerGetWorkspaceSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetWorkspaceSettings']>>>
-export type NotificationsControllerUpdateWorkspaceSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateWorkspaceSettings']>>>
-export type NotificationsControllerGetChannelSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetChannelSettings']>>>
-export type NotificationsControllerUpdateChannelSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateChannelSettings']>>>
-export type NotificationsControllerUpdateNotificationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateNotification']>>>
-export type NotificationsControllerDeleteNotificationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerDeleteNotification']>>>
-export type AblyControllerGetTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['ablyControllerGetToken']>>>
-export type StorageControllerUploadFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['storageControllerUploadFile']>>>
-export type ShortUrlControllerRedirectResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['shortUrlControllerRedirect']>>>
 export type V10UsersControllerGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v10UsersControllerGetUser']>>>
 export type V10UsersControllerGetMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v10UsersControllerGetMe']>>>
 export type V10GatewayControllerGetBotGatewayResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v10GatewayControllerGetBotGateway']>>>
@@ -5099,10 +4046,48 @@ export type V3ChannelIncomingWebhooksControllerUpdateChannelWebhookResult = NonN
 export type V3ChannelIncomingWebhooksControllerDeleteChannelWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerDeleteChannelWebhook']>>>
 export type V3ChannelIncomingWebhooksControllerExecuteWebhookByUrlTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken']>>>
 export type V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId']>>>
+export type V3OrganizationsControllerGetOrganizationWorkspacesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerGetOrganizationWorkspaces']>>>
+export type V3OrganizationsControllerGetOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerGetOrganization']>>>
+export type V3OrganizationsControllerUpdateOrganizationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerUpdateOrganization']>>>
+export type V3OrganizationsControllerGetM2mApplicationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerGetM2mApplications']>>>
+export type V3OrganizationsControllerCreateM2mApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerCreateM2mApplication']>>>
+export type V3OrganizationsControllerUpdateM2mApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerUpdateM2mApplication']>>>
+export type V3OrganizationsControllerDeleteM2mApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerDeleteM2mApplication']>>>
+export type NotificationsControllerGetNotificationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetNotifications']>>>
+export type NotificationsControllerGetNotificationByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetNotificationById']>>>
+export type NotificationsControllerUpdateNotificationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateNotification']>>>
+export type NotificationsControllerDeleteNotificationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerDeleteNotification']>>>
+export type NotificationsControllerMarkAllReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerMarkAllRead']>>>
+export type NotificationsControllerGetWorkspaceSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetWorkspaceSettings']>>>
+export type NotificationsControllerUpdateWorkspaceSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateWorkspaceSettings']>>>
+export type NotificationsControllerGetChannelSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetChannelSettings']>>>
+export type NotificationsControllerUpdateChannelSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateChannelSettings']>>>
 export type InvitationsControllerGetInvitationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerGetInvitations']>>>
 export type InvitationsControllerCreateInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerCreateInvitation']>>>
 export type InvitationsControllerGetInvitationByTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerGetInvitationByToken']>>>
 export type InvitationsControllerAcceptInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerAcceptInvitation']>>>
+export type IntegrationsControllerHandlePlaneWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerHandlePlaneWebhook']>>>
+export type IntegrationsControllerHandleHulyWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerHandleHulyWebhook']>>>
+export type IntegrationsControllerGetStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetStats']>>>
+export type IntegrationsControllerGetWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetWebhooks']>>>
+export type IntegrationsControllerCreateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerCreateWebhook']>>>
+export type IntegrationsControllerUpdateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerUpdateWebhook']>>>
+export type IntegrationsControllerDeleteWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerDeleteWebhook']>>>
+export type IntegrationsControllerGetWebhookLogsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetWebhookLogs']>>>
+export type IntegrationsControllerGetApiKeysResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerGetApiKeys']>>>
+export type IntegrationsControllerUpdateApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerUpdateApiKey']>>>
+export type IntegrationsControllerDeleteApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['integrationsControllerDeleteApiKey']>>>
+export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerGetWorkspaceIntegrations']>>>
+export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerCreateWorkspaceIntegration']>>>
+export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerGetWorkspaceIntegration']>>>
+export type WorkspaceIntegrationsControllerUpdateWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerUpdateWorkspaceIntegration']>>>
+export type WorkspaceIntegrationsControllerDeleteWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerDeleteWorkspaceIntegration']>>>
+export type WorkspaceIntegrationsControllerTestWorkspaceIntegrationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerTestWorkspaceIntegration']>>>
+export type WorkspaceIntegrationsControllerGetWorkspaceWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerGetWorkspaceWebhooks']>>>
+export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['workspaceIntegrationsControllerCreateWorkspaceWebhook']>>>
+export type AblyControllerGetTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['ablyControllerGetToken']>>>
+export type StorageControllerUploadFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['storageControllerUploadFile']>>>
+export type ShortUrlControllerRedirectResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['shortUrlControllerRedirect']>>>
 export type CallsControllerStartCallResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['callsControllerStartCall']>>>
 export type CallsControllerUpdateCallResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['callsControllerUpdateCall']>>>
 export type CallsControllerInviteToCallResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['callsControllerInviteToCall']>>>
@@ -5164,6 +4149,9 @@ export type ChannelsControllerGetWorkspaceChannelsResult = NonNullable<Awaited<R
 export type ChannelsControllerGetChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetChannel']>>>
 export type ChannelsControllerUpdateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerUpdateChannel']>>>
 export type ChannelsControllerDeleteChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerDeleteChannel']>>>
+export type ChannelsControllerGetChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetChannelMembers']>>>
+export type ChannelsControllerAddChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerAddChannelMembers']>>>
+export type ChannelsControllerRemoveChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerRemoveChannelMember']>>>
 export type DepartmentsControllerGetDepartmentsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['departmentsControllerGetDepartments']>>>
 export type DepartmentsControllerCreateDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['departmentsControllerCreateDepartment']>>>
 export type DepartmentsControllerGetDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['departmentsControllerGetDepartment']>>>

@@ -18,7 +18,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiProperty
 import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
-import { ProvisioningService } from '../v2/provisioning.service';
+import { ProvisioningService } from '../provisioning/provisioning.service';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
 import { IsString, IsOptional, IsEmail, IsArray, IsEnum } from 'class-validator';
