@@ -46,6 +46,50 @@
         ]
       }
     },
+    "/api/link-preview": {
+      "get": {
+        "operationId": "AppController_getLinkPreview",
+        "parameters": [
+          {
+            "name": "url",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get link preview metadata for a URL",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "UsersController_getUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of all users"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all users",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/api/users/search": {
       "get": {
         "operationId": "UsersController_searchUsers",
@@ -90,6 +134,24 @@
           }
         ],
         "summary": "Get current user profile",
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_patchMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user profile",
         "tags": [
           "Users"
         ]
@@ -141,6 +203,34 @@
           }
         ],
         "summary": "Get a user profile by ID",
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_patchUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The user ID or me",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update user profile by ID",
         "tags": [
           "Users"
         ]
@@ -232,6 +322,26 @@
           }
         ],
         "summary": "Unblock a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/users/me/status": {
+      "patch": {
+        "operationId": "UsersController_updateMyStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User status updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user status",
         "tags": [
           "Users"
         ]
@@ -330,3029 +440,6 @@
         "summary": "Deactivate a device token",
         "tags": [
           "Users"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/members": {
-      "get": {
-        "description": "Requires members:read scope.",
-        "operationId": "V2WorkspacesController_getMembers",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of members returned successfully."
-          },
-          "403": {
-            "description": "Forbidden: Missing scope."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all workspace members",
-        "tags": [
-          "Members"
-        ]
-      },
-      "post": {
-        "description": "Requires members:write scope.",
-        "operationId": "V2WorkspacesController_addMember",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddMemberDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Member added successfully."
-          },
-          "404": {
-            "description": "User not found."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Add a member to the workspace",
-        "tags": [
-          "Members"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/members/{userId}": {
-      "get": {
-        "description": "Requires members:read scope.",
-        "operationId": "V2WorkspacesController_getMember",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the user",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Member details returned successfully."
-          },
-          "404": {
-            "description": "Member not found."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific workspace member",
-        "tags": [
-          "Members"
-        ]
-      },
-      "delete": {
-        "description": "Requires members:write scope.",
-        "operationId": "V2WorkspacesController_removeMember",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the user",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Member removed successfully."
-          },
-          "400": {
-            "description": "Cannot remove workspace owner."
-          },
-          "404": {
-            "description": "Member not found."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Remove a member from the workspace",
-        "tags": [
-          "Members"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/channels": {
-      "get": {
-        "description": "Requires channels:read scope.",
-        "operationId": "V2MessagesController_getChannels",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of channels returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all channels in the workspace",
-        "tags": [
-          "Channels & Messages"
-        ]
-      },
-      "post": {
-        "description": "Requires channels:write scope.",
-        "operationId": "V2MessagesController_createChannel",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateChannelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Channel created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new channel",
-        "tags": [
-          "Channels & Messages"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/channels/{channelId}/icon": {
-      "post": {
-        "description": "Requires channels:write scope.",
-        "operationId": "V2MessagesController_uploadChannelIcon",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Icon uploaded successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upload a channel icon",
-        "tags": [
-          "Channels & Messages"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/channels/{channelId}": {
-      "get": {
-        "description": "Requires channels:read scope.",
-        "operationId": "V2MessagesController_getChannel",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Channel details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific channel",
-        "tags": [
-          "Channels & Messages"
-        ]
-      },
-      "patch": {
-        "description": "Requires channels:write scope.",
-        "operationId": "V2MessagesController_updateChannel",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateChannelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Channel updated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a channel",
-        "tags": [
-          "Channels & Messages"
-        ]
-      },
-      "delete": {
-        "description": "Requires channels:write scope.",
-        "operationId": "V2MessagesController_deleteChannel",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Channel deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a channel",
-        "tags": [
-          "Channels & Messages"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/messages": {
-      "get": {
-        "description": "Requires messages:read scope.",
-        "operationId": "V2MessagesController_getMessages",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "threadId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "contextId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "cursor",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of messages returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List messages in the workspace",
-        "tags": [
-          "Channels & Messages"
-        ]
-      },
-      "post": {
-        "description": "\nRequires messages:send scope. Supports multipart/form-data for file uploads.\n\n**M2M Behavior:**\n- If the request is made by an M2M application, the message is sent by the app's associated bot.\n- If no app bot exists, it falls back to the workspace's **Default Bot**.\n- You can include `actions` to create interactive buttons that trigger webhooks.\n    ",
-        "operationId": "V2MessagesController_sendMessage",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendMessageDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Message sent successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Send a message",
-        "tags": [
-          "Channels & Messages"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/search/members": {
-      "get": {
-        "description": "Requires members:read scope.",
-        "operationId": "V2SearchController_searchMembers",
-        "parameters": [
-          {
-            "name": "q",
-            "required": true,
-            "in": "query",
-            "description": "The search query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Search results returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Search for members in the workspace",
-        "tags": [
-          "Search"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/search/messages": {
-      "get": {
-        "description": "Requires messages:read scope.",
-        "operationId": "V2SearchController_searchMessages",
-        "parameters": [
-          {
-            "name": "q",
-            "required": true,
-            "in": "query",
-            "description": "The search query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "channelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Search results returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Search for messages in the workspace",
-        "tags": [
-          "Search"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/api-tokens": {
-      "get": {
-        "description": "Requires tokens:read scope.",
-        "operationId": "V2ApiTokensController_getTokens",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of tokens returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all API tokens in the workspace",
-        "tags": [
-          "API Tokens"
-        ]
-      },
-      "post": {
-        "description": "Requires tokens:write scope.",
-        "operationId": "V2ApiTokensController_createToken",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTokenDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Token created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new API token",
-        "tags": [
-          "API Tokens"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/api-tokens/{tokenId}": {
-      "delete": {
-        "description": "Requires tokens:write scope.",
-        "operationId": "V2ApiTokensController_deleteToken",
-        "parameters": [
-          {
-            "name": "tokenId",
-            "required": true,
-            "in": "path",
-            "description": "The token ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Token deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete an API token",
-        "tags": [
-          "API Tokens"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/api-tokens/{tokenId}/rotate": {
-      "post": {
-        "description": "Requires tokens:write scope.",
-        "operationId": "V2ApiTokensController_rotateToken",
-        "parameters": [
-          {
-            "name": "tokenId",
-            "required": true,
-            "in": "path",
-            "description": "The token ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Token rotated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Rotate an API token (generate new token value)",
-        "tags": [
-          "API Tokens"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/webhooks": {
-      "get": {
-        "description": "\nRequires webhooks:read scope.\nList all webhooks configured for this workspace.\n\n**Supported Events:**\n- `message.sent`: Triggered when a new message is sent.\n- `message.updated`: Triggered when a message is edited or updated by a callback.\n- `message.action`: Triggered when a user clicks an interactive button on a message.\n- `channel.created`: Triggered when a new channel is created.\n- `channel.updated`: Triggered when channel details change.\n- `member.joined`: Triggered when a new member joins the workspace.\n- `member.left`: Triggered when a member leaves the workspace.\n    ",
-        "operationId": "V2WebhooksController_getWebhooks",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of webhooks returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all webhooks in the workspace",
-        "tags": [
-          "Webhooks"
-        ]
-      },
-      "post": {
-        "description": "Requires webhooks:write scope.",
-        "operationId": "V2WebhooksController_createWebhook",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWebhookDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Webhook created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new webhook",
-        "tags": [
-          "Webhooks"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/webhooks/{webhookId}": {
-      "get": {
-        "description": "Requires webhooks:read scope.",
-        "operationId": "V2WebhooksController_getWebhook",
-        "parameters": [
-          {
-            "name": "webhookId",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Webhook details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific webhook",
-        "tags": [
-          "Webhooks"
-        ]
-      },
-      "patch": {
-        "description": "Requires webhooks:write scope.",
-        "operationId": "V2WebhooksController_updateWebhook",
-        "parameters": [
-          {
-            "name": "webhookId",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateWebhookDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Webhook updated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a webhook",
-        "tags": [
-          "Webhooks"
-        ]
-      },
-      "delete": {
-        "description": "Requires webhooks:write scope.",
-        "operationId": "V2WebhooksController_deleteWebhook",
-        "parameters": [
-          {
-            "name": "webhookId",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Webhook deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a webhook",
-        "tags": [
-          "Webhooks"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/threads": {
-      "get": {
-        "description": "Requires threads:read scope.",
-        "operationId": "V2ThreadsController_getThreads",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of threads returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all threads in the workspace",
-        "tags": [
-          "Threads"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/threads/{threadId}/messages": {
-      "get": {
-        "description": "Requires threads:read and messages:read scopes.",
-        "operationId": "V2ThreadsController_getThreadMessages",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "description": "The thread ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "cursor",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of messages returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List messages in a thread",
-        "tags": [
-          "Threads"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/threads/context/{contextId}": {
-      "get": {
-        "description": "Requires threads:read scope.",
-        "operationId": "V2ThreadsController_getThreadByContext",
-        "parameters": [
-          {
-            "name": "contextId",
-            "required": true,
-            "in": "path",
-            "description": "The custom context ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Thread details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get a thread by its context ID",
-        "tags": [
-          "Threads"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}": {
-      "post": {
-        "description": "\nTriggers a custom action associated with a message.\n\n**M2M Interactivity:**\nIf the message was sent by an M2M application, triggering an action will:\n1. Dispatch a **Callback** to the M2M application's configured `webhookUrl`.\n2. The callback includes the `formState` and `payload` provided in the request.\n3. The M2M application can respond to the callback to **update the message** content or metadata in real-time.\n    ",
-        "operationId": "V2MessageActionsController_handleAction",
-        "parameters": [
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "actionId",
-            "required": true,
-            "in": "path",
-            "description": "The custom action ID defined in the message",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": false,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "formState": {
-                    "type": "object",
-                    "additionalProperties": true
-                  },
-                  "payload": {
-                    "type": "object",
-                    "additionalProperties": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Action triggered successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Trigger a message action",
-        "tags": [
-          "Message Actions"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/departments": {
-      "get": {
-        "description": "Requires departments:read scope.",
-        "operationId": "V2DepartmentsController_getDepartments",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of departments returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all departments in the workspace",
-        "tags": [
-          "Departments"
-        ]
-      },
-      "post": {
-        "description": "Requires departments:write scope.",
-        "operationId": "V2DepartmentsController_createDepartment",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDepartmentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Department created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new department",
-        "tags": [
-          "Departments"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/departments/{departmentId}": {
-      "get": {
-        "description": "Requires departments:read scope.",
-        "operationId": "V2DepartmentsController_getDepartment",
-        "parameters": [
-          {
-            "name": "departmentId",
-            "required": true,
-            "in": "path",
-            "description": "The department ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Department details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific department",
-        "tags": [
-          "Departments"
-        ]
-      },
-      "patch": {
-        "description": "Requires departments:write scope.",
-        "operationId": "V2DepartmentsController_updateDepartment",
-        "parameters": [
-          {
-            "name": "departmentId",
-            "required": true,
-            "in": "path",
-            "description": "The department ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDepartmentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Department updated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a department",
-        "tags": [
-          "Departments"
-        ]
-      },
-      "delete": {
-        "description": "Requires departments:write scope.",
-        "operationId": "V2DepartmentsController_deleteDepartment",
-        "parameters": [
-          {
-            "name": "departmentId",
-            "required": true,
-            "in": "path",
-            "description": "The department ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Department deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a department",
-        "tags": [
-          "Departments"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/teams": {
-      "get": {
-        "description": "Requires teams:read scope.",
-        "operationId": "V2TeamsController_getTeams",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of teams returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all teams in the workspace",
-        "tags": [
-          "Teams"
-        ]
-      },
-      "post": {
-        "description": "Requires teams:write scope.",
-        "operationId": "V2TeamsController_createTeam",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTeamDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Team created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new team",
-        "tags": [
-          "Teams"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/teams/{teamId}": {
-      "get": {
-        "description": "Requires teams:read scope.",
-        "operationId": "V2TeamsController_getTeam",
-        "parameters": [
-          {
-            "name": "teamId",
-            "required": true,
-            "in": "path",
-            "description": "The team ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Team details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific team",
-        "tags": [
-          "Teams"
-        ]
-      },
-      "patch": {
-        "description": "Requires teams:write scope.",
-        "operationId": "V2TeamsController_updateTeam",
-        "parameters": [
-          {
-            "name": "teamId",
-            "required": true,
-            "in": "path",
-            "description": "The team ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTeamDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Team updated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a team",
-        "tags": [
-          "Teams"
-        ]
-      },
-      "delete": {
-        "description": "Requires teams:write scope.",
-        "operationId": "V2TeamsController_deleteTeam",
-        "parameters": [
-          {
-            "name": "teamId",
-            "required": true,
-            "in": "path",
-            "description": "The team ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Team deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a team",
-        "tags": [
-          "Teams"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/announcements": {
-      "get": {
-        "description": "Requires announcements:read scope.",
-        "operationId": "V2AnnouncementsController_getAnnouncements",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of announcements returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all announcements in the workspace",
-        "tags": [
-          "Announcements"
-        ]
-      },
-      "post": {
-        "description": "Requires announcements:write scope.",
-        "operationId": "V2AnnouncementsController_createAnnouncement",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAnnouncementDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Announcement created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new announcement",
-        "tags": [
-          "Announcements"
-        ]
-      }
-    },
-    "/api/v2/workspaces/{slug}/announcements/{announcementId}": {
-      "get": {
-        "description": "Requires announcements:read scope.",
-        "operationId": "V2AnnouncementsController_getAnnouncement",
-        "parameters": [
-          {
-            "name": "announcementId",
-            "required": true,
-            "in": "path",
-            "description": "The announcement ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Announcement details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific announcement",
-        "tags": [
-          "Announcements"
-        ]
-      },
-      "patch": {
-        "description": "Requires announcements:write scope.",
-        "operationId": "V2AnnouncementsController_updateAnnouncement",
-        "parameters": [
-          {
-            "name": "announcementId",
-            "required": true,
-            "in": "path",
-            "description": "The announcement ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAnnouncementDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Announcement updated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update an announcement",
-        "tags": [
-          "Announcements"
-        ]
-      },
-      "delete": {
-        "description": "Requires announcements:write scope.",
-        "operationId": "V2AnnouncementsController_deleteAnnouncement",
-        "parameters": [
-          {
-            "name": "announcementId",
-            "required": true,
-            "in": "path",
-            "description": "The announcement ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Announcement deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete an announcement",
-        "tags": [
-          "Announcements"
-        ]
-      }
-    },
-    "/api/v2/oauth/token": {
-      "post": {
-        "description": "\nUsed for bot, integration, and M2M authentication.\n\n**Scopes available:**\n- `*`: Full access (only for internal system bots).\n- `provisioning:workspaces`: Ability to create and manage workspaces.\n- `messages:read`: Read messages in allowed channels.\n- `messages:send`: Send messages and trigger actions.\n- `channels:read`: List and view channel details.\n- `channels:write`: Create and manage channels.\n- `webhooks:read`: View webhook configurations.\n- `webhooks:write`: Manage webhooks.\n    ",
-        "operationId": "V2OAuthController_getToken",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TokenRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Access token returned successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "access_token": {
-                      "type": "string",
-                      "example": "oat_..."
-                    },
-                    "token_type": {
-                      "type": "string",
-                      "example": "Bearer"
-                    },
-                    "expires_in": {
-                      "type": "integer",
-                      "example": 3600
-                    },
-                    "scope": {
-                      "type": "string",
-                      "example": "provisioning:workspaces messages:send"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid client credentials."
-          },
-          "403": {
-            "description": "IP not allowed or unauthorized scopes."
-          }
-        },
-        "summary": "Exchange client credentials for an access token",
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/api/v2/applications": {
-      "post": {
-        "description": "Requires an authenticated user or M2M app.",
-        "operationId": "V2ApplicationsController_createApplication",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateApplicationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Application created successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new bot application",
-        "tags": [
-          "Bot Applications"
-        ]
-      },
-      "get": {
-        "operationId": "V2ApplicationsController_getApplications",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of applications returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List all bot applications owned by the user or organization",
-        "tags": [
-          "Bot Applications"
-        ]
-      }
-    },
-    "/api/v2/applications/{id}": {
-      "get": {
-        "operationId": "V2ApplicationsController_getApplication",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The application ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Application details returned successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get details of a specific bot application",
-        "tags": [
-          "Bot Applications"
-        ]
-      },
-      "post": {
-        "operationId": "V2ApplicationsController_updateApplication",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The application ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateApplicationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Application updated successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a bot application",
-        "tags": [
-          "Bot Applications"
-        ]
-      }
-    },
-    "/api/v2/applications/{id}/delete": {
-      "post": {
-        "operationId": "V2ApplicationsController_deleteApplication",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The application ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Application deleted successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a bot application",
-        "tags": [
-          "Bot Applications"
-        ]
-      }
-    },
-    "/api/v2/applications/{id}/reset-token": {
-      "post": {
-        "operationId": "V2ApplicationsController_resetBotToken",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The application ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Token reset successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Reset the bot user token",
-        "tags": [
-          "Bot Applications"
-        ]
-      }
-    },
-    "/api/v2/applications/{id}/install": {
-      "post": {
-        "operationId": "V2ApplicationsController_installBot",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The application ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "workspaceId": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Bot installed successfully."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Install the bot into a workspace",
-        "tags": [
-          "Bot Applications"
-        ]
-      }
-    },
-    "/api/v2/contact": {
-      "post": {
-        "operationId": "V2ContactController_submitContactForm",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string"
-                  },
-                  "message": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Form submitted successfully."
-          }
-        },
-        "summary": "Submit a contact form",
-        "tags": [
-          "General"
-        ]
-      }
-    },
-    "/api/v2/provisioning/workspaces": {
-      "post": {
-        "description": "\nProvisions a new workspace within your organization.\nWhen provisioned via M2M:\n1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.\n2. Your M2M application is installed as an **Administrator** in the new workspace.\n3. The specified owner and initial members are added (must belong to the same organization).\n\nThe System Bot acts as the default sender for messages and announcements sent via M2M if no application-specific bot is configured.\n    ",
-        "operationId": "ProvisioningController_provisionWorkspace",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProvisionWorkspaceDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Workspace provisioned successfully."
-          },
-          "400": {
-            "description": "Invalid input or owner not found."
-          },
-          "403": {
-            "description": "Forbidden: Missing provisioning:workspaces scope."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Provision a new workspace (Enterprise M2M)",
-        "tags": [
-          "Provisioning"
-        ]
-      }
-    },
-    "/api/organizations/{orgSlug}/workspaces": {
-      "get": {
-        "operationId": "OrganizationsController_getOrganizationWorkspaces",
-        "parameters": [
-          {
-            "name": "orgSlug",
-            "required": true,
-            "in": "path",
-            "description": "The organization slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List workspaces for an organization",
-        "tags": [
-          "Organizations"
-        ]
-      }
-    },
-    "/api/organizations/{orgSlug}": {
-      "get": {
-        "operationId": "OrganizationsController_getOrganization",
-        "parameters": [
-          {
-            "name": "orgSlug",
-            "required": true,
-            "in": "path",
-            "description": "The organization slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get organization details",
-        "tags": [
-          "Organizations"
-        ]
-      },
-      "patch": {
-        "operationId": "OrganizationsController_updateOrganization",
-        "parameters": [
-          {
-            "name": "orgSlug",
-            "required": true,
-            "in": "path",
-            "description": "The organization slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateOrganizationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update organization details",
-        "tags": [
-          "Organizations"
-        ]
-      }
-    },
-    "/api/integrations/plane/webhook": {
-      "post": {
-        "operationId": "IntegrationsController_handlePlaneWebhook",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "summary": "Handle Plane webhook",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/huly/webhook/{id}": {
-      "post": {
-        "operationId": "IntegrationsController_handleHulyWebhook",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "summary": "Handle Huly webhook",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/stats": {
-      "get": {
-        "operationId": "IntegrationsController_getStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Integration statistics"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get integration statistics",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/webhooks": {
-      "get": {
-        "operationId": "IntegrationsController_getWebhooks",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of webhooks"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all integration webhooks",
-        "tags": [
-          "Integrations"
-        ]
-      },
-      "post": {
-        "operationId": "IntegrationsController_createWebhook",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateIntegrationWebhookDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Webhook created successfully"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create an integration webhook",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/webhooks/{webhookId}": {
-      "patch": {
-        "operationId": "IntegrationsController_updateWebhook",
-        "parameters": [
-          {
-            "name": "webhookId",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Webhook updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update an integration webhook",
-        "tags": [
-          "Integrations"
-        ]
-      },
-      "delete": {
-        "operationId": "IntegrationsController_deleteWebhook",
-        "parameters": [
-          {
-            "name": "webhookId",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Webhook deleted"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete an integration webhook",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/webhooks/{webhookId}/logs": {
-      "get": {
-        "operationId": "IntegrationsController_getWebhookLogs",
-        "parameters": [
-          {
-            "name": "webhookId",
-            "required": true,
-            "in": "path",
-            "description": "The webhook ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Webhook logs"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get integration webhook logs",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/api-keys": {
-      "get": {
-        "operationId": "IntegrationsController_getApiKeys",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of API keys"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all integration API keys",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/integrations/api-keys/{keyId}": {
-      "patch": {
-        "operationId": "IntegrationsController_updateApiKey",
-        "parameters": [
-          {
-            "name": "keyId",
-            "required": true,
-            "in": "path",
-            "description": "The key ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "API key updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update an integration API key",
-        "tags": [
-          "Integrations"
-        ]
-      },
-      "delete": {
-        "operationId": "IntegrationsController_deleteApiKey",
-        "parameters": [
-          {
-            "name": "keyId",
-            "required": true,
-            "in": "path",
-            "description": "The key ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "API key deleted"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete an integration API key",
-        "tags": [
-          "Integrations"
-        ]
-      }
-    },
-    "/api/workspaces/{slug}/integrations": {
-      "get": {
-        "operationId": "WorkspaceIntegrationsController_getWorkspaceIntegrations",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of integrations"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all integrations for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      },
-      "post": {
-        "operationId": "WorkspaceIntegrationsController_createWorkspaceIntegration",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateIntegrationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Integration created successfully"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a new integration for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      }
-    },
-    "/api/workspaces/{slug}/integrations/{integrationId}": {
-      "get": {
-        "operationId": "WorkspaceIntegrationsController_getWorkspaceIntegration",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "integrationId",
-            "required": true,
-            "in": "path",
-            "description": "The integration ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Integration details"
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get integration details",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      },
-      "patch": {
-        "operationId": "WorkspaceIntegrationsController_updateWorkspaceIntegration",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "integrationId",
-            "required": true,
-            "in": "path",
-            "description": "The integration ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Integration updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update an integration",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      },
-      "delete": {
-        "operationId": "WorkspaceIntegrationsController_deleteWorkspaceIntegration",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "integrationId",
-            "required": true,
-            "in": "path",
-            "description": "The integration ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Integration deleted"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete an integration",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      }
-    },
-    "/api/workspaces/{slug}/integrations/{integrationId}/test": {
-      "post": {
-        "operationId": "WorkspaceIntegrationsController_testWorkspaceIntegration",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "integrationId",
-            "required": true,
-            "in": "path",
-            "description": "The integration ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Test successful"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Test an integration",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      }
-    },
-    "/api/workspaces/{slug}/integrations/webhooks": {
-      "get": {
-        "operationId": "WorkspaceIntegrationsController_getWorkspaceWebhooks",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of webhooks"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all integration webhooks for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      },
-      "post": {
-        "operationId": "WorkspaceIntegrationsController_createWorkspaceWebhook",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "description": "The workspace slug",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateIntegrationWebhookDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Webhook created successfully"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create an integration webhook for a workspace",
-        "tags": [
-          "Workspace Integrations"
-        ]
-      }
-    },
-    "/api/notifications": {
-      "get": {
-        "operationId": "NotificationsController_getNotifications",
-        "parameters": [
-          {
-            "name": "unreadOnly",
-            "required": false,
-            "in": "query",
-            "description": "Filter by unread only",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Number of notifications to return",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of notifications"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get notifications for the current user",
-        "tags": [
-          "Notifications"
-        ]
-      }
-    },
-    "/api/notifications/mark-all-read": {
-      "post": {
-        "operationId": "NotificationsController_markAllRead",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": "All notifications marked as read"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Mark all notifications as read",
-        "tags": [
-          "Notifications"
-        ]
-      }
-    },
-    "/api/notifications/settings/workspace": {
-      "get": {
-        "operationId": "NotificationsController_getWorkspaceSettings",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "required": true,
-            "in": "query",
-            "description": "The workspace ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Workspace notification settings"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get notification settings for a workspace",
-        "tags": [
-          "Notifications"
-        ]
-      },
-      "patch": {
-        "operationId": "NotificationsController_updateWorkspaceSettings",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WorkspaceSettingsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Workspace notification settings updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update notification settings for a workspace",
-        "tags": [
-          "Notifications"
-        ]
-      }
-    },
-    "/api/notifications/settings/channel": {
-      "get": {
-        "operationId": "NotificationsController_getChannelSettings",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "query",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Channel notification settings"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get notification settings for a channel",
-        "tags": [
-          "Notifications"
-        ]
-      },
-      "patch": {
-        "operationId": "NotificationsController_updateChannelSettings",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChannelSettingsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Channel notification settings updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update notification settings for a channel",
-        "tags": [
-          "Notifications"
-        ]
-      }
-    },
-    "/api/notifications/{notificationId}": {
-      "patch": {
-        "operationId": "NotificationsController_updateNotification",
-        "parameters": [
-          {
-            "name": "notificationId",
-            "required": true,
-            "in": "path",
-            "description": "The notification ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateNotificationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Notification updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a notification (e.g. mark as read)",
-        "tags": [
-          "Notifications"
-        ]
-      },
-      "delete": {
-        "operationId": "NotificationsController_deleteNotification",
-        "parameters": [
-          {
-            "name": "notificationId",
-            "required": true,
-            "in": "path",
-            "description": "The notification ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Notification deleted"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a notification",
-        "tags": [
-          "Notifications"
-        ]
-      }
-    },
-    "/api/ably/token": {
-      "post": {
-        "operationId": "AblyController_getToken",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Ably"
-        ]
-      }
-    },
-    "/api/storage/upload": {
-      "post": {
-        "operationId": "StorageController_uploadFile",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Upload a file",
-        "tags": [
-          "Storage"
-        ]
-      }
-    },
-    "/s/{code}": {
-      "get": {
-        "operationId": "ShortUrlController_redirect",
-        "parameters": [
-          {
-            "name": "code",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Proxy file request using high-performance streaming",
-        "tags": [
-          "Storage"
         ]
       }
     },
@@ -5201,6 +2288,529 @@
         ]
       }
     },
+    "/api/v3/organizations/{orgSlug}/workspaces": {
+      "get": {
+        "operationId": "V3OrganizationsController_getOrganizationWorkspaces",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List workspaces for an organization",
+        "tags": [
+          "V3 Organizations"
+        ]
+      }
+    },
+    "/api/v3/organizations/{orgSlug}": {
+      "get": {
+        "operationId": "V3OrganizationsController_getOrganization",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get organization details",
+        "tags": [
+          "V3 Organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "V3OrganizationsController_updateOrganization",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateOrganizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update organization details",
+        "tags": [
+          "V3 Organizations"
+        ]
+      }
+    },
+    "/api/v3/organizations/{orgSlug}/m2m": {
+      "get": {
+        "operationId": "V3OrganizationsController_getM2mApplications",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List organization M2M applications",
+        "tags": [
+          "V3 Organizations"
+        ]
+      },
+      "post": {
+        "operationId": "V3OrganizationsController_createM2mApplication",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateM2mApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create organization M2M application credentials",
+        "tags": [
+          "V3 Organizations"
+        ]
+      }
+    },
+    "/api/v3/organizations/{orgSlug}/m2m/{id}": {
+      "patch": {
+        "operationId": "V3OrganizationsController_updateM2mApplication",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The M2M application/organization ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateM2mApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update organization M2M application credentials and scopes",
+        "tags": [
+          "V3 Organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "V3OrganizationsController_deleteM2mApplication",
+        "parameters": [
+          {
+            "name": "orgSlug",
+            "required": true,
+            "in": "path",
+            "description": "The organization slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The M2M application/organization ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete organization M2M application credentials",
+        "tags": [
+          "V3 Organizations"
+        ]
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "operationId": "NotificationsController_getNotifications",
+        "parameters": [
+          {
+            "name": "unreadOnly",
+            "required": false,
+            "in": "query",
+            "description": "Filter by unread only",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of notifications to return",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notifications"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notifications for the current user",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/notifications/{notificationId}": {
+      "get": {
+        "operationId": "NotificationsController_getNotificationById",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "description": "The notification ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification details"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single notification by ID",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "patch": {
+        "operationId": "NotificationsController_updateNotification",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "description": "The notification ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a notification (e.g. mark as read)",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "delete": {
+        "operationId": "NotificationsController_deleteNotification",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "description": "The notification ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a notification",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/notifications/mark-all-read": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "All notifications marked as read"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark all notifications as read",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/notifications/settings/workspace": {
+      "get": {
+        "operationId": "NotificationsController_getWorkspaceSettings",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "query",
+            "description": "The workspace ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace notification settings"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notification settings for a workspace",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "patch": {
+        "operationId": "NotificationsController_updateWorkspaceSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workspace notification settings updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update notification settings for a workspace",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/notifications/settings/channel": {
+      "get": {
+        "operationId": "NotificationsController_getChannelSettings",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "query",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel notification settings"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notification settings for a channel",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "patch": {
+        "operationId": "NotificationsController_updateChannelSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel notification settings updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update notification settings for a channel",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
     "/api/invitations": {
       "get": {
         "operationId": "InvitationsController_getInvitations",
@@ -5317,6 +2927,645 @@
         "summary": "Accept an invitation",
         "tags": [
           "Invitations"
+        ]
+      }
+    },
+    "/api/integrations/plane/webhook": {
+      "post": {
+        "operationId": "IntegrationsController_handlePlaneWebhook",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Handle Plane webhook",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/huly/webhook/{id}": {
+      "post": {
+        "operationId": "IntegrationsController_handleHulyWebhook",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Handle Huly webhook",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/stats": {
+      "get": {
+        "operationId": "IntegrationsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Integration statistics"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get integration statistics",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/webhooks": {
+      "get": {
+        "operationId": "IntegrationsController_getWebhooks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of webhooks"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integration webhooks",
+        "tags": [
+          "Integrations"
+        ]
+      },
+      "post": {
+        "operationId": "IntegrationsController_createWebhook",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an integration webhook",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/webhooks/{webhookId}": {
+      "patch": {
+        "operationId": "IntegrationsController_updateWebhook",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an integration webhook",
+        "tags": [
+          "Integrations"
+        ]
+      },
+      "delete": {
+        "operationId": "IntegrationsController_deleteWebhook",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an integration webhook",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/webhooks/{webhookId}/logs": {
+      "get": {
+        "operationId": "IntegrationsController_getWebhookLogs",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "description": "The webhook ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook logs"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get integration webhook logs",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/api-keys": {
+      "get": {
+        "operationId": "IntegrationsController_getApiKeys",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of API keys"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integration API keys",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/integrations/api-keys/{keyId}": {
+      "patch": {
+        "operationId": "IntegrationsController_updateApiKey",
+        "parameters": [
+          {
+            "name": "keyId",
+            "required": true,
+            "in": "path",
+            "description": "The key ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an integration API key",
+        "tags": [
+          "Integrations"
+        ]
+      },
+      "delete": {
+        "operationId": "IntegrationsController_deleteApiKey",
+        "parameters": [
+          {
+            "name": "keyId",
+            "required": true,
+            "in": "path",
+            "description": "The key ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an integration API key",
+        "tags": [
+          "Integrations"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/integrations": {
+      "get": {
+        "operationId": "WorkspaceIntegrationsController_getWorkspaceIntegrations",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of integrations"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integrations for a workspace",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      },
+      "post": {
+        "operationId": "WorkspaceIntegrationsController_createWorkspaceIntegration",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Integration created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new integration for a workspace",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/integrations/{integrationId}": {
+      "get": {
+        "operationId": "WorkspaceIntegrationsController_getWorkspaceIntegration",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The integration ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration details"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get integration details",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      },
+      "patch": {
+        "operationId": "WorkspaceIntegrationsController_updateWorkspaceIntegration",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The integration ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an integration",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      },
+      "delete": {
+        "operationId": "WorkspaceIntegrationsController_deleteWorkspaceIntegration",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The integration ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an integration",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/integrations/{integrationId}/test": {
+      "post": {
+        "operationId": "WorkspaceIntegrationsController_testWorkspaceIntegration",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The integration ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Test successful"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Test an integration",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/integrations/webhooks": {
+      "get": {
+        "operationId": "WorkspaceIntegrationsController_getWorkspaceWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhooks"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all integration webhooks for a workspace",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      },
+      "post": {
+        "operationId": "WorkspaceIntegrationsController_createWorkspaceWebhook",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an integration webhook for a workspace",
+        "tags": [
+          "Workspace Integrations"
+        ]
+      }
+    },
+    "/api/ably/token": {
+      "post": {
+        "operationId": "AblyController_getToken",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Ably"
+        ]
+      }
+    },
+    "/api/storage/upload": {
+      "post": {
+        "operationId": "StorageController_uploadFile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a file",
+        "tags": [
+          "Storage"
+        ]
+      }
+    },
+    "/s/{code}": {
+      "get": {
+        "operationId": "ShortUrlController_redirect",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Proxy file request using high-performance streaming",
+        "tags": [
+          "Storage"
         ]
       }
     },
@@ -5456,9 +3705,18 @@
         "parameters": [
           {
             "name": "workspaceId",
-            "required": true,
+            "required": false,
             "in": "query",
             "description": "The workspace ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceSlug",
+            "required": false,
+            "in": "query",
+            "description": "The workspace slug",
             "schema": {
               "type": "string"
             }
@@ -7431,6 +5689,130 @@
           }
         ],
         "summary": "Delete a channel",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/channels/{channelId}/members": {
+      "get": {
+        "operationId": "ChannelsController_getChannelMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of channel members"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get members of a channel",
+        "tags": [
+          "Channels"
+        ]
+      },
+      "post": {
+        "operationId": "ChannelsController_addChannelMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Members added to channel"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add members to a channel",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/channels/{channelId}/members/{targetUserId}": {
+      "delete": {
+        "operationId": "ChannelsController_removeChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetUserId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID to remove",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed from channel"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a member from a channel",
         "tags": [
           "Channels"
         ]
@@ -9537,799 +7919,6 @@
       }
     },
     "schemas": {
-      "AddMemberDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "example": "user@example.com",
-            "description": "The email of the user to add"
-          },
-          "role": {
-            "type": "string",
-            "example": "member",
-            "description": "The role of the member",
-            "default": "member"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "CreateChannelDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "general"
-          },
-          "icon": {
-            "type": "string",
-            "example": "Hash",
-            "default": "Hash"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ],
-            "default": "public"
-          },
-          "description": {
-            "type": "string"
-          },
-          "metadata": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "UpdateChannelDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ]
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "SendMessageDto": {
-        "type": "object",
-        "properties": {
-          "channelId": {
-            "type": "string",
-            "description": "Required if recipientId is not provided"
-          },
-          "recipientId": {
-            "type": "string",
-            "description": "Required if channelId is not provided"
-          },
-          "content": {
-            "type": "string",
-            "example": "Hello world!"
-          },
-          "threadId": {
-            "type": "string"
-          },
-          "contextId": {
-            "type": "string"
-          },
-          "messageType": {
-            "type": "string",
-            "default": "standard"
-          },
-          "metadata": {
-            "type": "object"
-          },
-          "actions": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          },
-          "attachments": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        },
-        "required": [
-          "content"
-        ]
-      },
-      "CreateTokenDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "My App Token"
-          },
-          "permissions": {
-            "type": "object",
-            "properties": {
-              "actions": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "enum": [
-                    "read:members",
-                    "write:members",
-                    "read:departments",
-                    "write:departments",
-                    "read:teams",
-                    "write:teams",
-                    "read:announcements",
-                    "write:announcements",
-                    "read:channels",
-                    "write:channels",
-                    "send:messages",
-                    "read:messages",
-                    "read:threads",
-                    "read:webhooks",
-                    "write:webhooks",
-                    "read:tokens",
-                    "write:tokens"
-                  ]
-                }
-              }
-            }
-          },
-          "rateLimit": {
-            "type": "number",
-            "default": 1000
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "ISO string date"
-          }
-        },
-        "required": [
-          "name",
-          "permissions"
-        ]
-      },
-      "CreateWebhookDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "My Webhook"
-          },
-          "url": {
-            "type": "string",
-            "example": "https://example.com/webhook"
-          },
-          "events": {
-            "example": [
-              "message.sent",
-              "channel.created"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "active": {
-            "type": "boolean",
-            "default": true
-          }
-        },
-        "required": [
-          "name",
-          "url",
-          "events"
-        ]
-      },
-      "UpdateWebhookDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "active": {
-            "type": "boolean"
-          }
-        }
-      },
-      "CreateDepartmentDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Product"
-          },
-          "slug": {
-            "type": "string",
-            "example": "product"
-          },
-          "description": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string"
-          },
-          "parentId": {
-            "type": "string"
-          },
-          "managerId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "slug"
-        ]
-      },
-      "UpdateDepartmentDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string"
-          },
-          "parentId": {
-            "type": "string"
-          },
-          "managerId": {
-            "type": "string"
-          }
-        }
-      },
-      "CreateTeamDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Engineering"
-          },
-          "slug": {
-            "type": "string",
-            "example": "engineering"
-          },
-          "description": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string"
-          },
-          "departmentId": {
-            "type": "string"
-          },
-          "leadId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "slug"
-        ]
-      },
-      "UpdateTeamDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string"
-          },
-          "departmentId": {
-            "type": "string"
-          },
-          "leadId": {
-            "type": "string"
-          }
-        }
-      },
-      "CreateAnnouncementDto": {
-        "type": "object",
-        "properties": {
-          "departmentId": {
-            "type": "string",
-            "example": "dept_123"
-          },
-          "title": {
-            "type": "string",
-            "example": "New Policy"
-          },
-          "content": {
-            "type": "string",
-            "example": "The new policy is..."
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ],
-            "default": "normal"
-          },
-          "pinned": {
-            "type": "boolean",
-            "default": false
-          },
-          "publishAt": {
-            "type": "string",
-            "description": "ISO string date"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "ISO string date"
-          },
-          "targetAudience": {
-            "type": "object"
-          },
-          "attachments": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        },
-        "required": [
-          "departmentId",
-          "title",
-          "content"
-        ]
-      },
-      "UpdateAnnouncementDto": {
-        "type": "object",
-        "properties": {
-          "departmentId": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ]
-          },
-          "pinned": {
-            "type": "boolean"
-          },
-          "publishAt": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string"
-          },
-          "targetAudience": {
-            "type": "object"
-          },
-          "attachments": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        }
-      },
-      "TokenRequestDto": {
-        "type": "object",
-        "properties": {
-          "grant_type": {
-            "type": "string",
-            "example": "client_credentials",
-            "enum": [
-              "client_credentials"
-            ]
-          },
-          "client_id": {
-            "type": "string",
-            "example": "your_client_id"
-          },
-          "client_secret": {
-            "type": "string",
-            "example": "your_client_secret"
-          },
-          "scope": {
-            "type": "string",
-            "example": "provisioning:workspaces"
-          }
-        },
-        "required": [
-          "grant_type",
-          "client_id",
-          "client_secret"
-        ]
-      },
-      "CreateApplicationDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "My Bot"
-          },
-          "description": {
-            "type": "string"
-          },
-          "workspaceId": {
-            "type": "string",
-            "description": "Optional workspace ID to link the bot to"
-          },
-          "organizationId": {
-            "type": "string"
-          },
-          "scopes": {
-            "example": [
-              "*"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "allowedIps": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "webhookUrl": {
-            "type": "string"
-          },
-          "webhookSecret": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "UpdateApplicationDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "channelDefinitions": {
-            "type": "object"
-          },
-          "scopes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "allowedIps": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "webhookUrl": {
-            "type": "string"
-          },
-          "webhookSecret": {
-            "type": "string"
-          }
-        }
-      },
-      "ProvisionWorkspaceDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Acme Corp",
-            "description": "The display name of the workspace"
-          },
-          "slug": {
-            "type": "string",
-            "example": "acme-corp",
-            "description": "Unique slug for the workspace URL"
-          },
-          "ownerEmail": {
-            "type": "string",
-            "example": "admin@acme.com",
-            "description": "The email of the workspace owner. Must exist in the organization."
-          },
-          "industry": {
-            "type": "string",
-            "example": "Technology"
-          },
-          "description": {
-            "type": "string",
-            "example": "Primary workspace for Acme Corp teams"
-          },
-          "icon": {
-            "type": "string",
-            "example": "building",
-            "description": "Icon identifier"
-          },
-          "brandingConfig": {
-            "type": "object",
-            "description": "Custom branding configuration"
-          },
-          "channels": {
-            "example": [
-              "general",
-              "engineering"
-            ],
-            "description": "Initial channels to create",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "initialMembers": {
-            "type": "array",
-            "description": "Initial members to add to the workspace",
-            "items": {
-              "type": "object",
-              "properties": {
-                "email": {
-                  "type": "string",
-                  "example": "user@acme.com"
-                },
-                "role": {
-                  "type": "string",
-                  "example": "member",
-                  "enum": [
-                    "admin",
-                    "member"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "required": [
-          "name",
-          "slug",
-          "ownerEmail"
-        ]
-      },
-      "UpdateOrganizationDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Updated Organization Name"
-          },
-          "logo": {
-            "type": "string",
-            "example": "https://example.com/logo.png"
-          },
-          "banner": {
-            "type": "string",
-            "example": "https://example.com/banner.png"
-          }
-        }
-      },
-      "CreateIntegrationWebhookDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "My Integration Webhook"
-          },
-          "url": {
-            "type": "string",
-            "example": "https://example.com/webhook"
-          },
-          "events": {
-            "example": [
-              "event.name"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "name",
-          "url",
-          "events"
-        ]
-      },
-      "CreateIntegrationDto": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "enum": [
-              "slack",
-              "github",
-              "gitlab",
-              "jira",
-              "linear",
-              "notion",
-              "figma",
-              "discord",
-              "teams",
-              "zapier",
-              "make",
-              "custom",
-              "huly"
-            ],
-            "example": "github"
-          },
-          "name": {
-            "type": "string",
-            "example": "My GitHub Integration"
-          },
-          "config": {
-            "type": "object",
-            "properties": {
-              "webhookUrl": {
-                "type": "string"
-              },
-              "hulyUrl": {
-                "type": "string"
-              },
-              "apiKey": {
-                "type": "string"
-              },
-              "accessToken": {
-                "type": "string"
-              },
-              "refreshToken": {
-                "type": "string"
-              },
-              "channelId": {
-                "type": "string"
-              },
-              "repositoryId": {
-                "type": "string"
-              },
-              "projectId": {
-                "type": "string"
-              },
-              "teamId": {
-                "type": "string"
-              },
-              "scopes": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "customHeaders": {
-                "type": "object",
-                "additionalProperties": true
-              },
-              "events": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "description": {
-            "type": "string",
-            "example": "Integration with GitHub"
-          }
-        },
-        "required": [
-          "service",
-          "name",
-          "config"
-        ]
-      },
-      "WorkspaceSettingsDto": {
-        "type": "object",
-        "properties": {
-          "workspaceId": {
-            "type": "string",
-            "example": "workspace_123"
-          },
-          "preference": {
-            "type": "string",
-            "enum": [
-              "all",
-              "mentions",
-              "none"
-            ],
-            "example": "all"
-          }
-        },
-        "required": [
-          "workspaceId",
-          "preference"
-        ]
-      },
-      "ChannelSettingsDto": {
-        "type": "object",
-        "properties": {
-          "channelId": {
-            "type": "string",
-            "example": "channel_123"
-          },
-          "preference": {
-            "type": "string",
-            "enum": [
-              "all",
-              "mentions",
-              "none",
-              "default"
-            ],
-            "example": "all"
-          }
-        },
-        "required": [
-          "channelId",
-          "preference"
-        ]
-      },
-      "UpdateNotificationDto": {
-        "type": "object",
-        "properties": {
-          "isRead": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "isRead"
-        ]
-      },
       "V3TokenRequestDto": {
         "type": "object",
         "properties": {
@@ -10622,6 +8211,138 @@
           "content"
         ]
       },
+      "V3UpdateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Organization Name"
+          },
+          "logo": {
+            "type": "string",
+            "example": "https://example.com/logo.png"
+          },
+          "banner": {
+            "type": "string",
+            "example": "https://example.com/banner.png"
+          }
+        }
+      },
+      "V3CreateM2mApplicationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "CI/CD Pipeline"
+          },
+          "scopes": {
+            "example": [
+              "provisioning:workspaces"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedIps": {
+            "example": [
+              "192.168.1.1"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "V3UpdateM2mApplicationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "CI/CD Pipeline Updated"
+          },
+          "scopes": {
+            "example": [
+              "provisioning:workspaces",
+              "messages:send"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedIps": {
+            "example": [
+              "192.168.1.1"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WorkspaceSettingsDto": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "example": "workspace_123"
+          },
+          "preference": {
+            "type": "string",
+            "enum": [
+              "all",
+              "mentions",
+              "none"
+            ],
+            "example": "all"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "preference"
+        ]
+      },
+      "ChannelSettingsDto": {
+        "type": "object",
+        "properties": {
+          "channelId": {
+            "type": "string",
+            "example": "channel_123"
+          },
+          "preference": {
+            "type": "string",
+            "enum": [
+              "all",
+              "mentions",
+              "none",
+              "default"
+            ],
+            "example": "all"
+          }
+        },
+        "required": [
+          "channelId",
+          "preference"
+        ]
+      },
+      "UpdateNotificationDto": {
+        "type": "object",
+        "properties": {
+          "isRead": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "isRead"
+        ]
+      },
       "CreateInvitationDto": {
         "type": "object",
         "properties": {
@@ -10647,6 +8368,118 @@
         },
         "required": [
           "email"
+        ]
+      },
+      "CreateIntegrationWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Integration Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "event.name"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "events"
+        ]
+      },
+      "CreateIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "enum": [
+              "slack",
+              "github",
+              "gitlab",
+              "jira",
+              "linear",
+              "notion",
+              "figma",
+              "discord",
+              "teams",
+              "zapier",
+              "make",
+              "custom",
+              "huly"
+            ],
+            "example": "github"
+          },
+          "name": {
+            "type": "string",
+            "example": "My GitHub Integration"
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "webhookUrl": {
+                "type": "string"
+              },
+              "hulyUrl": {
+                "type": "string"
+              },
+              "apiKey": {
+                "type": "string"
+              },
+              "accessToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              },
+              "channelId": {
+                "type": "string"
+              },
+              "repositoryId": {
+                "type": "string"
+              },
+              "projectId": {
+                "type": "string"
+              },
+              "teamId": {
+                "type": "string"
+              },
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "customHeaders": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": {
+            "type": "string",
+            "example": "Integration with GitHub"
+          }
+        },
+        "required": [
+          "service",
+          "name",
+          "config"
         ]
       },
       "StartCallDto": {
@@ -10791,6 +8624,10 @@
           "icon": {
             "type": "string",
             "example": "https://example.com/new-icon.png"
+          },
+          "banner": {
+            "type": "string",
+            "example": "https://example.com/banner.png"
           },
           "description": {
             "type": "string",

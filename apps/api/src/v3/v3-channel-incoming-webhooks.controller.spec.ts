@@ -6,7 +6,7 @@ import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import * as sharedServer from '@repo/shared/server';
-import { V2WebhooksService } from '../v2/v2-webhooks.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 vi.mock('@repo/database', () => ({
   prisma: {
@@ -58,7 +58,7 @@ describe('V3ChannelIncomingWebhooksController', () => {
       providers: [
         { provide: ConfigService, useValue: {} },
         { provide: 'REDIS_CLIENT', useValue: {} },
-        { provide: V2WebhooksService, useValue: mockWebhooksService },
+        { provide: WebhooksService, useValue: mockWebhooksService },
         ApiV3Guard,
       ],
     }).compile();

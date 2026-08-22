@@ -26,7 +26,7 @@ import { z } from 'zod';
 import * as crypto from 'crypto';
 import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
 import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
-import { V2WebhooksService } from '../v2/v2-webhooks.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 export class CreateChannelIncomingWebhookDto {
   @IsString()
@@ -122,7 +122,7 @@ const executeWebhookSchema = z.object({
 export class V3ChannelIncomingWebhooksController {
   private readonly logger = new Logger(V3ChannelIncomingWebhooksController.name);
 
-  constructor(private readonly webhooksService: V2WebhooksService) {}
+  constructor(private readonly webhooksService: WebhooksService) {}
 
   private formatResponse<T>(data: T) {
     return {
