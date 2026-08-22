@@ -144,6 +144,24 @@ describe('DeviceAuthController', () => {
       expect(result).toEqual({ status: 'expired' });
     });
 
+    it("should return status 'expired' on invalid_grant error", async () => {
+      mockDeviceToken.mockRejectedValue({
+        body: { error: 'invalid_grant', error_description: 'Invalid device code' },
+      });
+
+      const result = await controller.checkStatus('my-device-code');
+      expect(result).toEqual({ status: 'expired' });
+    });
+
+    it("should return status 'expired' on invalid_request error", async () => {
+      mockDeviceToken.mockRejectedValue({
+        body: { error: 'invalid_request', error_description: 'Invalid request' },
+      });
+
+      const result = await controller.checkStatus('my-device-code');
+      expect(result).toEqual({ status: 'expired' });
+    });
+
     it('should throw BadRequestException on unknown errors', async () => {
       mockDeviceToken.mockRejectedValue({
         error: 'invalid_client',

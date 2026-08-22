@@ -150,6 +150,8 @@ export class DeviceAuthController {
         case 'access_denied':
           return { status: 'denied' };
         case 'expired_token':
+        case 'invalid_grant':
+        case 'invalid_request':
           return { status: 'expired' };
         default:
           throw new BadRequestException(error?.body?.error_description ?? 'Invalid or unknown device code');
