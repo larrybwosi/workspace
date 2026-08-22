@@ -82,6 +82,7 @@ const SLUG_TO_TAGS_MAP: Record<string, string[]> = {
   workspaces: ['V3 Workspaces'],
   webhooks: ['V3 Webhooks'],
   'incoming-webhooks': ['V3 Channel Incoming Webhooks'],
+  organizations: ['V3 Organizations'],
 };
 
 interface DocPageProps {

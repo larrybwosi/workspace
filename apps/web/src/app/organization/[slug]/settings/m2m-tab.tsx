@@ -430,7 +430,7 @@ export function M2mTab({ orgSlug }: { orgSlug: string }) {
               Send a <code className="font-mono text-xs">POST</code> request to the token endpoint:
             </p>
             <pre className="overflow-x-auto rounded-md bg-zinc-950 p-3 font-mono text-[11px] leading-relaxed text-zinc-100">
-{`curl -X POST /api/v2/oauth/token \\
+{`curl -X POST /api/v3/oauth/token \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
   -d "client_secret=YOUR_CLIENT_SECRET"`}

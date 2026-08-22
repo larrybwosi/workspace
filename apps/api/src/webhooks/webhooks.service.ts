@@ -12,7 +12,7 @@ export interface WebhookEvent {
 }
 
 @Injectable()
-export class V2WebhooksService {
+export class WebhooksService {
   /**
    * Dispatch a webhook event to all registered endpoints for a workspace
    */
