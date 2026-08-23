@@ -18,6 +18,12 @@ export class WebhooksService {
    */
   async dispatch(workspaceId: string, eventType: string, data: any) {
     try {
+      /**
+       * ⚡ Performance Optimization:
+       * Uses `select: { id: true, url: true, secret: true }` to retrieve only the fields required for signature generation
+       * and HTTP dispatching. Avoids over-fetching unused columns (`workspaceId`, `name`, `events`, `active`, `createdAt`, `updatedAt`)
+       * across active webhooks when dispatching events.
+       */
       const webhooks = await prisma.workspaceWebhook.findMany({
         where: {
           workspaceId,
@@ -25,6 +31,11 @@ export class WebhooksService {
           events: {
             has: eventType,
           },
+        },
+        select: {
+          id: true,
+          url: true,
+          secret: true,
         },
       });
 
