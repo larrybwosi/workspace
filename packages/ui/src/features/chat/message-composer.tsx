@@ -72,12 +72,12 @@ export function MessageComposer({
   // Mention items preparation
   const mentionItems = useMemo((): MentionItem[] => {
     if (mentionType === 'user') {
-      const workspaceMembers = (membersData.members || []).map((m: any) => ({
-        id: m.user.id,
-        name: m.user.name,
+      const workspaceMembers = (membersData?.members || []).map((m: any) => ({
+        id: m.user?.id || m.userId,
+        name: m.user?.name || 'Unknown',
         type: 'user' as const,
-        image: m.user.image || m.user.avatar,
-        description: m.role || m.user.role,
+        image: m.user?.image || m.user?.avatar,
+        description: m.role || m.user?.role,
       }));
 
       let filteredMembers = workspaceMembers;
