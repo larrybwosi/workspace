@@ -1,3 +1,9 @@
+## 2026-08-23 - [Prisma/Performance] Batch Pre-fetching Badge Assignments to Eliminate N+1 Asset Eligibility Queries
+
+**Learning:** `AssetsService.getEligibleAssets` previously executed sequential database queries inside asset filtering loops to check `userBadgeAssignment` eligibility per asset, causing an N+1 query bottleneck. Pre-fetching user badge assignments (`select: { badgeId: true }`) into a `Set<string>` and fetching active assets alongside user profile details in a single `Promise.all` call reduces database round-trips from (2 + N) to 1 while enabling O(1) in-memory badge eligibility verification.
+
+**Action:** Pre-fetch user relation attributes (like badges or permissions) into Set data structures when evaluating rule eligibility over collections to eliminate N+1 database round-trips.
+
 ## 2026-08-22 - [Prisma/Performance] Targeted Selection in Event Webhook Dispatching
 
 **Learning:** `WebhooksService.dispatch` previously retrieved full `WorkspaceWebhook` records when querying active webhooks for event broadcasting. Since event payload signing and HTTP dispatching only require `id`, `url`, and `secret`, adding `select: { id: true, url: true, secret: true }` avoids over-fetching unused scalar columns (`workspaceId`, `name`, `events`, `active`, `createdAt`, `updatedAt`) across all target webhooks.
