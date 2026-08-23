@@ -337,7 +337,7 @@ fun ProfileHeaderSection(user: UserEntity?, palette: ProfilePalette) {
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(start = 20.dp)
+                .padding(start = 128.dp, end = 16.dp)
                 .padding(top = 148.dp + 8.dp)
         ) {
             val displayName = user?.name?.takeIf { it.isNotBlank() } ?: user?.username ?: "User"
