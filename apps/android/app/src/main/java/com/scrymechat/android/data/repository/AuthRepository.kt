@@ -129,7 +129,12 @@ class AuthRepository @Inject constructor(
 
     suspend fun authorizeQR(sessionId: String): Result<Unit> {
         return try {
-            val response = authApi.authorizeQR(com.scrymechat.android.data.remote.QRAuthorizeRequest(sessionId))
+            val response = authApi.authorizeQR(
+                com.scrymechat.android.data.remote.QRAuthorizeRequest(
+                    userCode = sessionId,
+                    sessionId = sessionId
+                )
+            )
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
