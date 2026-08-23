@@ -25,10 +25,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
-    this.logger.error(
-      `${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`,
-      exception instanceof Error ? exception.stack : undefined
-    );
+    if (status === HttpStatus.NOT_FOUND) {
+      this.logger.warn(`${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`);
+    } else {
+      this.logger.error(
+        `${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`,
+        exception instanceof Error ? exception.stack : undefined
+      );
+    }
 
     const payload = {
       statusCode: status,
