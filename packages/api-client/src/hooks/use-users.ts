@@ -64,12 +64,15 @@ export function useUpdateUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<User> & { id: string }) => {
+    mutationFn: async ({ id = 'me', ...updates }: Partial<User> & { id?: string }) => {
       const { data } = await apiClient.patch<User>(`/users/${id}`, updates);
       return data;
     },
     onSuccess: data => {
-      queryClient.invalidateQueries({ queryKey: userKeys.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: userKeys.current() });
+      if (data?.id) {
+        queryClient.invalidateQueries({ queryKey: userKeys.detail(data.id) });
+      }
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
   });
