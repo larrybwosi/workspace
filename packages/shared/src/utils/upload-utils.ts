@@ -120,14 +120,28 @@ export function formatFileSize(bytes: number): string {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
+export function getDocumentIconPath(fileNameOrType: string): string {
+  const str = fileNameOrType.toLowerCase();
+  const ext = str.includes('.') ? str.split('.').pop() || '' : str;
+
+  if (ext === 'pdf' || str.includes('pdf')) return '/pdf.svg';
+  if (['doc', 'docx', 'odt', 'rtf'].includes(ext) || str.includes('word') || str.includes('document')) return '/word.svg';
+  if (['xls', 'xlsx', 'ods', 'csv'].includes(ext) || str.includes('excel') || str.includes('spreadsheet')) return '/xls.svg';
+  if (['ppt', 'pptx', 'odp'].includes(ext) || str.includes('powerpoint') || str.includes('presentation')) return '/ppt.svg';
+  if (['psd'].includes(ext) || str.includes('photoshop')) return '/psd.svg';
+  if (['xd'].includes(ext)) return '/xd.svg';
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext) || str.includes('zip') || str.includes('compressed') || str.includes('archive')) return '/archive.svg';
+  if (['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'json', 'py', 'java', 'c', 'cpp', 'cs', 'go', 'rs', 'php', 'rb', 'sql', 'sh', 'xml', 'yaml', 'yml'].includes(ext) || str.includes('json') || str.includes('javascript') || str.includes('typescript')) return '/code.svg';
+  if (['txt', 'md', 'log'].includes(ext) || str.includes('text/plain')) return '/text.svg';
+
+  return `/${ext}.svg`;
+}
+
 export function getFileIcon(type: string): string {
   if (type.startsWith('image/')) return '🖼️';
   if (type.startsWith('video/')) return '🎥';
   if (type.startsWith('audio/')) return '🎵';
-  if (type.includes('pdf')) return '/pdf.svg';
-  if (type.includes('word') || type.includes('document')) return '/word.svg';
-  if (type.includes('excel') || type.includes('spreadsheet')) return '/xls.svg';
-  if (type.includes('powerpoint') || type.includes('presentation')) return '/ppt.svg';
-  if (type.includes('zip') || type.includes('rar')) return '🗜️';
+  const docIcon = getDocumentIconPath(type);
+  if (docIcon.startsWith('/')) return docIcon;
   return '📎';
 }
