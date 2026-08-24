@@ -228,6 +228,8 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    private val typingJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+
     private fun observeTypingStatus() {
         viewModelScope.launch {
             realtimeRepository.observeTyping().collect { event ->
@@ -242,12 +244,15 @@ class ChatViewModel @Inject constructor(
                         val newList = (state.typingUsers + event.userName).distinct()
                         state.copy(typingUsers = newList)
                     }
-                    // Remove after 3 seconds
-                    viewModelScope.launch {
+
+                    // Cancel any existing timeout job for this user and schedule a new 3-second delay
+                    typingJobs[event.userName]?.cancel()
+                    typingJobs[event.userName] = viewModelScope.launch {
                         kotlinx.coroutines.delay(3000)
                         _uiState.update { state ->
                             state.copy(typingUsers = state.typingUsers - event.userName)
                         }
+                        typingJobs.remove(event.userName)
                     }
                 }
             }

@@ -370,10 +370,24 @@ export class DmsService {
     // Notify the other participant
     const recipientId = dm.participant1Id === userId ? dm.participant2Id : dm.participant1Id;
     if (recipientId) {
+      publishRealtime(AblyChannels.user(recipientId), AblyEvents.DM_RECEIVED, {
+        dmId,
+        from: formattedMessage.user?.name || 'Someone',
+        message: formattedMessage,
+      }).catch(err => this.logger.error('Failed to publish DM received event:', err));
+
+      publishRealtime(AblyChannels.user(recipientId), 'message:new', formattedMessage).catch(err =>
+        this.logger.error('Failed to publish DM message:new to recipient:', err)
+      );
+
       this.notificationsService
         .notifyDM(dmId, userId, formattedMessage.user?.name || 'Someone', recipientId, formattedMessage.id, content)
         .catch(err => this.logger.error('Failed to send DM notification:', err));
     }
+
+    publishRealtime(AblyChannels.user(userId), 'message:new', formattedMessage).catch(err =>
+      this.logger.error('Failed to publish DM message:new to sender:', err)
+    );
 
     return formattedMessage;
   }
