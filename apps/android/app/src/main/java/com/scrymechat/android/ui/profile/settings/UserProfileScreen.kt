@@ -2,6 +2,7 @@ package com.scrymechat.android.ui.profile.settings
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,7 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +35,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+enum class ImagePickerType { AVATAR, BANNER }
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     onBack: () -> Unit,
@@ -46,9 +51,16 @@ fun UserProfileScreen(
 
     var name by remember(user) { mutableStateOf(user?.name ?: "") }
     var username by remember(user) { mutableStateOf(user?.username ?: "") }
+    var statusEmoji by remember(user) { mutableStateOf(user?.statusEmoji ?: "") }
     var statusText by remember(user) { mutableStateOf(user?.statusText ?: "") }
+    var bio by remember(user) { mutableStateOf(user?.bio ?: "") }
+    var jobTitle by remember(user) { mutableStateOf(user?.jobTitle ?: "") }
+    var department by remember(user) { mutableStateOf(user?.department ?: "") }
+    var officeLocation by remember(user) { mutableStateOf(user?.officeLocation ?: "") }
     var github by remember(user) { mutableStateOf(user?.github ?: "") }
     var slack by remember(user) { mutableStateOf(user?.slack ?: "") }
+
+    var activeImagePickerType by remember { mutableStateOf<ImagePickerType?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.errorEvents.collect { error ->
@@ -56,12 +68,17 @@ fun UserProfileScreen(
         }
     }
 
-    val avatarLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { viewModel.setPendingAvatar(it) }
-    }
-
-    val bannerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { viewModel.setPendingBanner(it) }
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let {
+            when (activeImagePickerType) {
+                ImagePickerType.AVATAR -> viewModel.setPendingAvatar(it)
+                ImagePickerType.BANNER -> viewModel.setPendingBanner(it)
+                null -> {}
+            }
+        }
+        activeImagePickerType = null
     }
 
     Scaffold(
@@ -97,7 +114,7 @@ fun UserProfileScreen(
                             .fillMaxWidth()
                             .height(120.dp)
                             .background(if (user?.banner == null && uiState.pendingBannerUri == null) palette.accent.copy(alpha = 0.12f) else Color.Transparent)
-                            .clickable { bannerLauncher.launch("image/*") }
+                            .clickable { activeImagePickerType = ImagePickerType.BANNER }
                     ) {
                         val bannerModel = uiState.pendingBannerUri ?: user?.banner
                         if (bannerModel != null) {
@@ -125,11 +142,12 @@ fun UserProfileScreen(
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Column {
                             Spacer(modifier = Modifier.height(44.dp)) // space for overlapping avatar
-                            Text(name, color = palette.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+                            Text(name.ifEmpty { "User" }, color = palette.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
                             Text("@$username", color = palette.textSecondary, fontSize = 14.sp)
-                            if (statusText.isNotEmpty()) {
+                            val statusDisplay = listOfNotNull(statusEmoji.takeIf { it.isNotBlank() }, statusText.takeIf { it.isNotBlank() }).joinToString(" ")
+                            if (statusDisplay.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(statusText, color = palette.textPrimary, fontSize = 15.sp)
+                                Text(statusDisplay, color = palette.textPrimary, fontSize = 15.sp)
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -143,7 +161,7 @@ fun UserProfileScreen(
                                 .background(palette.cardSurface)
                                 .padding(4.dp)
                                 .clip(CircleShape)
-                                .clickable { avatarLauncher.launch("image/*") }
+                                .clickable { activeImagePickerType = ImagePickerType.AVATAR }
                         ) {
                             val avatarModel = uiState.pendingAvatarUri ?: user?.avatar
                             if (avatarModel != null) {
@@ -194,11 +212,56 @@ fun UserProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
                     OutlinedTextField(
+                        value = statusEmoji,
+                        onValueChange = { statusEmoji = it },
+                        label = { Text("Status Emoji") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
                         value = statusText,
                         onValueChange = { statusText = it },
-                        label = { Text("About Me") },
+                        label = { Text("Status Message") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = bio,
+                        onValueChange = { bio = it },
+                        label = { Text("About Me / Bio") },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = jobTitle,
+                        onValueChange = { jobTitle = it },
+                        label = { Text("Job Title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = department,
+                        onValueChange = { department = it },
+                        label = { Text("Department") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = standardTextFieldColors(palette)
+                    )
+                    Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
+                    OutlinedTextField(
+                        value = officeLocation,
+                        onValueChange = { officeLocation = it },
+                        label = { Text("Office Location") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
                         colors = standardTextFieldColors(palette)
                     )
                     Spacer(modifier = Modifier.height(SettingsTokens.FieldSpacing))
@@ -225,7 +288,12 @@ fun UserProfileScreen(
                             viewModel.saveProfile(mapOf(
                                 "name" to name,
                                 "username" to username,
+                                "statusEmoji" to statusEmoji,
                                 "statusText" to statusText,
+                                "bio" to bio,
+                                "jobTitle" to jobTitle,
+                                "department" to department,
+                                "officeLocation" to officeLocation,
                                 "github" to github,
                                 "slack" to slack
                             ), context)
@@ -241,6 +309,86 @@ fun UserProfileScreen(
                             Text("Save Profile", fontWeight = FontWeight.Medium)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    activeImagePickerType?.let { type ->
+        ImagePickerBottomSheet(
+            title = if (type == ImagePickerType.AVATAR) "Choose Avatar Image" else "Choose Banner Image",
+            onDismiss = { activeImagePickerType = null },
+            onPickPhoto = {
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ImagePickerBottomSheet(
+    title: String,
+    onDismiss: () -> Unit,
+    onPickPhoto: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Surface(
+                onClick = {
+                    onPickPhoto()
+                },
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Choose photo from gallery",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }

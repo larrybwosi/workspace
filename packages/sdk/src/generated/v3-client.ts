@@ -226,7 +226,15 @@ export type CallsControllerGetScheduledCallsParams = {
 /**
  * The workspace ID
  */
-workspaceId: string;
+workspaceId?: string;
+/**
+ * The workspace slug
+ */
+workspaceSlug?: string;
+};
+
+export type StorageControllerUploadFileBody = {
+  file?: Blob;
 };
 
 export type InvitationsControllerGetInvitationsParams = {
@@ -234,6 +242,31 @@ export type InvitationsControllerGetInvitationsParams = {
  * Filter by workspace ID
  */
 workspaceId?: string;
+};
+
+export type NotificationsControllerGetChannelSettingsParams = {
+/**
+ * The channel ID
+ */
+channelId: string;
+};
+
+export type NotificationsControllerGetWorkspaceSettingsParams = {
+/**
+ * The workspace ID
+ */
+workspaceId: string;
+};
+
+export type NotificationsControllerGetNotificationsParams = {
+/**
+ * Filter by unread only
+ */
+unreadOnly?: string;
+/**
+ * Number of notifications to return
+ */
+limit?: string;
 };
 
 export type V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams = {
@@ -249,12 +282,6 @@ export type V3WorkspacesControllerDeleteWorkspace200Data = {
 
 export type V3WorkspacesControllerDeleteWorkspace200 = {
   data?: V3WorkspacesControllerDeleteWorkspace200Data;
-  success?: boolean;
-  timestamp?: string;
-};
-
-export type V3WorkspacesControllerUpdateWorkspace200 = {
-  data?: V3WorkspacesControllerUpdateWorkspace200Data;
   success?: boolean;
   timestamp?: string;
 };
@@ -283,6 +310,18 @@ export type V3WorkspacesControllerUpdateWorkspace200Data = {
   workspace?: V3WorkspacesControllerUpdateWorkspace200DataWorkspace;
 };
 
+export type V3WorkspacesControllerUpdateWorkspace200 = {
+  data?: V3WorkspacesControllerUpdateWorkspace200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+  success?: boolean;
+  timestamp?: string;
+};
+
 /**
  * @nullable
  */
@@ -307,8 +346,8 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
   workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
 };
 
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+export type V3WorkspacesControllerProvisionWorkspace201 = {
+  data?: V3WorkspacesControllerProvisionWorkspace201Data;
   success?: boolean;
   timestamp?: string;
 };
@@ -328,12 +367,6 @@ export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
 export type V3WorkspacesControllerProvisionWorkspace201Data = {
   bot?: V3WorkspacesControllerProvisionWorkspace201DataBot;
   workspace?: V3WorkspacesControllerProvisionWorkspace201DataWorkspace;
-};
-
-export type V3WorkspacesControllerProvisionWorkspace201 = {
-  data?: V3WorkspacesControllerProvisionWorkspace201Data;
-  success?: boolean;
-  timestamp?: string;
 };
 
 export type V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem = {
@@ -374,100 +407,6 @@ before?: string;
 after?: string;
 };
 
-export type StorageControllerUploadFileBody = {
-  file?: Blob;
-};
-
-export type NotificationsControllerGetChannelSettingsParams = {
-/**
- * The channel ID
- */
-channelId: string;
-};
-
-export type NotificationsControllerGetWorkspaceSettingsParams = {
-/**
- * The workspace ID
- */
-workspaceId: string;
-};
-
-export type NotificationsControllerGetNotificationsParams = {
-/**
- * Filter by unread only
- */
-unreadOnly?: string;
-/**
- * Number of notifications to return
- */
-limit?: string;
-};
-
-export type V2ContactControllerSubmitContactFormBody = {
-  email?: string;
-  message?: string;
-  name?: string;
-};
-
-export type V2ApplicationsControllerInstallBotBody = {
-  workspaceId?: string;
-};
-
-export type V2OAuthControllerGetToken200 = {
-  access_token?: string;
-  expires_in?: number;
-  scope?: string;
-  token_type?: string;
-};
-
-export type V2MessageActionsControllerHandleActionBodyPayload = { [key: string]: unknown };
-
-export type V2MessageActionsControllerHandleActionBodyFormState = { [key: string]: unknown };
-
-export type V2MessageActionsControllerHandleActionBody = {
-  formState?: V2MessageActionsControllerHandleActionBodyFormState;
-  payload?: V2MessageActionsControllerHandleActionBodyPayload;
-};
-
-export type V2ThreadsControllerGetThreadMessagesParams = {
-cursor?: string;
-limit?: number;
-};
-
-export type V2ThreadsControllerGetThreadsParams = {
-channelId?: string;
-limit?: number;
-};
-
-export type V2SearchControllerSearchMessagesParams = {
-/**
- * The search query
- */
-q: string;
-channelId?: string;
-limit?: number;
-};
-
-export type V2SearchControllerSearchMembersParams = {
-/**
- * The search query
- */
-q: string;
-limit?: number;
-};
-
-export type V2MessagesControllerGetMessagesParams = {
-channelId?: string;
-threadId?: string;
-contextId?: string;
-limit?: number;
-cursor?: string;
-};
-
-export type V2MessagesControllerUploadChannelIconBody = {
-  file?: Blob;
-};
-
 export type UsersControllerDeleteDeviceTokenParams = {
 token: string;
 };
@@ -493,6 +432,10 @@ export type UsersControllerRegisterDeviceTokenBody = {
 
 export type UsersControllerSearchUsersParams = {
 query: string;
+};
+
+export type AppControllerGetLinkPreviewParams = {
+url: string;
 };
 
 export type CreateScheduledNotificationDtoScheduleType = typeof CreateScheduledNotificationDtoScheduleType[keyof typeof CreateScheduledNotificationDtoScheduleType];
@@ -764,6 +707,7 @@ export const UpdateWorkspaceDtoPlan = {
 export type UpdateWorkspaceDtoBrandingConfig = { [key: string]: unknown };
 
 export interface UpdateWorkspaceDto {
+  banner?: string;
   brandingConfig?: UpdateWorkspaceDtoBrandingConfig;
   customDomain?: string;
   description?: string;
@@ -835,6 +779,56 @@ export interface StartCallDto {
   type: StartCallDtoType;
 }
 
+export type CreateIntegrationDtoService = typeof CreateIntegrationDtoService[keyof typeof CreateIntegrationDtoService];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateIntegrationDtoService = {
+  slack: 'slack',
+  github: 'github',
+  gitlab: 'gitlab',
+  jira: 'jira',
+  linear: 'linear',
+  notion: 'notion',
+  figma: 'figma',
+  discord: 'discord',
+  teams: 'teams',
+  zapier: 'zapier',
+  make: 'make',
+  custom: 'custom',
+  huly: 'huly',
+} as const;
+
+export interface CreateIntegrationDto {
+  config: CreateIntegrationDtoConfig;
+  description?: string;
+  name: string;
+  service: CreateIntegrationDtoService;
+}
+
+export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
+
+export type CreateIntegrationDtoConfig = {
+  accessToken?: string;
+  apiKey?: string;
+  channelId?: string;
+  customHeaders?: CreateIntegrationDtoConfigCustomHeaders;
+  events?: string[];
+  hulyUrl?: string;
+  projectId?: string;
+  refreshToken?: string;
+  repositoryId?: string;
+  scopes?: string[];
+  teamId?: string;
+  webhookUrl?: string;
+};
+
+export interface CreateIntegrationWebhookDto {
+  events: string[];
+  name: string;
+  url: string;
+}
+
 export type CreateInvitationDtoPermissions = { [key: string]: unknown };
 
 export interface CreateInvitationDto {
@@ -843,6 +837,59 @@ export interface CreateInvitationDto {
   permissions?: CreateInvitationDtoPermissions;
   role?: string;
   workspaceId?: string;
+}
+
+export interface UpdateNotificationDto {
+  isRead: boolean;
+}
+
+export type ChannelSettingsDtoPreference = typeof ChannelSettingsDtoPreference[keyof typeof ChannelSettingsDtoPreference];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ChannelSettingsDtoPreference = {
+  all: 'all',
+  mentions: 'mentions',
+  none: 'none',
+  default: 'default',
+} as const;
+
+export interface ChannelSettingsDto {
+  channelId: string;
+  preference: ChannelSettingsDtoPreference;
+}
+
+export type WorkspaceSettingsDtoPreference = typeof WorkspaceSettingsDtoPreference[keyof typeof WorkspaceSettingsDtoPreference];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSettingsDtoPreference = {
+  all: 'all',
+  mentions: 'mentions',
+  none: 'none',
+} as const;
+
+export interface WorkspaceSettingsDto {
+  preference: WorkspaceSettingsDtoPreference;
+  workspaceId: string;
+}
+
+export interface V3UpdateM2mApplicationDto {
+  allowedIps?: string[];
+  name?: string;
+  scopes?: string[];
+}
+
+export interface V3CreateM2mApplicationDto {
+  allowedIps?: string[];
+  name: string;
+  scopes?: string[];
+}
+
+export interface V3UpdateOrganizationDto {
+  banner?: string;
+  logo?: string;
+  name?: string;
 }
 
 export type ExecuteChannelIncomingWebhookDtoAttachmentsItem = { [key: string]: unknown };
@@ -982,382 +1029,6 @@ export interface V3TokenRequestDto {
   grant_type: V3TokenRequestDtoGrantType;
   /** Space-separated list of scopes requested. */
   scope?: string;
-}
-
-export interface UpdateNotificationDto {
-  isRead: boolean;
-}
-
-export type ChannelSettingsDtoPreference = typeof ChannelSettingsDtoPreference[keyof typeof ChannelSettingsDtoPreference];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ChannelSettingsDtoPreference = {
-  all: 'all',
-  mentions: 'mentions',
-  none: 'none',
-  default: 'default',
-} as const;
-
-export interface ChannelSettingsDto {
-  channelId: string;
-  preference: ChannelSettingsDtoPreference;
-}
-
-export type WorkspaceSettingsDtoPreference = typeof WorkspaceSettingsDtoPreference[keyof typeof WorkspaceSettingsDtoPreference];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const WorkspaceSettingsDtoPreference = {
-  all: 'all',
-  mentions: 'mentions',
-  none: 'none',
-} as const;
-
-export interface WorkspaceSettingsDto {
-  preference: WorkspaceSettingsDtoPreference;
-  workspaceId: string;
-}
-
-export type CreateIntegrationDtoService = typeof CreateIntegrationDtoService[keyof typeof CreateIntegrationDtoService];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateIntegrationDtoService = {
-  slack: 'slack',
-  github: 'github',
-  gitlab: 'gitlab',
-  jira: 'jira',
-  linear: 'linear',
-  notion: 'notion',
-  figma: 'figma',
-  discord: 'discord',
-  teams: 'teams',
-  zapier: 'zapier',
-  make: 'make',
-  custom: 'custom',
-  huly: 'huly',
-} as const;
-
-export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
-
-export type CreateIntegrationDtoConfig = {
-  accessToken?: string;
-  apiKey?: string;
-  channelId?: string;
-  customHeaders?: CreateIntegrationDtoConfigCustomHeaders;
-  events?: string[];
-  hulyUrl?: string;
-  projectId?: string;
-  refreshToken?: string;
-  repositoryId?: string;
-  scopes?: string[];
-  teamId?: string;
-  webhookUrl?: string;
-};
-
-export interface CreateIntegrationDto {
-  config: CreateIntegrationDtoConfig;
-  description?: string;
-  name: string;
-  service: CreateIntegrationDtoService;
-}
-
-export interface CreateIntegrationWebhookDto {
-  events: string[];
-  name: string;
-  url: string;
-}
-
-export interface UpdateOrganizationDto {
-  banner?: string;
-  logo?: string;
-  name?: string;
-}
-
-export type ProvisionWorkspaceDtoInitialMembersItemRole = typeof ProvisionWorkspaceDtoInitialMembersItemRole[keyof typeof ProvisionWorkspaceDtoInitialMembersItemRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ProvisionWorkspaceDtoInitialMembersItemRole = {
-  admin: 'admin',
-  member: 'member',
-} as const;
-
-export type ProvisionWorkspaceDtoInitialMembersItem = {
-  email?: string;
-  role?: ProvisionWorkspaceDtoInitialMembersItemRole;
-};
-
-/**
- * Custom branding configuration
- */
-export type ProvisionWorkspaceDtoBrandingConfig = { [key: string]: unknown };
-
-export interface ProvisionWorkspaceDto {
-  /** Custom branding configuration */
-  brandingConfig?: ProvisionWorkspaceDtoBrandingConfig;
-  /** Initial channels to create */
-  channels?: string[];
-  description?: string;
-  /** Icon identifier */
-  icon?: string;
-  industry?: string;
-  /** Initial members to add to the workspace */
-  initialMembers?: ProvisionWorkspaceDtoInitialMembersItem[];
-  /** The display name of the workspace */
-  name: string;
-  /** The email of the workspace owner. Must exist in the organization. */
-  ownerEmail: string;
-  /** Unique slug for the workspace URL */
-  slug: string;
-}
-
-export type UpdateApplicationDtoChannelDefinitions = { [key: string]: unknown };
-
-export interface UpdateApplicationDto {
-  allowedIps?: string[];
-  channelDefinitions?: UpdateApplicationDtoChannelDefinitions;
-  description?: string;
-  name?: string;
-  scopes?: string[];
-  webhookSecret?: string;
-  webhookUrl?: string;
-}
-
-export interface CreateApplicationDto {
-  allowedIps?: string[];
-  description?: string;
-  name: string;
-  organizationId?: string;
-  scopes?: string[];
-  webhookSecret?: string;
-  webhookUrl?: string;
-  /** Optional workspace ID to link the bot to */
-  workspaceId?: string;
-}
-
-export type TokenRequestDtoGrantType = typeof TokenRequestDtoGrantType[keyof typeof TokenRequestDtoGrantType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TokenRequestDtoGrantType = {
-  client_credentials: 'client_credentials',
-} as const;
-
-export interface TokenRequestDto {
-  client_id: string;
-  client_secret: string;
-  grant_type: TokenRequestDtoGrantType;
-  scope?: string;
-}
-
-export type UpdateAnnouncementDtoTargetAudience = { [key: string]: unknown };
-
-export type UpdateAnnouncementDtoPriority = typeof UpdateAnnouncementDtoPriority[keyof typeof UpdateAnnouncementDtoPriority];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateAnnouncementDtoPriority = {
-  low: 'low',
-  normal: 'normal',
-  high: 'high',
-  urgent: 'urgent',
-} as const;
-
-export type UpdateAnnouncementDtoAttachmentsItem = { [key: string]: unknown };
-
-export interface UpdateAnnouncementDto {
-  attachments?: UpdateAnnouncementDtoAttachmentsItem[];
-  content?: string;
-  departmentId?: string;
-  expiresAt?: string;
-  pinned?: boolean;
-  priority?: UpdateAnnouncementDtoPriority;
-  publishAt?: string;
-  targetAudience?: UpdateAnnouncementDtoTargetAudience;
-  title?: string;
-}
-
-export type CreateAnnouncementDtoTargetAudience = { [key: string]: unknown };
-
-export type CreateAnnouncementDtoPriority = typeof CreateAnnouncementDtoPriority[keyof typeof CreateAnnouncementDtoPriority];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateAnnouncementDtoPriority = {
-  low: 'low',
-  normal: 'normal',
-  high: 'high',
-  urgent: 'urgent',
-} as const;
-
-export type CreateAnnouncementDtoAttachmentsItem = { [key: string]: unknown };
-
-export interface CreateAnnouncementDto {
-  attachments?: CreateAnnouncementDtoAttachmentsItem[];
-  content: string;
-  departmentId: string;
-  /** ISO string date */
-  expiresAt?: string;
-  pinned?: boolean;
-  priority?: CreateAnnouncementDtoPriority;
-  /** ISO string date */
-  publishAt?: string;
-  targetAudience?: CreateAnnouncementDtoTargetAudience;
-  title: string;
-}
-
-export interface UpdateTeamDto {
-  color?: string;
-  departmentId?: string;
-  description?: string;
-  icon?: string;
-  leadId?: string;
-  name?: string;
-  slug?: string;
-}
-
-export interface CreateTeamDto {
-  color?: string;
-  departmentId?: string;
-  description?: string;
-  icon?: string;
-  leadId?: string;
-  name: string;
-  slug: string;
-}
-
-export interface UpdateDepartmentDto {
-  color?: string;
-  description?: string;
-  icon?: string;
-  managerId?: string;
-  name?: string;
-  parentId?: string;
-  slug?: string;
-}
-
-export interface CreateDepartmentDto {
-  color?: string;
-  description?: string;
-  icon?: string;
-  managerId?: string;
-  name: string;
-  parentId?: string;
-  slug: string;
-}
-
-export interface UpdateWebhookDto {
-  active?: boolean;
-  events?: string[];
-  name?: string;
-  url?: string;
-}
-
-export interface CreateWebhookDto {
-  active?: boolean;
-  events: string[];
-  name: string;
-  url: string;
-}
-
-export type CreateTokenDtoPermissionsActionsItem = typeof CreateTokenDtoPermissionsActionsItem[keyof typeof CreateTokenDtoPermissionsActionsItem];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateTokenDtoPermissionsActionsItem = {
-  'read:members': 'read:members',
-  'write:members': 'write:members',
-  'read:departments': 'read:departments',
-  'write:departments': 'write:departments',
-  'read:teams': 'read:teams',
-  'write:teams': 'write:teams',
-  'read:announcements': 'read:announcements',
-  'write:announcements': 'write:announcements',
-  'read:channels': 'read:channels',
-  'write:channels': 'write:channels',
-  'send:messages': 'send:messages',
-  'read:messages': 'read:messages',
-  'read:threads': 'read:threads',
-  'read:webhooks': 'read:webhooks',
-  'write:webhooks': 'write:webhooks',
-  'read:tokens': 'read:tokens',
-  'write:tokens': 'write:tokens',
-} as const;
-
-export type CreateTokenDtoPermissions = {
-  actions?: CreateTokenDtoPermissionsActionsItem[];
-};
-
-export interface CreateTokenDto {
-  /** ISO string date */
-  expiresAt?: string;
-  name: string;
-  permissions: CreateTokenDtoPermissions;
-  rateLimit?: number;
-}
-
-export type SendMessageDtoMetadata = { [key: string]: unknown };
-
-export type SendMessageDtoAttachmentsItem = { [key: string]: unknown };
-
-export type SendMessageDtoActionsItem = { [key: string]: unknown };
-
-export interface SendMessageDto {
-  actions?: SendMessageDtoActionsItem[];
-  attachments?: SendMessageDtoAttachmentsItem[];
-  /** Required if recipientId is not provided */
-  channelId?: string;
-  content: string;
-  contextId?: string;
-  messageType?: string;
-  metadata?: SendMessageDtoMetadata;
-  /** Required if channelId is not provided */
-  recipientId?: string;
-  threadId?: string;
-}
-
-export type UpdateChannelDtoType = typeof UpdateChannelDtoType[keyof typeof UpdateChannelDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateChannelDtoType = {
-  public: 'public',
-  private: 'private',
-} as const;
-
-export interface UpdateChannelDto {
-  description?: string;
-  icon?: string;
-  name?: string;
-  type?: UpdateChannelDtoType;
-}
-
-export type CreateChannelDtoType = typeof CreateChannelDtoType[keyof typeof CreateChannelDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateChannelDtoType = {
-  public: 'public',
-  private: 'private',
-} as const;
-
-export type CreateChannelDtoMetadata = { [key: string]: unknown };
-
-export interface CreateChannelDto {
-  description?: string;
-  icon?: string;
-  metadata?: CreateChannelDtoMetadata;
-  name: string;
-  type?: CreateChannelDtoType;
-}
-
-export interface AddMemberDto {
-  /** The email of the user to add */
-  email: string;
-  /** The role of the member */
-  role?: string;
 }
 
 
@@ -1553,6 +1224,131 @@ export const useAppControllerGetRealtimeConfig = <TData = Awaited<ReturnType<typ
 
 
 /**
+ * @summary Get link preview metadata for a URL
+ */
+export const appControllerGetLinkPreview = (
+    params: AppControllerGetLinkPreviewParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/link-preview`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getAppControllerGetLinkPreviewQueryKey = (params: AppControllerGetLinkPreviewParams,) => {
+    return [`/api/link-preview`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getAppControllerGetLinkPreviewQueryOptions = <TData = Awaited<ReturnType<typeof appControllerGetLinkPreview>>, TError = ErrorType<unknown>>(params: AppControllerGetLinkPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetLinkPreview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAppControllerGetLinkPreviewQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerGetLinkPreview>>> = ({ signal }) => appControllerGetLinkPreview(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appControllerGetLinkPreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AppControllerGetLinkPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof appControllerGetLinkPreview>>>
+export type AppControllerGetLinkPreviewQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get link preview metadata for a URL
+ */
+export const useAppControllerGetLinkPreview = <TData = Awaited<ReturnType<typeof appControllerGetLinkPreview>>, TError = ErrorType<unknown>>(
+ params: AppControllerGetLinkPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetLinkPreview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getAppControllerGetLinkPreviewQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get all users
+ */
+export const usersControllerGetUsers = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/users`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getUsersControllerGetUsersQueryKey = () => {
+    return [`/api/users`] as const;
+    }
+
+
+export const getUsersControllerGetUsersQueryOptions = <TData = Awaited<ReturnType<typeof usersControllerGetUsers>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersControllerGetUsersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetUsers>>> = ({ signal }) => usersControllerGetUsers(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetUsers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type UsersControllerGetUsersQueryResult = NonNullable<Awaited<ReturnType<typeof usersControllerGetUsers>>>
+export type UsersControllerGetUsersQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all users
+ */
+export const useUsersControllerGetUsers = <TData = Awaited<ReturnType<typeof usersControllerGetUsers>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getUsersControllerGetUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * @summary Search for users by username or name
  */
 export const usersControllerSearchUsers = (
@@ -1680,6 +1476,62 @@ export const useUsersControllerGetMe = <TData = Awaited<ReturnType<typeof usersC
 /**
  * @summary Update current user profile
  */
+export const usersControllerPatchMe = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/users/me`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getUsersControllerPatchMeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPatchMe>>, void> = () => {
+
+
+          return  usersControllerPatchMe(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerPatchMeMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerPatchMe>>>
+
+    export type UsersControllerPatchMeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update current user profile
+ */
+export const useUsersControllerPatchMe = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerPatchMe>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerPatchMeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update current user profile
+ */
 export const usersControllerUpdateMe = (
 
  options?: SecondParameter<typeof customInstance>,) => {
@@ -1794,6 +1646,62 @@ export const useUsersControllerGetUser = <TData = Awaited<ReturnType<typeof user
 
 
 
+
+/**
+ * @summary Update user profile by ID
+ */
+export const usersControllerPatchUser = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/users/${id}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getUsersControllerPatchUserMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPatchUser>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  usersControllerPatchUser(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerPatchUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerPatchUser>>>
+
+    export type UsersControllerPatchUserMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update user profile by ID
+ */
+export const useUsersControllerPatchUser = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerPatchUser>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerPatchUserMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
 
 /**
  * @summary Get social profile between current user and target user
@@ -1965,6 +1873,62 @@ export const useUsersControllerUnblockUser = <TError = ErrorType<unknown>,
       > => {
 
       const mutationOptions = getUsersControllerUnblockUserMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update current user status
+ */
+export const usersControllerUpdateMyStatus = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/users/me/status`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getUsersControllerUpdateMyStatusMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, void> = () => {
+
+
+          return  usersControllerUpdateMyStatus(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerUpdateMyStatusMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>>
+
+    export type UsersControllerUpdateMyStatusMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update current user status
+ */
+export const useUsersControllerUpdateMyStatus = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerUpdateMyStatusMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -2145,5226 +2109,6 @@ export const useUsersControllerDeleteDeviceToken = <TError = ErrorType<unknown>,
 
       return useMutation(mutationOptions);
     }
-
-/**
- * Requires members:read scope.
- * @summary List all workspace members
- */
-export const v2WorkspacesControllerGetMembers = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2WorkspacesControllerGetMembersQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/members`] as const;
-    }
-
-
-export const getV2WorkspacesControllerGetMembersQueryOptions = <TData = Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>, TError = ErrorType<void>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2WorkspacesControllerGetMembersQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>> = ({ signal }) => v2WorkspacesControllerGetMembers(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2WorkspacesControllerGetMembersQueryResult = NonNullable<Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>>
-export type V2WorkspacesControllerGetMembersQueryError = ErrorType<void>
-
-/**
- * @summary List all workspace members
- */
-export const useV2WorkspacesControllerGetMembers = <TData = Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>, TError = ErrorType<void>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WorkspacesControllerGetMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2WorkspacesControllerGetMembersQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires members:write scope.
- * @summary Add a member to the workspace
- */
-export const v2WorkspacesControllerAddMember = (
-    slug: unknown,
-    addMemberDto: BodyType<AddMemberDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: addMemberDto
-    },
-      options);
-    }
-
-
-
-export const getV2WorkspacesControllerAddMemberMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WorkspacesControllerAddMember>>, TError,{slug: unknown;data: BodyType<AddMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2WorkspacesControllerAddMember>>, TError,{slug: unknown;data: BodyType<AddMemberDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2WorkspacesControllerAddMember>>, {slug: unknown;data: BodyType<AddMemberDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2WorkspacesControllerAddMember(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2WorkspacesControllerAddMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v2WorkspacesControllerAddMember>>>
-    export type V2WorkspacesControllerAddMemberMutationBody = BodyType<AddMemberDto>
-    export type V2WorkspacesControllerAddMemberMutationError = ErrorType<void>
-
-    /**
- * @summary Add a member to the workspace
- */
-export const useV2WorkspacesControllerAddMember = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WorkspacesControllerAddMember>>, TError,{slug: unknown;data: BodyType<AddMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2WorkspacesControllerAddMember>>,
-        TError,
-        {slug: unknown;data: BodyType<AddMemberDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2WorkspacesControllerAddMemberMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires members:read scope.
- * @summary Get details of a specific workspace member
- */
-export const v2WorkspacesControllerGetMember = (
-    slug: unknown,
-    userId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members/${userId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2WorkspacesControllerGetMemberQueryKey = (slug: unknown,
-    userId: string,) => {
-    return [`/api/v2/workspaces/${slug}/members/${userId}`] as const;
-    }
-
-
-export const getV2WorkspacesControllerGetMemberQueryOptions = <TData = Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>, TError = ErrorType<void>>(slug: unknown,
-    userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2WorkspacesControllerGetMemberQueryKey(slug,userId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>> = ({ signal }) => v2WorkspacesControllerGetMember(slug,userId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2WorkspacesControllerGetMemberQueryResult = NonNullable<Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>>
-export type V2WorkspacesControllerGetMemberQueryError = ErrorType<void>
-
-/**
- * @summary Get details of a specific workspace member
- */
-export const useV2WorkspacesControllerGetMember = <TData = Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>, TError = ErrorType<void>>(
- slug: unknown,
-    userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WorkspacesControllerGetMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2WorkspacesControllerGetMemberQueryOptions(slug,userId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires members:write scope.
- * @summary Remove a member from the workspace
- */
-export const v2WorkspacesControllerRemoveMember = (
-    slug: unknown,
-    userId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/members/${userId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2WorkspacesControllerRemoveMemberMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WorkspacesControllerRemoveMember>>, TError,{slug: unknown;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2WorkspacesControllerRemoveMember>>, TError,{slug: unknown;userId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2WorkspacesControllerRemoveMember>>, {slug: unknown;userId: string}> = (props) => {
-          const {slug,userId} = props ?? {};
-
-          return  v2WorkspacesControllerRemoveMember(slug,userId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2WorkspacesControllerRemoveMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v2WorkspacesControllerRemoveMember>>>
-
-    export type V2WorkspacesControllerRemoveMemberMutationError = ErrorType<void>
-
-    /**
- * @summary Remove a member from the workspace
- */
-export const useV2WorkspacesControllerRemoveMember = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WorkspacesControllerRemoveMember>>, TError,{slug: unknown;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2WorkspacesControllerRemoveMember>>,
-        TError,
-        {slug: unknown;userId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2WorkspacesControllerRemoveMemberMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires channels:read scope.
- * @summary List all channels in the workspace
- */
-export const v2MessagesControllerGetChannels = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2MessagesControllerGetChannelsQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/channels`] as const;
-    }
-
-
-export const getV2MessagesControllerGetChannelsQueryOptions = <TData = Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>, TError = ErrorType<unknown>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2MessagesControllerGetChannelsQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>> = ({ signal }) => v2MessagesControllerGetChannels(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2MessagesControllerGetChannelsQueryResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>>
-export type V2MessagesControllerGetChannelsQueryError = ErrorType<unknown>
-
-/**
- * @summary List all channels in the workspace
- */
-export const useV2MessagesControllerGetChannels = <TData = Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>, TError = ErrorType<unknown>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2MessagesControllerGetChannelsQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires channels:write scope.
- * @summary Create a new channel
- */
-export const v2MessagesControllerCreateChannel = (
-    slug: unknown,
-    createChannelDto: BodyType<CreateChannelDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createChannelDto
-    },
-      options);
-    }
-
-
-
-export const getV2MessagesControllerCreateChannelMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerCreateChannel>>, TError,{slug: unknown;data: BodyType<CreateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerCreateChannel>>, TError,{slug: unknown;data: BodyType<CreateChannelDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2MessagesControllerCreateChannel>>, {slug: unknown;data: BodyType<CreateChannelDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2MessagesControllerCreateChannel(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2MessagesControllerCreateChannelMutationResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerCreateChannel>>>
-    export type V2MessagesControllerCreateChannelMutationBody = BodyType<CreateChannelDto>
-    export type V2MessagesControllerCreateChannelMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new channel
- */
-export const useV2MessagesControllerCreateChannel = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerCreateChannel>>, TError,{slug: unknown;data: BodyType<CreateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2MessagesControllerCreateChannel>>,
-        TError,
-        {slug: unknown;data: BodyType<CreateChannelDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2MessagesControllerCreateChannelMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires channels:write scope.
- * @summary Upload a channel icon
- */
-export const v2MessagesControllerUploadChannelIcon = (
-    slug: unknown,
-    channelId: string,
-    v2MessagesControllerUploadChannelIconBody: BodyType<V2MessagesControllerUploadChannelIconBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-      const formData = new FormData();
-if(v2MessagesControllerUploadChannelIconBody.file !== undefined) {
- formData.append('file', v2MessagesControllerUploadChannelIconBody.file)
- }
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}/icon`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-
-
-export const getV2MessagesControllerUploadChannelIconMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerUploadChannelIcon>>, TError,{slug: unknown;channelId: string;data: BodyType<V2MessagesControllerUploadChannelIconBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerUploadChannelIcon>>, TError,{slug: unknown;channelId: string;data: BodyType<V2MessagesControllerUploadChannelIconBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2MessagesControllerUploadChannelIcon>>, {slug: unknown;channelId: string;data: BodyType<V2MessagesControllerUploadChannelIconBody>}> = (props) => {
-          const {slug,channelId,data} = props ?? {};
-
-          return  v2MessagesControllerUploadChannelIcon(slug,channelId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2MessagesControllerUploadChannelIconMutationResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerUploadChannelIcon>>>
-    export type V2MessagesControllerUploadChannelIconMutationBody = BodyType<V2MessagesControllerUploadChannelIconBody>
-    export type V2MessagesControllerUploadChannelIconMutationError = ErrorType<unknown>
-
-    /**
- * @summary Upload a channel icon
- */
-export const useV2MessagesControllerUploadChannelIcon = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerUploadChannelIcon>>, TError,{slug: unknown;channelId: string;data: BodyType<V2MessagesControllerUploadChannelIconBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2MessagesControllerUploadChannelIcon>>,
-        TError,
-        {slug: unknown;channelId: string;data: BodyType<V2MessagesControllerUploadChannelIconBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2MessagesControllerUploadChannelIconMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires channels:read scope.
- * @summary Get details of a specific channel
- */
-export const v2MessagesControllerGetChannel = (
-    slug: unknown,
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2MessagesControllerGetChannelQueryKey = (slug: unknown,
-    channelId: string,) => {
-    return [`/api/v2/workspaces/${slug}/channels/${channelId}`] as const;
-    }
-
-
-export const getV2MessagesControllerGetChannelQueryOptions = <TData = Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>, TError = ErrorType<unknown>>(slug: unknown,
-    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2MessagesControllerGetChannelQueryKey(slug,channelId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>> = ({ signal }) => v2MessagesControllerGetChannel(slug,channelId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2MessagesControllerGetChannelQueryResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>>
-export type V2MessagesControllerGetChannelQueryError = ErrorType<unknown>
-
-/**
- * @summary Get details of a specific channel
- */
-export const useV2MessagesControllerGetChannel = <TData = Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetChannel>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2MessagesControllerGetChannelQueryOptions(slug,channelId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires channels:write scope.
- * @summary Update a channel
- */
-export const v2MessagesControllerUpdateChannel = (
-    slug: unknown,
-    channelId: string,
-    updateChannelDto: BodyType<UpdateChannelDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateChannelDto
-    },
-      options);
-    }
-
-
-
-export const getV2MessagesControllerUpdateChannelMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerUpdateChannel>>, TError,{slug: unknown;channelId: string;data: BodyType<UpdateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerUpdateChannel>>, TError,{slug: unknown;channelId: string;data: BodyType<UpdateChannelDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2MessagesControllerUpdateChannel>>, {slug: unknown;channelId: string;data: BodyType<UpdateChannelDto>}> = (props) => {
-          const {slug,channelId,data} = props ?? {};
-
-          return  v2MessagesControllerUpdateChannel(slug,channelId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2MessagesControllerUpdateChannelMutationResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerUpdateChannel>>>
-    export type V2MessagesControllerUpdateChannelMutationBody = BodyType<UpdateChannelDto>
-    export type V2MessagesControllerUpdateChannelMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a channel
- */
-export const useV2MessagesControllerUpdateChannel = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerUpdateChannel>>, TError,{slug: unknown;channelId: string;data: BodyType<UpdateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2MessagesControllerUpdateChannel>>,
-        TError,
-        {slug: unknown;channelId: string;data: BodyType<UpdateChannelDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2MessagesControllerUpdateChannelMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires channels:write scope.
- * @summary Delete a channel
- */
-export const v2MessagesControllerDeleteChannel = (
-    slug: unknown,
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/channels/${channelId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2MessagesControllerDeleteChannelMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerDeleteChannel>>, TError,{slug: unknown;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerDeleteChannel>>, TError,{slug: unknown;channelId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2MessagesControllerDeleteChannel>>, {slug: unknown;channelId: string}> = (props) => {
-          const {slug,channelId} = props ?? {};
-
-          return  v2MessagesControllerDeleteChannel(slug,channelId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2MessagesControllerDeleteChannelMutationResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerDeleteChannel>>>
-
-    export type V2MessagesControllerDeleteChannelMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a channel
- */
-export const useV2MessagesControllerDeleteChannel = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerDeleteChannel>>, TError,{slug: unknown;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2MessagesControllerDeleteChannel>>,
-        TError,
-        {slug: unknown;channelId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2MessagesControllerDeleteChannelMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires messages:read scope.
- * @summary List messages in the workspace
- */
-export const v2MessagesControllerGetMessages = (
-    slug: unknown,
-    params?: V2MessagesControllerGetMessagesParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/messages`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getV2MessagesControllerGetMessagesQueryKey = (slug: unknown,
-    params?: V2MessagesControllerGetMessagesParams,) => {
-    return [`/api/v2/workspaces/${slug}/messages`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getV2MessagesControllerGetMessagesQueryOptions = <TData = Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>, TError = ErrorType<unknown>>(slug: unknown,
-    params?: V2MessagesControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2MessagesControllerGetMessagesQueryKey(slug,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>> = ({ signal }) => v2MessagesControllerGetMessages(slug,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2MessagesControllerGetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>>
-export type V2MessagesControllerGetMessagesQueryError = ErrorType<unknown>
-
-/**
- * @summary List messages in the workspace
- */
-export const useV2MessagesControllerGetMessages = <TData = Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    params?: V2MessagesControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2MessagesControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2MessagesControllerGetMessagesQueryOptions(slug,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- *
-Requires messages:send scope. Supports multipart/form-data for file uploads.
-
-**M2M Behavior:**
-- If the request is made by an M2M application, the message is sent by the app's associated bot.
-- If no app bot exists, it falls back to the workspace's **Default Bot**.
-- You can include `actions` to create interactive buttons that trigger webhooks.
-
- * @summary Send a message
- */
-export const v2MessagesControllerSendMessage = (
-    slug: unknown,
-    sendMessageDto: BodyType<SendMessageDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/messages`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: sendMessageDto
-    },
-      options);
-    }
-
-
-
-export const getV2MessagesControllerSendMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerSendMessage>>, TError,{slug: unknown;data: BodyType<SendMessageDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerSendMessage>>, TError,{slug: unknown;data: BodyType<SendMessageDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2MessagesControllerSendMessage>>, {slug: unknown;data: BodyType<SendMessageDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2MessagesControllerSendMessage(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2MessagesControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v2MessagesControllerSendMessage>>>
-    export type V2MessagesControllerSendMessageMutationBody = BodyType<SendMessageDto>
-    export type V2MessagesControllerSendMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Send a message
- */
-export const useV2MessagesControllerSendMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessagesControllerSendMessage>>, TError,{slug: unknown;data: BodyType<SendMessageDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2MessagesControllerSendMessage>>,
-        TError,
-        {slug: unknown;data: BodyType<SendMessageDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2MessagesControllerSendMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires members:read scope.
- * @summary Search for members in the workspace
- */
-export const v2SearchControllerSearchMembers = (
-    slug: unknown,
-    params: V2SearchControllerSearchMembersParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/search/members`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getV2SearchControllerSearchMembersQueryKey = (slug: unknown,
-    params: V2SearchControllerSearchMembersParams,) => {
-    return [`/api/v2/workspaces/${slug}/search/members`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getV2SearchControllerSearchMembersQueryOptions = <TData = Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>, TError = ErrorType<unknown>>(slug: unknown,
-    params: V2SearchControllerSearchMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2SearchControllerSearchMembersQueryKey(slug,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>> = ({ signal }) => v2SearchControllerSearchMembers(slug,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2SearchControllerSearchMembersQueryResult = NonNullable<Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>>
-export type V2SearchControllerSearchMembersQueryError = ErrorType<unknown>
-
-/**
- * @summary Search for members in the workspace
- */
-export const useV2SearchControllerSearchMembers = <TData = Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    params: V2SearchControllerSearchMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2SearchControllerSearchMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2SearchControllerSearchMembersQueryOptions(slug,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires messages:read scope.
- * @summary Search for messages in the workspace
- */
-export const v2SearchControllerSearchMessages = (
-    slug: unknown,
-    params: V2SearchControllerSearchMessagesParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/search/messages`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getV2SearchControllerSearchMessagesQueryKey = (slug: unknown,
-    params: V2SearchControllerSearchMessagesParams,) => {
-    return [`/api/v2/workspaces/${slug}/search/messages`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getV2SearchControllerSearchMessagesQueryOptions = <TData = Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>, TError = ErrorType<unknown>>(slug: unknown,
-    params: V2SearchControllerSearchMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2SearchControllerSearchMessagesQueryKey(slug,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>> = ({ signal }) => v2SearchControllerSearchMessages(slug,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2SearchControllerSearchMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>>
-export type V2SearchControllerSearchMessagesQueryError = ErrorType<unknown>
-
-/**
- * @summary Search for messages in the workspace
- */
-export const useV2SearchControllerSearchMessages = <TData = Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    params: V2SearchControllerSearchMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2SearchControllerSearchMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2SearchControllerSearchMessagesQueryOptions(slug,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires tokens:read scope.
- * @summary List all API tokens in the workspace
- */
-export const v2ApiTokensControllerGetTokens = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2ApiTokensControllerGetTokensQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/api-tokens`] as const;
-    }
-
-
-export const getV2ApiTokensControllerGetTokensQueryOptions = <TData = Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>, TError = ErrorType<unknown>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2ApiTokensControllerGetTokensQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>> = ({ signal }) => v2ApiTokensControllerGetTokens(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2ApiTokensControllerGetTokensQueryResult = NonNullable<Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>>
-export type V2ApiTokensControllerGetTokensQueryError = ErrorType<unknown>
-
-/**
- * @summary List all API tokens in the workspace
- */
-export const useV2ApiTokensControllerGetTokens = <TData = Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>, TError = ErrorType<unknown>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ApiTokensControllerGetTokens>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2ApiTokensControllerGetTokensQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires tokens:write scope.
- * @summary Create a new API token
- */
-export const v2ApiTokensControllerCreateToken = (
-    slug: unknown,
-    createTokenDto: BodyType<CreateTokenDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTokenDto
-    },
-      options);
-    }
-
-
-
-export const getV2ApiTokensControllerCreateTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerCreateToken>>, TError,{slug: unknown;data: BodyType<CreateTokenDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerCreateToken>>, TError,{slug: unknown;data: BodyType<CreateTokenDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApiTokensControllerCreateToken>>, {slug: unknown;data: BodyType<CreateTokenDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2ApiTokensControllerCreateToken(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApiTokensControllerCreateTokenMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApiTokensControllerCreateToken>>>
-    export type V2ApiTokensControllerCreateTokenMutationBody = BodyType<CreateTokenDto>
-    export type V2ApiTokensControllerCreateTokenMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new API token
- */
-export const useV2ApiTokensControllerCreateToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerCreateToken>>, TError,{slug: unknown;data: BodyType<CreateTokenDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApiTokensControllerCreateToken>>,
-        TError,
-        {slug: unknown;data: BodyType<CreateTokenDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApiTokensControllerCreateTokenMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires tokens:write scope.
- * @summary Delete an API token
- */
-export const v2ApiTokensControllerDeleteToken = (
-    slug: unknown,
-    tokenId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens/${tokenId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2ApiTokensControllerDeleteTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerDeleteToken>>, TError,{slug: unknown;tokenId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerDeleteToken>>, TError,{slug: unknown;tokenId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApiTokensControllerDeleteToken>>, {slug: unknown;tokenId: string}> = (props) => {
-          const {slug,tokenId} = props ?? {};
-
-          return  v2ApiTokensControllerDeleteToken(slug,tokenId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApiTokensControllerDeleteTokenMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApiTokensControllerDeleteToken>>>
-
-    export type V2ApiTokensControllerDeleteTokenMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete an API token
- */
-export const useV2ApiTokensControllerDeleteToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerDeleteToken>>, TError,{slug: unknown;tokenId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApiTokensControllerDeleteToken>>,
-        TError,
-        {slug: unknown;tokenId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApiTokensControllerDeleteTokenMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires tokens:write scope.
- * @summary Rotate an API token (generate new token value)
- */
-export const v2ApiTokensControllerRotateToken = (
-    slug: unknown,
-    tokenId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/api-tokens/${tokenId}/rotate`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getV2ApiTokensControllerRotateTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerRotateToken>>, TError,{slug: unknown;tokenId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerRotateToken>>, TError,{slug: unknown;tokenId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApiTokensControllerRotateToken>>, {slug: unknown;tokenId: string}> = (props) => {
-          const {slug,tokenId} = props ?? {};
-
-          return  v2ApiTokensControllerRotateToken(slug,tokenId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApiTokensControllerRotateTokenMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApiTokensControllerRotateToken>>>
-
-    export type V2ApiTokensControllerRotateTokenMutationError = ErrorType<unknown>
-
-    /**
- * @summary Rotate an API token (generate new token value)
- */
-export const useV2ApiTokensControllerRotateToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApiTokensControllerRotateToken>>, TError,{slug: unknown;tokenId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApiTokensControllerRotateToken>>,
-        TError,
-        {slug: unknown;tokenId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApiTokensControllerRotateTokenMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- *
-Requires webhooks:read scope.
-List all webhooks configured for this workspace.
-
-**Supported Events:**
-- `message.sent`: Triggered when a new message is sent.
-- `message.updated`: Triggered when a message is edited or updated by a callback.
-- `message.action`: Triggered when a user clicks an interactive button on a message.
-- `channel.created`: Triggered when a new channel is created.
-- `channel.updated`: Triggered when channel details change.
-- `member.joined`: Triggered when a new member joins the workspace.
-- `member.left`: Triggered when a member leaves the workspace.
-
- * @summary List all webhooks in the workspace
- */
-export const v2WebhooksControllerGetWebhooks = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2WebhooksControllerGetWebhooksQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/webhooks`] as const;
-    }
-
-
-export const getV2WebhooksControllerGetWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>, TError = ErrorType<unknown>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2WebhooksControllerGetWebhooksQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>> = ({ signal }) => v2WebhooksControllerGetWebhooks(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2WebhooksControllerGetWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>>
-export type V2WebhooksControllerGetWebhooksQueryError = ErrorType<unknown>
-
-/**
- * @summary List all webhooks in the workspace
- */
-export const useV2WebhooksControllerGetWebhooks = <TData = Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>, TError = ErrorType<unknown>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2WebhooksControllerGetWebhooksQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires webhooks:write scope.
- * @summary Create a new webhook
- */
-export const v2WebhooksControllerCreateWebhook = (
-    slug: unknown,
-    createWebhookDto: BodyType<CreateWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createWebhookDto
-    },
-      options);
-    }
-
-
-
-export const getV2WebhooksControllerCreateWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerCreateWebhook>>, TError,{slug: unknown;data: BodyType<CreateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerCreateWebhook>>, TError,{slug: unknown;data: BodyType<CreateWebhookDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2WebhooksControllerCreateWebhook>>, {slug: unknown;data: BodyType<CreateWebhookDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2WebhooksControllerCreateWebhook(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2WebhooksControllerCreateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof v2WebhooksControllerCreateWebhook>>>
-    export type V2WebhooksControllerCreateWebhookMutationBody = BodyType<CreateWebhookDto>
-    export type V2WebhooksControllerCreateWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new webhook
- */
-export const useV2WebhooksControllerCreateWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerCreateWebhook>>, TError,{slug: unknown;data: BodyType<CreateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2WebhooksControllerCreateWebhook>>,
-        TError,
-        {slug: unknown;data: BodyType<CreateWebhookDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2WebhooksControllerCreateWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires webhooks:read scope.
- * @summary Get details of a specific webhook
- */
-export const v2WebhooksControllerGetWebhook = (
-    slug: unknown,
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks/${webhookId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2WebhooksControllerGetWebhookQueryKey = (slug: unknown,
-    webhookId: string,) => {
-    return [`/api/v2/workspaces/${slug}/webhooks/${webhookId}`] as const;
-    }
-
-
-export const getV2WebhooksControllerGetWebhookQueryOptions = <TData = Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>, TError = ErrorType<unknown>>(slug: unknown,
-    webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2WebhooksControllerGetWebhookQueryKey(slug,webhookId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>> = ({ signal }) => v2WebhooksControllerGetWebhook(slug,webhookId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && webhookId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2WebhooksControllerGetWebhookQueryResult = NonNullable<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>>
-export type V2WebhooksControllerGetWebhookQueryError = ErrorType<unknown>
-
-/**
- * @summary Get details of a specific webhook
- */
-export const useV2WebhooksControllerGetWebhook = <TData = Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2WebhooksControllerGetWebhook>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2WebhooksControllerGetWebhookQueryOptions(slug,webhookId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires webhooks:write scope.
- * @summary Update a webhook
- */
-export const v2WebhooksControllerUpdateWebhook = (
-    slug: unknown,
-    webhookId: string,
-    updateWebhookDto: BodyType<UpdateWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks/${webhookId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateWebhookDto
-    },
-      options);
-    }
-
-
-
-export const getV2WebhooksControllerUpdateWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerUpdateWebhook>>, TError,{slug: unknown;webhookId: string;data: BodyType<UpdateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerUpdateWebhook>>, TError,{slug: unknown;webhookId: string;data: BodyType<UpdateWebhookDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2WebhooksControllerUpdateWebhook>>, {slug: unknown;webhookId: string;data: BodyType<UpdateWebhookDto>}> = (props) => {
-          const {slug,webhookId,data} = props ?? {};
-
-          return  v2WebhooksControllerUpdateWebhook(slug,webhookId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2WebhooksControllerUpdateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof v2WebhooksControllerUpdateWebhook>>>
-    export type V2WebhooksControllerUpdateWebhookMutationBody = BodyType<UpdateWebhookDto>
-    export type V2WebhooksControllerUpdateWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a webhook
- */
-export const useV2WebhooksControllerUpdateWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerUpdateWebhook>>, TError,{slug: unknown;webhookId: string;data: BodyType<UpdateWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2WebhooksControllerUpdateWebhook>>,
-        TError,
-        {slug: unknown;webhookId: string;data: BodyType<UpdateWebhookDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2WebhooksControllerUpdateWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires webhooks:write scope.
- * @summary Delete a webhook
- */
-export const v2WebhooksControllerDeleteWebhook = (
-    slug: unknown,
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/webhooks/${webhookId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2WebhooksControllerDeleteWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerDeleteWebhook>>, TError,{slug: unknown;webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerDeleteWebhook>>, TError,{slug: unknown;webhookId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2WebhooksControllerDeleteWebhook>>, {slug: unknown;webhookId: string}> = (props) => {
-          const {slug,webhookId} = props ?? {};
-
-          return  v2WebhooksControllerDeleteWebhook(slug,webhookId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2WebhooksControllerDeleteWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof v2WebhooksControllerDeleteWebhook>>>
-
-    export type V2WebhooksControllerDeleteWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a webhook
- */
-export const useV2WebhooksControllerDeleteWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2WebhooksControllerDeleteWebhook>>, TError,{slug: unknown;webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2WebhooksControllerDeleteWebhook>>,
-        TError,
-        {slug: unknown;webhookId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2WebhooksControllerDeleteWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires threads:read scope.
- * @summary List all threads in the workspace
- */
-export const v2ThreadsControllerGetThreads = (
-    slug: unknown,
-    params?: V2ThreadsControllerGetThreadsParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/threads`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getV2ThreadsControllerGetThreadsQueryKey = (slug: unknown,
-    params?: V2ThreadsControllerGetThreadsParams,) => {
-    return [`/api/v2/workspaces/${slug}/threads`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getV2ThreadsControllerGetThreadsQueryOptions = <TData = Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>, TError = ErrorType<unknown>>(slug: unknown,
-    params?: V2ThreadsControllerGetThreadsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2ThreadsControllerGetThreadsQueryKey(slug,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>> = ({ signal }) => v2ThreadsControllerGetThreads(slug,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2ThreadsControllerGetThreadsQueryResult = NonNullable<Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>>
-export type V2ThreadsControllerGetThreadsQueryError = ErrorType<unknown>
-
-/**
- * @summary List all threads in the workspace
- */
-export const useV2ThreadsControllerGetThreads = <TData = Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    params?: V2ThreadsControllerGetThreadsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreads>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2ThreadsControllerGetThreadsQueryOptions(slug,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires threads:read and messages:read scopes.
- * @summary List messages in a thread
- */
-export const v2ThreadsControllerGetThreadMessages = (
-    slug: unknown,
-    threadId: string,
-    params?: V2ThreadsControllerGetThreadMessagesParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/threads/${threadId}/messages`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getV2ThreadsControllerGetThreadMessagesQueryKey = (slug: unknown,
-    threadId: string,
-    params?: V2ThreadsControllerGetThreadMessagesParams,) => {
-    return [`/api/v2/workspaces/${slug}/threads/${threadId}/messages`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getV2ThreadsControllerGetThreadMessagesQueryOptions = <TData = Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>, TError = ErrorType<unknown>>(slug: unknown,
-    threadId: string,
-    params?: V2ThreadsControllerGetThreadMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2ThreadsControllerGetThreadMessagesQueryKey(slug,threadId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>> = ({ signal }) => v2ThreadsControllerGetThreadMessages(slug,threadId,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && threadId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2ThreadsControllerGetThreadMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>>
-export type V2ThreadsControllerGetThreadMessagesQueryError = ErrorType<unknown>
-
-/**
- * @summary List messages in a thread
- */
-export const useV2ThreadsControllerGetThreadMessages = <TData = Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    threadId: string,
-    params?: V2ThreadsControllerGetThreadMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2ThreadsControllerGetThreadMessagesQueryOptions(slug,threadId,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires threads:read scope.
- * @summary Get a thread by its context ID
- */
-export const v2ThreadsControllerGetThreadByContext = (
-    slug: unknown,
-    contextId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/threads/context/${contextId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2ThreadsControllerGetThreadByContextQueryKey = (slug: unknown,
-    contextId: string,) => {
-    return [`/api/v2/workspaces/${slug}/threads/context/${contextId}`] as const;
-    }
-
-
-export const getV2ThreadsControllerGetThreadByContextQueryOptions = <TData = Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>, TError = ErrorType<unknown>>(slug: unknown,
-    contextId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2ThreadsControllerGetThreadByContextQueryKey(slug,contextId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>> = ({ signal }) => v2ThreadsControllerGetThreadByContext(slug,contextId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && contextId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2ThreadsControllerGetThreadByContextQueryResult = NonNullable<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>>
-export type V2ThreadsControllerGetThreadByContextQueryError = ErrorType<unknown>
-
-/**
- * @summary Get a thread by its context ID
- */
-export const useV2ThreadsControllerGetThreadByContext = <TData = Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    contextId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ThreadsControllerGetThreadByContext>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2ThreadsControllerGetThreadByContextQueryOptions(slug,contextId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- *
-Triggers a custom action associated with a message.
-
-**M2M Interactivity:**
-If the message was sent by an M2M application, triggering an action will:
-1. Dispatch a **Callback** to the M2M application's configured `webhookUrl`.
-2. The callback includes the `formState` and `payload` provided in the request.
-3. The M2M application can respond to the callback to **update the message** content or metadata in real-time.
-
- * @summary Trigger a message action
- */
-export const v2MessageActionsControllerHandleAction = (
-    slug: unknown,
-    messageId: string,
-    actionId: string,
-    v2MessageActionsControllerHandleActionBody?: BodyType<V2MessageActionsControllerHandleActionBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/messages/${messageId}/actions/${actionId}`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: v2MessageActionsControllerHandleActionBody
-    },
-      options);
-    }
-
-
-
-export const getV2MessageActionsControllerHandleActionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessageActionsControllerHandleAction>>, TError,{slug: unknown;messageId: string;actionId: string;data: BodyType<V2MessageActionsControllerHandleActionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2MessageActionsControllerHandleAction>>, TError,{slug: unknown;messageId: string;actionId: string;data: BodyType<V2MessageActionsControllerHandleActionBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2MessageActionsControllerHandleAction>>, {slug: unknown;messageId: string;actionId: string;data: BodyType<V2MessageActionsControllerHandleActionBody>}> = (props) => {
-          const {slug,messageId,actionId,data} = props ?? {};
-
-          return  v2MessageActionsControllerHandleAction(slug,messageId,actionId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2MessageActionsControllerHandleActionMutationResult = NonNullable<Awaited<ReturnType<typeof v2MessageActionsControllerHandleAction>>>
-    export type V2MessageActionsControllerHandleActionMutationBody = BodyType<V2MessageActionsControllerHandleActionBody>
-    export type V2MessageActionsControllerHandleActionMutationError = ErrorType<unknown>
-
-    /**
- * @summary Trigger a message action
- */
-export const useV2MessageActionsControllerHandleAction = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2MessageActionsControllerHandleAction>>, TError,{slug: unknown;messageId: string;actionId: string;data: BodyType<V2MessageActionsControllerHandleActionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2MessageActionsControllerHandleAction>>,
-        TError,
-        {slug: unknown;messageId: string;actionId: string;data: BodyType<V2MessageActionsControllerHandleActionBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2MessageActionsControllerHandleActionMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires departments:read scope.
- * @summary List all departments in the workspace
- */
-export const v2DepartmentsControllerGetDepartments = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2DepartmentsControllerGetDepartmentsQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/departments`] as const;
-    }
-
-
-export const getV2DepartmentsControllerGetDepartmentsQueryOptions = <TData = Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>, TError = ErrorType<unknown>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2DepartmentsControllerGetDepartmentsQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>> = ({ signal }) => v2DepartmentsControllerGetDepartments(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2DepartmentsControllerGetDepartmentsQueryResult = NonNullable<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>>
-export type V2DepartmentsControllerGetDepartmentsQueryError = ErrorType<unknown>
-
-/**
- * @summary List all departments in the workspace
- */
-export const useV2DepartmentsControllerGetDepartments = <TData = Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>, TError = ErrorType<unknown>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartments>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2DepartmentsControllerGetDepartmentsQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires departments:write scope.
- * @summary Create a new department
- */
-export const v2DepartmentsControllerCreateDepartment = (
-    slug: unknown,
-    createDepartmentDto: BodyType<CreateDepartmentDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createDepartmentDto
-    },
-      options);
-    }
-
-
-
-export const getV2DepartmentsControllerCreateDepartmentMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerCreateDepartment>>, TError,{slug: unknown;data: BodyType<CreateDepartmentDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerCreateDepartment>>, TError,{slug: unknown;data: BodyType<CreateDepartmentDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2DepartmentsControllerCreateDepartment>>, {slug: unknown;data: BodyType<CreateDepartmentDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2DepartmentsControllerCreateDepartment(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2DepartmentsControllerCreateDepartmentMutationResult = NonNullable<Awaited<ReturnType<typeof v2DepartmentsControllerCreateDepartment>>>
-    export type V2DepartmentsControllerCreateDepartmentMutationBody = BodyType<CreateDepartmentDto>
-    export type V2DepartmentsControllerCreateDepartmentMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new department
- */
-export const useV2DepartmentsControllerCreateDepartment = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerCreateDepartment>>, TError,{slug: unknown;data: BodyType<CreateDepartmentDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2DepartmentsControllerCreateDepartment>>,
-        TError,
-        {slug: unknown;data: BodyType<CreateDepartmentDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2DepartmentsControllerCreateDepartmentMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires departments:read scope.
- * @summary Get details of a specific department
- */
-export const v2DepartmentsControllerGetDepartment = (
-    slug: unknown,
-    departmentId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments/${departmentId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2DepartmentsControllerGetDepartmentQueryKey = (slug: unknown,
-    departmentId: string,) => {
-    return [`/api/v2/workspaces/${slug}/departments/${departmentId}`] as const;
-    }
-
-
-export const getV2DepartmentsControllerGetDepartmentQueryOptions = <TData = Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>, TError = ErrorType<unknown>>(slug: unknown,
-    departmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2DepartmentsControllerGetDepartmentQueryKey(slug,departmentId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>> = ({ signal }) => v2DepartmentsControllerGetDepartment(slug,departmentId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && departmentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2DepartmentsControllerGetDepartmentQueryResult = NonNullable<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>>
-export type V2DepartmentsControllerGetDepartmentQueryError = ErrorType<unknown>
-
-/**
- * @summary Get details of a specific department
- */
-export const useV2DepartmentsControllerGetDepartment = <TData = Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    departmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2DepartmentsControllerGetDepartment>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2DepartmentsControllerGetDepartmentQueryOptions(slug,departmentId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires departments:write scope.
- * @summary Update a department
- */
-export const v2DepartmentsControllerUpdateDepartment = (
-    slug: unknown,
-    departmentId: string,
-    updateDepartmentDto: BodyType<UpdateDepartmentDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments/${departmentId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateDepartmentDto
-    },
-      options);
-    }
-
-
-
-export const getV2DepartmentsControllerUpdateDepartmentMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerUpdateDepartment>>, TError,{slug: unknown;departmentId: string;data: BodyType<UpdateDepartmentDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerUpdateDepartment>>, TError,{slug: unknown;departmentId: string;data: BodyType<UpdateDepartmentDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2DepartmentsControllerUpdateDepartment>>, {slug: unknown;departmentId: string;data: BodyType<UpdateDepartmentDto>}> = (props) => {
-          const {slug,departmentId,data} = props ?? {};
-
-          return  v2DepartmentsControllerUpdateDepartment(slug,departmentId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2DepartmentsControllerUpdateDepartmentMutationResult = NonNullable<Awaited<ReturnType<typeof v2DepartmentsControllerUpdateDepartment>>>
-    export type V2DepartmentsControllerUpdateDepartmentMutationBody = BodyType<UpdateDepartmentDto>
-    export type V2DepartmentsControllerUpdateDepartmentMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a department
- */
-export const useV2DepartmentsControllerUpdateDepartment = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerUpdateDepartment>>, TError,{slug: unknown;departmentId: string;data: BodyType<UpdateDepartmentDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2DepartmentsControllerUpdateDepartment>>,
-        TError,
-        {slug: unknown;departmentId: string;data: BodyType<UpdateDepartmentDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2DepartmentsControllerUpdateDepartmentMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires departments:write scope.
- * @summary Delete a department
- */
-export const v2DepartmentsControllerDeleteDepartment = (
-    slug: unknown,
-    departmentId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/departments/${departmentId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2DepartmentsControllerDeleteDepartmentMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerDeleteDepartment>>, TError,{slug: unknown;departmentId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerDeleteDepartment>>, TError,{slug: unknown;departmentId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2DepartmentsControllerDeleteDepartment>>, {slug: unknown;departmentId: string}> = (props) => {
-          const {slug,departmentId} = props ?? {};
-
-          return  v2DepartmentsControllerDeleteDepartment(slug,departmentId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2DepartmentsControllerDeleteDepartmentMutationResult = NonNullable<Awaited<ReturnType<typeof v2DepartmentsControllerDeleteDepartment>>>
-
-    export type V2DepartmentsControllerDeleteDepartmentMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a department
- */
-export const useV2DepartmentsControllerDeleteDepartment = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2DepartmentsControllerDeleteDepartment>>, TError,{slug: unknown;departmentId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2DepartmentsControllerDeleteDepartment>>,
-        TError,
-        {slug: unknown;departmentId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2DepartmentsControllerDeleteDepartmentMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires teams:read scope.
- * @summary List all teams in the workspace
- */
-export const v2TeamsControllerGetTeams = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2TeamsControllerGetTeamsQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/teams`] as const;
-    }
-
-
-export const getV2TeamsControllerGetTeamsQueryOptions = <TData = Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>, TError = ErrorType<unknown>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2TeamsControllerGetTeamsQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>> = ({ signal }) => v2TeamsControllerGetTeams(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2TeamsControllerGetTeamsQueryResult = NonNullable<Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>>
-export type V2TeamsControllerGetTeamsQueryError = ErrorType<unknown>
-
-/**
- * @summary List all teams in the workspace
- */
-export const useV2TeamsControllerGetTeams = <TData = Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>, TError = ErrorType<unknown>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2TeamsControllerGetTeams>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2TeamsControllerGetTeamsQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires teams:write scope.
- * @summary Create a new team
- */
-export const v2TeamsControllerCreateTeam = (
-    slug: unknown,
-    createTeamDto: BodyType<CreateTeamDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createTeamDto
-    },
-      options);
-    }
-
-
-
-export const getV2TeamsControllerCreateTeamMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerCreateTeam>>, TError,{slug: unknown;data: BodyType<CreateTeamDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerCreateTeam>>, TError,{slug: unknown;data: BodyType<CreateTeamDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2TeamsControllerCreateTeam>>, {slug: unknown;data: BodyType<CreateTeamDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2TeamsControllerCreateTeam(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2TeamsControllerCreateTeamMutationResult = NonNullable<Awaited<ReturnType<typeof v2TeamsControllerCreateTeam>>>
-    export type V2TeamsControllerCreateTeamMutationBody = BodyType<CreateTeamDto>
-    export type V2TeamsControllerCreateTeamMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new team
- */
-export const useV2TeamsControllerCreateTeam = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerCreateTeam>>, TError,{slug: unknown;data: BodyType<CreateTeamDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2TeamsControllerCreateTeam>>,
-        TError,
-        {slug: unknown;data: BodyType<CreateTeamDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2TeamsControllerCreateTeamMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires teams:read scope.
- * @summary Get details of a specific team
- */
-export const v2TeamsControllerGetTeam = (
-    slug: unknown,
-    teamId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams/${teamId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2TeamsControllerGetTeamQueryKey = (slug: unknown,
-    teamId: string,) => {
-    return [`/api/v2/workspaces/${slug}/teams/${teamId}`] as const;
-    }
-
-
-export const getV2TeamsControllerGetTeamQueryOptions = <TData = Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>, TError = ErrorType<unknown>>(slug: unknown,
-    teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2TeamsControllerGetTeamQueryKey(slug,teamId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>> = ({ signal }) => v2TeamsControllerGetTeam(slug,teamId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && teamId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2TeamsControllerGetTeamQueryResult = NonNullable<Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>>
-export type V2TeamsControllerGetTeamQueryError = ErrorType<unknown>
-
-/**
- * @summary Get details of a specific team
- */
-export const useV2TeamsControllerGetTeam = <TData = Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2TeamsControllerGetTeam>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2TeamsControllerGetTeamQueryOptions(slug,teamId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires teams:write scope.
- * @summary Update a team
- */
-export const v2TeamsControllerUpdateTeam = (
-    slug: unknown,
-    teamId: string,
-    updateTeamDto: BodyType<UpdateTeamDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams/${teamId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateTeamDto
-    },
-      options);
-    }
-
-
-
-export const getV2TeamsControllerUpdateTeamMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerUpdateTeam>>, TError,{slug: unknown;teamId: string;data: BodyType<UpdateTeamDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerUpdateTeam>>, TError,{slug: unknown;teamId: string;data: BodyType<UpdateTeamDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2TeamsControllerUpdateTeam>>, {slug: unknown;teamId: string;data: BodyType<UpdateTeamDto>}> = (props) => {
-          const {slug,teamId,data} = props ?? {};
-
-          return  v2TeamsControllerUpdateTeam(slug,teamId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2TeamsControllerUpdateTeamMutationResult = NonNullable<Awaited<ReturnType<typeof v2TeamsControllerUpdateTeam>>>
-    export type V2TeamsControllerUpdateTeamMutationBody = BodyType<UpdateTeamDto>
-    export type V2TeamsControllerUpdateTeamMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a team
- */
-export const useV2TeamsControllerUpdateTeam = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerUpdateTeam>>, TError,{slug: unknown;teamId: string;data: BodyType<UpdateTeamDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2TeamsControllerUpdateTeam>>,
-        TError,
-        {slug: unknown;teamId: string;data: BodyType<UpdateTeamDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2TeamsControllerUpdateTeamMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires teams:write scope.
- * @summary Delete a team
- */
-export const v2TeamsControllerDeleteTeam = (
-    slug: unknown,
-    teamId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/teams/${teamId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2TeamsControllerDeleteTeamMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerDeleteTeam>>, TError,{slug: unknown;teamId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerDeleteTeam>>, TError,{slug: unknown;teamId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2TeamsControllerDeleteTeam>>, {slug: unknown;teamId: string}> = (props) => {
-          const {slug,teamId} = props ?? {};
-
-          return  v2TeamsControllerDeleteTeam(slug,teamId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2TeamsControllerDeleteTeamMutationResult = NonNullable<Awaited<ReturnType<typeof v2TeamsControllerDeleteTeam>>>
-
-    export type V2TeamsControllerDeleteTeamMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a team
- */
-export const useV2TeamsControllerDeleteTeam = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2TeamsControllerDeleteTeam>>, TError,{slug: unknown;teamId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2TeamsControllerDeleteTeam>>,
-        TError,
-        {slug: unknown;teamId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2TeamsControllerDeleteTeamMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires announcements:read scope.
- * @summary List all announcements in the workspace
- */
-export const v2AnnouncementsControllerGetAnnouncements = (
-    slug: unknown,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2AnnouncementsControllerGetAnnouncementsQueryKey = (slug: unknown,) => {
-    return [`/api/v2/workspaces/${slug}/announcements`] as const;
-    }
-
-
-export const getV2AnnouncementsControllerGetAnnouncementsQueryOptions = <TData = Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>, TError = ErrorType<unknown>>(slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2AnnouncementsControllerGetAnnouncementsQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>> = ({ signal }) => v2AnnouncementsControllerGetAnnouncements(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2AnnouncementsControllerGetAnnouncementsQueryResult = NonNullable<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>>
-export type V2AnnouncementsControllerGetAnnouncementsQueryError = ErrorType<unknown>
-
-/**
- * @summary List all announcements in the workspace
- */
-export const useV2AnnouncementsControllerGetAnnouncements = <TData = Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>, TError = ErrorType<unknown>>(
- slug: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2AnnouncementsControllerGetAnnouncementsQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires announcements:write scope.
- * @summary Create a new announcement
- */
-export const v2AnnouncementsControllerCreateAnnouncement = (
-    slug: unknown,
-    createAnnouncementDto: BodyType<CreateAnnouncementDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createAnnouncementDto
-    },
-      options);
-    }
-
-
-
-export const getV2AnnouncementsControllerCreateAnnouncementMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerCreateAnnouncement>>, TError,{slug: unknown;data: BodyType<CreateAnnouncementDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerCreateAnnouncement>>, TError,{slug: unknown;data: BodyType<CreateAnnouncementDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2AnnouncementsControllerCreateAnnouncement>>, {slug: unknown;data: BodyType<CreateAnnouncementDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  v2AnnouncementsControllerCreateAnnouncement(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2AnnouncementsControllerCreateAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof v2AnnouncementsControllerCreateAnnouncement>>>
-    export type V2AnnouncementsControllerCreateAnnouncementMutationBody = BodyType<CreateAnnouncementDto>
-    export type V2AnnouncementsControllerCreateAnnouncementMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new announcement
- */
-export const useV2AnnouncementsControllerCreateAnnouncement = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerCreateAnnouncement>>, TError,{slug: unknown;data: BodyType<CreateAnnouncementDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2AnnouncementsControllerCreateAnnouncement>>,
-        TError,
-        {slug: unknown;data: BodyType<CreateAnnouncementDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2AnnouncementsControllerCreateAnnouncementMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires announcements:read scope.
- * @summary Get details of a specific announcement
- */
-export const v2AnnouncementsControllerGetAnnouncement = (
-    slug: unknown,
-    announcementId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements/${announcementId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2AnnouncementsControllerGetAnnouncementQueryKey = (slug: unknown,
-    announcementId: string,) => {
-    return [`/api/v2/workspaces/${slug}/announcements/${announcementId}`] as const;
-    }
-
-
-export const getV2AnnouncementsControllerGetAnnouncementQueryOptions = <TData = Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>, TError = ErrorType<unknown>>(slug: unknown,
-    announcementId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2AnnouncementsControllerGetAnnouncementQueryKey(slug,announcementId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>> = ({ signal }) => v2AnnouncementsControllerGetAnnouncement(slug,announcementId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && announcementId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2AnnouncementsControllerGetAnnouncementQueryResult = NonNullable<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>>
-export type V2AnnouncementsControllerGetAnnouncementQueryError = ErrorType<unknown>
-
-/**
- * @summary Get details of a specific announcement
- */
-export const useV2AnnouncementsControllerGetAnnouncement = <TData = Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>, TError = ErrorType<unknown>>(
- slug: unknown,
-    announcementId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerGetAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2AnnouncementsControllerGetAnnouncementQueryOptions(slug,announcementId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Requires announcements:write scope.
- * @summary Update an announcement
- */
-export const v2AnnouncementsControllerUpdateAnnouncement = (
-    slug: unknown,
-    announcementId: string,
-    updateAnnouncementDto: BodyType<UpdateAnnouncementDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements/${announcementId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateAnnouncementDto
-    },
-      options);
-    }
-
-
-
-export const getV2AnnouncementsControllerUpdateAnnouncementMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerUpdateAnnouncement>>, TError,{slug: unknown;announcementId: string;data: BodyType<UpdateAnnouncementDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerUpdateAnnouncement>>, TError,{slug: unknown;announcementId: string;data: BodyType<UpdateAnnouncementDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2AnnouncementsControllerUpdateAnnouncement>>, {slug: unknown;announcementId: string;data: BodyType<UpdateAnnouncementDto>}> = (props) => {
-          const {slug,announcementId,data} = props ?? {};
-
-          return  v2AnnouncementsControllerUpdateAnnouncement(slug,announcementId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2AnnouncementsControllerUpdateAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof v2AnnouncementsControllerUpdateAnnouncement>>>
-    export type V2AnnouncementsControllerUpdateAnnouncementMutationBody = BodyType<UpdateAnnouncementDto>
-    export type V2AnnouncementsControllerUpdateAnnouncementMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update an announcement
- */
-export const useV2AnnouncementsControllerUpdateAnnouncement = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerUpdateAnnouncement>>, TError,{slug: unknown;announcementId: string;data: BodyType<UpdateAnnouncementDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2AnnouncementsControllerUpdateAnnouncement>>,
-        TError,
-        {slug: unknown;announcementId: string;data: BodyType<UpdateAnnouncementDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2AnnouncementsControllerUpdateAnnouncementMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires announcements:write scope.
- * @summary Delete an announcement
- */
-export const v2AnnouncementsControllerDeleteAnnouncement = (
-    slug: unknown,
-    announcementId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/workspaces/${slug}/announcements/${announcementId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getV2AnnouncementsControllerDeleteAnnouncementMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerDeleteAnnouncement>>, TError,{slug: unknown;announcementId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerDeleteAnnouncement>>, TError,{slug: unknown;announcementId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2AnnouncementsControllerDeleteAnnouncement>>, {slug: unknown;announcementId: string}> = (props) => {
-          const {slug,announcementId} = props ?? {};
-
-          return  v2AnnouncementsControllerDeleteAnnouncement(slug,announcementId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2AnnouncementsControllerDeleteAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof v2AnnouncementsControllerDeleteAnnouncement>>>
-
-    export type V2AnnouncementsControllerDeleteAnnouncementMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete an announcement
- */
-export const useV2AnnouncementsControllerDeleteAnnouncement = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2AnnouncementsControllerDeleteAnnouncement>>, TError,{slug: unknown;announcementId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2AnnouncementsControllerDeleteAnnouncement>>,
-        TError,
-        {slug: unknown;announcementId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2AnnouncementsControllerDeleteAnnouncementMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- *
-Used for bot, integration, and M2M authentication.
-
-**Scopes available:**
-- `*`: Full access (only for internal system bots).
-- `provisioning:workspaces`: Ability to create and manage workspaces.
-- `messages:read`: Read messages in allowed channels.
-- `messages:send`: Send messages and trigger actions.
-- `channels:read`: List and view channel details.
-- `channels:write`: Create and manage channels.
-- `webhooks:read`: View webhook configurations.
-- `webhooks:write`: Manage webhooks.
-
- * @summary Exchange client credentials for an access token
- */
-export const v2OAuthControllerGetToken = (
-    tokenRequestDto: BodyType<TokenRequestDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<V2OAuthControllerGetToken200>(
-      {url: `/api/v2/oauth/token`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: tokenRequestDto
-    },
-      options);
-    }
-
-
-
-export const getV2OAuthControllerGetTokenMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2OAuthControllerGetToken>>, TError,{data: BodyType<TokenRequestDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2OAuthControllerGetToken>>, TError,{data: BodyType<TokenRequestDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2OAuthControllerGetToken>>, {data: BodyType<TokenRequestDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  v2OAuthControllerGetToken(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2OAuthControllerGetTokenMutationResult = NonNullable<Awaited<ReturnType<typeof v2OAuthControllerGetToken>>>
-    export type V2OAuthControllerGetTokenMutationBody = BodyType<TokenRequestDto>
-    export type V2OAuthControllerGetTokenMutationError = ErrorType<void>
-
-    /**
- * @summary Exchange client credentials for an access token
- */
-export const useV2OAuthControllerGetToken = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2OAuthControllerGetToken>>, TError,{data: BodyType<TokenRequestDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2OAuthControllerGetToken>>,
-        TError,
-        {data: BodyType<TokenRequestDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2OAuthControllerGetTokenMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * Requires an authenticated user or M2M app.
- * @summary Create a new bot application
- */
-export const v2ApplicationsControllerCreateApplication = (
-    createApplicationDto: BodyType<CreateApplicationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createApplicationDto
-    },
-      options);
-    }
-
-
-
-export const getV2ApplicationsControllerCreateApplicationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerCreateApplication>>, TError,{data: BodyType<CreateApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerCreateApplication>>, TError,{data: BodyType<CreateApplicationDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApplicationsControllerCreateApplication>>, {data: BodyType<CreateApplicationDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  v2ApplicationsControllerCreateApplication(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApplicationsControllerCreateApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerCreateApplication>>>
-    export type V2ApplicationsControllerCreateApplicationMutationBody = BodyType<CreateApplicationDto>
-    export type V2ApplicationsControllerCreateApplicationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new bot application
- */
-export const useV2ApplicationsControllerCreateApplication = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerCreateApplication>>, TError,{data: BodyType<CreateApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApplicationsControllerCreateApplication>>,
-        TError,
-        {data: BodyType<CreateApplicationDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApplicationsControllerCreateApplicationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary List all bot applications owned by the user or organization
- */
-export const v2ApplicationsControllerGetApplications = (
-
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2ApplicationsControllerGetApplicationsQueryKey = () => {
-    return [`/api/v2/applications`] as const;
-    }
-
-
-export const getV2ApplicationsControllerGetApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2ApplicationsControllerGetApplicationsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>> = ({ signal }) => v2ApplicationsControllerGetApplications(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2ApplicationsControllerGetApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>>
-export type V2ApplicationsControllerGetApplicationsQueryError = ErrorType<unknown>
-
-/**
- * @summary List all bot applications owned by the user or organization
- */
-export const useV2ApplicationsControllerGetApplications = <TData = Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2ApplicationsControllerGetApplicationsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get details of a specific bot application
- */
-export const v2ApplicationsControllerGetApplication = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getV2ApplicationsControllerGetApplicationQueryKey = (id: string,) => {
-    return [`/api/v2/applications/${id}`] as const;
-    }
-
-
-export const getV2ApplicationsControllerGetApplicationQueryOptions = <TData = Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getV2ApplicationsControllerGetApplicationQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>> = ({ signal }) => v2ApplicationsControllerGetApplication(id, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type V2ApplicationsControllerGetApplicationQueryResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>>
-export type V2ApplicationsControllerGetApplicationQueryError = ErrorType<unknown>
-
-/**
- * @summary Get details of a specific bot application
- */
-export const useV2ApplicationsControllerGetApplication = <TData = Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>, TError = ErrorType<unknown>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v2ApplicationsControllerGetApplication>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getV2ApplicationsControllerGetApplicationQueryOptions(id,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update a bot application
- */
-export const v2ApplicationsControllerUpdateApplication = (
-    id: string,
-    updateApplicationDto: BodyType<UpdateApplicationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: updateApplicationDto
-    },
-      options);
-    }
-
-
-
-export const getV2ApplicationsControllerUpdateApplicationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerUpdateApplication>>, TError,{id: string;data: BodyType<UpdateApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerUpdateApplication>>, TError,{id: string;data: BodyType<UpdateApplicationDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApplicationsControllerUpdateApplication>>, {id: string;data: BodyType<UpdateApplicationDto>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  v2ApplicationsControllerUpdateApplication(id,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApplicationsControllerUpdateApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerUpdateApplication>>>
-    export type V2ApplicationsControllerUpdateApplicationMutationBody = BodyType<UpdateApplicationDto>
-    export type V2ApplicationsControllerUpdateApplicationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a bot application
- */
-export const useV2ApplicationsControllerUpdateApplication = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerUpdateApplication>>, TError,{id: string;data: BodyType<UpdateApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApplicationsControllerUpdateApplication>>,
-        TError,
-        {id: string;data: BodyType<UpdateApplicationDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApplicationsControllerUpdateApplicationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete a bot application
- */
-export const v2ApplicationsControllerDeleteApplication = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}/delete`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getV2ApplicationsControllerDeleteApplicationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerDeleteApplication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerDeleteApplication>>, TError,{id: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApplicationsControllerDeleteApplication>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  v2ApplicationsControllerDeleteApplication(id,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApplicationsControllerDeleteApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerDeleteApplication>>>
-
-    export type V2ApplicationsControllerDeleteApplicationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a bot application
- */
-export const useV2ApplicationsControllerDeleteApplication = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerDeleteApplication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApplicationsControllerDeleteApplication>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApplicationsControllerDeleteApplicationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Reset the bot user token
- */
-export const v2ApplicationsControllerResetBotToken = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}/reset-token`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getV2ApplicationsControllerResetBotTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerResetBotToken>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerResetBotToken>>, TError,{id: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApplicationsControllerResetBotToken>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  v2ApplicationsControllerResetBotToken(id,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApplicationsControllerResetBotTokenMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerResetBotToken>>>
-
-    export type V2ApplicationsControllerResetBotTokenMutationError = ErrorType<unknown>
-
-    /**
- * @summary Reset the bot user token
- */
-export const useV2ApplicationsControllerResetBotToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerResetBotToken>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApplicationsControllerResetBotToken>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApplicationsControllerResetBotTokenMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Install the bot into a workspace
- */
-export const v2ApplicationsControllerInstallBot = (
-    id: string,
-    v2ApplicationsControllerInstallBotBody: BodyType<V2ApplicationsControllerInstallBotBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/applications/${id}/install`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: v2ApplicationsControllerInstallBotBody
-    },
-      options);
-    }
-
-
-
-export const getV2ApplicationsControllerInstallBotMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerInstallBot>>, TError,{id: string;data: BodyType<V2ApplicationsControllerInstallBotBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerInstallBot>>, TError,{id: string;data: BodyType<V2ApplicationsControllerInstallBotBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ApplicationsControllerInstallBot>>, {id: string;data: BodyType<V2ApplicationsControllerInstallBotBody>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  v2ApplicationsControllerInstallBot(id,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ApplicationsControllerInstallBotMutationResult = NonNullable<Awaited<ReturnType<typeof v2ApplicationsControllerInstallBot>>>
-    export type V2ApplicationsControllerInstallBotMutationBody = BodyType<V2ApplicationsControllerInstallBotBody>
-    export type V2ApplicationsControllerInstallBotMutationError = ErrorType<unknown>
-
-    /**
- * @summary Install the bot into a workspace
- */
-export const useV2ApplicationsControllerInstallBot = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ApplicationsControllerInstallBot>>, TError,{id: string;data: BodyType<V2ApplicationsControllerInstallBotBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ApplicationsControllerInstallBot>>,
-        TError,
-        {id: string;data: BodyType<V2ApplicationsControllerInstallBotBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ApplicationsControllerInstallBotMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Submit a contact form
- */
-export const v2ContactControllerSubmitContactForm = (
-    v2ContactControllerSubmitContactFormBody: BodyType<V2ContactControllerSubmitContactFormBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/contact`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: v2ContactControllerSubmitContactFormBody
-    },
-      options);
-    }
-
-
-
-export const getV2ContactControllerSubmitContactFormMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ContactControllerSubmitContactForm>>, TError,{data: BodyType<V2ContactControllerSubmitContactFormBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v2ContactControllerSubmitContactForm>>, TError,{data: BodyType<V2ContactControllerSubmitContactFormBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v2ContactControllerSubmitContactForm>>, {data: BodyType<V2ContactControllerSubmitContactFormBody>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  v2ContactControllerSubmitContactForm(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type V2ContactControllerSubmitContactFormMutationResult = NonNullable<Awaited<ReturnType<typeof v2ContactControllerSubmitContactForm>>>
-    export type V2ContactControllerSubmitContactFormMutationBody = BodyType<V2ContactControllerSubmitContactFormBody>
-    export type V2ContactControllerSubmitContactFormMutationError = ErrorType<unknown>
-
-    /**
- * @summary Submit a contact form
- */
-export const useV2ContactControllerSubmitContactForm = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v2ContactControllerSubmitContactForm>>, TError,{data: BodyType<V2ContactControllerSubmitContactFormBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof v2ContactControllerSubmitContactForm>>,
-        TError,
-        {data: BodyType<V2ContactControllerSubmitContactFormBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getV2ContactControllerSubmitContactFormMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- *
-Provisions a new workspace within your organization.
-When provisioned via M2M:
-1. A **System Bot** (Default Bot) is automatically created with admin privileges for the workspace.
-2. Your M2M application is installed as an **Administrator** in the new workspace.
-3. The specified owner and initial members are added (must belong to the same organization).
-
-The System Bot acts as the default sender for messages and announcements sent via M2M if no application-specific bot is configured.
-
- * @summary Provision a new workspace (Enterprise M2M)
- */
-export const provisioningControllerProvisionWorkspace = (
-    provisionWorkspaceDto: BodyType<ProvisionWorkspaceDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/v2/provisioning/workspaces`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: provisionWorkspaceDto
-    },
-      options);
-    }
-
-
-
-export const getProvisioningControllerProvisionWorkspaceMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof provisioningControllerProvisionWorkspace>>, TError,{data: BodyType<ProvisionWorkspaceDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof provisioningControllerProvisionWorkspace>>, TError,{data: BodyType<ProvisionWorkspaceDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof provisioningControllerProvisionWorkspace>>, {data: BodyType<ProvisionWorkspaceDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  provisioningControllerProvisionWorkspace(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ProvisioningControllerProvisionWorkspaceMutationResult = NonNullable<Awaited<ReturnType<typeof provisioningControllerProvisionWorkspace>>>
-    export type ProvisioningControllerProvisionWorkspaceMutationBody = BodyType<ProvisionWorkspaceDto>
-    export type ProvisioningControllerProvisionWorkspaceMutationError = ErrorType<void>
-
-    /**
- * @summary Provision a new workspace (Enterprise M2M)
- */
-export const useProvisioningControllerProvisionWorkspace = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof provisioningControllerProvisionWorkspace>>, TError,{data: BodyType<ProvisionWorkspaceDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof provisioningControllerProvisionWorkspace>>,
-        TError,
-        {data: BodyType<ProvisionWorkspaceDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getProvisioningControllerProvisionWorkspaceMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary List workspaces for an organization
- */
-export const organizationsControllerGetOrganizationWorkspaces = (
-    orgSlug: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/organizations/${orgSlug}/workspaces`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getOrganizationsControllerGetOrganizationWorkspacesQueryKey = (orgSlug: string,) => {
-    return [`/api/organizations/${orgSlug}/workspaces`] as const;
-    }
-
-
-export const getOrganizationsControllerGetOrganizationWorkspacesQueryOptions = <TData = Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>, TError = ErrorType<unknown>>(orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getOrganizationsControllerGetOrganizationWorkspacesQueryKey(orgSlug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>> = ({ signal }) => organizationsControllerGetOrganizationWorkspaces(orgSlug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(orgSlug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type OrganizationsControllerGetOrganizationWorkspacesQueryResult = NonNullable<Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>>
-export type OrganizationsControllerGetOrganizationWorkspacesQueryError = ErrorType<unknown>
-
-/**
- * @summary List workspaces for an organization
- */
-export const useOrganizationsControllerGetOrganizationWorkspaces = <TData = Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>, TError = ErrorType<unknown>>(
- orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationsControllerGetOrganizationWorkspaces>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getOrganizationsControllerGetOrganizationWorkspacesQueryOptions(orgSlug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get organization details
- */
-export const organizationsControllerGetOrganization = (
-    orgSlug: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/organizations/${orgSlug}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getOrganizationsControllerGetOrganizationQueryKey = (orgSlug: string,) => {
-    return [`/api/organizations/${orgSlug}`] as const;
-    }
-
-
-export const getOrganizationsControllerGetOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof organizationsControllerGetOrganization>>, TError = ErrorType<unknown>>(orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationsControllerGetOrganization>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getOrganizationsControllerGetOrganizationQueryKey(orgSlug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof organizationsControllerGetOrganization>>> = ({ signal }) => organizationsControllerGetOrganization(orgSlug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(orgSlug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof organizationsControllerGetOrganization>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type OrganizationsControllerGetOrganizationQueryResult = NonNullable<Awaited<ReturnType<typeof organizationsControllerGetOrganization>>>
-export type OrganizationsControllerGetOrganizationQueryError = ErrorType<unknown>
-
-/**
- * @summary Get organization details
- */
-export const useOrganizationsControllerGetOrganization = <TData = Awaited<ReturnType<typeof organizationsControllerGetOrganization>>, TError = ErrorType<unknown>>(
- orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationsControllerGetOrganization>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getOrganizationsControllerGetOrganizationQueryOptions(orgSlug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update organization details
- */
-export const organizationsControllerUpdateOrganization = (
-    orgSlug: string,
-    updateOrganizationDto: BodyType<UpdateOrganizationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/organizations/${orgSlug}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateOrganizationDto
-    },
-      options);
-    }
-
-
-
-export const getOrganizationsControllerUpdateOrganizationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof organizationsControllerUpdateOrganization>>, TError,{orgSlug: string;data: BodyType<UpdateOrganizationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof organizationsControllerUpdateOrganization>>, TError,{orgSlug: string;data: BodyType<UpdateOrganizationDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof organizationsControllerUpdateOrganization>>, {orgSlug: string;data: BodyType<UpdateOrganizationDto>}> = (props) => {
-          const {orgSlug,data} = props ?? {};
-
-          return  organizationsControllerUpdateOrganization(orgSlug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type OrganizationsControllerUpdateOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof organizationsControllerUpdateOrganization>>>
-    export type OrganizationsControllerUpdateOrganizationMutationBody = BodyType<UpdateOrganizationDto>
-    export type OrganizationsControllerUpdateOrganizationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update organization details
- */
-export const useOrganizationsControllerUpdateOrganization = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof organizationsControllerUpdateOrganization>>, TError,{orgSlug: string;data: BodyType<UpdateOrganizationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof organizationsControllerUpdateOrganization>>,
-        TError,
-        {orgSlug: string;data: BodyType<UpdateOrganizationDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getOrganizationsControllerUpdateOrganizationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Handle Plane webhook
- */
-export const integrationsControllerHandlePlaneWebhook = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/plane/webhook`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerHandlePlaneWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, TError,void, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, void> = () => {
-
-
-          return  integrationsControllerHandlePlaneWebhook(requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerHandlePlaneWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>>
-
-    export type IntegrationsControllerHandlePlaneWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Handle Plane webhook
- */
-export const useIntegrationsControllerHandlePlaneWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerHandlePlaneWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Handle Huly webhook
- */
-export const integrationsControllerHandleHulyWebhook = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/huly/webhook/${id}`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerHandleHulyWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, TError,{id: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  integrationsControllerHandleHulyWebhook(id,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerHandleHulyWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>>
-
-    export type IntegrationsControllerHandleHulyWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Handle Huly webhook
- */
-export const useIntegrationsControllerHandleHulyWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerHandleHulyWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get integration statistics
- */
-export const integrationsControllerGetStats = (
-
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/stats`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getIntegrationsControllerGetStatsQueryKey = () => {
-    return [`/api/integrations/stats`] as const;
-    }
-
-
-export const getIntegrationsControllerGetStatsQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetStatsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetStats>>> = ({ signal }) => integrationsControllerGetStats(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type IntegrationsControllerGetStatsQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetStats>>>
-export type IntegrationsControllerGetStatsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get integration statistics
- */
-export const useIntegrationsControllerGetStats = <TData = Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getIntegrationsControllerGetStatsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get all integration webhooks
- */
-export const integrationsControllerGetWebhooks = (
-
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getIntegrationsControllerGetWebhooksQueryKey = () => {
-    return [`/api/integrations/webhooks`] as const;
-    }
-
-
-export const getIntegrationsControllerGetWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetWebhooksQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>> = ({ signal }) => integrationsControllerGetWebhooks(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type IntegrationsControllerGetWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>>
-export type IntegrationsControllerGetWebhooksQueryError = ErrorType<unknown>
-
-/**
- * @summary Get all integration webhooks
- */
-export const useIntegrationsControllerGetWebhooks = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getIntegrationsControllerGetWebhooksQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Create an integration webhook
- */
-export const integrationsControllerCreateWebhook = (
-    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createIntegrationWebhookDto
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerCreateWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, TError,{data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, TError,{data: BodyType<CreateIntegrationWebhookDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, {data: BodyType<CreateIntegrationWebhookDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  integrationsControllerCreateWebhook(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerCreateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>>
-    export type IntegrationsControllerCreateWebhookMutationBody = BodyType<CreateIntegrationWebhookDto>
-    export type IntegrationsControllerCreateWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create an integration webhook
- */
-export const useIntegrationsControllerCreateWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, TError,{data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>,
-        TError,
-        {data: BodyType<CreateIntegrationWebhookDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerCreateWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Update an integration webhook
- */
-export const integrationsControllerUpdateWebhook = (
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks/${webhookId}`, method: 'PATCH'
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerUpdateWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, TError,{webhookId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, {webhookId: string}> = (props) => {
-          const {webhookId} = props ?? {};
-
-          return  integrationsControllerUpdateWebhook(webhookId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerUpdateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>>
-
-    export type IntegrationsControllerUpdateWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update an integration webhook
- */
-export const useIntegrationsControllerUpdateWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>,
-        TError,
-        {webhookId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerUpdateWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete an integration webhook
- */
-export const integrationsControllerDeleteWebhook = (
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks/${webhookId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerDeleteWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, TError,{webhookId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, {webhookId: string}> = (props) => {
-          const {webhookId} = props ?? {};
-
-          return  integrationsControllerDeleteWebhook(webhookId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerDeleteWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>>
-
-    export type IntegrationsControllerDeleteWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete an integration webhook
- */
-export const useIntegrationsControllerDeleteWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>,
-        TError,
-        {webhookId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerDeleteWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get integration webhook logs
- */
-export const integrationsControllerGetWebhookLogs = (
-    webhookId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/webhooks/${webhookId}/logs`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getIntegrationsControllerGetWebhookLogsQueryKey = (webhookId: string,) => {
-    return [`/api/integrations/webhooks/${webhookId}/logs`] as const;
-    }
-
-
-export const getIntegrationsControllerGetWebhookLogsQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError = ErrorType<unknown>>(webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetWebhookLogsQueryKey(webhookId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>> = ({ signal }) => integrationsControllerGetWebhookLogs(webhookId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(webhookId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type IntegrationsControllerGetWebhookLogsQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>>
-export type IntegrationsControllerGetWebhookLogsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get integration webhook logs
- */
-export const useIntegrationsControllerGetWebhookLogs = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError = ErrorType<unknown>>(
- webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getIntegrationsControllerGetWebhookLogsQueryOptions(webhookId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get all integration API keys
- */
-export const integrationsControllerGetApiKeys = (
-
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/api-keys`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getIntegrationsControllerGetApiKeysQueryKey = () => {
-    return [`/api/integrations/api-keys`] as const;
-    }
-
-
-export const getIntegrationsControllerGetApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetApiKeysQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>> = ({ signal }) => integrationsControllerGetApiKeys(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type IntegrationsControllerGetApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>>
-export type IntegrationsControllerGetApiKeysQueryError = ErrorType<unknown>
-
-/**
- * @summary Get all integration API keys
- */
-export const useIntegrationsControllerGetApiKeys = <TData = Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getIntegrationsControllerGetApiKeysQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update an integration API key
- */
-export const integrationsControllerUpdateApiKey = (
-    keyId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/api-keys/${keyId}`, method: 'PATCH'
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerUpdateApiKeyMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, TError,{keyId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, {keyId: string}> = (props) => {
-          const {keyId} = props ?? {};
-
-          return  integrationsControllerUpdateApiKey(keyId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerUpdateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>>
-
-    export type IntegrationsControllerUpdateApiKeyMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update an integration API key
- */
-export const useIntegrationsControllerUpdateApiKey = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>,
-        TError,
-        {keyId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerUpdateApiKeyMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete an integration API key
- */
-export const integrationsControllerDeleteApiKey = (
-    keyId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/integrations/api-keys/${keyId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getIntegrationsControllerDeleteApiKeyMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, TError,{keyId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, {keyId: string}> = (props) => {
-          const {keyId} = props ?? {};
-
-          return  integrationsControllerDeleteApiKey(keyId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerDeleteApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>>
-
-    export type IntegrationsControllerDeleteApiKeyMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete an integration API key
- */
-export const useIntegrationsControllerDeleteApiKey = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>,
-        TError,
-        {keyId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationsControllerDeleteApiKeyMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get all integrations for a workspace
- */
-export const workspaceIntegrationsControllerGetWorkspaceIntegrations = (
-    slug: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryKey = (slug: string,) => {
-    return [`/api/workspaces/${slug}/integrations`] as const;
-    }
-
-
-export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>> = ({ signal }) => workspaceIntegrationsControllerGetWorkspaceIntegrations(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>>
-export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get all integrations for a workspace
- */
-export const useWorkspaceIntegrationsControllerGetWorkspaceIntegrations = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError = ErrorType<unknown>>(
- slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Create a new integration for a workspace
- */
-export const workspaceIntegrationsControllerCreateWorkspaceIntegration = (
-    slug: string,
-    createIntegrationDto: BodyType<CreateIntegrationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createIntegrationDto
-    },
-      options);
-    }
-
-
-
-export const getWorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, TError,{slug: string;data: BodyType<CreateIntegrationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, TError,{slug: string;data: BodyType<CreateIntegrationDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, {slug: string;data: BodyType<CreateIntegrationDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  workspaceIntegrationsControllerCreateWorkspaceIntegration(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>>
-    export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationBody = BodyType<CreateIntegrationDto>
-    export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new integration for a workspace
- */
-export const useWorkspaceIntegrationsControllerCreateWorkspaceIntegration = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, TError,{slug: string;data: BodyType<CreateIntegrationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>,
-        TError,
-        {slug: string;data: BodyType<CreateIntegrationDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getWorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get integration details
- */
-export const workspaceIntegrationsControllerGetWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryKey = (slug: string,
-    integrationId: string,) => {
-    return [`/api/workspaces/${slug}/integrations/${integrationId}`] as const;
-    }
-
-
-export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryOptions = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError = ErrorType<void>>(slug: string,
-    integrationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryKey(slug,integrationId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>> = ({ signal }) => workspaceIntegrationsControllerGetWorkspaceIntegration(slug,integrationId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug && integrationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>>
-export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryError = ErrorType<void>
-
-/**
- * @summary Get integration details
- */
-export const useWorkspaceIntegrationsControllerGetWorkspaceIntegration = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError = ErrorType<void>>(
- slug: string,
-    integrationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryOptions(slug,integrationId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update an integration
- */
-export const workspaceIntegrationsControllerUpdateWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'PATCH'
-    },
-      options);
-    }
-
-
-
-export const getWorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, {slug: string;integrationId: string}> = (props) => {
-          const {slug,integrationId} = props ?? {};
-
-          return  workspaceIntegrationsControllerUpdateWorkspaceIntegration(slug,integrationId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>>
-
-    export type WorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update an integration
- */
-export const useWorkspaceIntegrationsControllerUpdateWorkspaceIntegration = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>,
-        TError,
-        {slug: string;integrationId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getWorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete an integration
- */
-export const workspaceIntegrationsControllerDeleteWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getWorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, {slug: string;integrationId: string}> = (props) => {
-          const {slug,integrationId} = props ?? {};
-
-          return  workspaceIntegrationsControllerDeleteWorkspaceIntegration(slug,integrationId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>>
-
-    export type WorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete an integration
- */
-export const useWorkspaceIntegrationsControllerDeleteWorkspaceIntegration = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>,
-        TError,
-        {slug: string;integrationId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getWorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Test an integration
- */
-export const workspaceIntegrationsControllerTestWorkspaceIntegration = (
-    slug: string,
-    integrationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/${integrationId}/test`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getWorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, {slug: string;integrationId: string}> = (props) => {
-          const {slug,integrationId} = props ?? {};
-
-          return  workspaceIntegrationsControllerTestWorkspaceIntegration(slug,integrationId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>>
-
-    export type WorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Test an integration
- */
-export const useWorkspaceIntegrationsControllerTestWorkspaceIntegration = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>,
-        TError,
-        {slug: string;integrationId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getWorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get all integration webhooks for a workspace
- */
-export const workspaceIntegrationsControllerGetWorkspaceWebhooks = (
-    slug: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryKey = (slug: string,) => {
-    return [`/api/workspaces/${slug}/integrations/webhooks`] as const;
-    }
-
-
-export const getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryKey(slug);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>> = ({ signal }) => workspaceIntegrationsControllerGetWorkspaceWebhooks(slug, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type WorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>>
-export type WorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryError = ErrorType<unknown>
-
-/**
- * @summary Get all integration webhooks for a workspace
- */
-export const useWorkspaceIntegrationsControllerGetWorkspaceWebhooks = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError = ErrorType<unknown>>(
- slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryOptions(slug,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Create an integration webhook for a workspace
- */
-export const workspaceIntegrationsControllerCreateWorkspaceWebhook = (
-    slug: string,
-    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createIntegrationWebhookDto
-    },
-      options);
-    }
-
-
-
-export const getWorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, TError,{slug: string;data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, TError,{slug: string;data: BodyType<CreateIntegrationWebhookDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, {slug: string;data: BodyType<CreateIntegrationWebhookDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  workspaceIntegrationsControllerCreateWorkspaceWebhook(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>>
-    export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationBody = BodyType<CreateIntegrationWebhookDto>
-    export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create an integration webhook for a workspace
- */
-export const useWorkspaceIntegrationsControllerCreateWorkspaceWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, TError,{slug: string;data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>,
-        TError,
-        {slug: string;data: BodyType<CreateIntegrationWebhookDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getWorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get notifications for the current user
- */
-export const notificationsControllerGetNotifications = (
-    params?: NotificationsControllerGetNotificationsParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getNotificationsControllerGetNotificationsQueryKey = (params?: NotificationsControllerGetNotificationsParams,) => {
-    return [`/api/notifications`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getNotificationsControllerGetNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError = ErrorType<unknown>>(params?: NotificationsControllerGetNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetNotificationsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>> = ({ signal }) => notificationsControllerGetNotifications(params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type NotificationsControllerGetNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>>
-export type NotificationsControllerGetNotificationsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get notifications for the current user
- */
-export const useNotificationsControllerGetNotifications = <TData = Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError = ErrorType<unknown>>(
- params?: NotificationsControllerGetNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getNotificationsControllerGetNotificationsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Mark all notifications as read
- */
-export const notificationsControllerMarkAllRead = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/mark-all-read`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getNotificationsControllerMarkAllReadMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, TError,void, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, void> = () => {
-
-
-          return  notificationsControllerMarkAllRead(requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerMarkAllReadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>>
-
-    export type NotificationsControllerMarkAllReadMutationError = ErrorType<unknown>
-
-    /**
- * @summary Mark all notifications as read
- */
-export const useNotificationsControllerMarkAllRead = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerMarkAllReadMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get notification settings for a workspace
- */
-export const notificationsControllerGetWorkspaceSettings = (
-    params: NotificationsControllerGetWorkspaceSettingsParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/settings/workspace`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getNotificationsControllerGetWorkspaceSettingsQueryKey = (params: NotificationsControllerGetWorkspaceSettingsParams,) => {
-    return [`/api/notifications/settings/workspace`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getNotificationsControllerGetWorkspaceSettingsQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError = ErrorType<unknown>>(params: NotificationsControllerGetWorkspaceSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetWorkspaceSettingsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>> = ({ signal }) => notificationsControllerGetWorkspaceSettings(params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type NotificationsControllerGetWorkspaceSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>>
-export type NotificationsControllerGetWorkspaceSettingsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get notification settings for a workspace
- */
-export const useNotificationsControllerGetWorkspaceSettings = <TData = Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError = ErrorType<unknown>>(
- params: NotificationsControllerGetWorkspaceSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getNotificationsControllerGetWorkspaceSettingsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update notification settings for a workspace
- */
-export const notificationsControllerUpdateWorkspaceSettings = (
-    workspaceSettingsDto: BodyType<WorkspaceSettingsDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/settings/workspace`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: workspaceSettingsDto
-    },
-      options);
-    }
-
-
-
-export const getNotificationsControllerUpdateWorkspaceSettingsMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, TError,{data: BodyType<WorkspaceSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, TError,{data: BodyType<WorkspaceSettingsDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, {data: BodyType<WorkspaceSettingsDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  notificationsControllerUpdateWorkspaceSettings(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerUpdateWorkspaceSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>>
-    export type NotificationsControllerUpdateWorkspaceSettingsMutationBody = BodyType<WorkspaceSettingsDto>
-    export type NotificationsControllerUpdateWorkspaceSettingsMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update notification settings for a workspace
- */
-export const useNotificationsControllerUpdateWorkspaceSettings = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, TError,{data: BodyType<WorkspaceSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>,
-        TError,
-        {data: BodyType<WorkspaceSettingsDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerUpdateWorkspaceSettingsMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get notification settings for a channel
- */
-export const notificationsControllerGetChannelSettings = (
-    params: NotificationsControllerGetChannelSettingsParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/settings/channel`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getNotificationsControllerGetChannelSettingsQueryKey = (params: NotificationsControllerGetChannelSettingsParams,) => {
-    return [`/api/notifications/settings/channel`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getNotificationsControllerGetChannelSettingsQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError = ErrorType<unknown>>(params: NotificationsControllerGetChannelSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetChannelSettingsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>> = ({ signal }) => notificationsControllerGetChannelSettings(params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type NotificationsControllerGetChannelSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>>
-export type NotificationsControllerGetChannelSettingsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get notification settings for a channel
- */
-export const useNotificationsControllerGetChannelSettings = <TData = Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError = ErrorType<unknown>>(
- params: NotificationsControllerGetChannelSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getNotificationsControllerGetChannelSettingsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update notification settings for a channel
- */
-export const notificationsControllerUpdateChannelSettings = (
-    channelSettingsDto: BodyType<ChannelSettingsDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/settings/channel`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: channelSettingsDto
-    },
-      options);
-    }
-
-
-
-export const getNotificationsControllerUpdateChannelSettingsMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, TError,{data: BodyType<ChannelSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, TError,{data: BodyType<ChannelSettingsDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, {data: BodyType<ChannelSettingsDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  notificationsControllerUpdateChannelSettings(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerUpdateChannelSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>>
-    export type NotificationsControllerUpdateChannelSettingsMutationBody = BodyType<ChannelSettingsDto>
-    export type NotificationsControllerUpdateChannelSettingsMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update notification settings for a channel
- */
-export const useNotificationsControllerUpdateChannelSettings = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, TError,{data: BodyType<ChannelSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>,
-        TError,
-        {data: BodyType<ChannelSettingsDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerUpdateChannelSettingsMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Update a notification (e.g. mark as read)
- */
-export const notificationsControllerUpdateNotification = (
-    notificationId: string,
-    updateNotificationDto: BodyType<UpdateNotificationDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/${notificationId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateNotificationDto
-    },
-      options);
-    }
-
-
-
-export const getNotificationsControllerUpdateNotificationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, TError,{notificationId: string;data: BodyType<UpdateNotificationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, TError,{notificationId: string;data: BodyType<UpdateNotificationDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, {notificationId: string;data: BodyType<UpdateNotificationDto>}> = (props) => {
-          const {notificationId,data} = props ?? {};
-
-          return  notificationsControllerUpdateNotification(notificationId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerUpdateNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>>
-    export type NotificationsControllerUpdateNotificationMutationBody = BodyType<UpdateNotificationDto>
-    export type NotificationsControllerUpdateNotificationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a notification (e.g. mark as read)
- */
-export const useNotificationsControllerUpdateNotification = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, TError,{notificationId: string;data: BodyType<UpdateNotificationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>,
-        TError,
-        {notificationId: string;data: BodyType<UpdateNotificationDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerUpdateNotificationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete a notification
- */
-export const notificationsControllerDeleteNotification = (
-    notificationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/notifications/${notificationId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getNotificationsControllerDeleteNotificationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, TError,{notificationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, TError,{notificationId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, {notificationId: string}> = (props) => {
-          const {notificationId} = props ?? {};
-
-          return  notificationsControllerDeleteNotification(notificationId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerDeleteNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>>
-
-    export type NotificationsControllerDeleteNotificationMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a notification
- */
-export const useNotificationsControllerDeleteNotification = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, TError,{notificationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>,
-        TError,
-        {notificationId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerDeleteNotificationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-export const ablyControllerGetToken = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/ably/token`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getAblyControllerGetTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ablyControllerGetToken>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ablyControllerGetToken>>, TError,void, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ablyControllerGetToken>>, void> = () => {
-
-
-          return  ablyControllerGetToken(requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AblyControllerGetTokenMutationResult = NonNullable<Awaited<ReturnType<typeof ablyControllerGetToken>>>
-
-    export type AblyControllerGetTokenMutationError = ErrorType<unknown>
-
-    export const useAblyControllerGetToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ablyControllerGetToken>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof ablyControllerGetToken>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getAblyControllerGetTokenMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Upload a file
- */
-export const storageControllerUploadFile = (
-    storageControllerUploadFileBody: BodyType<StorageControllerUploadFileBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-      const formData = new FormData();
-if(storageControllerUploadFileBody.file !== undefined) {
- formData.append('file', storageControllerUploadFileBody.file)
- }
-
-      return customInstance<void>(
-      {url: `/api/storage/upload`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-
-
-export const getStorageControllerUploadFileMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: BodyType<StorageControllerUploadFileBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: BodyType<StorageControllerUploadFileBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storageControllerUploadFile>>, {data: BodyType<StorageControllerUploadFileBody>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  storageControllerUploadFile(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StorageControllerUploadFileMutationResult = NonNullable<Awaited<ReturnType<typeof storageControllerUploadFile>>>
-    export type StorageControllerUploadFileMutationBody = BodyType<StorageControllerUploadFileBody>
-    export type StorageControllerUploadFileMutationError = ErrorType<unknown>
-
-    /**
- * @summary Upload a file
- */
-export const useStorageControllerUploadFile = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: BodyType<StorageControllerUploadFileBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof storageControllerUploadFile>>,
-        TError,
-        {data: BodyType<StorageControllerUploadFileBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getStorageControllerUploadFileMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Proxy file request using high-performance streaming
- */
-export const shortUrlControllerRedirect = (
-    code: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/s/${code}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getShortUrlControllerRedirectQueryKey = (code: string,) => {
-    return [`/s/${code}`] as const;
-    }
-
-
-export const getShortUrlControllerRedirectQueryOptions = <TData = Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError = ErrorType<unknown>>(code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getShortUrlControllerRedirectQueryKey(code);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof shortUrlControllerRedirect>>> = ({ signal }) => shortUrlControllerRedirect(code, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(code), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ShortUrlControllerRedirectQueryResult = NonNullable<Awaited<ReturnType<typeof shortUrlControllerRedirect>>>
-export type ShortUrlControllerRedirectQueryError = ErrorType<unknown>
-
-/**
- * @summary Proxy file request using high-performance streaming
- */
-export const useShortUrlControllerRedirect = <TData = Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError = ErrorType<unknown>>(
- code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getShortUrlControllerRedirectQueryOptions(code,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
 
 export const v10UsersControllerGetUser = (
     id: string,
@@ -9969,6 +4713,965 @@ export const useV3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId = <
     }
 
 /**
+ * @summary List workspaces for an organization
+ */
+export const v3OrganizationsControllerGetOrganizationWorkspaces = (
+    orgSlug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/workspaces`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3OrganizationsControllerGetOrganizationWorkspacesQueryKey = (orgSlug: string,) => {
+    return [`/api/v3/organizations/${orgSlug}/workspaces`] as const;
+    }
+
+
+export const getV3OrganizationsControllerGetOrganizationWorkspacesQueryOptions = <TData = Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>, TError = ErrorType<unknown>>(orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3OrganizationsControllerGetOrganizationWorkspacesQueryKey(orgSlug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>> = ({ signal }) => v3OrganizationsControllerGetOrganizationWorkspaces(orgSlug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(orgSlug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3OrganizationsControllerGetOrganizationWorkspacesQueryResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>>
+export type V3OrganizationsControllerGetOrganizationWorkspacesQueryError = ErrorType<unknown>
+
+/**
+ * @summary List workspaces for an organization
+ */
+export const useV3OrganizationsControllerGetOrganizationWorkspaces = <TData = Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>, TError = ErrorType<unknown>>(
+ orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganizationWorkspaces>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3OrganizationsControllerGetOrganizationWorkspacesQueryOptions(orgSlug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get organization details
+ */
+export const v3OrganizationsControllerGetOrganization = (
+    orgSlug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3OrganizationsControllerGetOrganizationQueryKey = (orgSlug: string,) => {
+    return [`/api/v3/organizations/${orgSlug}`] as const;
+    }
+
+
+export const getV3OrganizationsControllerGetOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>, TError = ErrorType<unknown>>(orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3OrganizationsControllerGetOrganizationQueryKey(orgSlug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>> = ({ signal }) => v3OrganizationsControllerGetOrganization(orgSlug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(orgSlug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3OrganizationsControllerGetOrganizationQueryResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>>
+export type V3OrganizationsControllerGetOrganizationQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get organization details
+ */
+export const useV3OrganizationsControllerGetOrganization = <TData = Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>, TError = ErrorType<unknown>>(
+ orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetOrganization>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3OrganizationsControllerGetOrganizationQueryOptions(orgSlug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update organization details
+ */
+export const v3OrganizationsControllerUpdateOrganization = (
+    orgSlug: string,
+    v3UpdateOrganizationDto: BodyType<V3UpdateOrganizationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateOrganizationDto
+    },
+      options);
+    }
+
+
+
+export const getV3OrganizationsControllerUpdateOrganizationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateOrganization>>, TError,{orgSlug: string;data: BodyType<V3UpdateOrganizationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateOrganization>>, TError,{orgSlug: string;data: BodyType<V3UpdateOrganizationDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateOrganization>>, {orgSlug: string;data: BodyType<V3UpdateOrganizationDto>}> = (props) => {
+          const {orgSlug,data} = props ?? {};
+
+          return  v3OrganizationsControllerUpdateOrganization(orgSlug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3OrganizationsControllerUpdateOrganizationMutationResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateOrganization>>>
+    export type V3OrganizationsControllerUpdateOrganizationMutationBody = BodyType<V3UpdateOrganizationDto>
+    export type V3OrganizationsControllerUpdateOrganizationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update organization details
+ */
+export const useV3OrganizationsControllerUpdateOrganization = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateOrganization>>, TError,{orgSlug: string;data: BodyType<V3UpdateOrganizationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3OrganizationsControllerUpdateOrganization>>,
+        TError,
+        {orgSlug: string;data: BodyType<V3UpdateOrganizationDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3OrganizationsControllerUpdateOrganizationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary List organization M2M applications
+ */
+export const v3OrganizationsControllerGetM2mApplications = (
+    orgSlug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3OrganizationsControllerGetM2mApplicationsQueryKey = (orgSlug: string,) => {
+    return [`/api/v3/organizations/${orgSlug}/m2m`] as const;
+    }
+
+
+export const getV3OrganizationsControllerGetM2mApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>, TError = ErrorType<unknown>>(orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3OrganizationsControllerGetM2mApplicationsQueryKey(orgSlug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>> = ({ signal }) => v3OrganizationsControllerGetM2mApplications(orgSlug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(orgSlug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3OrganizationsControllerGetM2mApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>>
+export type V3OrganizationsControllerGetM2mApplicationsQueryError = ErrorType<unknown>
+
+/**
+ * @summary List organization M2M applications
+ */
+export const useV3OrganizationsControllerGetM2mApplications = <TData = Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>, TError = ErrorType<unknown>>(
+ orgSlug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3OrganizationsControllerGetM2mApplications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3OrganizationsControllerGetM2mApplicationsQueryOptions(orgSlug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create organization M2M application credentials
+ */
+export const v3OrganizationsControllerCreateM2mApplication = (
+    orgSlug: string,
+    v3CreateM2mApplicationDto: BodyType<V3CreateM2mApplicationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateM2mApplicationDto
+    },
+      options);
+    }
+
+
+
+export const getV3OrganizationsControllerCreateM2mApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerCreateM2mApplication>>, TError,{orgSlug: string;data: BodyType<V3CreateM2mApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerCreateM2mApplication>>, TError,{orgSlug: string;data: BodyType<V3CreateM2mApplicationDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3OrganizationsControllerCreateM2mApplication>>, {orgSlug: string;data: BodyType<V3CreateM2mApplicationDto>}> = (props) => {
+          const {orgSlug,data} = props ?? {};
+
+          return  v3OrganizationsControllerCreateM2mApplication(orgSlug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3OrganizationsControllerCreateM2mApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerCreateM2mApplication>>>
+    export type V3OrganizationsControllerCreateM2mApplicationMutationBody = BodyType<V3CreateM2mApplicationDto>
+    export type V3OrganizationsControllerCreateM2mApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create organization M2M application credentials
+ */
+export const useV3OrganizationsControllerCreateM2mApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerCreateM2mApplication>>, TError,{orgSlug: string;data: BodyType<V3CreateM2mApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3OrganizationsControllerCreateM2mApplication>>,
+        TError,
+        {orgSlug: string;data: BodyType<V3CreateM2mApplicationDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3OrganizationsControllerCreateM2mApplicationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update organization M2M application credentials and scopes
+ */
+export const v3OrganizationsControllerUpdateM2mApplication = (
+    orgSlug: string,
+    id: string,
+    v3UpdateM2mApplicationDto: BodyType<V3UpdateM2mApplicationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateM2mApplicationDto
+    },
+      options);
+    }
+
+
+
+export const getV3OrganizationsControllerUpdateM2mApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateM2mApplication>>, TError,{orgSlug: string;id: string;data: BodyType<V3UpdateM2mApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateM2mApplication>>, TError,{orgSlug: string;id: string;data: BodyType<V3UpdateM2mApplicationDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateM2mApplication>>, {orgSlug: string;id: string;data: BodyType<V3UpdateM2mApplicationDto>}> = (props) => {
+          const {orgSlug,id,data} = props ?? {};
+
+          return  v3OrganizationsControllerUpdateM2mApplication(orgSlug,id,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3OrganizationsControllerUpdateM2mApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateM2mApplication>>>
+    export type V3OrganizationsControllerUpdateM2mApplicationMutationBody = BodyType<V3UpdateM2mApplicationDto>
+    export type V3OrganizationsControllerUpdateM2mApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update organization M2M application credentials and scopes
+ */
+export const useV3OrganizationsControllerUpdateM2mApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerUpdateM2mApplication>>, TError,{orgSlug: string;id: string;data: BodyType<V3UpdateM2mApplicationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3OrganizationsControllerUpdateM2mApplication>>,
+        TError,
+        {orgSlug: string;id: string;data: BodyType<V3UpdateM2mApplicationDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3OrganizationsControllerUpdateM2mApplicationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete organization M2M application credentials
+ */
+export const v3OrganizationsControllerDeleteM2mApplication = (
+    orgSlug: string,
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/organizations/${orgSlug}/m2m/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3OrganizationsControllerDeleteM2mApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerDeleteM2mApplication>>, TError,{orgSlug: string;id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerDeleteM2mApplication>>, TError,{orgSlug: string;id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3OrganizationsControllerDeleteM2mApplication>>, {orgSlug: string;id: string}> = (props) => {
+          const {orgSlug,id} = props ?? {};
+
+          return  v3OrganizationsControllerDeleteM2mApplication(orgSlug,id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3OrganizationsControllerDeleteM2mApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v3OrganizationsControllerDeleteM2mApplication>>>
+
+    export type V3OrganizationsControllerDeleteM2mApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete organization M2M application credentials
+ */
+export const useV3OrganizationsControllerDeleteM2mApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3OrganizationsControllerDeleteM2mApplication>>, TError,{orgSlug: string;id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3OrganizationsControllerDeleteM2mApplication>>,
+        TError,
+        {orgSlug: string;id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3OrganizationsControllerDeleteM2mApplicationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get notifications for the current user
+ */
+export const notificationsControllerGetNotifications = (
+    params?: NotificationsControllerGetNotificationsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getNotificationsControllerGetNotificationsQueryKey = (params?: NotificationsControllerGetNotificationsParams,) => {
+    return [`/api/notifications`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getNotificationsControllerGetNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError = ErrorType<unknown>>(params?: NotificationsControllerGetNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetNotificationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>> = ({ signal }) => notificationsControllerGetNotifications(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type NotificationsControllerGetNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>>
+export type NotificationsControllerGetNotificationsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get notifications for the current user
+ */
+export const useNotificationsControllerGetNotifications = <TData = Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError = ErrorType<unknown>>(
+ params?: NotificationsControllerGetNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotifications>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getNotificationsControllerGetNotificationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get a single notification by ID
+ */
+export const notificationsControllerGetNotificationById = (
+    notificationId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/${notificationId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getNotificationsControllerGetNotificationByIdQueryKey = (notificationId: string,) => {
+    return [`/api/notifications/${notificationId}`] as const;
+    }
+
+
+export const getNotificationsControllerGetNotificationByIdQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>, TError = ErrorType<unknown>>(notificationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetNotificationByIdQueryKey(notificationId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>> = ({ signal }) => notificationsControllerGetNotificationById(notificationId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(notificationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type NotificationsControllerGetNotificationByIdQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>>
+export type NotificationsControllerGetNotificationByIdQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get a single notification by ID
+ */
+export const useNotificationsControllerGetNotificationById = <TData = Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>, TError = ErrorType<unknown>>(
+ notificationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetNotificationById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getNotificationsControllerGetNotificationByIdQueryOptions(notificationId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update a notification (e.g. mark as read)
+ */
+export const notificationsControllerUpdateNotification = (
+    notificationId: string,
+    updateNotificationDto: BodyType<UpdateNotificationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/${notificationId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateNotificationDto
+    },
+      options);
+    }
+
+
+
+export const getNotificationsControllerUpdateNotificationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, TError,{notificationId: string;data: BodyType<UpdateNotificationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, TError,{notificationId: string;data: BodyType<UpdateNotificationDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, {notificationId: string;data: BodyType<UpdateNotificationDto>}> = (props) => {
+          const {notificationId,data} = props ?? {};
+
+          return  notificationsControllerUpdateNotification(notificationId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerUpdateNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>>
+    export type NotificationsControllerUpdateNotificationMutationBody = BodyType<UpdateNotificationDto>
+    export type NotificationsControllerUpdateNotificationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a notification (e.g. mark as read)
+ */
+export const useNotificationsControllerUpdateNotification = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>, TError,{notificationId: string;data: BodyType<UpdateNotificationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerUpdateNotification>>,
+        TError,
+        {notificationId: string;data: BodyType<UpdateNotificationDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerUpdateNotificationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete a notification
+ */
+export const notificationsControllerDeleteNotification = (
+    notificationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/${notificationId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getNotificationsControllerDeleteNotificationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, TError,{notificationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, TError,{notificationId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, {notificationId: string}> = (props) => {
+          const {notificationId} = props ?? {};
+
+          return  notificationsControllerDeleteNotification(notificationId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerDeleteNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>>
+
+    export type NotificationsControllerDeleteNotificationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a notification
+ */
+export const useNotificationsControllerDeleteNotification = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>, TError,{notificationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerDeleteNotification>>,
+        TError,
+        {notificationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerDeleteNotificationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const notificationsControllerMarkAllRead = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/mark-all-read`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getNotificationsControllerMarkAllReadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, void> = () => {
+
+
+          return  notificationsControllerMarkAllRead(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerMarkAllReadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>>
+
+    export type NotificationsControllerMarkAllReadMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark all notifications as read
+ */
+export const useNotificationsControllerMarkAllRead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerMarkAllRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerMarkAllReadMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get notification settings for a workspace
+ */
+export const notificationsControllerGetWorkspaceSettings = (
+    params: NotificationsControllerGetWorkspaceSettingsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/settings/workspace`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getNotificationsControllerGetWorkspaceSettingsQueryKey = (params: NotificationsControllerGetWorkspaceSettingsParams,) => {
+    return [`/api/notifications/settings/workspace`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getNotificationsControllerGetWorkspaceSettingsQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError = ErrorType<unknown>>(params: NotificationsControllerGetWorkspaceSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetWorkspaceSettingsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>> = ({ signal }) => notificationsControllerGetWorkspaceSettings(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type NotificationsControllerGetWorkspaceSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>>
+export type NotificationsControllerGetWorkspaceSettingsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get notification settings for a workspace
+ */
+export const useNotificationsControllerGetWorkspaceSettings = <TData = Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError = ErrorType<unknown>>(
+ params: NotificationsControllerGetWorkspaceSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetWorkspaceSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getNotificationsControllerGetWorkspaceSettingsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update notification settings for a workspace
+ */
+export const notificationsControllerUpdateWorkspaceSettings = (
+    workspaceSettingsDto: BodyType<WorkspaceSettingsDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/settings/workspace`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: workspaceSettingsDto
+    },
+      options);
+    }
+
+
+
+export const getNotificationsControllerUpdateWorkspaceSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, TError,{data: BodyType<WorkspaceSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, TError,{data: BodyType<WorkspaceSettingsDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, {data: BodyType<WorkspaceSettingsDto>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  notificationsControllerUpdateWorkspaceSettings(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerUpdateWorkspaceSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>>
+    export type NotificationsControllerUpdateWorkspaceSettingsMutationBody = BodyType<WorkspaceSettingsDto>
+    export type NotificationsControllerUpdateWorkspaceSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update notification settings for a workspace
+ */
+export const useNotificationsControllerUpdateWorkspaceSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>, TError,{data: BodyType<WorkspaceSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerUpdateWorkspaceSettings>>,
+        TError,
+        {data: BodyType<WorkspaceSettingsDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerUpdateWorkspaceSettingsMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get notification settings for a channel
+ */
+export const notificationsControllerGetChannelSettings = (
+    params: NotificationsControllerGetChannelSettingsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/settings/channel`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getNotificationsControllerGetChannelSettingsQueryKey = (params: NotificationsControllerGetChannelSettingsParams,) => {
+    return [`/api/notifications/settings/channel`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getNotificationsControllerGetChannelSettingsQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError = ErrorType<unknown>>(params: NotificationsControllerGetChannelSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetChannelSettingsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>> = ({ signal }) => notificationsControllerGetChannelSettings(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type NotificationsControllerGetChannelSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>>
+export type NotificationsControllerGetChannelSettingsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get notification settings for a channel
+ */
+export const useNotificationsControllerGetChannelSettings = <TData = Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError = ErrorType<unknown>>(
+ params: NotificationsControllerGetChannelSettingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetChannelSettings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getNotificationsControllerGetChannelSettingsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update notification settings for a channel
+ */
+export const notificationsControllerUpdateChannelSettings = (
+    channelSettingsDto: BodyType<ChannelSettingsDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/notifications/settings/channel`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: channelSettingsDto
+    },
+      options);
+    }
+
+
+
+export const getNotificationsControllerUpdateChannelSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, TError,{data: BodyType<ChannelSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, TError,{data: BodyType<ChannelSettingsDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, {data: BodyType<ChannelSettingsDto>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  notificationsControllerUpdateChannelSettings(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerUpdateChannelSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>>
+    export type NotificationsControllerUpdateChannelSettingsMutationBody = BodyType<ChannelSettingsDto>
+    export type NotificationsControllerUpdateChannelSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update notification settings for a channel
+ */
+export const useNotificationsControllerUpdateChannelSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>, TError,{data: BodyType<ChannelSettingsDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerUpdateChannelSettings>>,
+        TError,
+        {data: BodyType<ChannelSettingsDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerUpdateChannelSettingsMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
  * @summary Get invitations for the current user
  */
 export const invitationsControllerGetInvitations = (
@@ -10206,6 +5909,1301 @@ export const useInvitationsControllerAcceptInvitation = <TError = ErrorType<void
 
       return useMutation(mutationOptions);
     }
+
+/**
+ * @summary Handle Plane webhook
+ */
+export const integrationsControllerHandlePlaneWebhook = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/plane/webhook`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerHandlePlaneWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, void> = () => {
+
+
+          return  integrationsControllerHandlePlaneWebhook(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerHandlePlaneWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>>
+
+    export type IntegrationsControllerHandlePlaneWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Handle Plane webhook
+ */
+export const useIntegrationsControllerHandlePlaneWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerHandlePlaneWebhook>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerHandlePlaneWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Handle Huly webhook
+ */
+export const integrationsControllerHandleHulyWebhook = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/huly/webhook/${id}`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerHandleHulyWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  integrationsControllerHandleHulyWebhook(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerHandleHulyWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>>
+
+    export type IntegrationsControllerHandleHulyWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Handle Huly webhook
+ */
+export const useIntegrationsControllerHandleHulyWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerHandleHulyWebhook>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerHandleHulyWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get integration statistics
+ */
+export const integrationsControllerGetStats = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/stats`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getIntegrationsControllerGetStatsQueryKey = () => {
+    return [`/api/integrations/stats`] as const;
+    }
+
+
+export const getIntegrationsControllerGetStatsQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetStats>>> = ({ signal }) => integrationsControllerGetStats(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type IntegrationsControllerGetStatsQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetStats>>>
+export type IntegrationsControllerGetStatsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get integration statistics
+ */
+export const useIntegrationsControllerGetStats = <TData = Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetStats>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getIntegrationsControllerGetStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get all integration webhooks
+ */
+export const integrationsControllerGetWebhooks = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getIntegrationsControllerGetWebhooksQueryKey = () => {
+    return [`/api/integrations/webhooks`] as const;
+    }
+
+
+export const getIntegrationsControllerGetWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetWebhooksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>> = ({ signal }) => integrationsControllerGetWebhooks(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type IntegrationsControllerGetWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>>
+export type IntegrationsControllerGetWebhooksQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all integration webhooks
+ */
+export const useIntegrationsControllerGetWebhooks = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getIntegrationsControllerGetWebhooksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create an integration webhook
+ */
+export const integrationsControllerCreateWebhook = (
+    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIntegrationWebhookDto
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerCreateWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, TError,{data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, TError,{data: BodyType<CreateIntegrationWebhookDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, {data: BodyType<CreateIntegrationWebhookDto>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  integrationsControllerCreateWebhook(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerCreateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>>
+    export type IntegrationsControllerCreateWebhookMutationBody = BodyType<CreateIntegrationWebhookDto>
+    export type IntegrationsControllerCreateWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an integration webhook
+ */
+export const useIntegrationsControllerCreateWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>, TError,{data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerCreateWebhook>>,
+        TError,
+        {data: BodyType<CreateIntegrationWebhookDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerCreateWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update an integration webhook
+ */
+export const integrationsControllerUpdateWebhook = (
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks/${webhookId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerUpdateWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, TError,{webhookId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, {webhookId: string}> = (props) => {
+          const {webhookId} = props ?? {};
+
+          return  integrationsControllerUpdateWebhook(webhookId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerUpdateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>>
+
+    export type IntegrationsControllerUpdateWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update an integration webhook
+ */
+export const useIntegrationsControllerUpdateWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerUpdateWebhook>>,
+        TError,
+        {webhookId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerUpdateWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete an integration webhook
+ */
+export const integrationsControllerDeleteWebhook = (
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks/${webhookId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerDeleteWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, TError,{webhookId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, {webhookId: string}> = (props) => {
+          const {webhookId} = props ?? {};
+
+          return  integrationsControllerDeleteWebhook(webhookId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerDeleteWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>>
+
+    export type IntegrationsControllerDeleteWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an integration webhook
+ */
+export const useIntegrationsControllerDeleteWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerDeleteWebhook>>,
+        TError,
+        {webhookId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerDeleteWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get integration webhook logs
+ */
+export const integrationsControllerGetWebhookLogs = (
+    webhookId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/webhooks/${webhookId}/logs`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getIntegrationsControllerGetWebhookLogsQueryKey = (webhookId: string,) => {
+    return [`/api/integrations/webhooks/${webhookId}/logs`] as const;
+    }
+
+
+export const getIntegrationsControllerGetWebhookLogsQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError = ErrorType<unknown>>(webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetWebhookLogsQueryKey(webhookId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>> = ({ signal }) => integrationsControllerGetWebhookLogs(webhookId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(webhookId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type IntegrationsControllerGetWebhookLogsQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>>
+export type IntegrationsControllerGetWebhookLogsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get integration webhook logs
+ */
+export const useIntegrationsControllerGetWebhookLogs = <TData = Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError = ErrorType<unknown>>(
+ webhookId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetWebhookLogs>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getIntegrationsControllerGetWebhookLogsQueryOptions(webhookId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get all integration API keys
+ */
+export const integrationsControllerGetApiKeys = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/api-keys`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getIntegrationsControllerGetApiKeysQueryKey = () => {
+    return [`/api/integrations/api-keys`] as const;
+    }
+
+
+export const getIntegrationsControllerGetApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIntegrationsControllerGetApiKeysQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>> = ({ signal }) => integrationsControllerGetApiKeys(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type IntegrationsControllerGetApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>>
+export type IntegrationsControllerGetApiKeysQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all integration API keys
+ */
+export const useIntegrationsControllerGetApiKeys = <TData = Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof integrationsControllerGetApiKeys>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getIntegrationsControllerGetApiKeysQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update an integration API key
+ */
+export const integrationsControllerUpdateApiKey = (
+    keyId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/api-keys/${keyId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerUpdateApiKeyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, TError,{keyId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, {keyId: string}> = (props) => {
+          const {keyId} = props ?? {};
+
+          return  integrationsControllerUpdateApiKey(keyId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerUpdateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>>
+
+    export type IntegrationsControllerUpdateApiKeyMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update an integration API key
+ */
+export const useIntegrationsControllerUpdateApiKey = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerUpdateApiKey>>,
+        TError,
+        {keyId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerUpdateApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete an integration API key
+ */
+export const integrationsControllerDeleteApiKey = (
+    keyId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/api-keys/${keyId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getIntegrationsControllerDeleteApiKeyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, TError,{keyId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, {keyId: string}> = (props) => {
+          const {keyId} = props ?? {};
+
+          return  integrationsControllerDeleteApiKey(keyId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerDeleteApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>>
+
+    export type IntegrationsControllerDeleteApiKeyMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an integration API key
+ */
+export const useIntegrationsControllerDeleteApiKey = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerDeleteApiKey>>,
+        TError,
+        {keyId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getIntegrationsControllerDeleteApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get all integrations for a workspace
+ */
+export const workspaceIntegrationsControllerGetWorkspaceIntegrations = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryKey = (slug: string,) => {
+    return [`/api/workspaces/${slug}/integrations`] as const;
+    }
+
+
+export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>> = ({ signal }) => workspaceIntegrationsControllerGetWorkspaceIntegrations(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>>
+export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all integrations for a workspace
+ */
+export const useWorkspaceIntegrationsControllerGetWorkspaceIntegrations = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegrations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getWorkspaceIntegrationsControllerGetWorkspaceIntegrationsQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a new integration for a workspace
+ */
+export const workspaceIntegrationsControllerCreateWorkspaceIntegration = (
+    slug: string,
+    createIntegrationDto: BodyType<CreateIntegrationDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIntegrationDto
+    },
+      options);
+    }
+
+
+
+export const getWorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, TError,{slug: string;data: BodyType<CreateIntegrationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, TError,{slug: string;data: BodyType<CreateIntegrationDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, {slug: string;data: BodyType<CreateIntegrationDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  workspaceIntegrationsControllerCreateWorkspaceIntegration(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>>
+    export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationBody = BodyType<CreateIntegrationDto>
+    export type WorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new integration for a workspace
+ */
+export const useWorkspaceIntegrationsControllerCreateWorkspaceIntegration = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>, TError,{slug: string;data: BodyType<CreateIntegrationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceIntegration>>,
+        TError,
+        {slug: string;data: BodyType<CreateIntegrationDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceIntegrationsControllerCreateWorkspaceIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get integration details
+ */
+export const workspaceIntegrationsControllerGetWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryKey = (slug: string,
+    integrationId: string,) => {
+    return [`/api/workspaces/${slug}/integrations/${integrationId}`] as const;
+    }
+
+
+export const getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryOptions = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError = ErrorType<void>>(slug: string,
+    integrationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryKey(slug,integrationId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>> = ({ signal }) => workspaceIntegrationsControllerGetWorkspaceIntegration(slug,integrationId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && integrationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>>
+export type WorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryError = ErrorType<void>
+
+/**
+ * @summary Get integration details
+ */
+export const useWorkspaceIntegrationsControllerGetWorkspaceIntegration = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError = ErrorType<void>>(
+ slug: string,
+    integrationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceIntegration>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getWorkspaceIntegrationsControllerGetWorkspaceIntegrationQueryOptions(slug,integrationId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update an integration
+ */
+export const workspaceIntegrationsControllerUpdateWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getWorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, {slug: string;integrationId: string}> = (props) => {
+          const {slug,integrationId} = props ?? {};
+
+          return  workspaceIntegrationsControllerUpdateWorkspaceIntegration(slug,integrationId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>>
+
+    export type WorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update an integration
+ */
+export const useWorkspaceIntegrationsControllerUpdateWorkspaceIntegration = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceIntegrationsControllerUpdateWorkspaceIntegration>>,
+        TError,
+        {slug: string;integrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceIntegrationsControllerUpdateWorkspaceIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete an integration
+ */
+export const workspaceIntegrationsControllerDeleteWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getWorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, {slug: string;integrationId: string}> = (props) => {
+          const {slug,integrationId} = props ?? {};
+
+          return  workspaceIntegrationsControllerDeleteWorkspaceIntegration(slug,integrationId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>>
+
+    export type WorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an integration
+ */
+export const useWorkspaceIntegrationsControllerDeleteWorkspaceIntegration = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceIntegrationsControllerDeleteWorkspaceIntegration>>,
+        TError,
+        {slug: string;integrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceIntegrationsControllerDeleteWorkspaceIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Test an integration
+ */
+export const workspaceIntegrationsControllerTestWorkspaceIntegration = (
+    slug: string,
+    integrationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/${integrationId}/test`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getWorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, {slug: string;integrationId: string}> = (props) => {
+          const {slug,integrationId} = props ?? {};
+
+          return  workspaceIntegrationsControllerTestWorkspaceIntegration(slug,integrationId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>>
+
+    export type WorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Test an integration
+ */
+export const useWorkspaceIntegrationsControllerTestWorkspaceIntegration = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>, TError,{slug: string;integrationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceIntegrationsControllerTestWorkspaceIntegration>>,
+        TError,
+        {slug: string;integrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceIntegrationsControllerTestWorkspaceIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get all integration webhooks for a workspace
+ */
+export const workspaceIntegrationsControllerGetWorkspaceWebhooks = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryKey = (slug: string,) => {
+    return [`/api/workspaces/${slug}/integrations/webhooks`] as const;
+    }
+
+
+export const getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>> = ({ signal }) => workspaceIntegrationsControllerGetWorkspaceWebhooks(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type WorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>>
+export type WorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all integration webhooks for a workspace
+ */
+export const useWorkspaceIntegrationsControllerGetWorkspaceWebhooks = <TData = Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerGetWorkspaceWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getWorkspaceIntegrationsControllerGetWorkspaceWebhooksQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create an integration webhook for a workspace
+ */
+export const workspaceIntegrationsControllerCreateWorkspaceWebhook = (
+    slug: string,
+    createIntegrationWebhookDto: BodyType<CreateIntegrationWebhookDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/integrations/webhooks`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIntegrationWebhookDto
+    },
+      options);
+    }
+
+
+
+export const getWorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, TError,{slug: string;data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, TError,{slug: string;data: BodyType<CreateIntegrationWebhookDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, {slug: string;data: BodyType<CreateIntegrationWebhookDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  workspaceIntegrationsControllerCreateWorkspaceWebhook(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>>
+    export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationBody = BodyType<CreateIntegrationWebhookDto>
+    export type WorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an integration webhook for a workspace
+ */
+export const useWorkspaceIntegrationsControllerCreateWorkspaceWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>, TError,{slug: string;data: BodyType<CreateIntegrationWebhookDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceIntegrationsControllerCreateWorkspaceWebhook>>,
+        TError,
+        {slug: string;data: BodyType<CreateIntegrationWebhookDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceIntegrationsControllerCreateWorkspaceWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+export const ablyControllerGetToken = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/ably/token`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getAblyControllerGetTokenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ablyControllerGetToken>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof ablyControllerGetToken>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ablyControllerGetToken>>, void> = () => {
+
+
+          return  ablyControllerGetToken(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AblyControllerGetTokenMutationResult = NonNullable<Awaited<ReturnType<typeof ablyControllerGetToken>>>
+
+    export type AblyControllerGetTokenMutationError = ErrorType<unknown>
+
+    export const useAblyControllerGetToken = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ablyControllerGetToken>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof ablyControllerGetToken>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getAblyControllerGetTokenMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Upload a file
+ */
+export const storageControllerUploadFile = (
+    storageControllerUploadFileBody: BodyType<StorageControllerUploadFileBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+      const formData = new FormData();
+if(storageControllerUploadFileBody.file !== undefined) {
+ formData.append('file', storageControllerUploadFileBody.file)
+ }
+
+      return customInstance<void>(
+      {url: `/api/storage/upload`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
+    },
+      options);
+    }
+
+
+
+export const getStorageControllerUploadFileMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: BodyType<StorageControllerUploadFileBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: BodyType<StorageControllerUploadFileBody>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storageControllerUploadFile>>, {data: BodyType<StorageControllerUploadFileBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  storageControllerUploadFile(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StorageControllerUploadFileMutationResult = NonNullable<Awaited<ReturnType<typeof storageControllerUploadFile>>>
+    export type StorageControllerUploadFileMutationBody = BodyType<StorageControllerUploadFileBody>
+    export type StorageControllerUploadFileMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upload a file
+ */
+export const useStorageControllerUploadFile = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: BodyType<StorageControllerUploadFileBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof storageControllerUploadFile>>,
+        TError,
+        {data: BodyType<StorageControllerUploadFileBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getStorageControllerUploadFileMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Proxy file request using high-performance streaming
+ */
+export const shortUrlControllerRedirect = (
+    code: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/s/${code}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getShortUrlControllerRedirectQueryKey = (code: string,) => {
+    return [`/s/${code}`] as const;
+    }
+
+
+export const getShortUrlControllerRedirectQueryOptions = <TData = Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError = ErrorType<unknown>>(code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getShortUrlControllerRedirectQueryKey(code);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof shortUrlControllerRedirect>>> = ({ signal }) => shortUrlControllerRedirect(code, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(code), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ShortUrlControllerRedirectQueryResult = NonNullable<Awaited<ReturnType<typeof shortUrlControllerRedirect>>>
+export type ShortUrlControllerRedirectQueryError = ErrorType<unknown>
+
+/**
+ * @summary Proxy file request using high-performance streaming
+ */
+export const useShortUrlControllerRedirect = <TData = Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError = ErrorType<unknown>>(
+ code: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortUrlControllerRedirect>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getShortUrlControllerRedirectQueryOptions(code,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
 
 /**
  * @summary Start a new call
@@ -10446,7 +7444,7 @@ export const useCallsControllerGetParticipants = <TData = Awaited<ReturnType<typ
  * @summary Get scheduled calls for a workspace
  */
 export const callsControllerGetScheduledCalls = (
-    params: CallsControllerGetScheduledCallsParams,
+    params?: CallsControllerGetScheduledCallsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
@@ -10459,12 +7457,12 @@ export const callsControllerGetScheduledCalls = (
     }
 
 
-export const getCallsControllerGetScheduledCallsQueryKey = (params: CallsControllerGetScheduledCallsParams,) => {
+export const getCallsControllerGetScheduledCallsQueryKey = (params?: CallsControllerGetScheduledCallsParams,) => {
     return [`/api/calls/scheduled`, ...(params ? [params]: [])] as const;
     }
 
 
-export const getCallsControllerGetScheduledCallsQueryOptions = <TData = Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError = ErrorType<unknown>>(params: CallsControllerGetScheduledCallsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getCallsControllerGetScheduledCallsQueryOptions = <TData = Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError = ErrorType<unknown>>(params?: CallsControllerGetScheduledCallsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -10489,7 +7487,7 @@ export type CallsControllerGetScheduledCallsQueryError = ErrorType<unknown>
  * @summary Get scheduled calls for a workspace
  */
 export const useCallsControllerGetScheduledCalls = <TData = Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError = ErrorType<unknown>>(
- params: CallsControllerGetScheduledCallsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params?: CallsControllerGetScheduledCallsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof callsControllerGetScheduledCalls>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 
   ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 
@@ -13842,6 +10840,187 @@ export const useChannelsControllerDeleteChannel = <TError = ErrorType<unknown>,
       > => {
 
       const mutationOptions = getChannelsControllerDeleteChannelMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get members of a channel
+ */
+export const channelsControllerGetChannelMembers = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getChannelsControllerGetChannelMembersQueryKey = (slug: string,
+    channelId: string,) => {
+    return [`/api/workspaces/${slug}/channels/${channelId}/members`] as const;
+    }
+
+
+export const getChannelsControllerGetChannelMembersQueryOptions = <TData = Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>, TError = ErrorType<unknown>>(slug: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getChannelsControllerGetChannelMembersQueryKey(slug,channelId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>> = ({ signal }) => channelsControllerGetChannelMembers(slug,channelId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ChannelsControllerGetChannelMembersQueryResult = NonNullable<Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>>
+export type ChannelsControllerGetChannelMembersQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get members of a channel
+ */
+export const useChannelsControllerGetChannelMembers = <TData = Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>, TError = ErrorType<unknown>>(
+ slug: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetChannelMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getChannelsControllerGetChannelMembersQueryOptions(slug,channelId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Add members to a channel
+ */
+export const channelsControllerAddChannelMembers = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerAddChannelMembersMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, {slug: string;channelId: string}> = (props) => {
+          const {slug,channelId} = props ?? {};
+
+          return  channelsControllerAddChannelMembers(slug,channelId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerAddChannelMembersMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>>
+
+    export type ChannelsControllerAddChannelMembersMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add members to a channel
+ */
+export const useChannelsControllerAddChannelMembers = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>,
+        TError,
+        {slug: string;channelId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerAddChannelMembersMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Remove a member from a channel
+ */
+export const channelsControllerRemoveChannelMember = (
+    slug: string,
+    channelId: string,
+    targetUserId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members/${targetUserId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerRemoveChannelMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveChannelMember>>, TError,{slug: string;channelId: string;targetUserId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveChannelMember>>, TError,{slug: string;channelId: string;targetUserId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerRemoveChannelMember>>, {slug: string;channelId: string;targetUserId: string}> = (props) => {
+          const {slug,channelId,targetUserId} = props ?? {};
+
+          return  channelsControllerRemoveChannelMember(slug,channelId,targetUserId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerRemoveChannelMemberMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerRemoveChannelMember>>>
+
+    export type ChannelsControllerRemoveChannelMemberMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a member from a channel
+ */
+export const useChannelsControllerRemoveChannelMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveChannelMember>>, TError,{slug: string;channelId: string;targetUserId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerRemoveChannelMember>>,
+        TError,
+        {slug: string;channelId: string;targetUserId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerRemoveChannelMemberMutationOptions(options);
 
       return useMutation(mutationOptions);
     }

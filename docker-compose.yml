@@ -7,7 +7,7 @@ services:
       - '3001'
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:3001/api/health']
-      interval: 30s
+      interval: 10m
       timeout: 10s
       retries: 3
     depends_on:
@@ -58,7 +58,7 @@ services:
       - '3000'
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:3000/api/health']
-      interval: 30s
+      interval: 10m
       timeout: 10s
       retries: 3
     depends_on:

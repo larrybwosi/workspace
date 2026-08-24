@@ -25,6 +25,31 @@ import { prisma } from '@repo/database';
  */
 const DEVICE_CLIENT_ID = 'desktop-app';
 
+function prepareHeaders(req: FastifyRequest): Headers {
+  const headers = fromNodeHeaders(req.headers as Record<string, string | string[]>);
+  const authHeader = headers.get('authorization') || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const keys = [
+      'better-auth.session_token',
+      'better-auth.session-token',
+      '__Secure-better-auth.session_token',
+      '__Secure-better-auth.session-token',
+    ];
+    const cookie = headers.get('cookie') || '';
+    let updatedCookie = cookie;
+    for (const k of keys) {
+      if (token && !cookie.includes(k)) {
+        updatedCookie = updatedCookie ? `${updatedCookie}; ${k}=${token}` : `${k}=${token}`;
+      }
+    }
+    if (updatedCookie !== cookie) {
+      headers.set('cookie', updatedCookie);
+    }
+  }
+  return headers;
+}
+
 function extractUserCode(input: string): string {
   if (!input) return '';
   let code = input.trim();
@@ -125,6 +150,8 @@ export class DeviceAuthController {
         case 'access_denied':
           return { status: 'denied' };
         case 'expired_token':
+        case 'invalid_grant':
+        case 'invalid_request':
           return { status: 'expired' };
         default:
           throw new BadRequestException(error?.body?.error_description ?? 'Invalid or unknown device code');
@@ -151,7 +178,7 @@ export class DeviceAuthController {
     const userCode = extractUserCode(rawCode);
 
     try {
-      const headers = fromNodeHeaders(req.headers as Record<string, string | string[]>);
+      const headers = prepareHeaders(req);
       // Ensure the device code record is claimed by the current user session
       try {
         await auth.api.deviceVerify({
@@ -167,6 +194,7 @@ export class DeviceAuthController {
         headers,
       });
     } catch (error: any) {
+      console.error('QR device authorization error:', error);
       if (error?.status === 404 || error?.body?.error === 'invalid_grant' || error?.body?.error === 'invalid_request') {
         throw new BadRequestException('Session not found or expired');
       }
@@ -208,7 +236,7 @@ export class DeviceAuthController {
     const userCode = extractUserCode(rawCode);
 
     try {
-      const headers = fromNodeHeaders(req.headers as Record<string, string | string[]>);
+      const headers = prepareHeaders(req);
       try {
         await auth.api.deviceVerify({
           query: { user_code: userCode },
@@ -222,7 +250,8 @@ export class DeviceAuthController {
         body: { userCode },
         headers,
       });
-    } catch {
+    } catch (error: any) {
+      console.error('QR device deny error:', error);
       throw new BadRequestException('Session not found or expired');
     }
 

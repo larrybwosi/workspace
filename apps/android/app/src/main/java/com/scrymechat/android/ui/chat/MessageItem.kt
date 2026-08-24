@@ -395,7 +395,7 @@ fun SwipeableMessageItem(
 ) {
     val swipeState = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
-    val threshold = with(density) { 80.dp.toPx() }
+    val threshold = with(density) { 50.dp.toPx() }
     val animatedOffset by animateFloatAsState(
         targetValue = swipeState.value,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),

@@ -3,6 +3,7 @@ import { AblyChannels, AblyEvents } from './ably';
 import { getAblyRest } from './ably.server';
 import { extractUserMentions, extractChannelMentions } from './mention-utils';
 import { queueNotification } from './notification-queue';
+import { sendPushNotification } from './push-notifications';
 
 export interface NotificationPayload {
   userId: string;
@@ -81,6 +82,17 @@ export async function createNotifications(payloads: NotificationPayload[]) {
             }
           }
         }
+
+        await sendPushNotification({
+          userId: notification.userId,
+          title: notification.title,
+          body: notification.message,
+          data: customData,
+          linkUrl: notification.linkUrl || undefined,
+          notificationId: notification.id,
+        }).catch(err => {
+          console.error('Direct push notification send error:', err);
+        });
 
         await queueNotification({
           userId: notification.userId,

@@ -45,6 +45,9 @@ vi.mock('@repo/database', () => ({
     webhookLog: {
       findMany: vi.fn(),
     },
+    workspaceAuditLog: {
+      create: vi.fn().mockReturnValue({ catch: vi.fn() }),
+    },
   },
 }));
 
@@ -448,6 +451,39 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
       await expect(service.getWebhookLogs('user-1', 'wh-nonexistent')).rejects.toThrow(
         NotFoundException
       );
+    });
+  });
+
+  describe('workspace audit logging (backgrounded)', () => {
+    it('should create workspace audit log when workspace integration is created', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'owner' }],
+      });
+      mockPrisma.workspaceIntegration.create.mockResolvedValue({
+        id: 'int-1',
+        workspaceId: 'ws-1',
+        service: 'slack',
+      });
+
+      await service.createWorkspaceIntegration('user-1', 'my-workspace', {
+        service: 'slack',
+        name: 'Slack Integration',
+      });
+
+      expect(mockPrisma.workspaceAuditLog.create).toHaveBeenCalledWith({
+        data: {
+          workspaceId: 'ws-1',
+          userId: 'user-1',
+          action: 'integration.created',
+          resource: 'integration',
+          resourceId: 'int-1',
+          metadata: {
+            service: 'slack',
+            name: 'Slack Integration',
+          },
+        },
+      });
     });
   });
 });

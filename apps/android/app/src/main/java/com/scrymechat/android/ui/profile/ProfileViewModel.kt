@@ -122,8 +122,11 @@ class ProfileViewModel @Inject constructor(
                                 statusText = body.statusText ?: currentUser.statusText,
                                 statusEmoji = body.statusEmoji ?: currentUser.statusEmoji,
                                 bio = body.bio ?: currentUser.bio,
-                                github = (finalUpdates["github"] as? String) ?: currentUser.github,
-                                slack = (finalUpdates["slack"] as? String) ?: currentUser.slack
+                                jobTitle = (finalUpdates["jobTitle"] as? String) ?: body.jobTitle ?: currentUser.jobTitle,
+                                department = (finalUpdates["department"] as? String) ?: body.department ?: currentUser.department,
+                                officeLocation = (finalUpdates["officeLocation"] as? String) ?: body.officeLocation ?: currentUser.officeLocation,
+                                github = (finalUpdates["github"] as? String) ?: body.github ?: currentUser.github,
+                                slack = (finalUpdates["slack"] as? String) ?: body.slack ?: currentUser.slack
                             )
                             userDao.insertUser(updatedUser)
                         }
@@ -306,10 +309,10 @@ class ProfileViewModel @Inject constructor(
                     if (userDto != null) {
                         _targetUser.value = UserEntity(
                             id = userDto.id,
-                            name = userDto.name,
+                            name = userDto.name.ifEmpty { userDto.username ?: "User" },
                             username = userDto.username,
                             email = "", // Private info
-                            avatar = userDto.avatar,
+                            avatar = userDto.avatar ?: userDto.image,
                             banner = userDto.banner,
                             statusText = userDto.statusText,
                             statusEmoji = userDto.statusEmoji,
@@ -344,30 +347,5 @@ data class ProfileUiState(
     val isUploading: Boolean = false,
     val pendingAvatarUri: android.net.Uri? = null,
     val pendingBannerUri: android.net.Uri? = null,
-    val sessions: List<com.scrymechat.android.ui.profile.settings.DeviceSession> = listOf(
-        com.scrymechat.android.ui.profile.settings.DeviceSession(
-            id = "current-session",
-            deviceName = "Google Pixel 8 Pro",
-            deviceType = com.scrymechat.android.ui.profile.settings.DeviceType.MOBILE,
-            lastActive = "Active now",
-            location = "San Francisco, CA",
-            isCurrentDevice = true
-        ),
-        com.scrymechat.android.ui.profile.settings.DeviceSession(
-            id = "session-web",
-            deviceName = "Chrome on macOS",
-            deviceType = com.scrymechat.android.ui.profile.settings.DeviceType.WEB,
-            lastActive = "Active 2 hours ago",
-            location = "San Francisco, CA",
-            isCurrentDevice = false
-        ),
-        com.scrymechat.android.ui.profile.settings.DeviceSession(
-            id = "session-desktop",
-            deviceName = "Windows Desktop App",
-            deviceType = com.scrymechat.android.ui.profile.settings.DeviceType.DESKTOP,
-            lastActive = "Active 3 days ago",
-            location = "New York, NY",
-            isCurrentDevice = false
-        )
-    )
+    val sessions: List<com.scrymechat.android.ui.profile.settings.DeviceSession> = emptyList()
 )

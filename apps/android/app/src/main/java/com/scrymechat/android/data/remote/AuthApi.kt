@@ -1,5 +1,6 @@
 package com.scrymechat.android.data.remote
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -66,6 +67,9 @@ interface AuthApi {
 }
 
 data class QRAuthorizeRequest(
+    @SerializedName("userCode")
+    val userCode: String,
+    @SerializedName("sessionId")
     val sessionId: String
 )
 
@@ -87,6 +91,11 @@ data class UserResponse(
     val bio: String? = null,
     val role: String? = null,
     val status: String? = null,
+    val jobTitle: String? = null,
+    val department: String? = null,
+    val officeLocation: String? = null,
+    val github: String? = null,
+    val slack: String? = null,
     val notificationPreferences: Any? = null
 )
 
