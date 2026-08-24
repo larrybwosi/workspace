@@ -220,7 +220,7 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   React.useEffect(() => {
     if (!workspaceSlug) return;
 
-    const workspaceChannel = `workspace:${workspaceSlug}`;
+    const workspaceChannel = workspace?.id ? AblyChannels.workspace(workspace.id) : `workspace:${workspaceSlug}`;
 
     const handleChannelUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
@@ -228,6 +228,10 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
 
     realtime.subscribe(workspaceChannel, 'message:new', handleChannelUpdate);
     realtime.subscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+    if (workspace?.id && workspaceSlug !== workspace.id) {
+      realtime.subscribe(`workspace:${workspaceSlug}`, 'message:new', handleChannelUpdate);
+      realtime.subscribe(`workspace:${workspaceSlug}`, 'message:sent', handleChannelUpdate);
+    }
 
     if (sessionUser?.id) {
       const userChannel = AblyChannels.user(sessionUser.id);
@@ -235,6 +239,10 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
       return () => {
         realtime.unsubscribe(workspaceChannel, 'message:new', handleChannelUpdate);
         realtime.unsubscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+        if (workspace?.id && workspaceSlug !== workspace.id) {
+          realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:new', handleChannelUpdate);
+          realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:sent', handleChannelUpdate);
+        }
         realtime.unsubscribe(userChannel, 'message:read', handleChannelUpdate);
       };
     }
@@ -242,8 +250,12 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
     return () => {
       realtime.unsubscribe(workspaceChannel, 'message:new', handleChannelUpdate);
       realtime.unsubscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+      if (workspace?.id && workspaceSlug !== workspace.id) {
+        realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:new', handleChannelUpdate);
+        realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:sent', handleChannelUpdate);
+      }
     };
-  }, [workspaceSlug, sessionUser?.id, queryClient]);
+  }, [workspaceSlug, workspace?.id, sessionUser?.id, queryClient]);
 
   // Friends/DM list
   const { data: friends, isLoading: friendsLoading } = useFriends();

@@ -49,6 +49,7 @@ export class DmsService {
           select: {
             messages: {
               where: {
+                senderId: { not: userId },
                 readBy: {
                   none: {
                     userId: userId,
@@ -306,7 +307,7 @@ export class DmsService {
         timestamp: m.createdAt,
         messageType: 'standard',
         reactions: Array.from(reactionGroups.values()),
-        readByCurrentUser: m.readBy.length > 0,
+        readByCurrentUser: m.readBy.length > 0 || m.senderId === userId,
         // Remove raw fields not needed in frontend
         readBy: undefined,
       };
