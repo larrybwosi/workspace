@@ -1,3 +1,9 @@
+## 2026-08-24 - [Prisma/Performance] Pre-fetching System Bot Relation to Eliminate Secondary Query in Incoming Webhooks
+
+**Learning:** `V3ChannelIncomingWebhooksController.processIncomingWebhookExecution` previously executed a secondary `prisma.botApplication.findFirst` query to resolve the workspace default system bot sender ID on every incoming webhook invocation. Including the system bot relation (`channel: { include: { workspace: { select: { botApplications: { where: { botId: { not: null } }, select: { botId: true }, take: 1 } } } } }`) in the initial webhook lookup query eliminates the secondary query entirely, reducing database round-trips (RTT) from 2 to 1 on the execution path.
+
+**Action:** Pre-fetch system bot/application relations inside the initial entity lookup query for webhook processing handlers to avoid secondary database queries during message execution.
+
 ## 2026-08-23 - [Prisma/Performance] Batch Pre-fetching Badge Assignments to Eliminate N+1 Asset Eligibility Queries
 
 **Learning:** `AssetsService.getEligibleAssets` previously executed sequential database queries inside asset filtering loops to check `userBadgeAssignment` eligibility per asset, causing an N+1 query bottleneck. Pre-fetching user badge assignments (`select: { badgeId: true }`) into a `Set<string>` and fetching active assets alongside user profile details in a single `Promise.all` call reduces database round-trips from (2 + N) to 1 while enabling O(1) in-memory badge eligibility verification.
