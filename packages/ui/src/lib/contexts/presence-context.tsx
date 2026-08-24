@@ -35,21 +35,31 @@ export function PresenceProvider({ children, userId }: { children: React.ReactNo
     }
 
     channel.presence.subscribe(['enter', 'present'], (member: any) => {
-      setOnlineUsers(prev => new Set([...prev, member.clientId]));
+      setOnlineUsers(prev => new Set([...prev, member.clientId || member.userId]));
     });
 
     channel.presence.subscribe('leave', (member: any) => {
       setOnlineUsers(prev => {
         const next = new Set(prev);
-        next.delete(member.clientId);
+        next.delete(member.clientId || member.userId);
         return next;
       });
     });
+
+    const handleSync = (data: any) => {
+      if (Array.isArray(data?.members)) {
+        const ids = data.members.map((m: any) => m.userId || m.clientId);
+        setOnlineUsers(prev => new Set([...prev, ...ids]));
+      }
+    };
+
+    realtime.subscribe(PRESENCE_CHANNEL, 'presence:sync', handleSync);
 
     updatePresence();
 
     return () => {
       channel.presence.unsubscribe();
+      realtime.unsubscribe(PRESENCE_CHANNEL, 'presence:sync', handleSync);
       if (userId) {
         channel.presence.leaveClient(userId);
       }
