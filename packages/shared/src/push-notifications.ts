@@ -384,28 +384,30 @@ async function sendDesktopPushNotification(
   }
 ) {
   try {
-    // For Tauri, we'll use a WebSocket or HTTP endpoint that the desktop app polls
-    // This is a placeholder implementation - adjust based on your Tauri setup
-    const response = await fetch(`${env.DESKTOP_NOTIFICATION_ENDPOINT}/notify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        linkUrl: payload.linkUrl,
-        notificationId: payload.notificationId,
-      }),
-    });
+    // If DESKTOP_NOTIFICATION_ENDPOINT is configured, send HTTP notification.
+    // Otherwise, real-time desktop notifications are delivered via Ably channels to active clients.
+    if (env.DESKTOP_NOTIFICATION_ENDPOINT) {
+      const response = await fetch(`${env.DESKTOP_NOTIFICATION_ENDPOINT}/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: payload.title,
+          body: payload.body,
+          data: payload.data,
+          linkUrl: payload.linkUrl,
+          notificationId: payload.notificationId,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Desktop notification failed: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Desktop notification failed: ${response.statusText}`);
+      }
     }
 
-    // Log successful notification
+    // Log successful notification (handled via Ably real-time subscription or desktop endpoint)
     await prisma.pushNotificationLog.create({
       data: {
         userId: payload.userId,
