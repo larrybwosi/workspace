@@ -1,3 +1,9 @@
+## 2026-08-25 - [Prisma/Performance] Child Sub-Resource Point Lookup for Workspace Departments
+
+**Learning:** `DepartmentsController.getDepartment` previously executed `prisma.workspace.findUnique({ where: { slug } })` with nested department filters, requiring database index scans across the workspace and department tables. Replacing this query with a direct O(1) primary key point lookup on `prisma.workspaceDepartment.findUnique({ where: { id: departmentId } })` and includes for parent workspace slug and membership verification reduces database query overhead, leverages the primary key B-tree index, and optimizes endpoint latency.
+
+**Action:** Prefer direct child sub-resource primary key point lookups (`findUnique`) with nested parent model selections for authorization verification over parent entity queries with nested child filters.
+
 ## 2026-08-24 - [Prisma/Performance] Pre-fetching System Bot Relation to Eliminate Secondary Query in Incoming Webhooks
 
 **Learning:** `V3ChannelIncomingWebhooksController.processIncomingWebhookExecution` previously executed a secondary `prisma.botApplication.findFirst` query to resolve the workspace default system bot sender ID on every incoming webhook invocation. Including the system bot relation (`channel: { include: { workspace: { select: { botApplications: { where: { botId: { not: null } }, select: { botId: true }, take: 1 } } } } }`) in the initial webhook lookup query eliminates the secondary query entirely, reducing database round-trips (RTT) from 2 to 1 on the execution path.
