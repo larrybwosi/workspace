@@ -180,3 +180,4 @@ For complete instructions on domain setup, Traefik TLS termination, persistent s
 ## 📄 License
 
 Copyright © 2025 Scryme Chat. All rights reserved.
+Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See the [LICENSE](LICENSE) file for details.

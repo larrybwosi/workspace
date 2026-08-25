@@ -233,11 +233,15 @@ export function Sidebar({
     realtime.subscribe(userChannel, AblyEvents.DM_RECEIVED, handleDMUpdate);
     realtime.subscribe(userChannel, 'message:new', handleDMUpdate);
     realtime.subscribe(userChannel, 'dm:received', handleDMUpdate);
+    realtime.subscribe(userChannel, AblyEvents.MESSAGE_READ, handleDMUpdate);
+    realtime.subscribe(userChannel, 'message:read', handleDMUpdate);
 
     return () => {
       realtime.unsubscribe(userChannel, AblyEvents.DM_RECEIVED, handleDMUpdate);
       realtime.unsubscribe(userChannel, 'message:new', handleDMUpdate);
       realtime.unsubscribe(userChannel, 'dm:received', handleDMUpdate);
+      realtime.unsubscribe(userChannel, AblyEvents.MESSAGE_READ, handleDMUpdate);
+      realtime.unsubscribe(userChannel, 'message:read', handleDMUpdate);
     };
   }, [sessionUser?.id, queryClient]);
 

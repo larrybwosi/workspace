@@ -182,6 +182,7 @@ export const useChannelViewScroll = (
 ) => {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
+  const prevMessagesLengthRef = useRef(messages.length);
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setIsAtBottom(entry.isIntersecting), { threshold: 0.1 });
@@ -203,8 +204,16 @@ export const useChannelViewScroll = (
   }, [messages.length, highlightedMessageId, initialUnreadId, isLoading, hasInitialScrolled, highlightedMessageRef, firstUnreadRef, messagesEndRef]);
 
   useEffect(() => {
-    if (hasInitialScrolled && isAtBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, hasInitialScrolled, isAtBottom, messagesEndRef]);
+    if (hasInitialScrolled) {
+      if (messages.length > prevMessagesLengthRef.current) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage && (!lastMessage.readByCurrentUser || isAtBottom)) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      prevMessagesLengthRef.current = messages.length;
+    }
+  }, [messages, hasInitialScrolled, isAtBottom, messagesEndRef]);
 
   return { isAtBottom, hasInitialScrolled, setHasInitialScrolled };
 };
