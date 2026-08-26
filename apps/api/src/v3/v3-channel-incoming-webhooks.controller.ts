@@ -18,6 +18,7 @@ import {
   UseFilters,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty, ApiQuery } from '@nestjs/swagger';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
@@ -472,6 +473,7 @@ export class V3ChannelIncomingWebhooksController {
   // EXECUTION (TRIGGER) ENDPOINTS
   // ============================================
 
+  @AllowAnonymous()
   @Post('v3/webhooks/incoming/:token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -519,6 +521,7 @@ export class V3ChannelIncomingWebhooksController {
     return this.processIncomingWebhookExecution(webhook, body, signatureHeader);
   }
 
+  @AllowAnonymous()
   @Post('v3/channels/:channelId/webhooks/incoming')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
