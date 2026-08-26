@@ -3,14 +3,13 @@ import { apiClient } from '../client';
 
 export function useStorageUpload() {
   return useMutation({
-    mutationFn: async (file: { uri: string; name: string; type: string }) => {
+    mutationFn: async (file: File | { uri: string; name: string; type: string }) => {
       const formData = new FormData();
-      // @ts-expect-error - Expo FormData requires object for file upload
-      formData.append('file', {
-        uri: file.uri,
-        name: file.name,
-        type: file.type,
-      });
+      if (file instanceof File) {
+        formData.append('file', file);
+      } else {
+        formData.append('file', new Blob([file.uri], { type: file.type }), file.name);
+      }
 
       const { data } = await apiClient.post('/storage/upload', formData, {
         headers: {
