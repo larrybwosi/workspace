@@ -321,3 +321,8 @@
 
 **Learning:** When validating session-based workspace access where the active organization ID is present, querying child relation tables without compound unique keys (such as `prisma.member.findFirst({ where: { organizationId, userId } })`) causes database index scans. Replacing `findFirst` on the non-unique relation with a primary key point-lookup on the parent model `prisma.organization.findUnique({ where: { id: workspaceId }, select: { id: true, slug: true, members: { where: { userId }, select: { id: true } } } })` leverages direct O(1) primary key indexing and enriches context with `workspaceSlug`.
 **Action:** Always prefer querying parent models by primary key `id` with nested relation filtering over `findFirst` on non-uniquely constrained child models for authorization checks in guards.
+
+## 2026-08-26 - [Prisma/Performance] Batch Channel Creation and O(1) Org Member Point Lookups in Workspace Provisioning
+
+**Learning:** In `ProvisioningService.provisionWorkspace`, creating channels sequentially using a `for` loop with `tx.channel.create` caused N separate database round-trips inside an active transaction. Replacing it with `tx.channel.createMany` reduces channel creation down to 1 single batch SQL INSERT statement. Additionally, replacing `tx.member.findFirst({ where: { organizationId, userId } })` with a direct primary key point lookup `tx.organization.findUnique` leverages O(1) B-tree indexing on `Organization`.
+**Action:** Use `createMany` for multi-record insertions in transactions and replace `findFirst` on non-uniquely constrained child models with primary key point lookups on parent models.
