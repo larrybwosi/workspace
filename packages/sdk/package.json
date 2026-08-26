@@ -27,7 +27,9 @@
     "src"
   ],
   "scripts": {
-    "generate": "orval",
+    "generate:ts": "orval",
+    "generate:rust": "openapi-generator-cli generate -i ../../apps/api/openapi.json -g rust -o rust --skip-validate-spec --additional-properties=packageName=scryme-sdk,packageVersion=2.81.5,useSingleRequestParameter=true",
+    "generate": "pnpm generate:ts && pnpm generate:rust",
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "pnpm build",
@@ -41,6 +43,7 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.13.5",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/react": "^19.2.14",

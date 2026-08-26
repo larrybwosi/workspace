@@ -1,9 +1,77 @@
+use std::collections::HashMap;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
     Emitter, Manager,
 };
 use tauri_plugin_deep_link::DeepLinkExt;
+
+#[derive(serde::Deserialize)]
+pub struct ProxyRequest {
+    pub method: String,
+    pub path: String,
+    pub headers: Option<HashMap<String, String>>,
+    pub body: Option<serde_json::Value>,
+    pub base_url: Option<String>,
+}
+
+#[derive(serde::Serialize)]
+pub struct ProxyResponse {
+    pub status: u16,
+    pub headers: HashMap<String, String>,
+    pub body: serde_json::Value,
+}
+
+#[tauri::command]
+async fn api_request(request: ProxyRequest) -> Result<ProxyResponse, String> {
+    let mut config = scryme_sdk::apis::configuration::Configuration::new();
+
+    if let Some(ref base) = request.base_url {
+        let mut trimmed = base.trim_end_matches('/').to_string();
+        if trimmed.ends_with("/api") {
+            trimmed = trimmed[..trimmed.len() - 4].to_string();
+        }
+        config.base_path = trimmed;
+    }
+
+    let client = config.client;
+
+    let full_url = format!("{}{}", config.base_path, request.path);
+    let method = request.method.parse::<reqwest::Method>().map_err(|e| e.to_string())?;
+
+    let mut req_builder = client.request(method, &full_url);
+
+    if let Some(headers) = request.headers {
+        for (k, v) in headers {
+            req_builder = req_builder.header(k, v);
+        }
+    }
+
+    if let Some(body) = request.body {
+        req_builder = req_builder.json(&body);
+    }
+
+    let response = req_builder.send().await.map_err(|e| e.to_string())?;
+
+    let status = response.status().as_u16();
+
+    let mut res_headers = HashMap::new();
+    for (name, value) in response.headers() {
+        if let Ok(val_str) = value.to_str() {
+            res_headers.insert(name.as_str().to_string(), val_str.to_string());
+        }
+    }
+
+    let body_text = response.text().await.map_err(|e| e.to_string())?;
+    let body_json: serde_json::Value = serde_json::from_str(&body_text)
+        .unwrap_or(serde_json::Value::String(body_text));
+
+    Ok(ProxyResponse {
+        status,
+        headers: res_headers,
+        body: body_json,
+    })
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -87,7 +155,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![api_request])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
