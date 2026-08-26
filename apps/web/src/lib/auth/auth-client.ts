@@ -13,7 +13,7 @@ const getEnv = (name: string) => {
   if (!env) return undefined;
 
   return (
-    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`EXPO_PUBLIC_${name}`] || env[`TAURI_${name}`]
+    env[name] || env[`VITE_${name}`] || env[`NEXT_PUBLIC_${name}`] || env[`TAURI_${name}`]
   );
 };
 
