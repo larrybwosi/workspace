@@ -8,14 +8,11 @@ permissions:
   contents: write
 
 jobs:
-  # =======================================================================
-  # DEV: minor release, gated to only run when Android Kotlin code changed
-  # =======================================================================
-  detect-android-kotlin:
-    if: github.ref == 'refs/heads/dev'
+  # Check if changeset files exist (.changeset/*.md excluding README.md)
+  detect-changeset:
     runs-on: ubuntu-latest
     outputs:
-      changed: ${{ steps.filter.outputs.kotlin }}
+      has_changeset: ${{ steps.filter.outputs.changeset }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,15 +20,17 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          # push event -> paths-filter diffs against github.event.before automatically
           filters: |
-            kotlin:
-              - 'apps/android/**/*.kt'
-              - 'apps/android/**/*.kts'
+            changeset:
+              - '.changeset/*.md'
+              - '! .changeset/README.md'
 
+  # =======================================================================
+  # DEV: minor release, runs when a merge/push to dev is made and changeset files exist
+  # =======================================================================
   version-dev:
-    needs: [detect-android-kotlin]
-    if: github.ref == 'refs/heads/dev' && needs.detect-android-kotlin.outputs.changed == 'true'
+    needs: [detect-changeset]
+    if: github.ref == 'refs/heads/dev' && needs.detect-changeset.outputs.has_changeset == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -124,11 +123,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # =======================================================================
-  # MAIN: every push/merge to main bumps the version and cuts a release.
-  # No changesets — version is bumped directly (patch) and published.
+  # MAIN: runs when a merge/push to main is made and changeset files exist.
   # =======================================================================
   version-main:
-    if: github.ref == 'refs/heads/main'
+    needs: [detect-changeset]
+    if: github.ref == 'refs/heads/main' && needs.detect-changeset.outputs.has_changeset == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
