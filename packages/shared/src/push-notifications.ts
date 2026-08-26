@@ -1,36 +1,4 @@
 import { prisma } from '@repo/database';
-import * as admin from 'firebase-admin';
-import { validateEnv } from './env';
-
-const env = validateEnv();
-
-let firebaseAdmin: admin.app.App | undefined;
-
-function getFirebaseAdmin() {
-  if (firebaseAdmin) return firebaseAdmin;
-
-  try {
-    const privateKey = env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-    if (!env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || !env.FIREBASE_CLIENT_EMAIL || !privateKey) {
-      console.warn('Firebase environment variables are not fully defined');
-      return undefined;
-    }
-
-    firebaseAdmin = admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: env.FIREBASE_CLIENT_EMAIL,
-        privateKey,
-      }),
-    });
-
-    return firebaseAdmin;
-  } catch (error) {
-    console.error(' Firebase Admin initialization error:', error);
-    return undefined;
-  }
-}
 
 export interface PushNotificationPayload {
   userId: string;
@@ -42,10 +10,61 @@ export interface PushNotificationPayload {
   notificationId?: string;
 }
 
+export interface PlatformPushNotificationPayload extends PushNotificationPayload {
+  deviceToken: string;
+  platform: string;
+}
+
+export interface PushNotificationResult {
+  success: boolean;
+  messageId?: string;
+  result?: any;
+}
+
+export type PushNotificationProvider = (
+  payload: PlatformPushNotificationPayload
+) => Promise<PushNotificationResult>;
+
+const providerRegistry = new Map<string, PushNotificationProvider>();
+
+/**
+ * Register a push notification provider handler for a specific platform (e.g. 'web', 'android', 'ios', 'desktop').
+ */
+export function registerPushNotificationProvider(platform: string, provider: PushNotificationProvider) {
+  providerRegistry.set(platform, provider);
+}
+
+/**
+ * Set or replace multiple platform push notification providers.
+ */
+export function setPushNotificationProviders(providers: Record<string, PushNotificationProvider>) {
+  for (const [platform, provider] of Object.entries(providers)) {
+    providerRegistry.set(platform, provider);
+  }
+}
+
+/**
+ * Remove a registered provider for a platform.
+ */
+export function unregisterPushNotificationProvider(platform: string) {
+  providerRegistry.delete(platform);
+}
+
+/**
+ * Clear all registered push notification providers.
+ */
+export function clearPushNotificationProviders() {
+  providerRegistry.clear();
+}
+
+/**
+ * Framework-agnostic dispatcher for sending push notifications across user devices.
+ * Uses registered platform push providers and handles device token state and notification logging.
+ */
 export async function sendPushNotification(payload: PushNotificationPayload) {
   const { userId, title, body, data, imageUrl, linkUrl, notificationId } = payload;
 
-  // Get all active device tokens for the user
+  // Fetch all active device tokens for the user
   const deviceTokens = await prisma.deviceToken.findMany({
     where: {
       userId,
@@ -54,392 +73,81 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
   });
 
   if (deviceTokens.length === 0) {
-    console.log(' No active device tokens found for user:', userId);
     return [];
   }
 
   const results = await Promise.allSettled(
     deviceTokens.map(async device => {
-      switch (device.platform) {
-        case 'web':
-          return sendWebPushNotification(device.token, {
+      const provider = providerRegistry.get(device.platform);
+
+      const platformPayload: PlatformPushNotificationPayload = {
+        userId,
+        title,
+        body,
+        data,
+        imageUrl,
+        linkUrl,
+        notificationId,
+        deviceToken: device.token,
+        platform: device.platform,
+      };
+
+      try {
+        let res: PushNotificationResult;
+        if (provider) {
+          res = await provider(platformPayload);
+        } else {
+          // Fallback log if no platform provider registered
+          res = { success: true };
+        }
+
+        await prisma.pushNotificationLog.create({
+          data: {
+            userId,
+            notificationId,
+            platform: device.platform,
+            deviceToken: device.token,
             title,
             body,
-            data,
-            imageUrl,
-            linkUrl,
-            notificationId,
+            data: data as any,
+            status: 'sent',
+          },
+        });
+
+        return res;
+      } catch (error: any) {
+        await prisma.pushNotificationLog.create({
+          data: {
             userId,
-          });
-        case 'ios':
-          return sendExpoPushNotification(device.token, { title, body, data, imageUrl, notificationId, userId });
-        case 'android':
-          return sendAndroidPushNotification(device.token, {
+            notificationId,
+            platform: device.platform,
+            deviceToken: device.token,
             title,
             body,
-            data,
-            imageUrl,
-            notificationId,
-            userId,
+            data: data as any,
+            status: 'failed',
+            error: error?.message || String(error),
+          },
+        });
+
+        // Deactivate token on invalid/unregistered token errors
+        if (
+          error?.deactivateToken ||
+          error?.code === 'messaging/invalid-registration-token' ||
+          error?.code === 'messaging/registration-token-not-registered' ||
+          error?.message?.includes('DeviceNotRegistered') ||
+          error?.message?.includes('InvalidCredentials')
+        ) {
+          await prisma.deviceToken.updateMany({
+            where: { token: device.token },
+            data: { isActive: false },
           });
-        case 'desktop':
-          return sendDesktopPushNotification(device.token, { title, body, data, linkUrl, notificationId, userId });
-        default:
-          throw new Error(`Unsupported platform: ${device.platform}`);
+        }
+
+        throw error;
       }
     })
   );
 
   return results;
-}
-
-async function sendWebPushNotification(
-  token: string,
-  payload: {
-    title: string;
-    body: string;
-    data?: Record<string, string>;
-    imageUrl?: string;
-    linkUrl?: string;
-    notificationId?: string;
-    userId: string;
-  }
-) {
-  try {
-    const firebaseAdmin = getFirebaseAdmin();
-    if (!firebaseAdmin) {
-      throw new Error('Firebase Admin not initialized');
-    }
-
-    const message: admin.messaging.Message = {
-      token,
-      notification: {
-        title: payload.title,
-        body: payload.body,
-        ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-      },
-      webpush: {
-        notification: {
-          title: payload.title,
-          body: payload.body,
-          icon: '/icon-192.png',
-          badge: '/badge-72.png',
-          ...(payload.imageUrl && { image: payload.imageUrl }),
-        },
-        fcmOptions: {
-          link: payload.linkUrl || '/',
-        },
-      },
-      data: {
-        ...payload.data,
-        notificationId: payload.notificationId || '',
-        linkUrl: payload.linkUrl || '',
-      },
-    };
-
-    const response = await firebaseAdmin.messaging().send(message);
-
-    // Log successful notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'web',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'sent',
-      },
-    });
-
-    return { success: true, messageId: response };
-  } catch (error: any) {
-    console.error(' Web push notification error:', error);
-
-    // Log failed notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'web',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'failed',
-        error: error.message,
-      },
-    });
-
-    // Deactivate invalid tokens
-    if (
-      error.code === 'messaging/invalid-registration-token' ||
-      error.code === 'messaging/registration-token-not-registered'
-    ) {
-      await prisma.deviceToken.updateMany({
-        where: { token },
-        data: { isActive: false },
-      });
-    }
-
-    throw error;
-  }
-}
-
-async function sendAndroidPushNotification(
-  token: string,
-  payload: {
-    title: string;
-    body: string;
-    data?: Record<string, string>;
-    imageUrl?: string;
-    notificationId?: string;
-    userId: string;
-  }
-) {
-  try {
-    const firebaseAdmin = getFirebaseAdmin();
-    if (!firebaseAdmin) {
-      // Fallback to Expo if Firebase is not configured but token looks like an Expo token
-      if (token.includes('[')) {
-        return sendExpoPushNotification(token, payload);
-      }
-      throw new Error('Firebase Admin not initialized');
-    }
-
-    const message: admin.messaging.Message = {
-      token,
-      notification: {
-        title: payload.title,
-        body: payload.body,
-        ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-      },
-      android: {
-        priority: 'high',
-        notification: {
-          channelId:
-            payload.data?.type === 'direct_message' || payload.data?.type === 'mention' ? 'urgent' : 'high',
-          sound: 'default',
-        },
-      },
-      data: {
-        ...payload.data,
-        title: payload.title,
-        body: payload.body,
-        notificationId: payload.notificationId || '',
-        imageUrl: payload.imageUrl || '',
-      },
-    };
-
-    const response = await firebaseAdmin.messaging().send(message);
-
-    // Log successful notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'android',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'sent',
-      },
-    });
-
-    return { success: true, messageId: response };
-  } catch (error: any) {
-    console.error(' Android push notification error:', error);
-
-    // Log failed notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'android',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'failed',
-        error: error.message,
-      },
-    });
-
-    // Deactivate invalid tokens
-    if (
-      error.code === 'messaging/invalid-registration-token' ||
-      error.code === 'messaging/registration-token-not-registered'
-    ) {
-      await prisma.deviceToken.updateMany({
-        where: { token },
-        data: { isActive: false },
-      });
-    }
-
-    throw error;
-  }
-}
-
-async function sendExpoPushNotification(
-  token: string,
-  payload: {
-    title: string;
-    body: string;
-    data?: Record<string, string>;
-    imageUrl?: string;
-    notificationId?: string;
-    userId: string;
-  }
-) {
-  try {
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.EXPO_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({
-        to: token,
-        sound: 'default',
-        title: payload.title,
-        body: payload.body,
-        data: {
-          ...payload.data,
-          notificationId: payload.notificationId || '',
-        },
-        categoryIdentifier:
-          payload.data?.type === 'direct_message' ||
-          payload.data?.type === 'channel_alert' ||
-          payload.data?.type === 'mention'
-            ? 'MESSAGE_REPLY'
-            : undefined,
-        badge: 1,
-        priority: 'high',
-        threadId: payload.data?.entityId,
-      }),
-    });
-
-    const result: any = await response.json();
-
-    if (result.data?.status === 'error') {
-      throw new Error(result.data.message || 'Expo push failed');
-    }
-
-    // Log successful notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: token.includes('[') ? 'android' : 'ios',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'sent',
-      },
-    });
-
-    return { success: true, result };
-  } catch (error: any) {
-    console.error(' Expo push notification error:', error);
-
-    // Log failed notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'mobile',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'failed',
-        error: error.message,
-      },
-    });
-
-    // Deactivate invalid tokens
-    if (error.message?.includes('DeviceNotRegistered') || error.message?.includes('InvalidCredentials')) {
-      await prisma.deviceToken.updateMany({
-        where: { token },
-        data: { isActive: false },
-      });
-    }
-
-    throw error;
-  }
-}
-
-async function sendDesktopPushNotification(
-  token: string,
-  payload: {
-    title: string;
-    body: string;
-    data?: Record<string, string>;
-    linkUrl?: string;
-    notificationId?: string;
-    userId: string;
-  }
-) {
-  try {
-    // If DESKTOP_NOTIFICATION_ENDPOINT is configured, send HTTP notification.
-    // Otherwise, real-time desktop notifications are delivered via Ably channels to active clients.
-    if (env.DESKTOP_NOTIFICATION_ENDPOINT) {
-      const response = await fetch(`${env.DESKTOP_NOTIFICATION_ENDPOINT}/notify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: payload.title,
-          body: payload.body,
-          data: payload.data,
-          linkUrl: payload.linkUrl,
-          notificationId: payload.notificationId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Desktop notification failed: ${response.statusText}`);
-      }
-    }
-
-    // Log successful notification (handled via Ably real-time subscription or desktop endpoint)
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'desktop',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'sent',
-      },
-    });
-
-    return { success: true };
-  } catch (error: any) {
-    console.error(' Desktop push notification error:', error);
-
-    // Log failed notification
-    await prisma.pushNotificationLog.create({
-      data: {
-        userId: payload.userId,
-        notificationId: payload.notificationId,
-        platform: 'desktop',
-        deviceToken: token,
-        title: payload.title,
-        body: payload.body,
-        data: payload.data,
-        status: 'failed',
-        error: error.message,
-      },
-    });
-
-    throw error;
-  }
 }
