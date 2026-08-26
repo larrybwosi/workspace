@@ -178,7 +178,7 @@ export class MessagesService {
         replyTo: formattedReplyTo,
         reactions: Array.from(reactionGroups.values()),
         mentions: msg.mentions.map(m => m.mention),
-        readByCurrentUser: msg.readBy.length > 0,
+        readByCurrentUser: msg.readBy.length > 0 || msg.userId === userId,
         replyCount: msg._count.replies,
         // We keep replyTo as an object because the UI uses it for the 'replied to' header
         // while also keeping the ID available if needed.
@@ -206,6 +206,7 @@ export class MessagesService {
       where: { id: channelId },
       select: {
         id: true,
+        workspaceId: true,
         isPrivate: true,
         type: true,
         members: {
@@ -318,6 +319,9 @@ export class MessagesService {
         ? notifyReply(channelId, userId, sender?.name || 'Someone', replyToId, message.id, content)
         : Promise.resolve(),
       publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message),
+      channel.workspaceId
+        ? publishRealtime(AblyChannels.workspace(channel.workspaceId), AblyEvents.MESSAGE_SENT, message)
+        : Promise.resolve(),
     ]).catch(err => this.logger.error('Failed to process message side effects:', err));
 
     return message;

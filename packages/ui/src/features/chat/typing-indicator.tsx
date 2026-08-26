@@ -10,7 +10,7 @@ interface TypingIndicatorProps {
 }
 
 export function TypingIndicator({ channelId, currentUserId }: TypingIndicatorProps) {
-  const [typingUsers, setTypingUsers] = useState<any[]>([]);
+  const [typingUsersMap, setTypingUsersMap] = useState<Map<string, { name: string; avatar?: string; lastSeen: number }>>(new Map());
 
   useEffect(() => {
     if (!channelId) return;
@@ -28,22 +28,49 @@ export function TypingIndicator({ channelId, currentUserId }: TypingIndicatorPro
 
       if (!userId || userId === currentUserId) return;
 
-      setTypingUsers(prev => {
-        const filtered = prev.filter(u => u.userId !== userId);
-        return [...filtered, { userId, name: displayName, avatar }];
+      setTypingUsersMap(prev => {
+        const next = new Map(prev);
+        next.set(userId, { name: displayName, avatar, lastSeen: Date.now() });
+        return next;
       });
-
-      setTimeout(() => {
-        setTypingUsers(prev => prev.filter(u => u.userId !== userId));
-      }, 3000);
     };
 
     realtime.subscribe(room, 'typing', handleTyping);
+    const userRoom = currentUserId ? `user:${currentUserId}` : null;
+    if (userRoom) {
+      realtime.subscribe(userRoom, 'typing', handleTyping);
+    }
+
+    // Periodic cleanup for typing users inactive for > 3000ms
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setTypingUsersMap(prev => {
+        let changed = false;
+        const next = new Map(prev);
+        for (const [uid, user] of next.entries()) {
+          if (now - user.lastSeen > 3000) {
+            next.delete(uid);
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 500);
 
     return () => {
       realtime.unsubscribe(room, 'typing', handleTyping);
+      if (userRoom) {
+        realtime.unsubscribe(userRoom, 'typing', handleTyping);
+      }
+      clearInterval(interval);
     };
   }, [channelId, currentUserId]);
+
+  const typingUsers = Array.from(typingUsersMap.entries()).map(([userId, user]) => ({
+    userId,
+    name: user.name,
+    avatar: user.avatar,
+  }));
 
   if (typingUsers.length === 0) return null;
 

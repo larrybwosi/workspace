@@ -253,10 +253,15 @@ describe('V3ChannelIncomingWebhooksController', () => {
         name: 'Status Webhook',
         isActive: true,
         createdBy: 'user-admin',
-        channel: { id: 'ch-777', workspaceId: 'ws-555' },
+        channel: {
+          id: 'ch-777',
+          workspaceId: 'ws-555',
+          workspace: {
+            botApplications: [{ botId: 'bot-123' }],
+          },
+        },
       };
 
-      const mockBot = { botId: 'bot-123' };
       const mockCreatedMessage = {
         id: 'msg-abc',
         content: 'System Status: Nominal',
@@ -272,7 +277,6 @@ describe('V3ChannelIncomingWebhooksController', () => {
       };
 
       (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
-      (prisma.botApplication.findFirst as any).mockResolvedValue(mockBot);
       (prisma.message.create as any).mockResolvedValue(mockCreatedMessage);
 
       const result = await controller.executeWebhookByUrlToken('token-abc', body);
@@ -341,11 +345,16 @@ describe('V3ChannelIncomingWebhooksController', () => {
         name: 'Status Webhook',
         isActive: true,
         createdBy: 'user-admin',
-        channel: { id: 'ch-777', workspaceId: 'ws-555' },
+        channel: {
+          id: 'ch-777',
+          workspaceId: 'ws-555',
+          workspace: {
+            botApplications: [{ botId: 'bot-123' }],
+          },
+        },
       };
 
       (prisma.channelIncomingWebhook.findUnique as any).mockResolvedValue(mockWebhook);
-      (prisma.botApplication.findFirst as any).mockResolvedValue({ botId: 'bot-123' });
       (prisma.message.create as any).mockResolvedValue({ id: 'msg-abc' });
 
       const result = await controller.executeWebhookByChannelId('ch-777', body, 'token-abc');

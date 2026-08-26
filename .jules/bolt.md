@@ -1,3 +1,15 @@
+## 2026-08-25 - [Prisma/Performance] Child Sub-Resource Point Lookup for Workspace Departments
+
+**Learning:** `DepartmentsController.getDepartment` previously executed `prisma.workspace.findUnique({ where: { slug } })` with nested department filters, requiring database index scans across the workspace and department tables. Replacing this query with a direct O(1) primary key point lookup on `prisma.workspaceDepartment.findUnique({ where: { id: departmentId } })` and includes for parent workspace slug and membership verification reduces database query overhead, leverages the primary key B-tree index, and optimizes endpoint latency.
+
+**Action:** Prefer direct child sub-resource primary key point lookups (`findUnique`) with nested parent model selections for authorization verification over parent entity queries with nested child filters.
+
+## 2026-08-24 - [Prisma/Performance] Pre-fetching System Bot Relation to Eliminate Secondary Query in Incoming Webhooks
+
+**Learning:** `V3ChannelIncomingWebhooksController.processIncomingWebhookExecution` previously executed a secondary `prisma.botApplication.findFirst` query to resolve the workspace default system bot sender ID on every incoming webhook invocation. Including the system bot relation (`channel: { include: { workspace: { select: { botApplications: { where: { botId: { not: null } }, select: { botId: true }, take: 1 } } } } }`) in the initial webhook lookup query eliminates the secondary query entirely, reducing database round-trips (RTT) from 2 to 1 on the execution path.
+
+**Action:** Pre-fetch system bot/application relations inside the initial entity lookup query for webhook processing handlers to avoid secondary database queries during message execution.
+
 ## 2026-08-23 - [Prisma/Performance] Batch Pre-fetching Badge Assignments to Eliminate N+1 Asset Eligibility Queries
 
 **Learning:** `AssetsService.getEligibleAssets` previously executed sequential database queries inside asset filtering loops to check `userBadgeAssignment` eligibility per asset, causing an N+1 query bottleneck. Pre-fetching user badge assignments (`select: { badgeId: true }`) into a `Set<string>` and fetching active assets alongside user profile details in a single `Promise.all` call reduces database round-trips from (2 + N) to 1 while enabling O(1) in-memory badge eligibility verification.

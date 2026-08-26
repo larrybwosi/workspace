@@ -46,6 +46,38 @@ export function NotificationListener() {
         linkUrl: notification.linkUrl,
         type: notification.type,
       });
+
+      // Trigger OS desktop / system notification (Tauri Desktop App or Web Browser fallback)
+      if (typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)) {
+        import('@tauri-apps/plugin-notification')
+          .then(async tauriNotif => {
+            let granted = await tauriNotif.isPermissionGranted();
+            if (!granted) {
+              const perm = await tauriNotif.requestPermission();
+              granted = perm === 'granted';
+            }
+            if (granted) {
+              tauriNotif.sendNotification({
+                title: notification.title || 'New Notification',
+                body: notification.message || '',
+              });
+            }
+          })
+          .catch(err => {
+            console.warn('Tauri notification trigger failed:', err);
+          });
+      } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        if (document.hidden) {
+          try {
+            new Notification(notification.title || 'New Notification', {
+              body: notification.message || '',
+              icon: '/icon-192.png',
+            });
+          } catch (e) {
+            console.warn('Browser Notification construction failed:', e);
+          }
+        }
+      }
     },
     [activeChannel]
   );

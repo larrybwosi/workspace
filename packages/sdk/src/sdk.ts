@@ -439,6 +439,148 @@ export interface UserProfile {
 }
 
 /**
+ * Represents a customer profile for support and CRM tracking.
+ */
+export interface CustomerProfile {
+  /** Unique customer profile identifier. */
+  id: string;
+  /** Unique user identifier. */
+  userId: string;
+  /** Associated workspace identifier. */
+  workspaceId: string;
+  /** Optional company name. */
+  company?: string | null;
+  /** Optional job title. */
+  jobTitle?: string | null;
+  /** External CRM identifier. */
+  crmId?: string | null;
+  /** Custom metadata key-value store. */
+  metadata?: Record<string, unknown> | null;
+  /** Array of customer tags. */
+  tags?: string[];
+  /** Associated user profile details. */
+  user?: UserProfile;
+}
+
+/**
+ * Represents a support ticket.
+ */
+export interface SupportTicket {
+  /** Unique ticket identifier. */
+  id: string;
+  /** Subject line or title of the ticket. */
+  subject: string;
+  /** Status of the ticket (OPEN, IN_PROGRESS, RESOLVED, CLOSED). */
+  status: string;
+  /** Unique workspace identifier. */
+  workspaceId: string;
+  /** Unique customer profile identifier. */
+  customerId: string;
+  /** Unique channel identifier created for ticket messages. */
+  channelId?: string | null;
+  /** Optional assigned agent user identifier. */
+  assigneeId?: string | null;
+  /** ISO timestamp when the ticket was created. */
+  createdAt: string;
+  /** ISO timestamp when the last message was sent. */
+  lastMessageAt: string;
+  /** Optional customer details. */
+  customer?: {
+    id: string;
+    userId: string;
+    user?: UserProfile;
+  };
+  /** Optional assignee details. */
+  assignee?: UserProfile;
+  /** Associated channel details. */
+  channel?: WorkspaceChannel;
+}
+
+/**
+ * Represents an active or ended live chat session.
+ */
+export interface LiveChatSession {
+  /** Unique session identifier. */
+  id: string;
+  /** Associated workspace identifier. */
+  workspaceId: string;
+  /** Optional customer profile identifier. */
+  customerId?: string | null;
+  /** Unique channel identifier for live chat. */
+  channelId: string;
+  /** Session status (ACTIVE, ENDED). */
+  status: string;
+  /** Custom metadata key-value store. */
+  metadata?: Record<string, unknown> | null;
+  /** Associated support ticket identifier if escalated. */
+  ticketId?: string | null;
+  /** ISO timestamp when live chat started. */
+  createdAt: string;
+  /** ISO timestamp when live chat ended. */
+  endedAt?: string | null;
+  /** Associated live chat channel details. */
+  channel?: WorkspaceChannel;
+}
+
+/**
+ * Options for creating a new support ticket.
+ */
+export interface CreateSupportTicketDto {
+  /** Unique workspace identifier where ticket is filed. */
+  workspaceId: string;
+  /** Subject or title of the support ticket. */
+  subject: string;
+  /** Initial message content to start the ticket conversation. */
+  initialMessage?: string;
+}
+
+/**
+ * Options for updating support ticket status.
+ */
+export interface UpdateSupportTicketStatusDto {
+  /** Target status (OPEN, IN_PROGRESS, RESOLVED, CLOSED). */
+  status: string;
+}
+
+/**
+ * Options for assigning or unassigning an agent to a support ticket.
+ */
+export interface AssignSupportTicketDto {
+  /** User ID of the agent to assign, or null to unassign. */
+  assigneeId: string | null;
+}
+
+/**
+ * Options for starting a new live chat session.
+ */
+export interface StartLiveChatDto {
+  /** Unique workspace identifier where live chat is initialized. */
+  workspaceId: string;
+  /** Optional metadata associated with the live chat session. */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Options for creating or updating a customer profile.
+ */
+export interface CreateCustomerProfileDto {
+  /** Associated workspace identifier. */
+  workspaceId: string;
+  /** User ID of the customer. */
+  userId: string;
+  /** Optional company name. */
+  company?: string;
+  /** Optional job title. */
+  jobTitle?: string;
+  /** External CRM identifier. */
+  crmId?: string;
+  /** Additional metadata key-value pairs. */
+  metadata?: Record<string, unknown>;
+  /** Tags for segmenting customers. */
+  tags?: string[];
+}
+
+/**
  * Configuration options for initializing the Scryme SDK.
  */
 export interface ScrymeSDKOptions {
@@ -1372,6 +1514,196 @@ export class ScrymeSDK {
             params,
             options
           ) as unknown as V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdResult;
+        },
+      },
+    };
+  }
+
+  /**
+   * Operations for managing support tickets, live chat sessions, and customer profiles.
+   */
+  public get support() {
+    return {
+      /**
+       * Creates a new support ticket in a workspace.
+       * @param data Details for creating the ticket including workspaceId, subject, and optional initialMessage.
+       * @param options Optional request config override.
+       */
+      createTicket: async (
+        data: CreateSupportTicketDto,
+        options?: AxiosRequestConfig
+      ): Promise<SupportTicket> => {
+        return this.raw.supportControllerCreateTicket({
+          ...options,
+          data,
+        } as any) as unknown as SupportTicket;
+      },
+
+      /**
+       * Retrieves all support tickets for a given workspace.
+       * @param workspaceId Unique workspace identifier.
+       * @param options Optional request config override.
+       */
+      getTickets: async (
+        workspaceId: string,
+        options?: AxiosRequestConfig
+      ): Promise<SupportTicket[]> => {
+        return this.raw.supportControllerGetTickets(
+          { workspaceId },
+          options
+        ) as unknown as SupportTicket[];
+      },
+
+      /**
+       * Updates the status of an existing support ticket.
+       * @param ticketId Unique identifier of the support ticket.
+       * @param status New status string (e.g. OPEN, IN_PROGRESS, RESOLVED, CLOSED).
+       * @param options Optional request config override.
+       */
+      updateStatus: async (
+        ticketId: string,
+        status: string,
+        options?: AxiosRequestConfig
+      ): Promise<SupportTicket> => {
+        return this.raw.supportControllerUpdateTicketStatus(ticketId, {
+          ...options,
+          data: { status },
+        } as any) as unknown as SupportTicket;
+      },
+
+      /**
+       * Assigns a support ticket to an agent or unassigns it.
+       * @param ticketId Unique identifier of the support ticket.
+       * @param assigneeId User ID of the assigned agent or null to unassign.
+       * @param options Optional request config override.
+       */
+      assignTicket: async (
+        ticketId: string,
+        assigneeId: string | null,
+        options?: AxiosRequestConfig
+      ): Promise<SupportTicket> => {
+        return this.raw.supportControllerAssignTicket(ticketId, {
+          ...options,
+          data: { assigneeId },
+        } as any) as unknown as SupportTicket;
+      },
+
+      /**
+       * Sub-namespace for managing support tickets.
+       */
+      tickets: {
+        /**
+         * Creates a new support ticket in a workspace.
+         * @param data Details for creating the ticket.
+         * @param options Optional request config override.
+         */
+        create: async (
+          data: CreateSupportTicketDto,
+          options?: AxiosRequestConfig
+        ): Promise<SupportTicket> => {
+          return this.support.createTicket(data, options);
+        },
+        /**
+         * Lists all support tickets in a workspace.
+         * @param workspaceId Unique workspace identifier.
+         * @param options Optional request config override.
+         */
+        list: async (
+          workspaceId: string,
+          options?: AxiosRequestConfig
+        ): Promise<SupportTicket[]> => {
+          return this.support.getTickets(workspaceId, options);
+        },
+        /**
+         * Updates ticket status.
+         * @param ticketId Unique ticket identifier.
+         * @param status New status string.
+         * @param options Optional request config override.
+         */
+        updateStatus: async (
+          ticketId: string,
+          status: string,
+          options?: AxiosRequestConfig
+        ): Promise<SupportTicket> => {
+          return this.support.updateStatus(ticketId, status, options);
+        },
+        /**
+         * Assigns or unassigns an agent to/from a support ticket.
+         * @param ticketId Unique ticket identifier.
+         * @param assigneeId Agent user ID or null.
+         * @param options Optional request config override.
+         */
+        assign: async (
+          ticketId: string,
+          assigneeId: string | null,
+          options?: AxiosRequestConfig
+        ): Promise<SupportTicket> => {
+          return this.support.assignTicket(ticketId, assigneeId, options);
+        },
+      },
+
+      /**
+       * Sub-namespace for live chat sessions.
+       */
+      liveChat: {
+        /**
+         * Starts a new live chat session for support.
+         * @param data Details for starting live chat session.
+         * @param options Optional request config override.
+         */
+        start: async (
+          data: StartLiveChatDto,
+          options?: AxiosRequestConfig
+        ): Promise<LiveChatSession> => {
+          return this.raw.supportControllerStartLiveChat({
+            ...options,
+            data,
+          } as any) as unknown as LiveChatSession;
+        },
+        /**
+         * Ends an active live chat session.
+         * @param sessionId Unique session identifier.
+         * @param options Optional request config override.
+         */
+        end: async (
+          sessionId: string,
+          options?: AxiosRequestConfig
+        ): Promise<LiveChatSession> => {
+          return this.raw.supportControllerEndLiveChat(sessionId, options) as unknown as LiveChatSession;
+        },
+      },
+
+      /**
+       * Sub-namespace for managing customer profiles.
+       */
+      customer: {
+        /**
+         * Creates or updates a customer profile in a workspace.
+         * @param data Profile details including workspaceId and userId.
+         * @param options Optional request config override.
+         */
+        createProfile: async (
+          data: CreateCustomerProfileDto,
+          options?: AxiosRequestConfig
+        ): Promise<CustomerProfile> => {
+          return this.raw.supportControllerCreateCustomerProfile({
+            ...options,
+            data,
+          } as any) as unknown as CustomerProfile;
+        },
+        /**
+         * Retrieves customer profiles in a workspace.
+         * @param workspaceId Unique workspace identifier.
+         * @param options Optional request config override.
+         */
+        getProfiles: async (
+          workspaceId: string,
+          options?: AxiosRequestConfig
+        ): Promise<CustomerProfile[]> => {
+          return this.raw.supportControllerGetCustomerProfiles(
+            { workspaceId },
+            options
+          ) as unknown as CustomerProfile[];
         },
       },
     };
