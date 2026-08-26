@@ -158,6 +158,7 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
     credentials: true,
+    strictPreflight: false,
     allowedHeaders: [
       'Origin',
       'X-Requested-With',

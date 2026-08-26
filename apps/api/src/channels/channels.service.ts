@@ -247,7 +247,7 @@ export class ChannelsService {
           : null,
         reactions: Array.from(reactionGroups.values()),
         mentions: msg.mentions.map(m => m.mention),
-        readByCurrentUser: msg.readBy.length > 0,
+        readByCurrentUser: msg.readBy.length > 0 || msg.userId === userId,
         // Remove raw fields not needed in frontend
         readBy: undefined,
       };

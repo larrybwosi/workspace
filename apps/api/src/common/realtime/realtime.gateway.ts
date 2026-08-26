@@ -111,6 +111,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       client.on('typing', (data: { room: string; userId: string; userName: string; avatar?: string }) => {
         this.logger.log(`User ${data.userName || data.userId} is typing in ${data.room}`);
         client.to(data.room).emit('typing', { ...data, _channel: data.room });
+        if (data.room.startsWith('dm-')) {
+          const targetUserId = data.room.replace('dm-', '');
+          client.to(`user:${targetUserId}`).emit('typing', { ...data, _channel: data.room });
+        }
       });
 
       client.on('enter-presence', (data: { channel: string; userId: string; data?: any }) => {
@@ -119,9 +123,19 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         if (!this.presenceMap.has(data.channel)) {
           this.presenceMap.set(data.channel, new Map());
         }
-        this.presenceMap.get(data.channel)!.set(data.userId, data.data || {});
 
-        this.server.to(data.channel).emit('presence:enter', { userId: data.userId, data: data.data });
+        // Send currently online presence list back to the newly joining client
+        const channelPresence = this.presenceMap.get(data.channel)!;
+        const currentMembers = Array.from(channelPresence.entries()).map(([uId, uData]) => ({
+          userId: uId,
+          clientId: uId,
+          data: uData,
+        }));
+        client.emit('presence:sync', { channel: data.channel, members: currentMembers });
+
+        // Add user and broadcast presence:enter
+        channelPresence.set(data.userId, data.data || {});
+        this.server.to(data.channel).emit('presence:enter', { userId: data.userId, clientId: data.userId, data: data.data });
       });
 
       client.on('leave-presence', (data: { channel: string; userId: string }) => {

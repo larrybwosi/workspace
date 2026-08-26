@@ -165,6 +165,7 @@ export class ChannelsController {
           by: ['channelId'],
           where: {
             channelId: { in: channelIds },
+            userId: { not: user.id },
             readBy: {
               none: {
                 userId: user.id,
@@ -179,6 +180,7 @@ export class ChannelsController {
           by: ['channelId'],
           where: {
             channelId: { in: channelIds },
+            userId: { not: user.id },
             readBy: {
               none: {
                 userId: user.id,

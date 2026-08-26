@@ -9,6 +9,7 @@ import {
   UseFilters,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty } from '@nestjs/swagger';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { V3ExceptionFilter } from './v3-exception.filter';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
@@ -53,6 +54,7 @@ export class V3OAuthController {
     };
   }
 
+  @AllowAnonymous()
   @Post('token')
   @ApiOperation({
     summary: 'Exchange client credentials for a V3 access token',

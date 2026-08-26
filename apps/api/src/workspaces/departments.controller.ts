@@ -384,114 +384,105 @@ export class DepartmentsController {
     @Param('slug') slug: string,
     @Param('departmentId') departmentId: string
   ) {
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
+    /**
+     * ⚡ Performance Optimization:
+     * 1. Replaces workspace lookup containing nested department filtering with a direct O(1) primary key point lookup on `prisma.workspaceDepartment.findUnique` by id.
+     * 2. Uses nested 'select'/'include' to retrieve the workspace slug and user's membership in a single round-trip.
+     * 3. Performs workspace validation and authorization checks in Node.js application memory.
+     * Expected impact: Directly leverages primary key index lookup on 'id', eliminating nested workspace filtering overhead and reducing DB CPU/scan latency.
+     */
+    const department = await prisma.workspaceDepartment.findUnique({
+      where: { id: departmentId },
+      include: {
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
+            members: {
+              where: { userId: user.id },
+              select: { role: true },
+            },
+          },
         },
-        departments: {
-          where: { id: departmentId },
+        parent: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+        children: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+        members: {
           select: {
             id: true,
             workspaceId: true,
-            name: true,
-            slug: true,
-            description: true,
-            icon: true,
-            color: true,
-            parentId: true,
-            managerId: true,
-            channelId: true,
-            settings: true,
-            createdAt: true,
-            updatedAt: true,
-            parent: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-            children: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-            members: {
-              select: {
-                id: true,
-                workspaceId: true,
-                userId: true,
-                departmentId: true,
-                role: true,
-                joinedAt: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    avatar: true,
-                    status: true,
-                  },
-                },
-              },
-            },
-            teams: {
+            userId: true,
+            departmentId: true,
+            role: true,
+            joinedAt: true,
+            user: {
               select: {
                 id: true,
                 name: true,
-                slug: true,
-                icon: true,
-                color: true,
-                members: {
-                  select: {
-                    id: true,
-                    teamId: true,
-                    userId: true,
-                    role: true,
-                    joinedAt: true,
-                    user: { select: { id: true, name: true, avatar: true } },
-                  },
-                },
-                _count: { select: { members: true } },
+                email: true,
+                avatar: true,
+                status: true,
               },
             },
-            announcements: {
-              orderBy: { createdAt: 'desc' },
-              take: 10,
-              select: {
-                id: true,
-                departmentId: true,
-                authorId: true,
-                title: true,
-                content: true,
-                priority: true,
-                pinned: true,
-                publishAt: true,
-                expiresAt: true,
-                targetAudience: true,
-                attachments: true,
-                createdAt: true,
-                updatedAt: true,
-                author: { select: { id: true, name: true, avatar: true } },
-              },
-            },
-            _count: { select: { members: true, teams: true, announcements: true } },
           },
         },
+        teams: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            icon: true,
+            color: true,
+            members: {
+              select: {
+                id: true,
+                teamId: true,
+                userId: true,
+                role: true,
+                joinedAt: true,
+                user: { select: { id: true, name: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true } },
+          },
+        },
+        announcements: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            departmentId: true,
+            authorId: true,
+            title: true,
+            content: true,
+            priority: true,
+            pinned: true,
+            publishAt: true,
+            expiresAt: true,
+            targetAudience: true,
+            attachments: true,
+            createdAt: true,
+            updatedAt: true,
+            author: { select: { id: true, name: true, avatar: true } },
+          },
+        },
+        _count: { select: { members: true, teams: true, announcements: true } },
       },
     });
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+    if (!department || !department.workspace || department.workspace.slug !== slug) {
+      throw new NotFoundException('Department not found');
     }
 
-    const member = workspace.members[0];
+    const member = department.workspace.members[0];
 
     if (!member) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const department = workspace.departments[0];
+    // Omit workspace relation to strictly preserve API contract
+    const { workspace: _workspace, ...departmentResponse } = department;
 
-    if (!department) {
-      throw new NotFoundException('Department not found');
-    }
-
-    return department;
+    return departmentResponse;
   }
 
   @Patch(':departmentId')

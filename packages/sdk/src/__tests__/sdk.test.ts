@@ -154,6 +154,32 @@ vi.mock('../generated/v3-server', () => {
       v3OAuthControllerGetToken: vi.fn(async (data, options) => {
         return { success: true, data, options };
       }),
+
+      // Support Controller Mock
+      supportControllerCreateTicket: vi.fn(async (options) => {
+        return { success: true, ticket: options?.data, options };
+      }),
+      supportControllerGetTickets: vi.fn(async (params, options) => {
+        return { success: true, workspaceId: params?.workspaceId, tickets: [], options };
+      }),
+      supportControllerStartLiveChat: vi.fn(async (options) => {
+        return { success: true, session: options?.data, options };
+      }),
+      supportControllerEndLiveChat: vi.fn(async (sessionId, options) => {
+        return { success: true, sessionId, options };
+      }),
+      supportControllerUpdateTicketStatus: vi.fn(async (ticketId, options) => {
+        return { success: true, ticketId, status: options?.data?.status, options };
+      }),
+      supportControllerAssignTicket: vi.fn(async (ticketId, options) => {
+        return { success: true, ticketId, assigneeId: options?.data?.assigneeId, options };
+      }),
+      supportControllerCreateCustomerProfile: vi.fn(async (options) => {
+        return { success: true, profile: options?.data, options };
+      }),
+      supportControllerGetCustomerProfiles: vi.fn(async (params, options) => {
+        return { success: true, workspaceId: params?.workspaceId, profiles: [], options };
+      }),
     })),
   };
 });
@@ -450,6 +476,64 @@ describe('ScrymeSDK', () => {
       // m2m.auth.token
       const tokenRes = await sdk.m2m.auth.token('cid', 'sec') as any;
       expect(tokenRes.data.client_id).toBe('cid');
+    });
+
+    it('should support sdk.support ticketing and customer operations', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      // support.createTicket
+      const ticketDto = { workspaceId: 'ws-123', subject: 'Billing Issue', initialMessage: 'Need help with invoice' };
+      const createRes = await sdk.support.createTicket(ticketDto) as any;
+      expect(createRes.success).toBe(true);
+      expect(createRes.ticket).toEqual(ticketDto);
+
+      // support.getTickets
+      const getRes = await sdk.support.getTickets('ws-123') as any;
+      expect(getRes.success).toBe(true);
+      expect(getRes.workspaceId).toBe('ws-123');
+
+      // support.updateStatus
+      const statusRes = await sdk.support.updateStatus('t-1', 'RESOLVED') as any;
+      expect(statusRes.success).toBe(true);
+      expect(statusRes.ticketId).toBe('t-1');
+      expect(statusRes.status).toBe('RESOLVED');
+
+      // support.assignTicket
+      const assignRes = await sdk.support.assignTicket('t-1', 'agent-99') as any;
+      expect(assignRes.success).toBe(true);
+      expect(assignRes.ticketId).toBe('t-1');
+      expect(assignRes.assigneeId).toBe('agent-99');
+
+      // support.tickets sub-namespace
+      const ticketSubCreate = await sdk.support.tickets.create(ticketDto) as any;
+      expect(ticketSubCreate.ticket).toEqual(ticketDto);
+
+      const ticketSubList = await sdk.support.tickets.list('ws-123') as any;
+      expect(ticketSubList.workspaceId).toBe('ws-123');
+
+      const ticketSubStatus = await sdk.support.tickets.updateStatus('t-2', 'CLOSED') as any;
+      expect(ticketSubStatus.status).toBe('CLOSED');
+
+      const ticketSubAssign = await sdk.support.tickets.assign('t-2', null) as any;
+      expect(ticketSubAssign.assigneeId).toBeNull();
+
+      // support.liveChat sub-namespace
+      const liveChatStart = await sdk.support.liveChat.start({ workspaceId: 'ws-123', metadata: { source: 'web' } }) as any;
+      expect(liveChatStart.session.workspaceId).toBe('ws-123');
+
+      const liveChatEnd = await sdk.support.liveChat.end('session-789') as any;
+      expect(liveChatEnd.sessionId).toBe('session-789');
+
+      // support.customer sub-namespace
+      const custDto = { workspaceId: 'ws-123', userId: 'usr-1', company: 'Acme Corp' };
+      const custCreate = await sdk.support.customer.createProfile(custDto) as any;
+      expect(custCreate.profile).toEqual(custDto);
+
+      const custGet = await sdk.support.customer.getProfiles('ws-123') as any;
+      expect(custGet.workspaceId).toBe('ws-123');
     });
   });
 });
