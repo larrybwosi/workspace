@@ -6,7 +6,10 @@ import {
   UnauthorizedException,
   BadRequestException,
   ForbiddenException,
+  InternalServerErrorException,
+  HttpException,
   UseFilters,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
@@ -46,6 +49,8 @@ const tokenRequestSchema = z.object({
 @Controller('v3/oauth')
 @UseFilters(V3ExceptionFilter)
 export class V3OAuthController {
+  private readonly logger = new Logger(V3OAuthController.name);
+
   private formatResponse<T>(data: T) {
     return {
       success: true,
@@ -97,37 +102,57 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
   @ApiResponse({ status: 401, description: 'Invalid client credentials.' })
   @ApiResponse({ status: 403, description: 'Access denied due to IP allowlist or scope constraints.' })
   async getToken(@Req() req: any, @Body() body: V3TokenRequestDto) {
-    const validatedData = tokenRequestSchema.safeParse(body);
-    if (!validatedData.success) {
-      throw new BadRequestException(validatedData.error.issues);
-    }
+    try {
+      // 1. Validate Payload
+      const validatedData = tokenRequestSchema.safeParse(body);
+      if (!validatedData.success) {
+        console.error('[OAuth Token Error] Validation failed:', validatedData.error.issues);
+        throw new BadRequestException(validatedData.error.issues);
+      }
 
-    const { client_id, client_secret, scope } = validatedData.data;
+      const { client_id, client_secret, scope } = validatedData.data;
 
-    // Find Organization by clientId
-    const org = await prisma.organization.findUnique({
-      where: { clientId: client_id },
-    });
+      // 2. Fetch Organization
+      let org;
+      try {
+        org = await prisma.organization.findUnique({
+          where: { clientId: client_id },
+        });
+      } catch (dbError) {
+        console.error(`[OAuth Token Error] Database query failed for clientId "${client_id}":`, dbError);
+        throw new InternalServerErrorException('Failed to verify client credentials due to a database error.');
+      }
 
-    if (org) {
-      const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
+      if (!org) {
+        console.warn(`[OAuth Token Error] Client ID not found: "${client_id}"`);
+        throw new UnauthorizedException('Invalid client credentials');
+      }
 
-      // Timing-safe constant-time comparison using SHA-256 hashes to prevent timing attacks
-      const providedSecretHash = crypto.createHash('sha256').update(client_secret).digest();
-      const orgSecretHash = crypto.createHash('sha256').update(org.clientSecret || '').digest();
-      const providedSecretHashedHash = crypto.createHash('sha256').update(hashedSecret).digest();
+      // 3. Verify Secret
+      let isValid = false;
+      try {
+        const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
+        const providedSecretHash = crypto.createHash('sha256').update(client_secret).digest();
+        const orgSecretHash = crypto.createHash('sha256').update(org.clientSecret || '').digest();
+        const providedSecretHashedHash = crypto.createHash('sha256').update(hashedSecret).digest();
 
-      const isPlainValid = crypto.timingSafeEqual(providedSecretHash, orgSecretHash);
-      const isHashedValid = crypto.timingSafeEqual(providedSecretHashedHash, orgSecretHash);
-      const isValid = isPlainValid || isHashedValid;
+        const isPlainValid = orgSecretHash.length === providedSecretHash.length && crypto.timingSafeEqual(providedSecretHash, orgSecretHash);
+        const isHashedValid = orgSecretHash.length === providedSecretHashedHash.length && crypto.timingSafeEqual(providedSecretHashedHash, orgSecretHash);
+
+        isValid = isPlainValid || isHashedValid;
+      } catch (cryptoError) {
+        console.error(`[OAuth Token Error] Cryptographic comparison error for client_id "${client_id}":`, cryptoError);
+        throw new UnauthorizedException('Invalid client credentials');
+      }
 
       if (!isValid) {
+        console.warn(`[OAuth Token Error] Invalid client_secret provided for client_id: "${client_id}"`);
         throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
       }
 
-      // IP Whitelisting Check (Enterprise feature)
+      // 4. IP Allowlist Check
       if (org.allowedIps && org.allowedIps.length > 0) {
-        const clientIp = req.ip || req.socket.remoteAddress;
+        const clientIp = req.ip || req.socket?.remoteAddress;
         let normalizedIp = clientIp || '';
         if (normalizedIp.startsWith('::ffff:')) {
           normalizedIp = normalizedIp.substring(7);
@@ -135,52 +160,73 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
         const isAllowed = org.allowedIps.includes(normalizedIp) || (clientIp && org.allowedIps.includes(clientIp));
         if (!isAllowed) {
+          console.warn(`[OAuth Token Error] IP restricted: IP "${clientIp}" (normalized: "${normalizedIp}") not in allowed list for client_id "${client_id}"`);
           throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
         }
       }
 
-      // Scope Check
+      // 5. Scope Validation
       const requestedScopes = scope ? scope.split(' ') : [];
-      const allowedScopes = org.scopes;
+      const allowedScopes = org.scopes || [];
 
       if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
         const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
         if (unauthorizedScopes.length > 0) {
+          console.warn(`[OAuth Token Error] Forbidden scopes "${unauthorizedScopes.join(', ')}" requested by client_id "${client_id}"`);
           throw new ForbiddenException(`Unauthorized scopes requested: ${unauthorizedScopes.join(', ')}`);
         }
       }
 
-      const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
+        const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
 
-      // Issue token for Organization M2M context
-      return this.issueToken(client_id, `m2m:${org.id}`, scopesToIssue);
+        // 6. Token Issuance
+        return await this.issueToken(org.id, client_id, `m2m:${org.id}`, scopesToIssue);
+
+    } catch (error) {
+      // Re-throw NestJS HttpExceptions so filters handle them correctly
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // Catch unexpected errors
+      console.error('[OAuth Token Error] Unexpected failure in getToken endpoint:', error);
+      throw new InternalServerErrorException('An unexpected error occurred while processing the token request.');
     }
-
-    throw new UnauthorizedException('Invalid client credentials');
   }
 
-  private async issueToken(clientId: string, userId: string, scope: string) {
-    const rawToken = `oat_${crypto.randomBytes(32).toString('hex')}`;
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour expiration
+  private async issueToken(
+    dbClientId: string,
+    publicClientId: string,
+    userId: string,
+    scope: string
+  ) {
+    try {
+      const rawToken = `oat_${crypto.randomBytes(32).toString('hex')}`;
+      const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 3600 * 1000);
 
-    const accessToken = await prisma.oAuthAccessToken.create({
-      data: {
-        id: crypto.randomBytes(16).toString('hex'),
-        token: hashedToken,
-        clientId: clientId,
-        userId: userId,
-        expiresAt,
-        scopes: scope ? scope.split(' ') : ['*'],
-        createdAt: new Date(),
-      },
-    });
+      const accessToken = await prisma.oAuthAccessToken.create({
+        data: {
+          id: crypto.randomBytes(16).toString('hex'),
+          token: hashedToken,
+          // Use the internal DB primary key that satisfies the FK constraint
+          clientId: dbClientId,
+          userId: userId,
+          expiresAt,
+          scopes: scope ? scope.split(' ') : ['*'],
+          createdAt: new Date(),
+        },
+      });
 
-    return this.formatResponse({
-      access_token: rawToken,
-      token_type: 'Bearer',
-      expires_in: 3600,
-      scope: accessToken.scopes.join(' '),
-    });
+      return this.formatResponse({
+        access_token: rawToken,
+        token_type: 'Bearer',
+        expires_in: 3600,
+        scope: accessToken.scopes.join(' '),
+      });
+    } catch (error) {
+      console.error(`[OAuth Token Error] Database error creating access token for clientId "${publicClientId}":`, error);
+      throw new InternalServerErrorException('Failed to generate access token.');
+    }
   }
 }
