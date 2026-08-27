@@ -33,20 +33,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from '../../../components/label';
 import { cn } from '../../../lib/utils';
 import { MessageRenderer } from '../message-renderer';
-import { CustomMessageSchema, type CustomMessage as ICustomMessage, type MessageNode } from '@repo/shared';
+import { CustomMessageSchema, type CustomMessage as ICustomMessage, type MessageNode, type CustomMessageTheme } from '@repo/shared';
 
 // --- Types & Interfaces ---
 
+/**
+ * Custom renderer function prop signature for extending UI component nodes.
+ */
+export type CustomNodeRenderer = React.FC<{
+  node: MessageNode;
+  values: Record<string, any>;
+  data: Record<string, any>;
+}>;
+
 export interface CustomMessageProps {
+  /** The message object containing metadata with custom message schema definition */
   message: any;
+  /** Callback triggered when interactive action buttons are clicked */
   onAction?: (actionId: string, data: Record<string, any>) => Promise<void> | void;
+  /** Whether the message interaction is in read-only mode */
   readOnly?: boolean;
+  /** External loading state flag */
   isLoading?: boolean;
+  /** Developer custom icon mapping to override or add new icons */
+  customIcons?: Record<string, React.ElementType>;
+  /** Developer custom node renderers to extend UI components (e.g. 'Custom.Chart': MyChartComponent) */
+  customRenderers?: Record<string, CustomNodeRenderer>;
+  /** Additional custom style overrides for the outer message container */
+  style?: React.CSSProperties;
+  /** Additional custom class names for the outer container */
+  className?: string;
 }
 
 // --- Icons Mapping ---
 
-const IconMap: Record<string, React.ElementType> = {
+const DefaultIconMap: Record<string, React.ElementType> = {
   Check,
   X,
   AlertCircle,
@@ -66,13 +87,23 @@ const IconMap: Record<string, React.ElementType> = {
   HelpCircle,
 };
 
-const getIcon = (name?: string, className?: string) => {
+// --- Contexts ---
+
+interface UIContextValue {
+  customIcons?: Record<string, React.ElementType>;
+  customRenderers?: Record<string, CustomNodeRenderer>;
+}
+
+const UIContext = React.createContext<UIContextValue>({});
+
+const useUI = () => React.useContext(UIContext);
+
+const getIcon = (name?: string, className?: string, customIcons?: Record<string, React.ElementType>) => {
   if (!name) return null;
-  const Icon = IconMap[name] || HelpCircle;
+  const mergedIcons = { ...DefaultIconMap, ...customIcons };
+  const Icon = mergedIcons[name] || HelpCircle;
   return <Icon className={cn('w-4 h-4', className)} />;
 };
-
-// --- Form State Context ---
 
 interface FormContextValue {
   values: Record<string, any>;
@@ -150,9 +181,9 @@ const validateField = (node: MessageNode, value: any) => {
   return null;
 };
 
-// --- Plugin Component Registry ---
+// --- Component Registry ---
 
-const ComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> = {
+const DefaultComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> = {
   // Layout
   'Layout.Card': ({ node }) => {
     const { properties = {} } = node;
@@ -272,7 +303,6 @@ const ComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> = {
             const json = await res.json();
 
             if (Array.isArray(json)) {
-              // Simple mapping if defined
               const items = ds.map
                 ? json.map((item: any) => ({ label: item[ds.map.label], value: item[ds.map.value] }))
                 : json;
@@ -377,12 +407,19 @@ const ChildrenRenderer = ({ node }: { node: MessageNode }) => {
 
 const NodeRenderer = ({ node }: { node: MessageNode }) => {
   const { values, data } = useForm();
+  const { customRenderers } = useUI();
 
   if (!evaluateCondition(node.condition, values, data)) {
     return null;
   }
 
-  const Component = ComponentRegistry[node.type];
+  // Developer custom renderer override takes priority
+  if (customRenderers && customRenderers[node.type]) {
+    const CustomComp = customRenderers[node.type];
+    return <CustomComp node={node} values={values} data={data} />;
+  }
+
+  const Component = DefaultComponentRegistry[node.type];
   if (Component) {
     return <Component node={node} />;
   }
@@ -396,36 +433,41 @@ const NodeRenderer = ({ node }: { node: MessageNode }) => {
 
 // --- Sub-components ---
 
-const CustomMessageHeader = memo(({ context, data, formValues }: { context: any, data: any, formValues: any }) => (
-  <div className="p-4 border-b bg-card/50 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      {context.icon && (
-        <div className="p-2 bg-primary/10 rounded-lg text-primary">{getIcon(context.icon, 'w-5 h-5')}</div>
-      )}
-      <div>
-        <h3 className="font-semibold text-sm leading-none flex items-center gap-2">
-          {resolveVariables(context.title, data, formValues)}
-          {context.priority !== 'normal' && (
-            <Badge
-              variant={context.priority === 'urgent' ? 'destructive' : 'outline'}
-              className="text-[10px] h-4 px-1.5 uppercase"
-            >
-              {context.priority}
-            </Badge>
-          )}
-        </h3>
-        {context.description && (
-          <p className="text-xs text-muted-foreground mt-1">
-            {resolveVariables(context.description, data, formValues)}
-          </p>
+const CustomMessageHeader = memo(({ context, data, formValues }: { context: any, data: any, formValues: any }) => {
+  const { customIcons } = useUI();
+  return (
+    <div className="p-4 border-b bg-card/50 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {context.icon && (
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            {getIcon(context.icon, 'w-5 h-5', customIcons)}
+          </div>
         )}
+        <div>
+          <h3 className="font-semibold text-sm leading-none flex items-center gap-2">
+            {resolveVariables(context.title, data, formValues)}
+            {context.priority !== 'normal' && (
+              <Badge
+                variant={context.priority === 'urgent' ? 'destructive' : 'outline'}
+                className="text-[10px] h-4 px-1.5 uppercase"
+              >
+                {context.priority}
+              </Badge>
+            )}
+          </h3>
+          {context.description && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {resolveVariables(context.description, data, formValues)}
+            </p>
+          )}
+        </div>
       </div>
+      <Button variant="ghost" size="icon" className="h-8 w-8">
+        <MoreVertical className="w-4 h-4" />
+      </Button>
     </div>
-    <Button variant="ghost" size="icon" className="h-8 w-8">
-      <MoreVertical className="w-4 h-4" />
-    </Button>
-  </div>
-));
+  );
+});
 
 CustomMessageHeader.displayName = 'CustomMessageHeader';
 
@@ -443,43 +485,55 @@ const CustomMessageActions = memo(({
   handleAction: (action: any) => void,
   loadingAction: string | null,
   externalLoading: boolean
-}) => (
-  <div className="p-4 border-t bg-card/30 flex flex-wrap gap-2">
-    {actions
-      .filter(action => evaluateCondition(action.condition, formValues, data))
-      .map(action => (
-        <Button
-          key={action.id}
-          variant={
-            action.type === 'PRIMARY'
-              ? 'default'
-              : action.type === 'DESTRUCTIVE'
-                ? 'destructive'
-                : action.type === 'GHOST'
-                  ? 'ghost'
-                  : 'outline'
-          }
-          size="sm"
-          className="flex-1 sm:flex-none h-9 gap-2"
-          onClick={() => handleAction(action)}
-          disabled={loadingAction !== null || externalLoading}
-        >
-          {(loadingAction === action.id || (externalLoading && !loadingAction)) ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            getIcon(action.icon, 'w-3.5 h-3.5')
-          )}
-          {resolveVariables(action.label, data, formValues)}
-        </Button>
-      ))}
-  </div>
-));
+}) => {
+  const { customIcons } = useUI();
+  return (
+    <div className="p-4 border-t bg-card/30 flex flex-wrap gap-2">
+      {actions
+        .filter(action => evaluateCondition(action.condition, formValues, data))
+        .map(action => (
+          <Button
+            key={action.id}
+            variant={
+              action.type === 'PRIMARY'
+                ? 'default'
+                : action.type === 'DESTRUCTIVE'
+                  ? 'destructive'
+                  : action.type === 'GHOST'
+                    ? 'ghost'
+                    : 'outline'
+            }
+            size="sm"
+            className="flex-1 sm:flex-none h-9 gap-2"
+            onClick={() => handleAction(action)}
+            disabled={loadingAction !== null || externalLoading}
+          >
+            {(loadingAction === action.id || (externalLoading && !loadingAction)) ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              getIcon(action.icon, 'w-3.5 h-3.5', customIcons)
+            )}
+            {resolveVariables(action.label, data, formValues)}
+          </Button>
+        ))}
+    </div>
+  );
+});
 
 CustomMessageActions.displayName = 'CustomMessageActions';
 
 // --- Main Component ---
 
-export function CustomMessage({ message, onAction, readOnly = false, isLoading: externalLoading = false }: CustomMessageProps) {
+export function CustomMessage({
+  message,
+  onAction,
+  readOnly = false,
+  isLoading: externalLoading = false,
+  customIcons,
+  customRenderers,
+  style,
+  className,
+}: CustomMessageProps) {
   const [loadingAction, setLoadingAction] = React.useState<string | null>(null);
   const [formValues, setFormValues] = React.useState<Record<string, any>>({});
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -555,36 +609,52 @@ export function CustomMessage({ message, onAction, readOnly = false, isLoading: 
     );
   }
 
-  const { context, root, actions = [], data = {} } = config;
+  const { context, root, actions = [], data = {}, theme } = config;
+
+  // Build custom style overrides from developer theme configuration
+  const themeStyle: React.CSSProperties = {
+    ...style,
+    ...(theme?.backgroundColor ? { backgroundColor: theme.backgroundColor } : {}),
+    ...(theme?.borderColor ? { borderColor: theme.borderColor } : {}),
+    ...(theme?.textColor ? { color: theme.textColor } : {}),
+  };
 
   return (
-    <FormContext.Provider value={{ values: formValues, setValue, errors, data }}>
-      <div className="w-full max-w-2xl space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300">
-        <Card className={cn('overflow-hidden border-border/60 shadow-sm', context.priority === 'urgent' && 'border-red-500/50 shadow-red-500/10')}>
-          <CustomMessageHeader context={context} data={data} formValues={formValues} />
-          <div className="p-4"><NodeRenderer node={root} /></div>
-          {actions.length > 0 && !readOnly && (
-            <CustomMessageActions
-              actions={actions}
-              formValues={formValues}
-              data={data}
-              handleAction={handleAction}
-              loadingAction={loadingAction}
-              externalLoading={externalLoading}
-            />
+    <UIContext.Provider value={{ customIcons, customRenderers }}>
+      <FormContext.Provider value={{ values: formValues, setValue, errors, data }}>
+        <div
+          className={cn('w-full max-w-2xl space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300', className, theme?.className)}
+          style={themeStyle}
+        >
+          <Card
+            className={cn('overflow-hidden border-border/60 shadow-sm', context.priority === 'urgent' && 'border-red-500/50 shadow-red-500/10')}
+            style={themeStyle}
+          >
+            <CustomMessageHeader context={context} data={data} formValues={formValues} />
+            <div className="p-4"><NodeRenderer node={root} /></div>
+            {actions.length > 0 && !readOnly && (
+              <CustomMessageActions
+                actions={actions}
+                formValues={formValues}
+                data={data}
+                handleAction={handleAction}
+                loadingAction={loadingAction}
+                externalLoading={externalLoading}
+              />
+            )}
+            {readOnly && (
+              <div className="p-2 border-t bg-muted/20 flex justify-center">
+                <Badge variant="outline" className="text-[10px] text-muted-foreground gap-1 border-none uppercase tracking-tighter">
+                  <Lock className="w-2.5 h-2.5" /> Read Only
+                </Badge>
+              </div>
+            )}
+          </Card>
+          {message.content && !message.content.startsWith('```') && (
+            <p className="text-[10px] text-muted-foreground px-1 italic">{message.content}</p>
           )}
-          {readOnly && (
-            <div className="p-2 border-t bg-muted/20 flex justify-center">
-              <Badge variant="outline" className="text-[10px] text-muted-foreground gap-1 border-none uppercase tracking-tighter">
-                <Lock className="w-2.5 h-2.5" /> Read Only
-              </Badge>
-            </div>
-          )}
-        </Card>
-        {message.content && !message.content.startsWith('```') && (
-          <p className="text-[10px] text-muted-foreground px-1 italic">{message.content}</p>
-        )}
-      </div>
-    </FormContext.Provider>
+        </div>
+      </FormContext.Provider>
+    </UIContext.Provider>
   );
 }

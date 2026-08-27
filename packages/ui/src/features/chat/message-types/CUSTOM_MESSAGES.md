@@ -1,447 +1,150 @@
-# Custom Message Component System
+# Custom Message Schema & UI Customization
 
-The custom message component system allows you to create highly customizable message types with UI definitions provided via JSON. This enables dynamic message rendering without writing new React components.
+The Custom Message system enables developers integrating with Scryme Chat to define structured, type-safe custom messages that render dynamically in the UI. developers can customize UI layouts, input validation, themes, icons, and custom node renderers.
 
-## Overview
+## Predefined Custom Message Schemas
 
-Custom messages are defined using the `messageType: "custom"` field and include a `metadata.uiDefinition` object that describes the UI structure, fields, and actions.
+The SDK (`@scryme/chat`) and shared package (`@repo/shared`) provide schema validation helpers and type builders for common UI message patterns:
 
-## Basic Structure
+- `APPROVAL`: Interactive approval request card with Approve/Reject actions.
+- `REPORT`: Data report card with summary text, metrics grid, and action links.
+- `FORM`: Interactive form with text, textarea, select, and checkbox inputs.
+- `FEEDBACK`: Feedback/survey request card.
+- `TASK_CARD`: Task card with status, assignee, due date, and completion action.
+- `SURVEY`: Quick multi-field survey form.
+- `GENERIC`: Node-based UI configuration.
 
-\`\`\`typescript
+---
+
+## SDK Usage Examples (`@scryme/chat`)
+
+### 1. Creating an Approval Custom Message
+
+```typescript
+import { ScrymeSDK, createApprovalMessage } from '@scryme/chat';
+
+const sdk = new ScrymeSDK({ token: 'YOUR_ACCESS_TOKEN' });
+
+// Create schema payload using helper builder
+const approvalSchema = createApprovalMessage({
+  title: 'Expense Reimbursement',
+  description: 'Requested by Jane Doe for $450.00',
+  fields: [
+    { label: 'Category', value: 'Travel' },
+    { label: 'Amount', value: '$450.00' },
+  ],
+  callbackId: 'expense-101',
+  priority: 'urgent',
+  theme: {
+    borderColor: '#38bdf8',
+  },
+});
+
+// Post to channel via SDK
+await sdk.channel.message.create('channel_123', {
+  content: 'New expense reimbursement approval requested.',
+  metadata: approvalSchema,
+});
+```
+
+### 2. Creating an Interactive Form Custom Message
+
+```typescript
+import { ScrymeSDK, createFormMessage } from '@scryme/chat';
+
+const sdk = new ScrymeSDK();
+
+const formSchema = createFormMessage({
+  title: 'Customer Feedback Form',
+  description: 'Please let us know how we did!',
+  submitCallbackId: 'feedback_submit_1',
+  fields: [
+    {
+      id: 'rating',
+      label: 'Rating',
+      type: 'select',
+      required: true,
+      options: [
+        { label: 'Excellent', value: '5' },
+        { label: 'Good', value: '4' },
+        { label: 'Average', value: '3' },
+      ],
+    },
+    {
+      id: 'comments',
+      label: 'Comments',
+      type: 'textarea',
+      placeholder: 'Share details about your experience...',
+    },
+  ],
+});
+
+await sdk.channel.message.create('channel_123', {
+  content: 'Customer feedback requested',
+  metadata: formSchema,
+});
+```
+
+---
+
+## UI Customization (`@repo/ui`)
+
+The `<CustomMessage />` React component supports extensive customization options for developer integrations:
+
+```tsx
+import { CustomMessage } from '@repo/ui';
+import { Rocket, Sparkles } from 'lucide-react';
+
+export function ChatFeedMessage({ message }) {
+  return (
+    <CustomMessage
+      message={message}
+      onAction={async (actionId, payload) => {
+        console.log('Action triggered:', actionId, payload);
+      }}
+      // Register custom Lucide or React icons mapped by string name
+      customIcons={{
+        Rocket,
+        Sparkles,
+      }}
+      // Register custom node renderers for custom element types
+      customRenderers={{
+        'Custom.Chart': ({ node, values, data }) => (
+          <div className="p-4 bg-slate-900 text-white rounded-lg">
+            Custom Chart Element: {node.properties?.title}
+          </div>
+        ),
+      }}
+      className="my-custom-message-container"
+    />
+  );
+}
+```
+
+---
+
+## Theme Configuration in Metadata
+
+Custom message metadata can specify theme overrides:
+
+```json
 {
-id: "msg-123",
-userId: "user-1",
-content: "Fallback text content",
-timestamp: new Date(),
-messageType: "custom",
-metadata: {
-uiDefinition: {
-layout: "card" | "inline" | "modal",
-sections: Section[],
-actions: Action[],
-theme: {
-backgroundColor: "#ffffff",
-borderColor: "#e5e7eb",
-textColor: "#000000"
+  "version": "v1",
+  "type": "APPROVAL",
+  "context": {
+    "title": "Branded Card",
+    "priority": "normal"
+  },
+  "theme": {
+    "backgroundColor": "#0f172a",
+    "textColor": "#f8fafc",
+    "borderColor": "#334155",
+    "accentColor": "#38bdf8",
+    "className": "custom-card-shadow"
+  },
+  "root": {
+    "type": "Layout.Card",
+    "children": []
+  }
 }
-}
-}
-}
-\`\`\`
-
-## UI Definition Schema
-
-### Layout Types
-
-- `card`: Renders as a bordered card with padding
-- `inline`: Renders inline without borders or padding
-- `modal`: Renders as a modal-style component (future enhancement)
-
-### Section Types
-
-#### 1. Header Section
-
-\`\`\`json
-{
-"type": "header",
-"content": "Section Title",
-"className": "optional-css-classes"
-}
-\`\`\`
-
-#### 2. Body Section
-
-\`\`\`json
-{
-"type": "body",
-"content": "Description or body text",
-"className": "optional-css-classes"
-}
-\`\`\`
-
-#### 3. Field Section
-
-\`\`\`json
-{
-"type": "field",
-"fields": [
-{
-"type": "text" | "number" | "date" | "select" | "textarea" | "badge" | "progress" | "image",
-"label": "Field Label",
-"value": "field value",
-"options": ["option1", "option2"],
-"editable": true,
-"className": "optional-css-classes"
-}
-]
-}
-\`\`\`
-
-**Field Types:**
-
-- `text`: Single-line text input/display
-- `number`: Numeric input/display
-- `date`: Date input/display
-- `select`: Dropdown selection
-- `textarea`: Multi-line text input/display
-- `badge`: Colored badge display
-- `progress`: Progress bar (value 0-100)
-- `image`: Image display
-
-#### 4. List Section
-
-\`\`\`json
-{
-"type": "list",
-"items": ["Item 1", "Item 2", "Item 3"],
-"className": "optional-css-classes"
-}
-\`\`\`
-
-#### 5. Grid Section
-
-\`\`\`json
-{
-"type": "grid",
-"columns": 2,
-"items": ["Grid Item 1", "Grid Item 2"],
-"className": "optional-css-classes"
-}
-\`\`\`
-
-#### 6. Footer Section
-
-\`\`\`json
-{
-"type": "footer",
-"content": "Footer text or metadata",
-"className": "optional-css-classes"
-}
-\`\`\`
-
-### Actions
-
-Actions are buttons that can be positioned inline (top) or in the footer (bottom).
-
-\`\`\`json
-{
-"id": "action-1",
-"label": "Button Text",
-"variant": "default" | "destructive" | "outline" | "secondary",
-"icon": "optional-icon-name",
-"position": "inline" | "footer"
-}
-\`\`\`
-
-## Complete Examples
-
-### Example 1: Project Status Update
-
-\`\`\`json
-{
-"messageType": "custom",
-"metadata": {
-"uiDefinition": {
-"layout": "card",
-"sections": [
-{
-"type": "header",
-"content": "Project Status Update"
-},
-{
-"type": "body",
-"content": "Weekly progress report for Q1 2024"
-},
-{
-"type": "field",
-"fields": [
-{
-"type": "badge",
-"label": "Status",
-"value": "On Track"
-},
-{
-"type": "progress",
-"label": "Completion",
-"value": 75
-},
-{
-"type": "text",
-"label": "Next Milestone",
-"value": "Beta Release - March 15"
-}
-]
-},
-{
-"type": "footer",
-"content": "Last updated: 2 hours ago"
-}
-],
-"actions": [
-{
-"id": "view-details",
-"label": "View Details",
-"variant": "default",
-"position": "footer"
-}
-]
-}
-}
-}
-\`\`\`
-
-### Example 2: Survey/Feedback Form
-
-\`\`\`json
-{
-"messageType": "custom",
-"metadata": {
-"uiDefinition": {
-"layout": "card",
-"sections": [
-{
-"type": "header",
-"content": "Quick Feedback"
-},
-{
-"type": "body",
-"content": "How satisfied are you with the new feature?"
-},
-{
-"type": "field",
-"fields": [
-{
-"type": "select",
-"label": "Rating",
-"value": "Very Satisfied",
-"options": ["Very Satisfied", "Satisfied", "Neutral", "Dissatisfied", "Very Dissatisfied"],
-"editable": true
-},
-{
-"type": "textarea",
-"label": "Comments",
-"value": "",
-"editable": true
-}
-]
-}
-],
-"actions": [
-{
-"id": "submit-feedback",
-"label": "Submit",
-"variant": "default",
-"position": "footer"
-},
-{
-"id": "skip",
-"label": "Skip",
-"variant": "outline",
-"position": "footer"
-}
-]
-}
-}
-}
-\`\`\`
-
-### Example 3: Team Member Card
-
-\`\`\`json
-{
-"messageType": "custom",
-"metadata": {
-"uiDefinition": {
-"layout": "card",
-"sections": [
-{
-"type": "field",
-"fields": [
-{
-"type": "image",
-"value": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-"className": "w-16 h-16 rounded-full mx-auto mb-3"
-}
-]
-},
-{
-"type": "header",
-"content": "John Doe",
-"className": "text-center"
-},
-{
-"type": "body",
-"content": "Senior Product Designer",
-"className": "text-center"
-},
-{
-"type": "field",
-"fields": [
-{
-"type": "badge",
-"label": "Status",
-"value": "Available"
-},
-{
-"type": "text",
-"label": "Location",
-"value": "San Francisco, CA"
-}
-]
-}
-],
-"actions": [
-{
-"id": "send-message",
-"label": "Send Message",
-"variant": "default",
-"position": "inline"
-},
-{
-"id": "view-profile",
-"label": "View Profile",
-"variant": "outline",
-"position": "inline"
-}
-]
-}
-}
-}
-\`\`\`
-
-## Usage in Code
-
-### Creating a Custom Message
-
-\`\`\`typescript
-import type { Message } from "@/lib/types"
-
-const customMessage: Message = {
-id: "msg-custom-1",
-userId: "user-1",
-content: "Fallback content if custom rendering fails",
-timestamp: new Date(),
-reactions: [],
-mentions: [],
-messageType: "custom",
-metadata: {
-uiDefinition: {
-layout: "card",
-sections: [
-{
-type: "header",
-content: "Custom Message Title"
-},
-{
-type: "body",
-content: "This is a custom message with dynamic UI"
-}
-],
-actions: [
-{
-id: "action-1",
-label: "Click Me",
-variant: "default",
-position: "footer"
-}
-]
-}
-},
-actions: [
-{
-id: "action-1",
-label: "Click Me",
-handler: (messageId, actionId) => {
-console.log("Action clicked:", messageId, actionId)
-// Handle action logic here
-}
-}
-]
-}
-\`\`\`
-
-### Handling Actions
-
-Actions are handled through the `actions` array on the message object. Each action should have a `handler` function:
-
-\`\`\`typescript
-actions: [
-{
-id: "approve",
-label: "Approve",
-variant: "default",
-handler: (messageId, actionId) => {
-// Call API to approve
-fetch(`/api/messages/${messageId}/actions/${actionId}`, {
-method: "POST"
-})
-}
-}
-]
-\`\`\`
-
-## API Integration
-
-When using the API hooks, custom messages can be created and updated:
-
-\`\`\`typescript
-import { useCreateMessage } from "@/hooks/api/use-messages"
-
-const { mutate: createMessage } = useCreateMessage()
-
-// Create a custom message
-createMessage({
-channelId: "channel-1",
-content: "Fallback content",
-messageType: "custom",
-metadata: {
-uiDefinition: {
-// ... UI definition
-}
-}
-})
-\`\`\`
-
-## Best Practices
-
-1. **Always provide fallback content**: The `content` field should contain meaningful text in case custom rendering fails
-2. **Keep UI definitions simple**: Complex UIs should be built as dedicated components
-3. **Use semantic field labels**: Make labels clear and descriptive
-4. **Validate user input**: When using editable fields, validate data before submission
-5. **Handle errors gracefully**: Wrap action handlers in try-catch blocks
-6. **Test with different themes**: Ensure custom colors work in both light and dark modes
-7. **Optimize images**: Use appropriately sized images to avoid performance issues
-8. **Limit nesting**: Keep section structures flat for better performance
-
-## Theming
-
-Custom messages support theme customization:
-
-\`\`\`json
-{
-"theme": {
-"backgroundColor": "#f3f4f6",
-"borderColor": "#d1d5db",
-"textColor": "#111827"
-}
-}
-\`\`\`
-
-Colors should be provided in hex format and should consider both light and dark mode compatibility.
-
-## Future Enhancements
-
-- Modal layout support
-- Rich text editing in textarea fields
-- File upload fields
-- Date range pickers
-- Multi-step forms
-- Conditional field visibility
-- Field validation rules
-- Custom field types via plugins
-  \`\`\`
-
-```typescript file="" isHidden
-
 ```
