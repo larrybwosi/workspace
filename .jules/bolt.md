@@ -1,8 +1,8 @@
-## 2026-08-27 - [Prisma/Performance] Pre-fetching Audit Log Actor User Relation to Eliminate Secondary Query
+## 2026-08-27 - [Prisma/Performance] Short-circuiting Empty Secondary Queries and O(1) Map Lookups in Audit Logs
 
-**Learning:** `AuditLogsController`'s `getAuditLogs` and `exportAuditLogs` previously executed a secondary `prisma.user.findMany` query to fetch actor user details for retrieved audit log records. Including the `user` relation (`select: { id: true, name: true, email: true, image: true }`) directly inside the `auditLogs` projection of the primary `prisma.workspace.findUnique` query eliminates the secondary query entirely, reducing database round-trips from 2 to 1 on both endpoints.
+**Learning:** In `AuditLogsController`, `WorkspaceAuditLog` stores `userId` as a plain scalar without a Prisma model relation to `User`. When querying audit log feeds or exporting CSVs, performing `prisma.user.findMany({ where: { id: { in: userIds } } })` unconditionally invokes a database query even when `userIds` is empty (e.g., workspaces with no audit log records). Guarding secondary relation queries with an empty-check short-circuit (`userIds.length > 0 ? await prisma.user.findMany(...) : []`) avoids redundant database calls entirely. Furthermore, using `new Map(users.map(u => [u.id, u]))` instead of object reduction provides cleaner O(1) lookups in Node.js.
 
-**Action:** Include related sub-resource entities (such as actor users or owners) directly in nested relational queries to avoid secondary `findMany` database round-trips when fetching log entries or feeds.
+**Action:** Always short-circuit secondary `findMany` queries on collection IDs (`userIds.length > 0`) when mapping scalar foreign keys, and construct a `Map` for O(1) in-memory lookups.
 
 ## 2026-08-25 - [Prisma/Performance] Child Sub-Resource Point Lookup for Workspace Departments
 

@@ -61,20 +61,31 @@ describe('AuditLogsController', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should export CSV using pre-fetched user relation without calling user.findMany', async () => {
+    it('should short-circuit user lookup when audit logs are empty', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+        auditLogs: [],
+      });
+
+      const mockRes = { header: vi.fn(), send: vi.fn() } as any;
+
+      await controller.exportAuditLogs(mockUser, 'workspace-1', mockRes);
+
+      expect(prisma.user.findMany).not.toHaveBeenCalled();
+      expect(mockRes.send).toHaveBeenCalled();
+    });
+
+    it('should fetch user data and generate CSV correctly', async () => {
       const mockAuditLogs = [
         {
           id: 'log-1',
+          userId: 'user-2',
           action: 'member.add',
           resource: 'member',
           resourceId: 'mem-2',
           metadata: {},
           createdAt: new Date('2026-08-27T00:00:00.000Z'),
-          user: {
-            id: 'user-2',
-            name: 'Other User',
-            email: 'other@example.com',
-          },
         },
       ];
 
@@ -84,35 +95,22 @@ describe('AuditLogsController', () => {
         auditLogs: mockAuditLogs,
       });
 
+      (prisma.user.findMany as any).mockResolvedValue([
+        {
+          id: 'user-2',
+          name: 'Other User',
+          email: 'other@example.com',
+        },
+      ]);
+
       const mockRes = { header: vi.fn(), send: vi.fn() } as any;
 
       await controller.exportAuditLogs(mockUser, 'workspace-1', mockRes);
 
-      expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
-        where: { slug: 'workspace-1' },
-        select: expect.objectContaining({
-          id: true,
-          members: {
-            where: { userId: 'user-1' },
-            select: { role: true },
-          },
-          auditLogs: expect.objectContaining({
-            take: 10000,
-            orderBy: { createdAt: 'desc' },
-            select: expect.objectContaining({
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
-            }),
-          }),
-        }),
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: { id: { in: ['user-2'] } },
+        select: { id: true, name: true, email: true },
       });
-
-      expect(prisma.user.findMany).not.toHaveBeenCalled();
       expect(mockRes.header).toHaveBeenCalledWith('Content-Type', 'text/csv');
       expect(mockRes.send).toHaveBeenCalledWith(expect.stringContaining('Other User'));
     });
@@ -142,7 +140,24 @@ describe('AuditLogsController', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should fetch audit logs and enrich with user data in single consolidated query', async () => {
+    it('should short-circuit user lookup when audit logs array is empty', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        name: 'Workspace 1',
+        slug: 'workspace-1',
+        members: [{ role: 'member' }],
+        auditLogs: [],
+        _count: { auditLogs: 0 },
+      });
+
+      const result = await controller.getAuditLogs(mockUser, 'workspace-1', '1', '50');
+
+      expect(prisma.user.findMany).not.toHaveBeenCalled();
+      expect(result.logs).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should fetch audit logs and map user details using Map lookup', async () => {
       const mockAuditLogs = [
         {
           id: 'log-1',
@@ -153,12 +168,6 @@ describe('AuditLogsController', () => {
           resourceId: 'mem-2',
           metadata: {},
           createdAt: new Date(),
-          user: {
-            id: 'user-2',
-            name: 'Other User',
-            email: 'other@example.com',
-            image: 'avatar.png',
-          },
         },
       ];
 
@@ -196,22 +205,15 @@ describe('AuditLogsController', () => {
             skip: 0,
             take: 50,
             orderBy: { createdAt: 'desc' },
-            select: expect.objectContaining({
+            select: {
               id: true,
+              userId: true,
               action: true,
               resource: true,
               resourceId: true,
               metadata: true,
               createdAt: true,
-              user: {
-                select: expect.objectContaining({
-                  id: true,
-                  name: true,
-                  email: true,
-                  image: true,
-                }),
-              },
-            }),
+            },
           },
           _count: {
             select: { auditLogs: true },
@@ -219,8 +221,15 @@ describe('AuditLogsController', () => {
         }),
       });
 
-      // Verifies that secondary prisma.user.findMany is NOT called because user relation is pre-fetched
-      expect(prisma.user.findMany).not.toHaveBeenCalled();
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: { id: { in: ['user-2'] } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      });
 
       expect(result.logs[0].user).toEqual({
         id: 'user-2',

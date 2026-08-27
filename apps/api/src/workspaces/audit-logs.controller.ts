@@ -50,19 +50,12 @@ export class AuditLogsController {
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
+            userId: true,
             action: true,
             resource: true,
             resourceId: true,
             metadata: true,
             createdAt: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
           },
         },
         _count: {
@@ -91,13 +84,34 @@ export class AuditLogsController {
     }));
     const total = workspace._count.auditLogs;
 
+    /**
+     * ⚡ Performance Optimization:
+     * Short-circuits secondary user lookups if userIds is empty to prevent redundant DB round-trips.
+     * Uses O(1) Map lookups instead of object reduction.
+     */
+    const userIds = [...new Set(logs.map(log => log.userId))];
+    const users =
+      userIds.length > 0
+        ? await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          })
+        : [];
+
+    const userMap = new Map(users.map(u => [u.id, u]));
+
     const enrichedLogs = logs.map(log => ({
       ...log,
       workspace: {
         name: workspace.name,
         slug: workspace.slug,
       },
-      user: log.user || null,
+      user: userMap.get(log.userId) || null,
     }));
 
     return {
@@ -134,18 +148,12 @@ export class AuditLogsController {
           take: 10000,
           select: {
             id: true,
+            userId: true,
             action: true,
             resource: true,
             resourceId: true,
             metadata: true,
             createdAt: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
           },
         },
       },
@@ -163,10 +171,26 @@ export class AuditLogsController {
 
     const logs = workspace.auditLogs;
 
+    /**
+     * ⚡ Performance Optimization:
+     * Short-circuits secondary user lookups if userIds is empty.
+     * Uses O(1) Map lookups.
+     */
+    const userIds = [...new Set(logs.map(log => log.userId))];
+    const users =
+      userIds.length > 0
+        ? await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, name: true, email: true },
+          })
+        : [];
+
+    const userMap = new Map(users.map(u => [u.id, u]));
+
     const csvHeader = 'Timestamp,Action,Actor Name,Actor Email,Resource,Resource ID,Metadata\n';
     const csvRows = logs
       .map(log => {
-        const u = log.user;
+        const u = userMap.get(log.userId);
         return [
           new Date(log.createdAt).toISOString(),
           log.action,
