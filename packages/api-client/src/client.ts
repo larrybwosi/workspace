@@ -47,11 +47,87 @@ const getBaseURL = () => {
   return url.replace(/\/$/, '') + '/api';
 };
 
+const isTauri = () => {
+  return (
+    typeof window !== 'undefined' &&
+    ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
+  );
+};
+
+const tauriAdapter = async (config: any) => {
+  const { invoke } = await import('@tauri-apps/api/core');
+
+  let fullUrl = config.url || '';
+  if (config.baseURL && !fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+    const base = config.baseURL.replace(/\/$/, '');
+    const path = fullUrl.startsWith('/') ? fullUrl : `/${fullUrl}`;
+    fullUrl = `${base}${path}`;
+  }
+
+  let path = fullUrl;
+  let baseUrlOverride: string | undefined = undefined;
+  if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
+    const urlObj = new URL(fullUrl);
+    baseUrlOverride = urlObj.origin;
+    path = urlObj.pathname + urlObj.search;
+  }
+
+  if (config.params && Object.keys(config.params).length > 0) {
+    const searchParams = new URLSearchParams();
+    for (const [k, v] of Object.entries(config.params)) {
+      if (v !== undefined && v !== null) {
+        searchParams.append(k, String(v));
+      }
+    }
+    const sep = path.includes('?') ? '&' : '?';
+    path = `${path}${sep}${searchParams.toString()}`;
+  }
+
+  let body = config.data;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      // Keep as string if not JSON
+    }
+  }
+
+  const headers: Record<string, string> = {};
+  if (config.headers) {
+    const headerObj = typeof config.headers.toJSON === 'function' ? config.headers.toJSON() : config.headers;
+    for (const [k, v] of Object.entries(headerObj)) {
+      if (v !== undefined && v !== null && typeof v !== 'function') {
+        headers[k] = String(v);
+      }
+    }
+  }
+
+  const res: any = await invoke('api_request', {
+    request: {
+      method: (config.method || 'get').toUpperCase(),
+      path,
+      headers,
+      body,
+      baseUrl: baseUrlOverride || getBaseURL(),
+    },
+  });
+
+  return {
+    data: res.body,
+    status: res.status,
+    statusText: String(res.status),
+    headers: res.headers || {},
+    config,
+    request: {},
+  };
+};
+
 // Create axios instance with default config
 export const apiClient = axios.create({
   baseURL: getBaseURL(),
   timeout: 10000,
   withCredentials: true,
+  adapter: isTauri() ? tauriAdapter : undefined,
 });
 
 apiClient.interceptors.request.use(config => {

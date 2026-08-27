@@ -30,9 +30,117 @@ const getBaseURL = () => {
   return url.replace(/\/$/, '') + '/api/auth';
 };
 
+const isTauri = () => {
+  return (
+    typeof window !== 'undefined' &&
+    ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
+  );
+};
+
+export const customFetch: typeof fetch = async (
+  url: string | URL | Request,
+  init?: RequestInit
+): Promise<Response> => {
+  if (!isTauri()) {
+    return fetch(url, init);
+  }
+
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+
+    let fullUrl = '';
+    if (typeof url === 'string') {
+      fullUrl = url;
+    } else if (url instanceof URL) {
+      fullUrl = url.toString();
+    } else if (url && typeof url === 'object' && 'url' in url) {
+      fullUrl = (url as Request).url;
+    }
+
+    let method = init?.method;
+    if (!method && url && typeof url === 'object' && 'method' in url) {
+      method = (url as Request).method;
+    }
+    method = (method || 'GET').toUpperCase();
+
+    let path = fullUrl;
+    let baseUrlOverride: string | undefined = undefined;
+    if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
+      const urlObj = new URL(fullUrl);
+      baseUrlOverride = urlObj.origin;
+      path = urlObj.pathname + urlObj.search;
+    }
+
+    const headersObj: Record<string, string> = {};
+    const initHeaders =
+      init?.headers ||
+      (url && typeof url === 'object' && 'headers' in url ? (url as Request).headers : undefined);
+
+    if (initHeaders) {
+      if (typeof (initHeaders as any).forEach === 'function') {
+        (initHeaders as any).forEach((value: string, key: string) => {
+          headersObj[key] = value;
+        });
+      } else if (Array.isArray(initHeaders)) {
+        for (const [k, v] of initHeaders) {
+          if (k && v !== undefined && v !== null) {
+            headersObj[k] = String(v);
+          }
+        }
+      } else if (typeof initHeaders === 'object') {
+        for (const [k, v] of Object.entries(initHeaders)) {
+          if (v !== undefined && v !== null) {
+            headersObj[k] = String(v);
+          }
+        }
+      }
+    }
+
+    let body: any = init?.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // Keep as string if not JSON
+      }
+    }
+
+    const res: any = await invoke('api_request', {
+      request: {
+        method,
+        path,
+        headers: headersObj,
+        body,
+        baseUrl: baseUrlOverride || getBaseURL(),
+      },
+    });
+
+    const responseHeaders = new Headers();
+    if (res.headers) {
+      for (const [k, v] of Object.entries(res.headers)) {
+        if (typeof v === 'string') {
+          responseHeaders.append(k, v);
+        }
+      }
+    }
+
+    const responseBody = typeof res.body === 'string' ? res.body : JSON.stringify(res.body ?? '');
+
+    return new Response(responseBody, {
+      status: res.status || 200,
+      statusText: String(res.status || 200),
+      headers: responseHeaders,
+    });
+  } catch (err) {
+    console.error('Tauri fetch error, falling back to window.fetch:', err);
+    return fetch(url, init);
+  }
+};
+
 export const authClient: any = createAuthClient({
   baseURL: getBaseURL(),
   fetchOptions: {
+    customFetchImpl: customFetch,
     auth: {
       type: 'Bearer',
       token: () => {

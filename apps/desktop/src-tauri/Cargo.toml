@@ -25,6 +25,8 @@ tauri-plugin-store = "2"
 tauri-plugin-process = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+reqwest = { version = "0.13", default-features = false, features = ["json", "multipart", "stream"] }
+scryme-sdk = { path = "../../../packages/sdk/rust" }
 tauri-plugin-single-instance = "2.4.2"
 alloc-no-stdlib = "=2.0.4"
 alloc-stdlib = "=0.2.2"
